@@ -25,33 +25,15 @@ service cloud.firestore {
 
     // Publicly accessible content (Catalog, Marketing, Settings)
     // We explicitly allow 'read' (get and list) for unauthenticated users.
-    
-    match /products/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /products/{docId=**} { allow read: if true; }
-    
-    match /services/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{docId=**} { allow read: if true; }
-    
-    match /product_categories/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{docId=**} { allow read: if true; }
-    
-    match /service_categories/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{docId=**} { allow read: if true; }
-    
-    match /brands/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{docId=**} { allow read: if true; }
-    
-    match /marketing_offers/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{docId=**} { allow read: if true; }
-    
-    match /marketing_campaigns/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{docId=**} { allow read: if true; }
-    
-    match /site_settings/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{docId=**} { allow read: if true; }
-    
-    match /service_areas/{docId} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{docId=**} { allow read: if true; }
+    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // Restricted Operational Data (Staff/Admin only)
     match /orders/{document=**} { allow read, write: if isStaff(); }
