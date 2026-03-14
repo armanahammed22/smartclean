@@ -23,6 +23,9 @@ import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/fireb
 import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 
+// Hardcoded Super Admin UID for initial bootstrapping
+const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -43,7 +46,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Sales Leads', href: '/admin/leads', icon: Users },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
     { name: 'Employees', href: '/admin/employees', icon: UserSquare2 },
-    { name: 'Inventory', href: '/admin/inventory', icon: Package },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
@@ -76,8 +78,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If user is logged in but the marker document doesn't exist in 'roles_admins'
-  if (!adminRole) {
+  // Allow access if the user has the Firestore marker OR is the Bootstrap Admin
+  const isAuthorized = adminRole || user.uid === BOOTSTRAP_ADMIN_UID;
+
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
         <AlertTriangle size={64} className="text-orange-500" />
