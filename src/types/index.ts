@@ -6,10 +6,17 @@ export interface Product {
   shortDescription: string;
   imageUrl: string;
   category: string;
+  type?: 'product';
 }
 
-export interface CartItem extends Product {
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  category: string;
   quantity: number;
+  itemType: 'product' | 'service';
 }
 
 export interface CheckoutFormData {
@@ -25,7 +32,9 @@ export interface Service {
   title: string;
   description: string;
   icon: "Layout" | "Wrench" | "Activity" | "Truck" | "ShieldCheck" | "Headphones";
-  price: string;
+  basePrice: number;
+  displayPrice: string;
+  type?: 'service';
 }
 
 export interface Feature {

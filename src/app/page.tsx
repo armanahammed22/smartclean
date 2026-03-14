@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -9,6 +8,7 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { getMockProducts, getMockServices } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/components/providers/cart-provider';
 import { 
   Layout, Wrench, Activity, Truck, ShieldCheck, 
   Headphones, ArrowRight, Home, Building2, 
@@ -24,6 +24,7 @@ import {
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
+  const { addToCart } = useCart();
 
   const MOCK_PRODUCTS = getMockProducts(language);
   const MOCK_SERVICES = getMockServices(language);
@@ -112,7 +113,7 @@ export default function SmartCleanHomePage() {
       </section>
 
       <div className="container mx-auto px-4 space-y-16">
-        {/* 5-Column Quick Category Grid */}
+        {/* Quick Category Grid */}
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {QUICK_CATEGORIES.map((cat, i) => (
@@ -126,7 +127,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Professional Services - FIRST PRIORITY */}
+        {/* Professional Services */}
         <section id="services">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
             <div className="text-center mb-12 space-y-2">
@@ -150,12 +151,18 @@ export default function SmartCleanHomePage() {
                     </p>
                     <div className="mt-auto pt-6 border-t">
                       <div className="flex items-center justify-between mb-6">
-                        <span className="text-primary font-bold text-xl">{service.price}</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
+                          <span className="text-primary font-bold text-xl">৳{service.displayPrice}</span>
+                        </div>
                         <Button variant="ghost" size="sm" className="gap-2 group-hover:text-primary font-bold px-0">
                           {t('service_details')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </div>
-                      <Button className="w-full gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md">
+                      <Button 
+                        onClick={() => addToCart(service)}
+                        className="w-full gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md"
+                      >
                         <CalendarCheck size={18} />
                         {t('book_now')}
                       </Button>
@@ -167,7 +174,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Featured Products - 5 Column Grid */}
+        {/* Featured Products */}
         <section id="products">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
             <div className="flex items-center justify-between mb-8">

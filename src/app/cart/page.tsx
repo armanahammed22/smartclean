@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Info } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, subtotal, itemCount } = useCart();
@@ -40,21 +41,39 @@ export default function CartPage() {
             <Card key={item.id} className="overflow-hidden border-border/50">
               <CardContent className="p-0">
                 <div className="flex flex-col sm:flex-row gap-4 p-4">
-                  <div className="relative w-full sm:w-24 h-24 shrink-0 rounded-md overflow-hidden bg-muted">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="relative w-full sm:w-24 h-24 shrink-0 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="p-4 bg-primary/10 text-primary rounded-full">
+                        <ShoppingBag size={32} />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 flex flex-col justify-between">
                     <div className="flex justify-between items-start gap-4">
                       <div>
-                        <h3 className="font-semibold text-lg">{item.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg">{item.name}</h3>
+                          {item.itemType === 'service' && (
+                            <Badge variant="outline" className="text-[10px] py-0 border-primary text-primary">
+                              {t('services_title')}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{item.category}</p>
                       </div>
-                      <p className="font-bold text-lg">৳{(item.price * item.quantity).toLocaleString()}</p>
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-primary">৳{(item.price * item.quantity).toLocaleString()}</p>
+                        {item.itemType === 'service' && (
+                          <span className="text-[10px] text-muted-foreground italic">({t('price_from')})</span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-between mt-4">
@@ -93,6 +112,13 @@ export default function CartPage() {
               </CardContent>
             </Card>
           ))}
+          
+          {items.some(item => item.itemType === 'service') && (
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 flex items-start gap-3 text-primary text-sm">
+              <Info className="shrink-0 mt-0.5" size={18} />
+              <p>{t('service_billing_note') || "Note: Service amounts are base prices and may vary based on actual work requirements."}</p>
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-1">
@@ -115,7 +141,12 @@ export default function CartPage() {
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>{t('total')}</span>
-                  <span className="text-primary">৳{(subtotal * 1.08).toLocaleString()}</span>
+                  <div className="text-right">
+                    <span className="text-primary">৳{(subtotal * 1.08).toLocaleString()}</span>
+                    {items.some(i => i.itemType === 'service') && (
+                      <p className="text-[10px] text-muted-foreground block leading-none mt-1">{t('price_from')}</p>
+                    )}
+                  </div>
                 </div>
               </div>
               <Button asChild className="w-full mt-8 gap-2 font-bold" size="lg">

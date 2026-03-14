@@ -1,15 +1,15 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CartItem, Product } from '@/types';
+import { CartItem, Product, Service } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (item: Product | Service, quantity?: number) => void;
+  removeFromCart: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -22,35 +22,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const addToCart = useCallback((product: Product, quantity = 1) => {
+  const addToCart = useCallback((item: Product | Service, quantity = 1) => {
+    const isService = 'basePrice' in item;
+    const price = isService ? (item as Service).basePrice : (item as Product).price;
+    const name = isService ? (item as Service).title : (item as Product).name;
+    const category = isService ? t('services_title') : (item as Product).category;
+    const imageUrl = isService ? '' : (item as Product).imageUrl; // Services might not have images in cart
+
     setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
+      const existingItem = prevItems.find((prev) => prev.id === item.id);
       if (existingItem) {
-        return prevItems.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+        return prevItems.map((prev) =>
+          prev.id === item.id ? { ...prev, quantity: prev.quantity + quantity } : prev
         );
       }
-      return [...prevItems, { ...product, quantity }];
+      return [...prevItems, { 
+        id: item.id, 
+        name, 
+        price, 
+        quantity, 
+        imageUrl, 
+        category,
+        itemType: isService ? 'service' : 'product'
+      }];
     });
     
     toast({
-      title: t('cart_added'),
-      description: `${product.name} ${t('cart_desc')}`,
+      title: isService ? t('book_now') : t('cart_added'),
+      description: `${name} ${t('cart_desc')}`,
     });
   }, [toast, t]);
 
-  const removeFromCart = useCallback((productId: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  const removeFromCart = useCallback((itemId: string) => {
+    setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemId);
       return;
     }
     setItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === itemId ? { ...item, quantity } : item
       )
     );
   }, [removeFromCart]);
