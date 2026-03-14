@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -5,8 +6,8 @@ import {Navbar} from '@/components/layout/navbar';
 import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'QuickOrder | Modern E-commerce Solutions',
-  description: 'Fast, efficient, and clean ordering experience.',
+  title: 'Smart Clean | Professional Cleaning Services',
+  description: 'Fast, efficient, and intelligent cleaning solutions for home and office.',
 };
 
 export default function RootLayout({

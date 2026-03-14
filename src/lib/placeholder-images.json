@@ -1,6 +1,12 @@
 {
   "placeholderImages": [
     {
+      "id": "app-logo",
+      "description": "Smart Clean Logo",
+      "imageUrl": "https://picsum.photos/seed/smartclean-logo/200/200",
+      "imageHint": "cleaning logo"
+    },
+    {
       "id": "prod-1",
       "description": "Ergonomic Office Chair",
       "imageUrl": "https://picsum.photos/seed/chair/600/400",

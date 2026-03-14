@@ -1,16 +1,21 @@
+
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Package, Search, Gift, Zap, User, Menu, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { ShoppingCart, Search, Gift, Zap, User, Menu } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const CATEGORIES = [
   "Residential", "Office", "Deep Clean", "Move In/Out", "Window", "Carpet", 
   "Post-Construction", "Eco-Friendly", "Upholstery", "Sanitization", "Kitchen", "Bathroom"
 ];
+
+const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
 
 export function Navbar() {
   const { itemCount } = useCart();
@@ -20,12 +25,21 @@ export function Navbar() {
       {/* Top Bar */}
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">
-              <Sparkles size={24} />
+          {/* Logo Area */}
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+              {LOGO_IMAGE ? (
+                <Image 
+                  src={LOGO_IMAGE.imageUrl} 
+                  alt="Smart Clean Logo" 
+                  fill 
+                  className="object-contain p-1"
+                />
+              ) : (
+                <span className="text-primary font-bold text-xl">S</span>
+              )}
             </div>
-            <span className="text-2xl font-bold tracking-tighter font-headline text-white">QUICKCLEAN</span>
+            <span className="text-2xl font-bold tracking-tighter font-headline text-white">SMART CLEAN</span>
           </Link>
 
           {/* Search Bar */}
