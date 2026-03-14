@@ -12,15 +12,20 @@ service cloud.firestore {
       allow read, write: if isBootstrapAdmin();
     }
 
-    match /orders/{orderId} {
-      allow read, write: if isStaff();
-    }
-    match /customers/{customerId} {
-      allow read, write: if isStaff();
-    }
-    match /service_areas/{areaId} {
+    match /product_categories/{catId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+    match /service_categories/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /orders/{orderId} {
+      allow read, write: if isStaff();
     }
     match /products/{productId} {
       allow read: if true;

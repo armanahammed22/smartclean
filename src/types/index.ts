@@ -6,8 +6,45 @@ export interface Product {
   description: string;
   shortDescription: string;
   imageUrl: string;
-  category: string;
+  categoryId: string;
+  subCategoryId?: string;
+  brandId?: string;
+  stockQuantity: number;
+  sku?: string;
   type?: 'product';
+  variants?: ProductVariant[];
+}
+
+export interface ProductVariant {
+  id: string;
+  type: 'Size' | 'Color' | 'Storage' | 'Model';
+  value: string;
+  price: number;
+  stockQuantity: number;
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+  parentId?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+  status: 'Active' | 'Inactive';
 }
 
 export interface CartItem {
@@ -18,30 +55,18 @@ export interface CartItem {
   category: string;
   quantity: number;
   itemType: 'product' | 'service';
-}
-
-export interface CheckoutFormData {
-  name: string;
-  phone: string;
-  email?: string;
-  address: string;
-  notes?: string;
+  variantId?: string;
 }
 
 export interface Service {
   id: string;
   title: string;
+  categoryId: string;
   description: string;
-  icon: "Layout" | "Wrench" | "Activity" | "Truck" | "ShieldCheck" | "Headphones";
+  icon: string;
   basePrice: number;
   displayPrice: string;
   imageUrl?: string;
   type?: 'service';
-}
-
-export interface Feature {
-  id: string;
-  title: string;
-  description: string;
-  icon: "Truck" | "ShieldCheck" | "Headphones";
+  status: 'Active' | 'Inactive';
 }

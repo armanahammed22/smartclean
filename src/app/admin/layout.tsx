@@ -26,7 +26,11 @@ import {
   TicketPercent,
   Truck,
   Menu,
-  MoreHorizontal
+  MoreHorizontal,
+  Tags,
+  Layers,
+  Award,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,6 +44,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
@@ -59,20 +68,49 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
-  const NAV_ITEMS = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
-    { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
-    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-500' },
-    { name: 'Inventory', href: '/admin/products', icon: Package, color: 'text-purple-500' },
-    { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-rose-500' },
-    { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-pink-500' },
-    { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-cyan-500' },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-indigo-500' },
-    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-yellow-500' },
-    { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-sky-500' },
-    { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-500' },
-    { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-slate-500' },
+  const NAV_GROUPS = [
+    {
+      title: 'Main',
+      items: [
+        { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
+        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
+        { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-500' },
+      ]
+    },
+    {
+      title: 'Products',
+      items: [
+        { name: 'Product List', href: '/admin/products', icon: Package, color: 'text-purple-500' },
+        { name: 'Categories', href: '/admin/products/categories', icon: Tags, color: 'text-pink-500' },
+        { name: 'Brands', href: '/admin/products/brands', icon: Award, color: 'text-rose-500' },
+      ]
+    },
+    {
+      title: 'Services',
+      items: [
+        { name: 'Service List', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
+        { name: 'Categories', href: '/admin/services/categories', icon: Layers, color: 'text-cyan-500' },
+      ]
+    },
+    {
+      title: 'Operations',
+      items: [
+        { name: 'Inventory Alerts', href: '/admin/inventory/alerts', icon: AlertCircle, color: 'text-red-500' },
+        { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
+        { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
+        { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-sky-500' },
+      ]
+    },
+    {
+      title: 'Business',
+      items: [
+        { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-teal-500' },
+        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
+        { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
+        { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-500' },
+        { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
+      ]
+    }
   ];
 
   const handleLogout = async () => {
@@ -114,67 +152,67 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => {
-    const items = mobileOnly ? NAV_ITEMS.filter(i => ['Customers', 'Reports', 'Settings', 'Service Areas', 'Couriers', 'Subscription'].includes(i.name)) : NAV_ITEMS;
-    
-    return (
-      <>
-        <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
-          <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-            <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
-            {!collapsed && (
-              <div className="truncate">
-                <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
-                <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
-              </div>
-            )}
-          </div>
+  const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
+    <>
+      <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
+        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
+          <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
+          {!collapsed && (
+            <div className="truncate">
+              <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
+              <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
+            </div>
+          )}
         </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-          {items.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={cn(
-                "flex items-center px-4 py-3 rounded-xl transition-all group relative",
-                pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
-                collapsed ? "justify-center" : "justify-between"
-              )}
-            >
-              <div className="flex items-center gap-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title} className="space-y-1">
+            {!collapsed && <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-4 mb-2">{group.title}</p>}
+            {group.items.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center px-4 py-2.5 rounded-xl transition-all group relative",
+                  pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
+                  collapsed ? "justify-center" : "justify-start"
+                )}
+              >
                 <item.icon 
-                  size={18} 
+                  size={collapsed ? 20 : 18} 
                   className={cn(
                     "shrink-0 transition-colors duration-300",
-                    pathname === item.href ? "text-white" : item.color
+                    pathname === item.href ? "text-white" : item.color,
+                    !collapsed && "mr-3"
                   )} 
                 />
-                {!collapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {!mobileOnly && (
-          <div className="p-4 border-t border-white/10 shrink-0">
-            <Button 
-              variant="ghost" 
-              className={cn(
-                "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
-                collapsed ? "justify-center" : "justify-start"
-              )} 
-              onClick={handleLogout}
-            >
-              <LogOut size={20} />
-              {!collapsed && <span className="font-semibold text-sm">Logout</span>}
-            </Button>
+                {!collapsed && <span className="text-xs font-bold truncate">{item.name}</span>}
+              </Link>
+            ))}
           </div>
-        )}
-      </>
-    );
-  };
+        ))}
+      </div>
+
+      {!mobileOnly && (
+        <div className="p-4 border-t border-white/10 shrink-0">
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
+              collapsed ? "justify-center" : "justify-start"
+            )} 
+            onClick={handleLogout}
+          >
+            <LogOut size={20} />
+            {!collapsed && <span className="font-bold text-xs">Logout</span>}
+          </Button>
+        </div>
+      )}
+    </>
+  );
 
   const MobileBottomNav = () => (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-50 border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
@@ -194,11 +232,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <button className="flex flex-col items-center gap-1 text-gray-400">
-              <MoreHorizontal size={20} />
+              <Menu size={20} />
               <span className="text-[10px] font-bold">Menu</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="p-0 bg-[#081621] border-none h-[60vh] rounded-t-3xl">
+          <SheetContent side="bottom" className="p-0 bg-[#081621] border-none h-[80vh] rounded-t-3xl">
             <SheetHeader className="sr-only">
               <SheetTitle>Admin Mobile Menu</SheetTitle>
             </SheetHeader>
@@ -217,7 +255,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      {/* Desktop Sidebar */}
       <aside 
         className={cn(
           "hidden lg:flex flex-col h-full bg-[#081621] text-white transition-all duration-300 z-30",
@@ -235,17 +272,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Button>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
+          <h2 className="text-sm font-bold text-gray-900">
+            {NAV_GROUPS.flatMap(g => g.items).find(i => i.href === pathname)?.name || 'Admin'}
+          </h2>
           <div className="flex items-center gap-4">
-            <h2 className="text-sm font-bold text-gray-900 truncate">
-              {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
               {user?.email?.[0].toUpperCase()}
             </div>
           </div>

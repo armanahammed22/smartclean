@@ -4,19 +4,54 @@
     "Product": {
       "title": "Product",
       "type": "object",
-      "description": "Fixed-price cleaning supplies and equipment.",
+      "description": "Fixed-price cleaning supplies and equipment with variant support.",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
         "price": { "type": "number" },
-        "category": { "type": "string" },
-        "subCategory": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "subCategoryId": { "type": "string" },
+        "brandId": { "type": "string" },
         "imageUrl": { "type": "string" },
         "stockQuantity": { "type": "number" },
         "sku": { "type": "string" },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "variants": { "type": "array" }
       },
-      "required": ["id", "name", "price"]
+      "required": ["id", "name", "price", "categoryId"]
+    },
+    "ProductCategory": {
+      "title": "ProductCategory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "icon": { "type": "string" },
+        "parentId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
+    "ServiceCategory": {
+      "title": "ServiceCategory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "icon": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
+    "Brand": {
+      "title": "Brand",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
     },
     "Order": {
       "title": "Order",
@@ -30,8 +65,6 @@
         "status": { "type": "string", "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] },
         "paymentStatus": { "type": "string", "enum": ["Unpaid", "Paid", "Refunded"] },
         "paymentMethod": { "type": "string" },
-        "courier": { "type": "string" },
-        "trackingId": { "type": "string" },
         "items": { "type": "array" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -43,33 +76,11 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
+        "categoryId": { "type": "string" },
         "basePrice": { "type": "number" },
         "duration": { "type": "string" },
         "description": { "type": "string" },
-        "category": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] }
-      }
-    },
-    "Customer": {
-      "title": "Customer",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "address": { "type": "string" },
-        "segment": { "type": "string" },
-        "totalSpent": { "type": "number" }
-      }
-    },
-    "ServiceArea": {
-      "title": "ServiceArea",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "status": { "type": "string" }
       }
     }
   },
@@ -77,13 +88,14 @@
     "providers": ["password"]
   },
   "firestore": {
-    "/leads/{leadId}": { "schema": "#/entities/Lead", "description": "Sales leads." },
-    "/bookings/{bookingId}": { "schema": "#/entities/Booking", "description": "Service appointments." },
+    "/product_categories/{catId}": { "schema": "#/entities/ProductCategory", "description": "Product hierarchies." },
+    "/service_categories/{catId}": { "schema": "#/entities/ServiceCategory", "description": "Service categories." },
+    "/brands/{brandId}": { "schema": "#/entities/Brand", "description": "Product brands." },
     "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Product orders." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Services catalog." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
-    "/customers/{customerId}": { "schema": "#/entities/Customer", "description": "Customer profiles." },
-    "/service_areas/{areaId}": { "schema": "#/entities/ServiceArea", "description": "Supported regions." },
-    "/employee_profiles/{employeeId}": { "schema": "#/entities/EmployeeProfile", "description": "Staff directory." }
+    "/leads/{leadId}": { "schema": "#/entities/Lead", "description": "Sales leads." },
+    "/bookings/{bookingId}": { "schema": "#/entities/Booking", "description": "Service appointments." },
+    "/customers/{customerId}": { "schema": "#/entities/Customer", "description": "Customer profiles." }
   }
 }
