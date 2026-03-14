@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -12,6 +11,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   BarChart3, 
   Download, 
