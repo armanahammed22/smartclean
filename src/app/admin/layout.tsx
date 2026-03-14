@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -12,6 +12,7 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
+  ChevronLeft,
   ShieldCheck,
   AlertTriangle,
   Loader2,
@@ -34,6 +35,7 @@ import { doc } from 'firebase/firestore';
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
@@ -48,19 +50,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
   const NAV_ITEMS = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Sales Leads', href: '/admin/leads', icon: Users },
-    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
-    { name: 'Inventory', href: '/admin/products', icon: Package },
-    { name: 'Services', href: '/admin/services', icon: Wrench },
-    { name: 'Customers', href: '/admin/customers', icon: UserSquare2 },
-    { name: 'Service Areas', href: '/admin/areas', icon: MapPin },
-    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Couriers', href: '/admin/couriers', icon: Truck },
-    { name: 'Subscription', href: '/admin/subscription', icon: CreditCard },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
+    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-400' },
+    { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-400' },
+    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-400' },
+    { name: 'Inventory', href: '/admin/products', icon: Package, color: 'text-purple-400' },
+    { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-rose-400' },
+    { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-pink-400' },
+    { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-cyan-400' },
+    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-yellow-400' },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-indigo-400' },
+    { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-sky-400' },
+    { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-400' },
+    { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-slate-400' },
   ];
 
   const handleLogout = async () => {
@@ -104,40 +106,92 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 bg-[#081621] text-white">
-        <div className="p-6 flex items-center gap-3 border-b border-white/10">
-          <div className="p-2 bg-primary rounded-lg text-white"><ShieldCheck size={24} /></div>
-          <div>
-            <h1 className="font-bold tracking-tight">ERP PORTAL</h1>
-            <p className="text-[10px] text-gray-400 uppercase font-black">Smart Clean SaaS</p>
-          </div>
+      {/* Collapsible Sidebar */}
+      <aside 
+        className={cn(
+          "hidden lg:flex flex-col fixed inset-y-0 bg-[#081621] text-white transition-all duration-300 z-30",
+          isCollapsed ? "w-20" : "w-72"
+        )}
+      >
+        <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 relative">
+          {!isCollapsed && (
+            <div className="flex items-center gap-3 overflow-hidden transition-all duration-300">
+              <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
+              <div className="truncate">
+                <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
+                <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
+              </div>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="p-2 bg-primary rounded-lg text-white mx-auto"><ShieldCheck size={20} /></div>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-gray-400 hover:text-white hover:bg-white/10 absolute -right-4 top-14 bg-[#081621] border border-white/10 rounded-full h-8 w-8 z-40 hidden lg:flex shadow-xl"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </Button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-1 mt-6">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center justify-between px-4 py-3 rounded-xl transition-all group",
-                pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                "flex items-center px-4 py-3 rounded-xl transition-all group relative",
+                pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
+                isCollapsed ? "justify-center" : "justify-between"
               )}
             >
               <div className="flex items-center gap-3">
-                <item.icon size={18} className={pathname === item.href ? "text-white" : "text-gray-500"} />
-                <span className="text-sm font-semibold">{item.name}</span>
+                <item.icon 
+                  size={18} 
+                  className={cn(
+                    "shrink-0 transition-colors duration-300",
+                    pathname === item.href ? "text-white" : item.color
+                  )} 
+                />
+                {!isCollapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
               </div>
-              {pathname === item.href && <ChevronRight size={14} />}
+              {!isCollapsed && pathname === item.href && <ChevronRight size={14} className="opacity-50" />}
+              
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && (
+                <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-2xl border border-white/10">
+                  {item.name}
+                </div>
+              )}
             </Link>
           ))}
         </div>
+
         <div className="p-4 border-t border-white/10">
-          <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-destructive gap-3" onClick={handleLogout}>
-            <LogOut size={20} /> Logout
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
+              isCollapsed ? "justify-center" : "justify-start"
+            )} 
+            onClick={handleLogout}
+          >
+            <LogOut size={20} />
+            {!isCollapsed && <span className="font-semibold text-sm">Logout</span>}
           </Button>
         </div>
       </aside>
-      <main className="flex-1 lg:ml-72 flex flex-col min-h-screen">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-10">
+
+      <main 
+        className={cn(
+          "flex-1 flex flex-col min-h-screen transition-all duration-300",
+          isCollapsed ? "lg:ml-20" : "lg:ml-72"
+        )}
+      >
+        <header className="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
             {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
           </h2>
@@ -146,7 +200,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                <p className="text-xs font-bold text-gray-900">{user.email?.split('@')[0]}</p>
                <p className="text-[9px] text-primary font-black uppercase tracking-tighter">System Admin</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
               {user?.email?.[0].toUpperCase()}
             </div>
           </div>
