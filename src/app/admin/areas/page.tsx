@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { MapPin, Plus, Trash2, Edit, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function ServiceAreasPage() {
   const db = useFirestore();
