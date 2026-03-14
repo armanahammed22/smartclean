@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -81,8 +80,8 @@ export default function AdminDashboard() {
       services.forEach(s => batch.set(doc(db, 'services', s.id), s));
 
       // 5. Categories
-      batch.set(doc(db, 'product_categories', 'cat1'), { id: 'cat1', name: 'Home Appliances', status: 'Active' });
-      batch.set(doc(db, 'product_categories', 'cat2'), { id: 'cat2', name: 'Cleaning Supplies', status: 'Active' });
+      batch.set(doc(db, 'product_categories', 'cat1'), { id: 'cat1', name: 'Home Appliances', status: 'Active', slug: 'home-appliances' });
+      batch.set(doc(db, 'product_categories', 'cat2'), { id: 'cat2', name: 'Cleaning Supplies', status: 'Active', slug: 'cleaning-supplies' });
 
       await batch.commit();
       toast({ title: "ERP Seeded", description: "Database populated with ERP and Marketing data." });

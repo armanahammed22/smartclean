@@ -174,14 +174,14 @@ export default function SmartCleanHomePage() {
         <div className="container mx-auto px-4 space-y-12 mt-8">
           
           {/* Categories Slider */}
-          {(!settings || settings.sections?.categorySections) && (
+          {(!settings || settings.sections?.categorySections) && categories && categories.length > 0 && (
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-[#081621]">
                 <Tags size={20} className="text-primary" />
                 <h2 className="text-lg font-bold uppercase tracking-tight">{t('nav_categories')}</h2>
               </div>
               <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                {categories?.map(cat => (
+                {categories.map(cat => (
                   <Button key={cat.id} variant="outline" className="rounded-full whitespace-nowrap font-bold bg-white shadow-sm border-gray-100 px-6">
                     {cat.name}
                   </Button>
