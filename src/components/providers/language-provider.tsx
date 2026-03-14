@@ -20,7 +20,7 @@ const translations: Record<Language, Record<string, string>> = {
     nav_products: "পণ্য",
     nav_account: "অ্যাকাউন্ট",
     nav_customize: "সার্ভিস কাস্টমাইজ করুন",
-    nav_booking: "বুকিং",
+    nav_booking: "অর্ডার তালিকা",
     search_placeholder: "সার্ভিস খুঁজুন...",
     
     // Hero
@@ -32,10 +32,10 @@ const translations: Record<Language, Record<string, string>> = {
     products_title: "শীর্ষ ক্লিনিং পণ্য",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     view_all: "সব দেখুন",
-    add_to_cart: "কার্টে যোগ করুন",
-    cart_title: "শপিং কার্ট",
-    empty_cart: "আপনার কার্ট খালি",
-    empty_cart_desc: "মনে হচ্ছে আপনি এখনও আপনার কার্টে কিছু যোগ করেননি।",
+    add_to_cart: "এখনই অর্ডার করুন",
+    cart_title: "অর্ডার তালিকা",
+    empty_cart: "আপনার তালিকা খালি",
+    empty_cart_desc: "মনে হচ্ছে আপনি এখনও আপনার তালিকায় কিছু যোগ করেননি।",
     browse_catalog: "ক্যাটালগ দেখুন",
     quantity: "পরিমাণ",
     remove: "সরিয়ে ফেলুন",
@@ -88,8 +88,8 @@ const translations: Record<Language, Record<string, string>> = {
     footer_rights: "© ২০২৬ স্মার্ট ক্লিন বাংলাদেশ। সর্বস্বত্ব সংরক্ষিত।",
     
     // UI
-    cart_added: "কার্টে যোগ করা হয়েছে",
-    cart_desc: "আপনার শপিং কার্টে পণ্যটি যোগ করা হয়েছে।"
+    cart_added: "অর্ডারে যোগ করা হয়েছে",
+    cart_desc: "পণ্যটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।"
   },
   en: {
     // Navbar
@@ -98,7 +98,7 @@ const translations: Record<Language, Record<string, string>> = {
     nav_products: "Products",
     nav_account: "Account",
     nav_customize: "Customize service",
-    nav_booking: "Booking",
+    nav_booking: "Order List",
     search_placeholder: "Search services...",
     
     // Hero
@@ -110,10 +110,10 @@ const translations: Record<Language, Record<string, string>> = {
     products_title: "Top Cleaning Products",
     products_subtitle: "High-performance tools for professional results.",
     view_all: "View All",
-    add_to_cart: "Add to Cart",
-    cart_title: "Shopping Cart",
-    empty_cart: "Your cart is empty",
-    empty_cart_desc: "Looks like you haven't added anything to your cart yet.",
+    add_to_cart: "Order Now",
+    cart_title: "Order List",
+    empty_cart: "Your order list is empty",
+    empty_cart_desc: "Looks like you haven't added anything to your order list yet.",
     browse_catalog: "Browse Catalog",
     quantity: "Quantity",
     remove: "Remove",
@@ -166,8 +166,8 @@ const translations: Record<Language, Record<string, string>> = {
     footer_rights: "© 2026 Smart Clean Bangladesh. All rights reserved.",
     
     // UI
-    cart_added: "Added to cart",
-    cart_desc: "Item has been added to your shopping cart."
+    cart_added: "Added to Order",
+    cart_desc: "Item has been added to your order list."
   }
 };
 
