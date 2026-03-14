@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "prod-1",
+      "description": "Ergonomic Office Chair",
+      "imageUrl": "https://picsum.photos/seed/chair/600/400",
+      "imageHint": "office chair"
+    },
+    {
+      "id": "prod-2",
+      "description": "Mechanical Keyboard",
+      "imageUrl": "https://picsum.photos/seed/keyboard/600/400",
+      "imageHint": "mechanical keyboard"
+    },
+    {
+      "id": "prod-3",
+      "description": "Wireless Noise-Cancelling Headphones",
+      "imageUrl": "https://picsum.photos/seed/headphones/600/400",
+      "imageHint": "headphones"
+    },
+    {
+      "id": "prod-4",
+      "description": "Dual Monitor Arm",
+      "imageUrl": "https://picsum.photos/seed/monitor/600/400",
+      "imageHint": "monitor arm"
+    },
+    {
+      "id": "prod-5",
+      "description": "Desk Organizer Set",
+      "imageUrl": "https://picsum.photos/seed/desk/600/400",
+      "imageHint": "desk organizer"
+    },
+    {
+      "id": "prod-6",
+      "description": "LED Desk Lamp",
+      "imageUrl": "https://picsum.photos/seed/lamp/600/400",
+      "imageHint": "desk lamp"
+    },
+    {
+      "id": "hero-main",
+      "description": "Office Workspace",
+      "imageUrl": "https://picsum.photos/seed/workspace/1200/600",
+      "imageHint": "modern workspace"
+    }
+  ]
 }
