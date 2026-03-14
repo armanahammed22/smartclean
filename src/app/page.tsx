@@ -112,35 +112,66 @@ export default function SmartCleanHomePage() {
 
   return (
     <div className="flex flex-col gap-12 pb-24 bg-[#F2F4F8]">
-      {/* Hero Section */}
+      {/* Hero Section - Multi-Banner Grid */}
       <section className="container mx-auto px-4 pt-6">
-        <div className="relative rounded-xl overflow-hidden h-[300px] md:h-[500px] shadow-lg">
-          <Carousel className="w-full h-full" opts={{ loop: true }}>
-            <CarouselContent className="h-full">
-              {HERO_IMAGES.map((img, index) => (
-                <CarouselItem key={index} className="h-full pl-0">
-                  <div className="relative h-full w-full group">
-                    <Image
-                      src={img?.imageUrl || ''}
-                      alt={img?.description || 'Hero image'}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      priority={index === 0}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-12">
-                      <div className="max-w-xl text-white space-y-4">
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight">{t('hero_title')}</h1>
-                        <p className="text-lg opacity-90">{t('hero_subtitle')}</p>
-                        <Button size="lg" className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground">{t('hero_cta')}</Button>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-auto lg:h-[500px]">
+          {/* Main Carousel - Column span 8/9 */}
+          <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-lg h-[300px] lg:h-full">
+            <Carousel className="w-full h-full" opts={{ loop: true }}>
+              <CarouselContent className="h-full">
+                {HERO_IMAGES.map((img, index) => (
+                  <CarouselItem key={index} className="h-full pl-0">
+                    <div className="relative h-full w-full group">
+                      <Image
+                        src={img?.imageUrl || ''}
+                        alt={img?.description || 'Hero main'}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        priority={index === 0}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-12">
+                        <div className="max-w-md text-white space-y-4">
+                          <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{t('hero_title')}</h1>
+                          <p className="text-sm md:text-base opacity-90">{t('hero_subtitle')}</p>
+                          <Button size="lg" className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold">{t('hero_cta')}</Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 bg-white/20 hover:bg-white/40 border-none text-white" />
-            <CarouselNext className="right-4 bg-white/20 hover:bg-white/40 border-none text-white" />
-          </Carousel>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4 bg-white/20 hover:bg-white/40 border-none text-white" />
+              <CarouselNext className="right-4 bg-white/20 hover:bg-white/40 border-none text-white" />
+            </Carousel>
+          </div>
+
+          {/* Side Banners - Column span 4 */}
+          <div className="lg:col-span-4 hidden lg:flex flex-col gap-4 h-full">
+            <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
+              <Image
+                src={PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || ''}
+                alt="Promo 1"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
+                <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'বিশেষ অফার' : 'Special Offer'}</h3>
+                <p className="text-sm opacity-90">{language === 'bn' ? 'আপনার প্রথম বুকিংয়ে ২০% ছাড়!' : '20% Off on your first booking!'}</p>
+              </div>
+            </div>
+            <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
+              <Image
+                src={PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || ''}
+                alt="Promo 2"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
+                <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'নতুন সার্ভিস' : 'New Service'}</h3>
+                <p className="text-sm opacity-90">{language === 'bn' ? 'আমাদের নতুন কিচেন ডিপ ক্লিন ট্রাই করুন' : 'Try our new Kitchen Deep Clean'}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -153,7 +184,7 @@ export default function SmartCleanHomePage() {
                 <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
                 <p className="text-muted-foreground">{t('products_subtitle')}</p>
               </div>
-              <Button variant="outline" className="rounded-full">{t('view_all')}</Button>
+              <Button variant="outline" className="rounded-full font-bold">{t('view_all')}</Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {MOCK_PRODUCTS.map((product) => (
@@ -187,7 +218,7 @@ export default function SmartCleanHomePage() {
                     </p>
                     <div className="flex items-center justify-between pt-6 border-t">
                       <span className="text-primary font-bold text-xl">{service.price}</span>
-                      <Button variant="ghost" size="sm" className="gap-2 group-hover:text-primary">
+                      <Button variant="ghost" size="sm" className="gap-2 group-hover:text-primary font-bold">
                         {t('service_details')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>
