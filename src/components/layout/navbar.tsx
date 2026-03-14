@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -21,7 +20,7 @@ export function Navbar() {
   const { itemCount } = useCart();
 
   return (
-    <header className="w-full z-50">
+    <header className="w-full z-50 sticky top-0 shadow-sm">
       {/* Top Bar */}
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
@@ -43,7 +42,7 @@ export function Navbar() {
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl relative">
+          <div className="flex-1 max-w-2xl relative hidden md:block">
             <Input 
               placeholder="Search services..." 
               className="w-full bg-white text-black h-11 pr-12 rounded-sm focus-visible:ring-0 border-none"
@@ -53,25 +52,22 @@ export function Navbar() {
 
           {/* Action Links */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link href="/offers" className="flex items-center gap-3 hover:text-primary transition-colors">
-              <Gift className="text-primary" size={24} />
+            <Link href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Gift className="text-primary" size={20} />
               <div className="flex flex-col">
-                <span className="text-sm font-bold leading-none">Offers</span>
-                <span className="text-[10px] text-gray-400">Latest Promos</span>
+                <span className="text-xs font-bold leading-none">Offers</span>
               </div>
             </Link>
-            <Link href="/deals" className="flex items-center gap-3 hover:text-primary transition-colors">
-              <Zap className="text-primary" size={24} />
+            <Link href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Zap className="text-primary" size={20} />
               <div className="flex flex-col">
-                <span className="text-sm font-bold leading-none">Special Deals</span>
-                <span className="text-[10px] text-gray-400">Flash Sales</span>
+                <span className="text-xs font-bold leading-none">Deals</span>
               </div>
             </Link>
-            <Link href="/account" className="flex items-center gap-3 hover:text-primary transition-colors">
-              <User className="text-primary" size={24} />
+            <Link href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <User className="text-primary" size={20} />
               <div className="flex flex-col">
-                <span className="text-sm font-bold leading-none">Account</span>
-                <span className="text-[10px] text-gray-400">Register or Login</span>
+                <span className="text-xs font-bold leading-none">Account</span>
               </div>
             </Link>
             <Button className="bg-primary hover:bg-primary/90 font-bold px-6 h-11 rounded-sm">
@@ -97,23 +93,25 @@ export function Navbar() {
       </div>
 
       {/* Category Navigation */}
-      <div className="bg-white border-b shadow-sm hidden lg:block">
-        <div className="container mx-auto px-4 overflow-x-auto">
-          <nav className="flex items-center justify-between py-3">
-            {CATEGORIES.slice(0, 12).map((cat) => (
-              <Link 
-                key={cat} 
-                href={`/category/${cat.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                className="text-[13px] font-semibold hover:text-primary whitespace-nowrap px-1 transition-colors"
-              >
-                {cat}
-              </Link>
-            ))}
-            <Link href="/cart" className="relative ml-4 flex items-center gap-2 group">
-              <ShoppingCart size={20} className="group-hover:text-primary transition-colors" />
+      <div className="bg-white border-b hidden lg:block overflow-hidden">
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center justify-between py-2">
+            <div className="flex gap-6 overflow-x-auto no-scrollbar">
+              {CATEGORIES.slice(0, 10).map((cat) => (
+                <Link 
+                  key={cat} 
+                  href="#"
+                  className="text-[13px] font-semibold hover:text-primary whitespace-nowrap px-1 transition-colors"
+                >
+                  {cat}
+                </Link>
+              ))}
+            </div>
+            <Link href="/cart" className="relative ml-4 flex items-center gap-2 group border-l pl-4">
+              <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
               <span className="text-[13px] font-semibold group-hover:text-primary transition-colors">Booking</span>
               {itemCount > 0 && (
-                <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white">
+                <Badge className="absolute -top-2 -right-3 h-4 w-4 flex items-center justify-center p-0 text-[9px] bg-primary text-white">
                   {itemCount}
                 </Badge>
               )}
