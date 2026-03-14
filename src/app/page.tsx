@@ -102,46 +102,28 @@ const IconMap: Record<string, React.ReactNode> = {
   Headphones: <Headphones className="text-primary" size={32} />,
 };
 
-const HERO_IMAGES = [
+const MAIN_HERO_IMAGES = [
   PlaceHolderImages.find(img => img.id === 'hero-main'),
   PlaceHolderImages.find(img => img.id === 'prod-1'),
   PlaceHolderImages.find(img => img.id === 'prod-4'),
 ];
 
+const SIDE_BANNERS = [
+  PlaceHolderImages.find(img => img.id === 'hero-side-1'),
+  PlaceHolderImages.find(img => img.id === 'hero-side-2'),
+];
+
 export default function CatalogPage() {
   return (
-    <div className="flex flex-col gap-24 pb-24">
-      {/* Custom Hero Section with Multiple Images */}
-      <section className="relative bg-muted/20 border-b overflow-hidden">
-        <div className="container mx-auto px-4 py-16 md:py-24 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 z-10 animate-in fade-in slide-in-from-left-8 duration-700">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold border border-primary/20">
-              <Star size={14} className="fill-primary" />
-              <span>Premium Workspace Solutions</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold font-headline tracking-tight text-foreground leading-[1.1]">
-              Elevate Your <span className="text-primary">Workflow</span> Performance
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-              Discover a curated collection of ergonomic essentials and professional services designed to optimize your productivity and well-being.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="gap-2 h-14 px-8 text-lg shadow-lg shadow-primary/20" asChild>
-                <Link href="#products">
-                  Shop Catalog
-                  <ArrowRight size={20} />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="h-14 px-8 text-lg bg-background/50 backdrop-blur-sm">
-                Our Services
-              </Button>
-            </div>
-          </div>
-          
-          <div className="relative h-[400px] md:h-[500px] w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-background animate-in fade-in slide-in-from-right-8 duration-700">
+    <div className="flex flex-col gap-12 pb-24 bg-[#F2F4F8]">
+      {/* Hero Section Grid */}
+      <section className="container mx-auto px-4 pt-6">
+        <div className="grid lg:grid-cols-12 gap-5">
+          {/* Main Carousel (approx 2/3 width) */}
+          <div className="lg:col-span-9 relative rounded-lg overflow-hidden h-[300px] md:h-[450px]">
             <Carousel className="w-full h-full" opts={{ loop: true }}>
               <CarouselContent className="h-full">
-                {HERO_IMAGES.map((img, index) => (
+                {MAIN_HERO_IMAGES.map((img, index) => (
                   <CarouselItem key={index} className="h-full pl-0">
                     <div className="relative h-full w-full">
                       <Image
@@ -152,70 +134,78 @@ export default function CatalogPage() {
                         priority={index === 0}
                         data-ai-hint={img?.imageHint}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                      <div className="absolute bottom-6 left-6 text-white">
-                        <p className="text-sm font-medium opacity-80 uppercase tracking-widest">{img?.description}</p>
-                      </div>
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="absolute bottom-6 right-6 flex gap-2 z-20">
-                <CarouselPrevious className="relative translate-x-0 left-0 h-12 w-12 bg-white/20 hover:bg-white/40 border-none text-white backdrop-blur-md" />
-                <CarouselNext className="relative translate-x-0 right-0 h-12 w-12 bg-white/20 hover:bg-white/40 border-none text-white backdrop-blur-md" />
-              </div>
+              <CarouselPrevious className="left-4 bg-black/30 hover:bg-black/50 border-none text-white h-10 w-10" />
+              <CarouselNext className="right-4 bg-black/30 hover:bg-black/50 border-none text-white h-10 w-10" />
             </Carousel>
+          </div>
+
+          {/* Side Banners */}
+          <div className="lg:col-span-3 flex flex-col gap-5">
+            {SIDE_BANNERS.map((banner, index) => (
+              <div key={index} className="relative flex-1 min-h-[140px] rounded-lg overflow-hidden group">
+                <Image
+                  src={banner?.imageUrl || ''}
+                  alt={banner?.description || 'Promo'}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  data-ai-hint={banner?.imageHint}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 space-y-32">
-        {/* Layer 1: Featured Products Grid */}
+      <div className="container mx-auto px-4 space-y-16">
+        {/* Featured Products Layer */}
         <section id="products">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-4">
-            <div className="space-y-1">
-              <h2 className="text-3xl font-bold font-headline tracking-tight">Featured Products</h2>
-              <p className="text-muted-foreground text-lg">Premium gear for modern professionals.</p>
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-bold tracking-tight">Featured Products</h2>
+                <p className="text-sm text-muted-foreground">Check & Buy Your Desired Product!</p>
+              </div>
+              <Button variant="outline" className="rounded-full px-6">View All</Button>
             </div>
-            <div className="h-px flex-1 bg-border mx-8 hidden md:block opacity-50"></div>
-            <Button variant="outline" className="rounded-full px-6">View All Products</Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {MOCK_PRODUCTS.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {/* Using a larger set of products for the grid feel */}
+              {[...MOCK_PRODUCTS, ...MOCK_PRODUCTS, ...MOCK_PRODUCTS].slice(0, 10).map((product, idx) => (
+                <ProductCard key={`${product.id}-${idx}`} product={product} />
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Layer 2: Services Grid */}
-        <section className="bg-primary/5 -mx-4 px-4 py-24 rounded-[4rem] border-y border-primary/10">
-          <div className="container mx-auto">
-            <div className="flex flex-col items-center text-center mb-16 space-y-4">
-              <div className="p-3 bg-primary/10 rounded-2xl w-fit">
-                <Wrench className="text-primary" size={32} />
-              </div>
-              <h2 className="text-4xl font-bold font-headline tracking-tight">Professional Services</h2>
-              <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
-                We don't just sell products; we provide end-to-end workspace solutions tailored to your unique requirements.
+        {/* Services Layer */}
+        <section>
+          <div className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="text-center mb-10 space-y-2">
+              <h2 className="text-3xl font-bold tracking-tight">Professional Services</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                End-to-end workspace solutions tailored to your unique requirements.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {MOCK_SERVICES.map((service) => (
-                <Card key={service.id} className="border-none shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-background group">
-                  <CardHeader className="pt-10 px-8">
-                    <div className="mb-8 p-5 bg-primary/10 rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-500">
+                <Card key={service.id} className="border-none shadow-md hover:shadow-lg transition-shadow group overflow-hidden">
+                  <CardHeader className="pt-8 px-6">
+                    <div className="mb-6 p-4 bg-primary/5 rounded-full w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-500">
                       {IconMap[service.icon]}
                     </div>
-                    <CardTitle className="text-2xl font-bold">{service.title}</CardTitle>
+                    <CardTitle className="text-xl font-bold">{service.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-8 px-8 pb-10">
-                    <p className="text-muted-foreground text-base leading-relaxed h-20 overflow-hidden line-clamp-3">
+                  <CardContent className="px-6 pb-8">
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                       {service.description}
                     </p>
-                    <div className="flex items-center justify-between pt-6 border-t border-border/50">
-                      <span className="text-primary font-bold text-2xl tracking-tight">{service.price}</span>
-                      <Button variant="ghost" size="sm" className="gap-2 font-semibold">
-                        Details <ArrowRight size={16} />
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <span className="text-primary font-bold text-lg">{service.price}</span>
+                      <Button variant="ghost" size="sm" className="gap-2">
+                        Details <ArrowRight size={14} />
                       </Button>
                     </div>
                   </CardContent>
@@ -225,20 +215,20 @@ export default function CatalogPage() {
           </div>
         </section>
 
-        {/* Layer 3: Why Choose Us Grid */}
+        {/* Advantages Layer */}
         <section className="pb-12">
-          <div className="flex flex-col items-center text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold font-headline tracking-tight">The QuickOrder Advantage</h2>
-            <p className="text-muted-foreground text-lg max-w-xl leading-relaxed">Experience a seamless transition to a better working environment with our core values.</p>
+          <div className="text-center mb-10 space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">The QuickOrder Advantage</h2>
+            <p className="text-muted-foreground">Why shopping with us is the best choice.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {MOCK_FEATURES.map((feature) => (
-              <div key={feature.id} className="flex flex-col items-start p-10 bg-card rounded-[2.5rem] border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 group">
-                <div className="mb-8 p-5 bg-primary text-primary-foreground rounded-[1.5rem] shadow-xl shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+              <div key={feature.id} className="bg-white flex flex-col items-center text-center p-8 rounded-xl shadow-sm border group">
+                <div className="mb-6 p-5 bg-primary text-primary-foreground rounded-full shadow-lg group-hover:rotate-12 transition-transform">
                   {React.cloneElement(IconMap[feature.icon] as React.ReactElement, { className: "text-white" })}
                 </div>
-                <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-muted-foreground text-base leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>

@@ -38,9 +38,21 @@
     },
     {
       "id": "hero-main",
-      "description": "Office Workspace",
-      "imageUrl": "https://picsum.photos/seed/workspace/1200/600",
-      "imageHint": "modern workspace"
+      "description": "Main Tech Promo",
+      "imageUrl": "https://picsum.photos/seed/techhero/1200/600",
+      "imageHint": "tech banner"
+    },
+    {
+      "id": "hero-side-1",
+      "description": "Special Offer Banner",
+      "imageUrl": "https://picsum.photos/seed/promo1/600/400",
+      "imageHint": "tech promo"
+    },
+    {
+      "id": "hero-side-2",
+      "description": "New Arrival Banner",
+      "imageUrl": "https://picsum.photos/seed/promo2/600/400",
+      "imageHint": "new gadget"
     }
   ]
 }
