@@ -1,10 +1,8 @@
-
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/products/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -13,9 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/components/providers/cart-provider';
 import { 
-  Layout, Wrench, Activity, Truck, ShieldCheck, 
-  Headphones, ArrowRight, Home, Building2, 
-  Brush, Sparkles, Wind, CalendarCheck, ShoppingCart 
+  Layout, Wrench, Activity, Home, Building2, 
+  Brush, Sparkles, Wind, CalendarCheck, ShoppingCart,
+  ShieldCheck, Truck, Headphones
 } from 'lucide-react';
 import {
   Carousel,
@@ -27,8 +25,7 @@ import {
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
-  const { addToCart } = useCart();
-  const router = useRouter();
+  const { addToCart, setCheckoutOpen } = useCart();
 
   const MOCK_PRODUCTS = getMockProducts(language);
   const MOCK_SERVICES = getMockServices(language);
@@ -55,7 +52,7 @@ export default function SmartCleanHomePage() {
 
   const handleBookNowDirectly = (service: any) => {
     addToCart(service);
-    router.push('/checkout');
+    setCheckoutOpen(true);
   };
 
   return (
@@ -94,24 +91,14 @@ export default function SmartCleanHomePage() {
 
           <div className="lg:col-span-4 hidden lg:flex flex-col gap-4 h-full">
             <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
-              <Image
-                src={PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || ''}
-                alt="Promo 1"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || ''} alt="Promo 1" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
                 <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'বিশেষ অফার' : 'Special Offer'}</h3>
                 <p className="text-sm opacity-90">{language === 'bn' ? 'আপনার প্রথম বুকিংয়ে ২০% ছাড়!' : '20% Off on your first booking!'}</p>
               </div>
             </div>
             <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
-              <Image
-                src={PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || ''}
-                alt="Promo 2"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || ''} alt="Promo 2" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
                 <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'নতুন সার্ভিস' : 'New Service'}</h3>
                 <p className="text-sm opacity-90">{language === 'bn' ? 'আমাদের নতুন কিচেন ডিপ ক্লিন ট্রাই করুন' : 'Try our new Kitchen Deep Clean'}</p>
@@ -193,11 +180,6 @@ export default function SmartCleanHomePage() {
                         <ShoppingCart size={20} />
                       </Button>
                     </div>
-                    <Button asChild variant="link" size="sm" className="w-full text-xs font-bold text-muted-foreground hover:text-primary">
-                      <Link href={`/service/${service.id}`}>
-                        {t('service_details')}
-                      </Link>
-                    </Button>
                   </CardFooter>
                 </Card>
               ))}

@@ -13,12 +13,15 @@ interface CartContextType {
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  isCheckoutOpen: boolean;
+  setCheckoutOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -27,7 +30,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const price = isService ? (item as Service).basePrice : (item as Product).price;
     const name = isService ? (item as Service).title : (item as Product).name;
     const category = isService ? t('services_title') : (item as Product).category;
-    const imageUrl = isService ? '' : (item as Product).imageUrl; // Services might not have images in cart
+    const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
 
     setItems((prevItems) => {
       const existingItem = prevItems.find((prev) => prev.id === item.id);
@@ -86,6 +89,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         subtotal,
+        isCheckoutOpen,
+        setCheckoutOpen
       }}
     >
       {children}

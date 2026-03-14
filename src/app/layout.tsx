@@ -5,6 +5,7 @@ import {LanguageProvider} from '@/components/providers/language-provider';
 import {Navbar} from '@/components/layout/navbar';
 import {Footer} from '@/components/layout/footer';
 import {Toaster} from '@/components/ui/toaster';
+import {CheckoutModal} from '@/components/checkout/checkout-modal';
 
 export const metadata: Metadata = {
   title: 'Smart Clean | Professional Cleaning Services in Bangladesh',
@@ -31,6 +32,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <CheckoutModal />
             <Toaster />
           </CartProvider>
         </LanguageProvider>

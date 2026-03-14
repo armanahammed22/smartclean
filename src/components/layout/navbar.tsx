@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,7 +16,7 @@ import { Card } from '@/components/ui/card';
 const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
 
 export function Navbar() {
-  const { itemCount } = useCart();
+  const { itemCount, setCheckoutOpen } = useCart();
   const { language, setLanguage, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<{ id: string; name: string; type: 'product' | 'service'; category?: string }[]>([]);
@@ -30,7 +29,6 @@ export function Navbar() {
 
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
-      // Get data for both languages to search across both
       const productsEn = getMockProducts('en');
       const productsBn = getMockProducts('bn');
       const servicesEn = getMockServices('en');
@@ -40,7 +38,6 @@ export function Navbar() {
       const matchedProductIds = new Set<string>();
       const matchedServiceIds = new Set<string>();
 
-      // Check for matches in English
       productsEn.forEach(p => {
         if (p.name.toLowerCase().includes(query)) matchedProductIds.add(p.id);
       });
@@ -48,7 +45,6 @@ export function Navbar() {
         if (s.title.toLowerCase().includes(query)) matchedServiceIds.add(s.id);
       });
 
-      // Check for matches in Bangla
       productsBn.forEach(p => {
         if (p.name.toLowerCase().includes(query)) matchedProductIds.add(p.id);
       });
@@ -56,7 +52,6 @@ export function Navbar() {
         if (s.title.toLowerCase().includes(query)) matchedServiceIds.add(s.id);
       });
 
-      // Display results in the CURRENT language
       const currentProducts = getMockProducts(language);
       const currentServices = getMockServices(language);
 
@@ -88,19 +83,12 @@ export function Navbar() {
 
   return (
     <header className="w-full z-50 sticky top-0 shadow-sm">
-      {/* Top Bar */}
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
-          {/* Logo Area */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
               {LOGO_IMAGE ? (
-                <Image 
-                  src={LOGO_IMAGE.imageUrl} 
-                  alt="Smart Clean Logo" 
-                  fill 
-                  className="object-contain p-1"
-                />
+                <Image src={LOGO_IMAGE.imageUrl} alt="Logo" fill className="object-contain p-1" />
               ) : (
                 <span className="text-primary font-bold text-xl">S</span>
               )}
@@ -108,7 +96,6 @@ export function Navbar() {
             <span className="text-2xl font-bold tracking-tighter font-headline text-white">SMART CLEAN</span>
           </Link>
 
-          {/* Search Bar */}
           <div className="flex-1 max-w-2xl relative hidden md:block" ref={searchRef}>
             <div className="relative">
               <Input 
@@ -116,19 +103,18 @@ export function Navbar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
                 placeholder={t('search_placeholder')}
-                className="w-full bg-white text-black h-11 pr-12 rounded-sm focus-visible:ring-0 border-none"
+                className="w-full bg-white text-black h-11 pr-12 rounded-sm border-none"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-primary" size={20} />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
             </div>
 
-            {/* Search Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
               <Card className="absolute top-full left-0 right-0 mt-1 shadow-xl border-border bg-white z-[60] max-h-[400px] overflow-y-auto">
                 <div className="py-2">
                   {suggestions.map((item) => (
                     <div 
                       key={`${item.type}-${item.id}`}
-                      className="px-4 py-3 hover:bg-primary/5 cursor-pointer flex items-center gap-3 border-b border-border/50 last:border-0 transition-colors"
+                      className="px-4 py-3 hover:bg-primary/5 cursor-pointer flex items-center gap-3 border-b border-border/50 transition-colors"
                       onClick={() => {
                         setSearchQuery('');
                         setShowSuggestions(false);
@@ -150,7 +136,6 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Action Links */}
           <div className="hidden lg:flex items-center gap-6">
             <Button 
               variant="ghost" 
@@ -163,16 +148,23 @@ export function Navbar() {
             
             <Link href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
               <User className="text-primary" size={20} />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold leading-none">{t('nav_account')}</span>
-              </div>
+              <span className="text-xs font-bold">{t('nav_account')}</span>
             </Link>
-            <Button className="bg-primary hover:bg-primary/90 font-bold px-6 h-11 rounded-sm text-primary-foreground">
-              {t('nav_customize')}
+            
+            <Button 
+              onClick={() => setCheckoutOpen(true)}
+              className="bg-primary hover:bg-primary/90 font-bold px-6 h-11 rounded-sm text-primary-foreground relative"
+            >
+              <ShoppingCart size={18} className="mr-2" />
+              {t('nav_booking')}
+              {itemCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-white text-primary border-2 border-primary">
+                  {itemCount}
+                </Badge>
+              )}
             </Button>
           </div>
           
-          {/* Mobile Cart/Menu */}
           <div className="flex lg:hidden items-center gap-4">
             <Button 
               variant="ghost" 
@@ -185,45 +177,29 @@ export function Navbar() {
                 <span className="text-[10px] font-bold mt-0.5">{language === 'bn' ? "EN" : "বাং"}</span>
               </div>
             </Button>
-             <Button variant="ghost" size="icon" asChild className="relative text-white">
-              <Link href="/cart">
-                <ShoppingCart size={22} />
-                {itemCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white">
-                    {itemCount}
-                  </Badge>
-                )}
-              </Link>
+            <Button variant="ghost" size="icon" onClick={() => setCheckoutOpen(true)} className="relative text-white">
+              <ShoppingCart size={22} />
+              {itemCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white">
+                  {itemCount}
+                </Badge>
+              )}
             </Button>
             <Menu className="cursor-pointer" size={28} />
           </div>
         </div>
       </div>
 
-      {/* Category Navigation */}
       <div className="bg-white border-b hidden lg:block overflow-hidden">
         <div className="container mx-auto px-4">
           <nav className="flex items-center justify-between py-2">
             <div className="flex gap-6 overflow-x-auto no-scrollbar">
               {CATEGORIES.map((cat) => (
-                <Link 
-                  key={cat} 
-                  href="#"
-                  className="text-[13px] font-semibold hover:text-primary whitespace-nowrap px-1 transition-colors"
-                >
+                <Link key={cat} href="#" className="text-[13px] font-semibold hover:text-primary whitespace-nowrap px-1">
                   {cat}
                 </Link>
               ))}
             </div>
-            <Link href="/cart" className="relative ml-4 flex items-center gap-2 group border-l pl-4">
-              <ShoppingCart size={18} className="group-hover:text-primary transition-colors" />
-              <span className="text-[13px] font-semibold group-hover:text-primary transition-colors">{t('nav_booking')}</span>
-              {itemCount > 0 && (
-                <Badge className="absolute -top-2 -right-3 h-4 w-4 flex items-center justify-center p-0 text-[9px] bg-primary text-white">
-                  {itemCount}
-                </Badge>
-              )}
-            </Link>
           </nav>
         </div>
       </div>

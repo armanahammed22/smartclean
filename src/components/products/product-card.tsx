@@ -1,9 +1,7 @@
-
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -16,15 +14,14 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const { addToCart, setCheckoutOpen } = useCart();
   const { t } = useLanguage();
-  const router = useRouter();
 
   const handleOrderNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
-    router.push('/checkout');
+    setCheckoutOpen(true);
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
