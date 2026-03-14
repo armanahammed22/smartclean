@@ -101,7 +101,7 @@ export default function LoginPage() {
                   <p className="font-bold underline">Fix this in 30 seconds:</p>
                   <ol className="list-decimal pl-4 mt-1 space-y-1">
                     <li>Open <strong>Firebase Console</strong></li>
-                    <li>Go to <strong>Authentication > Users</strong></li>
+                    <li>Go to <strong>Authentication &gt; Users</strong></li>
                     <li>Click <strong>Add User</strong></li>
                     <li>Email: <code>smartclean422@gmail.com</code></li>
                     <li>Password: <code>admin123</code></li>
