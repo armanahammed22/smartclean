@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -23,6 +25,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
@@ -31,10 +34,15 @@ export default function LoginPage() {
       });
       router.push('/admin/dashboard');
     } catch (error: any) {
+      const message = error.code === 'auth/invalid-credential' 
+        ? "Invalid email or password. Please ensure you have created this account in the Firebase Console."
+        : error.message;
+      
+      setError(message);
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "Invalid email or password.",
+        description: message,
       });
     } finally {
       setIsLoading(false);
@@ -55,7 +63,19 @@ export default function LoginPage() {
             Enter your credentials to access the management portal
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive" className="bg-destructive/10 text-destructive border-none">
+              <AlertCircle size={16} />
+              <AlertTitle className="font-bold">Auth Error</AlertTitle>
+              <AlertDescription className="text-xs">
+                {error}
+                <div className="mt-2 font-bold underline">
+                  Check README.md for setup instructions.
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
