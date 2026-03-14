@@ -21,6 +21,21 @@
       },
       "required": ["id", "name", "price", "categoryId"]
     },
+    "Service": {
+      "title": "Service",
+      "type": "object",
+      "description": "Cleaning and maintenance service offerings.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "imageUrl": { "type": "string" },
+        "categoryId": { "type": "string" }
+      },
+      "required": ["id", "title", "basePrice", "status"]
+    },
     "MarketingOffer": {
       "title": "MarketingOffer",
       "type": "object",
@@ -64,6 +79,7 @@
     "/marketing_offers/{id}": { "schema": "#/entities/MarketingOffer", "description": "Dynamic homepage banners." },
     "/marketing_campaigns/{id}": { "schema": "#/entities/MarketingCampaign", "description": "Timed sales events." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
+    "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
     "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Customer orders." }
   }
 }

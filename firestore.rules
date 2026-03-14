@@ -2,7 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Basic auth helper functions
+    // Helper functions
     function isSignedIn() { 
       return request.auth != null; 
     }
@@ -24,7 +24,7 @@ service cloud.firestore {
     }
 
     // Publicly accessible content (Catalog, Marketing, Settings)
-    // Explicitly allow read for anyone to support the public website.
+    // We allow blanket read access for all catalog items to support the public website.
     match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
@@ -46,7 +46,7 @@ service cloud.firestore {
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // Admin catch-all: Bootstrap admin can do anything
+    // Global Admin catch-all: Bootstrap admin can do anything anywhere.
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }

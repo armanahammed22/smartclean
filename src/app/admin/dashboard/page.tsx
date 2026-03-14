@@ -66,12 +66,23 @@ export default function AdminDashboard() {
       ];
       campaigns.forEach(c => batch.set(doc(db, 'marketing_campaigns', c.id), c));
 
-      // 3. Products (Expanded)
+      // 3. Products
       const products = [
         { id: 'p1', name: "Smart Vacuum Robot", price: 49999, categoryId: "cat1", category: "Home Appliances", status: "Active", onSale: true, imageUrl: "https://picsum.photos/seed/v1/600/400", stockQuantity: 12, createdAt: new Date().toISOString() },
         { id: 'p2', name: "Eco-Friendly Kit", price: 4500, categoryId: "cat2", category: "Cleaning Supplies", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v2/600/400", stockQuantity: 45, createdAt: new Date().toISOString() },
       ];
       products.forEach(p => batch.set(doc(db, 'products', p.id), p));
+
+      // 4. Services
+      const services = [
+        { id: 's1', title: 'Home Deep Clean', basePrice: 15000, description: 'Comprehensive residence cleaning.', status: 'Active', imageUrl: 'https://picsum.photos/seed/s1/800/600', categoryId: 'scat1' },
+        { id: 's2', title: 'AC Maintenance', basePrice: 5000, description: 'Expert AC servicing.', status: 'Active', imageUrl: 'https://picsum.photos/seed/s2/800/600', categoryId: 'scat2' }
+      ];
+      services.forEach(s => batch.set(doc(db, 'services', s.id), s));
+
+      // 5. Categories
+      batch.set(doc(db, 'product_categories', 'cat1'), { id: 'cat1', name: 'Home Appliances', status: 'Active' });
+      batch.set(doc(db, 'product_categories', 'cat2'), { id: 'cat2', name: 'Cleaning Supplies', status: 'Active' });
 
       await batch.commit();
       toast({ title: "ERP Seeded", description: "Database populated with ERP and Marketing data." });
