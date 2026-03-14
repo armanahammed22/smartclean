@@ -13,6 +13,42 @@
       "imageHint": "home icon"
     },
     {
+      "id": "hero-grid-1",
+      "description": "Sofa Cleaning Detail",
+      "imageUrl": "https://picsum.photos/seed/sofacl/400/300",
+      "imageHint": "sofa cleaning"
+    },
+    {
+      "id": "hero-grid-2",
+      "description": "Office Desk Cleaning",
+      "imageUrl": "https://picsum.photos/seed/officecl/400/300",
+      "imageHint": "office cleaning"
+    },
+    {
+      "id": "hero-grid-3",
+      "description": "Floor Scrubbing Machine",
+      "imageUrl": "https://picsum.photos/seed/floorcl/400/300",
+      "imageHint": "floor cleaning"
+    },
+    {
+      "id": "hero-grid-4",
+      "description": "Kitchen Deep Clean",
+      "imageUrl": "https://picsum.photos/seed/kitchencl/400/300",
+      "imageHint": "kitchen cleaning"
+    },
+    {
+      "id": "hero-grid-5",
+      "description": "Exhaust Fan Cleaning",
+      "imageUrl": "https://picsum.photos/seed/exhaust/400/300",
+      "imageHint": "cleaning equipment"
+    },
+    {
+      "id": "hero-grid-6",
+      "description": "Carpet Vacuuming",
+      "imageUrl": "https://picsum.photos/seed/carpetcl/400/300",
+      "imageHint": "carpet vacuum"
+    },
+    {
       "id": "prod-1",
       "description": "Smart Vacuum Robot",
       "imageUrl": "https://picsum.photos/seed/vacuum/600/400",
@@ -77,18 +113,6 @@
       "description": "New Arrival Banner",
       "imageUrl": "https://picsum.photos/seed/promo2/600/400",
       "imageHint": "new gadget"
-    },
-    {
-      "id": "mobile-only-1",
-      "description": "Mobile Exclusive Offer 1",
-      "imageUrl": "https://picsum.photos/seed/mob1/600/300",
-      "imageHint": "mobile offer"
-    },
-    {
-      "id": "mobile-only-2",
-      "description": "Mobile Exclusive Offer 2",
-      "imageUrl": "https://picsum.photos/seed/mob2/600/300",
-      "imageHint": "flash sale"
     }
   ]
 }

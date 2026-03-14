@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -15,13 +16,8 @@ import {
   Layout, Home, Building2, 
   Brush, Sparkles, Wind, CalendarCheck, 
   Waves, Thermometer, Box, Smartphone, 
-  Laptop, Computer
+  Laptop, Computer, CheckCircle2
 } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
@@ -43,13 +39,25 @@ export default function SmartCleanHomePage() {
     { name: language === 'bn' ? 'ফোন সাপোর্ট' : 'Support', icon: Smartphone },
   ];
 
-  const HERO_IMAGES = [
-    PlaceHolderImages.find(img => img.id === 'hero-main'),
-    PlaceHolderImages.find(img => img.id === 'hero-side-1'),
-    PlaceHolderImages.find(img => img.id === 'hero-side-2'),
+  const GRID_HERO_IMAGES = [
+    PlaceHolderImages.find(img => img.id === 'hero-grid-1'),
+    PlaceHolderImages.find(img => img.id === 'hero-grid-2'),
+    PlaceHolderImages.find(img => img.id === 'hero-grid-3'),
+    PlaceHolderImages.find(img => img.id === 'hero-grid-4'),
+    PlaceHolderImages.find(img => img.id === 'hero-grid-5'),
+    PlaceHolderImages.find(img => img.id === 'hero-grid-6'),
   ];
 
-  const MOBILE_ONLY_BANNER = PlaceHolderImages.find(img => img.id === 'hero-side-1');
+  const HERO_LOGOS = PlaceHolderImages.find(img => img.id === 'app-logo');
+
+  const CHECKLIST = [
+    t('service_home'),
+    t('service_office'),
+    t('service_deep'),
+    t('service_showroom'),
+    t('service_kitchen'),
+    t('service_sofa'),
+  ];
 
   const handleBookNowDirectly = (service: any) => {
     addToCart(service);
@@ -73,42 +81,55 @@ export default function SmartCleanHomePage() {
           </div>
         </div>
 
-        {/* Hero Section */}
+        {/* Marketing Hero Grid Section (Ref Image Style) */}
         <section className="container mx-auto px-4 pt-2">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-auto lg:h-[450px]">
-            <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-sm h-[200px] lg:h-full">
-              <Carousel className="w-full h-full" opts={{ loop: true }}>
-                <CarouselContent className="h-full">
-                  {HERO_IMAGES.map((img, index) => (
-                    <CarouselItem key={index} className="h-full pl-0">
-                      <div className="relative h-full w-full group">
-                        <Image
-                          src={img?.imageUrl || ''}
-                          alt={img?.description || 'Hero main'}
-                          fill
-                          className="object-cover"
-                          priority={index === 0}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex items-center px-8">
-                          <div className="max-w-xs text-white space-y-2">
-                            <h1 className="text-xl md:text-4xl font-bold leading-tight">{t('hero_title')}</h1>
-                            <Button size="sm" className="rounded-full px-6 bg-[#EF4A23] hover:bg-[#D43D1A] text-white border-none font-bold">{t('hero_cta')}</Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CarouselItem>
+          <div className="bg-white rounded-2xl overflow-hidden shadow-md flex flex-col lg:flex-row border border-gray-100">
+            {/* Left Content */}
+            <div className="flex-1 p-6 lg:p-12 bg-gradient-to-br from-[#F0F9FF] to-white flex flex-col justify-center relative">
+               <div className="flex items-center gap-3 mb-6 lg:mb-10">
+                  <div className="relative w-12 h-12 lg:w-16 lg:h-16">
+                    <Image src={HERO_LOGOS?.imageUrl || ''} alt="Logo" fill className="object-contain" />
+                  </div>
+                  <span className="text-2xl lg:text-4xl font-black text-[#081621] tracking-tighter uppercase font-headline">Smart Clean</span>
+               </div>
+
+               <h2 className="text-xl lg:text-4xl font-bold text-[#081621] mb-2 leading-tight">
+                  {t('hero_question')}
+               </h2>
+               <p className="text-sm lg:text-xl font-medium text-gray-600 mb-8 max-w-lg">
+                  {t('hero_banner_title')}
+               </p>
+
+               <div className="grid grid-cols-2 gap-y-4 mb-10">
+                  {CHECKLIST.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
+                      <span className="text-xs lg:text-sm font-bold text-gray-700">{item}</span>
+                    </div>
                   ))}
-                </CarouselContent>
-              </Carousel>
+               </div>
+
+               <Button 
+                className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-8 py-6 h-auto text-lg lg:text-xl font-black shadow-xl w-fit"
+                onClick={() => setCheckoutOpen(true)}
+               >
+                  {t('hero_phone')}
+               </Button>
             </div>
 
-            <div className="lg:col-span-4 hidden lg:flex flex-col gap-4 h-full">
-              <div className="relative flex-1 rounded-xl overflow-hidden shadow-sm group">
-                <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || ''} alt="Promo 1" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-              </div>
-              <div className="relative flex-1 rounded-xl overflow-hidden shadow-sm group">
-                <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || ''} alt="Promo 2" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-              </div>
+            {/* Right Image Grid */}
+            <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-0.5 bg-gray-100 border-l border-gray-100">
+               {GRID_HERO_IMAGES.map((img, idx) => (
+                 <div key={idx} className="relative aspect-square lg:aspect-auto overflow-hidden group">
+                   <Image 
+                    src={img?.imageUrl || ''} 
+                    alt={img?.description || 'Cleaning service'} 
+                    fill 
+                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                   />
+                   <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                 </div>
+               ))}
             </div>
           </div>
         </section>

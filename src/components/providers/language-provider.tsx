@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
@@ -26,6 +27,17 @@ const translations: Record<Language, Record<string, string>> = {
     nav_menu: "মেনু",
     nav_categories: "ক্যাটাগরি",
     
+    // Hero Reference Image Content
+    hero_question: "আপনি কি ক্লিনিং সার্ভিস নিতে চাচ্ছেন?",
+    hero_banner_title: "Smart Clean নিয়ে এলো সম্পূর্ণ প্রফেশনাল ক্লিনিং সার্ভিস",
+    hero_phone: "বুক করুন: 01919640422",
+    service_home: "বাসা ক্লিনিং",
+    service_office: "অফিস ক্লিনিং",
+    service_deep: "ডিপ ক্লিনিং",
+    service_showroom: "শোরুম ক্লিনিং",
+    service_kitchen: "বাথরুম ও কিচেন",
+    service_sofa: "সোফা ও কার্পেট ক্লিনিং",
+
     // Hero
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
@@ -125,6 +137,17 @@ const translations: Record<Language, Record<string, string>> = {
     nav_menu: "Menu",
     nav_categories: "Categories",
     
+    // Hero Reference Image Content
+    hero_question: "Are you looking for cleaning services?",
+    hero_banner_title: "Smart Clean Brings Fully Professional Cleaning Services",
+    hero_phone: "Book Now: 01919640422",
+    service_home: "Home Cleaning",
+    service_office: "Office Cleaning",
+    service_deep: "Deep Cleaning",
+    service_showroom: "Showroom Cleaning",
+    service_kitchen: "Bathroom & Kitchen",
+    service_sofa: "Sofa & Carpet Cleaning",
+
     // Hero
     hero_title: "Smart Solutions for a Clean Life",
     hero_subtitle: "Expert cleaning and maintenance services in Bangladesh. Trusted by thousands.",
