@@ -1,24 +1,63 @@
+
 "use client";
 
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Search, Globe, User, Menu } from 'lucide-react';
+import { ShoppingCart, Search, Globe, User, Menu, Package, Briefcase } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { getMockProducts, getMockServices } from '@/lib/data';
+import { Card } from '@/components/ui/card';
 
 const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
 
 export function Navbar() {
   const { itemCount } = useCart();
   const { language, setLanguage, t } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<{ id: string; name: string; type: 'product' | 'service'; category?: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const CATEGORIES = language === 'bn' 
     ? ["আবাসিক", "অফিস", "ডিপ ক্লিন", "মুভ ইন/আউট", "উইন্ডো", "কার্পেট", "স্যানিটাইজেশন", "কিচেন", "বাথরুম"]
     : ["Residential", "Office", "Deep Clean", "Move In/Out", "Window", "Carpet", "Sanitization", "Kitchen", "Bathroom"];
+
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const products = getMockProducts(language);
+      const services = getMockServices(language);
+      
+      const filteredProducts = products
+        .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map(p => ({ id: p.id, name: p.name, type: 'product' as const, category: p.category }));
+      
+      const filteredServices = services
+        .filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map(s => ({ id: s.id, name: s.title, type: 'service' as const }));
+      
+      setSuggestions([...filteredProducts, ...filteredServices]);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery, language]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="w-full z-50 sticky top-0 shadow-sm">
@@ -43,12 +82,45 @@ export function Navbar() {
           </Link>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl relative hidden md:block">
-            <Input 
-              placeholder={t('search_placeholder')}
-              className="w-full bg-white text-black h-11 pr-12 rounded-sm focus-visible:ring-0 border-none"
-            />
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-primary" size={20} />
+          <div className="flex-1 max-w-2xl relative hidden md:block" ref={searchRef}>
+            <div className="relative">
+              <Input 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                placeholder={t('search_placeholder')}
+                className="w-full bg-white text-black h-11 pr-12 rounded-sm focus-visible:ring-0 border-none"
+              />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-primary" size={20} />
+            </div>
+
+            {/* Search Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <Card className="absolute top-full left-0 right-0 mt-1 shadow-xl border-border bg-white z-[60] max-h-[400px] overflow-y-auto">
+                <div className="py-2">
+                  {suggestions.map((item) => (
+                    <div 
+                      key={`${item.type}-${item.id}`}
+                      className="px-4 py-3 hover:bg-primary/5 cursor-pointer flex items-center gap-3 border-b border-border/50 last:border-0 transition-colors"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <div className="p-2 bg-muted rounded-md text-primary">
+                        {item.type === 'product' ? <Package size={16} /> : <Briefcase size={16} />}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-sm text-black">{item.name}</span>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+                          {item.type === 'product' ? (item.category || t('products_title')) : t('services_title')}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* Action Links */}
