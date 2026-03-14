@@ -58,19 +58,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
   const NAV_ITEMS = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-400' },
-    { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-400' },
-    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-400' },
-    { name: 'Inventory', href: '/admin/products', icon: Package, color: 'text-purple-400' },
-    { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-rose-400' },
-    { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-pink-400' },
-    { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-cyan-400' },
-    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-yellow-400' },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-indigo-400' },
-    { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-sky-400' },
-    { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-400' },
-    { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-slate-400' },
+    { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
+    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
+    { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
+    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-500' },
+    { name: 'Inventory', href: '/admin/products', icon: Package, color: 'text-purple-500' },
+    { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-rose-500' },
+    { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-pink-500' },
+    { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-cyan-500' },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-indigo-500' },
+    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-yellow-500' },
+    { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-sky-500' },
+    { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-500' },
+    { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-slate-500' },
   ];
 
   const handleLogout = async () => {
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
         <AlertTriangle size={64} className="text-orange-500" />
         <h2 className="text-2xl font-bold">Unauthorized Access</h2>
-        <p className="text-muted-foreground max-w-xs mx-auto">Your account does not have admin privileges. UID: {user.uid}</p>
+        <p className="text-muted-foreground max-w-xs mx-auto">Your account does not have admin privileges.</p>
         <Button variant="outline" onClick={handleLogout}>Logout</Button>
       </div>
     );
@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
     <>
-      <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 relative">
+      <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
         <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
           <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
           {!collapsed && (
@@ -124,20 +124,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           )}
         </div>
-        
-        {!collapsed && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-gray-400 hover:text-white hover:bg-white/10 absolute -right-4 top-14 bg-[#081621] border border-white/10 rounded-full h-8 w-8 z-40 hidden lg:flex shadow-xl"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </Button>
-        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-1 mt-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.name}
@@ -159,18 +148,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               />
               {!collapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
             </div>
-            {!collapsed && pathname === item.href && <ChevronRight size={14} className="opacity-50" />}
-            
-            {collapsed && (
-              <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-2xl border border-white/10">
-                {item.name}
-              </div>
-            )}
           </Link>
         ))}
       </div>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 shrink-0">
         <Button 
           variant="ghost" 
           className={cn(
@@ -187,34 +169,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       {/* Desktop Sidebar */}
       <aside 
         className={cn(
-          "hidden lg:flex flex-col fixed inset-y-0 bg-[#081621] text-white transition-all duration-300 z-30",
-          isCollapsed ? "w-20" : "w-72"
+          "hidden lg:flex flex-col h-full bg-[#081621] text-white transition-all duration-300 z-30",
+          isCollapsed ? "w-20" : "w-64"
         )}
       >
         <SidebarContent collapsed={isCollapsed} />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute -right-4 top-20 bg-white border rounded-full h-8 w-8 z-40 hidden lg:flex shadow-md text-gray-400"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </Button>
       </aside>
 
       {/* Main Content Area */}
-      <main 
-        className={cn(
-          "flex-1 flex flex-col min-h-screen transition-all duration-300",
-          isCollapsed ? "lg:ml-20" : "lg:ml-72"
-        )}
-      >
-        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shadow-sm">
+      <div className="flex-1 flex flex-col h-full min-w-0">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
-            {/* Mobile Menu Toggle */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-72">
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Navigation</SheetTitle>
                 </SheetHeader>
@@ -224,26 +208,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest truncate max-w-[150px] md:max-w-none">
+            <h2 className="text-sm font-bold text-gray-900 truncate">
               {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
             </h2>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-               <p className="text-xs font-bold text-gray-900">{user.email?.split('@')[0]}</p>
-               <p className="text-[9px] text-primary font-black uppercase tracking-tighter">System Admin</p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
               {user?.email?.[0].toUpperCase()}
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB]">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
