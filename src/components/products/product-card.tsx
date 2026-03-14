@@ -37,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardHeader className="p-4 pb-1">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-semibold text-lg line-clamp-1 leading-tight">{product.name}</h3>
-          <span className="font-bold text-primary">${product.price.toFixed(2)}</span>
+          <span className="font-bold text-primary">৳{product.price.toLocaleString()}</span>
         </div>
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mt-1">
           {product.category}

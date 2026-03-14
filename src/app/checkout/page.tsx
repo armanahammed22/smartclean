@@ -184,21 +184,21 @@ export default function CheckoutPage() {
                       <span className="text-muted-foreground">
                         {item.name} <span className="text-xs font-bold">x{item.quantity}</span>
                       </span>
-                      <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-medium">৳{(item.price * item.quantity).toLocaleString()}</span>
                     </div>
                   ))}
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{t('subtotal')}</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>৳{subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{t('tax')}</span>
-                      <span>${(subtotal * 0.08).toFixed(2)}</span>
+                      <span>৳{(subtotal * 0.08).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2">
                       <span>{t('total')}</span>
-                      <span className="text-primary">${(subtotal * 1.08).toFixed(2)}</span>
+                      <span className="text-primary">৳{(subtotal * 1.08).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

@@ -54,7 +54,7 @@ export default function CartPage() {
                         <h3 className="font-semibold text-lg">{item.name}</h3>
                         <p className="text-sm text-muted-foreground">{item.category}</p>
                       </div>
-                      <p className="font-bold text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-lg">৳{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                     
                     <div className="flex items-center justify-between mt-4">
@@ -102,7 +102,7 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{t('subtotal')}</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>৳{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{t('shipping')}</span>
@@ -110,12 +110,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>{t('tax')}</span>
-                  <span>${(subtotal * 0.08).toFixed(2)}</span>
+                  <span>৳{(subtotal * 0.08).toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>{t('total')}</span>
-                  <span className="text-primary">${(subtotal * 1.08).toFixed(2)}</span>
+                  <span className="text-primary">৳{(subtotal * 1.08).toLocaleString()}</span>
                 </div>
               </div>
               <Button asChild className="w-full mt-8 gap-2 font-bold" size="lg">

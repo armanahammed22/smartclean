@@ -52,7 +52,7 @@ export function ProductDetailsDialog({ product, children }: ProductDetailsDialog
               </div>
               <DialogTitle className="text-2xl font-bold">{product.name}</DialogTitle>
               <div className="text-xl font-bold text-primary mt-1">
-                ${product.price.toFixed(2)}
+                ৳{product.price.toLocaleString()}
               </div>
             </DialogHeader>
             
@@ -88,7 +88,7 @@ export function ProductDetailsDialog({ product, children }: ProductDetailsDialog
 
               <Button onClick={handleAdd} className="w-full gap-2 font-bold">
                 <ShoppingCart size={18} />
-                {t('add_to_cart')} — ${(product.price * quantity).toFixed(2)}
+                {t('add_to_cart')} — ৳{(product.price * quantity).toLocaleString()}
               </Button>
             </div>
           </div>
