@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -24,7 +25,8 @@ import {
   BarChart3,
   TicketPercent,
   Truck,
-  Menu
+  Menu,
+  MoreHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,7 +45,7 @@ const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
@@ -112,60 +114,105 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
-    <>
-      <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
-        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
-          {!collapsed && (
-            <div className="truncate">
-              <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
-              <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            onClick={() => setIsMobileOpen(false)}
-            className={cn(
-              "flex items-center px-4 py-3 rounded-xl transition-all group relative",
-              pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
-              collapsed ? "justify-center" : "justify-between"
+  const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => {
+    const items = mobileOnly ? NAV_ITEMS.filter(i => ['Customers', 'Reports', 'Settings', 'Service Areas', 'Couriers', 'Subscription'].includes(i.name)) : NAV_ITEMS;
+    
+    return (
+      <>
+        <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
+          <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
+            <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
+            {!collapsed && (
+              <div className="truncate">
+                <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
+                <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
+              </div>
             )}
-          >
-            <div className="flex items-center gap-3">
-              <item.icon 
-                size={18} 
-                className={cn(
-                  "shrink-0 transition-colors duration-300",
-                  pathname === item.href ? "text-white" : item.color
-                )} 
-              />
-              {!collapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
-            </div>
-          </Link>
-        ))}
-      </div>
+          </div>
+        </div>
 
-      <div className="p-4 border-t border-white/10 shrink-0">
-        <Button 
-          variant="ghost" 
-          className={cn(
-            "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
-            collapsed ? "justify-center" : "justify-start"
-          )} 
-          onClick={handleLogout}
-        >
+        <div className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
+          {items.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={cn(
+                "flex items-center px-4 py-3 rounded-xl transition-all group relative",
+                pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
+                collapsed ? "justify-center" : "justify-between"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon 
+                  size={18} 
+                  className={cn(
+                    "shrink-0 transition-colors duration-300",
+                    pathname === item.href ? "text-white" : item.color
+                  )} 
+                />
+                {!collapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {!mobileOnly && (
+          <div className="p-4 border-t border-white/10 shrink-0">
+            <Button 
+              variant="ghost" 
+              className={cn(
+                "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
+                collapsed ? "justify-center" : "justify-start"
+              )} 
+              onClick={handleLogout}
+            >
+              <LogOut size={20} />
+              {!collapsed && <span className="font-semibold text-sm">Logout</span>}
+            </Button>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const MobileBottomNav = () => (
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-50 border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
+      <div className="flex items-center justify-around h-full px-2">
+        <Link href="/admin/orders" className={cn("flex flex-col items-center gap-1", pathname === '/admin/orders' ? "text-primary" : "text-gray-400")}>
+          <ShoppingCart size={20} />
+          <span className="text-[10px] font-bold">Orders</span>
+        </Link>
+        <Link href="/admin/bookings" className={cn("flex flex-col items-center gap-1", pathname === '/admin/bookings' ? "text-primary" : "text-gray-400")}>
+          <CalendarCheck size={20} />
+          <span className="text-[10px] font-bold">Booking</span>
+        </Link>
+        <Link href="/admin/dashboard" className={cn("flex flex-col items-center gap-1", pathname === '/admin/dashboard' ? "text-primary" : "text-gray-400")}>
+          <LayoutDashboard size={20} />
+          <span className="text-[10px] font-bold">Dashboard</span>
+        </Link>
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <button className="flex flex-col items-center gap-1 text-gray-400">
+              <MoreHorizontal size={20} />
+              <span className="text-[10px] font-bold">Menu</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="p-0 bg-[#081621] border-none h-[60vh] rounded-t-3xl">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Admin Mobile Menu</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col h-full text-white">
+              <SidebarContent mobileOnly />
+            </div>
+          </SheetContent>
+        </Sheet>
+        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-400">
           <LogOut size={20} />
-          {!collapsed && <span className="font-semibold text-sm">Logout</span>}
-        </Button>
+          <span className="text-[10px] font-bold">Logout</span>
+        </button>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -192,22 +239,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col h-full min-w-0">
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
-            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu size={24} />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>Admin Navigation</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col h-full text-white">
-                  <SidebarContent />
-                </div>
-              </SheetContent>
-            </Sheet>
-            
             <h2 className="text-sm font-bold text-gray-900 truncate">
               {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
             </h2>
@@ -220,9 +251,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB]">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-20 lg:pb-8">
           {children}
         </main>
+
+        <MobileBottomNav />
       </div>
     </div>
   );
