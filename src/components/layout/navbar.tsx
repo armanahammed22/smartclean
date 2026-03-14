@@ -20,11 +20,8 @@ export function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium hover:text-primary transition-colors hidden md:block">
+          <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
             Catalog
-          </Link>
-          <Link href="/admin/enhance" className="text-sm font-medium hover:text-primary transition-colors hidden md:block">
-            AI Tool
           </Link>
           
           <Button variant="ghost" size="icon" asChild className="relative">

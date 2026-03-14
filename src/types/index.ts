@@ -19,3 +19,18 @@ export interface CheckoutFormData {
   address: string;
   notes?: string;
 }
+
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  icon: "Layout" | "Wrench" | "Activity" | "Truck" | "ShieldCheck" | "Headphones";
+  price: string;
+}
+
+export interface Feature {
+  id: string;
+  title: string;
+  description: string;
+  icon: "Truck" | "ShieldCheck" | "Headphones";
+}
