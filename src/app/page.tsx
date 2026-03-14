@@ -194,25 +194,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Featured Products - 5 Column Grid */}
-        <section id="products">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
-            <div className="flex items-center justify-between mb-8">
-              <div className="space-y-1">
-                <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
-                <p className="text-muted-foreground">{t('products_subtitle')}</p>
-              </div>
-              <Button variant="outline" className="rounded-full font-bold">{t('view_all')}</Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {MOCK_PRODUCTS.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Professional Services */}
+        {/* Professional Services - FIRST PRIORITY */}
         <section id="services">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
             <div className="text-center mb-12 space-y-2">
@@ -248,6 +230,24 @@ export default function SmartCleanHomePage() {
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Products - 5 Column Grid */}
+        <section id="products">
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
+            <div className="flex items-center justify-between mb-8">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
+                <p className="text-muted-foreground">{t('products_subtitle')}</p>
+              </div>
+              <Button variant="outline" className="rounded-full font-bold">{t('view_all')}</Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {MOCK_PRODUCTS.map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
             </div>
           </div>
