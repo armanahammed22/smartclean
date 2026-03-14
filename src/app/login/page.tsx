@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, AlertCircle, Info, ArrowRight, Globe } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, AlertCircle, Info, ArrowRight, Globe, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -22,13 +21,6 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-
-  // If already logged in, show a redirect button
-  useEffect(() => {
-    if (user && !isUserLoading) {
-      // We don't auto-redirect here to avoid loops if they are unauthorized
-    }
-  }, [user, isUserLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +38,11 @@ export default function LoginPage() {
       let message = "An unexpected error occurred.";
       
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = "Invalid credentials. Please ensure you have created this account in your Firebase Console (Authentication tab).";
+        message = "Authentication failed. You MUST manually create this user in the Firebase Console (Authentication > Users) first.";
       } else if (error.code === 'auth/too-many-requests') {
         message = "Too many failed attempts. Please try again later.";
       } else if (error.code === 'auth/network-request-failed') {
-        message = "Network error. Please ensure your development domain is added to 'Authorized domains' in Firebase Console > Authentication > Settings.";
+        message = "Network error. Ensure your current domain is 'Authorized' in Firebase Console > Authentication > Settings.";
       }
 
       setError(message);
@@ -74,15 +66,18 @@ export default function LoginPage() {
               <ShieldCheck size={32} />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold font-headline">CRM Login</CardTitle>
+          <CardTitle className="text-2xl font-bold font-headline">CRM Portal Access</CardTitle>
           <CardDescription>
-            Enter your credentials to access the management portal
+            Enter your credentials to manage Smart Clean operations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {user && (
             <div className="p-4 bg-green-50 border border-green-100 rounded-xl space-y-3 mb-4">
-              <p className="text-xs font-bold text-green-700">You are currently logged in as:</p>
+              <div className="flex items-center gap-2 text-green-700">
+                <CheckCircle2 size={16} />
+                <p className="text-xs font-bold uppercase">Authenticated</p>
+              </div>
               <p className="text-sm font-mono truncate bg-white p-2 rounded border">{user.email}</p>
               <div className="p-2 bg-white rounded border text-[10px] font-mono break-all text-muted-foreground">
                 UID: {user.uid}
@@ -99,45 +94,46 @@ export default function LoginPage() {
           {error && (
             <Alert variant="destructive" className="bg-destructive/10 text-destructive border-none">
               <AlertCircle size={16} />
-              <AlertTitle className="font-bold">Login Problem</AlertTitle>
-              <AlertDescription className="text-xs">
+              <AlertTitle className="font-bold">Setup Required</AlertTitle>
+              <AlertDescription className="text-xs leading-relaxed">
                 {error}
+                <div className="mt-2 pt-2 border-t border-destructive/20">
+                  <p className="font-bold underline">Fix this in 30 seconds:</p>
+                  <ol className="list-decimal pl-4 mt-1 space-y-1">
+                    <li>Open <strong>Firebase Console</strong></li>
+                    <li>Go to <strong>Authentication > Users</strong></li>
+                    <li>Click <strong>Add User</strong></li>
+                    <li>Email: <code>smartclean422@gmail.com</code></li>
+                    <li>Password: <code>admin123</code></li>
+                  </ol>
+                </div>
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3 text-blue-700">
-            <div className="flex gap-3">
-              <Info size={18} className="shrink-0 mt-0.5" />
-              <div className="text-[11px] leading-relaxed">
-                <p className="font-bold uppercase mb-1">Critical Setup Steps:</p>
-                <ol className="list-decimal pl-4 space-y-1">
-                  <li>Enable <strong>Email/Password</strong> in Firebase Auth.</li>
-                  <li>Create user <strong>smartclean422@gmail.com</strong>.</li>
-                  <li>Assign UID <strong>gcp03WmpjROVvRdpLNsghNU4zHa2</strong> in code.</li>
-                </ol>
+          {!error && !user && (
+            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-2 text-blue-700">
+              <div className="flex gap-2 items-center">
+                <Info size={16} />
+                <p className="text-[11px] font-bold uppercase tracking-wider">Default Admin Details</p>
+              </div>
+              <div className="text-[11px] bg-white/50 p-2 rounded">
+                <p>Email: <code>smartclean422@gmail.com</code></p>
+                <p>Pass: <code>admin123</code></p>
               </div>
             </div>
-            
-            <div className="flex gap-3 pt-2 border-t border-blue-200">
-              <Globe size={18} className="shrink-0 mt-0.5" />
-              <div className="text-[11px] leading-relaxed">
-                <p className="font-bold uppercase mb-1">Network Error? (Whitelist Domain):</p>
-                <p>Go to <strong>Authentication &gt; Settings &gt; Authorized domains</strong> and add your current browser URL (e.g., the workstation domain).</p>
-              </div>
-            </div>
-          </div>
+          )}
 
           {!user && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="smartclean422@gmail.com" 
+                    placeholder="name@example.com" 
                     className="pl-10 h-11"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -152,7 +148,7 @@ export default function LoginPage() {
                   <Input 
                     id="password" 
                     type="password" 
-                    placeholder="admin123" 
+                    placeholder="••••••••" 
                     className="pl-10 h-11"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -164,10 +160,10 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Authenticating...
+                    Checking Credentials...
                   </>
                 ) : (
-                  "Sign In"
+                  "Sign In to ERP"
                 )}
               </Button>
             </form>
