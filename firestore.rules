@@ -25,6 +25,7 @@ service cloud.firestore {
 
     // Publicly accessible content (Catalog, Marketing, Settings)
     // We allow blanket read access for all catalog items to support the public website.
+    // This covers list, get, and collection group queries.
     match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
