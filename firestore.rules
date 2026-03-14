@@ -23,8 +23,8 @@ service cloud.firestore {
       return isAdmin() || isEmployee(); 
     }
 
-    // Publicly accessible content (Catalog, Marketing, Settings)
-    // Explicitly allowing 'read' (get and list) for everyone.
+    // Publicly accessible collections (Catalog & Marketing)
+    // We allow read (get & list) for everyone.
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
@@ -35,18 +35,18 @@ service cloud.firestore {
     match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
-    // Restricted Operational Data (Staff/Admin only)
+    // Operational Data (Staff only)
     match /orders/{document=**} { allow read, write: if isStaff(); }
     match /bookings/{document=**} { allow read, write: if isStaff(); }
     match /leads/{document=**} { allow read, write: if isStaff(); }
     match /customers/{document=**} { allow read, write: if isStaff(); }
     match /employee_profiles/{document=**} { allow read: if isStaff(); allow write: if isAdmin(); }
     
-    // Role Markers
+    // Role definitions
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // Global Admin catch-all: Bootstrap admin can do anything anywhere.
+    // Global Bootstrap Admin catch-all
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
