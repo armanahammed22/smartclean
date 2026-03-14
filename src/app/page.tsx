@@ -20,16 +20,12 @@ import {
 } from '@/components/ui/carousel';
 import { 
   BellRing, 
-  Star,
   Zap,
-  TicketPercent,
-  Megaphone,
   ChevronRight,
   TrendingUp,
   Clock,
   ArrowRight,
   Tags,
-  CheckCircle2,
   LayoutGrid
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
