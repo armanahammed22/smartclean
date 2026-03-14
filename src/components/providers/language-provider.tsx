@@ -21,15 +21,22 @@ const translations: Record<Language, Record<string, string>> = {
     nav_account: "অ্যাকাউন্ট",
     nav_customize: "সার্ভিস কাস্টমাইজ করুন",
     nav_booking: "অর্ডার তালিকা",
-    search_placeholder: "সার্ভিস খুঁজুন...",
+    search_placeholder: "পণ্য বা সার্ভিস খুঁজুন...",
+    nav_offers: "অফারসমূহ",
+    nav_menu: "মেনু",
+    nav_categories: "ক্যাটাগরি",
     
     // Hero
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
     hero_cta: "বুক করুন",
     
+    // Action Cards
+    action_custom_quote: "কাস্টম কোট",
+    action_service_tracker: "সার্ভিস ট্র্যাকার",
+    
     // Products & Cart
-    products_title: "শীর্ষ ক্লিনিং পণ্য",
+    products_title: "সেরা পণ্যসমূহ",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     view_all: "সব দেখুন",
     add_to_cart: "কার্টে যোগ করুন",
@@ -113,15 +120,22 @@ const translations: Record<Language, Record<string, string>> = {
     nav_account: "Account",
     nav_customize: "Customize service",
     nav_booking: "Order List",
-    search_placeholder: "Search services...",
+    search_placeholder: "Search products, services...",
+    nav_offers: "Offers",
+    nav_menu: "Menu",
+    nav_categories: "Categories",
     
     // Hero
     hero_title: "Smart Solutions for a Clean Life",
     hero_subtitle: "Expert cleaning and maintenance services in Bangladesh. Trusted by thousands.",
     hero_cta: "Book Now",
     
+    // Action Cards
+    action_custom_quote: "Custom Quote",
+    action_service_tracker: "Service Tracker",
+    
     // Products & Cart
-    products_title: "Top Cleaning Products",
+    products_title: "Featured Products",
     products_subtitle: "High-performance tools for professional results.",
     view_all: "View All",
     add_to_cart: "Add to Cart",

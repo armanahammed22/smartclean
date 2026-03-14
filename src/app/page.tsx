@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -14,7 +13,8 @@ import { useCart } from '@/components/providers/cart-provider';
 import { 
   Layout, Wrench, Activity, Home, Building2, 
   Brush, Sparkles, Wind, CalendarCheck, ShoppingCart,
-  ShieldCheck, Truck, Headphones
+  ShieldCheck, Truck, Headphones, Smartphone, Monitor,
+  Waves, Thermometer, Box, Laptop, Computer
 } from 'lucide-react';
 import {
   Carousel,
@@ -35,8 +35,13 @@ export default function SmartCleanHomePage() {
     { name: language === 'bn' ? 'আবাসিক' : 'Residential', icon: Home },
     { name: language === 'bn' ? 'অফিস' : 'Office', icon: Building2 },
     { name: language === 'bn' ? 'ডিপ ক্লিন' : 'Deep Clean', icon: Brush },
-    { name: language === 'bn' ? 'স্যানিটাইজেশন' : 'Sanitization', icon: Sparkles },
     { name: language === 'bn' ? 'এসি সার্ভিস' : 'AC Service', icon: Wind },
+    { name: language === 'bn' ? 'স্যানিটাইজেশন' : 'Sanitization', icon: Sparkles },
+    { name: language === 'bn' ? 'কার্পেট' : 'Carpet', icon: Waves },
+    { name: language === 'bn' ? 'উইন্ডো' : 'Window', icon: Monitor },
+    { name: language === 'bn' ? 'কিচেন' : 'Kitchen', icon: Thermometer },
+    { name: language === 'bn' ? 'বাথরুম' : 'Bathroom', icon: Box },
+    { name: language === 'bn' ? 'ফোন সাপোর্ট' : 'Support', icon: Smartphone },
   ];
 
   const IconMap: Record<string, React.ReactNode> = {
@@ -51,10 +56,7 @@ export default function SmartCleanHomePage() {
     PlaceHolderImages.find(img => img.id === 'hero-side-2'),
   ];
 
-  const MOBILE_ONLY_IMAGES = [
-    PlaceHolderImages.find(img => img.id === 'mobile-only-1'),
-    PlaceHolderImages.find(img => img.id === 'mobile-only-2'),
-  ];
+  const MOBILE_ONLY_BANNER = PlaceHolderImages.find(img => img.id === 'hero-side-1');
 
   const handleBookNowDirectly = (service: any) => {
     addToCart(service);
@@ -62,11 +64,25 @@ export default function SmartCleanHomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-12 pb-24 bg-[#F2F4F8]">
+    <div className="flex flex-col gap-6 pb-24 bg-[#F2F4F8]">
+      {/* Mobile Search Bar (Star Tech Style) */}
+      <div className="lg:hidden container mx-auto px-4 pt-4">
+        <div className="relative">
+          <input 
+            type="text" 
+            placeholder={t('search_placeholder')}
+            className="w-full bg-white border border-gray-200 rounded-full h-12 px-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <Layout size={20} />
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <section className="container mx-auto px-4 pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-auto lg:h-[500px]">
-          <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-lg h-[300px] lg:h-full">
+      <section className="container mx-auto px-4 pt-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-auto lg:h-[450px]">
+          <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-sm h-[200px] lg:h-full">
             <Carousel className="w-full h-full" opts={{ loop: true }}>
               <CarouselContent className="h-full">
                 {HERO_IMAGES.map((img, index) => (
@@ -76,191 +92,129 @@ export default function SmartCleanHomePage() {
                         src={img?.imageUrl || ''}
                         alt={img?.description || 'Hero main'}
                         fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover"
                         priority={index === 0}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center px-12">
-                        <div className="max-w-md text-white space-y-4">
-                          <h1 className="text-3xl md:text-5xl font-bold tracking-tight">{t('hero_title')}</h1>
-                          <p className="text-sm md:text-base opacity-90">{t('hero_subtitle')}</p>
-                          <Button size="lg" className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold">{t('hero_cta')}</Button>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex items-center px-8">
+                        <div className="max-w-xs text-white space-y-2">
+                          <h1 className="text-xl md:text-4xl font-bold leading-tight">{t('hero_title')}</h1>
+                          <Button size="sm" className="rounded-full px-6 bg-[#EF4A23] hover:bg-[#D43D1A] text-white border-none font-bold">{t('hero_cta')}</Button>
                         </div>
                       </div>
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-4 bg-white/20 hover:bg-white/40 border-none text-white" />
-              <CarouselNext className="right-4 bg-white/20 hover:bg-white/40 border-none text-white" />
             </Carousel>
           </div>
 
           <div className="lg:col-span-4 hidden lg:flex flex-col gap-4 h-full">
-            <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
+            <div className="relative flex-1 rounded-xl overflow-hidden shadow-sm group">
               <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || ''} alt="Promo 1" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
-                <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'বিশেষ অফার' : 'Special Offer'}</h3>
-                <p className="text-sm opacity-90">{language === 'bn' ? 'আপনার প্রথম বুকিংয়ে ২০% ছাড়!' : '20% Off on your first booking!'}</p>
-              </div>
             </div>
-            <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
+            <div className="relative flex-1 rounded-xl overflow-hidden shadow-sm group">
               <Image src={PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || ''} alt="Promo 2" fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/30 flex flex-col justify-end p-6 text-white">
-                <h3 className="text-xl font-bold mb-1">{language === 'bn' ? 'নতুন সার্ভিস' : 'New Service'}</h3>
-                <p className="text-sm opacity-90">{language === 'bn' ? 'আমাদের নতুন কিচেন ডিপ ক্লিন ট্রাই করুন' : 'Try our new Kitchen Deep Clean'}</p>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 space-y-12">
-        {/* Quick Category Grid */}
-        <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
+      {/* Category Grid (Star Tech Circular Style) */}
+      <section className="container mx-auto px-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
+          <div className="grid grid-cols-5 gap-y-6">
             {QUICK_CATEGORIES.map((cat, i) => (
-              <div key={i} className="flex flex-col items-center gap-3 p-3 md:p-4 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer group">
-                <div className="p-3 md:p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-1">
-                  <cat.icon size={32} />
+              <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#F2F4F8] rounded-full flex items-center justify-center text-gray-600 group-hover:bg-primary group-hover:text-white transition-colors">
+                  <cat.icon size={24} />
                 </div>
-                <span className="font-bold text-xs md:text-sm text-center text-[#081621]">{cat.name}</span>
+                <span className="text-[10px] md:text-xs font-medium text-center text-gray-800">{cat.name}</span>
               </div>
             ))}
           </div>
-        </section>
+          <div className="mt-6 flex justify-center">
+            <Button variant="ghost" size="sm" className="text-primary font-bold gap-1">
+              Show more
+              <Layout size={14} className="rotate-90" />
+            </Button>
+          </div>
+        </div>
+      </section>
 
-        {/* Mobile-Only Banner Section */}
-        <section className="lg:hidden">
-          <div className="grid grid-cols-2 gap-4">
-            {MOBILE_ONLY_IMAGES.map((img, i) => (
-              <div key={i} className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-md">
-                <Image 
-                  src={img?.imageUrl || ''} 
-                  alt={img?.description || 'Mobile Offer'} 
-                  fill 
-                  className="object-cover"
-                />
-              </div>
+      {/* Mobile Special Banner */}
+      <section className="lg:hidden container mx-auto px-4">
+        <div className="relative aspect-[21/9] rounded-xl overflow-hidden shadow-sm border-4 border-[#EF4A23]">
+          <Image 
+            src={MOBILE_ONLY_BANNER?.imageUrl || ''} 
+            alt="Offer Banner" 
+            fill 
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-[#EF4A23]/10 flex flex-col items-center justify-center text-white text-center p-2">
+            <p className="text-[10px] font-medium opacity-90">{language === 'bn' ? 'আমাদের ঢাকা এবং ঢাকার বাইরের সকল আউটলেট' : 'All our outlets inside and outside Dhaka'}</p>
+            <h3 className="text-lg font-bold leading-none my-1">{language === 'bn' ? 'খোলা থাকবে' : 'Open Now'}</h3>
+            <p className="text-[8px] opacity-80">১২৪০৩</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Action Cards (PC Builder Style) */}
+      <section className="container mx-auto px-4 grid grid-cols-2 gap-4">
+        <div className="bg-gradient-to-r from-[#F38A18] to-[#EF4A23] rounded-xl p-4 flex flex-col items-center justify-center text-white gap-2 shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+          <Computer size={32} />
+          <span className="text-sm font-bold">{t('action_custom_quote')}</span>
+        </div>
+        <div className="bg-gradient-to-r from-[#0081C4] to-[#00529E] rounded-xl p-4 flex flex-col items-center justify-center text-white gap-2 shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+          <Laptop size={32} />
+          <span className="text-sm font-bold">{t('action_service_tracker')}</span>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 space-y-12">
+        {/* Featured Products */}
+        <section id="products">
+          <div className="text-center mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-[#081621]">{t('products_title')}</h2>
+            <p className="text-xs text-muted-foreground">{t('products_subtitle')}</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {MOCK_PRODUCTS.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </section>
 
         {/* Professional Services */}
         <section id="services">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
-            <div className="text-center mb-10 space-y-2">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#081621]">{t('services_title')}</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
-                {t('services_subtitle')}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {MOCK_SERVICES.map((service) => (
-                <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col h-full bg-white">
-                  <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
-                    {service.imageUrl ? (
-                      <Image src={service.imageUrl} alt={service.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                       <div className="w-full h-full bg-primary/5 flex items-center justify-center">
-                         {IconMap[service.icon]}
-                       </div>
-                    )}
-                  </Link>
-                  <CardHeader className="pt-6 px-6 pb-2">
-                    <div className="mb-4 p-3 bg-primary/10 text-primary rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-                      {IconMap[service.icon] || <Layout size={24} />}
-                    </div>
-                    <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors">
-                      <CardTitle className="text-xl md:text-2xl font-bold line-clamp-1">{service.title}</CardTitle>
-                    </Link>
-                  </CardHeader>
-                  <CardContent className="px-6 flex-1">
-                    <p className="text-muted-foreground text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
-                      {service.description}
-                    </p>
-                    <div className="flex flex-col mb-2">
-                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('price_from')}</span>
-                      <span className="text-primary font-bold text-xl md:text-2xl">৳{service.displayPrice}</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="px-6 pb-6 pt-2 border-t mt-4 flex flex-col gap-3">
-                    <div className="flex w-full gap-2">
-                      <Button 
-                        onClick={() => handleBookNowDirectly(service)}
-                        className="flex-1 gap-2 font-bold h-11 md:h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-sm"
-                      >
-                        <CalendarCheck size={18} />
-                        {t('book_now')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-11 w-11 md:h-12 md:w-12 rounded-xl border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-                        onClick={() => addToCart(service)}
-                        title={t('add_to_cart')}
-                      >
-                        <ShoppingCart size={20} />
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+          <div className="text-center mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-[#081621]">{t('services_title')}</h2>
           </div>
-        </section>
-
-        {/* Featured Products */}
-        <section id="products">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-              <div className="space-y-1">
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
-                <p className="text-muted-foreground text-sm">{t('products_subtitle')}</p>
-              </div>
-              <Button variant="outline" className="rounded-full font-bold whitespace-nowrap">{t('view_all')}</Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {MOCK_PRODUCTS.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Advantages */}
-        <section className="pb-12">
-          <div className="text-center mb-10 space-y-2">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#081621]">{t('features_title')}</h2>
-            <p className="text-muted-foreground text-sm">{t('features_subtitle')}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
-                <ShieldCheck size={32} />
-              </div>
-              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'যাচাইকৃত পেশাদার' : 'Vetted Professionals'}</h3>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                {language === 'bn' ? 'প্রতিটি ক্লিনার কঠোর প্রশিক্ষণ এবং ব্যাকগ্রাউন্ড চেক এর মাধ্যমে আসে।' : 'Every cleaner undergoes background checks and rigorous training.'}
-              </p>
-            </div>
-            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
-                <Truck size={32} />
-              </div>
-              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'নমনীয় সময়সূচী' : 'Flexible Scheduling'}</h3>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                {language === 'bn' ? 'আপনার ব্যস্ত জীবনযাত্রার সাথে মানানসই যেকোনো সময়ে বুক করুন।' : 'Book a service at any time that fits your busy lifestyle.'}
-              </p>
-            </div>
-            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
-                <Headphones size={32} />
-              </div>
-              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'হ্যাপিনেস গ্যারান্টি' : 'Happiness Guarantee'}</h3>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                {language === 'bn' ? 'সন্তুষ্ট নন? আমরা আপনার সন্তুষ্টি না হওয়া পর্যন্ত ফ্রি রি-ক্লিন করব।' : 'Not satisfied? We will re-clean for free until you are happy.'}
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {MOCK_SERVICES.map((service) => (
+              <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white">
+                <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
+                  <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover" />
+                </Link>
+                <CardHeader className="p-4 pb-0">
+                  <CardTitle className="text-lg font-bold">{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground font-semibold">{t('price_from')}</span>
+                    <span className="text-primary font-bold text-xl">৳{service.displayPrice}</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="p-4 pt-0">
+                  <Button 
+                    onClick={() => handleBookNowDirectly(service)}
+                    className="w-full gap-2 font-bold bg-primary text-white"
+                  >
+                    <CalendarCheck size={18} />
+                    {t('book_now')}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </section>
       </div>

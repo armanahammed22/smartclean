@@ -185,7 +185,6 @@ export function Navbar() {
                 </Badge>
               )}
             </Button>
-            <Menu className="cursor-pointer" size={28} />
           </div>
         </div>
       </div>
