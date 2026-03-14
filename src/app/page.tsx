@@ -1,7 +1,6 @@
-
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard } from '@/components/products/product-card';
@@ -13,15 +12,35 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/components/providers/cart-provider';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious,
+  type CarouselApi
+} from '@/components/ui/carousel';
+import { 
   Layout, Home, Building2, 
   Brush, Sparkles, Wind, CalendarCheck, 
   Waves, Thermometer, Box, Smartphone, 
-  Laptop, Computer, CheckCircle2
+  Laptop, Computer, CheckCircle2,
+  BellRing
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { addToCart, setCheckoutOpen } = useCart();
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   const MOCK_PRODUCTS = getMockProducts(language);
   const MOCK_SERVICES = getMockServices(language);
@@ -39,24 +58,10 @@ export default function SmartCleanHomePage() {
     { name: language === 'bn' ? 'ফোন সাপোর্ট' : 'Support', icon: Smartphone },
   ];
 
-  const GRID_HERO_IMAGES = [
-    PlaceHolderImages.find(img => img.id === 'hero-grid-1'),
-    PlaceHolderImages.find(img => img.id === 'hero-grid-2'),
-    PlaceHolderImages.find(img => img.id === 'hero-grid-3'),
-    PlaceHolderImages.find(img => img.id === 'hero-grid-4'),
-    PlaceHolderImages.find(img => img.id === 'hero-grid-5'),
-    PlaceHolderImages.find(img => img.id === 'hero-grid-6'),
-  ];
-
-  const HERO_LOGOS = PlaceHolderImages.find(img => img.id === 'app-logo');
-
-  const CHECKLIST = [
-    t('service_home'),
-    t('service_office'),
-    t('service_deep'),
-    t('service_showroom'),
-    t('service_kitchen'),
-    t('service_sofa'),
+  const HERO_BANNERS = [
+    PlaceHolderImages.find(img => img.id === 'hero-main'),
+    PlaceHolderImages.find(img => img.id === 'hero-side-1'),
+    PlaceHolderImages.find(img => img.id === 'hero-side-2'),
   ];
 
   const handleBookNowDirectly = (service: any) => {
@@ -64,9 +69,18 @@ export default function SmartCleanHomePage() {
     setCheckoutOpen(true);
   };
 
+  const currentDate = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const marqueeText = `${currentDate} | ${t('hero_banner_title')} | ${t('hero_phone')} | ${t('footer_address')} | ${t('footer_hours')} | Professional Cleaning Nationwide.`;
+
   return (
     <PublicLayout>
-      <div className="flex flex-col gap-6 pb-12 bg-[#F2F4F8]">
+      <div className="flex flex-col gap-4 pb-12 bg-[#F2F4F8]">
         {/* Mobile Search Bar */}
         <div className="lg:hidden container mx-auto px-4 pt-4">
           <div className="relative">
@@ -81,62 +95,80 @@ export default function SmartCleanHomePage() {
           </div>
         </div>
 
-        {/* Marketing Hero Grid Section (Ref Image Style) */}
+        {/* Hero Carousel Section */}
         <section className="container mx-auto px-4 pt-2">
-          <div className="bg-white rounded-2xl overflow-hidden shadow-md flex flex-col lg:flex-row border border-gray-100">
-            {/* Left Content */}
-            <div className="flex-1 p-6 lg:p-12 bg-gradient-to-br from-[#F0F9FF] to-white flex flex-col justify-center relative">
-               <div className="flex items-center gap-3 mb-6 lg:mb-10">
-                  <div className="relative w-12 h-12 lg:w-16 lg:h-16">
-                    <Image src={HERO_LOGOS?.imageUrl || ''} alt="Logo" fill className="object-contain" />
-                  </div>
-                  <span className="text-2xl lg:text-4xl font-black text-[#081621] tracking-tighter uppercase font-headline">Smart Clean</span>
-               </div>
-
-               <h2 className="text-xl lg:text-4xl font-bold text-[#081621] mb-2 leading-tight">
-                  {t('hero_question')}
-               </h2>
-               <p className="text-sm lg:text-xl font-medium text-gray-600 mb-8 max-w-lg">
-                  {t('hero_banner_title')}
-               </p>
-
-               <div className="grid grid-cols-2 gap-y-4 mb-10">
-                  {CHECKLIST.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                      <span className="text-xs lg:text-sm font-bold text-gray-700">{item}</span>
+          <div className="relative group">
+            <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
+              <CarouselContent>
+                {HERO_BANNERS.map((banner, index) => (
+                  <CarouselItem key={index}>
+                    <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl shadow-lg bg-white border">
+                      <Image 
+                        src={banner?.imageUrl || ''} 
+                        alt={banner?.description || 'Promo'} 
+                        fill 
+                        className="object-cover"
+                        priority={index === 0}
+                      />
+                      {/* Promo Overlay (Optional/Static for now) */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent flex flex-col justify-center p-8 md:p-16">
+                         {index === 0 && (
+                           <div className="max-w-md space-y-4">
+                             <h2 className="text-2xl md:text-5xl font-black text-white drop-shadow-lg leading-tight font-headline">
+                                {t('hero_question')}
+                             </h2>
+                             <Button 
+                               className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-6 md:px-10 py-4 md:py-8 h-auto text-base md:text-2xl font-black shadow-2xl transition-transform hover:scale-105"
+                               onClick={() => setCheckoutOpen(true)}
+                             >
+                                {t('hero_cta')}
+                             </Button>
+                           </div>
+                         )}
+                      </div>
                     </div>
-                  ))}
-               </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="hidden md:block">
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </div>
+            </Carousel>
 
-               <Button 
-                className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-8 py-6 h-auto text-lg lg:text-xl font-black shadow-xl w-fit"
-                onClick={() => setCheckoutOpen(true)}
-               >
-                  {t('hero_phone')}
-               </Button>
-            </div>
-
-            {/* Right Image Grid */}
-            <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-0.5 bg-gray-100 border-l border-gray-100">
-               {GRID_HERO_IMAGES.map((img, idx) => (
-                 <div key={idx} className="relative aspect-square lg:aspect-auto overflow-hidden group">
-                   <Image 
-                    src={img?.imageUrl || ''} 
-                    alt={img?.description || 'Cleaning service'} 
-                    fill 
-                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
-                   />
-                   <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                 </div>
+            {/* Carousel Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+               {HERO_BANNERS.map((_, i) => (
+                 <div 
+                   key={i} 
+                   className={cn(
+                     "h-2 w-2 md:h-3 md:w-3 rounded-full transition-all",
+                     current === i ? "bg-primary w-6 md:w-8" : "bg-white/50"
+                   )} 
+                 />
                ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Scrolling Marquee Bar */}
+        <section className="container mx-auto px-4">
+          <div className="bg-white rounded-full h-12 md:h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden">
+            <div className="h-full bg-[#F9FAFB] px-4 md:px-6 flex items-center gap-2 border-r z-10 shrink-0">
+               <BellRing size={18} className="text-primary animate-bounce" />
+               <span className="text-[10px] md:text-xs font-black uppercase text-[#081621] tracking-widest hidden sm:inline">Update</span>
+            </div>
+            <div className="flex-1 overflow-hidden relative h-full flex items-center">
+               <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-medium text-gray-600 px-4">
+                 {marqueeText}
+               </p>
             </div>
           </div>
         </section>
 
         {/* Category Grid */}
         <section className="container mx-auto px-4">
-          <div className="bg-white p-6 rounded-2xl shadow-sm">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <div className="grid grid-cols-5 gap-y-6">
               {QUICK_CATEGORIES.map((cat, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer">
