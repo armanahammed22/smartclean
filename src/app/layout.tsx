@@ -1,13 +1,13 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
 import {Navbar} from '@/components/layout/navbar';
+import {Footer} from '@/components/layout/footer';
 import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Smart Clean | Professional Cleaning Services',
-  description: 'Fast, efficient, and intelligent cleaning solutions for home and office.',
+  title: 'Smart Clean | Professional Cleaning Services in Bangladesh',
+  description: 'Fast, efficient, and intelligent cleaning solutions for home and office in Bangladesh. Trusted by 1000+ customers.',
 };
 
 export default function RootLayout({
@@ -28,6 +28,7 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
+          <Footer />
           <Toaster />
         </CartProvider>
       </body>
