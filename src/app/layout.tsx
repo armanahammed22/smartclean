@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
+import {LanguageProvider} from '@/components/providers/language-provider';
 import {Navbar} from '@/components/layout/navbar';
 import {Footer} from '@/components/layout/footer';
 import {Toaster} from '@/components/ui/toaster';
@@ -23,14 +24,16 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-        <CartProvider>
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <Toaster />
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
