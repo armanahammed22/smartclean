@@ -23,7 +23,7 @@ service cloud.firestore {
     }
 
     // Public Catalog Access (Allow anyone to view)
-    // Using {id=**} ensures both collection lists and individual document reads are permitted.
+    // We explicitly match the collection paths to ensure both 'get' and 'list' operations work.
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }

@@ -79,9 +79,13 @@ export default function AdminDashboard() {
       ];
       services.forEach(s => batch.set(doc(db, 'services', s.id), s));
 
-      // 5. Categories
+      // 5. Product Categories
       batch.set(doc(db, 'product_categories', 'cat1'), { id: 'cat1', name: 'Home Appliances', status: 'Active', slug: 'home-appliances' });
       batch.set(doc(db, 'product_categories', 'cat2'), { id: 'cat2', name: 'Cleaning Supplies', status: 'Active', slug: 'cleaning-supplies' });
+
+      // 6. Service Categories
+      batch.set(doc(db, 'service_categories', 'scat1'), { id: 'scat1', name: 'Residential', status: 'Active' });
+      batch.set(doc(db, 'service_categories', 'scat2'), { id: 'scat2', name: 'Maintenance', status: 'Active' });
 
       await batch.commit();
       toast({ title: "ERP Seeded", description: "Database populated with ERP and Marketing data." });
@@ -113,7 +117,7 @@ export default function AdminDashboard() {
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
           Seed ERP & Marketing
-        </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
