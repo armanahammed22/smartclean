@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Layout, Wrench, Activity, Truck, ShieldCheck, 
   Headphones, ArrowRight, Home, Building2, 
-  Brush, Sparkles, Wind 
+  Brush, Sparkles, Wind, CalendarCheck 
 } from 'lucide-react';
 import {
   Carousel,
@@ -223,21 +223,27 @@ export default function SmartCleanHomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {MOCK_SERVICES.map((service) => (
-                <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
                   <CardHeader className="pt-8 px-6">
                     <div className="mb-6 p-4 bg-primary/5 rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 transform group-hover:-translate-y-2">
                       {IconMap[service.icon] || <Layout className="text-primary" size={32} />}
                     </div>
                     <CardTitle className="text-2xl font-bold">{service.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="px-6 pb-8">
+                  <CardContent className="px-6 pb-8 flex-1 flex flex-col">
                     <p className="text-muted-foreground leading-relaxed mb-6">
                       {service.description}
                     </p>
-                    <div className="flex items-center justify-between pt-6 border-t">
-                      <span className="text-primary font-bold text-xl">{service.price}</span>
-                      <Button variant="ghost" size="sm" className="gap-2 group-hover:text-primary font-bold">
-                        {t('service_details')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="mt-auto pt-6 border-t">
+                      <div className="flex items-center justify-between mb-6">
+                        <span className="text-primary font-bold text-xl">{service.price}</span>
+                        <Button variant="ghost" size="sm" className="gap-2 group-hover:text-primary font-bold px-0">
+                          {t('service_details')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </div>
+                      <Button className="w-full gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md">
+                        <CalendarCheck size={18} />
+                        {t('book_now')}
                       </Button>
                     </div>
                   </CardContent>

@@ -38,6 +38,7 @@ const translations: Record<Language, Record<string, string>> = {
     services_title: "আমাদের বিশেষজ্ঞতা",
     services_subtitle: "আমরা বিশেষায়িত ক্লিনিং এবং রক্ষণাবেক্ষণ সেবার একটি বিস্তৃত পরিসর প্রদান করি।",
     service_details: "বিস্তারিত",
+    book_now: "বুক করুন",
     price_from: "থেকে",
     
     // Features
@@ -82,6 +83,7 @@ const translations: Record<Language, Record<string, string>> = {
     services_title: "Our Expertise",
     services_subtitle: "We provide a wide range of specialized cleaning and maintenance services.",
     service_details: "Details",
+    book_now: "Book Now",
     price_from: "From",
     
     // Features
