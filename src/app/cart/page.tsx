@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -11,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, subtotal, itemCount } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, itemCount, setCheckoutOpen } = useCart();
   const { t } = useLanguage();
 
   if (items.length === 0) {
@@ -149,11 +150,13 @@ export default function CartPage() {
                   </div>
                 </div>
               </div>
-              <Button asChild className="w-full mt-8 gap-2 font-bold" size="lg">
-                <Link href="/checkout">
-                  {t('proceed_to_checkout')}
-                  <ArrowRight size={18} />
-                </Link>
+              <Button 
+                onClick={() => setCheckoutOpen(true)}
+                className="w-full mt-8 gap-2 font-bold" 
+                size="lg"
+              >
+                {t('proceed_to_checkout')}
+                <ArrowRight size={18} />
               </Button>
             </CardContent>
           </Card>

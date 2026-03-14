@@ -16,7 +16,7 @@ export default function ProductDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { language, t } = useLanguage();
-  const { addToCart } = useCart();
+  const { addToCart, setCheckoutOpen } = useCart();
   
   const product = getProductById(id as string, language);
 
@@ -28,6 +28,11 @@ export default function ProductDetailsPage() {
       </div>
     );
   }
+
+  const handleOrderNow = () => {
+    addToCart(product);
+    setCheckoutOpen(true);
+  };
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen pb-24">
@@ -94,12 +99,12 @@ export default function ProductDetailsPage() {
                 </div>
 
                 <Button 
-                  onClick={() => addToCart(product)} 
+                  onClick={handleOrderNow} 
                   size="lg" 
                   className="w-full h-16 rounded-2xl gap-3 text-lg font-bold shadow-lg"
                 >
                   <ShoppingCart size={24} />
-                  {t('add_to_cart')}
+                  {t('order_now')}
                 </Button>
               </div>
             </div>

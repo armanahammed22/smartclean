@@ -16,7 +16,7 @@ export default function ServiceDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { language, t } = useLanguage();
-  const { addToCart } = useCart();
+  const { addToCart, setCheckoutOpen } = useCart();
   
   const service = getServiceById(id as string, language);
 
@@ -28,6 +28,11 @@ export default function ServiceDetailsPage() {
       </div>
     );
   }
+
+  const handleBookNow = () => {
+    addToCart(service);
+    setCheckoutOpen(true);
+  };
 
   const features = language === 'bn' 
     ? ["প্রফেশনাল টিম", "সম্পূর্ণ বীমাকৃত", "পরিবেশ বান্ধব পণ্য", "সন্তুষ্টি গ্যারান্টি"]
@@ -113,7 +118,7 @@ export default function ServiceDetailsPage() {
 
                     <div className="space-y-4">
                       <Button 
-                        onClick={() => addToCart(service)} 
+                        onClick={handleBookNow} 
                         size="lg" 
                         className="w-full h-16 rounded-2xl gap-3 text-lg font-bold shadow-lg"
                       >
