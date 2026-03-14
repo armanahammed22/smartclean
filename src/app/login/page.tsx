@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, AlertCircle, Info, ArrowRight } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, AlertCircle, Info, ArrowRight, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -49,6 +49,8 @@ export default function LoginPage() {
         message = "Invalid credentials. Please ensure you have created this account in your Firebase Console (Authentication tab).";
       } else if (error.code === 'auth/too-many-requests') {
         message = "Too many failed attempts. Please try again later.";
+      } else if (error.code === 'auth/network-request-failed') {
+        message = "Network error. Please ensure your development domain is added to 'Authorized domains' in Firebase Console > Authentication > Settings.";
       }
 
       setError(message);
@@ -82,6 +84,9 @@ export default function LoginPage() {
             <div className="p-4 bg-green-50 border border-green-100 rounded-xl space-y-3 mb-4">
               <p className="text-xs font-bold text-green-700">You are currently logged in as:</p>
               <p className="text-sm font-mono truncate bg-white p-2 rounded border">{user.email}</p>
+              <div className="p-2 bg-white rounded border text-[10px] font-mono break-all text-muted-foreground">
+                UID: {user.uid}
+              </div>
               <Button 
                 onClick={() => router.push('/admin/dashboard')} 
                 className="w-full bg-green-600 hover:bg-green-700 gap-2 h-10 text-xs font-bold"
@@ -101,15 +106,25 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 text-blue-700">
-            <Info size={18} className="shrink-0 mt-0.5" />
-            <div className="text-[11px] leading-relaxed">
-              <p className="font-bold uppercase mb-1">Setup Instructions:</p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>Enable <strong>Email/Password</strong> in Firebase Auth.</li>
-                <li>Create user <strong>smartclean422@gmail.com</strong>.</li>
-                <li>Set password to <strong>admin123</strong>.</li>
-              </ol>
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3 text-blue-700">
+            <div className="flex gap-3">
+              <Info size={18} className="shrink-0 mt-0.5" />
+              <div className="text-[11px] leading-relaxed">
+                <p className="font-bold uppercase mb-1">Critical Setup Steps:</p>
+                <ol className="list-decimal pl-4 space-y-1">
+                  <li>Enable <strong>Email/Password</strong> in Firebase Auth.</li>
+                  <li>Create user <strong>smartclean422@gmail.com</strong>.</li>
+                  <li>Assign UID <strong>gcp03WmpjROVvRdpLNsghNU4zHa2</strong> in code.</li>
+                </ol>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 pt-2 border-t border-blue-200">
+              <Globe size={18} className="shrink-0 mt-0.5" />
+              <div className="text-[11px] leading-relaxed">
+                <p className="font-bold uppercase mb-1">Network Error? (Whitelist Domain):</p>
+                <p>Go to <strong>Authentication &gt; Settings &gt; Authorized domains</strong> and add your current browser URL (e.g., the workstation domain).</p>
+              </div>
             </div>
           </div>
 
