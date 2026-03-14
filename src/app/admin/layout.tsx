@@ -215,6 +215,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#081621] border-none w-72">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Admin Navigation</SheetTitle>
+                </SheetHeader>
                 <div className="flex flex-col h-full text-white">
                   <SidebarContent />
                 </div>
