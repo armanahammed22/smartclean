@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -48,6 +49,11 @@ export default function SmartCleanHomePage() {
     PlaceHolderImages.find(img => img.id === 'hero-main'),
     PlaceHolderImages.find(img => img.id === 'hero-side-1'),
     PlaceHolderImages.find(img => img.id === 'hero-side-2'),
+  ];
+
+  const MOBILE_ONLY_IMAGES = [
+    PlaceHolderImages.find(img => img.id === 'mobile-only-1'),
+    PlaceHolderImages.find(img => img.id === 'mobile-only-2'),
   ];
 
   const handleBookNowDirectly = (service: any) => {
@@ -108,7 +114,7 @@ export default function SmartCleanHomePage() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 space-y-16">
+      <div className="container mx-auto px-4 space-y-12">
         {/* Quick Category Grid */}
         <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
@@ -118,6 +124,22 @@ export default function SmartCleanHomePage() {
                   <cat.icon size={32} />
                 </div>
                 <span className="font-bold text-xs md:text-sm text-center text-[#081621]">{cat.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Mobile-Only Banner Section */}
+        <section className="lg:hidden">
+          <div className="grid grid-cols-2 gap-4">
+            {MOBILE_ONLY_IMAGES.map((img, i) => (
+              <div key={i} className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-md">
+                <Image 
+                  src={img?.imageUrl || ''} 
+                  alt={img?.description || 'Mobile Offer'} 
+                  fill 
+                  className="object-cover"
+                />
               </div>
             ))}
           </div>

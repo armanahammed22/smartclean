@@ -71,6 +71,18 @@
       "description": "New Arrival Banner",
       "imageUrl": "https://picsum.photos/seed/promo2/600/400",
       "imageHint": "new gadget"
+    },
+    {
+      "id": "mobile-only-1",
+      "description": "Mobile Exclusive Offer 1",
+      "imageUrl": "https://picsum.photos/seed/mob1/600/300",
+      "imageHint": "mobile offer"
+    },
+    {
+      "id": "mobile-only-2",
+      "description": "Mobile Exclusive Offer 2",
+      "imageUrl": "https://picsum.photos/seed/mob2/600/300",
+      "imageHint": "flash sale"
     }
   ]
 }
