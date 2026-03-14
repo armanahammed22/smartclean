@@ -30,15 +30,42 @@ export function Navbar() {
 
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
-      const products = getMockProducts(language);
-      const services = getMockServices(language);
+      // Get data for both languages to search across both
+      const productsEn = getMockProducts('en');
+      const productsBn = getMockProducts('bn');
+      const servicesEn = getMockServices('en');
+      const servicesBn = getMockServices('bn');
       
-      const filteredProducts = products
-        .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      const query = searchQuery.toLowerCase();
+      const matchedProductIds = new Set<string>();
+      const matchedServiceIds = new Set<string>();
+
+      // Check for matches in English
+      productsEn.forEach(p => {
+        if (p.name.toLowerCase().includes(query)) matchedProductIds.add(p.id);
+      });
+      servicesEn.forEach(s => {
+        if (s.title.toLowerCase().includes(query)) matchedServiceIds.add(s.id);
+      });
+
+      // Check for matches in Bangla
+      productsBn.forEach(p => {
+        if (p.name.toLowerCase().includes(query)) matchedProductIds.add(p.id);
+      });
+      servicesBn.forEach(s => {
+        if (s.title.toLowerCase().includes(query)) matchedServiceIds.add(s.id);
+      });
+
+      // Display results in the CURRENT language
+      const currentProducts = getMockProducts(language);
+      const currentServices = getMockServices(language);
+
+      const filteredProducts = currentProducts
+        .filter(p => matchedProductIds.has(p.id))
         .map(p => ({ id: p.id, name: p.name, type: 'product' as const, category: p.category }));
       
-      const filteredServices = services
-        .filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      const filteredServices = currentServices
+        .filter(s => matchedServiceIds.has(s.id))
         .map(s => ({ id: s.id, name: s.title, type: 'service' as const }));
       
       setSuggestions([...filteredProducts, ...filteredServices]);
