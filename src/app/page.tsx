@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -27,8 +27,8 @@ import {
   Laptop, Computer, BellRing, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
@@ -38,7 +38,10 @@ export default function SmartCleanHomePage() {
   const [currentDate, setCurrentDate] = useState<string>('');
   const db = useFirestore();
 
-  // Real-time Category Fetching
+  // Real-time Customization Fetching
+  const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
+  const { data: customization } = useDoc(customizationRef);
+
   const prodCatsQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories'), orderBy('name', 'asc')) : null, [db]);
   const servCatsQuery = useMemoFirebase(() => db ? query(collection(db, 'service_categories'), orderBy('name', 'asc')) : null, [db]);
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
@@ -68,9 +71,9 @@ export default function SmartCleanHomePage() {
   }, [language]);
 
   const HERO_BANNERS = [
-    PlaceHolderImages.find(img => img.id === 'hero-main'),
-    PlaceHolderImages.find(img => img.id === 'hero-side-1'),
-    PlaceHolderImages.find(img => img.id === 'hero-side-2'),
+    { imageUrl: customization?.hero?.imageUrl || PlaceHolderImages.find(img => img.id === 'hero-main')?.imageUrl || '', title: customization?.hero?.title, subtitle: customization?.hero?.subtitle },
+    { imageUrl: PlaceHolderImages.find(img => img.id === 'hero-side-1')?.imageUrl || '' },
+    { imageUrl: PlaceHolderImages.find(img => img.id === 'hero-side-2')?.imageUrl || '' },
   ];
 
   const handleBookNowDirectly = (service: any) => {
@@ -84,29 +87,38 @@ export default function SmartCleanHomePage() {
     <PublicLayout>
       <div className="flex flex-col gap-4 pb-12 bg-[#F2F4F8]">
         {/* Hero Carousel Section */}
-        <section className="container mx-auto px-4 pt-4">
-          <div className="relative group">
-            <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
-              <CarouselContent>
-                {HERO_BANNERS.map((banner, index) => (
-                  <CarouselItem key={index}>
-                    <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl shadow-lg bg-white border">
-                      <Image src={banner?.imageUrl || ''} alt={banner?.description || 'Promo'} fill className="object-cover" priority={index === 0} />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent flex flex-col justify-center p-8 md:p-16">
-                         {index === 0 && (
-                           <div className="max-w-md space-y-4">
-                             <h2 className="text-2xl md:text-5xl font-black text-white drop-shadow-lg leading-tight font-headline">{t('hero_question')}</h2>
-                             <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-6 md:px-10 py-4 md:py-8 h-auto text-base md:text-2xl font-black shadow-2xl transition-transform hover:scale-105" onClick={() => setCheckoutOpen(true)}>{t('hero_cta')}</Button>
-                           </div>
-                         )}
+        {(!customization || customization.hero?.enabled !== false) && (
+          <section className="container mx-auto px-4 pt-4">
+            <div className="relative group">
+              <Carousel setApi={setApi} className="w-full" opts={{ loop: true }}>
+                <CarouselContent>
+                  {HERO_BANNERS.map((banner, index) => (
+                    <CarouselItem key={index}>
+                      <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl shadow-lg bg-white border">
+                        <Image src={banner.imageUrl} alt="Promo" fill className="object-cover" priority={index === 0} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent flex flex-col justify-center p-8 md:p-16">
+                           {index === 0 && (
+                             <div className="max-w-md space-y-4">
+                               <h2 className="text-2xl md:text-5xl font-black text-white drop-shadow-lg leading-tight font-headline">
+                                 {banner.title || t('hero_question')}
+                               </h2>
+                               <p className="text-white font-medium drop-shadow-md text-sm md:text-lg">
+                                 {banner.subtitle || ''}
+                               </p>
+                               <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-6 md:px-10 py-4 md:py-8 h-auto text-base md:text-2xl font-black shadow-2xl transition-transform hover:scale-105" onClick={() => setCheckoutOpen(true)}>
+                                 {customization?.hero?.ctaText || t('hero_cta')}
+                               </Button>
+                             </div>
+                           )}
+                        </div>
                       </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
-        </section>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            </div>
+          </section>
+        )}
 
         {/* Marquee */}
         <section className="container mx-auto px-4">
@@ -123,68 +135,82 @@ export default function SmartCleanHomePage() {
 
         <div className="container mx-auto px-4 space-y-16 mt-8">
           {/* Grouped Services */}
-          <section id="services">
-            <div className="mb-10 text-center">
-              <h2 className="text-3xl font-black text-[#081621] font-headline uppercase tracking-tighter">{t('services_title')}</h2>
-              <div className="h-1 w-20 bg-primary mx-auto mt-2 rounded-full" />
-            </div>
-            
-            <div className="space-y-12">
-              {servCats?.map(cat => (
-                <div key={cat.id} className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary rounded-lg text-white"><Layout size={20} /></div>
-                    <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">{cat.name}</h3>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    {services?.filter(s => s.categoryId === cat.id).map((service) => (
-                      <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white flex flex-col h-full group">
-                        <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
-                          <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover group-hover:scale-105 transition-transform" />
-                        </Link>
-                        <CardHeader className="p-4 pb-1">
-                          <CardTitle className="text-sm md:text-base font-bold line-clamp-1">{service.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-1">
-                          <div className="flex flex-col">
-                            <span className="text-[9px] text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
-                            <span className="text-primary font-black text-lg">৳{service.basePrice.toLocaleString()}</span>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="p-4 pt-0">
-                          <Button onClick={() => handleBookNowDirectly(service)} size="sm" className="w-full gap-2 font-bold bg-primary text-white h-10">{t('book_now')}</Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          {(customization?.sections?.popularServices !== false) && (
+            <section id="services">
+              <div className="mb-10 text-center">
+                <h2 className="text-3xl font-black text-[#081621] font-headline uppercase tracking-tighter">{t('services_title')}</h2>
+                <div className="h-1 w-20 bg-primary mx-auto mt-2 rounded-full" />
+              </div>
+              
+              <div className="space-y-12">
+                {servCats?.map(cat => {
+                  const filteredServices = services?.filter(s => s.categoryId === cat.id);
+                  if (!filteredServices?.length) return null;
+
+                  return (
+                    <div key={cat.id} className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary rounded-lg text-white"><Layout size={20} /></div>
+                        <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">{cat.name}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {filteredServices.map((service) => (
+                          <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white flex flex-col h-full group">
+                            <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
+                              <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover group-hover:scale-105 transition-transform" />
+                            </Link>
+                            <CardHeader className="p-4 pb-1">
+                              <CardTitle className="text-sm md:text-base font-bold line-clamp-1">{service.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0 flex-1">
+                              <div className="flex flex-col">
+                                <span className="text-[9px] text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
+                                <span className="text-primary font-black text-lg">৳{service.basePrice.toLocaleString()}</span>
+                              </div>
+                            </CardContent>
+                            <CardFooter className="p-4 pt-0">
+                              <Button onClick={() => handleBookNowDirectly(service)} size="sm" className="w-full gap-2 font-bold bg-primary text-white h-10">{t('book_now')}</Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* Grouped Products */}
-          <section id="products">
-            <div className="mb-10 text-center">
-              <h2 className="text-3xl font-black text-[#081621] font-headline uppercase tracking-tighter">{t('products_title')}</h2>
-              <div className="h-1 w-20 bg-primary mx-auto mt-2 rounded-full" />
-            </div>
+          {(customization?.sections?.popularProducts !== false) && (
+            <section id="products">
+              <div className="mb-10 text-center">
+                <h2 className="text-3xl font-black text-[#081621] font-headline uppercase tracking-tighter">{t('products_title')}</h2>
+                <div className="h-1 w-20 bg-primary mx-auto mt-2 rounded-full" />
+              </div>
 
-            <div className="space-y-12">
-              {prodCats?.filter(c => !c.parentId).map(cat => (
-                <div key={cat.id} className="space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#081621] rounded-lg text-white"><Box size={20} /></div>
-                    <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">{cat.name}</h3>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {products?.filter(p => p.categoryId === cat.id).map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+              <div className="space-y-12">
+                {prodCats?.filter(c => !c.parentId).map(cat => {
+                  const filteredProducts = products?.filter(p => p.categoryId === cat.id);
+                  if (!filteredProducts?.length) return null;
+
+                  return (
+                    <div key={cat.id} className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[#081621] rounded-lg text-white"><Box size={20} /></div>
+                        <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">{cat.name}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {filteredProducts.map((product) => (
+                          <ProductCard key={product.id} product={product} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </PublicLayout>

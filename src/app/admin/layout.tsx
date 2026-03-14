@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -28,7 +29,8 @@ import {
   Tags,
   Layers,
   Award,
-  AlertCircle
+  AlertCircle,
+  Paintbrush
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -95,13 +97,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      title: 'Site Control',
+      items: [
+        { name: 'Site Customize', href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
+        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
+        { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
+      ]
+    },
+    {
       title: 'Business',
       items: [
         { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-teal-500' },
-        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
         { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
         { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-500' },
-        { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
       ]
     }
   ];

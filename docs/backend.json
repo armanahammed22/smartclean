@@ -43,44 +43,49 @@
         "status": { "type": "string", "enum": ["Active", "Inactive"] }
       }
     },
-    "Brand": {
-      "title": "Brand",
+    "SiteSettings": {
+      "title": "SiteSettings",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+        "websiteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "faviconUrl": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "address": { "type": "string" },
+        "socialLinks": { "type": "object" },
+        "currency": { "type": "string" },
+        "defaultLanguage": { "type": "string" },
+        "seoTitle": { "type": "string" },
+        "seoDescription": { "type": "string" },
+        "footerContent": { "type": "string" }
       }
     },
-    "Order": {
-      "title": "Order",
+    "HomepageCustomization": {
+      "title": "HomepageCustomization",
       "type": "object",
-      "description": "Product sales order.",
       "properties": {
-        "id": { "type": "string" },
-        "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "totalAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] },
-        "paymentStatus": { "type": "string", "enum": ["Unpaid", "Paid", "Refunded"] },
-        "paymentMethod": { "type": "string" },
-        "items": { "type": "array" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Service": {
-      "title": "Service",
-      "type": "object",
-      "description": "Variable-price cleaning services.",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "categoryId": { "type": "string" },
-        "basePrice": { "type": "number" },
-        "duration": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+        "hero": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "imageUrl": { "type": "string" },
+            "ctaText": { "type": "string" },
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "sections": {
+          "type": "object",
+          "properties": {
+            "popularProducts": { "type": "boolean" },
+            "recentProducts": { "type": "boolean" },
+            "popularServices": { "type": "boolean" },
+            "campaigns": { "type": "boolean" }
+          }
+        },
+        "featuredProductIds": { "type": "array", "items": { "type": "string" } },
+        "featuredServiceIds": { "type": "array", "items": { "type": "string" } }
       }
     }
   },
@@ -94,8 +99,7 @@
     "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Product orders." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Services catalog." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
-    "/leads/{leadId}": { "schema": "#/entities/Lead", "description": "Sales leads." },
-    "/bookings/{bookingId}": { "schema": "#/entities/Booking", "description": "Service appointments." },
-    "/customers/{customerId}": { "schema": "#/entities/Customer", "description": "Customer profiles." }
+    "/site_settings/global": { "schema": "#/entities/SiteSettings", "description": "Global website configuration." },
+    "/site_settings/homepage": { "schema": "#/entities/HomepageCustomization", "description": "Homepage layout control." }
   }
 }
