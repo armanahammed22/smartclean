@@ -75,6 +75,17 @@ export function Navbar() {
           
           {/* Mobile Cart/Menu */}
           <div className="flex lg:hidden items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:text-primary p-0 h-auto"
+              onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+            >
+              <div className="flex flex-col items-center">
+                <Globe size={20} className="text-primary" />
+                <span className="text-[10px] font-bold mt-0.5">{language === 'bn' ? "EN" : "বাং"}</span>
+              </div>
+            </Button>
              <Button variant="ghost" size="icon" asChild className="relative text-white">
               <Link href="/cart">
                 <ShoppingCart size={22} />
