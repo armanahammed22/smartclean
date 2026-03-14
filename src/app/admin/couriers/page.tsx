@@ -15,53 +15,56 @@ export default function CouriersPage() {
   ];
 
   return (
-    <div className="p-8 space-y-8 bg-[#F9FAFB] min-h-screen">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Courier & Logistics Integration</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Courier Logistics</h1>
           <p className="text-muted-foreground text-sm">Automate order shipping and tracking</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {COURIERS.map((courier) => (
-          <Card key={courier.name} className="border-none shadow-sm group hover:shadow-md transition-all">
+          <Card key={courier.name} className="border-none shadow-sm group hover:shadow-md transition-all bg-white rounded-2xl">
              <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                   <div className="p-3 bg-gray-100 rounded-xl group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                   <div className="p-3 bg-gray-50 border rounded-xl group-hover:bg-primary/5 group-hover:text-primary transition-all">
                       <Truck size={24} />
                    </div>
-                   <Badge variant="secondary" className={`text-[9px] font-bold border-none ${courier.color}`}>
+                   <Badge variant="secondary" className={`text-[9px] font-black border-none uppercase ${courier.color}`}>
                       {courier.status}
                    </Badge>
                 </div>
-                <CardTitle className="mt-4 text-xl font-bold">{courier.name}</CardTitle>
+                <CardTitle className="mt-4 text-base md:text-lg font-bold text-gray-900">{courier.name}</CardTitle>
              </CardHeader>
              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">{courier.desc}</p>
-                <div className="pt-4 flex gap-2">
-                   <Button variant="outline" className="flex-1 gap-1 text-xs font-bold h-10"><Settings size={14} /> Configure</Button>
-                   <Button variant="ghost" className="h-10 text-primary"><ExternalLink size={16} /></Button>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed line-clamp-2">{courier.desc}</p>
+                <div className="pt-2 flex gap-2">
+                   <Button variant="outline" className="flex-1 gap-1.5 text-[10px] font-bold h-9"><Settings size={14} /> Config</Button>
+                   <Button variant="ghost" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-lg"><ExternalLink size={16} /></Button>
                 </div>
              </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card className="border-none shadow-sm bg-white overflow-hidden">
-         <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
-            <div className="p-6 bg-primary/5 rounded-full text-primary shrink-0">
-               <ShieldCheck size={64} />
+      <Card className="border-none shadow-sm bg-primary text-white overflow-hidden rounded-3xl relative">
+         <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12">
+            <ShieldCheck size={120} />
+         </div>
+         <CardContent className="p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative z-10">
+            <div className="p-6 bg-white/10 backdrop-blur-md rounded-full shrink-0">
+               <ShieldCheck size={48} />
             </div>
             <div className="space-y-4 text-center md:text-left">
-               <h3 className="text-2xl font-bold font-headline">Enterprise Shipping Automation</h3>
-               <p className="text-muted-foreground max-w-xl">
-                 Integrate your logistics accounts to automatically generate waybills, print labels, and notify customers via SMS/Email the moment an order is marked as "Shipped".
+               <h3 className="text-xl md:text-2xl font-black font-headline uppercase tracking-tight">Enterprise Shipping Automation</h3>
+               <p className="text-white/80 text-sm md:text-base max-w-xl leading-relaxed">
+                 Integrate your logistics accounts to automatically generate waybills, print labels, and notify customers via SMS/Email instantly.
                </p>
-               <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                  <div className="flex items-center gap-2 text-sm font-bold"><Zap size={16} className="text-primary" /> Auto-Labeling</div>
-                  <div className="flex items-center gap-2 text-sm font-bold"><Zap size={16} className="text-primary" /> SMS Tracking</div>
-                  <div className="flex items-center gap-2 text-sm font-bold"><Zap size={16} className="text-primary" /> Return Processing</div>
+               <div className="flex flex-wrap gap-4 justify-center md:justify-start pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest"><Zap size={14} className="text-white" /> Auto-Labeling</div>
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest"><Zap size={14} className="text-white" /> SMS Tracking</div>
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest"><Zap size={14} className="text-white" /> Return Sync</div>
                </div>
             </div>
          </CardContent>

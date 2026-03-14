@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,7 +7,7 @@ import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'f
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Trash2, Edit, Globe } from 'lucide-react';
+import { MapPin, Plus, Trash2, Edit, Globe, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -46,68 +47,71 @@ export default function ServiceAreasPage() {
   };
 
   return (
-    <div className="p-8 space-y-8 bg-[#F9FAFB] min-h-screen">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Service Area Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Service Areas</h1>
           <p className="text-muted-foreground text-sm">Define regions where your services are available</p>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border">
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
            <Globe size={16} className="text-primary" />
-           <span className="text-xs font-bold uppercase tracking-widest">Global Ops: Enabled</span>
+           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Ops: Enabled</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="border-none shadow-sm">
+        <Card className="border-none shadow-sm h-fit bg-white rounded-2xl">
           <CardHeader>
             <CardTitle className="text-lg font-bold">Add New Region</CardTitle>
           </CardHeader>
           <CardContent>
              <form onSubmit={handleAddArea} className="space-y-4">
                 <div className="space-y-2">
-                   <label className="text-xs font-bold uppercase text-muted-foreground">Region Name</label>
+                   <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Region Name</label>
                    <Input 
                      placeholder="e.g. Uttara, Dhaka" 
                      value={newArea}
                      onChange={(e) => setNewArea(e.target.value)}
-                     className="h-11"
+                     className="h-11 bg-gray-50 border-gray-100 focus:bg-white"
                    />
                 </div>
-                <Button type="submit" className="w-full gap-2 font-bold h-11">
+                <Button type="submit" className="w-full gap-2 font-bold h-11 shadow-lg">
                    <Plus size={18} /> Add Service Area
                 </Button>
              </form>
           </CardContent>
         </Card>
 
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2">
            {isLoading ? (
-             <div className="p-20 text-center text-muted-foreground">Loading areas...</div>
-           ) : areas?.length ? (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {areas.map((area) => (
-                 <Card key={area.id} className="border-none shadow-sm group hover:shadow-md transition-shadow">
-                    <CardContent className="p-6 flex items-center justify-between">
+             <div className="p-20 text-center flex flex-col items-center gap-3">
+               <Loader2 className="animate-spin text-primary" size={32} />
+               <span className="text-muted-foreground font-medium">Syncing areas...</span>
+             </div>
+           ) : (
+             <div className="grid grid-cols-2 gap-4 md:gap-6">
+               {areas?.map((area) => (
+                 <Card key={area.id} className="border-none shadow-sm group hover:shadow-md transition-all bg-white rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                          <div className="p-2.5 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                              <MapPin size={20} />
                           </div>
-                          <div>
-                             <h4 className="font-bold text-gray-900">{area.name}</h4>
+                          <div className="space-y-1">
+                             <h4 className="font-bold text-gray-900 text-sm leading-tight">{area.name}</h4>
                              <Badge variant="outline" className={cn(
-                               "text-[8px] font-black border-none px-1.5",
+                               "text-[8px] font-black border-none px-1.5 py-0",
                                area.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                              )}>
                                {area.status?.toUpperCase()}
                              </Badge>
                           </div>
                        </div>
-                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <div className="flex gap-1">
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-primary"
+                            className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg"
                             onClick={() => toggleStatus(area.id, area.status)}
                           >
                             <Edit size={14} />
@@ -115,7 +119,7 @@ export default function ServiceAreasPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-destructive"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg"
                             onClick={() => deleteDoc(doc(db!, 'service_areas', area.id))}
                           >
                             <Trash2 size={14} />
@@ -124,10 +128,11 @@ export default function ServiceAreasPage() {
                     </CardContent>
                  </Card>
                ))}
-             </div>
-           ) : (
-             <div className="p-20 text-center border-2 border-dashed rounded-2xl bg-white text-muted-foreground italic">
-                No service areas defined. Services will be globally available by default.
+               {!areas?.length && !isLoading && (
+                 <div className="col-span-full p-20 text-center border-2 border-dashed rounded-3xl bg-white text-muted-foreground italic">
+                    All services are globally available.
+                 </div>
+               )}
              </div>
            )}
         </div>
