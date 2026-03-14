@@ -7,9 +7,7 @@ import {
   Phone, 
   Mail, 
   Clock, 
-  Facebook, 
-  MessageSquare, 
-  Calendar,
+  MessageCircle,
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,6 +59,7 @@ export function Footer() {
               {["Home Cleaning", "Deep Cleaning", "AC Service", "Pest Control", "Plumbing", "Electrical"].map((item) => (
                 <li key={item}>
                   <Link href="#" className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-2">
+                    <ChevronRight size={12} className="text-primary" />
                     {item}
                   </Link>
                 </li>
@@ -104,7 +103,7 @@ export function Footer() {
               </div>
             </div>
             <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-full py-6">
-              Book a Service
+              Get a Quote
             </Button>
           </div>
         </div>
@@ -122,19 +121,16 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Floating Buttons */}
-      <div className="fixed bottom-6 left-6 z-[60]">
-        <Button className="bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full px-6 py-6 shadow-lg shadow-[#25D366]/20 flex items-center gap-2 group">
-          <MessageSquare size={20} className="fill-current" />
-          <span className="font-bold">WhatsApp</span>
-        </Button>
-      </div>
-
-      <div className="fixed bottom-6 right-6 z-[60]">
-        <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 py-6 shadow-lg shadow-primary/20 flex items-center gap-2 group">
-          <Calendar size={20} />
-          <span className="font-bold">Book Now</span>
-        </Button>
+      {/* Floating WhatsApp Button */}
+      <div className="fixed bottom-8 right-8 z-[60]">
+        <Link 
+          href="https://wa.me/8801919640422" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center justify-center w-16 h-16 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full shadow-2xl shadow-[#25D366]/40 transition-all hover:scale-110 active:scale-95 group"
+        >
+          <MessageCircle size={32} className="fill-white text-[#25D366]" />
+        </Link>
       </div>
     </footer>
   );
