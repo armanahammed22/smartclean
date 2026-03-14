@@ -23,19 +23,16 @@ service cloud.firestore {
     }
 
     // Public Catalog Access (Allow anyone to view)
-    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
-
-    // Nested documents in catalog
-    match /products/{id}/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id}/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    // Using {id=**} ensures both collection lists and individual document reads are permitted.
+    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // Operational Data (Staff only)
     match /orders/{document=**} { allow read, write: if isStaff(); }
