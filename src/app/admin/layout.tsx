@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -13,9 +13,9 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
-  Package,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,46 +54,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/login');
   };
 
-  if (isUserLoading || roleLoading) {
+  // If loading user or checking role, show loader
+  if (isUserLoading || (user && roleLoading)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
         <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-sm font-medium text-muted-foreground">Verifying access...</p>
+        <p className="text-sm font-medium text-muted-foreground">Verifying access credentials...</p>
       </div>
     );
   }
 
+  // If no user is authenticated
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
-        <ShieldCheck size={64} className="text-gray-300" />
-        <h2 className="text-2xl font-bold">Authentication Required</h2>
-        <p className="text-muted-foreground max-w-md">
-          You must be signed in to access the CRM portal.
-        </p>
-        <Button asChild className="font-bold">
-          <Link href="/login">Go to Login</Link>
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
+        <div className="p-4 bg-white rounded-full shadow-sm">
+          <Lock size={48} className="text-gray-400" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Authentication Required</h2>
+          <p className="text-muted-foreground max-w-md">
+            The CRM portal is a restricted area. Please sign in with your administrative account.
+          </p>
+        </div>
+        <Button asChild className="font-bold h-12 px-8 rounded-xl">
+          <Link href="/login">Go to Login Page</Link>
         </Button>
       </div>
     );
   }
 
-  // Allow access if the user has the Firestore marker OR is the Bootstrap Admin
-  const isAuthorized = adminRole || user.uid === BOOTSTRAP_ADMIN_UID;
+  // Permission Logic: 
+  // 1. User has 'roles_admins' document in Firestore
+  // 2. User UID matches the hardcoded bootstrap ID
+  const isAuthorized = !!adminRole || user.uid === BOOTSTRAP_ADMIN_UID;
 
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
         <AlertTriangle size={64} className="text-orange-500" />
-        <h2 className="text-2xl font-bold">Access Denied</h2>
-        <p className="text-muted-foreground max-w-md">
-          Your account ({user.email}) does not have administrator privileges. 
-          Please ensure your UID <code className="bg-gray-200 px-1 rounded">{user.uid}</code> 
-          is added to the <strong>roles_admins</strong> collection in Firestore.
-        </p>
+        <h2 className="text-2xl font-bold">Unauthorized Access</h2>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border max-w-md text-left space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Your account <strong>{user.email}</strong> is authenticated, but does not have permission to view this portal.
+          </p>
+          <div className="p-3 bg-muted rounded-lg text-[10px] font-mono break-all">
+            UID: {user.uid}
+          </div>
+          <p className="text-xs text-muted-foreground italic">
+            Fix: Go to Firestore and add this UID to the 'roles_admins' collection.
+          </p>
+        </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleLogout}>Logout</Button>
-          <Button asChild><Link href="/">Back to Home</Link></Button>
+          <Button variant="outline" onClick={handleLogout}>Logout & Switch Account</Button>
+          <Button asChild><Link href="/">Back to Website</Link></Button>
         </div>
       </div>
     );
@@ -138,6 +152,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="p-4 border-t border-white/10">
+          <div className="mb-4 px-4 py-3 bg-white/5 rounded-xl">
+             <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Authenticated As</p>
+             <p className="text-xs truncate font-medium">{user.email}</p>
+          </div>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-gray-400 hover:text-white hover:bg-destructive/10 hover:text-destructive gap-3"

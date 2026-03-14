@@ -3,9 +3,9 @@
 
 A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15, Tailwind CSS, and Firebase.
 
-## 🚀 How to Access the Admin Dashboard
+## 🚀 Accessing the Admin Dashboard
 
-The CRM portal is located at `/admin/dashboard`. To log in with your credentials (`smartclean422@gmail.com` / `admin123`), follow these mandatory steps in the Firebase Console:
+The CRM portal is located at `/admin/dashboard`. To log in with your credentials (`smartclean422@gmail.com` / `admin123`), you MUST complete these steps in the Firebase Console:
 
 ### 1. Enable Authentication
 - Go to [Firebase Console](https://console.firebase.com/).
@@ -20,21 +20,19 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 - Click **Add user**.
 - **COPY THE UID** generated for this user (it should be: `gcp03WmpjROVvRdpLNsghNU4zHa2`).
 
-### 3. Grant Administrator Privileges (Firestore)
+### 3. (Optional but Recommended) Grant Admin Rights
 - Go to **Build > Firestore Database**.
-- Click **Start collection** (if your DB is empty) or click your existing database.
 - Create a collection named `roles_admins`.
-- **CRITICAL**: Create a new document where the **Document ID** is exactly your UID: `gcp03WmpjROVvRdpLNsghNU4zHa2`.
-- You can leave the fields empty. Save the document.
+- Create a new document where the **Document ID** is your UID: `gcp03WmpjROVvRdpLNsghNU4zHa2`.
+- You can leave the fields empty.
 
-### 4. Login
+### 4. Access the Dashboard
 - Go to `/login` in your app.
 - Enter your email and password.
-- You will be redirected to the Admin Dashboard.
-- Click **"Seed Database"** in the top right to populate the CRM with sample data!
+- You will be redirected to the Dashboard.
+- **NOTE**: The code includes a "bootstrap" bypass for UID `gcp03WmpjROVvRdpLNsghNU4zHa2`. If you use this exact UID, you will have access immediately!
 
-## Key Features
-- **Multi-tenant Leads**: Track sales opportunities across different sources.
-- **Service Workflow**: Assign employees and track cleaning progress.
-- **Analytics**: Revenue forecasting and employee performance metrics.
-- **SaaS Ready**: Structure built for company isolation and role-based access.
+## Features
+- **Leads & Bookings**: Full tracking of sales and appointments.
+- **Staff Management**: Performance metrics and job assignments.
+- **Seed Utility**: Click "Seed Database" in the dashboard to populate with sample data.
