@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -26,7 +25,6 @@ import {
   TicketPercent,
   Truck,
   Menu,
-  MoreHorizontal,
   Tags,
   Layers,
   Award,
@@ -44,11 +42,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
@@ -81,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Products',
       items: [
         { name: 'Product List', href: '/admin/products', icon: Package, color: 'text-purple-500' },
-        { name: 'Categories', href: '/admin/products/categories', icon: Tags, color: 'text-pink-500' },
+        { name: 'Product Categories', href: '/admin/products/categories', icon: Tags, color: 'text-pink-500' },
         { name: 'Brands', href: '/admin/products/brands', icon: Award, color: 'text-rose-500' },
       ]
     },
@@ -89,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Services',
       items: [
         { name: 'Service List', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
-        { name: 'Categories', href: '/admin/services/categories', icon: Layers, color: 'text-cyan-500' },
+        { name: 'Service Categories', href: '/admin/services/categories', icon: Layers, color: 'text-cyan-500' },
       ]
     },
     {
@@ -229,22 +222,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <LayoutDashboard size={20} />
           <span className="text-[10px] font-bold">Dashboard</span>
         </Link>
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <button className="flex flex-col items-center gap-1 text-gray-400">
-              <Menu size={20} />
-              <span className="text-[10px] font-bold">Menu</span>
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="p-0 bg-[#081621] border-none h-[80vh] rounded-t-3xl">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Admin Mobile Menu</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col h-full text-white">
-              <SidebarContent mobileOnly />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <Link href="/admin/reports" className={cn("flex flex-col items-center gap-1", pathname === '/admin/reports' ? "text-primary" : "text-gray-400")}>
+          <BarChart3 size={20} />
+          <span className="text-[10px] font-bold">Reports</span>
+        </Link>
         <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-400">
           <LogOut size={20} />
           <span className="text-[10px] font-bold">Logout</span>
@@ -274,9 +255,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
-          <h2 className="text-sm font-bold text-gray-900">
-            {NAV_GROUPS.flatMap(g => g.items).find(i => i.href === pathname)?.name || 'Admin'}
-          </h2>
+          <div className="flex items-center gap-4">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600">
+                  <Menu size={24} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Admin Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col h-full text-white">
+                  <SidebarContent mobileOnly />
+                </div>
+              </SheetContent>
+            </Sheet>
+            <h2 className="text-sm font-bold text-gray-900">
+              {NAV_GROUPS.flatMap(g => g.items).find(i => i.href === pathname)?.name || 'Admin'}
+            </h2>
+          </div>
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
               {user?.email?.[0].toUpperCase()}
