@@ -17,7 +17,8 @@ import {
   Loader2,
   Lock,
   Wrench,
-  CreditCard
+  CreditCard,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Sales Leads', href: '/admin/leads', icon: Users },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
     { name: 'Services', href: '/admin/services', icon: Wrench },
+    { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Staff', href: '/admin/employees', icon: UserSquare2 },
     { name: 'Subscription', href: '/admin/subscription', icon: CreditCard },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

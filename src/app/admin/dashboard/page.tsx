@@ -77,6 +77,18 @@ export default function AdminDashboard() {
         batch.set(ref, e);
       });
 
+      // Seed Products
+      const products = [
+        { name: "Smart Vacuum Robot", price: 49999, category: "Equipment", stockQuantity: 15, description: "AI-powered cleaning robot", imageUrl: "https://picsum.photos/seed/vacuum/600/400" },
+        { name: "Eco Cleaning Kit", price: 4500, category: "Supplies", stockQuantity: 50, description: "Biodegradable organic solutions", imageUrl: "https://picsum.photos/seed/eco/600/400" },
+        { name: "Pro Steam Mop", price: 12900, category: "Equipment", stockQuantity: 8, description: "High-temp sanitizing steam mop", imageUrl: "https://picsum.photos/seed/steam/600/400" },
+      ];
+
+      products.forEach((p) => {
+        const ref = doc(collection(db, 'products'));
+        batch.set(ref, p);
+      });
+
       // Seed Bookings
       const bookings = [
         { serviceId: "Home Deep Clean", customerId: "Rahim Ahmed", employeeId: "Karim Uddin", dateTime: new Date(Date.now() + 86400000).toISOString(), status: "Assigned", totalPrice: 15000 },
