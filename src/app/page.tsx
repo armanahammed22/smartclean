@@ -1,9 +1,9 @@
-
 "use client";
 
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/products/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -14,7 +14,7 @@ import { useCart } from '@/components/providers/cart-provider';
 import { 
   Layout, Wrench, Activity, Truck, ShieldCheck, 
   Headphones, ArrowRight, Home, Building2, 
-  Brush, Sparkles, Wind, CalendarCheck 
+  Brush, Sparkles, Wind, CalendarCheck, ShoppingCart 
 } from 'lucide-react';
 import {
   Carousel,
@@ -27,6 +27,7 @@ import {
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
+  const router = useRouter();
 
   const MOCK_PRODUCTS = getMockProducts(language);
   const MOCK_SERVICES = getMockServices(language);
@@ -50,6 +51,11 @@ export default function SmartCleanHomePage() {
     PlaceHolderImages.find(img => img.id === 'hero-side-1'),
     PlaceHolderImages.find(img => img.id === 'hero-side-2'),
   ];
+
+  const handleBookNowDirectly = (service: any) => {
+    addToCart(service);
+    router.push('/checkout');
+  };
 
   return (
     <div className="flex flex-col gap-12 pb-24 bg-[#F2F4F8]">
@@ -174,13 +180,24 @@ export default function SmartCleanHomePage() {
                           </Link>
                         </Button>
                       </div>
-                      <Button 
-                        onClick={() => addToCart(service)}
-                        className="w-full gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md"
-                      >
-                        <CalendarCheck size={18} />
-                        {t('book_now')}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleBookNowDirectly(service)}
+                          className="flex-1 gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md"
+                        >
+                          <CalendarCheck size={18} />
+                          {t('book_now')}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-12 w-12 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
+                          onClick={() => addToCart(service)}
+                          title={t('add_to_cart')}
+                        >
+                          <ShoppingCart size={20} />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

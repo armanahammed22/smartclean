@@ -1,8 +1,8 @@
-
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,12 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { t } = useLanguage();
+  const router = useRouter();
+
+  const handleOrderNow = () => {
+    addToCart(product);
+    router.push('/checkout');
+  };
 
   return (
     <Card className="overflow-hidden group flex flex-col h-full hover:shadow-lg transition-all duration-300 border-border/50">
@@ -44,13 +50,21 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.shortDescription}
         </p>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 gap-2">
         <Button 
-          className="w-full gap-2 group font-bold" 
-          onClick={() => addToCart(product)}
+          className="flex-1 gap-2 group font-bold" 
+          onClick={handleOrderNow}
         >
-          <ShoppingCart size={16} className="group-active:scale-125 transition-transform" />
-          {t('add_to_cart')}
+          {t('order_now')}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="shrink-0 hover:bg-primary hover:text-white transition-colors border-primary text-primary"
+          onClick={() => addToCart(product)}
+          title={t('add_to_cart')}
+        >
+          <ShoppingCart size={18} />
         </Button>
       </CardFooter>
     </Card>

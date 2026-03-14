@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,19 +29,18 @@ import {
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, CalendarIcon, Clock } from 'lucide-react';
+import { Loader2, CheckCircle2, CalendarIcon, Wallet, CreditCard } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().min(10, "Phone number must be valid"),
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().min(10, "Please provide a complete address"),
-  date: z.date({
-    required_error: "Please select a booking date",
-  }),
-  time: z.string().min(1, "Please select a time slot"),
-  service: z.string().min(1, "Please select the primary service"),
+  date: z.date().optional(),
+  time: z.string().optional(),
+  paymentMethod: z.string().min(1, "Please select a payment method"),
   notes: z.string().optional(),
 });
 
@@ -51,8 +50,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const servicesInCart = items.filter(i => i.itemType === 'service');
-  const defaultService = servicesInCart.length > 0 ? servicesInCart[0].id : "";
+  const hasServices = items.some(i => i.itemType === 'service');
+  const defaultPayment = hasServices ? "cash_in_hand" : "cod";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,10 +61,15 @@ export default function CheckoutPage() {
       email: "",
       address: "",
       time: "",
-      service: defaultService,
+      paymentMethod: defaultPayment,
       notes: "",
     },
   });
+
+  // Re-evaluate payment method if cart changes
+  useEffect(() => {
+    form.setValue('paymentMethod', hasServices ? "cash_in_hand" : "cod");
+  }, [hasServices, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
@@ -162,100 +166,123 @@ export default function CheckoutPage() {
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="date"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel className="font-bold">{t('booking_date')}</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={"outline"}
-                                      className={cn(
-                                        "h-12 w-full pl-3 text-left font-normal bg-[#F9FAFB]",
-                                        !field.value && "text-muted-foreground"
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        format(field.value, "PPP")
-                                      ) : (
-                                        <span>{t('pick_date')}</span>
-                                      )}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) =>
-                                      date < new Date() || date < new Date("1900-01-01")
-                                    }
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      {hasServices && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-primary/5 rounded-xl border border-primary/20">
+                          <FormField
+                            control={form.control}
+                            name="date"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel className="font-bold">{t('booking_date')}</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "h-12 w-full pl-3 text-left font-normal bg-white",
+                                          !field.value && "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value ? (
+                                          format(field.value, "PPP")
+                                        ) : (
+                                          <span>{t('pick_date')}</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={field.onChange}
+                                      disabled={(date) =>
+                                        date < new Date() || date < new Date("1900-01-01")
+                                      }
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
+                          <FormField
+                            control={form.control}
+                            name="time"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="font-bold">{t('booking_time')}</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-12 bg-white">
+                                      <SelectValue placeholder={t('select_time')} />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="morning">{t('morning')}</SelectItem>
+                                    <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
+                                    <SelectItem value="evening">{t('evening')}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-4">
+                        <FormLabel className="font-bold text-lg">{t('payment_method')}</FormLabel>
                         <FormField
                           control={form.control}
-                          name="time"
+                          name="paymentMethod"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">{t('booking_time')}</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-12 bg-[#F9FAFB]">
-                                    <SelectValue placeholder={t('select_time')} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="morning">{t('morning')}</SelectItem>
-                                  <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
-                                  <SelectItem value="evening">{t('evening')}</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <FormItem className="space-y-3">
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="grid grid-cols-1 gap-4"
+                                >
+                                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border p-4 cursor-pointer hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                    <FormControl>
+                                      <RadioGroupItem value="cod" disabled={hasServices} />
+                                    </FormControl>
+                                    <FormLabel className="font-medium flex items-center gap-3 cursor-pointer w-full">
+                                      <div className="p-2 bg-muted rounded-full text-muted-foreground group-checked:text-primary">
+                                        <Wallet size={18} />
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span>{t('payment_cod')}</span>
+                                        {hasServices && <span className="text-[10px] text-destructive">Products only</span>}
+                                      </div>
+                                    </FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border p-4 cursor-pointer hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                    <FormControl>
+                                      <RadioGroupItem value="cash_in_hand" />
+                                    </FormControl>
+                                    <FormLabel className="font-medium flex items-center gap-3 cursor-pointer w-full">
+                                      <div className="p-2 bg-muted rounded-full text-muted-foreground">
+                                        <CreditCard size={18} />
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span>{t('payment_cash_hand')}</span>
+                                        <span className="text-[10px] text-muted-foreground italic">Preferred for bookings</span>
+                                      </div>
+                                    </FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name="service"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-bold">{t('select_service')}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="h-12 bg-[#F9FAFB]">
-                                  <SelectValue placeholder={t('select_service')} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {items.map(item => (
-                                  <SelectItem key={item.id} value={item.id}>
-                                    {item.name}
-                                  </SelectItem>
-                                ))}
-                                {items.length === 0 && (
-                                  <SelectItem value="general">General Cleaning</SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
                       <FormField
                         control={form.control}
@@ -324,7 +351,7 @@ export default function CheckoutPage() {
                         <span>{t('total')}</span>
                         <span>৳{(subtotal * 1.08).toLocaleString()}</span>
                       </div>
-                      {items.some(i => i.itemType === 'service') && (
+                      {hasServices && (
                         <p className="text-[10px] text-center italic text-muted-foreground mt-2">
                           {t('service_billing_note')}
                         </p>

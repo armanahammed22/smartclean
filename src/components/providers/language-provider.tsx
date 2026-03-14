@@ -32,7 +32,8 @@ const translations: Record<Language, Record<string, string>> = {
     products_title: "শীর্ষ ক্লিনিং পণ্য",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     view_all: "সব দেখুন",
-    add_to_cart: "এখনই অর্ডার করুন",
+    add_to_cart: "কার্টে যোগ করুন",
+    order_now: "এখনই অর্ডার করুন",
     cart_title: "অর্ডার তালিকা",
     empty_cart: "আপনার তালিকা খালি",
     empty_cart_desc: "মনে হচ্ছে আপনি এখনও আপনার তালিকায় কিছু যোগ করেননি।",
@@ -45,7 +46,7 @@ const translations: Record<Language, Record<string, string>> = {
     services_title: "আমাদের বিশেষজ্ঞতা",
     services_subtitle: "আমরা বিশেষায়িত ক্লিনিং এবং রক্ষণাবেক্ষণ সেবার একটি বিস্তৃত পরিসর প্রদান করি।",
     service_details: "বিস্তারিত",
-    book_now: "বুক করুন",
+    book_now: "এখনই বুক করুন",
     price_from: "থেকে",
     
     // Features
@@ -68,7 +69,7 @@ const translations: Record<Language, Record<string, string>> = {
     delivery_address: "সেবার ঠিকানা / ডেলিভারি ঠিকানা",
     booking_date: "পছন্দসই তারিখ",
     booking_time: "পছন্দসই সময়",
-    select_service: "প্রধান সেবা নির্বাচন করুন",
+    select_service: "সেবা নির্বাচন করুন",
     order_notes: "অর্ডার নোট (ঐচ্ছিক)",
     place_order: "অর্ডার সম্পন্ন করুন",
     processing: "প্রসেসিং হচ্ছে...",
@@ -78,6 +79,9 @@ const translations: Record<Language, Record<string, string>> = {
     morning: "সকাল (৮টা - ১২টা)",
     afternoon: "দুপুর (১২টা - ৪টা)",
     evening: "বিকাল (৪টা - ৮টা)",
+    payment_method: "পেমেন্ট পদ্ধতি",
+    payment_cod: "ক্যাশ অন ডেলিভারি (COD)",
+    payment_cash_hand: "ক্যাশ ইন হ্যান্ড (Cash in Hand)",
     
     // Order Success
     order_confirmed: "অর্ডার নিশ্চিত করা হয়েছে!",
@@ -98,7 +102,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // UI
     cart_added: "অর্ডারে যোগ করা হয়েছে",
-    cart_desc: "পণ্যটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে。",
+    cart_desc: "আইটেমটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।",
     service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।"
   },
   en: {
@@ -120,7 +124,8 @@ const translations: Record<Language, Record<string, string>> = {
     products_title: "Top Cleaning Products",
     products_subtitle: "High-performance tools for professional results.",
     view_all: "View All",
-    add_to_cart: "Order Now",
+    add_to_cart: "Add to Cart",
+    order_now: "Order Now",
     cart_title: "Order List",
     empty_cart: "Your order list is empty",
     empty_cart_desc: "Looks like you haven't added anything to your order list yet.",
@@ -156,7 +161,7 @@ const translations: Record<Language, Record<string, string>> = {
     delivery_address: "Service Address / Delivery Address",
     booking_date: "Preferred Date",
     booking_time: "Preferred Time",
-    select_service: "Select Primary Service",
+    select_service: "Select Service",
     order_notes: "Order Notes (Optional)",
     place_order: "Place Order",
     processing: "Processing...",
@@ -166,6 +171,9 @@ const translations: Record<Language, Record<string, string>> = {
     morning: "Morning (8AM - 12PM)",
     afternoon: "Afternoon (12PM - 4PM)",
     evening: "Evening (4PM - 8PM)",
+    payment_method: "Payment Method",
+    payment_cod: "Cash on Delivery (COD)",
+    payment_cash_hand: "Cash in Hand",
 
     // Order Success
     order_confirmed: "Order Confirmed!",
