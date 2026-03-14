@@ -12,39 +12,33 @@ export interface Product {
   stockQuantity: number;
   sku?: string;
   type?: 'product';
-  variants?: ProductVariant[];
-}
-
-export interface ProductVariant {
-  id: string;
-  type: 'Size' | 'Color' | 'Storage' | 'Model';
-  value: string;
-  price: number;
-  stockQuantity: number;
-}
-
-export interface ProductCategory {
-  id: string;
-  name: string;
-  slug: string;
-  icon?: string;
-  parentId?: string;
   status: 'Active' | 'Inactive';
+  onSale?: boolean;
 }
 
-export interface Brand {
+export interface MarketingOffer {
   id: string;
-  name: string;
-  slug: string;
-  status: 'Active' | 'Inactive';
+  title: string;
+  description: string;
+  imageUrl: string;
+  link: string;
+  placement: 'top' | 'middle' | 'before_products' | 'after_products';
+  enabled: boolean;
+  productIds?: string[];
+  serviceIds?: string[];
 }
 
-export interface ServiceCategory {
+export interface MarketingCampaign {
   id: string;
-  name: string;
-  slug: string;
-  icon?: string;
-  status: 'Active' | 'Inactive';
+  title: string;
+  description: string;
+  bannerUrl: string;
+  startDate: string;
+  endDate: string;
+  type: 'flat_discount' | 'percent_discount' | 'free_gift' | 'lucky_draw';
+  terms: string;
+  enabled: boolean;
+  productIds?: string[];
 }
 
 export interface CartItem {
@@ -55,7 +49,6 @@ export interface CartItem {
   category: string;
   quantity: number;
   itemType: 'product' | 'service';
-  variantId?: string;
 }
 
 export interface Service {

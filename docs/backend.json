@@ -16,106 +16,42 @@
         "stockQuantity": { "type": "number" },
         "sku": { "type": "string" },
         "description": { "type": "string" },
-        "variants": { "type": "array" }
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "onSale": { "type": "boolean" }
       },
       "required": ["id", "name", "price", "categoryId"]
     },
-    "ProductCategory": {
-      "title": "ProductCategory",
+    "MarketingOffer": {
+      "title": "MarketingOffer",
       "type": "object",
+      "description": "Promotional banners with placement logic.",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "icon": { "type": "string" },
-        "parentId": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "link": { "type": "string" },
+        "placement": { "type": "string", "enum": ["top", "middle", "before_products", "after_products"] },
+        "enabled": { "type": "boolean" },
+        "productIds": { "type": "array", "items": { "type": "string" } },
+        "serviceIds": { "type": "array", "items": { "type": "string" } }
       }
     },
-    "ServiceCategory": {
-      "title": "ServiceCategory",
+    "MarketingCampaign": {
+      "title": "MarketingCampaign",
       "type": "object",
+      "description": "Dated promotional events with rewards.",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "icon": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
-      }
-    },
-    "SiteSettings": {
-      "title": "SiteSettings",
-      "type": "object",
-      "properties": {
-        "websiteName": { "type": "string" },
-        "logoUrl": { "type": "string" },
-        "faviconUrl": { "type": "string" },
-        "contactEmail": { "type": "string" },
-        "contactPhone": { "type": "string" },
-        "address": { "type": "string" },
-        "socialLinks": { "type": "object" },
-        "currency": { "type": "string" },
-        "defaultLanguage": { "type": "string" },
-        "seoTitle": { "type": "string" },
-        "seoDescription": { "type": "string" },
-        "footerContent": { "type": "string" }
-      }
-    },
-    "HomepageCustomization": {
-      "title": "HomepageCustomization",
-      "type": "object",
-      "properties": {
-        "hero": {
-          "type": "object",
-          "properties": {
-            "title": { "type": "string" },
-            "subtitle": { "type": "string" },
-            "imageUrl": { "type": "string" },
-            "ctaText": { "type": "string" },
-            "ctaLink": { "type": "string" },
-            "enabled": { "type": "boolean" }
-          }
-        },
-        "sections": {
-          "type": "object",
-          "properties": {
-            "popularProducts": { "type": "boolean" },
-            "recentProducts": { "type": "boolean" },
-            "bestSellingProducts": { "type": "boolean" },
-            "popularServices": { "type": "boolean" },
-            "recentServices": { "type": "boolean" },
-            "bestSellingServices": { "type": "boolean" },
-            "campaigns": { "type": "boolean" },
-            "offerBanners": { "type": "boolean" },
-            "customContent": { "type": "boolean" }
-          }
-        },
-        "offerBanners": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "imageUrl": { "type": "string" },
-              "link": { "type": "string" },
-              "enabled": { "type": "boolean" }
-            }
-          }
-        },
-        "campaigns": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "title": { "type": "string" },
-              "description": { "type": "string" },
-              "imageUrl": { "type": "string" },
-              "enabled": { "type": "boolean" }
-            }
-          }
-        },
-        "featuredProductIds": { "type": "array", "items": { "type": "string" } },
-        "featuredServiceIds": { "type": "array", "items": { "type": "string" } },
-        "marketingContent": { "type": "string" }
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["flat_discount", "percent_discount", "free_gift", "lucky_draw"] },
+        "terms": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "productIds": { "type": "array", "items": { "type": "string" } }
       }
     }
   },
@@ -125,11 +61,9 @@
   "firestore": {
     "/product_categories/{catId}": { "schema": "#/entities/ProductCategory", "description": "Product hierarchies." },
     "/service_categories/{catId}": { "schema": "#/entities/ServiceCategory", "description": "Service categories." },
-    "/brands/{brandId}": { "schema": "#/entities/Brand", "description": "Product brands." },
-    "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Product orders." },
-    "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Services catalog." },
+    "/marketing_offers/{id}": { "schema": "#/entities/MarketingOffer", "description": "Dynamic homepage banners." },
+    "/marketing_campaigns/{id}": { "schema": "#/entities/MarketingCampaign", "description": "Timed sales events." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
-    "/site_settings/global": { "schema": "#/entities/SiteSettings", "description": "Global website configuration." },
-    "/site_settings/homepage": { "schema": "#/entities/HomepageCustomization", "description": "Homepage layout control." }
+    "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Customer orders." }
   }
 }

@@ -5,23 +5,22 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard } from '@/components/products/product-card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/components/providers/cart-provider';
 import { PublicLayout } from '@/components/layout/public-layout';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, doc, where } from 'firebase/firestore';
+import { Badge } from '@/components/ui/badge';
 import { 
   Carousel, 
   CarouselContent, 
   CarouselItem, 
   CarouselNext,
-  CarouselPrevious,
-  type CarouselApi
+  CarouselPrevious 
 } from '@/components/ui/carousel';
 import { 
-  Layout, 
-  Box, 
   BellRing, 
   Star,
   Zap,
@@ -31,27 +30,27 @@ import {
   TrendingUp,
   Clock,
   ArrowRight,
-  Tags
+  Tags,
+  CheckCircle2,
+  LayoutGrid
 } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc, limit, where } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
 
-// Helper component for the Flash Sale timer
-const CountdownTimer = () => {
-  const [timeLeft, setTimeTime] = useState({ hours: 12, minutes: 0, seconds: 0 });
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeTime(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
+      const difference = +new Date(targetDate) - +new Date();
+      if (difference > 0) {
+        setTimeTime({
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60),
+        });
+      }
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [targetDate]);
 
   return (
     <div className="flex gap-2">
@@ -67,308 +66,169 @@ const CountdownTimer = () => {
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { addToCart, setCheckoutOpen } = useCart();
-  const [currentDate, setCurrentDate] = useState<string>('');
+  const [marqueeText, setMarqueeText] = useState<string>('');
   const db = useFirestore();
 
-  // Settings & Customization
-  const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
-  const { data: customization } = useDoc(customizationRef);
-
-  // Firestore Collections
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
-  const prodCatsQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories'), orderBy('name', 'asc')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('name', 'asc')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
+  const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), where('enabled', '==', true)) : null, [db]);
+  const campaignsQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_campaigns'), where('enabled', '==', true)) : null, [db]);
 
   const { data: products } = useCollection(productsQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: productCategories } = useCollection(prodCatsQuery);
+  const { data: offers } = useCollection(offersQuery);
+  const { data: campaigns } = useCollection(campaignsQuery);
 
   useEffect(() => {
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
-    setCurrentDate(dateStr);
-  }, [language]);
+    setMarqueeText(`${dateStr} | ${t('hero_banner_title')} | Free Shipping on Equipment | Professional Deep Cleaning Across Dhaka & Chittagong.`);
+  }, [language, t]);
 
-  const handleBookNowDirectly = (service: any) => {
-    addToCart(service);
-    setCheckoutOpen(true);
+  const renderOffers = (placement: string) => {
+    return offers?.filter(o => o.placement === placement).map(offer => (
+      <Link key={offer.id} href={offer.link || '#'} className="block relative aspect-[21/7] rounded-3xl overflow-hidden group shadow-lg">
+        <Image src={offer.imageUrl} alt={offer.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+        <div className="absolute inset-0 bg-black/20" />
+      </Link>
+    ));
   };
 
-  // Logic Helpers
-  const activeProducts = products?.filter(p => p.status !== 'Inactive') || [];
-  const activeServices = services?.filter(s => s.status !== 'Inactive') || [];
-  const featuredProducts = activeProducts.filter(p => customization?.featuredProductIds?.includes(p.id));
-  const trendingProducts = activeProducts.slice(0, 8); // In real app, order by 'views'
-  const popularProducts = activeProducts.slice(2, 10);
-  const flashSaleProducts = activeProducts.filter(p => p.onSale).length > 0 ? activeProducts.filter(p => p.onSale) : activeProducts.slice(0, 4);
-
-  const marqueeText = `${currentDate ? currentDate + ' | ' : ''}${t('hero_banner_title')} | ${t('hero_phone')} | ${t('footer_address')} | Professional Cleaning Nationwide.`;
+  const activeCampaign = campaigns?.find(c => {
+    const now = new Date().toISOString();
+    return now >= c.startDate && now <= c.endDate;
+  });
 
   return (
     <PublicLayout>
       <div className="flex flex-col gap-4 pb-12 bg-[#F2F4F8]">
         
-        {/* 1. Hero Section */}
-        {customization?.hero?.enabled !== false && (
-          <section className="container mx-auto px-4 pt-4">
-            <div className="relative overflow-hidden rounded-2xl shadow-lg bg-white border aspect-[21/9] w-full">
-              <Image 
-                src={customization?.hero?.imageUrl || PlaceHolderImages.find(img => img.id === 'hero-main')?.imageUrl || ''} 
-                alt="Promo" 
-                fill 
-                className="object-cover" 
-                priority 
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex flex-col justify-center p-8 md:p-16">
-                <div className="max-w-md space-y-4">
-                  <h2 className="text-2xl md:text-5xl font-black text-white drop-shadow-lg leading-tight font-headline">
-                    {customization?.hero?.title || t('hero_question')}
-                  </h2>
-                  <p className="text-white font-medium drop-shadow-md text-sm md:text-lg">
-                    {customization?.hero?.subtitle || ''}
-                  </p>
-                  <Button 
-                    className="bg-[#EF4A23] hover:bg-[#D43D1A] text-white rounded-full px-6 md:px-10 py-4 md:py-8 h-auto text-base md:text-2xl font-black shadow-2xl transition-transform hover:scale-105" 
-                    asChild
-                  >
-                    <Link href={customization?.hero?.ctaLink || "/#services"}>
-                      {customization?.hero?.ctaText || t('hero_cta')}
-                    </Link>
-                  </Button>
+        {/* Top Banner Offers */}
+        <section className="container mx-auto px-4 pt-4 space-y-4">
+          {renderOffers('top')}
+        </section>
+
+        {/* Hero Section */}
+        <section className="container mx-auto px-4">
+          <div className="relative overflow-hidden rounded-3xl shadow-xl bg-[#081621] text-white aspect-[21/9] md:aspect-[21/7]">
+            <Image src="https://picsum.photos/seed/main-hero/1200/600" alt="Hero" fill className="object-cover opacity-40" />
+            <div className="absolute inset-0 flex flex-col justify-center p-8 md:p-16 space-y-6">
+              <div className="max-w-xl space-y-2">
+                <Badge className="bg-primary text-white border-none mb-4 uppercase tracking-[0.2em]">Bangladesh's #1 Clean Tech</Badge>
+                <h1 className="text-3xl md:text-6xl font-black font-headline leading-tight">{t('hero_banner_title')}</h1>
+                <p className="text-white/80 text-sm md:text-lg">{t('hero_subtitle')}</p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] rounded-full h-14 px-10 text-lg font-black shadow-2xl" asChild>
+                  <Link href="#services">{t('hero_cta')}</Link>
+                </Button>
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 rounded-full border border-white/20">
+                  <Clock className="text-primary" />
+                  <span className="font-bold text-sm">{t('hero_phone')}</span>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
-
-        {/* Marquee Updates */}
-        <section className="container mx-auto px-4">
-          <div className="bg-white rounded-full h-12 md:h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden">
-            <div className="h-full bg-[#F9FAFB] px-4 md:px-6 flex items-center gap-2 border-r z-10 shrink-0">
-               <BellRing size={18} className="text-primary animate-bounce" />
-               <span className="text-[10px] md:text-xs font-black uppercase text-[#081621] tracking-widest hidden sm:inline">Update</span>
-            </div>
-            <div className="flex-1 overflow-hidden relative h-full flex items-center">
-               <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-medium text-gray-600 px-4">{marqueeText}</p>
             </div>
           </div>
         </section>
 
-        <div className="container mx-auto px-4 space-y-12 md:space-y-20 mt-8">
+        {/* Marquee */}
+        <section className="container mx-auto px-4">
+          <div className="bg-white rounded-full h-12 shadow-sm border border-gray-100 flex items-center overflow-hidden">
+            <div className="h-full bg-primary px-6 flex items-center gap-2 z-10 text-white font-black text-xs uppercase tracking-widest">
+              <BellRing size={16} /> LIVE
+            </div>
+            <div className="flex-1 overflow-hidden relative h-full flex items-center">
+               <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-medium text-gray-600 px-4">
+                 {marqueeText}
+               </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 space-y-12 mt-8">
           
-          {/* 2. Category Slider */}
-          <section className="bg-white p-6 rounded-2xl shadow-sm border overflow-hidden">
-            <div className="flex items-center gap-2 mb-6">
-              <Tags className="text-primary" size={20} />
-              <h2 className="font-black uppercase tracking-tight text-sm md:text-base">Browse by Category</h2>
-            </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {productCategories?.map(cat => (
-                <Link key={cat.id} href={`/category/${cat.slug}`} className="flex flex-col items-center gap-3 shrink-0 group">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center transition-all group-hover:bg-primary/10 group-hover:border-primary/30 group-hover:scale-110 group-active:scale-95 shadow-sm">
-                    <Box size={24} className="text-gray-400 group-hover:text-primary" />
-                  </div>
-                  <span className="text-[10px] md:text-xs font-bold text-center group-hover:text-primary truncate w-20">{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* 3. Trending Products Slider */}
-          {customization?.sections?.trendingProducts !== false && activeProducts.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary rounded-lg text-white"><TrendingUp size={20} /></div>
-                  <h2 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tight">Trending Now</h2>
-                </div>
-                <Button variant="ghost" className="text-xs font-bold text-primary gap-1">View All <ChevronRight size={14} /></Button>
-              </div>
-              <Carousel opts={{ align: "start", loop: true }} className="w-full">
-                <CarouselContent className="-ml-4">
-                  {trendingProducts.map((product) => (
-                    <CarouselItem key={product.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4">
-                      <ProductCard product={product} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <div className="hidden md:block">
-                  <CarouselPrevious className="-left-4 bg-white shadow-xl" />
-                  <CarouselNext className="-right-4 bg-white shadow-xl" />
-                </div>
-              </Carousel>
-            </section>
-          )}
-
-          {/* 4. Popular Products */}
-          {customization?.sections?.popularProducts !== false && popularProducts.length > 0 && (
-            <section className="space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#081621] rounded-lg text-white"><Star size={20} /></div>
-                  <h2 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tight">Popular Products</h2>
-                </div>
-                <div className="h-px flex-1 bg-gray-200 mx-6 rounded-full hidden md:block" />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                {popularProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* 5. Featured Products (Manual) */}
-          {customization?.sections?.featuredProducts !== false && featuredProducts.length > 0 && (
-            <section className="bg-primary/5 p-8 rounded-3xl border border-primary/10">
-              <div className="mb-10 text-center">
-                <Badge className="bg-primary text-white mb-2">Editor's Choice</Badge>
-                <h2 className="text-3xl font-black text-[#081621] uppercase tracking-tighter">Featured Equipment</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* 6. Flash Sale */}
-          {customization?.sections?.flashSale !== false && flashSaleProducts.length > 0 && (
-            <section className="bg-[#081621] p-6 md:p-10 rounded-3xl shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
-                <Zap size={200} className="text-white" />
-              </div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 relative z-10">
+          {/* Active Campaign Flash Sale */}
+          {activeCampaign && (
+            <section className="bg-[#081621] p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-10 opacity-10"><Zap size={200} className="text-white" /></div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Zap className="text-yellow-400 fill-yellow-400" size={32} />
-                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Flash Sale</h2>
+                  <div className="flex items-center gap-3 text-yellow-400">
+                    <Zap fill="currentColor" size={32} />
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">{activeCampaign.title}</h2>
                   </div>
-                  <p className="text-white/60 font-medium">Hurry! Offers end soon.</p>
+                  <p className="text-white/60 font-medium">{activeCampaign.description}</p>
+                  <Button variant="link" className="text-primary p-0 h-auto font-bold" asChild>
+                    <Link href={`/campaign/${activeCampaign.id}`}>View Campaign Details <ArrowRight size={16} className="ml-2" /></Link>
+                  </Button>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest text-center md:text-left">Ending In</span>
-                  <CountdownTimer />
+                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Ending In</span>
+                  <CountdownTimer targetDate={activeCampaign.endDate} />
                 </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 relative z-10">
-                {flashSaleProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
               </div>
             </section>
           )}
 
-          {/* 7. Services Section */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between">
+          {/* Offers: Before Products */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {renderOffers('before_products')}
+          </div>
+
+          {/* Services Section */}
+          <section id="services" className="space-y-8">
+            <div className="flex items-center justify-between border-b pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-lg text-white"><TicketPercent size={20} /></div>
-                <h2 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tight">{t('services_title')}</h2>
+                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20"><LayoutGrid size={24} /></div>
+                <h2 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tighter">{t('services_title')}</h2>
               </div>
-              <Button asChild variant="outline" className="rounded-full font-bold border-primary text-primary hover:bg-primary/5">
-                <Link href="/services">Browse All Services</Link>
-              </Button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {(activeServices.length > 0 ? activeServices.slice(0, 4) : []).map((service) => (
-                <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white flex flex-col h-full group">
-                  <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
-                    <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover group-hover:scale-105 transition-transform" />
+              {services?.slice(0, 4).map((service) => (
+                <Card key={service.id} className="border-none shadow-sm hover:shadow-xl transition-all overflow-hidden bg-white group flex flex-col">
+                  <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
+                    <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
                   </Link>
-                  <CardHeader className="p-4 pb-1">
-                    <CardTitle className="text-xs md:text-sm font-bold line-clamp-1">{service.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0 flex-1">
-                    <div className="flex flex-col">
-                      <span className="text-[8px] text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
-                      <span className="text-primary font-black text-sm md:text-base">৳{service.basePrice.toLocaleString()}</span>
+                  <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <h3 className="font-bold text-sm leading-tight line-clamp-2">{service.title}</h3>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest">{t('price_from')}</span>
+                        <span className="text-primary font-black text-lg">৳{service.basePrice.toLocaleString()}</span>
+                      </div>
+                      <Button onClick={() => { addToCart(service); setCheckoutOpen(true); }} className="w-full gap-2 font-bold bg-primary text-white h-10 text-xs">
+                        {t('book_now')}
+                      </Button>
                     </div>
                   </CardContent>
-                  <CardFooter className="p-4 pt-0">
-                    <Button onClick={() => handleBookNowDirectly(service)} size="sm" className="w-full gap-2 font-bold bg-primary text-white h-9 text-[10px] md:text-xs">{t('book_now')}</Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
           </section>
 
-          {/* 8. Offer Banners */}
-          {customization?.sections?.offerBanners && customization.offerBanners?.length > 0 && (
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {customization.offerBanners?.filter((b: any) => b.enabled).map((banner: any, i: number) => (
-                <Link key={i} href={banner.link || '#'} className="block relative aspect-[16/7] rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition-all">
-                  <Image src={banner.imageUrl} alt="Promo" fill className="object-cover group-hover:scale-105 transition-transform" />
-                </Link>
+          {/* Middle Offers */}
+          <div className="space-y-6">
+            {renderOffers('middle')}
+          </div>
+
+          {/* Trending Products */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-[#EF4A23] rounded-2xl text-white shadow-lg shadow-red-500/20"><TrendingUp size={24} /></div>
+              <h2 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tighter">Trending Products</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+              {products?.slice(0, 10).map((product) => (
+                <ProductCard key={product.id} product={product} />
               ))}
-            </section>
-          )}
+            </div>
+          </section>
 
-          {/* 9. Campaign Section */}
-          {customization?.sections?.campaigns && customization.campaigns?.length > 0 && (
-            <section className="space-y-8">
-              {customization.campaigns?.filter((c: any) => c.enabled).map((camp: any, i: number) => (
-                <div key={i} className="relative aspect-[21/7] w-full rounded-3xl overflow-hidden shadow-lg group">
-                  <Image src={camp.imageUrl} alt={camp.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16">
-                    <div className="max-w-xl space-y-4">
-                      <div className="flex items-center gap-2 text-primary">
-                        <Zap size={20} fill="currentColor" />
-                        <span className="text-xs font-black uppercase tracking-widest text-white">Active Campaign</span>
-                      </div>
-                      <h2 className="text-2xl md:text-4xl font-black text-white">{camp.title}</h2>
-                      <p className="text-white/80 text-sm md:text-lg line-clamp-2">{camp.description}</p>
-                      <Button className="w-fit bg-primary hover:bg-primary/90 font-bold px-8 h-12 shadow-xl shadow-primary/20">Learn More <ArrowRight size={18} className="ml-2" /></Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </section>
-          )}
-
-          {/* Category-Based Product Sections */}
-          {productCategories?.map(cat => {
-            const catProducts = activeProducts.filter(p => p.categoryId === cat.id || p.category === cat.name).slice(0, 4);
-            if (catProducts.length === 0) return null;
-            return (
-              <section key={cat.id} className="space-y-8">
-                <div className="flex items-center justify-between border-b pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border shadow-sm text-primary">
-                      <ChevronRight size={20} />
-                    </div>
-                    <h2 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tight">{cat.name}</h2>
-                  </div>
-                  <Button asChild variant="link" className="text-primary font-bold">
-                    <Link href={`/category/${cat.slug}`}>View All ({activeProducts.filter(p => p.categoryId === cat.id || p.category === cat.name).length})</Link>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                  {catProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-
-          {/* Footer Custom Content */}
-          {customization?.sections?.customContent && customization.marketingContent && (
-            <section className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <Megaphone className="text-primary" size={24} />
-                <h2 className="text-xl font-black uppercase tracking-tight">Special Announcements</h2>
-              </div>
-              <div className="prose prose-sm max-w-none text-gray-600">
-                {customization.marketingContent}
-              </div>
-            </section>
-          )}
+          {/* Offers: After Products */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {renderOffers('after_products')}
+          </div>
 
         </div>
       </div>
