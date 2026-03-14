@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -94,12 +93,20 @@ export default function SmartCleanHomePage() {
   }, [language, t]);
 
   const renderOffers = (placement: string) => {
-    return offers?.filter(o => o.placement === placement).map(offer => (
-      <Link key={offer.id} href={offer.link || '#'} className="block relative aspect-[21/7] rounded-3xl overflow-hidden group shadow-lg">
-        <Image src={offer.imageUrl} alt={offer.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-        <div className="absolute inset-0 bg-black/20" />
-      </Link>
-    ));
+    return offers?.filter(o => o.placement === placement).map(offer => {
+      if (!offer.imageUrl || typeof offer.imageUrl !== 'string' || offer.imageUrl === '') return null;
+      return (
+        <Link key={offer.id} href={offer.link || '#'} className="block relative aspect-[21/7] rounded-3xl overflow-hidden group shadow-lg">
+          <Image 
+            src={offer.imageUrl} 
+            alt={offer.title || 'Offer'} 
+            fill 
+            className="object-cover group-hover:scale-105 transition-transform duration-700" 
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </Link>
+      );
+    });
   };
 
   const activeCampaign = campaigns?.find(c => {
@@ -249,7 +256,13 @@ export default function SmartCleanHomePage() {
                 {services.map((service) => (
                   <Card key={service.id} className="border-none shadow-sm hover:shadow-xl transition-all overflow-hidden bg-white group flex flex-col">
                     <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
-                      <Image src={service.imageUrl || 'https://picsum.photos/seed/serv/400/300'} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                      {service.imageUrl ? (
+                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground/30">
+                          <LayoutGrid size={48} />
+                        </div>
+                      )}
                     </Link>
                     <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-4">
                       <h3 className="font-bold text-sm leading-tight line-clamp-2">{service.title}</h3>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -28,7 +27,8 @@ import {
   Clock,
   Gift,
   Trophy,
-  Loader2
+  Loader2,
+  ImageIcon
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -117,7 +117,18 @@ export default function MarketingAdminPage() {
             {offers?.map((offer) => (
               <Card key={offer.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group">
                 <div className="relative aspect-[21/7] bg-gray-50 border-b">
-                  <Image src={offer.imageUrl} alt={offer.title} fill className="object-cover" />
+                  {offer.imageUrl && typeof offer.imageUrl === 'string' && offer.imageUrl !== '' ? (
+                    <Image 
+                      src={offer.imageUrl} 
+                      alt={offer.title || 'Offer'} 
+                      fill 
+                      className="object-cover" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
+                      <ImageIcon size={48} />
+                    </div>
+                  )}
                   <div className="absolute top-2 right-2 flex gap-2">
                     <Switch 
                       checked={offer.enabled} 
