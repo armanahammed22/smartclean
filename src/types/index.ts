@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ export interface Service {
   icon: "Layout" | "Wrench" | "Activity" | "Truck" | "ShieldCheck" | "Headphones";
   basePrice: number;
   displayPrice: string;
+  imageUrl?: string;
   type?: 'service';
 }
 

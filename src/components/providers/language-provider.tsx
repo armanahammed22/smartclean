@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
@@ -39,6 +40,7 @@ const translations: Record<Language, Record<string, string>> = {
     browse_catalog: "ক্যাটালগ দেখুন",
     quantity: "পরিমাণ",
     remove: "সরিয়ে ফেলুন",
+    back_to_list: "তালিকায় ফিরে যান",
     
     // Services
     services_title: "আমাদের বিশেষজ্ঞতা",
@@ -89,7 +91,8 @@ const translations: Record<Language, Record<string, string>> = {
     
     // UI
     cart_added: "অর্ডারে যোগ করা হয়েছে",
-    cart_desc: "পণ্যটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।"
+    cart_desc: "পণ্যটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে。",
+    service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।"
   },
   en: {
     // Navbar
@@ -117,6 +120,7 @@ const translations: Record<Language, Record<string, string>> = {
     browse_catalog: "Browse Catalog",
     quantity: "Quantity",
     remove: "Remove",
+    back_to_list: "Back to List",
     
     // Services
     services_title: "Our Expertise",
@@ -167,7 +171,8 @@ const translations: Record<Language, Record<string, string>> = {
     
     // UI
     cart_added: "Added to Order",
-    cart_desc: "Item has been added to your order list."
+    cart_desc: "Item has been added to your order list.",
+    service_billing_note: "Note: Service amounts are base prices and may vary based on actual work requirements."
   }
 };
 
