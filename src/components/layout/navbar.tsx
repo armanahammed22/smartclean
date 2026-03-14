@@ -1,17 +1,15 @@
-
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, Package, Search, Gift, Zap, User, Menu } from 'lucide-react';
+import { ShoppingCart, Package, Search, Gift, Zap, User, Menu, Sparkles } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const CATEGORIES = [
-  "Desktop", "Laptop", "Component", "Monitor", "Power", "Phone", "Tablet", 
-  "Office Equipment", "Camera", "Security", "Networking", "Software", 
-  "Server & Storage", "Accessories", "Gadget", "Gaming", "TV", "Appliance"
+  "Residential", "Office", "Deep Clean", "Move In/Out", "Window", "Carpet", 
+  "Post-Construction", "Eco-Friendly", "Upholstery", "Sanitization", "Kitchen", "Bathroom"
 ];
 
 export function Navbar() {
@@ -25,15 +23,15 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">
-              <Package size={24} />
+              <Sparkles size={24} />
             </div>
-            <span className="text-2xl font-bold tracking-tighter font-headline text-white">QUICKTECH</span>
+            <span className="text-2xl font-bold tracking-tighter font-headline text-white">QUICKCLEAN</span>
           </Link>
 
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl relative">
             <Input 
-              placeholder="Search products..." 
+              placeholder="Search services..." 
               className="w-full bg-white text-black h-11 pr-12 rounded-sm focus-visible:ring-0 border-none"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-primary" size={20} />
@@ -45,7 +43,7 @@ export function Navbar() {
               <Gift className="text-primary" size={24} />
               <div className="flex flex-col">
                 <span className="text-sm font-bold leading-none">Offers</span>
-                <span className="text-[10px] text-gray-400">Latest Offers</span>
+                <span className="text-[10px] text-gray-400">Latest Promos</span>
               </div>
             </Link>
             <Link href="/deals" className="flex items-center gap-3 hover:text-primary transition-colors">
@@ -63,7 +61,7 @@ export function Navbar() {
               </div>
             </Link>
             <Button className="bg-primary hover:bg-primary/90 font-bold px-6 h-11 rounded-sm">
-              PC Builder
+              Customize service
             </Button>
           </div>
           
@@ -99,7 +97,7 @@ export function Navbar() {
             ))}
             <Link href="/cart" className="relative ml-4 flex items-center gap-2 group">
               <ShoppingCart size={20} className="group-hover:text-primary transition-colors" />
-              <span className="text-[13px] font-semibold group-hover:text-primary transition-colors">Cart</span>
+              <span className="text-[13px] font-semibold group-hover:text-primary transition-colors">Booking</span>
               {itemCount > 0 && (
                 <Badge className="absolute -top-3 -right-3 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-white">
                   {itemCount}
