@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -189,27 +190,28 @@ export default function SmartCleanHomePage() {
           <div className="text-center mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-[#081621]">{t('services_title')}</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
             {MOCK_SERVICES.map((service) => (
-              <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white">
-                <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
+              <Card key={service.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden bg-white flex flex-col h-full">
+                <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
                   <Image src={service.imageUrl || ''} alt={service.title} fill className="object-cover" />
                 </Link>
-                <CardHeader className="p-4 pb-0">
-                  <CardTitle className="text-lg font-bold">{service.title}</CardTitle>
+                <CardHeader className="p-3 md:p-4 pb-1">
+                  <CardTitle className="text-sm md:text-lg font-bold line-clamp-1">{service.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
+                <CardContent className="p-3 md:p-4 pt-0 flex-1">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-muted-foreground font-semibold">{t('price_from')}</span>
-                    <span className="text-primary font-bold text-xl">৳{service.displayPrice}</span>
+                    <span className="text-[9px] md:text-[10px] text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
+                    <span className="text-primary font-bold text-base md:text-xl">৳{service.displayPrice}</span>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 pt-0">
+                <CardFooter className="p-3 md:p-4 pt-0">
                   <Button 
                     onClick={() => handleBookNowDirectly(service)}
-                    className="w-full gap-2 font-bold bg-primary text-white"
+                    size="sm"
+                    className="w-full gap-1 md:gap-2 font-bold bg-primary text-white text-[10px] md:text-sm h-8 md:h-10"
                   >
-                    <CalendarCheck size={18} />
+                    <CalendarCheck size={14} className="md:w-4 md:h-4" />
                     {t('book_now')}
                   </Button>
                 </CardFooter>
