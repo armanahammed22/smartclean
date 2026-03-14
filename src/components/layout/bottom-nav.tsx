@@ -4,62 +4,65 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, LayoutGrid, Zap, ShoppingCart, Home } from 'lucide-react';
+import { Menu, Package, Zap, LayoutGrid, Home } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
-import { useCart } from '@/components/providers/cart-provider';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function BottomNav() {
   const { t } = useLanguage();
-  const { itemCount, setCheckoutOpen } = useCart();
   const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
-  const HOME_IMAGE = PlaceHolderImages.find(img => img.id === 'nav-home');
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[100] border-t border-white/10 h-16">
-      <div className="flex items-center justify-between h-full px-4 relative">
-        {/* Home Button - Admin can change the image/logo via PlaceHolderImages */}
-        <Link href="/" className="flex flex-col items-center gap-1 flex-1">
-          <div className="relative w-5 h-5 flex items-center justify-center">
-            {HOME_IMAGE ? (
-              <Image 
-                src={HOME_IMAGE.imageUrl} 
-                alt="Home" 
-                fill 
-                className="object-contain opacity-80" 
-              />
-            ) : (
-              <Home size={22} className="text-white/80" />
-            )}
-          </div>
-          <span className="text-[10px] font-medium">{t('nav_home')}</span>
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[100] border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
+      <div className="flex items-center justify-between h-full px-2 relative">
+        {/* Left Side: 1. Products */}
+        <Link href="/#products" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <Package size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_products')}</span>
         </Link>
         
-        <Link href="#" className="flex flex-col items-center gap-1 flex-1">
-          <LayoutGrid size={22} className="text-white/80" />
-          <span className="text-[10px] font-medium">{t('nav_categories')}</span>
+        {/* Left Side: 2. Service */}
+        <Link href="/#services" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <LayoutGrid size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_services')}</span>
         </Link>
         
-        <div className="flex-1 flex justify-center">
-          <Link href="/" className="absolute -top-6 bg-[#EF4A23] p-3 rounded-full shadow-lg border-4 border-[#081621]">
-            <div className="relative w-8 h-8">
-              {LOGO_IMAGE ? (
-                <Image src={LOGO_IMAGE.imageUrl} alt="Logo" fill className="object-contain" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-white">S</div>
-              )}
+        {/* Middle: Home (Raised Circular Logo) */}
+        <div className="flex-1 flex justify-center relative h-full">
+          <div className="absolute -top-6">
+            <Link 
+              href="/" 
+              className="bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 p-3 rounded-full shadow-[0_8px_16px_rgba(249,115,22,0.4)] border-4 border-[#081621] flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+            >
+              <div className="relative w-8 h-8">
+                {LOGO_IMAGE ? (
+                  <Image 
+                    src={LOGO_IMAGE.imageUrl} 
+                    alt="Home" 
+                    fill 
+                    className="object-contain" 
+                  />
+                ) : (
+                  <Home size={24} className="text-white" />
+                )}
+              </div>
+            </Link>
+            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
+               <span className="text-[9px] font-bold uppercase tracking-tighter text-white">{t('nav_home')}</span>
             </div>
-          </Link>
+          </div>
         </div>
         
-        <button onClick={() => setCheckoutOpen(true)} className="flex flex-col items-center gap-1 flex-1 relative">
-          <ShoppingCart size={22} className="text-white/80" />
-          <span className="text-[10px] font-medium">{t('nav_booking')}({itemCount})</span>
-        </button>
+        {/* Right Side: 4. Offer */}
+        <Link href="/#offers" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <Zap size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_offers')}</span>
+        </Link>
         
-        <Link href="#" className="flex flex-col items-center gap-1 flex-1">
-          <Menu size={22} className="text-white/80" />
-          <span className="text-[10px] font-medium">{t('nav_menu')}</span>
+        {/* Right Side: 5. Menu */}
+        <Link href="#" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <Menu size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_menu')}</span>
         </Link>
       </div>
     </nav>
