@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -33,6 +34,7 @@ export default function SmartCleanHomePage() {
   const { addToCart, setCheckoutOpen } = useCart();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [currentDate, setCurrentDate] = useState<string>('');
 
   useEffect(() => {
     if (!api) return;
@@ -41,6 +43,17 @@ export default function SmartCleanHomePage() {
       setCurrent(api.selectedScrollSnap());
     });
   }, [api]);
+
+  useEffect(() => {
+    // We set the date here to avoid hydration mismatches between server and client
+    const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    setCurrentDate(dateStr);
+  }, [language]);
 
   const MOCK_PRODUCTS = getMockProducts(language);
   const MOCK_SERVICES = getMockServices(language);
@@ -69,14 +82,7 @@ export default function SmartCleanHomePage() {
     setCheckoutOpen(true);
   };
 
-  const currentDate = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-
-  const marqueeText = `${currentDate} | ${t('hero_banner_title')} | ${t('hero_phone')} | ${t('footer_address')} | ${t('footer_hours')} | Professional Cleaning Nationwide.`;
+  const marqueeText = `${currentDate ? currentDate + ' | ' : ''}${t('hero_banner_title')} | ${t('hero_phone')} | ${t('footer_address')} | ${t('footer_hours')} | Professional Cleaning Nationwide.`;
 
   return (
     <PublicLayout>
