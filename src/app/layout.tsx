@@ -7,6 +7,7 @@ import {Footer} from '@/components/layout/footer';
 import {Toaster} from '@/components/ui/toaster';
 import {CheckoutModal} from '@/components/checkout/checkout-modal';
 import {BottomNav} from '@/components/layout/bottom-nav';
+import {FirebaseClientProvider} from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Smart Clean | Professional Cleaning Services in Bangladesh',
@@ -26,18 +27,20 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col pb-16 lg:pb-0">
-        <LanguageProvider>
-          <CartProvider>
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <BottomNav />
-            <CheckoutModal />
-            <Toaster />
-          </CartProvider>
-        </LanguageProvider>
+        <FirebaseClientProvider>
+          <LanguageProvider>
+            <CartProvider>
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+              <BottomNav />
+              <CheckoutModal />
+              <Toaster />
+            </CartProvider>
+          </LanguageProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
