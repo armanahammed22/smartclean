@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -24,18 +23,27 @@ import {
   MapPin,
   BarChart3,
   TicketPercent,
-  Truck
+  Truck,
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
@@ -104,29 +112,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* Collapsible Sidebar */}
-      <aside 
-        className={cn(
-          "hidden lg:flex flex-col fixed inset-y-0 bg-[#081621] text-white transition-all duration-300 z-30",
-          isCollapsed ? "w-20" : "w-72"
-        )}
-      >
-        <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 relative">
-          {!isCollapsed && (
-            <div className="flex items-center gap-3 overflow-hidden transition-all duration-300">
-              <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
-              <div className="truncate">
-                <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
-                <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
-              </div>
+  const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
+    <>
+      <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 relative">
+        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
+          <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
+          {!collapsed && (
+            <div className="truncate">
+              <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
+              <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
             </div>
           )}
-          {isCollapsed && (
-            <div className="p-2 bg-primary rounded-lg text-white mx-auto"><ShieldCheck size={20} /></div>
-          )}
-          
+        </div>
+        
+        {!collapsed && (
           <Button 
             variant="ghost" 
             size="icon" 
@@ -135,66 +134,98 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
           </Button>
-        </div>
+        )}
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-1 mt-6">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center px-4 py-3 rounded-xl transition-all group relative",
-                pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
-                isCollapsed ? "justify-center" : "justify-between"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <item.icon 
-                  size={18} 
-                  className={cn(
-                    "shrink-0 transition-colors duration-300",
-                    pathname === item.href ? "text-white" : item.color
-                  )} 
-                />
-                {!isCollapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
-              </div>
-              {!isCollapsed && pathname === item.href && <ChevronRight size={14} className="opacity-50" />}
-              
-              {/* Tooltip for collapsed state */}
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-2xl border border-white/10">
-                  {item.name}
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        <div className="p-4 border-t border-white/10">
-          <Button 
-            variant="ghost" 
+      <div className="flex-1 overflow-y-auto p-4 space-y-1 mt-6">
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            onClick={() => setIsMobileOpen(false)}
             className={cn(
-              "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
-              isCollapsed ? "justify-center" : "justify-start"
-            )} 
-            onClick={handleLogout}
+              "flex items-center px-4 py-3 rounded-xl transition-all group relative",
+              pathname === item.href ? "bg-primary text-white shadow-lg" : "text-gray-400 hover:bg-white/5 hover:text-white",
+              collapsed ? "justify-center" : "justify-between"
+            )}
           >
-            <LogOut size={20} />
-            {!isCollapsed && <span className="font-semibold text-sm">Logout</span>}
-          </Button>
-        </div>
+            <div className="flex items-center gap-3">
+              <item.icon 
+                size={18} 
+                className={cn(
+                  "shrink-0 transition-colors duration-300",
+                  pathname === item.href ? "text-white" : item.color
+                )} 
+              />
+              {!collapsed && <span className="text-sm font-semibold truncate">{item.name}</span>}
+            </div>
+            {!collapsed && pathname === item.href && <ChevronRight size={14} className="opacity-50" />}
+            
+            {collapsed && (
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-2xl border border-white/10">
+                {item.name}
+              </div>
+            )}
+          </Link>
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-white/10">
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
+            collapsed ? "justify-center" : "justify-start"
+          )} 
+          onClick={handleLogout}
+        >
+          <LogOut size={20} />
+          {!collapsed && <span className="font-semibold text-sm">Logout</span>}
+        </Button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-screen bg-[#F8FAFC]">
+      {/* Desktop Sidebar */}
+      <aside 
+        className={cn(
+          "hidden lg:flex flex-col fixed inset-y-0 bg-[#081621] text-white transition-all duration-300 z-30",
+          isCollapsed ? "w-20" : "w-72"
+        )}
+      >
+        <SidebarContent collapsed={isCollapsed} />
       </aside>
 
+      {/* Main Content Area */}
       <main 
         className={cn(
           "flex-1 flex flex-col min-h-screen transition-all duration-300",
           isCollapsed ? "lg:ml-20" : "lg:ml-72"
         )}
       >
-        <header className="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-            {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
-          </h2>
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Toggle */}
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu size={24} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-72">
+                <div className="flex flex-col h-full text-white">
+                  <SidebarContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+            
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest truncate max-w-[150px] md:max-w-none">
+              {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
+            </h2>
+          </div>
+
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
                <p className="text-xs font-bold text-gray-900">{user.email?.split('@')[0]}</p>
@@ -205,7 +236,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <div className="flex-1">{children}</div>
+
+        <div className="flex-1 overflow-x-hidden">
+          {children}
+        </div>
       </main>
     </div>
   );
