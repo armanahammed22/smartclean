@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -8,7 +9,7 @@ import { ProductCard } from '@/components/products/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
 import { getMockProducts, getMockServices } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/components/providers/cart-provider';
 import { 
@@ -122,14 +123,14 @@ export default function SmartCleanHomePage() {
 
       <div className="container mx-auto px-4 space-y-16">
         {/* Quick Category Grid */}
-        <section className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
             {QUICK_CATEGORIES.map((cat, i) => (
-              <div key={i} className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer group">
-                <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-1">
+              <div key={i} className="flex flex-col items-center gap-3 p-3 md:p-4 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer group">
+                <div className="p-3 md:p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-1">
                   <cat.icon size={32} />
                 </div>
-                <span className="font-bold text-sm text-center text-[#081621]">{cat.name}</span>
+                <span className="font-bold text-xs md:text-sm text-center text-[#081621]">{cat.name}</span>
               </div>
             ))}
           </div>
@@ -137,17 +138,17 @@ export default function SmartCleanHomePage() {
 
         {/* Professional Services */}
         <section id="services">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
-            <div className="text-center mb-12 space-y-2">
-              <h2 className="text-4xl font-bold tracking-tight text-[#081621]">{t('services_title')}</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
+            <div className="text-center mb-10 space-y-2">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#081621]">{t('services_title')}</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
                 {t('services_subtitle')}
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {MOCK_SERVICES.map((service) => (
-                <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col">
-                  <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
+                <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden flex flex-col h-full bg-white">
+                  <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden shrink-0">
                     {service.imageUrl ? (
                       <Image src={service.imageUrl} alt={service.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
@@ -156,50 +157,48 @@ export default function SmartCleanHomePage() {
                        </div>
                     )}
                   </Link>
-                  <CardHeader className="pt-6 px-6">
-                    <div className="mb-4 p-3 bg-primary/5 rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-                      {IconMap[service.icon] || <Layout className="text-primary" size={24} />}
+                  <CardHeader className="pt-6 px-6 pb-2">
+                    <div className="mb-4 p-3 bg-primary/10 text-primary rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
+                      {IconMap[service.icon] || <Layout size={24} />}
                     </div>
                     <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors">
-                      <CardTitle className="text-2xl font-bold">{service.title}</CardTitle>
+                      <CardTitle className="text-xl md:text-2xl font-bold line-clamp-1">{service.title}</CardTitle>
                     </Link>
                   </CardHeader>
-                  <CardContent className="px-6 pb-8 flex-1 flex flex-col">
-                    <p className="text-muted-foreground leading-relaxed mb-6 line-clamp-2">
+                  <CardContent className="px-6 flex-1">
+                    <p className="text-muted-foreground text-sm md:text-base leading-relaxed line-clamp-2 mb-4">
                       {service.description}
                     </p>
-                    <div className="mt-auto pt-6 border-t">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground font-semibold uppercase">{t('price_from')}</span>
-                          <span className="text-primary font-bold text-xl">৳{service.displayPrice}</span>
-                        </div>
-                        <Button asChild variant="ghost" size="sm" className="gap-2 group-hover:text-primary font-bold px-0">
-                          <Link href={`/service/${service.id}`}>
-                            {t('service_details')} <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                          </Link>
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleBookNowDirectly(service)}
-                          className="flex-1 gap-2 font-bold h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-md"
-                        >
-                          <CalendarCheck size={18} />
-                          {t('book_now')}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-12 w-12 rounded-xl border-primary text-primary hover:bg-primary hover:text-white"
-                          onClick={() => addToCart(service)}
-                          title={t('add_to_cart')}
-                        >
-                          <ShoppingCart size={20} />
-                        </Button>
-                      </div>
+                    <div className="flex flex-col mb-2">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('price_from')}</span>
+                      <span className="text-primary font-bold text-xl md:text-2xl">৳{service.displayPrice}</span>
                     </div>
                   </CardContent>
+                  <CardFooter className="px-6 pb-6 pt-2 border-t mt-4 flex flex-col gap-3">
+                    <div className="flex w-full gap-2">
+                      <Button 
+                        onClick={() => handleBookNowDirectly(service)}
+                        className="flex-1 gap-2 font-bold h-11 md:h-12 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-sm"
+                      >
+                        <CalendarCheck size={18} />
+                        {t('book_now')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-11 w-11 md:h-12 md:w-12 rounded-xl border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                        onClick={() => addToCart(service)}
+                        title={t('add_to_cart')}
+                      >
+                        <ShoppingCart size={20} />
+                      </Button>
+                    </div>
+                    <Button asChild variant="link" size="sm" className="w-full text-xs font-bold text-muted-foreground hover:text-primary">
+                      <Link href={`/service/${service.id}`}>
+                        {t('service_details')}
+                      </Link>
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -208,15 +207,15 @@ export default function SmartCleanHomePage() {
 
         {/* Featured Products */}
         <section id="products">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
-            <div className="flex items-center justify-between mb-8">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-border/50">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
               <div className="space-y-1">
-                <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
-                <p className="text-muted-foreground">{t('products_subtitle')}</p>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#081621]">{t('products_title')}</h2>
+                <p className="text-muted-foreground text-sm">{t('products_subtitle')}</p>
               </div>
-              <Button variant="outline" className="rounded-full font-bold">{t('view_all')}</Button>
+              <Button variant="outline" className="rounded-full font-bold whitespace-nowrap">{t('view_all')}</Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {MOCK_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -226,35 +225,35 @@ export default function SmartCleanHomePage() {
 
         {/* Advantages */}
         <section className="pb-12">
-          <div className="text-center mb-12 space-y-2">
-            <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('features_title')}</h2>
-            <p className="text-muted-foreground">{t('features_subtitle')}</p>
+          <div className="text-center mb-10 space-y-2">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#081621]">{t('features_title')}</h2>
+            <p className="text-muted-foreground text-sm">{t('features_subtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
                 <ShieldCheck size={32} />
               </div>
-              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'যাচাইকৃত পেশাদার' : 'Vetted Professionals'}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'যাচাইকৃত পেশাদার' : 'Vetted Professionals'}</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 {language === 'bn' ? 'প্রতিটি ক্লিনার কঠোর প্রশিক্ষণ এবং ব্যাকগ্রাউন্ড চেক এর মাধ্যমে আসে।' : 'Every cleaner undergoes background checks and rigorous training.'}
               </p>
             </div>
-            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
                 <Truck size={32} />
               </div>
-              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'নমনীয় সময়সূচী' : 'Flexible Scheduling'}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'নমনীয় সময়সূচী' : 'Flexible Scheduling'}</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 {language === 'bn' ? 'আপনার ব্যস্ত জীবনযাত্রার সাথে মানানসই যেকোনো সময়ে বুক করুন।' : 'Book a service at any time that fits your busy lifestyle.'}
               </p>
             </div>
-            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+            <div className="bg-white flex flex-col items-center text-center p-8 md:p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-6 md:mb-8 p-5 md:p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
                 <Headphones size={32} />
               </div>
-              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'হ্যাপিনেস গ্যারান্টি' : 'Happiness Guarantee'}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{language === 'bn' ? 'হ্যাপিনেস গ্যারান্টি' : 'Happiness Guarantee'}</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 {language === 'bn' ? 'সন্তুষ্ট নন? আমরা আপনার সন্তুষ্টি না হওয়া পর্যন্ত ফ্রি রি-ক্লিন করব।' : 'Not satisfied? We will re-clean for free until you are happy.'}
               </p>
             </div>
