@@ -72,6 +72,7 @@
             "subtitle": { "type": "string" },
             "imageUrl": { "type": "string" },
             "ctaText": { "type": "string" },
+            "ctaLink": { "type": "string" },
             "enabled": { "type": "boolean" }
           }
         },
@@ -80,12 +81,41 @@
           "properties": {
             "popularProducts": { "type": "boolean" },
             "recentProducts": { "type": "boolean" },
+            "bestSellingProducts": { "type": "boolean" },
             "popularServices": { "type": "boolean" },
-            "campaigns": { "type": "boolean" }
+            "recentServices": { "type": "boolean" },
+            "bestSellingServices": { "type": "boolean" },
+            "campaigns": { "type": "boolean" },
+            "offerBanners": { "type": "boolean" },
+            "customContent": { "type": "boolean" }
+          }
+        },
+        "offerBanners": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "imageUrl": { "type": "string" },
+              "link": { "type": "string" },
+              "enabled": { "type": "boolean" }
+            }
+          }
+        },
+        "campaigns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "imageUrl": { "type": "string" },
+              "enabled": { "type": "boolean" }
+            }
           }
         },
         "featuredProductIds": { "type": "array", "items": { "type": "string" } },
-        "featuredServiceIds": { "type": "array", "items": { "type": "string" } }
+        "featuredServiceIds": { "type": "array", "items": { "type": "string" } },
+        "marketingContent": { "type": "string" }
       }
     }
   },

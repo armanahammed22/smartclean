@@ -13,16 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Globe, 
-  Smartphone, 
   Mail, 
   MapPin, 
   Save, 
   Search, 
-  Link as LinkIcon,
   Image as ImageIcon,
-  DollarSign,
-  Languages,
-  Loader2
+  Loader2,
+  DollarSign
 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
@@ -50,7 +47,11 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     if (settings) {
-      setFormData(settings);
+      setFormData({
+        ...formData,
+        ...settings,
+        socialLinks: { ...formData.socialLinks, ...(settings.socialLinks || {}) }
+      });
     }
   }, [settings]);
 
@@ -111,11 +112,18 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Currency Symbol (e.g. ৳ or BDT)</Label>
-                  <Input 
-                    value={formData.currency} 
-                    onChange={(e) => setFormData({...formData, currency: e.target.value})}
-                  />
+                  <Label>Currency Symbol (e.g. ৳)</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input 
+                        value={formData.currency} 
+                        onChange={(e) => setFormData({...formData, currency: e.target.value})}
+                      />
+                    </div>
+                    <div className="w-12 h-10 bg-gray-50 border rounded-md flex items-center justify-center font-bold text-primary">
+                      {formData.currency || '৳'}
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Logo URL</Label>
