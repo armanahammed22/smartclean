@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -17,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, User, ClipboardList, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function BookingsPage() {
   const db = useFirestore();
@@ -144,7 +144,7 @@ export default function BookingsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic">
+                  <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic text-sm">
                     No bookings found.
                   </TableCell>
                 </TableRow>
