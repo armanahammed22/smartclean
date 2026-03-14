@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -74,6 +75,26 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
+      // 1. Categories
+      const catIds = ['cat1', 'cat2', 'cat3'];
+      const categories = [
+        { id: 'cat1', name: "Home Appliances", slug: "home-appliances", status: "Active", createdAt: new Date().toISOString() },
+        { id: 'cat2', name: "Cleaning Supplies", slug: "cleaning-supplies", status: "Active", createdAt: new Date().toISOString() },
+        { id: 'cat3', name: "Industrial Kits", slug: "industrial-kits", status: "Active", createdAt: new Date().toISOString() },
+      ];
+      categories.forEach(c => batch.set(doc(db, 'product_categories', c.id), c));
+
+      // 2. Products
+      const products = [
+        { name: "Smart Vacuum Robot", price: 49999, categoryId: "cat1", category: "Home Appliances", status: "Active", onSale: true, imageUrl: "https://picsum.photos/seed/v1/600/400", stockQuantity: 12, createdAt: new Date().toISOString() },
+        { name: "Eco-Friendly Kit", price: 4500, categoryId: "cat2", category: "Cleaning Supplies", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v2/600/400", stockQuantity: 45, createdAt: new Date().toISOString() },
+        { name: "Pro Steam Mop", price: 12900, categoryId: "cat1", category: "Home Appliances", status: "Active", onSale: true, imageUrl: "https://picsum.photos/seed/v3/600/400", stockQuantity: 8, createdAt: new Date().toISOString() },
+        { name: "Air Purifier X", price: 29900, categoryId: "cat1", category: "Home Appliances", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v4/600/400", stockQuantity: 5, createdAt: new Date().toISOString() },
+        { name: "Industrial Degreaser", price: 8500, categoryId: "cat3", category: "Industrial Kits", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v5/600/400", stockQuantity: 20, createdAt: new Date().toISOString() },
+      ];
+      products.forEach(p => batch.set(doc(collection(db, 'products')), p));
+
+      // 3. Leads & Orders
       const leads = [
         { name: "Rahim Ahmed", phone: "01711223344", email: "rahim@example.com", address: "Gulshan 2, Dhaka", status: "New", source: "Facebook", createdAt: new Date().toISOString() },
         { name: "Sara Islam", phone: "01811556677", email: "sara@example.com", address: "Banani Road 11", status: "Qualified", source: "Google Maps", createdAt: new Date().toISOString() },
@@ -87,7 +108,7 @@ export default function AdminDashboard() {
       orders.forEach(o => batch.set(doc(collection(db, 'orders')), o));
 
       await batch.commit();
-      toast({ title: "ERP Seeded", description: "Database populated with sample ERP data." });
+      toast({ title: "ERP Seeded", description: "Database populated with localized categories and products." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -126,7 +147,6 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      {/* KPI GRID: 2 cols on mobile/tablet, 3 cols on desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {STATS.map((stat, i) => (
           <Card key={i} className="border-none shadow-sm group hover:shadow-md transition-all duration-300 overflow-hidden bg-white">

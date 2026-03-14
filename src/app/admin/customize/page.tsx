@@ -28,7 +28,10 @@ import {
   TicketPercent,
   Trash2,
   ListOrdered,
-  Megaphone
+  Megaphone,
+  Zap,
+  TrendingUp,
+  Tags
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -58,7 +61,10 @@ export default function SiteCustomizePage() {
       bestSellingServices: true,
       campaigns: true,
       offerBanners: true,
-      customContent: true
+      customContent: true,
+      trendingProducts: true,
+      flashSale: true,
+      categorySections: true
     },
     offerBanners: [],
     campaigns: [],
@@ -123,7 +129,7 @@ export default function SiteCustomizePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Site Customize</h1>
-          <p className="text-muted-foreground text-sm">Control your homepage layout and featured sections</p>
+          <p className="text-muted-foreground text-sm">Control your homepage layout and dynamic sections</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="gap-2 font-bold h-11" asChild>
@@ -228,9 +234,11 @@ export default function SiteCustomizePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { id: 'popularProducts', label: 'Popular Products', icon: Package },
-                  { id: 'recentProducts', label: 'Recent Products', icon: Plus },
-                  { id: 'bestSellingProducts', label: 'Best Selling Products', icon: Star },
+                  { id: 'trendingProducts', label: 'Trending Slider', icon: TrendingUp },
+                  { id: 'popularProducts', label: 'Popular Products Grid', icon: Star },
+                  { id: 'recentProducts', label: 'Recently Added Supplies', icon: Package },
+                  { id: 'flashSale', label: 'Flash Sale (Timer)', icon: Zap },
+                  { id: 'categorySections', label: 'Category-wise Product Sections', icon: Tags },
                 ].map((sec) => (
                   <div key={sec.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center gap-3">
@@ -252,13 +260,12 @@ export default function SiteCustomizePage() {
             <Card className="border-none shadow-sm bg-white rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Service Sections</CardTitle>
-                <CardDescription>Default Service display grids</CardDescription>
+                <CardDescription>Service grids and highlights</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { id: 'popularServices', label: 'Popular Services', icon: Wrench },
+                  { id: 'popularServices', label: 'Featured Services', icon: Wrench },
                   { id: 'recentServices', label: 'Recent Services', icon: Plus },
-                  { id: 'bestSellingServices', label: 'Best Selling Services', icon: Star },
                 ].map((sec) => (
                   <div key={sec.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                     <div className="flex items-center gap-3">
