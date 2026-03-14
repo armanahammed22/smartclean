@@ -23,7 +23,8 @@ import {
   Star,
   Package,
   Wrench,
-  Loader2
+  Loader2,
+  TicketPercent
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
