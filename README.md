@@ -18,13 +18,13 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 - Email: `smartclean422@gmail.com`
 - Password: `admin123`
 - Click **Add user**.
-- **COPY THE UID** generated for this user (it should be: `28N2Dy4D9mPF1fX5p9A6OZQVY0A2`).
+- **COPY THE UID** generated for this user (it should be: `gcp03WmpjROVvRdpLNsghNU4zHa2`).
 
 ### 3. Grant Administrator Privileges (Firestore)
 - Go to **Build > Firestore Database**.
 - Click **Start collection** (if your DB is empty) or click your existing database.
 - Create a collection named `roles_admins`.
-- **CRITICAL**: Create a new document where the **Document ID** is exactly your UID: `28N2Dy4D9mPF1fX5p9A6OZQVY0A2`.
+- **CRITICAL**: Create a new document where the **Document ID** is exactly your UID: `gcp03WmpjROVvRdpLNsghNU4zHa2`.
 - You can leave the fields empty. Save the document.
 
 ### 4. Login

@@ -86,8 +86,8 @@ export default function LoginPage() {
             <Info size={18} className="shrink-0" />
             <div className="text-[10px] leading-tight">
               <p className="font-bold uppercase">Setup Reminder:</p>
-              <p>1. Create <strong>{email || 'your email'}</strong> in Firebase Console Auth.</p>
-              <p>2. Add your UID to <strong>roles_admins</strong> collection in Firestore.</p>
+              <p>1. Create <strong>{email || 'smartclean422@gmail.com'}</strong> in Firebase Console Auth.</p>
+              <p>2. Add your UID <strong>gcp03WmpjROVvRdpLNsghNU4zHa2</strong> to <strong>roles_admins</strong> collection in Firestore.</p>
             </div>
           </div>
 
