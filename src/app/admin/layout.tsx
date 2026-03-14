@@ -18,7 +18,12 @@ import {
   Lock,
   Wrench,
   CreditCard,
-  Package
+  Package,
+  ShoppingCart,
+  MapPin,
+  BarChart3,
+  TicketPercent,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -44,11 +49,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const NAV_ITEMS = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Sales Leads', href: '/admin/leads', icon: Users },
     { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
+    { name: 'Inventory', href: '/admin/products', icon: Package },
     { name: 'Services', href: '/admin/services', icon: Wrench },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Staff', href: '/admin/employees', icon: UserSquare2 },
+    { name: 'Customers', href: '/admin/customers', icon: UserSquare2 },
+    { name: 'Service Areas', href: '/admin/areas', icon: MapPin },
+    { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+    { name: 'Couriers', href: '/admin/couriers', icon: Truck },
     { name: 'Subscription', href: '/admin/subscription', icon: CreditCard },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
@@ -85,7 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
         <AlertTriangle size={64} className="text-orange-500" />
-        <h2 className="text-2xl font-bold">Unauthorized</h2>
+        <h2 className="text-2xl font-bold">Unauthorized Access</h2>
+        <p className="text-muted-foreground max-w-xs mx-auto">Your account does not have admin privileges. UID: {user.uid}</p>
         <Button variant="outline" onClick={handleLogout}>Logout</Button>
       </div>
     );
@@ -97,11 +108,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-6 flex items-center gap-3 border-b border-white/10">
           <div className="p-2 bg-primary rounded-lg text-white"><ShieldCheck size={24} /></div>
           <div>
-            <h1 className="font-bold tracking-tight">CRM PORTAL</h1>
+            <h1 className="font-bold tracking-tight">ERP PORTAL</h1>
             <p className="text-[10px] text-gray-400 uppercase font-black">Smart Clean SaaS</p>
           </div>
         </div>
-        <nav className="flex-1 p-4 space-y-1 mt-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-1">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.name}
@@ -112,13 +123,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               )}
             >
               <div className="flex items-center gap-3">
-                <item.icon size={20} className={pathname === item.href ? "text-white" : "text-gray-500"} />
+                <item.icon size={18} className={pathname === item.href ? "text-white" : "text-gray-500"} />
                 <span className="text-sm font-semibold">{item.name}</span>
               </div>
               {pathname === item.href && <ChevronRight size={14} />}
             </Link>
           ))}
-        </nav>
+        </div>
         <div className="p-4 border-t border-white/10">
           <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-destructive gap-3" onClick={handleLogout}>
             <LogOut size={20} /> Logout
@@ -130,8 +141,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
             {NAV_ITEMS.find(i => i.href === pathname)?.name || 'Admin'}
           </h2>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-            {user?.email?.[0].toUpperCase()}
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+               <p className="text-xs font-bold text-gray-900">{user.email?.split('@')[0]}</p>
+               <p className="text-[9px] text-primary font-black uppercase tracking-tighter">System Admin</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              {user?.email?.[0].toUpperCase()}
+            </div>
           </div>
         </header>
         <div className="flex-1">{children}</div>

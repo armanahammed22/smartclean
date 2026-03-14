@@ -10,80 +10,66 @@
         "name": { "type": "string" },
         "price": { "type": "number" },
         "category": { "type": "string" },
+        "subCategory": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "stockQuantity": { "type": "number" }
+        "stockQuantity": { "type": "number" },
+        "sku": { "type": "string" },
+        "description": { "type": "string" }
       },
       "required": ["id", "name", "price"]
     },
-    "Service": {
-      "title": "Service",
+    "Order": {
+      "title": "Order",
       "type": "object",
-      "description": "Variable-price cleaning services offered by the company.",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "basePrice": { "type": "number" },
-        "duration": { "type": "string", "description": "e.g., 2 hours" },
-        "description": { "type": "string" },
-        "category": { "type": "string" }
-      },
-      "required": ["id", "title", "basePrice"]
-    },
-    "Lead": {
-      "title": "Lead",
-      "type": "object",
-      "description": "Potential customer captured from marketing channels.",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "address": { "type": "string" },
-        "status": { "type": "string", "enum": ["New", "Contacted", "Qualified", "Lost"] },
-        "source": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "companyId": { "type": "string" }
-      }
-    },
-    "Booking": {
-      "title": "Booking",
-      "type": "object",
-      "description": "A scheduled cleaning service appointment.",
+      "description": "Product sales order.",
       "properties": {
         "id": { "type": "string" },
         "customerId": { "type": "string" },
         "customerName": { "type": "string" },
-        "serviceId": { "type": "string" },
-        "serviceTitle": { "type": "string" },
-        "employeeId": { "type": "string" },
-        "employeeName": { "type": "string" },
-        "dateTime": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Pending", "Assigned", "In Progress", "Completed", "Cancelled"] },
-        "totalPrice": { "type": "number" },
-        "companyId": { "type": "string" }
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "paymentStatus": { "type": "string", "enum": ["Unpaid", "Paid", "Refunded"] },
+        "paymentMethod": { "type": "string" },
+        "courier": { "type": "string" },
+        "trackingId": { "type": "string" },
+        "items": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
-    "EmployeeProfile": {
-      "title": "EmployeeProfile",
+    "Service": {
+      "title": "Service",
+      "type": "object",
+      "description": "Variable-price cleaning services.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "duration": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
+    "Customer": {
+      "title": "Customer",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
         "email": { "type": "string" },
         "phone": { "type": "string" },
-        "role": { "type": "string" },
-        "completedJobs": { "type": "number" },
-        "companyId": { "type": "string" }
+        "address": { "type": "string" },
+        "segment": { "type": "string" },
+        "totalSpent": { "type": "number" }
       }
     },
-    "Subscription": {
-      "title": "Subscription",
+    "ServiceArea": {
+      "title": "ServiceArea",
       "type": "object",
       "properties": {
-        "companyId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Basic", "Pro", "Enterprise"] },
-        "status": { "type": "string" },
-        "expiryDate": { "type": "string", "format": "date-time" }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string" }
       }
     }
   },
@@ -91,25 +77,13 @@
     "providers": ["password"]
   },
   "firestore": {
-    "/leads/{leadId}": {
-      "schema": "#/entities/Lead",
-      "description": "Sales leads tracking."
-    },
-    "/bookings/{bookingId}": {
-      "schema": "#/entities/Booking",
-      "description": "Service appointments."
-    },
-    "/services/{serviceId}": {
-      "schema": "#/entities/Service",
-      "description": "Available cleaning services."
-    },
-    "/employee_profiles/{employeeId}": {
-      "schema": "#/entities/EmployeeProfile",
-      "description": "Employee directory."
-    },
-    "/subscriptions/{companyId}": {
-      "schema": "#/entities/Subscription",
-      "description": "Company subscription data."
-    }
+    "/leads/{leadId}": { "schema": "#/entities/Lead", "description": "Sales leads." },
+    "/bookings/{bookingId}": { "schema": "#/entities/Booking", "description": "Service appointments." },
+    "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Product orders." },
+    "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Services catalog." },
+    "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
+    "/customers/{customerId}": { "schema": "#/entities/Customer", "description": "Customer profiles." },
+    "/service_areas/{areaId}": { "schema": "#/entities/ServiceArea", "description": "Supported regions." },
+    "/employee_profiles/{employeeId}": { "schema": "#/entities/EmployeeProfile", "description": "Staff directory." }
   }
 }
