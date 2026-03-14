@@ -1,10 +1,9 @@
 
 'use client';
 
-import React from 'react';
-import { useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import React, { useState } from 'react';
+import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { collection, query, orderBy, limit, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { 
   Users, 
   Calendar, 
@@ -13,7 +12,9 @@ import {
   Clock, 
   UserPlus,
   ArrowUpRight,
-  ClipboardList
+  ClipboardList,
+  Database,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -25,10 +26,14 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const leadsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -43,12 +48,68 @@ export default function AdminDashboard() {
   const { data: recentLeads, isLoading: leadsLoading } = useCollection(leadsQuery);
   const { data: recentBookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
 
+  const handleSeedData = async () => {
+    if (!db) return;
+    setIsSeeding(true);
+    try {
+      const batch = writeBatch(db);
+
+      // Seed Leads
+      const leads = [
+        { name: "Rahim Ahmed", phone: "01711223344", email: "rahim@example.com", address: "Gulshan 2, Dhaka", status: "New", source: "Facebook", createdAt: new Date().toISOString() },
+        { name: "Sara Islam", phone: "01811556677", email: "sara@example.com", address: "Banani Road 11", status: "Qualified", source: "Google Maps", createdAt: new Date().toISOString() },
+        { name: "John Doe", phone: "01911889900", email: "john@example.com", address: "Uttara Sector 4", status: "Contacted", source: "Referral", createdAt: new Date().toISOString() },
+      ];
+
+      leads.forEach((l) => {
+        const ref = doc(collection(db, 'leads'));
+        batch.set(ref, l);
+      });
+
+      // Seed Employees
+      const employees = [
+        { name: "Karim Uddin", role: "Senior Cleaner", email: "karim@smartclean.com", phone: "01722334455", id: "emp_1" },
+        { name: "Fatema Begum", role: "Deep Clean Specialist", email: "fatema@smartclean.com", phone: "01733445566", id: "emp_2" },
+      ];
+
+      employees.forEach((e) => {
+        const ref = doc(db, 'employee_profiles', e.id);
+        batch.set(ref, e);
+      });
+
+      // Seed Bookings
+      const bookings = [
+        { serviceId: "Home Deep Clean", customerId: "Rahim Ahmed", employeeId: "Karim Uddin", dateTime: new Date(Date.now() + 86400000).toISOString(), status: "Assigned", totalPrice: 15000 },
+        { serviceId: "AC Maintenance", customerId: "Sara Islam", employeeId: "Unassigned", dateTime: new Date(Date.now() + 172800000).toISOString(), status: "Pending", totalPrice: 5000 },
+      ];
+
+      bookings.forEach((b) => {
+        const ref = doc(collection(db, 'bookings'));
+        batch.set(ref, b);
+      });
+
+      await batch.commit();
+      toast({
+        title: "Success",
+        description: "CRM has been seeded with realistic mock data.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error seeding data",
+        description: error.message,
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   if (isUserLoading) return <div className="p-8 text-center">Loading authentication...</div>;
   if (!user) return <div className="p-8 text-center">Access Denied. Please log in.</div>;
 
   const STATS = [
-    { title: "Total Leads", value: "124", icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Active Bookings", value: "12", icon: Calendar, color: "text-orange-600", bg: "bg-orange-50" },
+    { title: "Total Leads", value: recentLeads?.length || "0", icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
+    { title: "Active Bookings", value: recentBookings?.length || "0", icon: Calendar, color: "text-orange-600", bg: "bg-orange-50" },
     { title: "Completed Jobs", value: "1,420", icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { title: "Monthly Revenue", value: "৳2,45,000", icon: TrendingUp, color: "text-primary", bg: "bg-primary/10" },
   ];
@@ -61,7 +122,17 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground text-sm">Welcome back, {user.email}</p>
         </div>
         <div className="flex gap-2">
-          <Badge variant="outline" className="bg-white px-3 py-1">Company: Smart Clean BD</Badge>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSeedData} 
+            disabled={isSeeding}
+            className="gap-2 bg-white font-bold"
+          >
+            {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
+            Seed Database
+          </Button>
+          <Badge variant="outline" className="bg-white px-3 py-1 hidden sm:flex">Company: Smart Clean BD</Badge>
           <Badge className="bg-primary text-white px-3 py-1">Role: Admin</Badge>
         </div>
       </div>
@@ -120,7 +191,7 @@ export default function AdminDashboard() {
                 )) || (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic text-sm">
-                      No recent leads found.
+                      {leadsLoading ? "Loading leads..." : "No recent leads found. Click 'Seed Database' to add some."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -165,7 +236,7 @@ export default function AdminDashboard() {
                 )) || (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic text-sm">
-                      No upcoming bookings.
+                      {bookingsLoading ? "Loading bookings..." : "No upcoming bookings. Click 'Seed Database' to add some."}
                     </TableCell>
                   </TableRow>
                 )}
