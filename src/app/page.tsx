@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/carousel";
 
 export default function SmartCleanHomePage() {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const MOCK_PRODUCTS: Product[] = [
     {
@@ -180,24 +180,6 @@ export default function SmartCleanHomePage() {
       </section>
 
       <div className="container mx-auto px-4 space-y-16">
-        {/* Language Choice Toggle Group */}
-        <div className="flex justify-center items-center gap-3 py-6 border-b border-border/50">
-          <Button 
-            variant={language === 'bn' ? 'default' : 'outline'}
-            onClick={() => setLanguage('bn')}
-            className="rounded-full px-10 font-black text-lg h-12 shadow-sm"
-          >
-            বাংলা
-          </Button>
-          <Button 
-            variant={language === 'en' ? 'default' : 'outline'}
-            onClick={() => setLanguage('en')}
-            className="rounded-full px-10 font-black text-lg h-12 shadow-sm"
-          >
-            English
-          </Button>
-        </div>
-
         {/* 5-Column Quick Category Grid */}
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
