@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { useCart } from '@/components/providers/cart-provider';
+import { useLanguage } from '@/components/providers/language-provider';
 import { ProductDetailsDialog } from './product-details-dialog';
 
 interface ProductCardProps {
@@ -14,6 +15,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { t } = useLanguage();
 
   return (
     <Card className="overflow-hidden group flex flex-col h-full hover:shadow-lg transition-all duration-300 border-border/50">
@@ -48,11 +50,11 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button 
-          className="w-full gap-2 group" 
+          className="w-full gap-2 group font-bold" 
           onClick={() => addToCart(product)}
         >
           <ShoppingCart size={16} className="group-active:scale-125 transition-transform" />
-          Add to Cart
+          {t('add_to_cart')}
         </Button>
       </CardFooter>
     </Card>

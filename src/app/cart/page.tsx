@@ -4,12 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, subtotal, itemCount } = useCart();
+  const { t } = useLanguage();
 
   if (items.length === 0) {
     return (
@@ -17,12 +19,12 @@ export default function CartPage() {
         <div className="bg-muted p-6 rounded-full mb-6">
           <ShoppingBag size={48} className="text-muted-foreground" />
         </div>
-        <h2 className="text-3xl font-bold mb-4">Your cart is empty</h2>
+        <h2 className="text-3xl font-bold mb-4">{t('empty_cart')}</h2>
         <p className="text-muted-foreground mb-8 max-w-md">
-          Looks like you haven't added anything to your cart yet. Browse our catalog to find something amazing!
+          {t('empty_cart_desc')}
         </p>
         <Button asChild size="lg">
-          <Link href="/">Browse Catalog</Link>
+          <Link href="/">{t('browse_catalog')}</Link>
         </Button>
       </div>
     );
@@ -30,7 +32,7 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-10 font-headline">Shopping Cart ({itemCount})</h1>
+      <h1 className="text-3xl font-bold mb-10 font-headline">{t('cart_title')} ({itemCount})</h1>
       
       <div className="grid lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-4">
@@ -83,7 +85,7 @@ export default function CartPage() {
                         onClick={() => removeFromCart(item.id)}
                       >
                         <Trash2 size={16} />
-                        Remove
+                        {t('remove')}
                       </Button>
                     </div>
                   </div>
@@ -96,35 +98,32 @@ export default function CartPage() {
         <div className="lg:col-span-1">
           <Card className="sticky top-24 border-primary/20 shadow-md">
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+              <h2 className="text-xl font-bold mb-6">{t('order_summary')}</h2>
               <div className="space-y-4">
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Subtotal</span>
+                  <span>{t('subtotal')}</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Shipping</span>
-                  <span className="text-green-600 font-medium">Free</span>
+                  <span>{t('shipping')}</span>
+                  <span className="text-green-600 font-medium">{t('shipping_free')}</span>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Tax (Estimated)</span>
+                  <span>{t('tax')}</span>
                   <span>${(subtotal * 0.08).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
+                  <span>{t('total')}</span>
                   <span className="text-primary">${(subtotal * 1.08).toFixed(2)}</span>
                 </div>
               </div>
-              <Button asChild className="w-full mt-8 gap-2" size="lg">
+              <Button asChild className="w-full mt-8 gap-2 font-bold" size="lg">
                 <Link href="/checkout">
-                  Proceed to Checkout
+                  {t('proceed_to_checkout')}
                   <ArrowRight size={18} />
                 </Link>
               </Button>
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                Fast shipping and secure checkout.
-              </p>
             </CardContent>
           </Card>
         </div>

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/components/providers/cart-provider';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface ProductDetailsDialogProps {
   product: Product;
@@ -22,6 +23,7 @@ interface ProductDetailsDialogProps {
 export function ProductDetailsDialog({ product, children }: ProductDetailsDialogProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const handleAdd = () => {
@@ -62,7 +64,7 @@ export function ProductDetailsDialog({ product, children }: ProductDetailsDialog
 
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">Quantity</span>
+                <span className="text-sm font-medium">{t('quantity')}</span>
                 <div className="flex items-center border rounded-md">
                   <Button
                     variant="ghost"
@@ -84,9 +86,9 @@ export function ProductDetailsDialog({ product, children }: ProductDetailsDialog
                 </div>
               </div>
 
-              <Button onClick={handleAdd} className="w-full gap-2">
+              <Button onClick={handleAdd} className="w-full gap-2 font-bold">
                 <ShoppingCart size={18} />
-                Add to Cart — ${(product.price * quantity).toFixed(2)}
+                {t('add_to_cart')} — ${(product.price * quantity).toFixed(2)}
               </Button>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useCart } from '@/components/providers/cart-provider';
+import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -30,6 +31,7 @@ const formSchema = z.object({
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -46,15 +48,8 @@ export default function CheckoutPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    
-    // Simulate API call to ERP
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    
     const orderId = `ORD-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-    
-    // In a real app, we would POST to an API here
-    console.log("Submitting order:", { orderId, values, items, total: subtotal * 1.08 });
-    
     setIsSubmitting(false);
     clearCart();
     router.push(`/order-success?id=${orderId}`);
@@ -63,8 +58,8 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-24 text-center">
-        <h2 className="text-2xl font-bold mb-4">No items to checkout</h2>
-        <Button onClick={() => router.push('/')}>Return to Catalog</Button>
+        <h2 className="text-2xl font-bold mb-4">{t('empty_cart')}</h2>
+        <Button onClick={() => router.push('/')}>{t('browse_catalog')}</Button>
       </div>
     );
   }
@@ -72,13 +67,13 @@ export default function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-10 font-headline">Checkout</h1>
+        <h1 className="text-3xl font-bold mb-10 font-headline">{t('checkout_title')}</h1>
 
         <div className="grid md:grid-cols-5 gap-10">
           <div className="md:col-span-3">
             <Card>
               <CardHeader>
-                <CardTitle>Delivery Information</CardTitle>
+                <CardTitle>{t('delivery_info')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -89,7 +84,7 @@ export default function CheckoutPage() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name</FormLabel>
+                            <FormLabel>{t('full_name')}</FormLabel>
                             <FormControl>
                               <Input placeholder="John Doe" {...field} />
                             </FormControl>
@@ -102,9 +97,9 @@ export default function CheckoutPage() {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
+                            <FormLabel>{t('phone_number')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="+1 (555) 000-0000" {...field} />
+                              <Input placeholder="+880 1XXX-XXXXXX" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -117,7 +112,7 @@ export default function CheckoutPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email Address (Optional)</FormLabel>
+                          <FormLabel>{t('email_optional')}</FormLabel>
                           <FormControl>
                             <Input placeholder="john@example.com" {...field} />
                           </FormControl>
@@ -131,10 +126,10 @@ export default function CheckoutPage() {
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Delivery Address</FormLabel>
+                          <FormLabel>{t('delivery_address')}</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Street address, City, State, ZIP code" 
+                              placeholder="House, Street, Area, City" 
                               className="min-h-[100px]"
                               {...field} 
                             />
@@ -149,10 +144,10 @@ export default function CheckoutPage() {
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Order Notes (Optional)</FormLabel>
+                          <FormLabel>{t('order_notes')}</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Special delivery instructions..." 
+                              placeholder="..." 
                               {...field} 
                             />
                           </FormControl>
@@ -161,14 +156,14 @@ export default function CheckoutPage() {
                       )}
                     />
 
-                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full font-bold" size="lg" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing Order...
+                          {t('processing')}
                         </>
                       ) : (
-                        "Place Order"
+                        t('place_order')
                       )}
                     </Button>
                   </form>
@@ -180,7 +175,7 @@ export default function CheckoutPage() {
           <div className="md:col-span-2">
             <Card className="bg-muted/20">
               <CardHeader>
-                <CardTitle className="text-lg">Order Summary</CardTitle>
+                <CardTitle className="text-lg">{t('order_summary')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -194,15 +189,15 @@ export default function CheckoutPage() {
                   ))}
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-muted-foreground">{t('subtotal')}</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
+                      <span className="text-muted-foreground">{t('tax')}</span>
                       <span>${(subtotal * 0.08).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2">
-                      <span>Total</span>
+                      <span>{t('total')}</span>
                       <span className="text-primary">${(subtotal * 1.08).toFixed(2)}</span>
                     </div>
                   </div>
@@ -212,7 +207,7 @@ export default function CheckoutPage() {
             
             <div className="mt-6 flex items-center gap-3 p-4 bg-primary/5 rounded-lg text-primary text-sm border border-primary/20">
               <CheckCircle2 size={18} />
-              <p>Your data is protected and encrypted.</p>
+              <p>{t('secure_checkout')}</p>
             </div>
           </div>
         </div>

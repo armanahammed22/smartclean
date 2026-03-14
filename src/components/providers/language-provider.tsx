@@ -28,11 +28,17 @@ const translations: Record<Language, Record<string, string>> = {
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
     hero_cta: "এখনই বুক করুন",
     
-    // Products
+    // Products & Cart
     products_title: "শীর্ষ ক্লিনিং পণ্য",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     view_all: "সব দেখুন",
     add_to_cart: "কার্টে যোগ করুন",
+    cart_title: "শপিং কার্ট",
+    empty_cart: "আপনার কার্ট খালি",
+    empty_cart_desc: "মনে হচ্ছে আপনি এখনও আপনার কার্টে কিছু যোগ করেননি।",
+    browse_catalog: "ক্যাটালগ দেখুন",
+    quantity: "পরিমাণ",
+    remove: "সরিয়ে ফেলুন",
     
     // Services
     services_title: "আমাদের বিশেষজ্ঞতা",
@@ -45,6 +51,33 @@ const translations: Record<Language, Record<string, string>> = {
     features_title: "স্মার্ট ক্লিনের সুবিধা",
     features_subtitle: "কেন আমরা ১০০০+ গ্রাহকের পছন্দের তালিকায়।",
     
+    // Checkout & Summary
+    order_summary: "অর্ডার সারাংশ",
+    subtotal: "উপমোট",
+    shipping: "শিপিং",
+    shipping_free: "ফ্রি",
+    tax: "ট্যাক্স (আনুমানিক)",
+    total: "মোট",
+    proceed_to_checkout: "চেকআউট করুন",
+    checkout_title: "চেকআউট",
+    delivery_info: "ডেলিভারি তথ্য",
+    full_name: "পুরো নাম",
+    phone_number: "ফোন নম্বর",
+    email_optional: "ইমেল ঠিকানা (ঐচ্ছিক)",
+    delivery_address: "ডেলিভারি ঠিকানা",
+    order_notes: "অর্ডার নোট (ঐচ্ছিক)",
+    place_order: "অর্ডার সম্পন্ন করুন",
+    processing: "প্রসেসিং হচ্ছে...",
+    secure_checkout: "আপনার তথ্য সুরক্ষিত এবং এনক্রিপ্ট করা।",
+    
+    // Order Success
+    order_confirmed: "অর্ডার নিশ্চিত করা হয়েছে!",
+    thank_you_order: "আপনার ক্রয়ের জন্য ধন্যবাদ। আপনার অর্ডার গ্রহণ করা হয়েছে এবং প্রসেস করা হচ্ছে।",
+    order_id: "অর্ডার আইডি",
+    confirmation_email: "আপনার ইনবক্সে একটি নিশ্চিতকরণ ইমেল পাঠানো হয়েছে।",
+    back_to_shop: "দোকানে ফিরে যান",
+    continue_shopping: "কেনাকাটা চালিয়ে যান",
+
     // Footer
     footer_desc: "পুরো বাংলাদেশে প্রফেশনাল ক্লিনিং সেবার সবচেয়ে বিশ্বস্ত নাম। ১০০০+ সন্তুষ্ট গ্রাহকের বিশ্বস্ত।",
     footer_services: "সেবা সমূহ",
@@ -73,11 +106,17 @@ const translations: Record<Language, Record<string, string>> = {
     hero_subtitle: "Expert cleaning and maintenance services in Bangladesh. Trusted by thousands.",
     hero_cta: "Book Now",
     
-    // Products
+    // Products & Cart
     products_title: "Top Cleaning Products",
     products_subtitle: "High-performance tools for professional results.",
     view_all: "View All",
     add_to_cart: "Add to Cart",
+    cart_title: "Shopping Cart",
+    empty_cart: "Your cart is empty",
+    empty_cart_desc: "Looks like you haven't added anything to your cart yet.",
+    browse_catalog: "Browse Catalog",
+    quantity: "Quantity",
+    remove: "Remove",
     
     // Services
     services_title: "Our Expertise",
@@ -90,6 +129,33 @@ const translations: Record<Language, Record<string, string>> = {
     features_title: "The Smart Clean Advantage",
     features_subtitle: "Why we are the preferred choice for 1000+ clients.",
     
+    // Checkout & Summary
+    order_summary: "Order Summary",
+    subtotal: "Subtotal",
+    shipping: "Shipping",
+    shipping_free: "Free",
+    tax: "Tax (Estimated)",
+    total: "Total",
+    proceed_to_checkout: "Proceed to Checkout",
+    checkout_title: "Checkout",
+    delivery_info: "Delivery Information",
+    full_name: "Full Name",
+    phone_number: "Phone Number",
+    email_optional: "Email Address (Optional)",
+    delivery_address: "Delivery Address",
+    order_notes: "Order Notes (Optional)",
+    place_order: "Place Order",
+    processing: "Processing...",
+    secure_checkout: "Your data is protected and encrypted.",
+
+    // Order Success
+    order_confirmed: "Order Confirmed!",
+    thank_you_order: "Thank you for your purchase. Your order has been received and is being processed.",
+    order_id: "Order ID",
+    confirmation_email: "A confirmation email has been sent to your inbox.",
+    back_to_shop: "Back to Shop",
+    continue_shopping: "Continue Shopping",
+
     // Footer
     footer_desc: "The most trusted name for professional cleaning services across Bangladesh. Trusted by 1000+ satisfied clients.",
     footer_services: "Services",
