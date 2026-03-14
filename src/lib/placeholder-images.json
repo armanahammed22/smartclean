@@ -7,6 +7,12 @@
       "imageHint": "cleaning logo"
     },
     {
+      "id": "nav-home",
+      "description": "Home Navigation Icon",
+      "imageUrl": "https://picsum.photos/seed/home-nav/100/100",
+      "imageHint": "home icon"
+    },
+    {
       "id": "prod-1",
       "description": "Smart Vacuum Robot",
       "imageUrl": "https://picsum.photos/seed/vacuum/600/400",
