@@ -3,37 +3,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Basic auth helper functions
-    function isSignedIn() { return request.auth != null; }
-    function isBootstrapAdmin() { return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"; }
-    function isAdmin() { return isBootstrapAdmin() || exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)); }
-    function isEmployee() { return exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid)); }
-    function isStaff() { return isAdmin() || isEmployee(); }
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isBootstrapAdmin() { 
+      return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"; 
+    }
+    
+    function isAdmin() { 
+      return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))); 
+    }
+    
+    function isEmployee() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid)); 
+    }
+    
+    function isStaff() { 
+      return isAdmin() || isEmployee(); 
+    }
+
+    // Publicly accessible content (Catalog, Marketing, Settings)
+    // We allow anyone to read these collections for the public website.
+    // Using {document=**} ensures both individual document gets and collection listing are allowed.
+    match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{document=**} { allow read: if true; allow write: if isAdmin(); }
+
+    // Restricted Operational Data (Staff/Admin only)
+    match /orders/{document=**} { allow read, write: if isStaff(); }
+    match /bookings/{document=**} { allow read, write: if isStaff(); }
+    match /leads/{document=**} { allow read, write: if isStaff(); }
+    match /customers/{document=**} { allow read, write: if isStaff(); }
+    match /employee_profiles/{document=**} { allow read: if isStaff(); allow write: if isAdmin(); }
+    
+    // Role Markers
+    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
+    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
     // Admin catch-all: Bootstrap admin can do anything
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
-
-    // Publicly accessible content (Catalog, Marketing, Settings)
-    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
-
-    // Restricted Operational Data (Staff/Admin only)
-    match /orders/{id} { allow read, write: if isStaff(); }
-    match /bookings/{id} { allow read, write: if isStaff(); }
-    match /leads/{id} { allow read, write: if isStaff(); }
-    match /customers/{id} { allow read, write: if isStaff(); }
-    match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
-    
-    // Role Markers
-    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
-    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
   }
 }
