@@ -23,7 +23,7 @@ service cloud.firestore {
     }
 
     // Publicly accessible collections (Catalog & Marketing)
-    // Explicitly allow get and list for anyone (authenticated or not)
+    // We allow 'read' (get and list) for anyone to support the public website
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
