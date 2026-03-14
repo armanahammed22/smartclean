@@ -26,14 +26,14 @@ const translations: Record<Language, Record<string, string>> = {
     // Hero
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
-    hero_cta: "এখনই বুক করুন",
+    hero_cta: "বুক করুন",
     
     // Products & Cart
     products_title: "শীর্ষ ক্লিনিং পণ্য",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     view_all: "সব দেখুন",
     add_to_cart: "কার্টে যোগ করুন",
-    order_now: "এখনই অর্ডার করুন",
+    order_now: "অর্ডার করুন",
     cart_title: "অর্ডার তালিকা",
     empty_cart: "আপনার তালিকা খালি",
     empty_cart_desc: "মনে হচ্ছে আপনি এখনও আপনার তালিকায় কিছু যোগ করেননি।",
@@ -46,7 +46,7 @@ const translations: Record<Language, Record<string, string>> = {
     services_title: "আমাদের বিশেষজ্ঞতা",
     services_subtitle: "আমরা বিশেষায়িত ক্লিনিং এবং রক্ষণাবেক্ষণ সেবার একটি বিস্তৃত পরিসর প্রদান করি।",
     service_details: "বিস্তারিত",
-    book_now: "এখনই বুক করুন",
+    book_now: "বুক করুন",
     price_from: "থেকে",
     
     // Features
