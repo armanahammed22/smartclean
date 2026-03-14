@@ -24,9 +24,7 @@ service cloud.firestore {
     }
 
     // Publicly accessible content (Catalog, Marketing, Settings)
-    // We allow anyone to read these collections for the public website.
-    // Explicitly defining read access for both documents and collection listings.
-    
+    // Explicitly allow read for anyone to support the public website.
     match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
