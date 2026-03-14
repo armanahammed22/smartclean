@@ -1,0 +1,483 @@
+{
+  "entities": {
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a single product available in the QuickOrder catalog for customers to purchase.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "shortDescription": {
+          "type": "string",
+          "description": "A brief summary of the product, suitable for catalog display."
+        },
+        "fullDescription": {
+          "type": "string",
+          "description": "A comprehensive description of the product, for detailed product pages."
+        },
+        "price": {
+          "type": "number",
+          "description": "The current selling price of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to the primary image of the product.",
+          "format": "uri"
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "The current quantity of the product available in stock."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the product is currently active and visible in the catalog."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the product record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the product record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "shortDescription",
+        "fullDescription",
+        "price",
+        "imageUrl",
+        "stockQuantity",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Stores the details of a customer captured during the checkout process.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Customer entity."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the customer."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the customer.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the customer."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the customer record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the customer record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "phoneNumber",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a customer's submitted order, including details like items, total price, and shipping information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who placed the order. (Relationship: Customer 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date and time when the order was placed.",
+          "format": "date-time"
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "The final total price of the order, including all items and any applicable taxes/fees."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the order (e.g., 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')."
+        },
+        "orderNotes": {
+          "type": "string",
+          "description": "Any additional notes or special instructions provided by the customer for this order."
+        },
+        "shippingAddressLine1": {
+          "type": "string",
+          "description": "The first line of the shipping address for this specific order."
+        },
+        "shippingAddressLine2": {
+          "type": "string",
+          "description": "The second line of the shipping address for this specific order (optional)."
+        },
+        "shippingCity": {
+          "type": "string",
+          "description": "The city for the shipping address of this order."
+        },
+        "shippingStateProvince": {
+          "type": "string",
+          "description": "The state or province for the shipping address of this order."
+        },
+        "shippingPostalCode": {
+          "type": "string",
+          "description": "The postal code for the shipping address of this order."
+        },
+        "shippingCountry": {
+          "type": "string",
+          "description": "The country for the shipping address of this order."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "The status of the payment for the order (e.g., 'Paid', 'Pending', 'Failed', 'Refunded')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the order record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the order record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "orderDate",
+        "totalPrice",
+        "status",
+        "shippingAddressLine1",
+        "shippingCity",
+        "shippingStateProvince",
+        "shippingPostalCode",
+        "shippingCountry",
+        "paymentStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents a single product item within an order, capturing its state at the time of purchase.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being ordered. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product ordered."
+        },
+        "unitPriceAtTimeOfOrder": {
+          "type": "number",
+          "description": "The price of the product at the time the order was placed, to ensure historical accuracy."
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "The calculated subtotal for this order item (quantity * unitPriceAtTimeOfOrder)."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "unitPriceAtTimeOfOrder",
+        "subtotal"
+      ]
+    },
+    "AdminProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminProfile",
+      "type": "object",
+      "description": "Stores profile details for administrative users, excluding authentication data which is handled externally.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AdminProfile entity, typically linked to an external authentication system's user ID."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the administrator."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the administrator.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the administrator (optional)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the admin profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the admin profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "EmployeeProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EmployeeProfile",
+      "type": "object",
+      "description": "Stores profile details for employees (e.g., order fulfillers, inventory managers), excluding authentication data which is handled externally.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the EmployeeProfile entity, typically linked to an external authentication system's user ID."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the employee."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the employee."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the employee.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The phone number of the employee (optional)."
+        },
+        "role": {
+          "type": "string",
+          "description": "The specific role or job title of the employee within the organization (e.g., 'Order Fulfillment', 'Inventory Manager')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the employee profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the employee profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product catalog information. Publicly readable. Writeable by authenticated administrators and employees.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for a specific product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer profile details. Readable/writeable by authenticated administrators and employees. If 'customerId' matches 'request.auth.uid', the customer can read/write their own profile.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "The unique identifier for a specific customer. This may or may not align with a Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores customer orders. Readable/writeable by administrators and employees. Customers can read their own orders if 'customerId' matches 'request.auth.uid'. Includes denormalized 'customerId' for authorization.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier for a specific order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}/order_items/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores individual items within a specific order. Access is inherited from the parent order. Includes denormalized 'customerId' and 'orderId' for authorization independence.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the parent order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier for a specific item within an order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admin_profiles/{adminId}",
+        "definition": {
+          "entityName": "AdminProfile",
+          "schema": {
+            "$ref": "#/backend/entities/AdminProfile"
+          },
+          "description": "Stores profile details for administrative users. Accessible by the owner ('adminId' matches 'request.auth.uid') and other administrators. Used in conjunction with '/roles_admins/{uid}' for role-based access control.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier for an administrator, typically matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/employee_profiles/{employeeId}",
+        "definition": {
+          "entityName": "EmployeeProfile",
+          "schema": {
+            "$ref": "#/backend/entities/EmployeeProfile"
+          },
+          "description": "Stores profile details for employees. Accessible by the owner ('employeeId' matches 'request.auth.uid') and administrators. Used in conjunction with '/roles_employees/{uid}' for role-based access control.",
+          "params": [
+            {
+              "name": "employeeId",
+              "description": "The unique identifier for an employee, typically matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admins/{uid}",
+        "definition": {
+          "entityName": "AdminProfile",
+          "schema": {
+            "$ref": "#/backend/entities/AdminProfile"
+          },
+          "description": "Marker collection for Database Access Control (DBAC) to identify users with 'admin' privileges. Documents are typically empty, with 'uid' as the document ID. Read-only for rules evaluation; writeable by other admins.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The Firebase Authentication UID of a user with administrative privileges."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_employees/{uid}",
+        "definition": {
+          "entityName": "EmployeeProfile",
+          "schema": {
+            "$ref": "#/backend/entities/EmployeeProfile"
+          },
+          "description": "Marker collection for Database Access Control (DBAC) to identify users with 'employee' privileges. Documents are typically empty, with 'uid' as the document ID. Read-only for rules evaluation; writeable by administrators.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The Firebase Authentication UID of a user with employee privileges."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore structure prioritizes Authorization Independence by denormalizing key authorization attributes into subcollection documents and leverages Structural Segregation for clear security postures across collections. Roles are managed via Database Access Control (DBAC) using dedicated marker collections, ensuring simple and debuggable security rules.\n\n**Authorization Independence via Denormalization:**\n*   The `OrderItem` collection, which is a subcollection of `Order`, has its access dependent on the `customerId` of the parent `Order`. To maintain authorization independence and avoid `get()` calls in security rules, each `OrderItem` document will **explicitly include a denormalized `customerId` field**. This allows rules to evaluate ownership directly on the `OrderItem` document, enabling atomic operations and simplifying access logic.\n*   Similarly, the `Order` collection itself includes `customerId`, allowing for direct owner-based access without additional lookups if a customer is authenticated.\n\n**Support for QAPs (Queries as a Policy):**\n*   **Product Catalog Display:** The `/products` collection is designed for public read-only access. This inherently supports QAP for `list` operations, as any user can retrieve the entire catalog securely without needing additional filtering in rules.\n*   **Admin/Employee Access:** Collections like `/admin_profiles`, `/employee_profiles`, `/customers`, and `/orders` will have security rules that utilize the DBAC marker collections (`/roles_admins/{uid}` and `/roles_employees/{uid}`). For example, an employee's `list` query on `/orders` will be permitted if `request.auth.uid` exists in `/roles_employees/{uid}`. This is QAP-compliant because the permission is determined by the existence of a document, not by filtering data content based on complex conditions in the rules themselves.\n*   **Customer-Specific Data:** For a customer to view their own orders or order items, the `list` operation on `/orders` (and implicitly `/orders/{orderId}/order_items`) can be secured by checking if `request.auth.uid == resource.data.customerId`. This is a QAP-compliant pattern where the client application queries for `orders` and the rule filters based on the `customerId` field present in *each* `Order` document, ensuring only owned data is returned.\n\n**Structural Segregation:**\n*   `products` collection holds only public, catalog-visible items, ensuring uniform read access.\n*   `admin_profiles` and `employee_profiles` are distinct, separating user types with potentially different internal data and access needs, though both are managed by administrators.\n*   `roles_admins` and `roles_employees` are dedicated marker collections, providing a clean, existence-based mechanism for role assignment and checking, fully aligning with DBAC principles. Each document in these collections has the same security posture (being a role marker).\n\nThis design ensures a clear, predictable, and maintainable security model that directly supports the application's features and scales efficiently."
+  }
+}

@@ -1,0 +1,164 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset implements a robust Role-Based Access Control (RBAC) system using marker collections 
+     * (Database Access Control / DBAC) alongside individual resource ownership. It prioritizes 
+     * "Prototyping Mode" flexibility for data shapes while maintaining strict authorization boundaries.
+     *
+     * DATA STRUCTURE
+     * - /products: Publicly viewable catalog managed by staff.
+     * - /customers: Customer profiles accessible by staff or the customer themselves.
+     * - /orders & /orders/{id}/order_items: Order management with denormalized customer IDs for 
+     *   performant authorization.
+     * - /admin_profiles & /employee_profiles: Identity-linked profiles for staff.
+     * - /roles_admins & /roles_employees: Empty marker documents used as permission flags.
+     *
+     * KEY SECURITY DECISIONS
+     * - Role markers (/roles_*) are used to identify Admins and Employees via 'exists' checks.
+     * - Denormalization: OrderItems contain 'customerId' to allow rules to verify access without 
+     *   performing a 'get()' on the parent Order document, reducing latency and cost.
+     * - Relational Integrity: On creation, documents nested under IDs (like /customers/{id}) 
+     *   must have internal 'id' fields matching the path to prevent data-path mismatches.
+     */
+
+    // --- Global Helper Functions ---
+
+    /** @description Checks if the user is authenticated with any provider. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the user is an administrator via the roles_admins marker collection. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid));
+    }
+
+    /** @description Checks if the user is an employee via the roles_employees marker collection. */
+    function isEmployee() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid));
+    }
+
+    /** @description Checks if the user is any form of staff (Admin or Employee). */
+    function isStaff() {
+      return isAdmin() || isEmployee();
+    }
+
+    /** @description Checks if the authenticated UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Combined ownership and existence check for updates and deletes. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Public product catalog. Staff can manage entries.
+     * @path /products/{productId}
+     * @allow get, list: if true;
+     * @deny create, update, delete: if !isStaff();
+     * @principle Public read-only access for catalog, staff-only writes.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if isStaff();
+    }
+
+    /**
+     * @description Customer profiles. Shared by staff and the customer themselves.
+     * @path /customers/{customerId}
+     * @allow get, list: if isStaff() || isOwner(customerId);
+     * @deny create: if !isStaff() && request.resource.data.id != request.auth.uid;
+     * @principle Enforces path-to-data integrity and restricted staff/owner access.
+     */
+    match /customers/{customerId} {
+      allow get, list: if isStaff() || isOwner(customerId);
+      allow create: if isStaff() || (isOwner(customerId) && request.resource.data.id == customerId);
+      allow update: if isStaff() || (isExistingOwner(customerId) && request.resource.data.id == resource.data.id);
+      allow delete: if isStaff() || isExistingOwner(customerId);
+    }
+
+    /**
+     * @description Customer orders. Staff manage all; customers read their own.
+     * @path /orders/{orderId}
+     * @allow get, list: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+     * @deny create: if !isStaff() && request.resource.data.customerId != request.auth.uid;
+     * @principle Uses denormalized customerId for ownership verification.
+     */
+    match /orders/{orderId} {
+      allow get, list: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isStaff() || (isSignedIn() && request.resource.data.customerId == request.auth.uid);
+      allow update: if isStaff() || (isStaff() && resource != null);
+      allow delete: if isStaff() && resource != null;
+
+      /**
+       * @description Individual items within an order.
+       * @path /orders/{orderId}/order_items/{orderItemId}
+       * @allow get, list: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+       * @principle Leverages denormalized customerId to avoid parent lookups.
+       */
+      match /order_items/{orderItemId} {
+        allow get, list: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+        allow create: if isStaff() || (isSignedIn() && request.resource.data.customerId == request.auth.uid);
+        allow update: if isStaff() && resource != null;
+        allow delete: if isStaff() && resource != null;
+      }
+    }
+
+    /**
+     * @description Administrative user profiles.
+     * @path /admin_profiles/{adminId}
+     * @allow get, list: if isAdmin() || isOwner(adminId);
+     * @principle Self-access or global access for other administrators.
+     */
+    match /admin_profiles/{adminId} {
+      allow get, list: if isAdmin() || isOwner(adminId);
+      allow create: if (isAdmin() || isOwner(adminId)) && (request.resource.data.id == adminId);
+      allow update: if (isAdmin() || isExistingOwner(adminId)) && (request.resource.data.id == resource.data.id);
+      allow delete: if isAdmin() || isExistingOwner(adminId);
+    }
+
+    /**
+     * @description Employee user profiles.
+     * @path /employee_profiles/{employeeId}
+     * @allow get, list: if isAdmin() || isOwner(employeeId);
+     * @principle Owners can manage their profiles; admins have oversight.
+     */
+    match /employee_profiles/{employeeId} {
+      allow get, list: if isAdmin() || isOwner(employeeId);
+      allow create: if (isAdmin() || isOwner(employeeId)) && (request.resource.data.id == employeeId);
+      allow update: if (isAdmin() || isExistingOwner(employeeId)) && (request.resource.data.id == resource.data.id);
+      allow delete: if isAdmin() || isExistingOwner(employeeId);
+    }
+
+    /**
+     * @description Role Marker: Admins. Used for DBAC.
+     * @path /roles_admins/{uid}
+     * @allow get: if isSignedIn();
+     * @deny write: if !isAdmin();
+     * @principle Marker collection for identifying administrators; writeable only by existing admins.
+     */
+    match /roles_admins/{uid} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Role Marker: Employees. Used for DBAC.
+     * @path /roles_employees/{uid}
+     * @allow get: if isSignedIn();
+     * @deny write: if !isAdmin();
+     * @principle Marker collection for identifying employees; managed exclusively by administrators.
+     */
+    match /roles_employees/{uid} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
