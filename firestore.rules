@@ -3,10 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * CORE PHILOSOPHY
+     * CORE CRM SECURITY RULES
      * This ruleset implements a robust Role-Based Access Control (RBAC) system.
-     * It specifically authorizes the bootstrap administrator UID (gcp03WmpjROVvRdpLNsghNU4zHa2)
-     * to ensure immediate access to CRM management tools.
+     * It grants the bootstrap administrator UID absolute access to all CRM resources.
      */
 
     // --- Global Helper Functions ---
@@ -15,12 +14,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isBootstrapAdmin() {
+      return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2";
+    }
+
     function isAdmin() {
-      // Authorize via roles_admins collection OR the hardcoded bootstrap UID
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
-        request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"
-      );
+      return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)));
     }
 
     function isEmployee() {
@@ -45,6 +44,15 @@ service cloud.firestore {
       allow get, list, create, update, delete: if isStaff();
     }
 
+    match /services/{serviceId} {
+      allow get, list: if true; // Publicly viewable for booking
+      allow create, update, delete: if isStaff();
+    }
+
+    match /subscriptions/{companyId} {
+      allow get, list, write: if isAdmin();
+    }
+
     // --- Staff and Profiles ---
 
     match /admin_profiles/{adminId} {
@@ -59,7 +67,7 @@ service cloud.firestore {
 
     match /roles_admins/{uid} {
       allow get, list: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isBootstrapAdmin() || isAdmin();
     }
 
     match /roles_employees/{uid} {
