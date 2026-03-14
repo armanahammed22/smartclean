@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -34,10 +34,15 @@ export default function LoginPage() {
       });
       router.push('/admin/dashboard');
     } catch (error: any) {
-      const message = error.code === 'auth/invalid-credential' 
-        ? "Invalid email or password. Please ensure you have created this account in the Firebase Console."
-        : error.message;
+      console.error("Login error:", error);
+      let message = "An unexpected error occurred.";
       
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        message = "Invalid email or password. Please ensure you have created this account in your Firebase Console (Authentication tab).";
+      } else if (error.code === 'auth/too-many-requests') {
+        message = "Too many failed attempts. Please try again later.";
+      }
+
       setError(message);
       toast({
         variant: "destructive",
@@ -67,15 +72,25 @@ export default function LoginPage() {
           {error && (
             <Alert variant="destructive" className="bg-destructive/10 text-destructive border-none">
               <AlertCircle size={16} />
-              <AlertTitle className="font-bold">Auth Error</AlertTitle>
-              <AlertDescription className="text-xs">
-                {error}
-                <div className="mt-2 font-bold underline">
-                  Check README.md for setup instructions.
+              <AlertTitle className="font-bold">Access Required</AlertTitle>
+              <AlertDescription className="text-xs space-y-2">
+                <p>{error}</p>
+                <div className="pt-2 border-t border-destructive/20 font-bold uppercase tracking-tighter">
+                  Check README.md for 2-step setup.
                 </div>
               </AlertDescription>
             </Alert>
           )}
+
+          <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 text-blue-700">
+            <Info size={18} className="shrink-0" />
+            <div className="text-[10px] leading-tight">
+              <p className="font-bold uppercase">Setup Reminder:</p>
+              <p>1. Create <strong>{email || 'your email'}</strong> in Firebase Console Auth.</p>
+              <p>2. Add your UID to <strong>roles_admins</strong> collection in Firestore.</p>
+            </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -84,7 +99,7 @@ export default function LoginPage() {
                 <Input 
                   id="email" 
                   type="email" 
-                  placeholder="admin@smartclean.com" 
+                  placeholder="smartclean422@gmail.com" 
                   className="pl-10 h-11"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -99,7 +114,7 @@ export default function LoginPage() {
                 <Input 
                   id="password" 
                   type="password" 
-                  placeholder="••••••••" 
+                  placeholder="admin123" 
                   className="pl-10 h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,10 +126,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
+                  Authenticating...
                 </>
               ) : (
-                "Sign In"
+                "Sign In to Dashboard"
               )}
             </Button>
           </form>
