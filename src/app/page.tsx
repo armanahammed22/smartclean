@@ -3,12 +3,16 @@
 import React from 'react';
 import Image from 'next/image';
 import { ProductCard } from '@/components/products/product-card';
-import { Product, Service, Feature } from '@/types';
+import { Product, Service } from '@/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layout, Wrench, Activity, Truck, ShieldCheck, Headphones, ArrowRight } from 'lucide-react';
+import { 
+  Layout, Wrench, Activity, Truck, ShieldCheck, 
+  Headphones, ArrowRight, Home, Building2, 
+  Brush, Sparkles, Wind 
+} from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -18,7 +22,7 @@ import {
 } from "@/components/ui/carousel";
 
 export default function SmartCleanHomePage() {
-  const { language, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const MOCK_PRODUCTS: Product[] = [
     {
@@ -47,6 +51,24 @@ export default function SmartCleanHomePage() {
       shortDescription: language === 'bn' ? 'উচ্চ-তাপমাত্রার বাষ্প ব্যবহার করে মেঝে জীবাণুমুক্ত করুন।' : 'Sanitize floors without chemicals using high-temp steam.',
       description: 'Kills 99.9% of bacteria and germs. Perfect for hardwood and tile floors.',
       imageUrl: PlaceHolderImages.find(img => img.id === 'prod-3')?.imageUrl || '',
+    },
+    {
+      id: '4',
+      name: language === 'bn' ? 'এয়ার পিউরিফায়ার প্র' : 'Air Purifier Pro',
+      price: 299.00,
+      category: language === 'bn' ? 'সরঞ্জাম' : 'Equipment',
+      shortDescription: language === 'bn' ? 'পরিষ্কার বাতাসের জন্য উন্নত ফিল্টার।' : 'Advanced filtration for pure indoor air.',
+      description: 'High efficiency particulate air filter combined with activated carbon to remove odors and allergens.',
+      imageUrl: PlaceHolderImages.find(img => img.id === 'prod-4')?.imageUrl || '',
+    },
+    {
+      id: '5',
+      name: language === 'bn' ? 'উইন্ডো ক্লিনিং রোবট' : 'Window Cleaning Robot',
+      price: 349.99,
+      category: language === 'bn' ? 'সরঞ্জাম' : 'Equipment',
+      shortDescription: language === 'bn' ? 'অনায়াসে গ্লাস পরিষ্কারের রোবট।' : 'Effortless window cleaning with AI-driven robot.',
+      description: 'Suction-based window cleaner that automatically maps your glass surfaces for a streak-free finish.',
+      imageUrl: PlaceHolderImages.find(img => img.id === 'prod-6')?.imageUrl || '',
     }
   ];
 
@@ -74,34 +96,18 @@ export default function SmartCleanHomePage() {
     }
   ];
 
-  const MOCK_FEATURES: Feature[] = [
-    {
-      id: 'f1',
-      title: language === 'bn' ? 'যাচাইকৃত পেশাদার' : 'Vetted Professionals',
-      description: language === 'bn' ? 'প্রতিটি ক্লিনার কঠোর প্রশিক্ষণ এবং ব্যাকগ্রাউন্ড চেক এর মাধ্যমে আসে।' : 'Every cleaner undergoes background checks and rigorous training.',
-      icon: 'ShieldCheck'
-    },
-    {
-      id: 'f2',
-      title: language === 'bn' ? 'নমনীয় সময়সূচী' : 'Flexible Scheduling',
-      description: language === 'bn' ? 'আপনার ব্যস্ত জীবনযাত্রার সাথে মানানসই যেকোনো সময়ে বুক করুন।' : 'Book a service at any time that fits your busy lifestyle.',
-      icon: 'Truck'
-    },
-    {
-      id: 'f3',
-      title: language === 'bn' ? 'হ্যাপিনেস গ্যারান্টি' : 'Happiness Guarantee',
-      description: language === 'bn' ? 'সন্তুষ্ট নন? আমরা আপনার সন্তুষ্টি না হওয়া পর্যন্ত ফ্রি রি-ক্লিন করব।' : 'Not satisfied? We will re-clean for free until you are happy.',
-      icon: 'Headphones'
-    }
+  const QUICK_CATEGORIES = [
+    { name: language === 'bn' ? 'আবাসিক' : 'Residential', icon: Home },
+    { name: language === 'bn' ? 'অফিস' : 'Office', icon: Building2 },
+    { name: language === 'bn' ? 'ডিপ ক্লিন' : 'Deep Clean', icon: Brush },
+    { name: language === 'bn' ? 'স্যানিটাইজেশন' : 'Sanitization', icon: Sparkles },
+    { name: language === 'bn' ? 'এসি সার্ভিস' : 'AC Service', icon: Wind },
   ];
 
   const IconMap: Record<string, React.ReactNode> = {
     Layout: <Layout className="text-primary" size={32} />,
     Wrench: <Wrench className="text-primary" size={32} />,
     Activity: <Activity className="text-primary" size={32} />,
-    Truck: <Truck className="text-primary" size={32} />,
-    ShieldCheck: <ShieldCheck className="text-primary" size={32} />,
-    Headphones: <Headphones className="text-primary" size={32} />,
   };
 
   const HERO_IMAGES = [
@@ -112,10 +118,9 @@ export default function SmartCleanHomePage() {
 
   return (
     <div className="flex flex-col gap-12 pb-24 bg-[#F2F4F8]">
-      {/* Hero Section - Multi-Banner Grid */}
+      {/* Hero Section */}
       <section className="container mx-auto px-4 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-auto lg:h-[500px]">
-          {/* Main Carousel - Column span 8/9 */}
           <div className="lg:col-span-8 relative rounded-xl overflow-hidden shadow-lg h-[300px] lg:h-full">
             <Carousel className="w-full h-full" opts={{ loop: true }}>
               <CarouselContent className="h-full">
@@ -145,7 +150,6 @@ export default function SmartCleanHomePage() {
             </Carousel>
           </div>
 
-          {/* Side Banners - Column span 4 */}
           <div className="lg:col-span-4 hidden lg:flex flex-col gap-4 h-full">
             <div className="relative flex-1 rounded-xl overflow-hidden shadow-md group">
               <Image
@@ -176,7 +180,39 @@ export default function SmartCleanHomePage() {
       </section>
 
       <div className="container mx-auto px-4 space-y-16">
-        {/* Layer 1: Featured Products */}
+        {/* Language Choice Toggle Group */}
+        <div className="flex justify-center items-center gap-3 py-6 border-b border-border/50">
+          <Button 
+            variant={language === 'bn' ? 'default' : 'outline'}
+            onClick={() => setLanguage('bn')}
+            className="rounded-full px-10 font-black text-lg h-12 shadow-sm"
+          >
+            বাংলা
+          </Button>
+          <Button 
+            variant={language === 'en' ? 'default' : 'outline'}
+            onClick={() => setLanguage('en')}
+            className="rounded-full px-10 font-black text-lg h-12 shadow-sm"
+          >
+            English
+          </Button>
+        </div>
+
+        {/* 5-Column Quick Category Grid */}
+        <section className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {QUICK_CATEGORIES.map((cat, i) => (
+              <div key={i} className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer group">
+                <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:-translate-y-1">
+                  <cat.icon size={32} />
+                </div>
+                <span className="font-bold text-sm text-center text-[#081621]">{cat.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Products - 5 Column Grid */}
         <section id="products">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
             <div className="flex items-center justify-between mb-8">
@@ -186,7 +222,7 @@ export default function SmartCleanHomePage() {
               </div>
               <Button variant="outline" className="rounded-full font-bold">{t('view_all')}</Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {MOCK_PRODUCTS.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -194,7 +230,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Layer 2: Professional Services */}
+        {/* Professional Services */}
         <section id="services">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-border/50">
             <div className="text-center mb-12 space-y-2">
@@ -208,7 +244,7 @@ export default function SmartCleanHomePage() {
                 <Card key={service.id} className="border-none shadow-md hover:shadow-xl transition-all duration-300 group overflow-hidden">
                   <CardHeader className="pt-8 px-6">
                     <div className="mb-6 p-4 bg-primary/5 rounded-2xl w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 transform group-hover:-translate-y-2">
-                      {IconMap[service.icon]}
+                      {IconMap[service.icon] || <Layout className="text-primary" size={32} />}
                     </div>
                     <CardTitle className="text-2xl font-bold">{service.title}</CardTitle>
                   </CardHeader>
@@ -229,22 +265,40 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Layer 3: Advantages */}
+        {/* Advantages */}
         <section className="pb-12">
           <div className="text-center mb-12 space-y-2">
             <h2 className="text-3xl font-bold tracking-tight text-[#081621]">{t('features_title')}</h2>
             <p className="text-muted-foreground">{t('features_subtitle')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {MOCK_FEATURES.map((feature) => (
-              <div key={feature.id} className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
-                <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
-                  {React.cloneElement(IconMap[feature.icon] as React.ReactElement, { className: "text-white", size: 32 })}
-                </div>
-                <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                <ShieldCheck size={32} />
               </div>
-            ))}
+              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'যাচাইকৃত পেশাদার' : 'Vetted Professionals'}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {language === 'bn' ? 'প্রতিটি ক্লিনার কঠোর প্রশিক্ষণ এবং ব্যাকগ্রাউন্ড চেক এর মাধ্যমে আসে।' : 'Every cleaner undergoes background checks and rigorous training.'}
+              </p>
+            </div>
+            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                <Truck size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'নমনীয় সময়সূচী' : 'Flexible Scheduling'}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {language === 'bn' ? 'আপনার ব্যস্ত জীবনযাত্রার সাথে মানানসই যেকোনো সময়ে বুক করুন।' : 'Book a service at any time that fits your busy lifestyle.'}
+              </p>
+            </div>
+            <div className="bg-white flex flex-col items-center text-center p-10 rounded-3xl shadow-sm border border-border/50 group hover:bg-primary/5 transition-colors">
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+                <Headphones size={32} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">{language === 'bn' ? 'হ্যাপিনেস গ্যারান্টি' : 'Happiness Guarantee'}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {language === 'bn' ? 'সন্তুষ্ট নন? আমরা আপনার সন্তুষ্টি না হওয়া পর্যন্ত ফ্রি রি-ক্লিন করব।' : 'Not satisfied? We will re-clean for free until you are happy.'}
+              </p>
+            </div>
           </div>
         </section>
       </div>
