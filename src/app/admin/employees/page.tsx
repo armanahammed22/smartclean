@@ -1,9 +1,9 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,16 +12,24 @@ import {
   Mail, 
   Phone, 
   Star, 
-  Calendar, 
-  CheckCircle2, 
   Plus,
-  Search,
-  MoreHorizontal,
-  Loader2
+  Loader2,
+  Trash2,
+  Save
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function EmployeesPage() {
   const db = useFirestore();
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const employeesQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -30,6 +38,44 @@ export default function EmployeesPage() {
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
 
+  const handleAddEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!db) return;
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const employeeData = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      role: formData.get('role') as string,
+      status: 'Active',
+      rating: 5.0,
+      jobsCompleted: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      addDoc(collection(db, 'employee_profiles'), employeeData).catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'employee_profiles', operation: 'create', requestResourceData: employeeData }));
+      });
+      toast({ title: "Employee Hired", description: `${employeeData.name} has been added to the crew.` });
+      setIsDialogOpen(false);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteEmployee = (id: string) => {
+    if (!db) return;
+    deleteDoc(doc(db, 'employee_profiles', id)).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `employee_profiles/${id}`, operation: 'delete' }));
+    });
+    toast({ title: "Profile Removed" });
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -37,9 +83,50 @@ export default function EmployeesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Staff Directory</h1>
           <p className="text-muted-foreground text-sm">Manage cleaning crews and employee roles</p>
         </div>
-        <Button className="gap-2 font-bold shadow-lg h-11">
-          <Plus size={18} /> Hire New Staff
-        </Button>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => setIsDialogOpen(true)}>
+              <Plus size={18} /> Hire New Staff
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <form onSubmit={handleAddEmployee} className="space-y-4">
+              <DialogHeader><DialogTitle>New Employee Enrollment</DialogTitle></DialogHeader>
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input name="name" required placeholder="Employee Name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input name="email" type="email" required placeholder="email@smartclean.com" />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone Number</Label>
+                <Input name="phone" required placeholder="01XXXXXXXXX" />
+              </div>
+              <div className="space-y-2">
+                <Label>Assigned Role</Label>
+                <Select name="role" defaultValue="Cleaner">
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cleaner">Senior Cleaner</SelectItem>
+                    <SelectItem value="Technician">AC Technician</SelectItem>
+                    <SelectItem value="Supervisor">Supervisor</SelectItem>
+                    <SelectItem value="Manager">Operations Manager</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
+                  Enroll Staff
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -79,12 +166,12 @@ export default function EmployeesPage() {
                 <div className="grid grid-cols-2 gap-2 py-3 border-y border-gray-50">
                   <div className="text-center">
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">Completed</p>
-                    <p className="text-sm font-black text-gray-900">124</p>
+                    <p className="text-sm font-black text-gray-900">{staff.jobsCompleted || 0}</p>
                   </div>
                   <div className="text-center border-l">
                     <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">Rating</p>
                     <div className="flex items-center justify-center gap-0.5 text-orange-500">
-                      <p className="text-sm font-black text-gray-900">4.9</p>
+                      <p className="text-sm font-black text-gray-900">{staff.rating || '5.0'}</p>
                       <Star size={10} fill="currentColor" />
                     </div>
                   </div>
@@ -94,8 +181,8 @@ export default function EmployeesPage() {
                   <Button variant="outline" size="sm" className="flex-1 text-[9px] font-bold h-8 uppercase">
                     Schedule
                   </Button>
-                  <Button size="sm" className="flex-1 text-[9px] font-bold h-8 uppercase">
-                    Profile
+                  <Button variant="ghost" size="sm" className="h-8 text-destructive px-2" onClick={() => deleteEmployee(staff.id)}>
+                    <Trash2 size={14} />
                   </Button>
                 </div>
               </CardContent>
