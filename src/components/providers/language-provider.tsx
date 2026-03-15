@@ -56,6 +56,21 @@ const translations: Record<Language, Record<string, string>> = {
     growth: "গ্রোথ",
     active_staff: "সক্রিয় কর্মী",
 
+    // Dashboard Stats
+    stat_total_leads: "মোট লিড",
+    stat_active_customers: "সক্রিয় কাস্টমার",
+    stat_sales_volume: "বিক্রয় পরিমাণ",
+    stat_new_inquiries: "নতুন ইনকোয়ারি",
+    leads_acquisition: "লিড অর্জন",
+    market_insights: "মার্কেট ইনসাইটস",
+    campaign_conversions: "ক্যাম্পেইন কনভার্সন",
+    capture_rate: "ক্যাপচার রেট",
+    view_marketing_report: "মার্কেটিং রিপোর্ট দেখুন",
+    seed_erp_data: "ERP ডাটা সিড করুন",
+    erp_data_seeded: "ERP ডাটা সিড করা হয়েছে",
+    crm_overview: "CRM ওভারভিউ",
+    engagement_metrics: "রিয়েল-টাইম এনগেজমেন্ট ম্যাট্রিক্স",
+
     // Admin Sidebar Groups
     group_main: "মেইন ও অ্যানালিটিক্স",
     group_crm: "CRM ও সেলস",
@@ -171,7 +186,7 @@ const translations: Record<Language, Record<string, string>> = {
     service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।",
     chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন",
 
-    // Dynamic Labels (Common words used in Quick Links/Actions)
+    // Dynamic Labels
     "PC Builder": "পিসি বিল্ডার",
     "Laptop Finder": "ল্যাপটপ ফাইন্ডার",
     "TV Offer": "টিভি অফার",
@@ -222,6 +237,21 @@ const translations: Record<Language, Record<string, string>> = {
     sales: "Sales",
     growth: "Growth",
     active_staff: "Active Staff",
+
+    // Dashboard Stats
+    stat_total_leads: "Total Leads",
+    stat_active_customers: "Active Customers",
+    stat_sales_volume: "Sales Volume",
+    stat_new_inquiries: "New Inquiries",
+    leads_acquisition: "Leads Acquisition",
+    market_insights: "Market Insights",
+    campaign_conversions: "Campaign Conversions",
+    capture_rate: "Capture Rate",
+    view_marketing_report: "View Marketing Report",
+    seed_erp_data: "Seed ERP Data",
+    erp_data_seeded: "ERP Data Seeded",
+    crm_overview: "CRM Overview",
+    engagement_metrics: "Real-time engagement metrics",
 
     // Admin Sidebar Groups
     group_main: "Main & Analytics",

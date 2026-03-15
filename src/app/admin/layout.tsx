@@ -36,7 +36,8 @@ import {
   Calendar,
   Grid,
   Zap,
-  Wallet
+  Wallet,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -277,6 +278,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </h2>
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              className="text-gray-600 hover:text-primary gap-2 h-9 px-3"
+              onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+            >
+              <Globe size={18} />
+              <span className="text-xs font-bold">{language === 'bn' ? "English" : "বাংলা"}</span>
+            </Button>
             <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
               {user?.email?.[0].toUpperCase()}
             </div>
