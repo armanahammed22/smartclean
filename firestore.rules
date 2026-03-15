@@ -23,27 +23,28 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // PUBLIC CATALOG: Unauthenticated read access
-    // These collections must be readable by all users to show the site content and checkout options.
-    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+    // BOOTSTRAP ADMIN: Full access override
+    // This ensures the primary admin can always manage the system.
+    match /{document=**} {
+      allow read, write: if isBootstrapAdmin();
+    }
 
-    // Recursive matching for sub-collections if any exist
-    match /products/{id=**} { allow read: if true; }
-    match /services/{id=**} { allow read: if true; }
-    match /site_settings/{id=**} { allow read: if true; }
+    // PUBLIC CATALOG: Unauthenticated read access
+    // We use {id=**} to ensure both document 'get' and collection 'list' operations are permitted.
+    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
@@ -56,32 +57,27 @@ service cloud.firestore {
     }
     
     // CRM DATA
-    match /leads/{id} { allow create: if true; allow read, update, delete: if isStaff(); }
-    match /customers/{id} { allow read, write: if isStaff(); }
-    match /orders/{id} {
+    match /leads/{id=**} { allow create: if true; allow read, update, delete: if isStaff(); }
+    match /customers/{id=**} { allow read, write: if isStaff(); }
+    match /orders/{id=**} {
       allow create: if true;
       allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isStaff();
     }
-    match /bookings/{id} {
+    match /bookings/{id=**} {
       allow create: if true;
       allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isStaff();
     }
     
-    match /referrals/{id} {
+    match /referrals/{id=**} {
       allow create: if isSignedIn();
       allow read: if isStaff() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
     }
 
     // STAFF & ADMIN PROFILES
-    match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
+    match /employee_profiles/{id=**} { allow read: if isStaff(); allow write: if isAdmin(); }
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-
-    // Fallback for bootstrap admin to manage everything
-    match /{document=**} {
-      allow read, write: if isBootstrapAdmin();
-    }
   }
 }
