@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '@/components/providers/language-provider';
+import { Badge } from '@/components/ui/badge';
 
 const CHART_DATA = [
   { name: 'Jan', leads: 45, conversion: 12 },
@@ -66,42 +67,17 @@ export default function AdminDashboard() {
         {
           id: 's_home', title: 'Home Cleaning', basePrice: 2500, category: 'Cleaning',
           description: 'Professional deep cleaning for your residence.',
-          subs: ['Full Home Deep Cleaning', 'Bedroom Cleaning', 'Living Room Cleaning', 'Dining Room Cleaning', 'Balcony Cleaning', 'Floor Scrubbing', 'Floor Polishing']
+          subs: ['Full Home Deep Cleaning', 'Bedroom Cleaning', 'Living Room Cleaning', 'Dining Room Cleaning']
         },
         {
           id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning',
           description: 'Hygienic sanitation for your kitchen and appliances.',
-          subs: ['Kitchen Deep Cleaning', 'Stove Cleaning', 'Sink Cleaning', 'Cabinet Cleaning', 'Chimney Cleaning', 'Exhaust Fan Cleaning', 'Refrigerator Cleaning', 'Microwave Cleaning']
-        },
-        {
-          id: 's_bath', title: 'Bathroom Cleaning', basePrice: 800, category: 'Cleaning',
-          description: 'Medical-grade disinfection for toilets and basins.',
-          subs: ['Toilet Deep Cleaning', 'Basin Cleaning', 'Shower Area Cleaning', 'Bathroom Tile Cleaning', 'Mirror Cleaning', 'Drain Cleaning']
-        },
-        {
-          id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200, category: 'Cleaning',
-          description: 'Deep extraction cleaning for upholstered furniture.',
-          subs: ['Fabric Sofa Cleaning', 'Leather Sofa Cleaning', 'Chair Cleaning', 'Mattress Cleaning', 'Dining Chair Cleaning']
+          subs: ['Kitchen Deep Cleaning', 'Stove Cleaning', 'Sink Cleaning', 'Cabinet Cleaning']
         },
         {
           id: 's_ac', title: 'AC Services', basePrice: 1000, category: 'Home Services',
           description: 'Expert AC repair, servicing, and installation.',
-          subs: ['AC Installation', 'AC Uninstallation', 'AC Servicing', 'AC Gas Refill', 'AC Repair', 'AC Deep Cleaning', 'AC Water Leakage Fix']
-        },
-        {
-          id: 's_elec', title: 'Electrical Services', basePrice: 500, category: 'Home Services',
-          description: 'Safe and certified electrical maintenance.',
-          subs: ['Fan Installation', 'Light Installation', 'Switch Board Repair', 'Wiring Repair', 'Electrical Safety Check']
-        },
-        {
-          id: 's_plumb', title: 'Plumbing Services', basePrice: 500, category: 'Home Services',
-          description: 'Reliable plumbing and leak repair solutions.',
-          subs: ['Water Tap Repair', 'Pipe Leakage Fix', 'Sink Installation', 'Toilet Installation', 'Shower Installation', 'Water Line Repair']
-        },
-        {
-          id: 's_pest', title: 'Pest Control', basePrice: 2000, category: 'Home Services',
-          description: 'Effective treatment against cockroaches, termites, and more.',
-          subs: ['Cockroach Control', 'Termite Control', 'Mosquito Control', 'Bed Bug Treatment']
+          subs: ['AC Installation', 'AC Uninstallation', 'AC Servicing', 'AC Gas Refill']
         }
       ];
 
@@ -125,8 +101,7 @@ export default function AdminDashboard() {
       // 2. Staff
       const STAFF = [
         { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', phone: '01711111111' },
-        { id: 'emp2', name: 'Rahim Uddin', role: 'Technician', phone: '01822222222' },
-        { id: 'emp3', name: 'Karim Ahmed', role: 'Supervisor', phone: '01933333333' }
+        { id: 'emp2', name: 'Rahim Uddin', role: 'Technician', phone: '01822222222' }
       ];
       STAFF.forEach(e => {
         batch.set(doc(db, 'employee_profiles', e.id), {
@@ -144,8 +119,28 @@ export default function AdminDashboard() {
       };
       batch.set(doc(db, 'products', product.id), product);
 
+      // 4. Leads
+      batch.set(doc(db, 'leads', 'l1'), {
+        name: 'Adnan Sami', phone: '01712345678', source: 'Facebook', status: 'New', createdAt: new Date().toISOString()
+      });
+
+      // 5. Orders
+      batch.set(doc(db, 'orders', 'o1'), {
+        customerName: 'Tanvir Ahmed', customerPhone: '01912345678',
+        items: [{ id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, quantity: 1 }],
+        totalPrice: 45000, status: 'Processing', paymentMethod: 'bKash', createdAt: new Date().toISOString()
+      });
+
+      // 6. Bookings
+      batch.set(doc(db, 'bookings', 'b1'), {
+        customerName: 'Farhana Islam', customerPhone: '01812345678',
+        items: [{ id: 's_home', name: 'Home Cleaning', price: 2500, quantity: 1 }],
+        totalPrice: 2500, status: 'New', address: 'Banani, Dhaka',
+        dateTime: new Date().toISOString(), timeSlot: 'morning', createdAt: new Date().toISOString()
+      });
+
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Populated with full catalog of services, sub-services, and staff." });
+      toast({ title: "ERP Database Seeded", description: "All CRM modules populated with demo data." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -157,7 +152,7 @@ export default function AdminDashboard() {
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
-    { title: "Staff Count", value: customers?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50", trend: "+2%", isUp: true },
+    { title: "Staff Count", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50", trend: "+2%", isUp: true },
     { title: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: Wrench, color: "text-blue-600", bg: "bg-blue-50", trend: "+5%", isUp: true },
     { title: "Product Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+12%", isUp: true },
   ];
@@ -171,7 +166,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed All ERP Data
+          Seed CRM Data
         </Button>
       </div>
 
@@ -225,7 +220,7 @@ export default function AdminDashboard() {
                   { label: "Products", val: products?.length || 0, icon: Package },
                   { label: "Services", val: services?.length || 0, icon: Wrench },
                   { label: "Sub-Tasks", val: subServices?.length || 0, icon: Layers },
-                  { label: "Staff", val: customers?.length || 0, icon: Users }
+                  { label: "Staff", val: employees?.length || 0, icon: Users }
                 ].map((kpi, idx) => (
                   <div key={idx} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5">
                     <p className="text-[10px] font-black uppercase opacity-60 mb-1">{kpi.label}</p>

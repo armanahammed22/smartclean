@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Filter, MoreVertical, Phone, Mail, MapPin, Loader2, Save, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, Phone, Mail, MapPin, Loader2, Save, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -44,7 +44,7 @@ export default function LeadsPage() {
     lead.phone?.includes(searchTerm)
   );
 
-  const handleAddLead = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddLead = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!db) return;
     setIsSubmitting(true);
@@ -60,35 +60,55 @@ export default function LeadsPage() {
       createdAt: new Date().toISOString()
     };
 
-    try {
-      await addDoc(collection(db, 'leads'), leadData).catch(err => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'leads', operation: 'create', requestResourceData: leadData }));
+    const colRef = collection(db, 'leads');
+    addDoc(colRef, leadData)
+      .then(() => {
+        setIsSubmitting(false);
+        setIsDialogOpen(false);
+        toast({ title: "Lead Created" });
+      })
+      .catch(async (error) => {
+        setIsSubmitting(false);
+        const permissionError = new FirestorePermissionError({
+          path: colRef.path,
+          operation: 'create',
+          requestResourceData: leadData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
-      toast({ title: "Lead Created" });
-      setIsDialogOpen(false);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error creating lead" });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const updateLeadStatus = (id: string, newStatus: string) => {
     if (!db) return;
-    updateDoc(doc(db, 'leads', id), { status: newStatus }).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `leads/${id}`, operation: 'update', requestResourceData: { status: newStatus } }));
-    });
-    toast({ title: `Status Updated to ${newStatus}` });
+    const docRef = doc(db, 'leads', id);
+    updateDoc(docRef, { status: newStatus })
+      .then(() => {
+        toast({ title: `Status Updated to ${newStatus}` });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: { status: newStatus },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
-  const handleDeleteLead = async (id: string) => {
+  const handleDeleteLead = (id: string) => {
     if (!db || !confirm("Are you sure you want to delete this lead?")) return;
-    try {
-      await deleteDoc(doc(db, 'leads', id));
-      toast({ title: "Lead Deleted" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Could not delete lead." });
-    }
+    const docRef = doc(db, 'leads', id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: "Lead Deleted" });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (

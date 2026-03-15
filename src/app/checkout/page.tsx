@@ -32,6 +32,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Loader2, CheckCircle2, CalendarIcon, Wallet, CreditCard } from 'lucide-react';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,7 +50,9 @@ const formSchema = z.object({
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
+  const { user } = useUser();
+  const db = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -56,9 +62,9 @@ export default function CheckoutPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      name: user?.displayName || "",
       phone: "",
-      email: "",
+      email: user?.email || "",
       address: "",
       time: "",
       paymentMethod: defaultPayment,
@@ -66,19 +72,46 @@ export default function CheckoutPage() {
     },
   });
 
-  // Re-evaluate payment method if cart changes
   useEffect(() => {
     form.setValue('paymentMethod', hasServices ? "cash_in_hand" : "cod");
   }, [hasServices, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!db) return;
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    const orderId = `SC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-    setIsSubmitting(false);
-    clearCart();
-    router.push(`/order-success?id=${orderId}`);
+    
+    const collectionName = hasServices ? 'bookings' : 'orders';
+    const orderData = {
+      customerId: user?.uid || 'guest',
+      customerName: values.name,
+      customerPhone: values.phone,
+      customerEmail: values.email,
+      address: values.address,
+      items,
+      totalPrice: subtotal * 1.08, // Including tax
+      paymentMethod: values.paymentMethod,
+      status: 'New',
+      notes: values.notes,
+      dateTime: values.date?.toISOString() || new Date().toISOString(),
+      timeSlot: values.time,
+      createdAt: new Date().toISOString(),
+    };
+
+    addDoc(collection(db, collectionName), orderData)
+      .then((docRef) => {
+        setIsSubmitting(false);
+        clearCart();
+        router.push(`/order-success?id=${docRef.id}`);
+      })
+      .catch(async (error) => {
+        setIsSubmitting(false);
+        const permissionError = new FirestorePermissionError({
+          path: collectionName,
+          operation: 'create',
+          requestResourceData: orderData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   if (items.length === 0) {
