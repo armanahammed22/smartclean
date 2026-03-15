@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -125,9 +126,11 @@ export default function SmartCleanHomePage() {
                     </h2>
                     <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">{t('ops_overview')}</p>
                   </div>
-                  <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-bold h-11 rounded-xl" asChild>
-                    <Link href="/admin/dashboard">{t('full_admin')} <ArrowRight size={16} /></Link>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-bold h-11 rounded-xl" asChild>
+                      <Link href="/admin/dashboard">{t('full_admin')} <ArrowRight size={16} /></Link>
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -296,39 +299,50 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 4. Quick Action Cards - 2 Column Grid */}
+        {/* 4. Quick Action Cards - Center Aligned & Thinner */}
         <section className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-4 md:gap-8">
             {quickActions?.length ? quickActions.map((action) => {
               const Icon = ICONS[action.iconName] || Zap;
               return (
-                <Link key={action.id} href={action.link || '#'} className={`bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5`}>
-                  <div className="space-y-2 md:space-y-4 relative z-10">
-                    <Icon className="text-white opacity-80 group-hover:scale-110 transition-transform duration-500 w-8 h-8 md:w-14 md:h-14" />
-                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight leading-none">
+                <Link 
+                  key={action.id} 
+                  href={action.link || '#'} 
+                  className={cn(
+                    `bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-center shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5 h-32 md:h-44`,
+                  )}
+                >
+                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
+                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                      <Icon className="text-white w-6 h-6 md:w-10 md:h-10" />
+                    </div>
+                    <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight leading-tight">
                       {t(action.title)}
                     </h3>
                   </div>
-                  <div className="absolute top-0 right-0 p-4 opacity-10 scale-150 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
-                    <Icon size={160} className="text-white" />
+                  {/* Subtle Background Pattern */}
+                  <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 scale-150 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
+                    <Icon size={120} className="text-white" />
                   </div>
                 </Link>
               );
             }) : (
               <>
-                <Link href="/services" className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="space-y-2 md:space-y-4 relative z-10">
-                    <Wrench className="text-white opacity-80 w-8 h-8 md:w-14 md:h-14" />
-                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
+                <Link href="/services" className="bg-gradient-to-br from-primary to-primary/80 rounded-xl md:rounded-2xl h-32 md:h-44 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
+                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                      <Wrench className="text-white w-6 h-6 md:w-10 md:h-10" />
+                    </div>
+                    <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
                   </div>
-                  <div className="absolute right-0 top-0 p-4 opacity-10 rotate-12 scale-150"><Wrench size={160} className="text-white" /></div>
                 </Link>
-                <Link href="/products" className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="space-y-2 md:space-y-4 relative z-10">
-                    <Package className="text-white opacity-80 w-8 h-8 md:w-14 md:h-14" />
-                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight">{t('nav_products')}</h3>
+                <Link href="/products" className="bg-gradient-to-br from-[#081621] to-[#0a253a] rounded-xl md:rounded-2xl h-32 md:h-44 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
+                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                      <Package className="text-white w-6 h-6 md:w-10 md:h-10" />
+                    </div>
+                    <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight">{t('nav_products')}</h3>
                   </div>
-                  <div className="absolute right-0 top-0 p-4 opacity-10 rotate-12 scale-150"><Package size={160} className="text-white" /></div>
                 </Link>
               </>
             )}
