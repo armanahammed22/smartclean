@@ -81,8 +81,8 @@ export default function SmartCleanHomePage() {
   const actionsQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_actions')) : null, [db]);
   const { data: quickActions } = useCollection(actionsQuery);
 
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(8)) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(6)) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(10)) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(10)) : null, [db]);
 
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
   const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
@@ -321,7 +321,7 @@ export default function SmartCleanHomePage() {
             {servicesLoading ? (
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 {services?.map((service) => (
                   <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-primary/20 flex flex-col relative">
                     {isAdmin && (
@@ -344,16 +344,16 @@ export default function SmartCleanHomePage() {
                         </div>
                       </div>
                       <div className="p-5 md:p-8 space-y-4 flex-1">
-                        <h3 className="text-sm md:text-2xl font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
-                        <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 hidden sm:block leading-relaxed">{service.description}</p>
+                        <h3 className="text-sm md:text-xl font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
+                        <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-2 hidden sm:block leading-relaxed">{service.description}</p>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-4">
                           <div className="flex flex-col">
                             <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('base_price')}</span>
-                            <span className="text-base md:text-2xl font-black text-primary">
+                            <span className="text-base md:text-xl font-black text-primary">
                               ৳{(service.basePrice || 0).toLocaleString()} 
                             </span>
                           </div>
-                          <Button size="sm" className="rounded-xl font-black px-6 h-10 md:h-12 text-xs uppercase shadow-lg shadow-primary/10">
+                          <Button size="sm" className="rounded-xl font-black px-4 h-10 md:h-11 text-[10px] uppercase shadow-lg shadow-primary/10">
                             {t('book_now')}
                           </Button>
                         </div>
@@ -387,7 +387,7 @@ export default function SmartCleanHomePage() {
             {productsLoading ? (
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 {products?.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 ))}
