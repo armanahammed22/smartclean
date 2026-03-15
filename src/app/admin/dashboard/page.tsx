@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -87,6 +88,12 @@ export default function AdminDashboard() {
       const sub2 = { id: 'sub2', name: 'Bathroom Deep Clean', price: 1200, mainServiceId: 's1', duration: '1 hr' };
       batch.set(doc(db, 'sub_services', sub1.id), sub1);
       batch.set(doc(db, 'sub_services', sub2.id), sub2);
+
+      // 6. Payment Methods
+      const pm1 = { id: 'pm1', name: 'Cash on Delivery', type: 'cod', instructions: 'Pay when your package arrives.', isEnabled: true, isDefaultForProducts: true, isDefaultForServices: false };
+      const pm2 = { id: 'pm2', name: 'Cash in Hand', type: 'cash', instructions: 'Pay after service completion.', isEnabled: true, isDefaultForProducts: false, isDefaultForServices: true };
+      batch.set(doc(db, 'payment_methods', pm1.id), pm1);
+      batch.set(doc(db, 'payment_methods', pm2.id), pm2);
 
       await batch.commit();
       toast({ title: "ERP Data Seeded", description: "Database populated with initial ERP records." });

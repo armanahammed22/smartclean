@@ -88,6 +88,21 @@
         "link": { "type": "string" },
         "bgGradient": { "type": "string" }
       }
+    },
+    "PaymentMethod": {
+      "title": "PaymentMethod",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "instructions": { "type": "string" },
+        "isEnabled": { "type": "boolean" },
+        "isDefaultForProducts": { "type": "boolean" },
+        "isDefaultForServices": { "type": "boolean" },
+        "apiKey": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -104,6 +119,7 @@
     "/support_tickets/{id}": { "schema": "#/entities/SupportTicket", "description": "Customer support requests." },
     "/referrals/{id}": { "schema": "#/entities/Referral", "description": "Affiliate tracking." },
     "/quick_links/{id}": { "schema": "#/entities/QuickLink", "description": "Home icon grid links." },
-    "/quick_actions/{id}": { "schema": "#/entities/QuickAction", "description": "Home prominent action cards." }
+    "/quick_actions/{id}": { "schema": "#/entities/QuickAction", "description": "Home prominent action cards." },
+    "/payment_methods/{id}": { "schema": "#/entities/PaymentMethod", "description": "Payment gateway configuration." }
   }
 }

@@ -35,7 +35,8 @@ import {
   Briefcase,
   Calendar,
   Grid,
-  Zap
+  Zap,
+  Wallet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -125,6 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: t('group_system'),
       items: [
         { name: t('item_staff'), href: '/admin/employees', icon: Users, color: 'text-indigo-500' },
+        { name: 'Payment Management', href: '/admin/payments', icon: Wallet, color: 'text-emerald-600' },
         { name: t('item_couriers'), href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
         { name: t('item_subscription'), href: '/admin/subscription', icon: CreditCard, color: 'text-amber-600' },
         { name: t('item_settings'), href: '/admin/settings', icon: Settings, color: 'text-gray-500' },

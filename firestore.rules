@@ -37,6 +37,7 @@ service cloud.firestore {
     match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /quick_links/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /quick_actions/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
