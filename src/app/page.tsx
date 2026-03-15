@@ -281,7 +281,7 @@ export default function SmartCleanHomePage() {
           {/* Category Sections */}
           {(!settings || settings.sections?.categorySections) && categories?.map(cat => {
             const catProducts = products?.filter(p => p.categoryId === cat.id);
-            if (!catProducts?.length) return null;
+            if (!catProducts || catProducts.length === 0) return null;
             return (
               <section key={cat.id} className="space-y-8">
                 <div className="flex items-center justify-between border-b pb-4">
