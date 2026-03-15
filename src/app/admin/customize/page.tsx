@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -149,7 +150,7 @@ export default function SiteCustomizePage() {
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Primary Hero Banner</CardTitle>
-                <CardDescription>Main background image for your website landing section</CardDescription>
+                <CardDescription>Main optimized image for your website landing section (Recommended: 982x500)</CardDescription>
               </div>
               <Switch 
                 checked={formData.hero.enabled} 
@@ -165,7 +166,10 @@ export default function SiteCustomizePage() {
                     onChange={(e) => setFormData({...formData, hero: {...formData.hero, imageUrl: e.target.value}})}
                     placeholder="https://images.unsplash.com/photo-..."
                   />
-                  <p className="text-[10px] text-muted-foreground italic">Tip: Use high-resolution landscape images (e.g., 1920x800) for the best look.</p>
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700">
+                    <Info size={14} />
+                    <p className="text-[10px] font-bold uppercase tracking-wider">Optimized Size: 982 x 500 pixels</p>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>CTA Link URL (Optional)</Label>
