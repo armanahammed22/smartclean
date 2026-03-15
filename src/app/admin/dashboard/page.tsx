@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
+  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
   const { data: customers } = useCollection(customersQuery);
@@ -55,6 +56,7 @@ export default function AdminDashboard() {
   const { data: products } = useCollection(productsQuery);
   const { data: services } = useCollection(servicesQuery);
   const { data: subServices } = useCollection(subServicesQuery);
+  const { data: employees } = useCollection(employeesQuery);
 
   const handleSeedData = async () => {
     if (!db) return;
@@ -62,7 +64,7 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Service Categories & Services
+      // 1. Service Data
       const SERVICE_DATA = [
         {
           id: 's_home', title: 'Home Cleaning', basePrice: 2500, category: 'Cleaning',
@@ -105,23 +107,32 @@ export default function AdminDashboard() {
       ];
       STAFF.forEach(e => {
         batch.set(doc(db, 'employee_profiles', e.id), {
-          ...e, status: 'Active', email: `${e.id}@smartclean.com`, createdAt: new Date().toISOString()
+          ...e, id: e.id, status: 'Active', email: `${e.id}@smartclean.com`, createdAt: new Date().toISOString()
         });
       });
 
       // 3. Products
-      const product = {
-        id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, regularPrice: 49500,
-        categoryId: 'Equipment', stockQuantity: 15, status: 'Active', brand: 'SmartClean',
-        shortDescription: 'AI-powered cleaning for all surfaces.',
-        description: 'Professional grade vacuum robot with LiDAR mapping.',
-        imageUrl: 'https://picsum.photos/seed/vac/600/400'
-      };
-      batch.set(doc(db, 'products', product.id), product);
+      const productData = [
+        {
+          id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, regularPrice: 49500,
+          categoryId: 'Equipment', stockQuantity: 15, status: 'Active', brand: 'SmartClean',
+          shortDescription: 'AI-powered cleaning for all surfaces.',
+          description: 'Professional grade vacuum robot with LiDAR mapping.',
+          imageUrl: 'https://picsum.photos/seed/vac/600/400'
+        },
+        {
+          id: 'p2', name: 'Steam Mop Elite', price: 12000, regularPrice: 15000,
+          categoryId: 'Equipment', stockQuantity: 8, status: 'Active', brand: 'AquaClean',
+          shortDescription: 'High-temp steam sanitization.',
+          description: 'Kills 99.9% of bacteria without chemicals.',
+          imageUrl: 'https://picsum.photos/seed/mop/600/400'
+        }
+      ];
+      productData.forEach(p => batch.set(doc(db, 'products', p.id), p));
 
       // 4. Leads
       batch.set(doc(db, 'leads', 'l1'), {
-        name: 'Adnan Sami', phone: '01712345678', source: 'Facebook', status: 'New', createdAt: new Date().toISOString()
+        name: 'Adnan Sami', phone: '01712345678', source: 'Facebook', status: 'New', createdAt: new Date().toISOString(), address: 'Uttara, Dhaka'
       });
 
       // 5. Orders

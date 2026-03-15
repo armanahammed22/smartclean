@@ -5,7 +5,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wrench, Plus, Trash2, Edit, Loader2, Save, Package, Layers, Users, Clock, CheckCircle2 } from 'lucide-react';
+import { Wrench, Plus, Trash2, Edit, Loader2, Save, Layers, Users, Clock, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -26,15 +26,15 @@ export default function ServicesManagementPage() {
   // Data Queries
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
   const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'service_categories')) : null, [db]);
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
   const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
 
   const { data: services, isLoading } = useCollection(servicesQuery);
   const { data: categories } = useCollection(categoriesQuery);
-  const { data: products } = useCollection(productsQuery);
   const { data: subServices } = useCollection(subServicesQuery);
   const { data: employees } = useCollection(employeesQuery);
+  const { data: products } = useCollection(productsQuery);
 
   const KPI_STATS = [
     { label: "Total Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },

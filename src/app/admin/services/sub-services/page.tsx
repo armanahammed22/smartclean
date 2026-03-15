@@ -25,13 +25,11 @@ export default function SubServicesManagementPage() {
 
   // Data Queries
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), orderBy('name', 'asc')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
   const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
 
   const { data: subServices, isLoading } = useCollection(subServicesQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: products } = useCollection(productsQuery);
   const { data: employees } = useCollection(employeesQuery);
 
   const KPI_STATS = [
