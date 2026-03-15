@@ -211,26 +211,40 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Optimized Hero Section - 982x500 */}
+        {/* 2. Optimized Hero Section - Multiple Images Support */}
         <section className="container mx-auto px-4">
           <div className="max-w-[982px] mx-auto">
-            {customization?.hero?.enabled && customization.hero.imageUrl ? (
-              <div className="relative aspect-[982/500] w-full rounded-xl overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
-                <Image 
-                  src={customization.hero.imageUrl} 
-                  alt="Banner" 
-                  fill 
-                  className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-                  priority
-                />
-                {customization.hero.ctaLink && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
-                    <Button asChild size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-2xl">
-                      <Link href={customization.hero.ctaLink}>{customization.hero.ctaText || t('hero_cta')}</Link>
-                    </Button>
-                  </div>
+            {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
+              <Carousel className="w-full" opts={{ loop: true }}>
+                <CarouselContent>
+                  {customization.hero.images.map((img: any, idx: number) => (
+                    <CarouselItem key={idx}>
+                      <div className="relative aspect-[982/500] w-full rounded-xl overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+                        <Image 
+                          src={img.imageUrl} 
+                          alt={`Banner ${idx + 1}`} 
+                          fill 
+                          className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                          priority={idx === 0}
+                        />
+                        {img.ctaLink && (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
+                            <Button asChild size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-2xl">
+                              <Link href={img.ctaLink}>{img.ctaText || t('hero_cta')}</Link>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {customization.hero.images.length > 1 && (
+                  <>
+                    <CarouselPrevious className="hidden md:flex left-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
+                    <CarouselNext className="hidden md:flex right-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
+                  </>
                 )}
-              </div>
+              </Carousel>
             ) : (
               <Carousel className="w-full" opts={{ loop: true }}>
                 <CarouselContent>

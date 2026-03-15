@@ -25,7 +25,9 @@ import {
   Zap,
   Info,
   AlertCircle,
-  Megaphone as MegaphoneIcon
+  Megaphone as MegaphoneIcon,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -41,7 +43,10 @@ export default function SiteCustomizePage() {
   const { data: marqueeSettings, isLoading: marqueeLoading } = useDoc(marqueeRef);
 
   const [formData, setFormData] = useState<any>({
-    hero: { title: '', subtitle: '', imageUrl: '', ctaText: '', ctaLink: '', enabled: true },
+    hero: { 
+      enabled: true,
+      images: [] // Array of { imageUrl, ctaLink, ctaText }
+    },
     sections: { 
       campaigns: true,
       offerBanners: true,
@@ -70,7 +75,10 @@ export default function SiteCustomizePage() {
       setFormData({
         ...formData,
         ...customization,
-        hero: { ...formData.hero, ...(customization.hero || {}) },
+        hero: { 
+          enabled: customization.hero?.enabled ?? true,
+          images: customization.hero?.images || (customization.hero?.imageUrl ? [{ imageUrl: customization.hero.imageUrl, ctaLink: customization.hero.ctaLink || '', ctaText: customization.hero.ctaText || '' }] : [])
+        },
         sections: { ...formData.sections, ...(customization.sections || {}) }
       });
     }
@@ -94,6 +102,22 @@ export default function SiteCustomizePage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const addHeroImage = () => {
+    setFormData({
+      ...formData,
+      hero: {
+        ...formData.hero,
+        images: [...formData.hero.images, { imageUrl: '', ctaLink: '', ctaText: '' }]
+      }
+    });
+  };
+
+  const removeHeroImage = (index: number) => {
+    const updated = [...formData.hero.images];
+    updated.splice(index, 1);
+    setFormData({ ...formData, hero: { ...formData.hero, images: updated } });
   };
 
   const addOfferBanner = () => {
@@ -132,7 +156,7 @@ export default function SiteCustomizePage() {
       <Tabs defaultValue="hero" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="hero" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Layout size={16} /> Hero
+            <Layout size={16} /> Hero Carousel
           </TabsTrigger>
           <TabsTrigger value="marquee" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <BellRing size={16} /> Marquee
@@ -149,44 +173,87 @@ export default function SiteCustomizePage() {
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Primary Hero Banner</CardTitle>
-                <CardDescription>Main optimized image for your website landing section (Recommended: 982x500)</CardDescription>
+                <CardTitle className="text-lg font-bold">Hero Banners (982x500)</CardTitle>
+                <CardDescription>Manage multiple images for the homepage slider</CardDescription>
               </div>
-              <Switch 
-                checked={formData.hero.enabled} 
-                onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
-              />
+              <div className="flex items-center gap-4">
+                <Switch 
+                  checked={formData.hero.enabled} 
+                  onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
+                />
+                <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
+                  <Plus size={14} /> Add Slide
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Hero Image URL</Label>
-                  <Input 
-                    value={formData.hero.imageUrl} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, imageUrl: e.target.value}})}
-                    placeholder="https://images.unsplash.com/photo-..."
-                  />
-                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700">
-                    <Info size={14} />
-                    <p className="text-[10px] font-bold uppercase tracking-wider">Optimized Size: 982 x 500 pixels</p>
+            <CardContent className="p-6 space-y-6">
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700 mb-4">
+                <Info size={14} />
+                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels</p>
+              </div>
+
+              <div className="space-y-4">
+                {formData.hero.images.map((img: any, idx: number) => (
+                  <div key={idx} className="p-4 border rounded-xl space-y-4 relative bg-gray-50/30">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Slide #{idx + 1}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => removeHeroImage(idx)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-xs">Image URL</Label>
+                        <Input 
+                          value={img.imageUrl} 
+                          onChange={(e) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].imageUrl = e.target.value;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}
+                          placeholder="https://images.unsplash.com/photo-..."
+                          className="h-10 bg-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">CTA Link</Label>
+                        <Input 
+                          value={img.ctaLink} 
+                          onChange={(e) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].ctaLink = e.target.value;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}
+                          placeholder="/services"
+                          className="h-10 bg-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Button Text</Label>
+                        <Input 
+                          value={img.ctaText} 
+                          onChange={(e) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].ctaText = e.target.value;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}
+                          placeholder="Book Now"
+                          className="h-10 bg-white"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>CTA Link URL (Optional)</Label>
-                  <Input 
-                    value={formData.hero.ctaLink} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, ctaLink: e.target.value}})}
-                    placeholder="/services"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>CTA Button Text</Label>
-                  <Input 
-                    value={formData.hero.ctaText} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, ctaText: e.target.value}})}
-                    placeholder="Book Now"
-                  />
-                </div>
+                ))}
+                {formData.hero.images.length === 0 && (
+                  <div className="p-12 text-center border-2 border-dashed rounded-xl text-muted-foreground italic">
+                    No hero slides added. Using default carousel logic.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
