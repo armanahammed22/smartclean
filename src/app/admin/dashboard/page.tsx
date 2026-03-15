@@ -61,55 +61,91 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Categories
-      const pCat = { id: 'cat1', name: 'Equipment', status: 'Active', slug: 'equipment' };
-      const sCat = { id: 'scat1', name: 'Home Services', status: 'Active', slug: 'home-services' };
-      batch.set(doc(db, 'product_categories', pCat.id), pCat);
-      batch.set(doc(db, 'service_categories', sCat.id), sCat);
+      // 1. Service Categories & Services
+      const SERVICE_DATA = [
+        {
+          id: 's_home', title: 'Home Cleaning', basePrice: 2500, category: 'Cleaning',
+          description: 'Professional deep cleaning for your residence.',
+          subs: ['Full Home Deep Cleaning', 'Bedroom Cleaning', 'Living Room Cleaning', 'Dining Room Cleaning', 'Balcony Cleaning', 'Floor Scrubbing', 'Floor Polishing']
+        },
+        {
+          id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning',
+          description: 'Hygienic sanitation for your kitchen and appliances.',
+          subs: ['Kitchen Deep Cleaning', 'Stove Cleaning', 'Sink Cleaning', 'Cabinet Cleaning', 'Chimney Cleaning', 'Exhaust Fan Cleaning', 'Refrigerator Cleaning', 'Microwave Cleaning']
+        },
+        {
+          id: 's_bath', title: 'Bathroom Cleaning', basePrice: 800, category: 'Cleaning',
+          description: 'Medical-grade disinfection for toilets and basins.',
+          subs: ['Toilet Deep Cleaning', 'Basin Cleaning', 'Shower Area Cleaning', 'Bathroom Tile Cleaning', 'Mirror Cleaning', 'Drain Cleaning']
+        },
+        {
+          id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200, category: 'Cleaning',
+          description: 'Deep extraction cleaning for upholstered furniture.',
+          subs: ['Fabric Sofa Cleaning', 'Leather Sofa Cleaning', 'Chair Cleaning', 'Mattress Cleaning', 'Dining Chair Cleaning']
+        },
+        {
+          id: 's_ac', title: 'AC Services', basePrice: 1000, category: 'Home Services',
+          description: 'Expert AC repair, servicing, and installation.',
+          subs: ['AC Installation', 'AC Uninstallation', 'AC Servicing', 'AC Gas Refill', 'AC Repair', 'AC Deep Cleaning', 'AC Water Leakage Fix']
+        },
+        {
+          id: 's_elec', title: 'Electrical Services', basePrice: 500, category: 'Home Services',
+          description: 'Safe and certified electrical maintenance.',
+          subs: ['Fan Installation', 'Light Installation', 'Switch Board Repair', 'Wiring Repair', 'Electrical Safety Check']
+        },
+        {
+          id: 's_plumb', title: 'Plumbing Services', basePrice: 500, category: 'Home Services',
+          description: 'Reliable plumbing and leak repair solutions.',
+          subs: ['Water Tap Repair', 'Pipe Leakage Fix', 'Sink Installation', 'Toilet Installation', 'Shower Installation', 'Water Line Repair']
+        },
+        {
+          id: 's_pest', title: 'Pest Control', basePrice: 2000, category: 'Home Services',
+          description: 'Effective treatment against cockroaches, termites, and more.',
+          subs: ['Cockroach Control', 'Termite Control', 'Mosquito Control', 'Bed Bug Treatment']
+        }
+      ];
+
+      SERVICE_DATA.forEach(s => {
+        batch.set(doc(db, 'services', s.id), {
+          id: s.id, title: s.title, basePrice: s.basePrice, categoryId: s.category,
+          description: s.description, status: 'Active', duration: '2-4 Hours',
+          createdAt: new Date().toISOString(), imageUrl: `https://picsum.photos/seed/${s.id}/800/600`
+        });
+
+        s.subs.forEach((subName, idx) => {
+          const subId = `${s.id}_sub_${idx}`;
+          batch.set(doc(db, 'sub_services', subId), {
+            id: subId, name: subName, price: Math.floor(s.basePrice * 0.4),
+            mainServiceId: s.id, duration: '1 Hour', status: 'Active',
+            description: `Professional ${subName.toLowerCase()} service.`
+          });
+        });
+      });
 
       // 2. Staff
-      const emp1 = { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', phone: '01711111111', email: 'zayed@smartclean.com', createdAt: new Date().toISOString() };
-      batch.set(doc(db, 'employee_profiles', emp1.id), emp1);
+      const STAFF = [
+        { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', phone: '01711111111' },
+        { id: 'emp2', name: 'Rahim Uddin', role: 'Technician', phone: '01822222222' },
+        { id: 'emp3', name: 'Karim Ahmed', role: 'Supervisor', phone: '01933333333' }
+      ];
+      STAFF.forEach(e => {
+        batch.set(doc(db, 'employee_profiles', e.id), {
+          ...e, status: 'Active', email: `${e.id}@smartclean.com`, createdAt: new Date().toISOString()
+        });
+      });
 
       // 3. Products
       const product = {
-        id: 'p1',
-        name: 'Smart Vacuum Robot X1',
-        price: 45000,
-        regularPrice: 49500,
-        categoryId: 'cat1',
-        stockQuantity: 15,
-        status: 'Active',
-        brand: 'LG',
+        id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, regularPrice: 49500,
+        categoryId: 'Equipment', stockQuantity: 15, status: 'Active', brand: 'SmartClean',
         shortDescription: 'AI-powered cleaning for all surfaces.',
         description: 'Professional grade vacuum robot with LiDAR mapping.',
         imageUrl: 'https://picsum.photos/seed/vac/600/400'
       };
       batch.set(doc(db, 'products', product.id), product);
 
-      // 4. Mock Orders
-      const order1 = {
-        id: 'mock_ord_1',
-        customerName: 'Rahim Ahmed',
-        customerPhone: '01919000000',
-        totalPrice: 45000,
-        status: 'New',
-        paymentMethod: 'Cash on Delivery',
-        items: [{ name: 'Smart Vacuum Robot X1', quantity: 1, price: 45000 }],
-        createdAt: new Date().toISOString()
-      };
-      batch.set(doc(db, 'orders', order1.id), order1);
-
-      // 5. Mock Services
-      const mainSrv = { id: 's1', title: 'Deep Home Cleaning', basePrice: 5000, status: 'Active', duration: '4-5 Hours', categoryId: 'scat1', description: 'Complete sanitization of your home.' };
-      batch.set(doc(db, 'services', mainSrv.id), mainSrv);
-
-      // 6. Sub Services
-      const sub1 = { id: 'sub1', name: 'Kitchen Degreasing', price: 1500, mainServiceId: 's1', duration: '1 Hour', status: 'Active', description: 'Deep cleaning of kitchen grease.' };
-      batch.set(doc(db, 'sub_services', sub1.id), sub1);
-
       await batch.commit();
-      toast({ title: t('erp_data_seeded'), description: "Database populated with orders, bookings, and staff." });
+      toast({ title: "ERP Database Seeded", description: "Populated with full catalog of services, sub-services, and staff." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -120,27 +156,20 @@ export default function AdminDashboard() {
   if (isUserLoading) return <div className="p-8 text-center">{t('ops_overview')}...</div>;
 
   const STATS = [
-    { title: "Total Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50", trend: "+12%", isUp: true },
-    { title: "Active Products", value: products?.filter(p => p.status === 'Active').length || 0, icon: Package, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+8%", isUp: true },
-    { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+5%", isUp: true },
+    { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
     { title: "Staff Count", value: customers?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50", trend: "+2%", isUp: true },
-  ];
-
-  const OPERATION_KPI = [
-    { label: "Products", val: products?.length || 0, icon: Package, color: 'text-blue-500' },
-    { label: "Services", val: services?.length || 0, icon: Wrench, color: 'text-indigo-500' },
-    { label: "Sub-Services", val: subServices?.length || 0, icon: Layers, color: 'text-emerald-500' },
-    { label: "Active Staff", val: customers?.length || 0, icon: Users, color: 'text-orange-500' }
+    { title: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: Wrench, color: "text-blue-600", bg: "bg-blue-50", trend: "+5%", isUp: true },
+    { title: "Product Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+12%", isUp: true },
   ];
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('crm_overview')}</h1>
-          <p className="text-muted-foreground text-sm">{t('engagement_metrics')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">Service Operations Hub</h1>
+          <p className="text-muted-foreground text-sm">Real-time control over bookings, staff, and inventory</p>
         </div>
-        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
+        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
           Seed All ERP Data
         </Button>
@@ -170,7 +199,10 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-          <CardHeader className="border-b bg-gray-50/50"><CardTitle className="text-lg font-bold">{t('leads_acquisition')}</CardTitle></CardHeader>
+          <CardHeader className="border-b bg-gray-50/50 flex flex-row items-center justify-between">
+            <CardTitle className="text-lg font-bold">Booking Trends</CardTitle>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-none uppercase font-black text-[9px]">Live Data</Badge>
+          </CardHeader>
           <CardContent className="h-[350px] p-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={CHART_DATA}>
@@ -186,10 +218,15 @@ export default function AdminDashboard() {
 
         <Card className="border-none shadow-sm bg-primary text-white overflow-hidden relative rounded-[2rem]">
           <div className="absolute top-0 right-0 p-8 opacity-10"><TrendingUp size={120} /></div>
-          <CardHeader><CardTitle className="text-lg font-bold relative z-10">{t('market_insights')}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg font-bold relative z-10">Operations Matrix</CardTitle></CardHeader>
           <CardContent className="space-y-6 relative z-10">
              <div className="grid grid-cols-2 gap-4">
-                {OPERATION_KPI.map((kpi, idx) => (
+                {[
+                  { label: "Products", val: products?.length || 0, icon: Package },
+                  { label: "Services", val: services?.length || 0, icon: Wrench },
+                  { label: "Sub-Tasks", val: subServices?.length || 0, icon: Layers },
+                  { label: "Staff", val: customers?.length || 0, icon: Users }
+                ].map((kpi, idx) => (
                   <div key={idx} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5">
                     <p className="text-[10px] font-black uppercase opacity-60 mb-1">{kpi.label}</p>
                     <div className="flex justify-between items-center">
@@ -200,7 +237,7 @@ export default function AdminDashboard() {
                 ))}
              </div>
              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black h-12 mt-4 shadow-xl rounded-xl uppercase tracking-tighter">
-               {t('view_marketing_report')}
+               View Performance Log
              </Button>
           </CardContent>
         </Card>
