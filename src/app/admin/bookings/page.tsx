@@ -1,8 +1,9 @@
+
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -14,42 +15,76 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, User, ClipboardList, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, User, ClipboardList, ChevronRight, Trash2, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function BookingsPage() {
   const db = useFirestore();
+  const { toast } = useToast();
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'));
   }, [db]);
 
+  const employeesQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'employee_profiles'), orderBy('name', 'asc'));
+  }, [db]);
+
   const { data: bookings, isLoading } = useCollection(bookingsQuery);
+  const { data: employees } = useCollection(employeesQuery);
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    if (!db) return;
+    await updateDoc(doc(db, 'bookings', id), { status });
+    toast({ title: "Booking Updated", description: `Status changed to ${status}` });
+  };
+
+  const handleAssignStaff = async (id: string, employeeId: string) => {
+    if (!db) return;
+    const employee = employees?.find(e => e.id === employeeId);
+    await updateDoc(doc(db, 'bookings', id), { 
+      employeeId, 
+      employeeName: employee?.name || 'Assigned Staff',
+      status: 'Assigned'
+    });
+    toast({ title: "Staff Assigned", description: `Job assigned to ${employee?.name}` });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!db || !confirm("Delete this booking?")) return;
+    await deleteDoc(doc(db, 'bookings', id));
+    toast({ title: "Booking Removed" });
+  };
 
   const STATUS_CONFIG: Record<string, { label: string, color: string }> = {
-    'Pending': { label: 'PENDING', color: 'bg-orange-100 text-orange-700' },
-    'Assigned': { label: 'ASSIGNED', color: 'bg-blue-100 text-blue-700' },
-    'In Progress': { label: 'IN PROGRESS', color: 'bg-primary/20 text-primary font-bold' },
-    'Completed': { label: 'COMPLETED', color: 'bg-green-100 text-green-700' },
-    'Cancelled': { label: 'CANCELLED', color: 'bg-red-100 text-red-700' },
+    'New': { label: 'NEW', color: 'bg-blue-50 text-blue-700' },
+    'Assigned': { label: 'ASSIGNED', color: 'bg-indigo-50 text-indigo-700' },
+    'In Progress': { label: 'IN PROGRESS', color: 'bg-primary/10 text-primary font-bold' },
+    'Completed': { label: 'COMPLETED', color: 'bg-green-50 text-green-700' },
+    'Cancelled': { label: 'CANCELLED', color: 'bg-red-50 text-red-700' },
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Booking Management</h1>
-          <p className="text-muted-foreground text-sm">Schedule and track service appointments</p>
+          <h1 className="text-2xl font-bold">Service Bookings</h1>
+          <p className="text-muted-foreground text-sm">Schedule and track on-site maintenance appointments</p>
         </div>
         <div className="flex gap-2">
-           <Button variant="outline" className="gap-2">
-             <Calendar size={18} /> Calendar View
-           </Button>
-           <Button className="gap-2 font-bold">
-             <ClipboardList size={18} /> Manual Booking
-           </Button>
+           <Button variant="outline" className="gap-2"><Calendar size={18} /> Schedule View</Button>
+           <Button className="gap-2 font-bold"><ClipboardList size={18} /> Manual Booking</Button>
         </div>
       </div>
 
@@ -57,8 +92,10 @@ export default function BookingsPage() {
         <Card className="border-none shadow-sm bg-primary text-white">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-primary-foreground/80 text-xs font-bold uppercase">Pending Today</p>
-              <h3 className="text-3xl font-black mt-1">08</h3>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Pending Jobs</p>
+              <h3 className="text-3xl font-black mt-1">
+                {bookings?.filter(b => b.status === 'New').length || 0}
+              </h3>
             </div>
             <Clock size={40} className="opacity-20" />
           </CardContent>
@@ -66,8 +103,10 @@ export default function BookingsPage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase">Assigned Jobs</p>
-              <h3 className="text-3xl font-black mt-1">14</h3>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active Today</p>
+              <h3 className="text-3xl font-black mt-1">
+                {bookings?.filter(b => b.status === 'In Progress').length || 0}
+              </h3>
             </div>
             <User size={40} className="text-blue-500 opacity-20" />
           </CardContent>
@@ -75,79 +114,91 @@ export default function BookingsPage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase">Revenue Forecast</p>
-              <h3 className="text-3xl font-black mt-1">৳42,500</h3>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Completed Total</p>
+              <h3 className="text-3xl font-black mt-1">
+                {bookings?.filter(b => b.status === 'Completed').length || 0}
+              </h3>
             </div>
             <ClipboardList size={40} className="text-green-500 opacity-20" />
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
                 <TableHead className="font-bold py-4">Service Details</TableHead>
                 <TableHead className="font-bold">Customer</TableHead>
-                <TableHead className="font-bold">Date & Time</TableHead>
-                <TableHead className="font-bold">Assigned Staff</TableHead>
+                <TableHead className="font-bold">Schedule</TableHead>
+                <TableHead className="font-bold">Assign Staff</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-20">Loading appointments...</TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-20">Loading appointments...</TableCell></TableRow>
               ) : bookings?.length ? (
                 bookings.map((booking) => (
-                  <TableRow key={booking.id} className="hover:bg-gray-50/50">
+                  <TableRow key={booking.id} className="hover:bg-gray-50/50 transition-colors">
                     <TableCell className="py-4">
-                      <div className="font-bold text-gray-900">{booking.serviceId}</div>
-                      <div className="text-[10px] text-primary font-black">ID: {booking.id.slice(0, 8).toUpperCase()}</div>
+                      <div className="font-bold text-gray-900 leading-tight">
+                        {booking.items?.[0]?.name || 'Deep Cleaning'}
+                      </div>
+                      <div className="text-[10px] text-primary font-black mt-1 uppercase">ID: {booking.id.slice(0, 8)}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-sm">{booking.customerId || 'Direct Client'}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <div className="text-sm font-semibold">{format(new Date(booking.dateTime), 'MMM dd, yyyy')}</div>
-                        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Clock size={10} /> {format(new Date(booking.dateTime), 'hh:mm a')}
-                        </div>
+                      <div className="font-medium text-sm">{booking.customerName}</div>
+                      <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <MapPin size={10} /> {booking.address?.slice(0, 20)}...
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px]">
-                          <User size={12} />
-                        </div>
-                        <span className="text-sm font-medium">{booking.employeeId || 'Unassigned'}</span>
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-bold">{booking.dateTime ? format(new Date(booking.dateTime), 'MMM dd, yyyy') : 'N/A'}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase">{booking.timeSlot || 'Morning'}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={cn(
-                        "text-[9px] font-black border-none",
-                        STATUS_CONFIG[booking.status]?.color || "bg-gray-100 text-gray-700"
-                      )}>
-                        {STATUS_CONFIG[booking.status]?.label || booking.status}
-                      </Badge>
+                      <Select defaultValue={booking.employeeId} onValueChange={(val) => handleAssignStaff(booking.id, val)}>
+                        <SelectTrigger className="h-8 text-xs font-medium w-[150px] bg-gray-50 border-none">
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees?.map(emp => (
+                            <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select defaultValue={booking.status} onValueChange={(val) => handleUpdateStatus(booking.id, val)}>
+                        <SelectTrigger className={cn(
+                          "h-8 text-[9px] font-black uppercase w-[120px]",
+                          STATUS_CONFIG[booking.status]?.color
+                        )}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="New">New</SelectItem>
+                          <SelectItem value="Assigned">Assigned</SelectItem>
+                          <SelectItem value="In Progress">In Progress</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" className="text-primary gap-1 font-bold text-xs">
-                        Details <ChevronRight size={14} />
+                      <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDelete(booking.id)}>
+                        <Trash2 size={16} />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic text-sm">
-                    No bookings found.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-20 italic text-muted-foreground">No bookings found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

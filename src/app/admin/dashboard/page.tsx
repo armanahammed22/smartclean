@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, limit, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { 
   Users, 
   Database,
@@ -13,7 +13,8 @@ import {
   ArrowDownRight,
   Mail,
   UserCheck,
-  ShoppingCart
+  ShoppingCart,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,10 +40,14 @@ export default function AdminDashboard() {
   const [isSeeding, setIsSeeding] = useState(false);
 
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'customers'), orderBy('name', 'asc'), limit(5)) : null, [db]);
+  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'customers'), orderBy('name', 'asc')) : null, [db]);
+  const ordersQuery = useMemoFirebase(() => db ? query(collection(db, 'orders')) : null, [db]);
+  const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
-  const { data: recentCustomers } = useCollection(customersQuery);
+  const { data: customers } = useCollection(customersQuery);
+  const { data: orders } = useCollection(ordersQuery);
+  const { data: bookings } = useCollection(bookingsQuery);
 
   const handleSeedData = async () => {
     if (!db) return;
@@ -56,9 +61,9 @@ export default function AdminDashboard() {
       batch.set(doc(db, 'product_categories', pCat.id), pCat);
       batch.set(doc(db, 'service_categories', sCat.id), sCat);
 
-      // 2. Brands
-      const brand = { id: 'b1', name: 'SmartClean Pro', status: 'Active' };
-      batch.set(doc(db, 'brands', brand.id), brand);
+      // 2. Staff
+      const emp1 = { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', phone: '01711111111', email: 'zayed@smartclean.com', createdAt: new Date().toISOString() };
+      batch.set(doc(db, 'employee_profiles', emp1.id), emp1);
 
       // 3. Products
       const product = {
@@ -66,39 +71,42 @@ export default function AdminDashboard() {
         name: 'Smart Vacuum Robot X1',
         price: 45000,
         categoryId: 'cat1',
-        brandId: 'b1',
         stockQuantity: 15,
         status: 'Active',
         imageUrl: 'https://picsum.photos/seed/vac/600/400'
       };
       batch.set(doc(db, 'products', product.id), product);
 
-      // 4. Services
-      const service = {
-        id: 's1',
-        title: 'Deep Home Cleaning',
-        basePrice: 5000,
-        categoryId: 'scat1',
-        status: 'Active',
-        description: 'Comprehensive professional home cleaning.',
-        imageUrl: 'https://picsum.photos/seed/clean/600/400'
+      // 4. Mock Orders
+      const order1 = {
+        id: 'mock_ord_1',
+        customerName: 'Rahim Ahmed',
+        customerPhone: '01919000000',
+        totalPrice: 45000,
+        status: 'New',
+        paymentMethod: 'Cash on Delivery',
+        items: [{ name: 'Smart Vacuum Robot X1', quantity: 1, price: 45000 }],
+        createdAt: new Date().toISOString()
       };
-      batch.set(doc(db, 'services', service.id), service);
+      batch.set(doc(db, 'orders', order1.id), order1);
 
-      // 5. Sub-Services
-      const sub1 = { id: 'sub1', name: 'Kitchen Sanitization', price: 1500, mainServiceId: 's1', duration: '1 hr' };
-      const sub2 = { id: 'sub2', name: 'Bathroom Deep Clean', price: 1200, mainServiceId: 's1', duration: '1 hr' };
-      batch.set(doc(db, 'sub_services', sub1.id), sub1);
-      batch.set(doc(db, 'sub_services', sub2.id), sub2);
-
-      // 6. Payment Methods
-      const pm1 = { id: 'pm1', name: 'Cash on Delivery', type: 'cod', instructions: 'Pay when your package arrives.', isEnabled: true, isDefaultForProducts: true, isDefaultForServices: false };
-      const pm2 = { id: 'pm2', name: 'Cash in Hand', type: 'cash', instructions: 'Pay after service completion.', isEnabled: true, isDefaultForProducts: false, isDefaultForServices: true };
-      batch.set(doc(db, 'payment_methods', pm1.id), pm1);
-      batch.set(doc(db, 'payment_methods', pm2.id), pm2);
+      // 5. Mock Bookings
+      const booking1 = {
+        id: 'mock_book_1',
+        customerName: 'Karim Ullah',
+        customerPhone: '01818000000',
+        address: 'Dhanmondi, Dhaka',
+        status: 'New',
+        dateTime: new Date().toISOString(),
+        timeSlot: 'morning',
+        items: [{ name: 'Deep Home Cleaning', quantity: 1, price: 5000 }],
+        totalPrice: 5000,
+        createdAt: new Date().toISOString()
+      };
+      batch.set(doc(db, 'bookings', booking1.id), booking1);
 
       await batch.commit();
-      toast({ title: t('erp_data_seeded'), description: "Database populated with initial ERP records." });
+      toast({ title: t('erp_data_seeded'), description: "Database populated with orders, bookings, and staff." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -109,10 +117,10 @@ export default function AdminDashboard() {
   if (isUserLoading) return <div className="p-8 text-center">{t('ops_overview')}...</div>;
 
   const STATS = [
-    { title: t('stat_total_leads'), value: "842", icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "+12.5%", isUp: true },
-    { title: t('stat_active_customers'), value: "124", icon: UserCheck, color: "text-amber-600", bg: "bg-amber-50", trend: "+8.2%", isUp: true },
-    { title: t('stat_sales_volume'), value: "৳1.4M", icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+2.1%", isUp: true },
-    { title: t('stat_new_inquiries'), value: "48", icon: Mail, color: "text-purple-600", bg: "bg-purple-50", trend: "+5.4%", isUp: true },
+    { title: "Total Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50", trend: "+12%", isUp: true },
+    { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+5%", isUp: true },
+    { title: "Active Customers", value: customers?.length || 0, icon: UserCheck, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+8%", isUp: true },
+    { title: "Total Leads", value: recentLeads?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50", trend: "+2%", isUp: true },
   ];
 
   return (
@@ -124,7 +132,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          {t('seed_erp_data')}
+          Seed CRM Data
         </Button>
       </div>
 
@@ -175,8 +183,8 @@ export default function AdminDashboard() {
                 <span className="font-black text-xl">12.4%</span>
              </div>
              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-sm opacity-80 font-medium">{t('capture_rate')}</span>
-                <span className="font-black text-xl">842</span>
+                <span className="text-sm opacity-80 font-medium">Monthly Orders</span>
+                <span className="font-black text-xl">{orders?.length || 0}</span>
              </div>
              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black h-12 mt-4 shadow-xl">
                {t('view_marketing_report')}
