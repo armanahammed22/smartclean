@@ -26,7 +26,9 @@ import {
   Package,
   Wrench,
   Tags,
-  Award
+  Award,
+  HelpCircle,
+  Share2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,19 +70,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      title: 'Products Catalog',
+      title: 'Catalogs',
       items: [
-        { name: 'Manage Products', href: '/admin/products', icon: Package, color: 'text-emerald-500' },
-        { name: 'Product Categories', href: '/admin/products/categories', icon: Tags, color: 'text-emerald-400' },
-        { name: 'Brands', href: '/admin/products/brands', icon: Award, color: 'text-emerald-600' },
-      ]
-    },
-    {
-      title: 'Service Catalog',
-      items: [
-        { name: 'Manage Services', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
-        { name: 'Service Categories', href: '/admin/services/categories', icon: Tags, color: 'text-indigo-400' },
-        { name: 'Sub-Services', href: '/admin/services/sub-services', icon: Paintbrush, color: 'text-indigo-600' },
+        { name: 'Products', href: '/admin/products', icon: Package, color: 'text-emerald-500' },
+        { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
       ]
     },
     {
@@ -90,22 +83,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
         { name: 'Bookings', href: '/admin/bookings', icon: BarChart3, color: 'text-blue-400' },
         { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
-        { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-sky-500' },
+        { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle, color: 'text-rose-500' },
       ]
     },
     {
-      title: 'Staff & Logistics',
+      title: 'Growth & Rewards',
+      items: [
+        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
+        { name: 'Referrals', href: '/admin/referrals', icon: Share2, color: 'text-purple-500' },
+      ]
+    },
+    {
+      title: 'Logistics & Settings',
       items: [
         { name: 'Staff Directory', href: '/admin/employees', icon: Users, color: 'text-indigo-500' },
         { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-rose-500' },
-      ]
-    },
-    {
-      title: 'Site Control',
-      items: [
         { name: 'Site Customize', href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
-        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
-        { name: 'Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
+        { name: 'Global Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
       ]
     }
   ];
@@ -226,7 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="absolute -right-4 top-20 bg-white border rounded-full h-8 w-8 z-40 hidden lg:flex shadow-md text-gray-400 hover:text-primary"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {isCollapsed ? <ChevronRight size(14) /> : <ChevronLeft size(14) />}
         </Button>
       </aside>
 

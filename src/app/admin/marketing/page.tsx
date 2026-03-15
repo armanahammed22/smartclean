@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -22,7 +23,10 @@ import {
   Tag, 
   Gift, 
   Trophy, 
-  ImageIcon
+  ImageIcon,
+  TicketPercent,
+  Calendar,
+  Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -33,13 +37,16 @@ export default function MarketingAdminPage() {
 
   const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), orderBy('placement', 'asc')) : null, [db]);
   const campaignsQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_campaigns'), orderBy('endDate', 'desc')) : null, [db]);
+  const couponsQuery = useMemoFirebase(() => db ? query(collection(db, 'coupons'), orderBy('code', 'asc')) : null, [db]);
 
   const { data: offers } = useCollection(offersQuery);
   const { data: campaigns } = useCollection(campaignsQuery);
+  const { data: coupons, isLoading: cLoading } = useCollection(couponsQuery);
 
-  const handleToggleStatus = async (col: string, id: string, current: boolean) => {
+  const handleToggleStatus = async (col: string, id: string, current: any) => {
     if (!db) return;
-    await updateDoc(doc(db, col, id), { enabled: !current });
+    const updateVal = typeof current === 'boolean' ? !current : (current === 'Active' ? 'Inactive' : 'Active');
+    await updateDoc(doc(db, col, id), col === 'coupons' ? { status: updateVal } : { enabled: updateVal });
     toast({ title: "Status Updated" });
   };
 
@@ -60,16 +67,14 @@ export default function MarketingAdminPage() {
     });
   };
 
-  const handleAddCampaign = async () => {
+  const handleAddCoupon = async () => {
     if (!db) return;
-    await addDoc(collection(db, 'marketing_campaigns'), {
-      title: 'New Campaign',
-      type: 'percent_discount',
-      enabled: false,
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      bannerUrl: 'https://picsum.photos/seed/new-camp/1200/600',
-      terms: 'Standard campaign terms apply.'
+    await addDoc(collection(db, 'coupons'), {
+      code: 'NEW' + Math.floor(Math.random() * 999),
+      discountType: 'percent',
+      value: 10,
+      status: 'Active',
+      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     });
   };
 
@@ -94,6 +99,9 @@ export default function MarketingAdminPage() {
           </TabsTrigger>
           <TabsTrigger value="campaigns" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Zap size={16} /> Marketing Campaigns
+          </TabsTrigger>
+          <TabsTrigger value="coupons" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TicketPercent size={16} /> Coupon Codes
           </TabsTrigger>
         </TabsList>
 
@@ -153,66 +161,66 @@ export default function MarketingAdminPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="campaigns" className="space-y-6">
+        <TabsContent value="coupons" className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold">Active Campaigns</h2>
-            <Button onClick={handleAddCampaign} className="gap-2 font-bold"><Plus size={16} /> Create Campaign</Button>
+            <h2 className="text-lg font-bold">Active Coupons</h2>
+            <Button onClick={handleAddCoupon} className="gap-2 font-bold"><Plus size={16} /> Create Coupon</Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {campaigns?.map((camp) => (
-              <Card key={camp.id} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                      {camp.type === 'lucky_draw' ? <Trophy size={20} /> : <Gift size={20} />}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cLoading ? (
+              <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin inline" /></div>
+            ) : coupons?.map((coupon) => (
+              <Card key={coupon.id} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden border-l-4 border-l-primary">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-black font-mono text-primary tracking-tighter">{coupon.code}</h3>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase">Expires: {new Date(coupon.expiryDate).toLocaleDateString()}</p>
+                    </div>
+                    <Switch checked={coupon.status === 'Active'} onCheckedChange={() => handleToggleStatus('coupons', coupon.id, coupon.status)} />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 py-2 border-y border-gray-50">
+                    <div>
+                      <Label className="text-[8px] uppercase font-black text-muted-foreground">Type</Label>
+                      <Select defaultValue={coupon.discountType} onValueChange={(val) => updateDoc(doc(db!, 'coupons', coupon.id), { discountType: val })}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percent">Percentage</SelectItem>
+                          <SelectItem value="flat">Flat BDT</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <CardTitle className="text-base font-bold">{camp.title}</CardTitle>
-                      <CardDescription className="text-xs">Type: {camp.type?.replace('_', ' ').toUpperCase()}</CardDescription>
+                      <Label className="text-[8px] uppercase font-black text-muted-foreground">Value</Label>
+                      <Input 
+                        type="number" 
+                        className="h-8 text-xs" 
+                        defaultValue={coupon.value} 
+                        onBlur={(e) => updateDoc(doc(db!, 'coupons', coupon.id), { value: parseFloat(e.target.value) })}
+                      />
                     </div>
                   </div>
-                  <Switch checked={camp.enabled} onCheckedChange={() => handleToggleStatus('marketing_campaigns', camp.id, camp.enabled)} />
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Start Date</Label>
-                      <Input type="datetime-local" defaultValue={camp.startDate?.slice(0, 16)} onChange={(e) => updateDoc(doc(db!, 'marketing_campaigns', camp.id), { startDate: new Date(e.target.value).toISOString() })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>End Date</Label>
-                      <Input type="datetime-local" defaultValue={camp.endDate?.slice(0, 16)} onChange={(e) => updateDoc(doc(db!, 'marketing_campaigns', camp.id), { endDate: new Date(e.target.value).toISOString() })} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Promo Type</Label>
-                    <Select defaultValue={camp.type} onValueChange={(val) => updateDoc(doc(db!, 'marketing_campaigns', camp.id), { type: val })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="flat_discount">Flat Discount</SelectItem>
-                        <SelectItem value="percent_discount">Percentage Discount</SelectItem>
-                        <SelectItem value="free_gift">Free Gift</SelectItem>
-                        <SelectItem value="lucky_draw">Lucky Draw / Lottery</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Terms & Conditions</Label>
-                    <Textarea 
-                      defaultValue={camp.terms} 
-                      className="min-h-[100px]"
-                      onBlur={(e) => updateDoc(doc(db!, 'marketing_campaigns', camp.id), { terms: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex justify-end pt-4 border-t">
-                    <Button variant="ghost" size="sm" className="text-destructive gap-2" onClick={() => handleDelete('marketing_campaigns', camp.id)}>
-                      <Trash2 size={14} /> Remove Campaign
+
+                  <div className="flex justify-end">
+                    <Button variant="ghost" size="sm" className="text-destructive h-8 px-2 gap-1 text-[10px] font-bold" onClick={() => handleDelete('coupons', coupon.id)}>
+                      <Trash2 size={12} /> Remove
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold">Marketing Campaigns</h2>
+            <Button onClick={() => {}} className="gap-2 font-bold"><Plus size={16} /> New Campaign</Button>
+          </div>
+          <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic">
+            Campaign designer coming soon.
           </div>
         </TabsContent>
       </Tabs>
