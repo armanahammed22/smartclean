@@ -19,6 +19,7 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read access for products, services, and related metadata
+    // Using {id=**} for explicit collection-level list and recursive matching
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }

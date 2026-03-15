@@ -129,7 +129,7 @@ export default function SmartCleanHomePage() {
 
         <div className="container mx-auto px-4 space-y-16 mt-8">
           
-          {/* Services Grid */}
+          {/* Services Grid - Restored to 2 columns on mobile */}
           <section className="space-y-8">
             <div className="flex justify-between items-end">
               <div className="space-y-2">
@@ -144,7 +144,7 @@ export default function SmartCleanHomePage() {
             {servicesLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
                 {services?.map((service) => (
                   <Link key={service.id} href={`/service/${service.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-primary/20 flex flex-col">
                     <div className="relative aspect-video overflow-hidden">
@@ -155,18 +155,18 @@ export default function SmartCleanHomePage() {
                         className="object-cover group-hover:scale-110 transition-transform duration-500" 
                       />
                       <div className="absolute top-4 left-4">
-                        <Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-sm font-black">{service.category || 'General'}</Badge>
+                        <Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-sm font-black hidden sm:inline-flex">{service.category || 'General'}</Badge>
                       </div>
                     </div>
-                    <div className="p-6 space-y-4 flex-1">
-                      <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{service.title || 'Service Title'}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{service.description || 'Professional cleaning service.'}</p>
-                      <div className="flex items-center justify-between pt-4 border-t">
-                        <span className="text-lg font-black text-primary">
+                    <div className="p-3 md:p-6 space-y-2 md:space-y-4 flex-1">
+                      <h3 className="text-sm md:text-xl font-bold group-hover:text-primary transition-colors line-clamp-1">{service.title || 'Service Title'}</h3>
+                      <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 hidden sm:block">{service.description || 'Professional cleaning service.'}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-2 md:pt-4 border-t gap-2">
+                        <span className="text-xs md:text-lg font-black text-primary">
                           ৳{(service.basePrice || 0).toLocaleString()} 
-                          <span className="text-[10px] ml-1 font-bold text-muted-foreground uppercase">Base Price</span>
+                          <span className="text-[8px] md:text-[10px] ml-1 font-bold text-muted-foreground uppercase">Base</span>
                         </span>
-                        <Button size="sm" className="rounded-full font-bold px-6">Book Now</Button>
+                        <Button size="sm" className="rounded-full font-bold px-4 md:px-6 h-8 md:h-9 text-[10px] md:text-xs">Book Now</Button>
                       </div>
                     </div>
                   </Link>
@@ -193,7 +193,7 @@ export default function SmartCleanHomePage() {
             {productsLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 {products?.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 ))}
