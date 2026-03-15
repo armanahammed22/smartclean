@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -16,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Filter, MoreVertical, Phone, Mail, MapPin, Loader2, Save } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Phone, Mail, MapPin, Loader2, Save, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -62,7 +61,7 @@ export default function LeadsPage() {
     };
 
     try {
-      addDoc(collection(db, 'leads'), leadData).catch(err => {
+      await addDoc(collection(db, 'leads'), leadData).catch(err => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'leads', operation: 'create', requestResourceData: leadData }));
       });
       toast({ title: "Lead Created" });
@@ -80,6 +79,16 @@ export default function LeadsPage() {
       errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `leads/${id}`, operation: 'update', requestResourceData: { status: newStatus } }));
     });
     toast({ title: `Status Updated to ${newStatus}` });
+  };
+
+  const handleDeleteLead = async (id: string) => {
+    if (!db || !confirm("Are you sure you want to delete this lead?")) return;
+    try {
+      await deleteDoc(doc(db, 'leads', id));
+      toast({ title: "Lead Deleted" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Could not delete lead." });
+    }
   };
 
   return (
@@ -223,7 +232,7 @@ export default function LeadsPage() {
                       </Select>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => deleteDoc(doc(db!, 'leads', lead.id))}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteLead(lead.id)}>
                         <Trash2 size={16} className="text-destructive" />
                       </Button>
                     </TableCell>
