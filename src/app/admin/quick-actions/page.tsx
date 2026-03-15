@@ -179,9 +179,9 @@ export default function QuickActionsAdminPage() {
                 const Icon = ICONS[action.iconName] || Zap;
                 return (
                   <Card key={action.id} className={cn(
-                    `border-none shadow-xl bg-gradient-to-br ${action.bgGradient} text-white group overflow-hidden relative h-32 flex flex-col items-center justify-center text-center rounded-2xl`
+                    `border-none shadow-xl bg-gradient-to-br ${action.bgGradient} text-white group overflow-hidden relative h-[100px] md:h-[148px] flex flex-col items-center justify-center text-center rounded-2xl`
                   )}>
-                    <CardContent className="p-6 flex flex-col items-center justify-center gap-3 relative z-10 w-full h-full">
+                    <CardContent className="p-6 flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 w-full h-full">
                       <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
                         <Icon size={32} className="opacity-90" />
                       </div>

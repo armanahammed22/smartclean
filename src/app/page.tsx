@@ -270,7 +270,7 @@ export default function SmartCleanHomePage() {
               marqueeSettings?.bgColor || "bg-white"
             )}>
               <div className={cn(
-                "h-full px-8 flex items-center gap-2 z-10 font-black text-xs uppercase tracking-widest shadow-lg shrink-0",
+                "h-full px-8 flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg shrink-0 z-10",
                 marqueeSettings?.bgColor === 'bg-white' || !marqueeSettings?.bgColor ? "bg-primary text-white" : "bg-black/20 text-white"
               )}>
                 <MarqueeIcon size={18} /> {marqueeSettings?.label || 'INFO'}
@@ -299,7 +299,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 4. Quick Action Cards - Center Aligned & Thinner */}
+        {/* 4. Quick Action Cards - Center Aligned & Thinner (h-25 / h-37) */}
         <section className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-4 md:gap-8">
             {quickActions?.length ? quickActions.map((action) => {
@@ -309,11 +309,11 @@ export default function SmartCleanHomePage() {
                   key={action.id} 
                   href={action.link || '#'} 
                   className={cn(
-                    `bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-center shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5 h-32 md:h-44`,
+                    `bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-center shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5 h-[100px] md:h-[148px]`,
                   )}
                 >
-                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
-                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                  <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
+                    <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
                       <Icon className="text-white w-6 h-6 md:w-10 md:h-10" />
                     </div>
                     <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight leading-tight">
@@ -328,17 +328,17 @@ export default function SmartCleanHomePage() {
               );
             }) : (
               <>
-                <Link href="/services" className="bg-gradient-to-br from-primary to-primary/80 rounded-xl md:rounded-2xl h-32 md:h-44 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
-                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                <Link href="/services" className="bg-gradient-to-br from-primary to-primary/80 rounded-xl md:rounded-2xl h-[100px] md:h-[148px] flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
+                    <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
                       <Wrench className="text-white w-6 h-6 md:w-10 md:h-10" />
                     </div>
                     <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
                   </div>
                 </Link>
-                <Link href="/products" className="bg-gradient-to-br from-[#081621] to-[#0a253a] rounded-xl md:rounded-2xl h-32 md:h-44 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="flex flex-col items-center gap-2 md:gap-4 relative z-10 p-4">
-                    <div className="p-2 md:p-3 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
+                <Link href="/products" className="bg-gradient-to-br from-[#081621] to-[#0a253a] rounded-xl md:rounded-2xl h-[100px] md:h-[148px] flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
+                    <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
                       <Package className="text-white w-6 h-6 md:w-10 md:h-10" />
                     </div>
                     <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight">{t('nav_products')}</h3>
