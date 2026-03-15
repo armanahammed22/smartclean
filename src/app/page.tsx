@@ -45,7 +45,8 @@ import {
   Plus,
   Calendar,
   Share2,
-  CreditCard
+  CreditCard,
+  ShieldCheck
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { 
@@ -59,7 +60,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 
 const ICONS: Record<string, any> = {
-  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard
+  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard, ShieldCheck
 };
 
 export default function SmartCleanHomePage() {
