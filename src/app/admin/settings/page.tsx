@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +18,8 @@ import {
   Search, 
   Image as ImageIcon,
   Loader2,
-  DollarSign
+  DollarSign,
+  Upload
 } from 'lucide-react';
 
 export default function AdminSettingsPage() {
@@ -54,6 +54,17 @@ export default function AdminSettingsPage() {
       });
     }
   }, [settings]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData({ ...formData, [field]: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     if (!db) return;
@@ -126,21 +137,50 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Logo URL</Label>
+                  <Label>Logo URL or Manual Upload</Label>
                   <div className="flex gap-2">
                     <Input 
-                      value={formData.logoUrl} 
+                      value={formData.logoUrl?.startsWith('data:') ? 'Local Logo Loaded' : formData.logoUrl} 
                       onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
                     />
-                    <Button variant="outline" size="icon"><ImageIcon size={18} /></Button>
+                    <div className="relative">
+                      <Input 
+                        type="file" 
+                        id="logo-upload" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileUpload(e, 'logoUrl')} 
+                      />
+                      <Button variant="outline" size="icon" asChild>
+                        <label htmlFor="logo-upload" className="cursor-pointer">
+                          <Upload size={18} />
+                        </label>
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Favicon URL</Label>
-                  <Input 
-                    value={formData.faviconUrl} 
-                    onChange={(e) => setFormData({...formData, faviconUrl: e.target.value})}
-                  />
+                  <Label>Favicon URL or Manual Upload</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      value={formData.faviconUrl?.startsWith('data:') ? 'Local Favicon Loaded' : formData.faviconUrl} 
+                      onChange={(e) => setFormData({...formData, faviconUrl: e.target.value})}
+                    />
+                    <div className="relative">
+                      <Input 
+                        type="file" 
+                        id="favicon-upload" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileUpload(e, 'faviconUrl')} 
+                      />
+                      <Button variant="outline" size="icon" asChild>
+                        <label htmlFor="favicon-upload" className="cursor-pointer">
+                          <Upload size={18} />
+                        </label>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Default Language</Label>

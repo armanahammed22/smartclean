@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -27,7 +26,8 @@ import {
   AlertCircle,
   Megaphone as MegaphoneIcon,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Upload
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -45,7 +45,7 @@ export default function SiteCustomizePage() {
   const [formData, setFormData] = useState<any>({
     hero: { 
       enabled: true,
-      images: [] // Array of { imageUrl, ctaLink, ctaText }
+      images: [] 
     },
     sections: { 
       campaigns: true,
@@ -90,6 +90,17 @@ export default function SiteCustomizePage() {
     }
   }, [marqueeSettings]);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, onUpload: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onUpload(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     if (!db) return;
     setIsSubmitting(true);
@@ -120,19 +131,6 @@ export default function SiteCustomizePage() {
     setFormData({ ...formData, hero: { ...formData.hero, images: updated } });
   };
 
-  const addOfferBanner = () => {
-    setFormData({
-      ...formData,
-      offerBanners: [...(formData.offerBanners || []), { imageUrl: '', link: '', enabled: true }]
-    });
-  };
-
-  const removeOfferBanner = (index: number) => {
-    const updated = [...formData.offerBanners];
-    updated.splice(index, 1);
-    setFormData({ ...formData, offerBanners: updated });
-  };
-
   if (customLoading || marqueeLoading) return <div className="p-20 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={40} /><span className="text-muted-foreground font-bold">Syncing Site Data...</span></div>;
 
   return (
@@ -161,9 +159,6 @@ export default function SiteCustomizePage() {
           <TabsTrigger value="marquee" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <BellRing size={16} /> Marquee
           </TabsTrigger>
-          <TabsTrigger value="banners" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <ImageIcon size={16} /> Banners
-          </TabsTrigger>
           <TabsTrigger value="marketing" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Megaphone size={16} /> Marketing
           </TabsTrigger>
@@ -189,7 +184,7 @@ export default function SiteCustomizePage() {
             <CardContent className="p-6 space-y-6">
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700 mb-4">
                 <Info size={14} />
-                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels (Max 1MB)</p>
               </div>
 
               <div className="space-y-4">
@@ -208,17 +203,37 @@ export default function SiteCustomizePage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs">Image URL</Label>
-                        <Input 
-                          value={img.imageUrl} 
-                          onChange={(e) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].imageUrl = e.target.value;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}
-                          placeholder="https://images.unsplash.com/photo-..."
-                          className="h-10 bg-white"
-                        />
+                        <Label className="text-xs">Image URL or Manual Upload</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            value={img.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : img.imageUrl} 
+                            onChange={(e) => {
+                              const updated = [...formData.hero.images];
+                              updated[idx].imageUrl = e.target.value;
+                              setFormData({...formData, hero: {...formData.hero, images: updated}});
+                            }}
+                            placeholder="https://..."
+                            className="h-10 bg-white"
+                          />
+                          <div className="relative">
+                            <Input 
+                              type="file" 
+                              className="hidden" 
+                              id={`hero-upload-${idx}`} 
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, (url) => {
+                                const updated = [...formData.hero.images];
+                                updated[idx].imageUrl = url;
+                                setFormData({...formData, hero: { ...formData.hero, images: updated }});
+                              })}
+                            />
+                            <Button variant="outline" size="icon" asChild title="Manual Upload">
+                              <label htmlFor={`hero-upload-${idx}`} className="cursor-pointer">
+                                <Upload size={16} />
+                              </label>
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs">CTA Link</Label>
@@ -369,58 +384,6 @@ export default function SiteCustomizePage() {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="banners">
-          <Card className="border-none shadow-sm bg-white rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between border-b bg-gray-50/50">
-              <div>
-                <CardTitle className="text-lg font-bold">Offer Banners</CardTitle>
-                <CardDescription>Promotional images displayed across the site</CardDescription>
-              </div>
-              <Button onClick={addOfferBanner} variant="outline" className="gap-2 font-bold">
-                <Plus size={16} /> Add Banner
-              </Button>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {formData.offerBanners?.map((banner: any, idx: number) => (
-                <div key={idx} className="p-4 border rounded-xl space-y-4 relative group">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-2 right-2 text-destructive"
-                    onClick={() => removeOfferBanner(idx)}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>Image URL</Label>
-                      <Input 
-                        value={banner.imageUrl} 
-                        onChange={(e) => {
-                          const updated = [...formData.offerBanners];
-                          updated[idx].imageUrl = e.target.value;
-                          setFormData({...formData, offerBanners: updated});
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Link</Label>
-                      <Input 
-                        value={banner.link} 
-                        onChange={(e) => {
-                          const updated = [...formData.offerBanners];
-                          updated[idx].link = e.target.value;
-                          setFormData({...formData, offerBanners: updated});
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
             </CardContent>
           </Card>
         </TabsContent>

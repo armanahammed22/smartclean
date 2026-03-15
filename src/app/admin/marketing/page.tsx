@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -26,7 +25,8 @@ import {
   ImageIcon,
   TicketPercent,
   Calendar,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -42,6 +42,17 @@ export default function MarketingAdminPage() {
   const { data: offers } = useCollection(offersQuery);
   const { data: campaigns } = useCollection(campaignsQuery);
   const { data: coupons, isLoading: cLoading } = useCollection(couponsQuery);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, onUpload: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onUpload(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleToggleStatus = async (col: string, id: string, current: any) => {
     if (!db) return;
@@ -146,8 +157,29 @@ export default function MarketingAdminPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Image URL</Label>
-                    <Input defaultValue={offer.imageUrl} onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: e.target.value })} />
+                    <Label>Image URL or Upload</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        defaultValue={offer.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : offer.imageUrl} 
+                        onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: e.target.value })} 
+                      />
+                      <div className="relative">
+                        <Input 
+                          type="file" 
+                          className="hidden" 
+                          id={`offer-upload-${offer.id}`} 
+                          accept="image/*"
+                          onChange={(e) => handleFileUpload(e, (url) => {
+                            updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: url });
+                          })}
+                        />
+                        <Button variant="outline" size="icon" asChild>
+                          <label htmlFor={`offer-upload-${offer.id}`} className="cursor-pointer">
+                            <Upload size={16} />
+                          </label>
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex justify-between items-center pt-4">
                     <Badge variant="outline" className="uppercase text-[10px]">{offer.placement}</Badge>
