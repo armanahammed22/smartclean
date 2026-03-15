@@ -66,6 +66,28 @@
         "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
         "createdAt": { "type": "string" }
       }
+    },
+    "QuickLink": {
+      "title": "QuickLink",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "iconName": { "type": "string" },
+        "link": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
+    "QuickAction": {
+      "title": "QuickAction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "iconName": { "type": "string" },
+        "link": { "type": "string" },
+        "bgGradient": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -80,6 +102,8 @@
     "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },
     "/coupons/{id}": { "schema": "#/entities/Coupon", "description": "Discount codes." },
     "/support_tickets/{id}": { "schema": "#/entities/SupportTicket", "description": "Customer support requests." },
-    "/referrals/{id}": { "schema": "#/entities/Referral", "description": "Affiliate tracking." }
+    "/referrals/{id}": { "schema": "#/entities/Referral", "description": "Affiliate tracking." },
+    "/quick_links/{id}": { "schema": "#/entities/QuickLink", "description": "Home icon grid links." },
+    "/quick_actions/{id}": { "schema": "#/entities/QuickAction", "description": "Home prominent action cards." }
   }
 }

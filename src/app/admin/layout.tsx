@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -32,7 +33,9 @@ import {
   AlertCircle,
   CreditCard,
   Briefcase,
-  Calendar
+  Calendar,
+  Grid,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -75,6 +78,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      title: 'Page Components',
+      items: [
+        { name: 'Quick Links', href: '/admin/quick-links', icon: Grid, color: 'text-indigo-400' },
+        { name: 'Quick Actions', href: '/admin/quick-actions', icon: Zap, color: 'text-orange-400' },
+        { name: 'Site Customize', href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
+      ]
+    },
+    {
       title: 'Inventory & Products',
       items: [
         { name: 'Products', href: '/admin/products', icon: Package, color: 'text-emerald-500' },
@@ -113,7 +124,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: 'Staff Directory', href: '/admin/employees', icon: Users, color: 'text-indigo-500' },
         { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
-        { name: 'Site Customize', href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
         { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-amber-600' },
         { name: 'Global Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
       ]

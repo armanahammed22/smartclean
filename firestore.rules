@@ -27,12 +27,16 @@ service cloud.firestore {
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
