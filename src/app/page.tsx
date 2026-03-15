@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -299,7 +298,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 4. Quick Action Cards - Center Aligned & Thinner (h-25 / h-37) */}
+        {/* 4. Quick Action Cards - Center Aligned & Compact (h-20 / h-32) */}
         <section className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-4 md:gap-8">
             {quickActions?.length ? quickActions.map((action) => {
@@ -309,7 +308,7 @@ export default function SmartCleanHomePage() {
                   key={action.id} 
                   href={action.link || '#'} 
                   className={cn(
-                    `bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-center shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5 h-[100px] md:h-[148px]`,
+                    `bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-2xl flex flex-col items-center justify-center text-center shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5 h-20 md:h-32`,
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
@@ -328,7 +327,7 @@ export default function SmartCleanHomePage() {
               );
             }) : (
               <>
-                <Link href="/services" className="bg-gradient-to-br from-primary to-primary/80 rounded-xl md:rounded-2xl h-[100px] md:h-[148px] flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                <Link href="/services" className="bg-gradient-to-br from-primary to-primary/80 rounded-xl md:rounded-2xl h-20 md:h-32 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
                   <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
                     <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
                       <Wrench className="text-white w-6 h-6 md:w-10 md:h-10" />
@@ -336,7 +335,7 @@ export default function SmartCleanHomePage() {
                     <h3 className="text-white text-sm md:text-2xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
                   </div>
                 </Link>
-                <Link href="/products" className="bg-gradient-to-br from-[#081621] to-[#0a253a] rounded-xl md:rounded-2xl h-[100px] md:h-[148px] flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
+                <Link href="/products" className="bg-gradient-to-br from-[#081621] to-[#0a253a] rounded-xl md:rounded-2xl h-20 md:h-32 flex flex-col items-center justify-center text-center shadow-xl group overflow-hidden relative border border-white/5">
                   <div className="flex flex-col items-center justify-center gap-2 md:gap-3 relative z-10 p-4">
                     <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform duration-500">
                       <Package className="text-white w-6 h-6 md:w-10 md:h-10" />
