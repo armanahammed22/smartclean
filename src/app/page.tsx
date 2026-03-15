@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -65,7 +65,12 @@ export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { user } = useUser();
   const [showAllLinks, setShowAllLinks] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Role Checks
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
@@ -99,6 +104,10 @@ export default function SmartCleanHomePage() {
   // Dynamic Marquee Content
   const getMarqueeContent = () => {
     if (marqueeSettings?.text) return marqueeSettings.text;
+    
+    // Avoid hydration mismatch by returning a static part or placeholder during SSR/Initial Hydration
+    if (!isMounted) return t('hero_subtitle');
+
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });

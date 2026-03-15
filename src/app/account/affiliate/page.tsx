@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,11 +14,16 @@ export default function AffiliatePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
-  const referralLink = typeof window !== 'undefined' ? `${window.location.origin}/signup?ref=${profile?.referralCode}` : '';
+  const referralLink = isMounted ? `${window.location.origin}/signup?ref=${profile?.referralCode}` : '';
 
   const referralsQuery = useMemoFirebase(() => user ? query(collection(db, 'referrals'), where('referrerId', '==', user.uid)) : null, [db, user]);
   const { data: referrals } = useCollection(referralsQuery);
