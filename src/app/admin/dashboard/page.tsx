@@ -11,7 +11,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Mail,
-  UserCheck
+  UserCheck,
+  ShoppingCart
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
   const STATS = [
     { title: "Total Leads", value: "842", icon: Users, color: "text-blue-600", bg: "bg-blue-50", trend: "+12.5%", isUp: true },
     { title: "Active Customers", value: "124", icon: UserCheck, color: "text-amber-600", bg: "bg-amber-50", trend: "+8.2%", isUp: true },
-    { title: "Conversion Rate", value: "14.1%", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+2.1%", isUp: true },
+    { title: "Sales Volume", value: "৳1.4M", icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+2.1%", isUp: true },
     { title: "New Inquiries", value: "48", icon: Mail, color: "text-purple-600", bg: "bg-purple-50", trend: "+5.4%", isUp: true },
   ];
 
@@ -87,7 +88,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed Leads & Marketing
+          Seed ERP & Marketing
         </Button>
       </div>
 

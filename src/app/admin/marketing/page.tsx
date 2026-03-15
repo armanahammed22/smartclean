@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,18 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Megaphone, 
   Zap, 
-  Layout, 
-  Calendar, 
   Plus, 
   Trash2, 
-  Save, 
   Eye, 
-  CheckCircle2,
-  Tag,
-  Clock,
-  Gift,
-  Trophy,
-  Loader2,
+  Tag, 
+  Gift, 
+  Trophy, 
   ImageIcon
 } from 'lucide-react';
 import Image from 'next/image';
@@ -36,16 +30,12 @@ import Link from 'next/link';
 export default function MarketingAdminPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
 
-  // Firestore Data
   const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), orderBy('placement', 'asc')) : null, [db]);
   const campaignsQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_campaigns'), orderBy('endDate', 'desc')) : null, [db]);
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
 
-  const { data: offers, isLoading: offersLoading } = useCollection(offersQuery);
-  const { data: campaigns, isLoading: campaignsLoading } = useCollection(campaignsQuery);
-  const { data: products } = useCollection(productsQuery);
+  const { data: offers } = useCollection(offersQuery);
+  const { data: campaigns } = useCollection(campaignsQuery);
 
   const handleToggleStatus = async (col: string, id: string, current: boolean) => {
     if (!db) return;
@@ -117,56 +107,39 @@ export default function MarketingAdminPage() {
             {offers?.map((offer) => (
               <Card key={offer.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group">
                 <div className="relative aspect-[21/7] bg-gray-50 border-b">
-                  {offer.imageUrl && typeof offer.imageUrl === 'string' && offer.imageUrl !== '' ? (
-                    <Image 
-                      src={offer.imageUrl} 
-                      alt={offer.title || 'Offer'} 
-                      fill 
-                      className="object-cover" 
-                    />
+                  {offer.imageUrl ? (
+                    <Image src={offer.imageUrl} alt={offer.title || 'Offer'} fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
                       <ImageIcon size={48} />
                     </div>
                   )}
                   <div className="absolute top-2 right-2 flex gap-2">
-                    <Switch 
-                      checked={offer.enabled} 
-                      onCheckedChange={() => handleToggleStatus('marketing_offers', offer.id, offer.enabled)} 
-                    />
+                    <Switch checked={offer.enabled} onCheckedChange={() => handleToggleStatus('marketing_offers', offer.id, offer.enabled)} />
                   </div>
                 </div>
                 <CardContent className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Offer Title</Label>
-                      <Input 
-                        defaultValue={offer.title} 
-                        onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { title: e.target.value })}
-                      />
+                      <Input defaultValue={offer.title} onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { title: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                       <Label>Placement</Label>
-                      <Select 
-                        defaultValue={offer.placement} 
-                        onValueChange={(val) => updateDoc(doc(db!, 'marketing_offers', offer.id), { placement: val })}
-                      >
+                      <Select defaultValue={offer.placement} onValueChange={(val) => updateDoc(doc(db!, 'marketing_offers', offer.id), { placement: val })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="top">Top Banner</SelectItem>
                           <SelectItem value="middle">Middle Section</SelectItem>
-                          <SelectItem value="before_products">Before Products</SelectItem>
-                          <SelectItem value="after_products">After Products</SelectItem>
+                          <SelectItem value="before_products">Before CRM Intro</SelectItem>
+                          <SelectItem value="after_products">After CRM Intro</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Image URL</Label>
-                    <Input 
-                      defaultValue={offer.imageUrl} 
-                      onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: e.target.value })}
-                    />
+                    <Input defaultValue={offer.imageUrl} onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: e.target.value })} />
                   </div>
                   <div className="flex justify-between items-center pt-4">
                     <Badge variant="outline" className="uppercase text-[10px]">{offer.placement}</Badge>
@@ -199,10 +172,7 @@ export default function MarketingAdminPage() {
                       <CardDescription className="text-xs">Type: {camp.type?.replace('_', ' ').toUpperCase()}</CardDescription>
                     </div>
                   </div>
-                  <Switch 
-                    checked={camp.enabled} 
-                    onCheckedChange={() => handleToggleStatus('marketing_campaigns', camp.id, camp.enabled)} 
-                  />
+                  <Switch checked={camp.enabled} onCheckedChange={() => handleToggleStatus('marketing_campaigns', camp.id, camp.enabled)} />
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <div className="grid grid-cols-2 gap-4">

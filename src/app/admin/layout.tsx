@@ -19,7 +19,9 @@ import {
   BarChart3,
   TicketPercent,
   Menu,
-  Paintbrush
+  Paintbrush,
+  ShoppingCart,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -63,8 +65,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Operations',
       items: [
         { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
+        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
         { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
         { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-sky-500' },
+      ]
+    },
+    {
+      title: 'Staff & Logistics',
+      items: [
+        { name: 'Staff Directory', href: '/admin/employees', icon: Users, color: 'text-indigo-500' },
+        { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-rose-500' },
       ]
     },
     {
@@ -199,7 +209,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="absolute -right-4 top-20 bg-white border rounded-full h-8 w-8 z-40 hidden lg:flex shadow-md text-gray-400"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size(14) : <ChevronLeft size(14) />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </aside>
 

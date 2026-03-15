@@ -25,13 +25,15 @@ service cloud.firestore {
     match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // CRM DATA: Leads and Customers
-    // Anyone can submit a lead, but only staff can read them.
     match /leads/{id} { 
       allow create: if true; 
       allow read, update, delete: if isStaff(); 
     }
     match /customers/{id} { 
       allow read, write: if isStaff(); 
+    }
+    match /orders/{id} {
+      allow read, write: if isStaff();
     }
     
     // STAFF & ADMIN PROFILES

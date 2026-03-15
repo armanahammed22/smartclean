@@ -14,8 +14,6 @@ import {
   Clock, 
   Mail,
   Phone,
-  ShieldCheck,
-  Zap,
   ArrowRight
 } from 'lucide-react';
 
