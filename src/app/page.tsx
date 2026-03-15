@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -81,8 +82,8 @@ export default function SmartCleanHomePage() {
   const actionsQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_actions')) : null, [db]);
   const { data: quickActions } = useCollection(actionsQuery);
 
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(10)) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(10)) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(15)) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(15)) : null, [db]);
 
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
   const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
@@ -343,17 +344,17 @@ export default function SmartCleanHomePage() {
                           <Badge className="bg-white/95 text-primary border-none shadow-xl backdrop-blur-sm font-black text-[10px] uppercase hidden sm:inline-flex px-3 py-1 rounded-lg">{service.category || 'General'}</Badge>
                         </div>
                       </div>
-                      <div className="p-5 md:p-8 space-y-4 flex-1">
-                        <h3 className="text-sm md:text-xl font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
+                      <div className="p-5 md:p-6 space-y-4 flex-1">
+                        <h3 className="text-sm md:text-base font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
                         <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-2 hidden sm:block leading-relaxed">{service.description}</p>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-4">
+                        <div className="flex flex-col pt-4 border-t gap-3 mt-auto">
                           <div className="flex flex-col">
-                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('base_price')}</span>
-                            <span className="text-base md:text-xl font-black text-primary">
+                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('price_from')}</span>
+                            <span className="text-base md:text-lg font-black text-primary">
                               ৳{(service.basePrice || 0).toLocaleString()} 
                             </span>
                           </div>
-                          <Button size="sm" className="rounded-xl font-black px-4 h-10 md:h-11 text-[10px] uppercase shadow-lg shadow-primary/10">
+                          <Button size="sm" className="w-full rounded-xl font-black px-4 h-10 text-[10px] uppercase shadow-lg shadow-primary/10">
                             {t('book_now')}
                           </Button>
                         </div>

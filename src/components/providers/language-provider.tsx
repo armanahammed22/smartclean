@@ -109,7 +109,8 @@ const translations: Record<Language, Record<string, string>> = {
     services_subtitle: "আমরা বিশেষায়িত ক্লিনিং এবং রক্ষণাবেক্ষণ সেবার একটি বিস্তৃত পরিসর প্রদান করি।",
     service_details: "বিস্তারিত",
     book_now: "বুক করুন",
-    price_from: "থেকে",
+    price_from: "থেকে শুরু",
+    fixed_price: "ফিক্সড",
     base_price: "বেস প্রাইস",
     
     // Checkout & Summary
@@ -275,7 +276,8 @@ const translations: Record<Language, Record<string, string>> = {
     services_subtitle: "We provide a wide range of specialized cleaning and maintenance services.",
     service_details: "Details",
     book_now: "Book Now",
-    price_from: "From",
+    price_from: "Starts From",
+    fixed_price: "Fixed",
     base_price: "Base Price",
     
     // Checkout & Summary
