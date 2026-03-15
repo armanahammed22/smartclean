@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -76,7 +77,7 @@ export function Navbar() {
 
             <Button 
               variant="ghost" 
-              className="text-white hover:text-primary hover:bg-transparent gap-2 px-0 h-auto"
+              className="text-white hover:text-primary hover:bg-transparent gap-2 px-0 h-auto rounded-xl"
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
             >
               <Globe size={18} className="text-primary" />
@@ -86,7 +87,7 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="text-primary hover:text-white transition-colors font-black gap-2 p-0 h-auto uppercase text-xs tracking-tighter">
+                  <Button variant="ghost" className="text-primary hover:text-white transition-colors font-black gap-2 p-0 h-auto uppercase text-xs tracking-tighter rounded-xl">
                     <UserCircle size={24} />
                     <span>{t('nav_account')}</span>
                     <ChevronDown size={14} className="opacity-40" />
@@ -101,7 +102,6 @@ export function Navbar() {
                       <DropdownMenuSeparator className="bg-gray-50" />
                       <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-primary px-4 py-3">Admin Console</DropdownMenuLabel>
                       <DropdownMenuItem asChild><Link href="/admin/dashboard" className="font-bold flex items-center gap-2 rounded-xl bg-primary/5 text-primary"><LayoutDashboard size={14} /> {t('admin_portal')}</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild><Link href="/admin/bookings" className="font-bold rounded-xl">Manage Appointments</Link></DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator className="bg-gray-50" />
@@ -123,7 +123,7 @@ export function Navbar() {
           </div>
           
           <div className="flex lg:hidden items-center gap-4">
-            <Button variant="ghost" size="sm" className="text-white hover:text-primary p-0 h-auto" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}>
+            <Button variant="ghost" size="sm" className="text-white hover:text-primary p-0 h-auto rounded-xl" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}>
               <div className="flex flex-col items-center">
                 <Globe size={20} className="text-primary" />
                 <span className="text-[9px] font-black mt-0.5">{language === 'bn' ? "EN" : "বাং"}</span>

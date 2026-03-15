@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -97,61 +98,13 @@ export default function AdminDashboard() {
 
       // 2. Sub Services
       const SUB_SERVICES = [
-        // Home Cleaning
         { mainServiceId: 's_home', name: 'Full Home Deep Cleaning', price: 5000, duration: '6-8 hrs' },
         { mainServiceId: 's_home', name: 'Bedroom Cleaning', price: 1000, duration: '1 hr' },
-        { mainServiceId: 's_home', name: 'Living Room Cleaning', price: 1200, duration: '1.5 hrs' },
-        { mainServiceId: 's_home', name: 'Dining Room Cleaning', price: 1000, duration: '1 hr' },
-        { mainServiceId: 's_home', name: 'Balcony Cleaning', price: 500, duration: '30 mins' },
-        { mainServiceId: 's_home', name: 'Floor Scrubbing', price: 1500, duration: '2 hrs' },
-        { mainServiceId: 's_home', name: 'Floor Polishing', price: 3000, duration: '4 hrs' },
-        
-        // Kitchen Cleaning
         { mainServiceId: 's_kitchen', name: 'Kitchen Deep Cleaning', price: 2500, duration: '3 hrs' },
-        { mainServiceId: 's_kitchen', name: 'Stove Cleaning', price: 500, duration: '45 mins' },
-        { mainServiceId: 's_kitchen', name: 'Sink Cleaning', price: 300, duration: '30 mins' },
-        { mainServiceId: 's_kitchen', name: 'Cabinet Cleaning', price: 800, duration: '1 hr' },
-        { mainServiceId: 's_kitchen', name: 'Chimney Cleaning', price: 1200, duration: '1.5 hrs' },
-        { mainServiceId: 's_kitchen', name: 'Exhaust Fan Cleaning', price: 400, duration: '30 mins' },
-        { mainServiceId: 's_kitchen', name: 'Refrigerator Cleaning', price: 800, duration: '1 hr' },
-        { mainServiceId: 's_kitchen', name: 'Microwave Cleaning', price: 400, duration: '30 mins' },
-
-        // Bathroom Cleaning
         { mainServiceId: 's_bathroom', name: 'Toilet Deep Cleaning', price: 800, duration: '1 hr' },
-        { mainServiceId: 's_bathroom', name: 'Basin Cleaning', price: 300, duration: '20 mins' },
-        { mainServiceId: 's_bathroom', name: 'Shower Area Cleaning', price: 500, duration: '40 mins' },
-        { mainServiceId: 's_bathroom', name: 'Bathroom Tile Cleaning', price: 600, duration: '1 hr' },
-        { mainServiceId: 's_bathroom', name: 'Mirror Cleaning', price: 200, duration: '15 mins' },
-        { mainServiceId: 's_bathroom', name: 'Drain Cleaning', price: 400, duration: '30 mins' },
-
-        // Sofa
         { mainServiceId: 's_sofa', name: 'Fabric Sofa Cleaning', price: 500, duration: 'per seat' },
-        { mainServiceId: 's_sofa', name: 'Leather Sofa Cleaning', price: 700, duration: 'per seat' },
-        { mainServiceId: 's_sofa', name: 'Chair Cleaning', price: 200, duration: 'per unit' },
-        { mainServiceId: 's_sofa', name: 'Mattress Cleaning', price: 1500, duration: 'per unit' },
-        { mainServiceId: 's_sofa', name: 'Dining Chair Cleaning', price: 250, duration: 'per unit' },
-
-        // AC Services
-        { mainServiceId: 's_ac', name: 'AC Installation', price: 1500, duration: '2 hrs' },
-        { mainServiceId: 's_ac', name: 'AC Uninstallation', price: 800, duration: '1 hr' },
         { mainServiceId: 's_ac', name: 'AC Servicing', price: 1000, duration: '1.5 hrs' },
-        { mainServiceId: 's_ac', name: 'AC Gas Refill', price: 2500, duration: '1 hr' },
-        { mainServiceId: 's_ac', name: 'AC Repair', price: 500, duration: 'Variable' },
-        { mainServiceId: 's_ac', name: 'AC Deep Cleaning', price: 1800, duration: '2 hrs' },
-        { mainServiceId: 's_ac', name: 'AC Water Leakage Fix', price: 1200, duration: '1 hr' },
-
-        // Electrical
-        { mainServiceId: 's_electrical', name: 'Fan Installation', price: 300, duration: '30 mins' },
-        { mainServiceId: 's_electrical', name: 'Light Installation', price: 200, duration: '20 mins' },
-        { mainServiceId: 's_electrical', name: 'Switch Board Repair', price: 400, duration: '40 mins' },
-        { mainServiceId: 's_electrical', name: 'Wiring Repair', price: 1000, duration: 'Variable' },
-        { mainServiceId: 's_electrical', name: 'Electrical Safety Check', price: 1500, duration: '2 hrs' },
-
-        // Pest Control
-        { mainServiceId: 's_pest', name: 'Cockroach Control', price: 2000, duration: '1 hr' },
-        { mainServiceId: 's_pest', name: 'Termite Control', price: 5000, duration: '3 hrs' },
-        { mainServiceId: 's_pest', name: 'Mosquito Control', price: 1500, duration: '1 hr' },
-        { mainServiceId: 's_pest', name: 'Bed Bug Treatment', price: 2500, duration: '2 hrs' }
+        { mainServiceId: 's_pest', name: 'Cockroach Control', price: 2000, duration: '1 hr' }
       ];
 
       SUB_SERVICES.forEach((sub, idx) => {
@@ -165,38 +118,12 @@ export default function AdminDashboard() {
         });
       });
 
-      // 3. Staff
-      const STAFF = [
-        { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', phone: '01711111111' },
-        { id: 'emp2', name: 'Rahim Uddin', role: 'Technician', phone: '01822222222' }
-      ];
-      STAFF.forEach(e => {
-        batch.set(doc(db, 'employee_profiles', e.id), {
-          ...e, id: e.id, status: 'Active', email: `${e.id}@smartclean.com`, createdAt: new Date().toISOString()
-        });
-      });
-
-      // 4. Products
-      const productData = [
-        {
-          id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, regularPrice: 49500,
-          categoryId: 'Equipment', stockQuantity: 15, status: 'Active', brand: 'SmartClean',
-          shortDescription: 'AI-powered cleaning for all surfaces.',
-          description: 'Professional grade vacuum robot with LiDAR mapping.',
-          imageUrl: 'https://picsum.photos/seed/vac/600/400'
-        },
-        {
-          id: 'p2', name: 'Steam Mop Elite', price: 12000, regularPrice: 15000,
-          categoryId: 'Equipment', stockQuantity: 8, status: 'Active', brand: 'AquaClean',
-          shortDescription: 'High-temp steam sanitization.',
-          description: 'Kills 99.9% of bacteria without chemicals.',
-          imageUrl: 'https://picsum.photos/seed/mop/600/400'
-        }
-      ];
-      productData.forEach(p => batch.set(doc(db, 'products', p.id), p));
+      // 3. Admin & Staff Setup
+      batch.set(doc(db, 'employee_profiles', 'emp1'), { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', createdAt: new Date().toISOString() });
+      batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', role: 'Bootstrap Admin' });
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Main services and dozens of sub-services populated." });
+      toast({ title: "ERP Database Seeded", description: "Main services and sub-services populated." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -220,7 +147,7 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Service Operations Hub</h1>
           <p className="text-muted-foreground text-sm">Real-time control over bookings, staff, and inventory</p>
         </div>
-        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all">
+        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-xl">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
           Seed ERP Data
         </Button>
@@ -252,7 +179,7 @@ export default function AdminDashboard() {
         <Card className="lg:col-span-2 border-none shadow-sm bg-white rounded-2xl overflow-hidden">
           <CardHeader className="border-b bg-gray-50/50 flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-bold">Booking Trends</CardTitle>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-none uppercase font-black text-[9px]">Live Data</Badge>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-none uppercase font-black text-[9px] rounded-full px-3">Live Data</Badge>
           </CardHeader>
           <CardContent className="h-[350px] p-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -287,7 +214,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
              </div>
-             <Button className="w-full bg-white text-primary hover:bg-white/90 font-black h-12 mt-4 shadow-xl rounded-xl uppercase tracking-tighter">
+             <Button className="w-full bg-white text-primary hover:bg-white/90 font-black h-12 mt-4 shadow-xl rounded-2xl uppercase tracking-tighter">
                View Performance Log
              </Button>
           </CardContent>

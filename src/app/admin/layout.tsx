@@ -156,7 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Lock size={48} className="text-gray-400" />
         </div>
         <h2 className="text-2xl font-bold">Authentication Required</h2>
-        <Button asChild><Link href="/login">Go to Login</Link></Button>
+        <Button asChild className="rounded-xl"><Link href="/login">Go to Login</Link></Button>
       </div>
     );
   }
@@ -169,7 +169,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AlertTriangle size={64} className="text-orange-500" />
         <h2 className="text-2xl font-bold">Unauthorized Access</h2>
         <p className="text-muted-foreground max-w-xs mx-auto">Your account does not have admin privileges.</p>
-        <Button variant="outline" onClick={handleLogout}>Logout</Button>
+        <Button variant="outline" onClick={handleLogout} className="rounded-xl">Logout</Button>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <>
       <div className="p-6 flex items-center justify-between border-b border-white/10 h-16 shrink-0">
         <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
+          <div className="p-2 bg-primary rounded-xl text-white shrink-0"><ShieldCheck size={20} /></div>
           {!collapsed && (
             <div className="truncate">
               <h1 className="font-bold tracking-tight text-sm">CRM PORTAL</h1>
@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Button 
             variant="ghost" 
             className={cn(
-              "w-full text-gray-400 hover:text-destructive gap-3 transition-all",
+              "w-full text-gray-400 hover:text-destructive gap-3 transition-all rounded-xl",
               collapsed ? "justify-center" : "justify-start"
             )} 
             onClick={handleLogout}
@@ -260,7 +260,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600">
+                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl">
                   <Menu size={24} />
                 </Button>
               </SheetTrigger>
@@ -280,7 +280,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
-              className="text-gray-600 hover:text-primary gap-2 h-9 px-3"
+              className="text-gray-600 hover:text-primary gap-2 h-9 px-3 rounded-xl"
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
             >
               <Globe size={18} />
