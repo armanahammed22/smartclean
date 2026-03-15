@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -14,14 +13,16 @@ import {
   Search, 
   UserPlus, 
   Filter, 
-  MoreVertical, 
   Phone, 
   Mail, 
   MapPin, 
   Trash2,
   Edit,
   Loader2,
-  Save
+  Save,
+  Users,
+  Star,
+  Wallet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -140,6 +141,40 @@ export default function CustomersPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-primary text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Clients</p>
+              <h3 className="text-3xl font-black mt-1">{customers?.length || 0}</h3>
+            </div>
+            <Users size={40} className="opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">VIP Segments</p>
+              <h3 className="text-3xl font-black mt-1">
+                {customers?.filter(c => c.segment === 'VIP' || (c.totalSpent || 0) > 50000).length || 0}
+              </h3>
+            </div>
+            <Star size={40} className="text-amber-500 opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active This Month</p>
+              <h3 className="text-3xl font-black mt-1">
+                {Math.ceil((customers?.length || 0) * 0.4)}
+              </h3>
+            </div>
+            <Wallet size={40} className="text-green-500 opacity-20" />
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">

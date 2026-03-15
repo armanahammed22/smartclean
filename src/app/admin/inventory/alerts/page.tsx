@@ -1,21 +1,19 @@
-
 'use client';
 
 import React from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Package, ArrowRight, TrendingDown } from 'lucide-react';
+import { AlertCircle, Package, ArrowRight, TrendingDown, Layers } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function StockAlertsPage() {
   const db = useFirestore();
 
-  // In a real app, we would query for stockQuantity < threshold
-  // For MVP, we fetch all and filter client-side
   const productsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'products'), orderBy('stockQuantity', 'asc'));
@@ -30,34 +28,44 @@ export default function StockAlertsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Inventory Alerts</h1>
-        <p className="text-muted-foreground text-sm">Monitor low stock and out-of-stock items</p>
+        <p className="text-muted-foreground text-sm">Monitor critical stock levels across your supply catalog</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-none shadow-sm bg-orange-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-black text-orange-700">LOW STOCK ITEMS</CardTitle>
-            <TrendingDown className="text-orange-600" size={20} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-orange-900">{lowStock.length}</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-red-50 text-red-700">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-red-700/80 text-xs font-bold uppercase tracking-wider">Out of Stock</p>
+              <h3 className="text-3xl font-black mt-1">{outOfStock.length}</h3>
+            </div>
+            <AlertCircle size={40} className="opacity-20" />
           </CardContent>
         </Card>
         
-        <Card className="border-none shadow-sm bg-red-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-black text-red-700">OUT OF STOCK</CardTitle>
-            <AlertCircle className="text-red-600" size={20} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-red-900">{outOfStock.length}</div>
+        <Card className="border-none shadow-sm bg-orange-50 text-orange-700">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-orange-700/80 text-xs font-bold uppercase tracking-wider">Low Stock Items</p>
+              <h3 className="text-3xl font-black mt-1">{lowStock.length}</h3>
+            </div>
+            <TrendingDown size={40} className="opacity-20" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-primary text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Impacted SKUs</p>
+              <h3 className="text-3xl font-black mt-1">{outOfStock.length + lowStock.length}</h3>
+            </div>
+            <Layers size={40} className="opacity-20" />
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="bg-white border-b">
-          <CardTitle className="text-lg font-bold">Critical Inventory Items</CardTitle>
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
+        <CardHeader className="bg-gray-50/50 border-b">
+          <CardTitle className="text-sm font-bold uppercase tracking-widest text-gray-500">Critical Inventory Items</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -83,11 +91,11 @@ export default function StockAlertsPage() {
                         </div>
                         <div>
                           <div className="font-bold text-sm text-gray-900">{product.name}</div>
-                          <div className="text-[10px] text-muted-foreground uppercase">SKU: {product.sku || 'N/A'}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-medium">SKU: {product.id.slice(0, 8).toUpperCase()}</div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs font-medium">{product.categoryId}</TableCell>
+                    <TableCell className="text-[10px] font-black uppercase text-muted-foreground">{product.categoryId}</TableCell>
                     <TableCell>
                       <div className={cn(
                         "font-black text-sm",
@@ -105,7 +113,7 @@ export default function StockAlertsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="ghost" size="sm" className="text-primary gap-1 font-bold text-xs">
+                      <Button asChild variant="ghost" size="sm" className="text-primary gap-1 font-bold text-xs hover:bg-primary/5">
                         <Link href="/admin/products">Update <ArrowRight size={14} /></Link>
                       </Button>
                     </TableCell>

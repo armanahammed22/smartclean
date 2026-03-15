@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
   TableBody, 
@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Filter, Phone, Mail, MapPin, Loader2, Save, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, Phone, Mail, MapPin, Loader2, Save, Trash2, Briefcase, UserCheck, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -112,7 +112,7 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Sales Leads</h1>
@@ -170,7 +170,41 @@ export default function LeadsPage() {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-primary text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Leads</p>
+              <h3 className="text-3xl font-black mt-1">{leads?.length || 0}</h3>
+            </div>
+            <Briefcase size={40} className="opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Qualified</p>
+              <h3 className="text-3xl font-black mt-1">
+                {leads?.filter(l => l.status === 'Qualified').length || 0}
+              </h3>
+            </div>
+            <UserCheck size={40} className="text-blue-500 opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Follow-up Due</p>
+              <h3 className="text-3xl font-black mt-1">
+                {leads?.filter(l => l.status === 'New').length || 0}
+              </h3>
+            </div>
+            <TrendingUp size={40} className="text-green-500 opacity-20" />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
@@ -185,7 +219,7 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-gray-50/50">
@@ -214,11 +248,11 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-xs">
+                        <div className="flex items-center gap-1.5 text-xs font-medium">
                           <Phone size={12} className="text-primary" /> {lead.phone}
                         </div>
                         {lead.email && (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                             <Mail size={12} /> {lead.email}
                           </div>
                         )}
@@ -229,7 +263,7 @@ export default function LeadsPage() {
                         {lead.source}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-xs font-medium">
                       {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy') : 'N/A'}
                     </TableCell>
                     <TableCell>

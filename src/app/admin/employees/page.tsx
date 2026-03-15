@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Edit, Loader2, Save, Users, Wrench, Layers, Package, Star, Phone, Mail } from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2, Save, Users, Wrench, CheckCircle2, Phone, Mail } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -28,19 +27,10 @@ export default function EmployeesPage() {
   const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db]);
   const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
   const { data: bookings } = useCollection(bookingsQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: products } = useCollection(productsQuery);
-
-  const KPI_STATS = [
-    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Active Staff", value: employees?.filter(e => e.status === 'Active').length || 0, icon: Users, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Products", value: products?.length || 0, icon: Package, color: "text-indigo-600", bg: "bg-indigo-50" },
-  ];
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -148,18 +138,38 @@ export default function EmployeesPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {KPI_STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
-                <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm bg-primary text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Staff</p>
+              <h3 className="text-3xl font-black mt-1">{employees?.length || 0}</h3>
+            </div>
+            <Users size={40} className="opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active Staff</p>
+              <h3 className="text-3xl font-black mt-1">
+                {employees?.filter(e => e.status === 'Active').length || 0}
+              </h3>
+            </div>
+            <CheckCircle2 size={40} className="text-green-500 opacity-20" />
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active Services</p>
+              <h3 className="text-3xl font-black mt-1">
+                {services?.filter(s => s.status === 'Active').length || 0}
+              </h3>
+            </div>
+            <Wrench size={40} className="text-blue-500 opacity-20" />
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white">
@@ -182,7 +192,7 @@ export default function EmployeesPage() {
                 employees.map((staff) => {
                   const jobCount = bookings?.filter(b => b.employeeId === staff.id).length || 0;
                   return (
-                    <TableRow key={staff.id} className="hover:bg-gray-50/50">
+                    <TableRow key={staff.id} className="hover:bg-gray-50/50 transition-colors">
                       <TableCell className="py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9 border-2 border-gray-100 shadow-xs">
