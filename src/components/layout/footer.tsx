@@ -1,16 +1,25 @@
-
 "use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react';
+import { 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Clock, 
+  MessageCircle,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter
+} from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
 export function Footer() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const db = useFirestore();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
@@ -38,8 +47,32 @@ export function Footer() {
               </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              {t('footer_desc')}
+              {settings?.seoDescription || t('footer_desc')}
             </p>
+            
+            {/* Social Media Links */}
+            <div className="flex gap-4 pt-2">
+              {settings?.socialLinks?.facebook && (
+                <Link href={settings.socialLinks.facebook} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                  <Facebook size={18} />
+                </Link>
+              )}
+              {settings?.socialLinks?.instagram && (
+                <Link href={settings.socialLinks.instagram} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                  <Instagram size={18} />
+                </Link>
+              )}
+              {settings?.socialLinks?.linkedin && (
+                <Link href={settings.socialLinks.linkedin} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                  <Linkedin size={18} />
+                </Link>
+              )}
+              {settings?.socialLinks?.whatsapp && (
+                <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                  <MessageCircle size={18} />
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Column 2: Services */}
