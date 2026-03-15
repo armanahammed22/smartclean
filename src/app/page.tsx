@@ -99,7 +99,7 @@ export default function SmartCleanHomePage() {
     <PublicLayout>
       <div className="flex flex-col gap-6 pb-16 bg-[#F2F4F8]">
         
-        {/* 0. Admin Dashboard Summary (Integrated) */}
+        {/* 0. Admin Dashboard Summary */}
         {isAdmin && (
           <section className="container mx-auto px-4 pt-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group border border-white/5">
@@ -121,10 +121,10 @@ export default function SmartCleanHomePage() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { label: 'Leads', val: '842', color: 'text-blue-400', icon: Briefcase },
-                    { label: 'Sales', val: '৳1.4M', color: 'text-green-400', icon: ShoppingCart },
-                    { label: 'Growth', val: '+12%', color: 'text-primary', icon: TrendingUp },
-                    { label: 'Active Staff', val: '24', color: 'text-amber-400', icon: UserCheck }
+                    { label: t('leads'), val: '842', color: 'text-blue-400', icon: Briefcase },
+                    { label: t('sales'), val: '৳1.4M', color: 'text-green-400', icon: ShoppingCart },
+                    { label: t('growth'), val: '+12%', color: 'text-primary', icon: TrendingUp },
+                    { label: t('active_staff'), val: '24', color: 'text-amber-400', icon: UserCheck }
                   ].map((s, i) => (
                     <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
                       <p className="text-[9px] font-black text-white/40 uppercase mb-1">{s.label}</p>
@@ -140,7 +140,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 0.1 Customer Activity Summary (Integrated) */}
+        {/* 0.1 Customer Activity Summary */}
         {user && !isAdmin && (
           <section className="container mx-auto px-4 pt-6">
             <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -176,7 +176,9 @@ export default function SmartCleanHomePage() {
                     <div className="p-5 bg-gray-50 rounded-[1.5rem] text-gray-600 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-sm border border-transparent group-hover:border-primary/20">
                       <Icon size={32} />
                     </div>
-                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter text-center line-clamp-1">{link.label}</span>
+                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter text-center line-clamp-1">
+                      {t(link.label)}
+                    </span>
                   </Link>
                 );
               })}
@@ -188,7 +190,7 @@ export default function SmartCleanHomePage() {
                   className="gap-2 text-primary font-black text-xs uppercase hover:bg-transparent tracking-widest"
                   onClick={() => setShowAllLinks(!showAllLinks)}
                 >
-                  {showAllLinks ? 'Show less' : 'Show more'} <ChevronDown size={16} className={cn("transition-transform", showAllLinks && "rotate-180")} />
+                  {showAllLinks ? t('view_less') : t('view_more')} <ChevronDown size={16} className={cn("transition-transform", showAllLinks && "rotate-180")} />
                 </Button>
               </div>
             )}
@@ -249,7 +251,9 @@ export default function SmartCleanHomePage() {
                 <Link key={action.id} href={action.link || '#'} className={`bg-gradient-to-br ${action.bgGradient} rounded-[2rem] p-10 flex items-center justify-between shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5`}>
                   <div className="space-y-4 relative z-10">
                     <Icon size={56} className="text-white opacity-80 group-hover:scale-110 transition-transform duration-500" />
-                    <h3 className="text-white text-3xl font-black uppercase tracking-tight leading-none">{action.title}</h3>
+                    <h3 className="text-white text-3xl font-black uppercase tracking-tight leading-none">
+                      {t(action.title)}
+                    </h3>
                   </div>
                   <div className="absolute top-0 right-0 p-4 opacity-10 scale-150 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
                     <Icon size={160} className="text-white" />

@@ -28,6 +28,11 @@ const translations: Record<Language, Record<string, string>> = {
     nav_categories: "ক্যাটাগরি",
     portal_access: "পোর্টাল অ্যাক্সেস",
     get_inquiry: "ইনকোয়ারি করুন",
+    personal_dashboard: "পার্সোনাল ড্যাশবোর্ড",
+    service_history: "সার্ভিস হিস্ট্রি",
+    admin_portal: "অ্যাডমিন পোর্টাল",
+    manage_orders: "অর্ডার ম্যানেজ করুন",
+    sign_out: "সাইন আউট",
     
     // Hero & Sections
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
@@ -46,6 +51,44 @@ const translations: Record<Language, Record<string, string>> = {
     active_bookings: "আপনার ২ টি বুকিং পেন্ডিং আছে।",
     view_history: "ইতিহাস দেখুন",
     go_dashboard: "ড্যাশবোর্ড",
+    leads: "লিডস",
+    sales: "সেলস",
+    growth: "গ্রোথ",
+    active_staff: "সক্রিয় কর্মী",
+
+    // Admin Sidebar Groups
+    group_main: "মেইন ও অ্যানালিটিক্স",
+    group_crm: "CRM ও সেলস",
+    group_inventory: "ইনভেন্টরি ও প্রোডাক্ট",
+    group_service: "সার্ভিস অপারেশন",
+    group_page: "পেজ কম্পোনেন্ট",
+    group_growth: "গ্রোথ ও রিওয়ার্ড",
+    group_system: "সিস্টেম ও লজিস্টিক",
+
+    // Admin Sidebar Items
+    item_dashboard: "ড্যাশবোর্ড",
+    item_reports: "রিপোর্ট",
+    item_leads: "সেলস লিড",
+    item_orders: "প্রোডাক্ট অর্ডার",
+    item_bookings: "সার্ভিস বুকিং",
+    item_customers: "কাস্টমার ডিরেক্টরি",
+    item_tickets: "সাপোর্ট টিকিট",
+    item_products: "প্রোডাক্টস",
+    item_categories: "ক্যাটাগরি",
+    item_brands: "ব্র্যান্ডস",
+    item_alerts: "স্টক অ্যালার্ট",
+    item_services: "সার্ভিস লিস্ট",
+    item_subservices: "সাব-সার্ভিস",
+    item_areas: "সার্ভিস এরিয়া",
+    item_links: "কুইক লিংক",
+    item_actions: "কুইক অ্যাকশন",
+    item_customize: "সাইট কাস্টমাইজ",
+    item_marketing: "মার্কেটিং ও কুপন",
+    item_referrals: "রেফারাল প্রোগ্রাম",
+    item_staff: "স্টাফ ডিরেক্টরি",
+    item_couriers: "কুরিয়ার",
+    item_subscription: "সাবস্ক্রিপশন",
+    item_settings: "গ্লোবাল সেটিংস",
 
     // Products & Cart
     products_title: "সেরা পণ্যসমূহ",
@@ -125,7 +168,17 @@ const translations: Record<Language, Record<string, string>> = {
     cart_added: "অর্ডারে যোগ করা হয়েছে",
     cart_desc: "আইটেমটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।",
     service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।",
-    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন"
+    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন",
+
+    // Dynamic Labels (Common words used in Quick Links/Actions)
+    "PC Builder": "পিসি বিল্ডার",
+    "Laptop Finder": "ল্যাপটপ ফাইন্ডার",
+    "TV Offer": "টিভি অফার",
+    "Camera": "ক্যামেরা",
+    "Smartphone": "স্মার্টফোন",
+    "Tablet": "ট্যাবলেট",
+    "Drone": "ড্রোন",
+    "Starlink": "স্টারলিংক"
   },
   en: {
     // Navbar
@@ -141,6 +194,11 @@ const translations: Record<Language, Record<string, string>> = {
     nav_categories: "Categories",
     portal_access: "Portal Access",
     get_inquiry: "Get Inquiry",
+    personal_dashboard: "Personal Dashboard",
+    service_history: "Service History",
+    admin_portal: "Admin Portal",
+    manage_orders: "Manage Orders",
+    sign_out: "Sign Out",
     
     // Hero & Sections
     hero_title: "Smart Solutions for a Clean Life",
@@ -159,6 +217,44 @@ const translations: Record<Language, Record<string, string>> = {
     active_bookings: "You have 2 active bookings pending.",
     view_history: "View History",
     go_dashboard: "Dashboard",
+    leads: "Leads",
+    sales: "Sales",
+    growth: "Growth",
+    active_staff: "Active Staff",
+
+    // Admin Sidebar Groups
+    group_main: "Main & Analytics",
+    group_crm: "CRM & Sales",
+    group_inventory: "Inventory & Products",
+    group_service: "Service Operations",
+    group_page: "Page Components",
+    group_growth: "Growth & Rewards",
+    group_system: "System & Logistics",
+
+    // Admin Sidebar Items
+    item_dashboard: "Dashboard",
+    item_reports: "Reports",
+    item_leads: "Sales Leads",
+    item_orders: "Product Orders",
+    item_bookings: "Service Bookings",
+    item_customers: "Customer Directory",
+    item_tickets: "Support Tickets",
+    item_products: "Products",
+    item_categories: "Categories",
+    item_brands: "Brands",
+    item_alerts: "Stock Alerts",
+    item_services: "Service List",
+    item_subservices: "Sub-Services",
+    item_areas: "Service Areas",
+    item_links: "Quick Links",
+    item_actions: "Quick Actions",
+    item_customize: "Site Customize",
+    item_marketing: "Marketing & Coupons",
+    item_referrals: "Referral Program",
+    item_staff: "Staff Directory",
+    item_couriers: "Couriers",
+    item_subscription: "Subscription",
+    item_settings: "Global Settings",
 
     // Products & Cart
     products_title: "Featured Products",
@@ -238,7 +334,17 @@ const translations: Record<Language, Record<string, string>> = {
     cart_added: "Added to Order",
     cart_desc: "Item has been added to your order list.",
     service_billing_note: "Note: Service amounts are base prices and may vary based on actual work requirements.",
-    chat_wa: "Chat via WhatsApp"
+    chat_wa: "Chat via WhatsApp",
+
+    // Dynamic Labels
+    "PC Builder": "PC Builder",
+    "Laptop Finder": "Laptop Finder",
+    "TV Offer": "TV Offer",
+    "Camera": "Camera",
+    "Smartphone": "Smartphone",
+    "Tablet": "Tablet",
+    "Drone": "Drone",
+    "Starlink": "Starlink"
   }
 };
 

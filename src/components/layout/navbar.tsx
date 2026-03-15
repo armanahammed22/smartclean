@@ -54,7 +54,7 @@ export function Navbar() {
               <Input 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Find cleaning solutions..."
+                placeholder={t('search_placeholder')}
                 className="w-full bg-white text-black h-11 pr-12 rounded-sm border-none"
               />
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
@@ -76,37 +76,37 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="text-primary hover:text-white transition-colors font-bold gap-2 p-0 h-auto">
                     <UserCircle size={24} />
-                    <span className="text-xs">Account</span>
+                    <span className="text-xs">{t('nav_account')}</span>
                     <ChevronDown size={14} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl">
                   <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">My Portal</DropdownMenuLabel>
-                  <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold">Personal Dashboard</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/account/history" className="font-bold">Service History</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold">{t('personal_dashboard')}</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/account/history" className="font-bold">{t('service_history')}</Link></DropdownMenuItem>
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-widest text-primary">Management</DropdownMenuLabel>
-                      <DropdownMenuItem asChild><Link href="/admin/dashboard" className="font-bold flex items-center gap-2"><LayoutDashboard size={14} /> Admin Portal</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild><Link href="/admin/orders" className="font-bold">Manage Orders</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/admin/dashboard" className="font-bold flex items-center gap-2"><LayoutDashboard size={14} /> {t('admin_portal')}</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/admin/orders" className="font-bold">{t('manage_orders')}</Link></DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut(auth)} className="text-destructive font-bold flex items-center gap-2">
-                    <LogOut size={14} /> Sign Out
+                    <LogOut size={14} /> {t('sign_out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Link href="/login" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <ShieldCheck className="text-primary" size={20} />
-                <span className="text-xs font-bold">Portal Access</span>
+                <span className="text-xs font-bold">{t('portal_access')}</span>
               </Link>
             )}
             
             <Button asChild className="bg-primary hover:bg-primary/90 font-bold px-6 h-11 rounded-sm text-primary-foreground relative">
-              <Link href="/support">Get Inquiry</Link>
+              <Link href="/support">{t('get_inquiry')}</Link>
             </Button>
           </div>
           
