@@ -258,16 +258,16 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 4. Quick Action Cards */}
+        {/* 4. Quick Action Cards - 2 Column Grid */}
         <section className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 gap-4 md:gap-8">
             {quickActions?.length ? quickActions.map((action) => {
               const Icon = ICONS[action.iconName] || Zap;
               return (
-                <Link key={action.id} href={action.link || '#'} className={`bg-gradient-to-br ${action.bgGradient} rounded-[2rem] p-10 flex items-center justify-between shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5`}>
-                  <div className="space-y-4 relative z-10">
-                    <Icon size={56} className="text-white opacity-80 group-hover:scale-110 transition-transform duration-500" />
-                    <h3 className="text-white text-3xl font-black uppercase tracking-tight leading-none">
+                <Link key={action.id} href={action.link || '#'} className={`bg-gradient-to-br ${action.bgGradient} rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group hover:shadow-2xl transition-all overflow-hidden relative border border-white/5`}>
+                  <div className="space-y-2 md:space-y-4 relative z-10">
+                    <Icon className="text-white opacity-80 group-hover:scale-110 transition-transform duration-500 w-8 h-8 md:w-14 md:h-14" />
+                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight leading-none">
                       {t(action.title)}
                     </h3>
                   </div>
@@ -278,17 +278,17 @@ export default function SmartCleanHomePage() {
               );
             }) : (
               <>
-                <Link href="/services" className="bg-gradient-to-br from-orange-500 to-red-600 rounded-[2rem] p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="space-y-4 relative z-10">
-                    <Wrench size={56} className="text-white opacity-80" />
-                    <h3 className="text-white text-3xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
+                <Link href="/services" className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="space-y-2 md:space-y-4 relative z-10">
+                    <Wrench className="text-white opacity-80 w-8 h-8 md:w-14 md:h-14" />
+                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight">{t('nav_services')}</h3>
                   </div>
                   <div className="absolute right-0 top-0 p-4 opacity-10 rotate-12 scale-150"><Wrench size={160} className="text-white" /></div>
                 </Link>
-                <Link href="/products" className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-[2rem] p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
-                  <div className="space-y-4 relative z-10">
-                    <Package size={56} className="text-white opacity-80" />
-                    <h3 className="text-white text-3xl font-black uppercase tracking-tight">{t('nav_products')}</h3>
+                <Link href="/products" className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl md:rounded-[2rem] p-6 md:p-10 flex items-center justify-between shadow-xl group overflow-hidden relative border border-white/5">
+                  <div className="space-y-2 md:space-y-4 relative z-10">
+                    <Package className="text-white opacity-80 w-8 h-8 md:w-14 md:h-14" />
+                    <h3 className="text-white text-lg md:text-3xl font-black uppercase tracking-tight">{t('nav_products')}</h3>
                   </div>
                   <div className="absolute right-0 top-0 p-4 opacity-10 rotate-12 scale-150"><Package size={160} className="text-white" /></div>
                 </Link>
