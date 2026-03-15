@@ -18,7 +18,7 @@ service cloud.firestore {
       return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))); 
     }
 
-    // PUBLIC CATALOG: Unauthenticated read access for products, services, categories, and brands
+    // PUBLIC CATALOG: Unauthenticated read access for products, services, and related metadata
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
@@ -41,10 +41,12 @@ service cloud.firestore {
       allow read, write: if isStaff(); 
     }
     match /orders/{id} {
-      allow read, write: if isStaff();
+      allow create: if true;
+      allow read, update, delete: if isStaff();
     }
     match /bookings/{id} {
-      allow read, write: if isStaff();
+      allow create: if true;
+      allow read, update, delete: if isStaff();
     }
     
     // STAFF & ADMIN PROFILES

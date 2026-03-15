@@ -151,7 +151,7 @@ export default function SmartCleanHomePage() {
                     <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{service.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
                     <div className="flex items-center justify-between pt-4 border-t">
-                      <span className="text-lg font-black text-primary">৳{service.basePrice.toLocaleString()} <span className="text-[10px] font-bold text-muted-foreground uppercase">Base Price</span></span>
+                      <span className="text-lg font-black text-primary">৳{(service.basePrice || 0).toLocaleString()} <span className="text-[10px] font-bold text-muted-foreground uppercase">Base Price</span></span>
                       <Button size="sm" className="rounded-full font-bold px-6">Book Now</Button>
                     </div>
                   </div>
