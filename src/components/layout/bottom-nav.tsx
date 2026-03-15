@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, Package, Zap, LayoutGrid, Home } from 'lucide-react';
+import { Menu, Home, MessageSquare, ShieldCheck, Mail } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -15,19 +15,16 @@ export function BottomNav() {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[100] border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
       <div className="flex items-center justify-between h-full px-2 relative">
-        {/* Left Side: 1. Products */}
-        <Link href="/#products" className="flex flex-col items-center gap-1 flex-1 group transition-all">
-          <Package size={20} className="text-white group-hover:text-primary transition-colors" />
-          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_products')}</span>
+        <Link href="#contact" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <Mail size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">Inquiry</span>
         </Link>
         
-        {/* Left Side: 2. Service */}
-        <Link href="/#services" className="flex flex-col items-center gap-1 flex-1 group transition-all">
-          <LayoutGrid size={20} className="text-white group-hover:text-primary transition-colors" />
-          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_services')}</span>
+        <Link href="https://wa.me/8801919640422" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <MessageSquare size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">Chat</span>
         </Link>
         
-        {/* Middle: Home (Raised Circular Logo) */}
         <div className="flex-1 flex justify-center relative h-full">
           <div className="absolute -top-6">
             <Link 
@@ -47,22 +44,17 @@ export function BottomNav() {
                 )}
               </div>
             </Link>
-            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
-               <span className="text-[9px] font-bold uppercase tracking-tighter text-white">{t('nav_home')}</span>
-            </div>
           </div>
         </div>
         
-        {/* Right Side: 4. Offer */}
-        <Link href="/#offers" className="flex flex-col items-center gap-1 flex-1 group transition-all">
-          <Zap size={20} className="text-white group-hover:text-primary transition-colors" />
-          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_offers')}</span>
+        <Link href="/login" className="flex flex-col items-center gap-1 flex-1 group transition-all">
+          <ShieldCheck size={20} className="text-white group-hover:text-primary transition-colors" />
+          <span className="text-[9px] font-bold uppercase tracking-tighter">Portal</span>
         </Link>
         
-        {/* Right Side: 5. Menu */}
         <Link href="#" className="flex flex-col items-center gap-1 flex-1 group transition-all">
           <Menu size={20} className="text-white group-hover:text-primary transition-colors" />
-          <span className="text-[9px] font-bold uppercase tracking-tighter">{t('nav_menu')}</span>
+          <span className="text-[9px] font-bold uppercase tracking-tighter">Menu</span>
         </Link>
       </div>
     </nav>

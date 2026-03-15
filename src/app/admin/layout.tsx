@@ -7,7 +7,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Users, 
-  CalendarCheck, 
   UserSquare2, 
   Settings, 
   LogOut,
@@ -17,20 +16,13 @@ import {
   AlertTriangle,
   Loader2,
   Lock,
-  Wrench,
-  CreditCard,
-  Package,
-  ShoppingCart,
   MapPin,
   BarChart3,
   TicketPercent,
   Truck,
   Menu,
-  Tags,
-  Layers,
-  Award,
-  AlertCircle,
-  Paintbrush
+  Paintbrush,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,29 +60,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Main',
       items: [
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
-        { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck, color: 'text-emerald-500' },
-      ]
-    },
-    {
-      title: 'Products',
-      items: [
-        { name: 'Product List', href: '/admin/products', icon: Package, color: 'text-purple-500' },
-        { name: 'Product Categories', href: '/admin/products/categories', icon: Tags, color: 'text-pink-500' },
-        { name: 'Brands', href: '/admin/products/brands', icon: Award, color: 'text-rose-500' },
-      ]
-    },
-    {
-      title: 'Services',
-      items: [
-        { name: 'Service List', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
-        { name: 'Service Categories', href: '/admin/services/categories', icon: Layers, color: 'text-cyan-500' },
       ]
     },
     {
       title: 'Operations',
       items: [
-        { name: 'Inventory Alerts', href: '/admin/inventory/alerts', icon: AlertCircle, color: 'text-red-500' },
         { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
         { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
         { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-sky-500' },
@@ -160,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-2 bg-primary rounded-lg text-white shrink-0"><ShieldCheck size={20} /></div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-bold tracking-tight text-sm">ERP PORTAL</h1>
+              <h1 className="font-bold tracking-tight text-sm">CRM PORTAL</h1>
               <p className="text-[9px] text-gray-400 uppercase font-black">Smart Clean</p>
             </div>
           )}
@@ -218,13 +192,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const MobileBottomNav = () => (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-50 border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
       <div className="flex items-center justify-around h-full px-2">
-        <Link href="/admin/orders" className={cn("flex flex-col items-center gap-1", pathname === '/admin/orders' ? "text-primary" : "text-gray-400")}>
-          <ShoppingCart size={20} />
-          <span className="text-[10px] font-bold">Orders</span>
-        </Link>
-        <Link href="/admin/bookings" className={cn("flex flex-col items-center gap-1", pathname === '/admin/bookings' ? "text-primary" : "text-gray-400")}>
-          <CalendarCheck size={20} />
-          <span className="text-[10px] font-bold">Booking</span>
+        <Link href="/admin/leads" className={cn("flex flex-col items-center gap-1", pathname === '/admin/leads' ? "text-primary" : "text-gray-400")}>
+          <Users size={20} />
+          <span className="text-[10px] font-bold">Leads</span>
         </Link>
         <Link href="/admin/dashboard" className={cn("flex flex-col items-center gap-1", pathname === '/admin/dashboard' ? "text-primary" : "text-gray-400")}>
           <LayoutDashboard size={20} />

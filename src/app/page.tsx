@@ -1,67 +1,27 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ProductCard } from '@/components/products/product-card';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCart } from '@/components/providers/cart-provider';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, where } from 'firebase/firestore';
 import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext,
-  CarouselPrevious 
-} from '@/components/ui/carousel';
-import { 
   BellRing, 
-  Zap,
-  ChevronRight,
-  TrendingUp,
-  Clock,
+  Clock, 
   ArrowRight,
-  Tags,
-  LayoutGrid
+  LayoutGrid,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-
-const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
-  const [timeLeft, setTimeTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const difference = +new Date(targetDate) - +new Date();
-      if (difference > 0) {
-        setTimeTime({
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        });
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  return (
-    <div className="flex gap-2">
-      {[timeLeft.hours, timeLeft.minutes, timeLeft.seconds].map((val, i) => (
-        <div key={i} className="bg-red-600 text-white px-3 py-2 rounded-lg font-black text-xl min-w-[45px] text-center">
-          {val.toString().padStart(2, '0')}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
-  const { addToCart, setCheckoutOpen } = useCart();
   const [marqueeText, setMarqueeText] = useState<string>('');
   const db = useFirestore();
 
@@ -69,24 +29,14 @@ export default function SmartCleanHomePage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Queries
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('name', 'asc')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories'), where('status', '==', 'Active'), orderBy('name', 'asc')) : null, [db]);
   const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), where('enabled', '==', true)) : null, [db]);
-  const campaignsQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_campaigns'), where('enabled', '==', true)) : null, [db]);
-
-  const { data: products } = useCollection(productsQuery);
-  const { data: services } = useCollection(servicesQuery);
-  const { data: categories } = useCollection(categoriesQuery);
   const { data: offers } = useCollection(offersQuery);
-  const { data: campaigns } = useCollection(campaignsQuery);
 
   useEffect(() => {
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
-    setMarqueeText(`${dateStr} | ${t('hero_banner_title')} | Free Shipping on Equipment | Professional Deep Cleaning Across Bangladesh.`);
+    setMarqueeText(`${dateStr} | ${t('hero_banner_title')} | Bangladesh's Leading Cleaning Tech Partner.`);
   }, [language, t]);
 
   const renderOffers = (placement: string) => {
@@ -105,11 +55,6 @@ export default function SmartCleanHomePage() {
       );
     });
   };
-
-  const activeCampaign = campaigns?.find(c => {
-    const now = new Date().toISOString();
-    return now >= c.startDate && now <= c.endDate;
-  });
 
   return (
     <PublicLayout>
@@ -144,8 +89,8 @@ export default function SmartCleanHomePage() {
                 </div>
                 <div className="flex flex-wrap gap-4">
                   <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] rounded-full h-14 px-10 text-lg font-black shadow-2xl" asChild>
-                    <Link href={settings?.hero?.ctaLink || "#services"}>
-                      {settings?.hero?.ctaText || t('hero_cta')}
+                    <Link href="#contact">
+                      Contact Us
                     </Link>
                   </Button>
                   <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 rounded-full border border-white/20">
@@ -174,136 +119,41 @@ export default function SmartCleanHomePage() {
 
         <div className="container mx-auto px-4 space-y-12 mt-8">
           
-          {/* Categories Slider */}
-          {(!settings || settings.sections?.categorySections) && categories && categories.length > 0 && (
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 text-[#081621]">
-                <Tags size={20} className="text-primary" />
-                <h2 className="text-lg font-bold uppercase tracking-tight">{t('nav_categories')}</h2>
-              </div>
-              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                {categories.map(cat => (
-                  <Button key={cat.id} variant="outline" className="rounded-full whitespace-nowrap font-bold bg-white shadow-sm border-gray-100 px-6">
-                    {cat.name}
-                  </Button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Active Campaign Flash Sale */}
-          {activeCampaign && (!settings || settings.sections?.flashSale) && (
-            <section className="bg-[#081621] p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-10 opacity-10"><Zap size={200} className="text-white" /></div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 text-yellow-400">
-                    <Zap fill="currentColor" size={32} />
-                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">{activeCampaign.title}</h2>
-                  </div>
-                  <p className="text-white/60 font-medium">{activeCampaign.description}</p>
-                  <Button variant="link" className="text-primary p-0 h-auto font-bold" asChild>
-                    <Link href={`/campaign/${activeCampaign.id}`}>View Campaign Details <ArrowRight size={16} className="ml-2" /></Link>
-                  </Button>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Ending In</span>
-                  <CountdownTimer targetDate={activeCampaign.endDate} />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Trending Slider */}
-          {(!settings || settings.sections?.trendingProducts) && products && products.length > 0 && (
-            <section className="space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-[#EF4A23] rounded-2xl text-white shadow-lg shadow-red-500/20"><TrendingUp size={24} /></div>
-                <h2 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tighter">Trending Now</h2>
-              </div>
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-4">
-                  {products.slice(0, 8).map(product => (
-                    <CarouselItem key={product.id} className="pl-4 basis-1/2 md:basis-1/4 lg:basis-1/5">
-                      <ProductCard product={product} />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex" />
-                <CarouselNext className="hidden md:flex" />
-              </Carousel>
-            </section>
-          )}
-
-          {/* Offers: Before Products */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {renderOffers('before_products')}
-          </div>
-
-          {/* Service Showcase */}
-          {(!settings || settings.sections?.popularServices) && services && services.length > 0 && (
-            <section id="services" className="space-y-8">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20"><LayoutGrid size={24} /></div>
-                  <h2 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tighter">{t('services_title')}</h2>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                {services.map((service) => (
-                  <Card key={service.id} className="border-none shadow-sm hover:shadow-xl transition-all overflow-hidden bg-white group flex flex-col">
-                    <Link href={`/service/${service.id}`} className="block relative aspect-video overflow-hidden">
-                      {service.imageUrl ? (
-                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground/30">
-                          <LayoutGrid size={48} />
-                        </div>
-                      )}
-                    </Link>
-                    <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                      <h3 className="font-bold text-sm leading-tight line-clamp-2">{service.title}</h3>
-                      <div className="flex flex-col gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest">{t('price_from')}</span>
-                          <span className="text-primary font-black text-lg">৳{service.basePrice.toLocaleString()}</span>
-                        </div>
-                        <Button asChild className="w-full gap-2 font-bold bg-primary text-white h-10 text-xs">
-                          <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Category Sections */}
-          {(!settings || settings.sections?.categorySections) && categories?.map(cat => {
-            const catProducts = products?.filter(p => p.categoryId === cat.id);
-            if (!catProducts || catProducts.length === 0) return null;
-            return (
-              <section key={cat.id} className="space-y-8">
-                <div className="flex items-center justify-between border-b pb-4">
-                  <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter">{cat.name}</h2>
-                  <Button variant="link" className="text-primary font-bold">View All <ChevronRight size={16} /></Button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                  {catProducts.slice(0, 10).map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-
           {/* Middle Offers */}
           <div className="space-y-6">
             {renderOffers('middle')}
           </div>
 
-          {/* Offers: After Products */}
+          {/* Contact Section */}
+          <section id="contact" className="py-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-white rounded-3xl p-8 md:p-16 shadow-sm border">
+              <div className="space-y-6">
+                <h2 className="text-3xl md:text-4xl font-black font-headline text-[#081621]">Get a Custom Inquiry</h2>
+                <p className="text-muted-foreground text-lg">Our experts are ready to help you with specialized cleaning solutions for your home or business.</p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-xl text-primary"><Phone size={24} /></div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Phone</p>
+                      <p className="font-black text-lg">+8801919640422</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-xl text-primary"><Mail size={24} /></div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Email</p>
+                      <p className="font-black text-lg">smartclean422@gmail.com</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative aspect-square md:aspect-auto h-full min-h-[300px] rounded-2xl overflow-hidden shadow-2xl">
+                <Image src="https://picsum.photos/seed/cleancontact/800/800" alt="Contact" fill className="object-cover" />
+              </div>
+            </div>
+          </section>
+
+          {/* Offers: After Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {renderOffers('after_products')}
           </div>
