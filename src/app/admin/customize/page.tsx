@@ -69,6 +69,7 @@ export default function SiteCustomizePage() {
       setFormData({
         ...formData,
         ...customization,
+        hero: { ...formData.hero, ...(customization.hero || {}) },
         sections: { ...formData.sections, ...(customization.sections || {}) }
       });
     }
@@ -147,8 +148,8 @@ export default function SiteCustomizePage() {
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Main Hero Banner</CardTitle>
-                <CardDescription>Primary headline and images for the landing page</CardDescription>
+                <CardTitle className="text-lg font-bold">Primary Hero Banner</CardTitle>
+                <CardDescription>Main background image for your website landing section</CardDescription>
               </div>
               <Switch 
                 checked={formData.hero.enabled} 
@@ -157,28 +158,29 @@ export default function SiteCustomizePage() {
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Headline</Label>
-                  <Input 
-                    value={formData.hero.title} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, title: e.target.value}})}
-                    placeholder="e.g. Smart Clean CRM"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Sub-headline</Label>
-                  <Input 
-                    value={formData.hero.subtitle} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, subtitle: e.target.value}})}
-                    placeholder="e.g. Managing your cleaning operations intelligently"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Banner Image URL</Label>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Hero Image URL</Label>
                   <Input 
                     value={formData.hero.imageUrl} 
                     onChange={(e) => setFormData({...formData, hero: {...formData.hero, imageUrl: e.target.value}})}
-                    placeholder="https://..."
+                    placeholder="https://images.unsplash.com/photo-..."
+                  />
+                  <p className="text-[10px] text-muted-foreground italic">Tip: Use high-resolution landscape images (e.g., 1920x800) for the best look.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link URL (Optional)</Label>
+                  <Input 
+                    value={formData.hero.ctaLink} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, ctaLink: e.target.value}})}
+                    placeholder="/services"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Button Text</Label>
+                  <Input 
+                    value={formData.hero.ctaText} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, ctaText: e.target.value}})}
+                    placeholder="Book Now"
                   />
                 </div>
               </div>

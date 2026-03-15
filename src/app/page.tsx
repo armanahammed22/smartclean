@@ -72,6 +72,9 @@ export default function SmartCleanHomePage() {
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
   // Data Fetching
+  const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
+  const { data: customization } = useDoc(customizationRef);
+
   const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), where('enabled', '==', true)) : null, [db]);
   const { data: offers } = useCollection(offersQuery);
 
@@ -205,35 +208,54 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Promotional Slider */}
+        {/* 2. Dynamic Hero / Promotional Slider */}
         <section className="container mx-auto px-4">
-          <Carousel className="w-full" opts={{ loop: true }}>
-            <CarouselContent>
-              {carouselOffers?.length ? carouselOffers.map((offer) => (
-                <CarouselItem key={offer.id}>
-                  <Link href={offer.link || '#'} className="block relative aspect-[21/9] md:aspect-[21/7] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10">
-                    <Image src={offer.imageUrl} alt={offer.title || 'Promo'} fill className="object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16">
-                       <h2 className="text-white text-3xl md:text-6xl font-black uppercase tracking-tighter leading-tight max-w-3xl">{offer.title}</h2>
-                    </div>
-                  </Link>
-                </CarouselItem>
-              )) : (
-                <CarouselItem>
-                  <div className="relative aspect-[21/9] md:aspect-[21/7] rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-[#081621] to-[#0a253a] flex items-center justify-center text-white border border-white/5 shadow-2xl">
-                    <div className="text-center space-y-6 px-8 max-w-4xl">
-                      <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1 rounded-full">EST. 2026</Badge>
-                      <h2 className="text-4xl md:text-7xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
-                      <p className="text-lg md:text-xl opacity-60 font-medium leading-relaxed">{t('hero_subtitle')}</p>
-                      <Button size="lg" className="h-14 px-10 rounded-2xl font-black text-lg shadow-xl shadow-primary/20">{t('hero_cta')}</Button>
-                    </div>
-                  </div>
-                </CarouselItem>
+          {customization?.hero?.enabled && customization.hero.imageUrl ? (
+            <div className="relative aspect-[21/9] md:aspect-[21/8] rounded-2xl overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+              <Image 
+                src={customization.hero.imageUrl} 
+                alt="Banner" 
+                fill 
+                className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                priority
+              />
+              {customization.hero.ctaLink && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
+                  <Button asChild size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-2xl">
+                    <Link href={customization.hero.ctaLink}>{customization.hero.ctaText || t('hero_cta')}</Link>
+                  </Button>
+                </div>
               )}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex left-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
-            <CarouselNext className="hidden md:flex right-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
-          </Carousel>
+            </div>
+          ) : (
+            <Carousel className="w-full" opts={{ loop: true }}>
+              <CarouselContent>
+                {carouselOffers?.length ? carouselOffers.map((offer) => (
+                  <CarouselItem key={offer.id}>
+                    <Link href={offer.link || '#'} className="block relative aspect-[21/9] md:aspect-[21/8] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                      <Image src={offer.imageUrl} alt={offer.title || 'Promo'} fill className="object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16">
+                         <h2 className="text-white text-3xl md:text-6xl font-black uppercase tracking-tighter leading-tight max-w-3xl">{offer.title}</h2>
+                      </div>
+                    </Link>
+                  </CarouselItem>
+                )) : (
+                  <CarouselItem>
+                    <div className="relative aspect-[21/9] md:aspect-[21/8] rounded-2xl overflow-hidden bg-gradient-to-br from-[#081621] to-[#0a253a] flex items-center justify-center text-white border border-white/5 shadow-2xl">
+                      <div className="text-center space-y-6 px-8 max-w-4xl">
+                        <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1 rounded-full">EST. 2026</Badge>
+                        <h2 className="text-4xl md:text-7xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
+                        <p className="text-lg md:text-xl opacity-60 font-medium leading-relaxed">{t('hero_subtitle')}</p>
+                        <Button size="lg" className="h-14 px-10 rounded-2xl font-black text-lg shadow-xl shadow-primary/20">{t('hero_cta')}</Button>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex left-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
+              <CarouselNext className="hidden md:flex right-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
+            </Carousel>
+          )}
         </section>
 
         {/* 3. Marquee */}
