@@ -26,27 +26,27 @@ const translations: Record<Language, Record<string, string>> = {
     nav_offers: "অফারসমূহ",
     nav_menu: "মেনু",
     nav_categories: "ক্যাটাগরি",
+    portal_access: "পোর্টাল অ্যাক্সেস",
+    get_inquiry: "ইনকোয়ারি করুন",
     
-    // Hero Reference Image Content
-    hero_question: "আপনি কি ক্লিনিং সার্ভিস নিতে চাচ্ছেন?",
-    hero_banner_title: "Smart Clean নিয়ে এলো সম্পূর্ণ প্রফেশনাল ক্লিনিং সার্ভিস",
-    hero_phone: "বুক করুন: 01919640422",
-    service_home: "বাসা ক্লিনিং",
-    service_office: "অফিস ক্লিনিং",
-    service_deep: "ডিপ ক্লিনিং",
-    service_showroom: "শোরুম ক্লিনিং",
-    service_kitchen: "বাথরুম ও কিচেন",
-    service_sofa: "সোফা ও কার্পেট ক্লিনিং",
-
-    // Hero
+    // Hero & Sections
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
     hero_cta: "বুক করুন",
+    expert_services: "বিশেষজ্ঞ সেবা",
+    professional_tools: "প্রফেশনাল টুলস",
+    service_desc: "হোম এবং অফিসের জন্য প্রফেশনাল রক্ষণাবেক্ষণ সমাধান।",
+    product_desc: "সেরা ক্লিনিং পারফরম্যান্সের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
     
-    // Action Cards
-    action_custom_quote: "কাস্টম কোট",
-    action_service_tracker: "সার্ভিস ট্র্যাকার",
-    
+    // Admin & User Summaries
+    mgmt_center: "ম্যানেজমেন্ট কমান্ড সেন্টার",
+    ops_overview: "রিয়েল-টাইম অপারেশন ওভারভিউ",
+    full_admin: "সম্পূর্ণ অ্যাডমিন খুলুন",
+    welcome_back: "স্বাগতম,",
+    active_bookings: "আপনার ২ টি বুকিং পেন্ডিং আছে।",
+    view_history: "ইতিহাস দেখুন",
+    go_dashboard: "ড্যাশবোর্ড",
+
     // Products & Cart
     products_title: "সেরা পণ্যসমূহ",
     products_subtitle: "প্রফেশনাল ফলাফলের জন্য উচ্চ-ক্ষমতাসম্পন্ন সরঞ্জাম।",
@@ -67,10 +67,7 @@ const translations: Record<Language, Record<string, string>> = {
     service_details: "বিস্তারিত",
     book_now: "বুক করুন",
     price_from: "থেকে",
-    
-    // Features
-    features_title: "স্মার্ট ক্লিনের সুবিধা",
-    features_subtitle: "কেন আমরা ১০০০+ গ্রাহকের পছন্দের তালিকায়।",
+    base_price: "বেস প্রাইস",
     
     // Checkout & Summary
     order_summary: "অর্ডার সারাংশ",
@@ -118,11 +115,17 @@ const translations: Record<Language, Record<string, string>> = {
     footer_address: "ওয়ারলেস গেট, মহাখালী, ঢাকা-১২১২",
     footer_hours: "শনি - বৃহস্পতি: সকাল ৮টা - রাত ৮টা",
     footer_rights: "© ২০২৬ স্মার্ট ক্লিন বাংলাদেশ। সর্বস্বত্ব সংরক্ষিত।",
+    footer_about: "আমাদের সম্পর্কে",
+    footer_careers: "ক্যারিয়ার",
+    footer_privacy: "প্রাইভেসি পলিসি",
+    footer_terms: "শর্তাবলী",
+    footer_refund: "রিফান্ড পলিসি",
     
     // UI
     cart_added: "অর্ডারে যোগ করা হয়েছে",
     cart_desc: "আইটেমটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।",
-    service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।"
+    service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।",
+    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন"
   },
   en: {
     // Navbar
@@ -136,27 +139,27 @@ const translations: Record<Language, Record<string, string>> = {
     nav_offers: "Offers",
     nav_menu: "Menu",
     nav_categories: "Categories",
+    portal_access: "Portal Access",
+    get_inquiry: "Get Inquiry",
     
-    // Hero Reference Image Content
-    hero_question: "Are you looking for cleaning services?",
-    hero_banner_title: "Smart Clean Brings Fully Professional Cleaning Services",
-    hero_phone: "Book Now: 01919640422",
-    service_home: "Home Cleaning",
-    service_office: "Office Cleaning",
-    service_deep: "Deep Cleaning",
-    service_showroom: "Showroom Cleaning",
-    service_kitchen: "Bathroom & Kitchen",
-    service_sofa: "Sofa & Carpet Cleaning",
-
-    // Hero
+    // Hero & Sections
     hero_title: "Smart Solutions for a Clean Life",
     hero_subtitle: "Expert cleaning and maintenance services in Bangladesh. Trusted by thousands.",
     hero_cta: "Book Now",
-    
-    // Action Cards
-    action_custom_quote: "Custom Quote",
-    action_service_tracker: "Service Tracker",
-    
+    expert_services: "Expert Services",
+    professional_tools: "Professional Tools",
+    service_desc: "Professional maintenance solutions for home and office.",
+    product_desc: "High-performance tools for the best cleaning performance.",
+
+    // Admin & User Summaries
+    mgmt_center: "Management Command Center",
+    ops_overview: "Real-time Operations Overview",
+    full_admin: "Open Full Admin",
+    welcome_back: "Welcome back,",
+    active_bookings: "You have 2 active bookings pending.",
+    view_history: "View History",
+    go_dashboard: "Dashboard",
+
     // Products & Cart
     products_title: "Featured Products",
     products_subtitle: "High-performance tools for professional results.",
@@ -177,10 +180,7 @@ const translations: Record<Language, Record<string, string>> = {
     service_details: "Details",
     book_now: "Book Now",
     price_from: "From",
-    
-    // Features
-    features_title: "The Smart Clean Advantage",
-    features_subtitle: "Why we are the preferred choice for 1000+ clients.",
+    base_price: "Base Price",
     
     // Checkout & Summary
     order_summary: "Order Summary",
@@ -228,11 +228,17 @@ const translations: Record<Language, Record<string, string>> = {
     footer_address: "Wireless Gate, Mohakhali, Dhaka-1212",
     footer_hours: "Sat - Thu: 8am - 8pm",
     footer_rights: "© 2026 Smart Clean Bangladesh. All rights reserved.",
+    footer_about: "About Us",
+    footer_careers: "Careers",
+    footer_privacy: "Privacy Policy",
+    footer_terms: "Terms of Service",
+    footer_refund: "Refund Policy",
     
     // UI
     cart_added: "Added to Order",
     cart_desc: "Item has been added to your order list.",
-    service_billing_note: "Note: Service amounts are base prices and may vary based on actual work requirements."
+    service_billing_note: "Note: Service amounts are base prices and may vary based on actual work requirements.",
+    chat_wa: "Chat via WhatsApp"
   }
 };
 
