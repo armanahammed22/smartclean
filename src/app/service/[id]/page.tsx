@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -77,7 +78,7 @@ export default function ServiceDetailsPage() {
     <PublicLayout>
       <div className="bg-[#F2F4F8] min-h-screen pb-20">
         <div className="container mx-auto px-4 py-12">
-          <Button variant="ghost" onClick={() => router.back()} className="mb-10 gap-2 group font-bold">
+          <Button variant="ghost" onClick={() => router.back()} className="mb-10 gap-2 group font-bold rounded-none">
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Explore All Services
           </Button>
 
@@ -86,7 +87,7 @@ export default function ServiceDetailsPage() {
             {/* Left Content: Service Builder */}
             <div className="lg:col-span-8 space-y-12">
               {/* High Impact Hero */}
-              <div className="relative aspect-[21/8] rounded-[3rem] overflow-hidden shadow-2xl bg-[#081621] border border-white/5">
+              <div className="relative aspect-[21/8] rounded-none overflow-hidden shadow-2xl bg-[#081621] border border-white/5">
                 <Image 
                   src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/600'} 
                   alt={service.title || 'Service Banner'} 
@@ -95,15 +96,15 @@ export default function ServiceDetailsPage() {
                 />
                 <div className="absolute inset-0 flex flex-col justify-center p-12 md:p-20">
                   <div className="max-w-2xl space-y-6">
-                    <Badge className="bg-primary text-white border-none py-1.5 px-5 rounded-full font-black text-xs uppercase tracking-widest">
+                    <Badge className="bg-primary text-white border-none py-1.5 px-5 rounded-none font-black text-xs uppercase tracking-widest">
                       Premium Solution
                     </Badge>
                     <h1 className="text-4xl md:text-6xl font-black text-white leading-tight font-headline uppercase tracking-tight">{service.title}</h1>
                     <div className="flex flex-wrap gap-6">
-                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md border border-white/5">
+                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-none backdrop-blur-md border border-white/5">
                         <Clock size={18} className="text-primary" /> {service.duration || '2-3 Hours'}
                       </div>
-                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md border border-white/5">
+                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-none backdrop-blur-md border border-white/5">
                         <Sparkles size={18} className="text-primary" /> Expert Team Assigned
                       </div>
                     </div>
@@ -112,7 +113,7 @@ export default function ServiceDetailsPage() {
               </div>
 
               {/* Service Description */}
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border space-y-6">
+              <div className="bg-white p-10 rounded-none shadow-sm border space-y-6">
                 <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                   <Info className="text-primary" /> Service Overview
                 </h2>
@@ -128,7 +129,7 @@ export default function ServiceDetailsPage() {
                     <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Available Task Add-ons</h2>
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Select one or more to personalize your booking</p>
                   </div>
-                  <div className="p-3 bg-white rounded-2xl border shadow-sm font-black text-[10px] uppercase text-primary">
+                  <div className="p-3 bg-white rounded-none border shadow-sm font-black text-[10px] uppercase text-primary">
                     {subServices?.length || 0} Specializations
                   </div>
                 </div>
@@ -141,7 +142,7 @@ export default function ServiceDetailsPage() {
                       <div 
                         key={sub.id} 
                         className={cn(
-                          "group p-8 rounded-[2.5rem] border-2 transition-all duration-500 cursor-pointer bg-white relative flex flex-col justify-between h-full",
+                          "group p-8 rounded-none border-2 transition-all duration-500 cursor-pointer bg-white relative flex flex-col justify-between h-full",
                           selectedSubIds.includes(sub.id) 
                             ? "border-primary shadow-2xl shadow-primary/10 ring-1 ring-primary translate-y-[-4px]" 
                             : "border-transparent hover:border-primary/20 hover:shadow-xl hover:translate-y-[-2px] shadow-sm"
@@ -151,12 +152,12 @@ export default function ServiceDetailsPage() {
                         <div className="space-y-6">
                           <div className="flex justify-between items-start">
                             <div className={cn(
-                              "w-14 h-14 rounded-[1.25rem] border-2 flex items-center justify-center transition-all duration-500",
+                              "w-14 h-14 rounded-none border-2 flex items-center justify-center transition-all duration-500",
                               selectedSubIds.includes(sub.id) ? "bg-primary border-primary text-white scale-110" : "bg-gray-50 border-gray-100 text-transparent"
                             )}>
                               <CheckCircle2 size={32} />
                             </div>
-                            <Badge variant="secondary" className="bg-gray-50 text-gray-400 font-black uppercase text-[10px] tracking-tighter border-none px-3">Add-on</Badge>
+                            <Badge variant="secondary" className="bg-gray-50 text-gray-400 font-black uppercase text-[10px] tracking-tighter border-none px-3 rounded-none">Add-on</Badge>
                           </div>
                           
                           <div className="space-y-2">
@@ -170,7 +171,7 @@ export default function ServiceDetailsPage() {
                             <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Pricing</span>
                             <span className="text-lg font-black text-primary">৳{sub.price.toLocaleString()}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full">
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 bg-gray-50 px-3 py-1.5 rounded-none">
                             <Clock size={12} /> {sub.duration}
                           </div>
                         </div>
@@ -184,8 +185,8 @@ export default function ServiceDetailsPage() {
             {/* Right: Booking Summary Board */}
             <div className="lg:col-span-4">
               <div className="sticky top-24 space-y-8">
-                <Card className="rounded-[3rem] shadow-2xl border-none overflow-hidden bg-white group">
-                  <div className="bg-[#081621] p-10 text-white relative overflow-hidden">
+                <Card className="rounded-none shadow-2xl border-none overflow-hidden bg-white group">
+                  <div className="bg-[#081621] p-10 text-white relative overflow-hidden rounded-none">
                     <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform duration-700"><Wrench size={160} /></div>
                     <div className="relative z-10 space-y-6">
                       <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Booking Summary</h3>
@@ -194,7 +195,7 @@ export default function ServiceDetailsPage() {
                           <p className="text-5xl font-black text-white tracking-tighter">৳{totalPrice.toLocaleString()}</p>
                           <p className="text-[10px] font-bold text-white/40 uppercase mt-2 tracking-widest">Calculated Price (Estimated)</p>
                         </div>
-                        <div className="p-4 bg-white/10 rounded-[1.5rem] backdrop-blur-md border border-white/5">
+                        <div className="p-4 bg-white/10 rounded-none backdrop-blur-md border border-white/5">
                           <CalendarCheck className="text-primary" size={32} />
                         </div>
                       </div>
@@ -208,7 +209,7 @@ export default function ServiceDetailsPage() {
                         { icon: Zap, label: "Pricing Model", val: "Pay after service completion" }
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-5 group/item">
-                          <div className="p-3 bg-primary/5 rounded-2xl transition-colors group-hover/item:bg-primary group-hover/item:text-white text-primary">
+                          <div className="p-3 bg-primary/5 rounded-none transition-colors group-hover/item:bg-primary group-hover/item:text-white text-primary">
                             <item.icon size={20} />
                           </div>
                           <div className="flex flex-col">
@@ -222,15 +223,15 @@ export default function ServiceDetailsPage() {
                     <Button 
                       onClick={handleBookNow} 
                       size="lg" 
-                      className="w-full h-20 rounded-[1.5rem] gap-4 text-xl font-black shadow-2xl shadow-primary/20 uppercase tracking-tighter transition-all hover:scale-[1.02] active:scale-95"
+                      className="w-full h-20 rounded-none gap-4 text-xl font-black shadow-2xl shadow-primary/20 uppercase tracking-tighter transition-all hover:scale-[1.02] active:scale-95"
                     >
                       Book This Appointment <ChevronRight size={20} />
                     </Button>
                   </CardContent>
                 </Card>
 
-                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center gap-6 group cursor-pointer hover:border-primary/30 transition-all hover:shadow-md">
-                  <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center shadow-inner text-primary font-black text-lg group-hover:scale-110 transition-transform">AI</div>
+                <div className="bg-white p-8 rounded-none border border-gray-100 shadow-sm flex items-center gap-6 group cursor-pointer hover:border-primary/30 transition-all hover:shadow-md">
+                  <div className="w-16 h-16 bg-primary/10 rounded-none flex items-center justify-center shadow-inner text-primary font-black text-lg group-hover:scale-110 transition-transform">AI</div>
                   <div>
                     <p className="text-sm font-black text-[#081621] uppercase tracking-tight mb-1">Service Consultant</p>
                     <p className="text-xs text-muted-foreground font-medium leading-relaxed">Confused about add-ons? Let our AI suggest the best package for your needs.</p>

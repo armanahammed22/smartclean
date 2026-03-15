@@ -77,10 +77,10 @@ export default function MobileProductPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col shadow-2xl relative">
+    <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col shadow-2xl relative rounded-none">
       {/* Simple Header */}
       <div className="p-4 flex items-center gap-4 sticky top-0 bg-white/80 backdrop-blur-md z-10 border-b border-gray-50">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-none">
           <ArrowLeft size={20} />
         </Button>
         <h1 className="font-bold text-sm truncate">{product.name}</h1>
@@ -89,7 +89,7 @@ export default function MobileProductPage() {
       {/* Main View */}
       <div className="flex-1 overflow-y-auto pb-32">
         {/* Product Image */}
-        <div className="relative aspect-square w-full bg-gray-50 flex items-center justify-center">
+        <div className="relative aspect-square w-full bg-gray-50 flex items-center justify-center rounded-none">
           <Image 
             src={product.imageUrl || 'https://picsum.photos/seed/product/800/800'} 
             alt={product.name || 'Product'} 
@@ -102,7 +102,7 @@ export default function MobileProductPage() {
               onClick={handleSpeak} 
               disabled={isSpeaking}
               variant="secondary" 
-              className="rounded-full shadow-lg h-12 w-12 p-0 bg-white hover:bg-primary/10 text-primary border-none"
+              className="rounded-none shadow-lg h-12 w-12 p-0 bg-white hover:bg-primary/10 text-primary border-none"
             >
               {isSpeaking ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
             </Button>
@@ -113,7 +113,7 @@ export default function MobileProductPage() {
         <div className="p-6 space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-gray-50 border-none px-3 py-1">
+              <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-gray-50 border-none px-3 py-1 rounded-none">
                 {product.categoryId || 'General'}
               </Badge>
               <span className="text-[10px] font-black uppercase text-green-600">In Stock</span>
@@ -129,7 +129,7 @@ export default function MobileProductPage() {
 
           {/* Size Info */}
           {product.size && (
-            <div className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
+            <div className="p-4 bg-gray-50 rounded-none flex items-center justify-between">
               <span className="text-xs font-black uppercase text-gray-400 tracking-widest">Available Size / Spec</span>
               <span className="text-sm font-bold text-gray-900">{product.size}</span>
             </div>
@@ -164,13 +164,13 @@ export default function MobileProductPage() {
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 flex gap-3 z-20">
         <Button 
           variant="outline" 
-          className="flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] border-primary text-primary hover:bg-primary/5"
+          className="flex-1 h-14 rounded-none font-black uppercase tracking-widest text-[10px] border-primary text-primary hover:bg-primary/5"
           onClick={() => addToCart(product)}
         >
           <ShoppingCart size={18} className="mr-2" /> Cart
         </Button>
         <Button 
-          className="flex-[2] h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
+          className="flex-[2] h-14 rounded-none font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
           onClick={handleBuyNow}
         >
           <Zap size={18} className="mr-2" /> Buy Now

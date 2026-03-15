@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden group flex flex-col h-full hover:shadow-xl transition-all duration-300 border-border/50 bg-white rounded-xl md:rounded-2xl">
+    <Card className="overflow-hidden group flex flex-col h-full hover:shadow-xl transition-all duration-300 border-border/50 bg-white rounded-none">
       <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden shrink-0">
         {product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl !== '' ? (
           <Image
@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <span className="bg-primary/95 text-white text-[8px] font-black px-2 py-0.5 rounded-md backdrop-blur-sm uppercase tracking-tighter shadow-sm">
+          <span className="bg-primary/95 text-white text-[8px] font-black px-2 py-0.5 rounded-none backdrop-blur-sm uppercase tracking-tighter shadow-sm">
             {product.category}
           </span>
         </div>
@@ -69,7 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardContent>
         <CardFooter className="p-0 pt-2 gap-1.5 mt-auto border-t border-gray-50 flex items-center">
           <Button 
-            className="flex-1 gap-1 text-[10px] font-black h-8 rounded-lg bg-primary hover:bg-primary/90 shadow-sm uppercase tracking-tighter" 
+            className="flex-1 gap-1 text-[10px] font-black h-8 rounded-none bg-primary hover:bg-primary/90 shadow-sm uppercase tracking-tighter" 
             onClick={handleOrderNow}
           >
             {t('order_now')}
@@ -77,7 +77,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-8 w-8 rounded-lg hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white"
+            className="shrink-0 h-8 w-8 rounded-none hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white"
             onClick={handleAddToCart}
             title={t('add_to_cart')}
           >
