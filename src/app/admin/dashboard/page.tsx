@@ -64,39 +64,34 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Service Data
+      // 1. Service Data (Updated Main Services)
       const SERVICE_DATA = [
-        {
-          id: 's_home', title: 'Home Cleaning', basePrice: 2500, category: 'Cleaning',
-          description: 'Professional deep cleaning for your residence.',
-          subs: ['Full Home Deep Cleaning', 'Bedroom Cleaning', 'Living Room Cleaning', 'Dining Room Cleaning']
-        },
-        {
-          id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning',
-          description: 'Hygienic sanitation for your kitchen and appliances.',
-          subs: ['Kitchen Deep Cleaning', 'Stove Cleaning', 'Sink Cleaning', 'Cabinet Cleaning']
-        },
-        {
-          id: 's_ac', title: 'AC Services', basePrice: 1000, category: 'Home Services',
-          description: 'Expert AC repair, servicing, and installation.',
-          subs: ['AC Installation', 'AC Uninstallation', 'AC Servicing', 'AC Gas Refill']
-        }
+        { id: 's_home', title: 'Home Cleaning', basePrice: 2000, category: 'Cleaning', description: 'Professional deep cleaning for your residence.' },
+        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning', description: 'Hygienic sanitation for your kitchen and appliances.' },
+        { id: 's_bathroom', title: 'Bathroom Cleaning', basePrice: 1000, category: 'Cleaning', description: 'Deep cleaning and disinfection of bathrooms.' },
+        { id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200, category: 'Cleaning', description: 'Professional upholstery and furniture cleaning.' },
+        { id: 's_glass', title: 'Glass & Window Cleaning', basePrice: 800, category: 'Cleaning', description: 'Crystal clear cleaning for windows and glass surfaces.' },
+        { id: 's_office', title: 'Office Cleaning', basePrice: 5000, category: 'Cleaning', description: 'Customized cleaning solutions for corporate spaces.' },
+        { id: 's_post_const', title: 'Post Construction Cleaning', basePrice: 8000, category: 'Cleaning', description: 'Thorough cleaning after construction or renovation.' },
+        { id: 's_carpet', title: 'Carpet & Curtain Cleaning', basePrice: 1500, category: 'Cleaning', description: 'Deep cleaning for carpets, rugs, and curtains.' },
+        { id: 's_outdoor', title: 'Outdoor Cleaning', basePrice: 2000, category: 'Cleaning', description: 'Cleaning for balconies, patios, and outdoor areas.' },
+        { id: 's_ac', title: 'AC Services', basePrice: 1200, category: 'Home Services', description: 'AC installation, repair, and regular servicing.' },
+        { id: 's_electrical', title: 'Electrical Services', basePrice: 500, category: 'Home Services', description: 'Expert electrical repairs and installations.' },
+        { id: 's_plumbing', title: 'Plumbing Services', basePrice: 500, category: 'Home Services', description: 'Fixing leaks, blockages, and plumbing installs.' },
+        { id: 's_carpentry', title: 'Carpentry Services', basePrice: 1000, category: 'Home Services', description: 'Furniture repair and custom woodwork.' },
+        { id: 's_appliance', title: 'Appliance Repair', basePrice: 800, category: 'Home Services', description: 'Repairing fridges, washers, and other appliances.' },
+        { id: 's_painting', title: 'Painting Services', basePrice: 10000, category: 'Home Services', description: 'Professional interior and exterior painting.' },
+        { id: 's_pest', title: 'Pest Control', basePrice: 2500, category: 'Cleaning', description: 'Effective solutions for cockroaches, termites, and more.' }
       ];
 
       SERVICE_DATA.forEach(s => {
         batch.set(doc(db, 'services', s.id), {
-          id: s.id, title: s.title, basePrice: s.basePrice, categoryId: s.category,
-          description: s.description, status: 'Active', duration: '2-4 Hours',
-          createdAt: new Date().toISOString(), imageUrl: `https://picsum.photos/seed/${s.id}/800/600`
-        });
-
-        s.subs.forEach((subName, idx) => {
-          const subId = `${s.id}_sub_${idx}`;
-          batch.set(doc(db, 'sub_services', subId), {
-            id: subId, name: subName, price: Math.floor(s.basePrice * 0.4),
-            mainServiceId: s.id, duration: '1 Hour', status: 'Active',
-            description: `Professional ${subName.toLowerCase()} service.`
-          });
+          ...s,
+          status: 'Active',
+          duration: 'Variable',
+          createdAt: new Date().toISOString(),
+          imageUrl: `https://picsum.photos/seed/${s.id}/800/600`,
+          categoryId: s.category
         });
       });
 
@@ -130,28 +125,8 @@ export default function AdminDashboard() {
       ];
       productData.forEach(p => batch.set(doc(db, 'products', p.id), p));
 
-      // 4. Leads
-      batch.set(doc(db, 'leads', 'l1'), {
-        name: 'Adnan Sami', phone: '01712345678', source: 'Facebook', status: 'New', createdAt: new Date().toISOString(), address: 'Uttara, Dhaka'
-      });
-
-      // 5. Orders
-      batch.set(doc(db, 'orders', 'o1'), {
-        customerName: 'Tanvir Ahmed', customerPhone: '01912345678',
-        items: [{ id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, quantity: 1 }],
-        totalPrice: 45000, status: 'Processing', paymentMethod: 'bKash', createdAt: new Date().toISOString()
-      });
-
-      // 6. Bookings
-      batch.set(doc(db, 'bookings', 'b1'), {
-        customerName: 'Farhana Islam', customerPhone: '01812345678',
-        items: [{ id: 's_home', name: 'Home Cleaning', price: 2500, quantity: 1 }],
-        totalPrice: 2500, status: 'New', address: 'Banani, Dhaka',
-        dateTime: new Date().toISOString(), timeSlot: 'morning', createdAt: new Date().toISOString()
-      });
-
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "All CRM modules populated with demo data." });
+      toast({ title: "ERP Database Seeded", description: "All main services and demo data populated." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -177,7 +152,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed CRM Data
+          Seed ERP Data
         </Button>
       </div>
 
