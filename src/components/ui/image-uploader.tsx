@@ -34,12 +34,35 @@ export function ImageUploader({
   const [activeTab, setActiveMode] = useState<'upload' | 'url'>(initialUrl.startsWith('data:') || !initialUrl ? 'upload' : 'url');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync preview when mode or input changes
+  /**
+   * Transforms common image hosting links (like Google Drive) into direct image URLs
+   */
+  const transformUrl = (url: string): string => {
+    let transformed = url.trim();
+    
+    // Handle Google Drive Links
+    if (transformed.includes('drive.google.com')) {
+      const match = transformed.match(/\/d\/([^/]+)/) || transformed.match(/id=([^&]+)/);
+      if (match && match[1]) {
+        // Transform to direct view link
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+    }
+
+    // Handle Dropbox
+    if (transformed.includes('dropbox.com')) {
+      return transformed.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
+    }
+
+    return transformed;
+  };
+
   const handleUrlChange = (val: string) => {
     setUrlInput(val);
     if (val.trim()) {
-      setPreview(val);
-      onUpload(val);
+      const directUrl = transformUrl(val);
+      setPreview(directUrl);
+      onUpload(directUrl);
     } else {
       setPreview('');
       onUpload('');
@@ -164,7 +187,7 @@ export function ImageUploader({
             <Input 
               value={urlInput}
               onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder="https://images.unsplash.com/photo-..."
+              placeholder="Paste image or Google Drive link..."
               className="h-11 pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all rounded-xl"
             />
           </div>
@@ -180,7 +203,7 @@ export function ImageUploader({
                   alt="URL Preview" 
                   fill 
                   className="object-contain p-2"
-                  onError={() => setError('Unable to load image from URL.')}
+                  onError={() => setError('Unable to load image. Ensure the link is direct or public.')}
                 />
                 <Button 
                   variant="destructive" 
