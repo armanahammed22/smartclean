@@ -23,10 +23,13 @@ import {
   Glasses,
   Thermometer,
   Camera,
-  Loader2
+  Loader2,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 const ICONS: Record<string, any> = {
   Satellite,
@@ -45,23 +48,38 @@ const ICONS: Record<string, any> = {
 export default function QuickLinksAdminPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({ label: '', iconName: 'Grid', link: '', order: 0 });
+  const [formData, setFormData] = useState({ label: '', iconName: 'Grid', imageUrl: '', link: '', order: 0 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const linksQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const { data: links, isLoading } = useCollection(linksQuery);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData({ ...formData, imageUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !formData.label) return;
+    setIsSubmitting(true);
     try {
       await addDoc(collection(db, 'quick_links'), {
         ...formData,
         order: Number(formData.order)
       });
-      setFormData({ label: '', iconName: 'Grid', link: '', order: 0 });
+      setFormData({ label: '', iconName: 'Grid', imageUrl: '', link: '', order: 0 });
       toast({ title: "Quick Link Added" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,8 +109,9 @@ export default function QuickLinksAdminPage() {
                 <Label>Label</Label>
                 <Input value={formData.label} onChange={e => setFormData({...formData, label: e.target.value})} placeholder="e.g. Starlink" />
               </div>
+              
               <div className="space-y-2">
-                <Label>Icon</Label>
+                <Label>Icon (Lucide Fallback)</Label>
                 <Select value={formData.iconName} onValueChange={val => setFormData({...formData, iconName: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -102,6 +121,29 @@ export default function QuickLinksAdminPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label>Custom Image Icon (Manual Upload)</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={formData.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : formData.imageUrl} 
+                    onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+                    placeholder="https://..." 
+                  />
+                  <div className="relative">
+                    <Input type="file" id="nav-upload" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                    <Button variant="outline" size="icon" asChild>
+                      <label htmlFor="nav-upload" className="cursor-pointer"><Upload size={18} /></label>
+                    </Button>
+                  </div>
+                </div>
+                {formData.imageUrl && (
+                  <div className="mt-2 relative w-12 h-12 border rounded-lg overflow-hidden bg-gray-50">
+                    <Image src={formData.imageUrl} alt="Preview" fill className="object-contain p-1" />
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label>Link (URL)</Label>
                 <Input value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} placeholder="/category/starlink" />
@@ -110,7 +152,10 @@ export default function QuickLinksAdminPage() {
                 <Label>Order</Label>
                 <Input type="number" value={formData.order} onChange={e => setFormData({...formData, order: Number(e.target.value)})} />
               </div>
-              <Button type="submit" className="w-full gap-2 font-bold h-11"><Plus size={18} /> Add Link</Button>
+              <Button type="submit" className="w-full gap-2 font-bold h-11" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={18} />}
+                Add Link
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -125,8 +170,12 @@ export default function QuickLinksAdminPage() {
                 return (
                   <Card key={link.id} className="border-none shadow-sm bg-white group">
                     <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                      <div className="p-4 bg-primary/5 rounded-2xl text-primary group-hover:scale-110 transition-transform">
-                        <Icon size={32} />
+                      <div className="p-4 bg-primary/5 rounded-2xl text-primary group-hover:scale-110 transition-transform relative w-16 h-16 flex items-center justify-center">
+                        {link.imageUrl ? (
+                          <Image src={link.imageUrl} alt={link.label} fill className="object-contain p-2" />
+                        ) : (
+                          <Icon size={32} />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <h4 className="font-bold text-sm">{link.label}</h4>

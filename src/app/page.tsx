@@ -187,8 +187,12 @@ export default function SmartCleanHomePage() {
                 const Icon = ICONS[link.iconName] || Grid;
                 return (
                   <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-3 group">
-                    <div className="p-5 bg-gray-50 rounded-[1.5rem] text-gray-600 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-sm border border-transparent group-hover:border-primary/20">
-                      <Icon size={32} />
+                    <div className="p-5 bg-gray-50 rounded-[1.5rem] text-gray-600 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-sm border border-transparent group-hover:border-primary/20 relative w-20 h-20 flex items-center justify-center overflow-hidden">
+                      {link.imageUrl ? (
+                        <Image src={link.imageUrl} alt={link.label} fill className="object-contain p-4 group-hover:scale-110 transition-transform" />
+                      ) : (
+                        <Icon size={32} />
+                      )}
                     </div>
                     <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter text-center line-clamp-1">
                       {t(link.label)}
@@ -211,7 +215,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Optimized Hero Section - Multiple Images Support */}
+        {/* 2. Optimized Hero Section */}
         <section className="container mx-auto px-4">
           <div className="max-w-[982px] mx-auto">
             {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
@@ -246,33 +250,14 @@ export default function SmartCleanHomePage() {
                 )}
               </Carousel>
             ) : (
-              <Carousel className="w-full" opts={{ loop: true }}>
-                <CarouselContent>
-                  {carouselOffers?.length ? carouselOffers.map((offer) => (
-                    <CarouselItem key={offer.id}>
-                      <Link href={offer.link || '#'} className="block relative aspect-[982/500] w-full rounded-xl overflow-hidden shadow-2xl border border-white/10">
-                        <Image src={offer.imageUrl} alt={offer.title || 'Promo'} fill className="object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16">
-                           <h2 className="text-white text-xl md:text-4xl font-black uppercase tracking-tighter leading-tight max-w-3xl">{offer.title}</h2>
-                        </div>
-                      </Link>
-                    </CarouselItem>
-                  )) : (
-                    <CarouselItem>
-                      <div className="relative aspect-[982/500] w-full rounded-xl overflow-hidden bg-gradient-to-br from-[#081621] to-[#0a253a] flex items-center justify-center text-white border border-white/5 shadow-2xl">
-                        <div className="text-center space-y-6 px-8 max-w-4xl">
-                          <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1 rounded-full">EST. 2026</Badge>
-                          <h2 className="text-2xl md:text-5xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
-                          <p className="text-sm md:text-lg opacity-60 font-medium leading-relaxed">{t('hero_subtitle')}</p>
-                          <Button size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-xl shadow-primary/20">{t('hero_cta')}</Button>
-                        </div>
-                      </div>
-                    </CarouselItem>
-                  )}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex left-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
-                <CarouselNext className="hidden md:flex right-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md" />
-              </Carousel>
+              <div className="relative aspect-[982/500] w-full rounded-xl overflow-hidden bg-gradient-to-br from-[#081621] to-[#0a253a] flex items-center justify-center text-white border border-white/5 shadow-2xl">
+                <div className="text-center space-y-6 px-8 max-w-4xl">
+                  <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1 rounded-full">EST. 2026</Badge>
+                  <h2 className="text-2xl md:text-5xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
+                  <p className="text-sm md:text-lg opacity-60 font-medium leading-relaxed">{t('hero_subtitle')}</p>
+                  <Button size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-xl shadow-primary/20">{t('hero_cta')}</Button>
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -315,7 +300,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 4. Quick Action Cards - Center Aligned & Compact (h-20 / h-32) */}
+        {/* 4. Quick Action Cards */}
         <section className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-4 md:gap-8">
             {quickActions?.length ? quickActions.map((action) => {
@@ -336,7 +321,6 @@ export default function SmartCleanHomePage() {
                       {t(action.title)}
                     </h3>
                   </div>
-                  {/* Subtle Background Pattern */}
                   <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 scale-150 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
                     <Icon size={120} className="text-white" />
                   </div>
@@ -366,16 +350,13 @@ export default function SmartCleanHomePage() {
         </section>
 
         <div className="container mx-auto px-4 space-y-20 mt-12">
-          
           {/* Services Grid */}
           <section className="space-y-8">
             <div className="flex justify-between items-center gap-4 border-b pb-4">
               <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('expert_services')}</h2>
-              <div className="flex items-center gap-4 shrink-0">
-                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
-                  <Link href="/services">{t('view_all')} <ChevronRight size={16} /></Link>
-                </Button>
-              </div>
+              <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
+                <Link href="/services">{t('view_all')} <ChevronRight size={16} /></Link>
+              </Button>
             </div>
             
             {servicesLoading ? (
@@ -384,17 +365,10 @@ export default function SmartCleanHomePage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                 {services?.map((service) => (
                   <div key={service.id} className="group bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-transparent hover:border-primary/20 flex flex-col relative">
-                    {isAdmin && (
-                      <div className="absolute top-2 right-2 z-20">
-                        <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg border-none backdrop-blur-md bg-white/80" asChild>
-                          <Link href="/admin/services"><Settings size={14} className="text-primary" /></Link>
-                        </Button>
-                      </div>
-                    )}
                     <Link href={`/service/${service.id}`} className="block relative aspect-square overflow-hidden shrink-0">
                       <Image 
                         src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={service.title || 'Cleaning Service'} 
+                        alt={service.title} 
                         fill 
                         className="object-cover group-hover:scale-110 transition-transform duration-700" 
                       />
@@ -428,11 +402,9 @@ export default function SmartCleanHomePage() {
           <section className="space-y-8">
             <div className="flex justify-between items-center gap-4 border-b pb-4">
               <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('professional_tools')}</h2>
-              <div className="flex items-center gap-4 shrink-0">
-                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
-                  <Link href="/products">{t('view_all')} <ChevronRight size={16} /></Link>
-                </Button>
-              </div>
+              <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
+                <Link href="/products">{t('view_all')} <ChevronRight size={16} /></Link>
+              </Button>
             </div>
             
             {productsLoading ? (
@@ -445,7 +417,6 @@ export default function SmartCleanHomePage() {
               </div>
             )}
           </section>
-
         </div>
       </div>
     </PublicLayout>

@@ -21,8 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
-
 export function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const { user } = useUser();
@@ -30,9 +28,14 @@ export function Navbar() {
   const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
 
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+
+  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   return (
     <header className="w-full z-50 sticky top-0 shadow-sm">
@@ -40,16 +43,18 @@ export function Navbar() {
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
-              {LOGO_IMAGE ? (
-                <Image src={LOGO_IMAGE.imageUrl} alt="Logo" fill className="object-contain p-1" />
+              {displayLogo ? (
+                <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" />
               ) : (
                 <span className="text-primary font-bold text-xl">S</span>
               )}
             </div>
-            <span className="text-2xl font-bold tracking-tighter font-headline text-white uppercase">SMART CLEAN</span>
+            <span className="text-2xl font-bold tracking-tighter font-headline text-white uppercase">
+              {settings?.websiteName || 'SMART CLEAN'}
+            </span>
           </Link>
 
-          <div className="flex-1 max-w-xl relative hidden md:block">
+          <div className="flex-1 max-xl relative hidden md:block">
             <div className="relative">
               <Input 
                 value={searchQuery}

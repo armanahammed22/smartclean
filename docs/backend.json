@@ -74,6 +74,7 @@
         "id": { "type": "string" },
         "label": { "type": "string" },
         "iconName": { "type": "string" },
+        "imageUrl": { "type": "string" },
         "link": { "type": "string" },
         "order": { "type": "number" }
       }
