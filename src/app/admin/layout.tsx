@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -39,6 +40,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
@@ -192,7 +194,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {!mobileOnly && (
-        <div className="p-4 border-t border-white/10 shrink-0">
+        <div className="p-4 border-t border-white/10 shrink-0 mb-16 lg:mb-0">
           <Button 
             variant="ghost" 
             className={cn(
@@ -257,9 +259,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-20 lg:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-24 lg:pb-8">
           {children}
         </main>
+
+        <AdminBottomNav />
       </div>
     </div>
   );
