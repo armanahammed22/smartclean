@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -14,9 +13,7 @@ import {
   Edit, 
   Tags, 
   ChevronRight, 
-  FolderTree,
-  CheckCircle2,
-  XCircle
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -122,12 +119,15 @@ export default function ProductCategoriesPage() {
 
         <div className="lg:col-span-2 space-y-4">
           {isLoading ? (
-            <div className="p-20 text-center">Loading categories...</div>
+            <div className="p-20 text-center flex flex-col items-center gap-3">
+              <Loader2 className="animate-spin text-primary" size={32} />
+              <span className="text-muted-foreground">Loading categories...</span>
+            </div>
           ) : mainCategories?.length ? (
             <div className="grid grid-cols-1 gap-4">
               {mainCategories.map((cat) => (
                 <div key={cat.id} className="space-y-2">
-                  <Card className="border-none shadow-sm group">
+                  <Card className="border-none shadow-sm group bg-white">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -146,7 +146,7 @@ export default function ProductCategoriesPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => toggleStatus(cat.id, cat.status)}>
                           <Edit size={14} />
                         </Button>
@@ -178,7 +178,7 @@ export default function ProductCategoriesPage() {
             </div>
           ) : (
             <div className="p-20 text-center border-2 border-dashed rounded-2xl bg-white text-muted-foreground italic">
-              No categories defined yet.
+              No product categories defined yet.
             </div>
           )}
         </div>

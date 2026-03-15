@@ -47,22 +47,49 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Marketing Offers
-      const offers = [
-        { id: 'off1', title: 'Special CRM Offer', placement: 'top', enabled: true, imageUrl: 'https://picsum.photos/seed/off1/1200/400', link: '#' },
-        { id: 'off2', title: 'New Area Support', placement: 'middle', enabled: true, imageUrl: 'https://picsum.photos/seed/off2/1200/400', link: '#' }
-      ];
-      offers.forEach(o => batch.set(doc(db, 'marketing_offers', o.id), o));
+      // 1. Categories
+      const pCat = { id: 'cat1', name: 'Equipment', status: 'Active', slug: 'equipment' };
+      const sCat = { id: 'scat1', name: 'Home Services', status: 'Active', slug: 'home-services' };
+      batch.set(doc(db, 'product_categories', pCat.id), pCat);
+      batch.set(doc(db, 'service_categories', sCat.id), sCat);
 
-      // 2. Leads
-      const leads = [
-        { id: 'l1', name: "Rahat Khan", phone: "01711223344", address: "Uttara", source: "Facebook", status: "New", createdAt: new Date().toISOString() },
-        { id: 'l2', name: "Mehedi Hasan", phone: "01811223344", address: "Gulshan", source: "Website", status: "Qualified", createdAt: new Date().toISOString() },
-      ];
-      leads.forEach(l => batch.set(doc(db, 'leads', l.id), l));
+      // 2. Brands
+      const brand = { id: 'b1', name: 'SmartClean Pro', status: 'Active' };
+      batch.set(doc(db, 'brands', brand.id), brand);
+
+      // 3. Products
+      const product = {
+        id: 'p1',
+        name: 'Smart Vacuum Robot X1',
+        price: 45000,
+        categoryId: 'cat1',
+        brandId: 'b1',
+        stockQuantity: 15,
+        status: 'Active',
+        imageUrl: 'https://picsum.photos/seed/vac/600/400'
+      };
+      batch.set(doc(db, 'products', product.id), product);
+
+      // 4. Services
+      const service = {
+        id: 's1',
+        title: 'Deep Home Cleaning',
+        basePrice: 5000,
+        categoryId: 'scat1',
+        status: 'Active',
+        description: 'Comprehensive professional home cleaning.',
+        imageUrl: 'https://picsum.photos/seed/clean/600/400'
+      };
+      batch.set(doc(db, 'services', service.id), service);
+
+      // 5. Sub-Services
+      const sub1 = { id: 'sub1', name: 'Kitchen Sanitization', price: 1500, mainServiceId: 's1', duration: '1 hr' };
+      const sub2 = { id: 'sub2', name: 'Bathroom Deep Clean', price: 1200, mainServiceId: 's1', duration: '1 hr' };
+      batch.set(doc(db, 'sub_services', sub1.id), sub1);
+      batch.set(doc(db, 'sub_services', sub2.id), sub2);
 
       await batch.commit();
-      toast({ title: "CRM Seeded", description: "Database populated with Leads and Marketing data." });
+      toast({ title: "Catalog Seeded", description: "Database populated with Products and Services." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -88,7 +115,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed ERP & Marketing
+          Seed Catalog Data
         </Button>
       </div>
 

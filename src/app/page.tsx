@@ -8,14 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, doc, where } from 'firebase/firestore';
+import { collection, query, doc, where, limit } from 'firebase/firestore';
 import { 
   BellRing, 
   Clock, 
   Mail,
   Phone,
-  ArrowRight
+  ArrowRight,
+  Package,
+  Wrench,
+  Star,
+  ChevronRight
 } from 'lucide-react';
+import { ProductCard } from '@/components/products/product-card';
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
@@ -28,6 +33,12 @@ export default function SmartCleanHomePage() {
 
   const offersQuery = useMemoFirebase(() => db ? query(collection(db, 'marketing_offers'), where('enabled', '==', true)) : null, [db]);
   const { data: offers } = useCollection(offersQuery);
+
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(8)) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(6)) : null, [db]);
+
+  const { data: products } = useCollection(productsQuery);
+  const { data: services } = useCollection(servicesQuery);
 
   useEffect(() => {
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
@@ -114,8 +125,59 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 space-y-12 mt-8">
+        <div className="container mx-auto px-4 space-y-16 mt-8">
           
+          {/* Services Grid */}
+          <section className="space-y-8">
+            <div className="flex justify-between items-end">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black font-headline text-[#081621]">Expert Services</h2>
+                <p className="text-muted-foreground">Professional maintenance solutions for home and office.</p>
+              </div>
+              <Button variant="link" className="gap-2 font-bold" asChild>
+                <Link href="/services">View All Services <ChevronRight size={16} /></Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services?.map((service) => (
+                <Link key={service.id} href={`/service/${service.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-primary/20 flex flex-col">
+                  <div className="relative aspect-video overflow-hidden">
+                    <Image src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-sm font-black">{service.category || 'General'}</Badge>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-4 flex-1">
+                    <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{service.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <span className="text-lg font-black text-primary">৳{service.basePrice.toLocaleString()} <span className="text-[10px] font-bold text-muted-foreground uppercase">Base Price</span></span>
+                      <Button size="sm" className="rounded-full font-bold px-6">Book Now</Button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* Products Grid */}
+          <section className="space-y-8">
+            <div className="flex justify-between items-end">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black font-headline text-[#081621]">Professional Tools</h2>
+                <p className="text-muted-foreground">High-performance cleaning equipment and supplies.</p>
+              </div>
+              <Button variant="link" className="gap-2 font-bold" asChild>
+                <Link href="/products">Shop Catalog <ChevronRight size={16} /></Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {products?.map((product) => (
+                <ProductCard key={product.id} product={product as any} />
+              ))}
+            </div>
+          </section>
+
           {/* Custom Content Section */}
           {settings?.sections?.customContent && settings.marketingContent && (
             <section className="bg-white p-8 md:p-16 rounded-3xl border shadow-sm">
