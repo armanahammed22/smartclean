@@ -18,7 +18,8 @@ import {
   Package,
   Wrench,
   Star,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 
@@ -37,8 +38,8 @@ export default function SmartCleanHomePage() {
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(8)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(6)) : null, [db]);
 
-  const { data: products } = useCollection(productsQuery);
-  const { data: services } = useCollection(servicesQuery);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
+  const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
 
   useEffect(() => {
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
@@ -54,7 +55,7 @@ export default function SmartCleanHomePage() {
         <Link key={offer.id} href={offer.link || '#'} className="block relative aspect-[21/7] rounded-3xl overflow-hidden group shadow-lg">
           <Image 
             src={offer.imageUrl} 
-            alt={offer.title || 'Offer'} 
+            alt={offer.title || 'Marketing Offer'} 
             fill 
             className="object-cover group-hover:scale-105 transition-transform duration-700" 
           />
@@ -79,9 +80,10 @@ export default function SmartCleanHomePage() {
             <div className="relative overflow-hidden rounded-3xl shadow-xl bg-[#081621] text-white aspect-[21/9] md:aspect-[21/7]">
               <Image 
                 src={settings?.hero?.imageUrl || "https://picsum.photos/seed/crmhero/1200/600"} 
-                alt="Hero" 
+                alt="Smart Clean Hero" 
                 fill 
                 className="object-cover opacity-40" 
+                priority
               />
               <div className="absolute inset-0 flex flex-col justify-center p-8 md:p-16 space-y-6">
                 <div className="max-w-xl space-y-2">
@@ -138,26 +140,42 @@ export default function SmartCleanHomePage() {
                 <Link href="/services">View All Services <ChevronRight size={16} /></Link>
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services?.map((service) => (
-                <Link key={service.id} href={`/service/${service.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-primary/20 flex flex-col">
-                  <div className="relative aspect-video overflow-hidden">
-                    <Image src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} alt={service.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-sm font-black">{service.category || 'General'}</Badge>
+            
+            {servicesLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {services?.map((service) => (
+                  <Link key={service.id} href={`/service/${service.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-primary/20 flex flex-col">
+                    <div className="relative aspect-video overflow-hidden">
+                      <Image 
+                        src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
+                        alt={service.title || 'Cleaning Service'} 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-sm font-black">{service.category || 'General'}</Badge>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-6 space-y-4 flex-1">
-                    <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <span className="text-lg font-black text-primary">৳{(service.basePrice || 0).toLocaleString()} <span className="text-[10px] font-bold text-muted-foreground uppercase">Base Price</span></span>
-                      <Button size="sm" className="rounded-full font-bold px-6">Book Now</Button>
+                    <div className="p-6 space-y-4 flex-1">
+                      <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{service.title || 'Service Title'}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{service.description || 'Professional cleaning service.'}</p>
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <span className="text-lg font-black text-primary">
+                          ৳{(service.basePrice || 0).toLocaleString()} 
+                          <span className="text-[10px] ml-1 font-bold text-muted-foreground uppercase">Base Price</span>
+                        </span>
+                        <Button size="sm" className="rounded-full font-bold px-6">Book Now</Button>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+                {services?.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-muted-foreground italic">No services available currently.</div>
+                )}
+              </div>
+            )}
           </section>
 
           {/* Products Grid */}
@@ -171,11 +189,19 @@ export default function SmartCleanHomePage() {
                 <Link href="/products">Shop Catalog <ChevronRight size={16} /></Link>
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {products?.map((product) => (
-                <ProductCard key={product.id} product={product as any} />
-              ))}
-            </div>
+            
+            {productsLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" /></div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {products?.map((product) => (
+                  <ProductCard key={product.id} product={product as any} />
+                ))}
+                {products?.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-muted-foreground italic">No products in stock.</div>
+                )}
+              </div>
+            )}
           </section>
 
           {/* Custom Content Section */}
@@ -211,7 +237,7 @@ export default function SmartCleanHomePage() {
                 </div>
               </div>
               <div className="relative aspect-square md:aspect-auto h-full min-h-[300px] rounded-2xl overflow-hidden shadow-2xl">
-                <Image src="https://picsum.photos/seed/cleanops/800/800" alt="Contact" fill className="object-cover" />
+                <Image src="https://picsum.photos/seed/cleanops/800/800" alt="Enterprise Contact" fill className="object-cover" />
               </div>
             </div>
           </section>
