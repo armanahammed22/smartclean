@@ -28,7 +28,10 @@ import {
   Tags,
   Award,
   HelpCircle,
-  Share2
+  Share2,
+  Layers,
+  AlertCircle,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,41 +67,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const NAV_GROUPS = [
     {
-      title: 'Main',
+      title: 'Main & Analytics',
       items: [
         { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
+        { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-cyan-500' },
       ]
     },
     {
-      title: 'Catalogs',
+      title: 'Inventory & Products',
       items: [
         { name: 'Products', href: '/admin/products', icon: Package, color: 'text-emerald-500' },
-        { name: 'Services', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
+        { name: 'Categories', href: '/admin/products/categories', icon: Tags, color: 'text-green-500' },
+        { name: 'Brands', href: '/admin/products/brands', icon: Award, color: 'text-rose-500' },
+        { name: 'Stock Alerts', href: '/admin/inventory/alerts', icon: AlertCircle, color: 'text-orange-500' },
       ]
     },
     {
-      title: 'Operations',
+      title: 'Service Operations',
+      items: [
+        { name: 'Service List', href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
+        { name: 'Sub-Services', href: '/admin/services/sub-services', icon: Layers, color: 'text-blue-600' },
+        { name: 'Service Areas', href: '/admin/areas', icon: MapPin, color: 'text-red-500' },
+      ]
+    },
+    {
+      title: 'CRM & Sales',
       items: [
         { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
-        { name: 'Bookings', href: '/admin/bookings', icon: BarChart3, color: 'text-blue-400' },
-        { name: 'Customers', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
-        { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle, color: 'text-rose-500' },
+        { name: 'Product Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
+        { name: 'Service Bookings', href: '/admin/bookings', icon: Calendar, color: 'text-blue-400' },
+        { name: 'Customer Directory', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
+        { name: 'Support Tickets', href: '/admin/support', icon: HelpCircle, color: 'text-pink-500' },
       ]
     },
     {
       title: 'Growth & Rewards',
       items: [
-        { name: 'Marketing', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
-        { name: 'Referrals', href: '/admin/referrals', icon: Share2, color: 'text-purple-500' },
+        { name: 'Marketing & Coupons', href: '/admin/marketing', icon: TicketPercent, color: 'text-green-500' },
+        { name: 'Referral Program', href: '/admin/referrals', icon: Share2, color: 'text-purple-500' },
       ]
     },
     {
-      title: 'Logistics & Settings',
+      title: 'System & Logistics',
       items: [
         { name: 'Staff Directory', href: '/admin/employees', icon: Users, color: 'text-indigo-500' },
-        { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-rose-500' },
+        { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
         { name: 'Site Customize', href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
+        { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-amber-600' },
         { name: 'Global Settings', href: '/admin/settings', icon: Settings, color: 'text-gray-500' },
       ]
     }
