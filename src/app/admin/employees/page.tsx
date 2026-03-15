@@ -4,63 +4,69 @@
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Mail, 
-  Phone, 
-  Star, 
-  Plus,
-  Loader2,
-  Trash2,
-  Save
-} from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2, Save, Users, Wrench, Layers, Package, Star, Phone, Mail } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 export default function EmployeesPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const employeesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'employee_profiles'), orderBy('name', 'asc'));
-  }, [db]);
+  // Data Queries
+  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db]);
+  const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
+  const { data: bookings } = useCollection(bookingsQuery);
+  const { data: services } = useCollection(servicesQuery);
+  const { data: products } = useCollection(productsQuery);
 
-  const handleAddEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
+  const KPI_STATS = [
+    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Active Staff", value: employees?.filter(e => e.status === 'Active').length || 0, icon: Users, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Products", value: products?.length || 0, icon: Package, color: "text-indigo-600", bg: "bg-indigo-50" },
+  ];
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!db) return;
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    const employeeData = {
+    const staffData = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
       role: formData.get('role') as string,
-      status: 'Active',
-      rating: 5.0,
-      jobsCompleted: 0,
-      createdAt: new Date().toISOString()
+      status: formData.get('status') as string || 'Active',
+      updatedAt: new Date().toISOString()
     };
 
     try {
-      addDoc(collection(db, 'employee_profiles'), employeeData).catch(err => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'employee_profiles', operation: 'create', requestResourceData: employeeData }));
-      });
-      toast({ title: "Employee Hired", description: `${employeeData.name} has been added to the crew.` });
+      if (editingStaff) {
+        await updateDoc(doc(db, 'employee_profiles', editingStaff.id), staffData);
+        toast({ title: "Staff Updated" });
+      } else {
+        await addDoc(collection(db, 'employee_profiles'), { ...staffData, rating: 5.0, jobsCompleted: 0, createdAt: new Date().toISOString() });
+        toast({ title: "Staff Enrolled" });
+      }
       setIsDialogOpen(false);
+      setEditingStaff(null);
     } catch (e) {
       toast({ variant: "destructive", title: "Error" });
     } finally {
@@ -68,11 +74,9 @@ export default function EmployeesPage() {
     }
   };
 
-  const deleteEmployee = (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, 'employee_profiles', id)).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `employee_profiles/${id}`, operation: 'delete' }));
-    });
+  const handleDelete = async (id: string) => {
+    if (!db || !confirm("Remove this staff profile?")) return;
+    await deleteDoc(doc(db, 'employee_profiles', id));
     toast({ title: "Profile Removed" });
   };
 
@@ -81,41 +85,56 @@ export default function EmployeesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Staff Directory</h1>
-          <p className="text-muted-foreground text-sm">Manage cleaning crews and employee roles</p>
+          <p className="text-muted-foreground text-sm">Manage roles, schedules, and field performance</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingStaff(null); }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => setIsDialogOpen(true)}>
+            <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => { setEditingStaff(null); setIsDialogOpen(true); }}>
               <Plus size={18} /> Hire New Staff
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleAddEmployee} className="space-y-4">
-              <DialogHeader><DialogTitle>New Employee Enrollment</DialogTitle></DialogHeader>
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input name="name" required placeholder="Employee Name" />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input name="email" type="email" required placeholder="email@smartclean.com" />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone Number</Label>
-                <Input name="phone" required placeholder="01XXXXXXXXX" />
-              </div>
-              <div className="space-y-2">
-                <Label>Assigned Role</Label>
-                <Select name="role" defaultValue="Cleaner">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cleaner">Senior Cleaner</SelectItem>
-                    <SelectItem value="Technician">AC Technician</SelectItem>
-                    <SelectItem value="Supervisor">Supervisor</SelectItem>
-                    <SelectItem value="Manager">Operations Manager</SelectItem>
-                  </SelectContent>
-                </Select>
+          <DialogContent className="max-w-md">
+            <form onSubmit={handleSave} className="space-y-6">
+              <DialogHeader><DialogTitle>{editingStaff ? 'Edit Profile' : 'New Enrollment'}</DialogTitle></DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <Input name="name" defaultValue={editingStaff?.name} required placeholder="Employee Name" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input name="phone" defaultValue={editingStaff?.phone} required placeholder="01XXXXXXXXX" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input name="email" type="email" defaultValue={editingStaff?.email} required placeholder="staff@smartclean.com" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Assigned Role</Label>
+                  <Select name="role" defaultValue={editingStaff?.role || "Cleaner"}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cleaner">Cleaner</SelectItem>
+                      <SelectItem value="Technician">Technician</SelectItem>
+                      <SelectItem value="Supervisor">Supervisor</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select name="status" defaultValue={editingStaff?.status || "Active"}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="On Leave">On Leave</SelectItem>
+                      <SelectItem value="Terminated">Terminated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
@@ -129,71 +148,86 @@ export default function EmployeesPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {isLoading ? (
-          <div className="col-span-full py-20 text-center flex flex-col items-center gap-3">
-            <Loader2 className="animate-spin text-primary" size={32} />
-            <span className="text-muted-foreground font-medium">Loading staff...</span>
-          </div>
-        ) : employees?.length ? (
-          employees.map((staff) => (
-            <Card key={staff.id} className="border-none shadow-sm hover:shadow-md transition-all group overflow-hidden bg-white">
-              <div className="h-1.5 bg-primary w-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="flex flex-col items-center text-center gap-2 pb-2">
-                <Avatar className="h-16 w-16 border-4 border-gray-50 shadow-sm">
-                  <AvatarImage src={`https://picsum.photos/seed/${staff.id}/200`} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">{staff.name?.[0]}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-1">
-                  <CardTitle className="text-base font-bold line-clamp-1">{staff.name}</CardTitle>
-                  <Badge variant="outline" className="text-[9px] font-black uppercase border-primary/20 text-primary bg-primary/5">
-                    {staff.role}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-center gap-2 text-[10px] md:text-xs text-muted-foreground">
-                    <Mail size={12} className="text-primary shrink-0" />
-                    <span className="truncate">{staff.email}</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-[10px] md:text-xs text-muted-foreground">
-                    <Phone size={12} className="text-primary shrink-0" />
-                    <span>{staff.phone}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 py-3 border-y border-gray-50">
-                  <div className="text-center">
-                    <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">Completed</p>
-                    <p className="text-sm font-black text-gray-900">{staff.jobsCompleted || 0}</p>
-                  </div>
-                  <div className="text-center border-l">
-                    <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-wider">Rating</p>
-                    <div className="flex items-center justify-center gap-0.5 text-orange-500">
-                      <p className="text-sm font-black text-gray-900">{staff.rating || '5.0'}</p>
-                      <Star size={10} fill="currentColor" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 text-[9px] font-bold h-8 uppercase">
-                    Schedule
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 text-destructive px-2" onClick={() => deleteEmployee(staff.id)}>
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full py-24 text-center bg-white rounded-3xl border border-dashed text-muted-foreground italic">
-            No employees found in your company directory.
-          </div>
-        )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPI_STATS.map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gray-50/50">
+              <TableRow>
+                <TableHead className="font-bold py-4">Staff Member</TableHead>
+                <TableHead className="font-bold">Role</TableHead>
+                <TableHead className="font-bold">Contact</TableHead>
+                <TableHead className="font-bold">Jobs Count</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="text-right"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-20">Loading directory...</TableCell></TableRow>
+              ) : employees?.length ? (
+                employees.map((staff) => {
+                  const jobCount = bookings?.filter(b => b.employeeId === staff.id).length || 0;
+                  return (
+                    <TableRow key={staff.id} className="hover:bg-gray-50/50">
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 border-2 border-gray-100 shadow-xs">
+                            <AvatarImage src={`https://picsum.photos/seed/${staff.id}/100`} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{staff.name?.[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="font-bold text-gray-900 leading-tight">{staff.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell><Badge variant="outline" className="text-[10px] font-black uppercase border-indigo-100 text-indigo-600 bg-indigo-50/30">{staff.role}</Badge></TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] font-bold text-gray-700 flex items-center gap-1"><Phone size={10} className="text-primary" /> {staff.phone}</div>
+                          <div className="text-[9px] text-muted-foreground flex items-center gap-1"><Mail size={10} /> {staff.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-black text-sm text-center">{jobCount}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn(
+                          "text-[9px] font-black uppercase",
+                          staff.status === 'Active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                        )}>
+                          {staff.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingStaff(staff); setIsDialogOpen(true); }}>
+                            <Edit size={14} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(staff.id)}>
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow><TableCell colSpan={6} className="text-center py-20 italic text-muted-foreground">No employees found.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

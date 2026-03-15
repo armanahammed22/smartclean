@@ -4,20 +4,18 @@
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ImageUploader } from '@/components/ui/image-uploader';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 export default function ProductsManagementPage() {
   const db = useFirestore();
@@ -26,15 +24,25 @@ export default function ProductsManagementPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const productsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'products'), orderBy('name', 'asc'));
-  }, [db]);
+  // Data Queries
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
+  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
+  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
+  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
 
   const { data: products, isLoading } = useCollection(productsQuery);
-
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories')) : null, [db]);
   const { data: categories } = useCollection(categoriesQuery);
+  const { data: services } = useCollection(servicesQuery);
+  const { data: subServices } = useCollection(subServicesQuery);
+  const { data: employees } = useCollection(employeesQuery);
+
+  const KPI_STATS = [
+    { label: "Total Products", value: products?.length || 0, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Total Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Sub-Services", value: subServices?.length || 0, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+  ];
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,21 +56,16 @@ export default function ProductsManagementPage() {
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
       categoryId: formData.get('categoryId') as string,
       description: formData.get('description') as string,
-      imageUrl: formData.get('imageUrl') as string,
-      status: 'Active',
+      status: formData.get('status') as string || 'Active',
       updatedAt: new Date().toISOString()
     };
 
     try {
       if (editingProduct) {
-        updateDoc(doc(db, 'products', editingProduct.id), productData).catch(err => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `products/${editingProduct.id}`, operation: 'update', requestResourceData: productData }));
-        });
+        await updateDoc(doc(db, 'products', editingProduct.id), productData);
         toast({ title: "Product Updated" });
       } else {
-        addDoc(collection(db, 'products'), { ...productData, createdAt: new Date().toISOString() }).catch(err => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'products', operation: 'create', requestResourceData: productData }));
-        });
+        await addDoc(collection(db, 'products'), { ...productData, createdAt: new Date().toISOString() });
         toast({ title: "Product Added" });
       }
       setIsDialogOpen(false);
@@ -74,11 +77,9 @@ export default function ProductsManagementPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, 'products', id)).catch(err => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `products/${id}`, operation: 'delete' }));
-    });
+  const handleDelete = async (id: string) => {
+    if (!db || !confirm("Delete this product?")) return;
+    await deleteDoc(doc(db, 'products', id));
     toast({ title: "Product Deleted" });
   };
 
@@ -86,8 +87,8 @@ export default function ProductsManagementPage() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory & Products</h1>
-          <p className="text-muted-foreground text-sm">Manage cleaning supplies and equipment catalog</p>
+          <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
+          <p className="text-muted-foreground text-sm">Control your cleaning equipment and supply catalog</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingProduct(null); }}>
@@ -96,61 +97,57 @@ export default function ProductsManagementPage() {
               <Plus size={18} /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <form onSubmit={handleSave} className="space-y-6">
               <DialogHeader>
                 <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
               </DialogHeader>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Product Name</Label>
+                  <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Product Name</Label>
-                    <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Price (BDT)</Label>
-                      <Input name="price" type="number" defaultValue={editingProduct?.price} required placeholder="5000" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Stock Quantity</Label>
-                      <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required placeholder="10" />
-                    </div>
+                    <Label>Price (BDT)</Label>
+                    <Input name="price" type="number" defaultValue={editingProduct?.price} required placeholder="5000" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
-                    <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
-                      <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                      <SelectContent>
-                        {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <Label>Stock Qty</Label>
+                    <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required placeholder="10" />
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <ImageUploader 
-                    label="Product Image"
-                    initialUrl={editingProduct?.imageUrl}
-                    onUpload={(url) => {
-                      const input = document.getElementById('product-image-url') as HTMLInputElement;
-                      if(input) input.value = url;
-                    }}
-                  />
-                  <input type="hidden" name="imageUrl" id="product-image-url" defaultValue={editingProduct?.imageUrl} />
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
+                    <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
+                    <SelectContent>
+                      {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea name="description" defaultValue={editingProduct?.description} className="min-h-[100px]" placeholder="Detailed product features..." />
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select name="status" defaultValue={editingProduct?.status || "Active"}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea name="description" defaultValue={editingProduct?.description} className="min-h-[80px]" placeholder="Key features..." />
+                </div>
               </div>
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
-                  {editingProduct ? 'Update Product' : 'Save Product'}
+                  {editingProduct ? 'Update' : 'Save'}
                 </Button>
               </DialogFooter>
             </form>
@@ -158,72 +155,70 @@ export default function ProductsManagementPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {isLoading ? (
-          <div className="col-span-full text-center py-24 flex flex-col items-center gap-3">
-            <Loader2 className="animate-spin text-primary" size={32} />
-            <span className="text-muted-foreground font-medium">Loading inventory...</span>
-          </div>
-        ) : products?.length ? (
-          products.map((product) => (
-            <Card key={product.id} className="border-none shadow-sm group hover:shadow-md transition-all overflow-hidden bg-white flex flex-col h-full">
-              <div className="relative aspect-[4/3] overflow-hidden bg-gray-50 border-b">
-                {product.imageUrl ? (
-                  <Image 
-                    src={product.imageUrl} 
-                    alt={product.name || 'Product Image'} 
-                    fill 
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-                    <Package size={48} />
-                  </div>
-                )}
-                <Badge className="absolute top-2 right-2 bg-white/95 text-primary border-none text-[8px] font-black shadow-sm uppercase tracking-tighter">
-                  {categories?.find(c => c.id === product.categoryId)?.name || 'GENERAL'}
-                </Badge>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPI_STATS.map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
               </div>
-              
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-sm md:text-base font-bold line-clamp-1 text-gray-900">{product.name}</CardTitle>
-                <div className="text-primary font-black text-lg">
-                  ৳{product.price?.toLocaleString()}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="p-4 pt-0 space-y-4 flex-1">
-                <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-2 min-h-[32px]">
-                  {product.description || 'Professional equipment for deep cleaning and maintenance.'}
-                </p>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[9px] font-black uppercase tracking-wider text-gray-500">
-                  <div className="flex items-center gap-1.5">
-                    <Tag size={12} className="text-primary" /> Stock: {product.stockQuantity || 0}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <ShoppingCart size={12} className="text-primary" /> Sold: {product.soldCount || 0}
-                  </div>
-                </div>
-              </CardContent>
-              
-              <div className="p-4 pt-0 flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 gap-1.5 h-9 text-[10px] font-bold uppercase" onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}>
-                  <Edit size={12} /> Edit
-                </Button>
-                <Button variant="ghost" size="sm" className="h-9 w-9 text-destructive hover:bg-destructive/5 rounded-lg shrink-0" onClick={() => handleDelete(product.id)}>
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-24 border-2 border-dashed rounded-3xl text-muted-foreground italic bg-white">
-            <Package size={40} className="mx-auto mb-4 opacity-10" />
-            No products in your catalog yet.
-          </div>
-        )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gray-50/50">
+              <TableRow>
+                <TableHead className="font-bold py-4">Product Name</TableHead>
+                <TableHead className="font-bold">Category</TableHead>
+                <TableHead className="font-bold">Price</TableHead>
+                <TableHead className="font-bold">Stock</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="text-right"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-20">Syncing inventory...</TableCell></TableRow>
+              ) : products?.length ? (
+                products.map((product) => (
+                  <TableRow key={product.id} className="hover:bg-gray-50/50">
+                    <TableCell className="font-bold text-gray-900 py-4">{product.name}</TableCell>
+                    <TableCell className="text-xs font-medium">{categories?.find(c => c.id === product.categoryId)?.name || 'General'}</TableCell>
+                    <TableCell className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</TableCell>
+                    <TableCell className="text-xs">{product.stockQuantity || 0} Units</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn(
+                        "text-[9px] font-black uppercase",
+                        product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                      )}>
+                        {product.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}>
+                          <Edit size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(product.id)}>
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={6} className="text-center py-20 italic text-muted-foreground">No products found.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

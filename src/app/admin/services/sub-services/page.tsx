@@ -1,154 +1,223 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, where } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, Wrench, Clock, Users, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Layers, 
-  Clock, 
-  DollarSign,
-  Loader2
-} from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function SubServicesManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    duration: '',
-    mainServiceId: ''
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSub, setEditingSub] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const servicesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'services'), orderBy('title', 'asc'));
-  }, [db]);
+  // Data Queries
+  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), orderBy('name', 'asc')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
+  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
 
-  const subServicesQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'sub_services'), orderBy('name', 'asc'));
-  }, [db]);
-
-  const { data: services } = useCollection(servicesQuery);
   const { data: subServices, isLoading } = useCollection(subServicesQuery);
+  const { data: services } = useCollection(servicesQuery);
+  const { data: products } = useCollection(productsQuery);
+  const { data: employees } = useCollection(employeesQuery);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const KPI_STATS = [
+    { label: "Sub-Services", value: subServices?.length || 0, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Main Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Active Operations", value: services?.filter(s => s.status === 'Active').length || 0, icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+  ];
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!db || !formData.name || !formData.mainServiceId) return;
-    
+    if (!db) return;
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const subData = {
+      name: formData.get('name') as string,
+      mainServiceId: formData.get('mainServiceId') as string,
+      price: parseFloat(formData.get('price') as string),
+      duration: formData.get('duration') as string,
+      description: formData.get('description') as string,
+      status: formData.get('status') as string || 'Active',
+      updatedAt: new Date().toISOString()
+    };
+
     try {
-      await addDoc(collection(db, 'sub_services'), {
-        ...formData,
-        price: parseFloat(formData.price) || 0,
-        createdAt: new Date().toISOString()
-      });
-      setFormData({ name: '', description: '', price: '', duration: '', mainServiceId: '' });
-      toast({ title: "Sub-Service Added", description: "Successfully linked to main service." });
+      if (editingSub) {
+        await updateDoc(doc(db, 'sub_services', editingSub.id), subData);
+        toast({ title: "Sub-Service Updated" });
+      } else {
+        await addDoc(collection(db, 'sub_services'), { ...subData, createdAt: new Date().toISOString() });
+        toast({ title: "Sub-Service Added" });
+      }
+      setIsDialogOpen(false);
+      setEditingSub(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to add sub-service." });
+      toast({ variant: "destructive", title: "Error" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!db || !confirm("Delete this sub-service?")) return;
+    await deleteDoc(doc(db, 'sub_services', id));
+    toast({ title: "Removed" });
+  };
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Sub-Service Management</h1>
-        <p className="text-muted-foreground text-sm">Configure task-specific add-ons for your main services</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="border-none shadow-sm h-fit bg-white">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Add Sub-Service</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground">Main Service Link</label>
-                <Select value={formData.mainServiceId} onValueChange={(val) => setFormData({...formData, mainServiceId: val})}>
-                  <SelectTrigger><SelectValue placeholder="Select Main Service" /></SelectTrigger>
-                  <SelectContent>
-                    {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground">Sub-Service Name</label>
-                <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="e.g. Kitchen Sanitization" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground">Price (BDT)</label>
-                  <Input type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="1500" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground">Duration</label>
-                  <Input value={formData.duration} onChange={(e) => setFormData({...formData, duration: e.target.value})} placeholder="1 hr" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-muted-foreground">Description</label>
-                <Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Details about this specific task..." />
-              </div>
-              <Button type="submit" className="w-full font-bold h-11 gap-2"><Plus size={18} /> Add Service Task</Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="lg:col-span-2 space-y-4">
-          {isLoading ? (
-            <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Syncing...</div>
-          ) : subServices?.length ? (
-            <div className="grid grid-cols-1 gap-4">
-              {subServices.map((sub) => {
-                const mainSrv = services?.find(s => s.id === sub.mainServiceId);
-                return (
-                  <Card key={sub.id} className="border-none shadow-sm group bg-white">
-                    <CardContent className="p-5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl"><Layers size={20} /></div>
-                        <div>
-                          <h4 className="font-bold text-gray-900">{sub.name}</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                            <Badge variant="outline" className="text-[8px] font-black uppercase">{mainSrv?.title || 'Standalone'}</Badge>
-                            <span className="text-[10px] font-bold text-primary flex items-center gap-1"><DollarSign size={10} /> {sub.price}</span>
-                            <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1"><Clock size={10} /> {sub.duration}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteDoc(doc(db!, 'sub_services', sub.id))}>
-                        <Trash2 size={16} />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="p-20 text-center border-2 border-dashed rounded-3xl bg-white text-muted-foreground italic">No sub-services configured.</div>
-          )}
+    <div className="space-y-8 pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Task Add-ons (Sub-Services)</h1>
+          <p className="text-muted-foreground text-sm">Configure specialized tasks that can be added to main bookings</p>
         </div>
+        
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingSub(null); }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => { setEditingSub(null); setIsDialogOpen(true); }}>
+              <Plus size={18} /> Add Sub-Service
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <form onSubmit={handleSave} className="space-y-6">
+              <DialogHeader><DialogTitle>{editingSub ? 'Edit Task' : 'New Sub-Service Task'}</DialogTitle></DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Task Name</Label>
+                  <Input name="name" defaultValue={editingSub?.name} required placeholder="e.g. Kitchen Cabinet Cleaning" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Link to Main Service</Label>
+                  <Select name="mainServiceId" defaultValue={editingSub?.mainServiceId || ""}>
+                    <SelectTrigger><SelectValue placeholder="Select Parent Service" /></SelectTrigger>
+                    <SelectContent>
+                      {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price (BDT)</Label>
+                    <Input name="price" type="number" defaultValue={editingSub?.price} required placeholder="500" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Duration</Label>
+                    <Input name="duration" defaultValue={editingSub?.duration} placeholder="1 hr" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select name="status" defaultValue={editingSub?.status || "Active"}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea name="description" defaultValue={editingSub?.description} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
+                  Save Task
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPI_STATS.map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border-none shadow-sm overflow-hidden bg-white">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gray-50/50">
+              <TableRow>
+                <TableHead className="font-bold py-4">Sub-Service Name</TableHead>
+                <TableHead className="font-bold">Parent Service</TableHead>
+                <TableHead className="font-bold">Add-on Price</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="text-right"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={5} className="text-center py-20">Loading tasks...</TableCell></TableRow>
+              ) : subServices?.length ? (
+                subServices.map((sub) => (
+                  <TableRow key={sub.id} className="hover:bg-gray-50/50">
+                    <TableCell className="py-4">
+                      <div className="font-bold text-gray-900">{sub.name}</div>
+                      <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                        <Clock size={10} /> {sub.duration}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs font-semibold text-indigo-600">
+                      {services?.find(s => s.id === sub.mainServiceId)?.title || 'Independent'}
+                    </TableCell>
+                    <TableCell className="font-black text-primary text-sm">৳{sub.price?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn(
+                        "text-[9px] font-black uppercase",
+                        sub.status === 'Inactive' ? "bg-gray-100 text-gray-500" : "bg-green-50 text-green-700"
+                      )}>
+                        {sub.status || 'Active'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingSub(sub); setIsDialogOpen(true); }}>
+                          <Edit size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(sub.id)}>
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No tasks added yet.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
