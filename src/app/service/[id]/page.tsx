@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
@@ -65,7 +66,7 @@ export default function ServiceDetailsPage() {
     );
   };
 
-  if (serviceLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+  if (serviceLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
 
   if (!service) {
     return (
