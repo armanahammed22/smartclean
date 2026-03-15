@@ -1,14 +1,19 @@
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
 import {LanguageProvider} from '@/components/providers/language-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'Smart Clean | Professional Cleaning Services in Bangladesh',
   description: 'Fast, efficient, and intelligent cleaning solutions for home and office in Bangladesh. Trusted by 1000+ customers.',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({
