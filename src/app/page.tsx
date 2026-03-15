@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,16 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc, where } from 'firebase/firestore';
+import { collection, query, doc, where } from 'firebase/firestore';
 import { 
   BellRing, 
   Clock, 
-  ArrowRight,
-  LayoutGrid,
   Mail,
-  Phone
+  Phone,
+  ShieldCheck,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
@@ -36,12 +35,12 @@ export default function SmartCleanHomePage() {
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
-    setMarqueeText(`${dateStr} | ${t('hero_banner_title')} | Bangladesh's Leading Cleaning Tech Partner.`);
-  }, [language, t]);
+    setMarqueeText(`${dateStr} | Clean Tech Excellence | Bangladesh's Leading CRM for Cleaning Operations.`);
+  }, [language]);
 
   const renderOffers = (placement: string) => {
     return offers?.filter(o => o.placement === placement).map(offer => {
-      if (!offer.imageUrl || typeof offer.imageUrl !== 'string' || offer.imageUrl === '') return null;
+      if (!offer.imageUrl) return null;
       return (
         <Link key={offer.id} href={offer.link || '#'} className="block relative aspect-[21/7] rounded-3xl overflow-hidden group shadow-lg">
           <Image 
@@ -70,7 +69,7 @@ export default function SmartCleanHomePage() {
           <section className="container mx-auto px-4">
             <div className="relative overflow-hidden rounded-3xl shadow-xl bg-[#081621] text-white aspect-[21/9] md:aspect-[21/7]">
               <Image 
-                src={settings?.hero?.imageUrl || "https://picsum.photos/seed/main-hero/1200/600"} 
+                src={settings?.hero?.imageUrl || "https://picsum.photos/seed/crmhero/1200/600"} 
                 alt="Hero" 
                 fill 
                 className="object-cover opacity-40" 
@@ -78,24 +77,24 @@ export default function SmartCleanHomePage() {
               <div className="absolute inset-0 flex flex-col justify-center p-8 md:p-16 space-y-6">
                 <div className="max-w-xl space-y-2">
                   <Badge className="bg-primary text-white border-none mb-4 uppercase tracking-[0.2em]">
-                    Bangladesh's #1 Clean Tech
+                    Smart Clean Operations
                   </Badge>
                   <h1 className="text-3xl md:text-6xl font-black font-headline leading-tight">
-                    {settings?.hero?.title || t('hero_banner_title')}
+                    {settings?.hero?.title || 'Intelligent Cleaning CRM'}
                   </h1>
                   <p className="text-white/80 text-sm md:text-lg">
-                    {settings?.hero?.subtitle || t('hero_subtitle')}
+                    {settings?.hero?.subtitle || 'Managing enterprise cleaning services across Bangladesh with efficiency.'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-4">
                   <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] rounded-full h-14 px-10 text-lg font-black shadow-2xl" asChild>
                     <Link href="#contact">
-                      Contact Us
+                      Contact Sales
                     </Link>
                   </Button>
                   <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 rounded-full border border-white/20">
                     <Clock className="text-primary" />
-                    <span className="font-bold text-sm">{t('hero_phone')}</span>
+                    <span className="font-bold text-sm">24/7 Support Available</span>
                   </div>
                 </div>
               </div>
@@ -119,22 +118,26 @@ export default function SmartCleanHomePage() {
 
         <div className="container mx-auto px-4 space-y-12 mt-8">
           
-          {/* Middle Offers */}
-          <div className="space-y-6">
-            {renderOffers('middle')}
-          </div>
+          {/* Custom Content Section */}
+          {settings?.sections?.customContent && settings.marketingContent && (
+            <section className="bg-white p-8 md:p-16 rounded-3xl border shadow-sm">
+               <div className="max-w-3xl prose prose-slate">
+                  {settings.marketingContent}
+               </div>
+            </section>
+          )}
 
           {/* Contact Section */}
           <section id="contact" className="py-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-white rounded-3xl p-8 md:p-16 shadow-sm border">
               <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-black font-headline text-[#081621]">Get a Custom Inquiry</h2>
-                <p className="text-muted-foreground text-lg">Our experts are ready to help you with specialized cleaning solutions for your home or business.</p>
+                <h2 className="text-3xl md:text-4xl font-black font-headline text-[#081621]">Enterprise Inquiries</h2>
+                <p className="text-muted-foreground text-lg">Deploy Smart Clean technologies for your facility management and maintenance operations.</p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/10 rounded-xl text-primary"><Phone size={24} /></div>
                     <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Phone</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Hotline</p>
                       <p className="font-black text-lg">+8801919640422</p>
                     </div>
                   </div>
@@ -148,15 +151,10 @@ export default function SmartCleanHomePage() {
                 </div>
               </div>
               <div className="relative aspect-square md:aspect-auto h-full min-h-[300px] rounded-2xl overflow-hidden shadow-2xl">
-                <Image src="https://picsum.photos/seed/cleancontact/800/800" alt="Contact" fill className="object-cover" />
+                <Image src="https://picsum.photos/seed/cleanops/800/800" alt="Contact" fill className="object-cover" />
               </div>
             </div>
           </section>
-
-          {/* Offers: After Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {renderOffers('after_products')}
-          </div>
 
         </div>
       </div>

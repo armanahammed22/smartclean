@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -49,8 +48,8 @@ export default function AdminDashboard() {
 
       // 1. Marketing Offers
       const offers = [
-        { id: 'off1', title: 'Summer Sale', placement: 'top', enabled: true, imageUrl: 'https://picsum.photos/seed/off1/1200/400', link: '#' },
-        { id: 'off2', title: 'New Tech', placement: 'middle', enabled: true, imageUrl: 'https://picsum.photos/seed/off2/1200/400', link: '#' }
+        { id: 'off1', title: 'Special CRM Offer', placement: 'top', enabled: true, imageUrl: 'https://picsum.photos/seed/off1/1200/400', link: '#' },
+        { id: 'off2', title: 'New Area Support', placement: 'middle', enabled: true, imageUrl: 'https://picsum.photos/seed/off2/1200/400', link: '#' }
       ];
       offers.forEach(o => batch.set(doc(db, 'marketing_offers', o.id), o));
 

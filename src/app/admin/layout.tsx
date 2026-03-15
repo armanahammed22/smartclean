@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -19,10 +18,8 @@ import {
   MapPin,
   BarChart3,
   TicketPercent,
-  Truck,
   Menu,
-  Paintbrush,
-  CreditCard
+  Paintbrush
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -82,8 +79,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: 'Business',
       items: [
         { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-teal-500' },
-        { name: 'Couriers', href: '/admin/couriers', icon: Truck, color: 'text-slate-500' },
-        { name: 'Subscription', href: '/admin/subscription', icon: CreditCard, color: 'text-lime-500' },
       ]
     }
   ];
@@ -189,29 +184,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </>
   );
 
-  const MobileBottomNav = () => (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-50 border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
-      <div className="flex items-center justify-around h-full px-2">
-        <Link href="/admin/leads" className={cn("flex flex-col items-center gap-1", pathname === '/admin/leads' ? "text-primary" : "text-gray-400")}>
-          <Users size={20} />
-          <span className="text-[10px] font-bold">Leads</span>
-        </Link>
-        <Link href="/admin/dashboard" className={cn("flex flex-col items-center gap-1", pathname === '/admin/dashboard' ? "text-primary" : "text-gray-400")}>
-          <LayoutDashboard size={20} />
-          <span className="text-[10px] font-bold">Dashboard</span>
-        </Link>
-        <Link href="/admin/reports" className={cn("flex flex-col items-center gap-1", pathname === '/admin/reports' ? "text-primary" : "text-gray-400")}>
-          <BarChart3 size={20} />
-          <span className="text-[10px] font-bold">Reports</span>
-        </Link>
-        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-400">
-          <LogOut size={20} />
-          <span className="text-[10px] font-bold">Logout</span>
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside 
@@ -227,7 +199,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="absolute -right-4 top-20 bg-white border rounded-full h-8 w-8 z-40 hidden lg:flex shadow-md text-gray-400"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {isCollapsed ? <ChevronRight size(14) : <ChevronLeft size(14) />}
         </Button>
       </aside>
 
@@ -263,8 +235,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-20 lg:pb-8">
           {children}
         </main>
-
-        <MobileBottomNav />
       </div>
     </div>
   );

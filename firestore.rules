@@ -14,39 +14,32 @@ service cloud.firestore {
       return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))); 
     }
     
-    function isEmployee() { 
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid)); 
-    }
-    
     function isStaff() { 
-      return isAdmin() || isEmployee(); 
+      return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))); 
     }
 
-    // PUBLIC CATALOG ACCESS: Explicitly allow unauthenticated read (get/list)
-    // We use a broader match to ensure top-level collection listing is permitted
-    match /products/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    // PUBLIC ACCESS: Marketing and Global Settings
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    // OPERATIONAL DATA
-    match /orders/{allPaths=**} { allow read, write: if isStaff(); }
-    match /bookings/{allPaths=**} { allow read, write: if isStaff(); }
-    match /leads/{allPaths=**} { allow read, write: if true; } // Allow public lead submission
-    match /customers/{allPaths=**} { allow read, write: if isStaff(); }
-    match /employee_profiles/{allPaths=**} { allow read: if isStaff(); allow write: if isAdmin(); }
+    // CRM DATA: Leads and Customers
+    // Anyone can submit a lead, but only staff can read them.
+    match /leads/{id} { 
+      allow create: if true; 
+      allow read, update, delete: if isStaff(); 
+    }
+    match /customers/{id} { 
+      allow read, write: if isStaff(); 
+    }
     
-    // ROLE DEFINITIONS
+    // STAFF & ADMIN PROFILES
+    match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // Global Catch-all for Bootstrap Admin (Safety)
+    // Global Catch-all for Bootstrap Admin
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
