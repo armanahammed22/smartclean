@@ -3,18 +3,19 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, CalendarCheck, ShieldCheck, CheckCircle2, Clock, MapPin, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, ShieldCheck, CheckCircle2, Clock, MapPin, Loader2, Info, Star, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
@@ -28,7 +29,7 @@ export default function ServiceDetailsPage() {
 
   const subServicesQuery = useMemoFirebase(() => {
     if (!db || !id) return null;
-    return query(collection(db, 'sub_services'), where('mainServiceId', '==', id));
+    return query(collection(db, 'sub_services'), where('mainServiceId', '==', id), where('status', '==', 'Active'));
   }, [db, id]);
 
   const { data: subServices, isLoading: subLoading } = useCollection(subServicesQuery);
@@ -39,17 +40,16 @@ export default function ServiceDetailsPage() {
     if (!service) return 0;
     const subsPrice = subServices
       ?.filter(s => selectedSubServiceIds.includes(s.id))
-      .reduce((acc, s) => acc + s.price, 0) || 0;
-    return service.basePrice + subsPrice;
+      .reduce((acc, s) => acc + (Number(s.price) || 0), 0) || 0;
+    return (service.basePrice || 0) + subsPrice;
   }, [service, subServices, selectedSubServiceIds]);
 
   const handleBookNow = () => {
     if (!service) return;
     
-    // Create a combined service entry for the cart
     const selectedSubs = subServices?.filter(s => selectedSubServiceIds.includes(s.id)) || [];
     const combinedTitle = selectedSubs.length > 0 
-      ? `${service.title} (${selectedSubs.map(s => s.name).join(', ')})`
+      ? `${service.title} + ${selectedSubs.map(s => s.name).join(', ')}`
       : service.title;
 
     addToCart({
@@ -79,18 +79,18 @@ export default function ServiceDetailsPage() {
     );
   }
 
-  const features = language === 'bn' 
-    ? ["প্রফেশনাল টিম", "সম্পূর্ণ বীমাকৃত", "পরিবেশ বান্ধব পণ্য", "সন্তুষ্টি গ্যারান্টি"]
-    : ["Professional Team", "Fully Insured", "Eco-friendly Products", "Satisfaction Guaranteed"];
+  const guarantees = language === 'bn' 
+    ? ["প্রফেশনাল টিম", "১০০% নিরাপদ", "পরিবেশ বান্ধব", "সন্তুষ্টি গ্যারান্টি"]
+    : ["Pro Cleaners", "Fully Insured", "Eco-friendly", "Satisfaction Guaranteed"];
 
   return (
     <PublicLayout>
-      <div className="bg-[#F2F4F8] min-h-screen pb-24">
+      <div className="bg-[#F9FAFB] min-h-screen pb-24">
         <div className="container mx-auto px-4 py-8">
           <Button 
             variant="ghost" 
             onClick={() => router.back()} 
-            className="mb-8 gap-2 hover:bg-white"
+            className="mb-8 gap-2 hover:bg-white rounded-xl"
           >
             <ArrowLeft size={18} />
             {t('back_to_list')}
@@ -98,99 +98,131 @@ export default function ServiceDetailsPage() {
 
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-8 space-y-8">
-                <div className="relative aspect-video rounded-3xl overflow-hidden shadow-lg bg-white border border-border/50">
+              <div className="lg:col-span-8 space-y-10">
+                {/* Hero Header */}
+                <div className="relative aspect-[21/9] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10">
                   {service.imageUrl ? (
-                    <Image src={service.imageUrl} alt={service.title} fill className="object-cover" priority />
+                    <Image src={service.imageUrl} alt={service.title || 'Service'} fill className="object-cover" priority />
                   ) : (
-                    <div className="w-full h-full bg-primary/5 flex items-center justify-center">
-                      <CalendarCheck size={80} className="text-primary/20" />
+                    <div className="w-full h-full bg-gradient-to-br from-[#081621] to-[#0a253a] flex items-center justify-center">
+                      <CalendarCheck size={100} className="text-white/10" />
                     </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                    <Badge className="bg-primary text-white border-none w-fit mb-4 px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-[0.2em]">Expert Solution</Badge>
+                    <h1 className="text-3xl md:text-5xl font-black text-white font-headline leading-tight">{service.title}</h1>
+                  </div>
                 </div>
 
-                <div className="bg-white p-8 lg:p-12 rounded-3xl shadow-sm border border-border/50 space-y-6">
+                {/* Description & Guarantees */}
+                <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
                   <div className="space-y-4">
-                    <Badge className="bg-primary/10 text-primary border-none text-sm font-bold">
-                      {t('services_title')}
-                    </Badge>
-                    <h1 className="text-4xl font-bold text-[#081621] font-headline">
-                      {service.title}
-                    </h1>
-                    <p className="text-xl text-muted-foreground leading-relaxed">
+                    <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">Service Overview</h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
                       {service.description}
                     </p>
                   </div>
 
-                  {/* Sub Services Selection */}
-                  {subServices && subServices.length > 0 && (
-                    <div className="pt-8 border-t space-y-6">
-                      <h3 className="text-xl font-bold flex items-center gap-2">
-                        <Info size={20} className="text-primary" /> 
-                        {language === 'bn' ? 'অতিরিক্ত সেবা নির্বাচন করুন' : 'Select Additional Services'}
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        {subServices.map(sub => (
-                          <div 
-                            key={sub.id} 
-                            className={cn(
-                              "flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer",
-                              selectedSubServiceIds.includes(sub.id) ? "bg-primary/5 border-primary shadow-sm" : "bg-gray-50 border-transparent hover:border-gray-200"
-                            )}
-                            onClick={() => toggleSubService(sub.id)}
-                          >
-                            <div className="flex items-center gap-4">
-                              <Checkbox checked={selectedSubServiceIds.includes(sub.id)} onCheckedChange={() => toggleSubService(sub.id)} />
-                              <div>
-                                <p className="font-bold text-[#081621]">{sub.name}</p>
-                                <p className="text-xs text-muted-foreground">{sub.description}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-black text-primary">৳{sub.price}</p>
-                              <p className="text-[10px] text-muted-foreground font-bold">{sub.duration}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
-                    {features.map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3 p-4 bg-[#F2F4F8] rounded-xl">
-                        <CheckCircle2 size={20} className="text-primary" />
-                        <span className="font-bold text-[#081621]">{feature}</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {guarantees.map((g, i) => (
+                      <div key={i} className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl gap-3">
+                        <div className="p-2 bg-white rounded-full shadow-sm text-primary"><CheckCircle2 size={20} /></div>
+                        <span className="text-[10px] font-black uppercase text-gray-700 tracking-tight">{g}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Sub Services Selection */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
+                      <Star className="text-primary" fill="currentColor" size={24} />
+                      {language === 'bn' ? 'অতিরিক্ত সেবাসমূহ' : 'Available Add-ons'}
+                    </h2>
+                    <Badge variant="secondary" className="bg-white text-primary border-primary/20 px-3 py-1 rounded-full font-bold">
+                      {subServices?.length || 0} Options
+                    </Badge>
+                  </div>
+
+                  {subLoading ? (
+                    <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {subServices?.map(sub => (
+                        <div 
+                          key={sub.id} 
+                          className={cn(
+                            "group flex flex-col md:flex-row md:items-center justify-between p-6 rounded-[2rem] border transition-all duration-500 cursor-pointer bg-white relative overflow-hidden",
+                            selectedSubServiceIds.includes(sub.id) 
+                              ? "border-primary shadow-xl shadow-primary/10 ring-1 ring-primary" 
+                              : "border-gray-100 hover:border-primary/30 hover:shadow-md"
+                          )}
+                          onClick={() => toggleSubService(sub.id)}
+                        >
+                          <div className="flex items-center gap-6 relative z-10">
+                            <div className={cn(
+                              "w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors",
+                              selectedSubServiceIds.includes(sub.id) ? "bg-primary border-primary text-white" : "border-gray-200 text-transparent"
+                            )}>
+                              <CheckCircle2 size={24} />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-lg font-black text-gray-900 leading-none">{sub.name}</h4>
+                              <p className="text-sm text-muted-foreground max-w-md line-clamp-1">{sub.description}</p>
+                              <div className="flex items-center gap-3 pt-1">
+                                <span className="text-[10px] font-black uppercase text-primary bg-primary/5 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <Clock size={10} /> {sub.duration}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-4 md:mt-0 flex flex-col items-end gap-1 relative z-10">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Add for only</span>
+                            <p className="text-2xl font-black text-primary">৳{sub.price}</p>
+                          </div>
+                          
+                          {/* Progress Decoration */}
+                          {selectedSubServiceIds.includes(sub.id) && (
+                            <div className="absolute bottom-0 left-0 h-1 bg-primary w-full animate-in slide-in-from-left duration-1000" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Sidebar Booking Card */}
               <div className="lg:col-span-4">
                 <div className="sticky top-24 space-y-6">
-                  <Card className="rounded-3xl shadow-xl border-primary/20 overflow-hidden">
+                  <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
+                    <CardHeader className="bg-[#081621] text-white p-8">
+                      <CardTitle className="text-xl font-black uppercase tracking-widest text-primary">Booking Summary</CardTitle>
+                    </CardHeader>
                     <CardContent className="p-8 space-y-8">
-                      <div className="space-y-2">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('price_from')}</span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-4xl font-bold text-primary">৳{totalPrice.toLocaleString()}</span>
-                          <span className="text-sm text-muted-foreground italic">/ {language === 'bn' ? 'সার্ভিস' : 'service'}</span>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end border-b border-gray-50 pb-4">
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Estimated Total</span>
+                          <div className="text-right">
+                            <p className="text-4xl font-black text-primary leading-none">৳{totalPrice.toLocaleString()}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-2">Plus applicable taxes</p>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-4 text-sm">
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          <Clock size={18} className="text-primary" />
-                          <span>{t('footer_hours')}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          <MapPin size={18} className="text-primary" />
-                          <span>{language === 'bn' ? 'সারাদেশে সেবা প্রদান' : 'Service available nationwide'}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          <ShieldCheck size={18} className="text-primary" />
-                          <span>{language === 'bn' ? '১০০% নিরাপদ লেনদেন' : '100% Secure Transaction'}</span>
+                        <div className="space-y-4 pt-2">
+                          <div className="flex items-center gap-4 text-gray-600">
+                            <div className="p-2 bg-gray-50 rounded-xl"><Clock size={18} className="text-primary" /></div>
+                            <span className="text-xs font-bold">{t('footer_hours')}</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-gray-600">
+                            <div className="p-2 bg-gray-50 rounded-xl"><MapPin size={18} className="text-primary" /></div>
+                            <span className="text-xs font-bold">Available in All Major Areas</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-gray-600">
+                            <div className="p-2 bg-gray-50 rounded-xl"><ShieldCheck size={18} className="text-primary" /></div>
+                            <span className="text-xs font-bold">100% Satisfaction Guarantee</span>
+                          </div>
                         </div>
                       </div>
 
@@ -198,17 +230,26 @@ export default function ServiceDetailsPage() {
                         <Button 
                           onClick={handleBookNow} 
                           size="lg" 
-                          className="w-full h-16 rounded-2xl gap-3 text-lg font-bold shadow-lg"
+                          className="w-full h-16 rounded-2xl gap-3 text-lg font-black shadow-xl shadow-primary/30 uppercase tracking-tight"
                         >
                           <CalendarCheck size={24} />
                           {t('book_now')}
                         </Button>
-                        <p className="text-[10px] text-center text-muted-foreground">
+                        <p className="text-[10px] text-center text-muted-foreground italic leading-relaxed px-4">
                           {t('service_billing_note')}
                         </p>
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Trust Signal */}
+                  <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-primary font-black">AI</div>
+                    <div>
+                      <p className="text-xs font-black text-gray-900 uppercase leading-none mb-1">Smart Advisor</p>
+                      <p className="text-[10px] text-gray-500 font-medium">Need help picking? Ask our AI expert!</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

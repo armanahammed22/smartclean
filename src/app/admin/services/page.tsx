@@ -1,12 +1,11 @@
-
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wrench, Plus, Trash2, Edit, Loader2, Save, Package, Layers, Users, Clock } from 'lucide-react';
+import { Wrench, Plus, Trash2, Edit, Loader2, Save, Package, Layers, Users, Clock, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -40,7 +39,7 @@ export default function ServicesManagementPage() {
   const KPI_STATS = [
     { label: "Total Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
     { label: "Sub-Services", value: subServices?.length || 0, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: Wrench, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Active Services", value: services?.filter(s => s.status === 'Active').length || 0, icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
@@ -71,7 +70,7 @@ export default function ServicesManagementPage() {
       setIsDialogOpen(false);
       setEditingService(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: "Error", description: "Save failed." });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,28 +96,28 @@ export default function ServicesManagementPage() {
               <Plus size={18} /> Add New Service
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-3xl">
             <form onSubmit={handleSave} className="space-y-6">
-              <DialogHeader><DialogTitle>{editingService ? 'Edit Service' : 'New Service Offering'}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingService ? 'Edit Service' : 'New Service Offering'}</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Service Name</Label>
-                  <Input name="title" defaultValue={editingService?.title} required placeholder="e.g. Deep Home Cleaning" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Service Name</Label>
+                  <Input name="title" defaultValue={editingService?.title} required placeholder="e.g. Deep Home Cleaning" className="h-11 bg-gray-50 border-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Starts From (BDT)</Label>
-                    <Input name="basePrice" type="number" defaultValue={editingService?.basePrice} required placeholder="2000" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Starts From (BDT)</Label>
+                    <Input name="basePrice" type="number" defaultValue={editingService?.basePrice} required className="h-11 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Est. Duration</Label>
-                    <Input name="duration" defaultValue={editingService?.duration} placeholder="2-3 hrs" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Est. Duration</Label>
+                    <Input name="duration" defaultValue={editingService?.duration} placeholder="2-3 hrs" className="h-11 bg-gray-50 border-none" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Category</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
                   <Select name="categoryId" defaultValue={editingService?.categoryId || "general"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="general">General</SelectItem>
                       {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -126,9 +125,9 @@ export default function ServicesManagementPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status</Label>
                   <Select name="status" defaultValue={editingService?.status || "Active"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
@@ -136,13 +135,13 @@ export default function ServicesManagementPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea name="description" defaultValue={editingService?.description} placeholder="What's included?" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Description</Label>
+                  <Textarea name="description" defaultValue={editingService?.description} className="bg-gray-50 border-none" placeholder="What's included?" />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold px-8">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
                   Save Service
                 </Button>
@@ -154,11 +153,11 @@ export default function ServicesManagementPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {KPI_STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}><stat.icon size={20} /></div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{stat.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
               </div>
             </CardContent>
@@ -166,16 +165,16 @@ export default function ServicesManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-4">Service Details</TableHead>
+                <TableHead className="font-bold py-5 pl-8">Service Details</TableHead>
                 <TableHead className="font-bold">Category</TableHead>
                 <TableHead className="font-bold">Base Price</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="text-right"></TableHead>
+                <TableHead className="text-right pr-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,29 +182,29 @@ export default function ServicesManagementPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-20">Syncing services...</TableCell></TableRow>
               ) : services?.length ? (
                 services.map((service) => (
-                  <TableRow key={service.id} className="hover:bg-gray-50/50">
-                    <TableCell className="py-4">
+                  <TableRow key={service.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell className="py-5 pl-8">
                       <div className="font-bold text-gray-900 leading-tight">{service.title}</div>
                       <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
                         <Clock size={10} /> {service.duration || 'Variable'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs font-medium uppercase">{service.categoryId}</TableCell>
+                    <TableCell className="text-xs font-medium uppercase text-gray-500">{service.categoryId}</TableCell>
                     <TableCell className="font-black text-primary text-sm">৳{service.basePrice?.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge className={cn(
-                        "text-[9px] font-black border-none uppercase",
+                        "text-[9px] font-black border-none uppercase px-2 py-0.5 rounded-md",
                         service.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                       )}>
                         {service.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingService(service); setIsDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => { setEditingService(service); setIsDialogOpen(true); }}>
                           <Edit size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(service.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDelete(service.id)}>
                           <Trash2 size={14} />
                         </Button>
                       </div>

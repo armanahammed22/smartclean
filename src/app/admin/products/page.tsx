@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -53,9 +52,12 @@ export default function ProductsManagementPage() {
     const productData = {
       name: formData.get('name') as string,
       price: parseFloat(formData.get('price') as string),
+      regularPrice: parseFloat(formData.get('regularPrice') as string) || 0,
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
       categoryId: formData.get('categoryId') as string,
+      brand: formData.get('brand') as string || 'General',
       description: formData.get('description') as string,
+      shortDescription: formData.get('shortDescription') as string,
       status: formData.get('status') as string || 'Active',
       updatedAt: new Date().toISOString()
     };
@@ -97,57 +99,64 @@ export default function ProductsManagementPage() {
               <Plus size={18} /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl rounded-3xl">
             <form onSubmit={handleSave} className="space-y-6">
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle></DialogHeader>
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Product Name</Label>
-                  <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Price (BDT)</Label>
-                    <Input name="price" type="number" defaultValue={editingProduct?.price} required placeholder="5000" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Product Name</Label>
+                    <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-11 bg-gray-50 border-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Price (BDT)</Label>
+                      <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-11 bg-gray-50 border-none" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Reg. Price</Label>
+                      <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-11 bg-gray-50 border-none" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Stock Qty</Label>
+                      <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 bg-gray-50 border-none" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Brand</Label>
+                      <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. LG" className="h-11 bg-gray-50 border-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
+                    <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                      <SelectContent>
+                        {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Stock Qty</Label>
-                    <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required placeholder="10" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Short Description</Label>
+                    <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Brief summary" className="h-11 bg-gray-50 border-none" />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
-                    <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select name="status" defaultValue={editingProduct?.status || "Active"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea name="description" defaultValue={editingProduct?.description} className="min-h-[80px]" placeholder="Key features..." />
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Description</Label>
+                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none min-h-[100px]" placeholder="Key features and details..." />
+                  </div>
                 </div>
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold px-8">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
-                  {editingProduct ? 'Update' : 'Save'}
+                  Save Product
                 </Button>
               </DialogFooter>
             </form>
@@ -157,11 +166,11 @@ export default function ProductsManagementPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {KPI_STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}><stat.icon size={20} /></div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{stat.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
               </div>
             </CardContent>
@@ -169,17 +178,17 @@ export default function ProductsManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-4">Product Name</TableHead>
-                <TableHead className="font-bold">Category</TableHead>
-                <TableHead className="font-bold">Price</TableHead>
+                <TableHead className="font-bold py-5 pl-8">Product Name</TableHead>
+                <TableHead className="font-bold">Brand/Category</TableHead>
+                <TableHead className="font-bold">Pricing</TableHead>
                 <TableHead className="font-bold">Stock</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="text-right"></TableHead>
+                <TableHead className="text-right pr-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,25 +196,38 @@ export default function ProductsManagementPage() {
                 <TableRow><TableCell colSpan={6} className="text-center py-20">Syncing inventory...</TableCell></TableRow>
               ) : products?.length ? (
                 products.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-gray-50/50">
-                    <TableCell className="font-bold text-gray-900 py-4">{product.name}</TableCell>
-                    <TableCell className="text-xs font-medium">{categories?.find(c => c.id === product.categoryId)?.name || 'General'}</TableCell>
-                    <TableCell className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</TableCell>
-                    <TableCell className="text-xs">{product.stockQuantity || 0} Units</TableCell>
+                  <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell className="font-bold text-gray-900 py-5 pl-8">{product.name}</TableCell>
+                    <TableCell>
+                      <div className="text-xs font-bold text-gray-700">{product.brand || 'No Brand'}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">{categories?.find(c => c.id === product.categoryId)?.name || 'General'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</div>
+                      {product.regularPrice > 0 && <div className="text-[10px] text-muted-foreground line-through decoration-red-200">৳{product.regularPrice.toLocaleString()}</div>}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn(
+                        "text-[9px] font-black border-none px-2 py-0.5",
+                        product.stockQuantity < 5 ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-600"
+                      )}>
+                        {product.stockQuantity || 0} Units
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn(
-                        "text-[9px] font-black uppercase",
+                        "text-[9px] font-black uppercase border-none",
                         product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                       )}>
                         {product.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}>
                           <Edit size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(product.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDelete(product.id)}>
                           <Trash2 size={14} />
                         </Button>
                       </div>

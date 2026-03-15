@@ -1,12 +1,11 @@
-
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, Wrench, Clock, Users, Package } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, Wrench, Clock, Users, Package, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -69,7 +68,7 @@ export default function SubServicesManagementPage() {
       setIsDialogOpen(false);
       setEditingSub(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: "Error", description: "Could not save task." });
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +77,7 @@ export default function SubServicesManagementPage() {
   const handleDelete = async (id: string) => {
     if (!db || !confirm("Delete this sub-service?")) return;
     await deleteDoc(doc(db, 'sub_services', id));
-    toast({ title: "Removed" });
+    toast({ title: "Removed Successfully" });
   };
 
   return (
@@ -95,18 +94,18 @@ export default function SubServicesManagementPage() {
               <Plus size={18} /> Add Sub-Service
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-3xl">
             <form onSubmit={handleSave} className="space-y-6">
-              <DialogHeader><DialogTitle>{editingSub ? 'Edit Task' : 'New Sub-Service Task'}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingSub ? 'Edit Task' : 'New Sub-Service Task'}</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Task Name</Label>
-                  <Input name="name" defaultValue={editingSub?.name} required placeholder="e.g. Kitchen Cabinet Cleaning" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Task Name</Label>
+                  <Input name="name" defaultValue={editingSub?.name} required placeholder="e.g. Kitchen Cabinet Cleaning" className="h-11 bg-gray-50 border-none" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Link to Main Service</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Link to Main Service</Label>
                   <Select name="mainServiceId" defaultValue={editingSub?.mainServiceId || ""}>
-                    <SelectTrigger><SelectValue placeholder="Select Parent Service" /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue placeholder="Select Parent Service" /></SelectTrigger>
                     <SelectContent>
                       {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
                     </SelectContent>
@@ -114,18 +113,18 @@ export default function SubServicesManagementPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Price (BDT)</Label>
-                    <Input name="price" type="number" defaultValue={editingSub?.price} required placeholder="500" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Price (BDT)</Label>
+                    <Input name="price" type="number" defaultValue={editingSub?.price} required placeholder="500" className="h-11 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Duration</Label>
-                    <Input name="duration" defaultValue={editingSub?.duration} placeholder="1 hr" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Duration</Label>
+                    <Input name="duration" defaultValue={editingSub?.duration} placeholder="1 hr" className="h-11 bg-gray-50 border-none" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Status</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status</Label>
                   <Select name="status" defaultValue={editingSub?.status || "Active"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
@@ -133,13 +132,13 @@ export default function SubServicesManagementPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea name="description" defaultValue={editingSub?.description} />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Description</Label>
+                  <Textarea name="description" defaultValue={editingSub?.description} className="bg-gray-50 border-none" />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold px-8">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
                   Save Task
                 </Button>
@@ -151,11 +150,11 @@ export default function SubServicesManagementPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {KPI_STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}><stat.icon size={20} /></div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">{stat.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{stat.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
               </div>
             </CardContent>
@@ -163,16 +162,16 @@ export default function SubServicesManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-4">Sub-Service Name</TableHead>
+                <TableHead className="font-bold py-5 pl-8">Sub-Service Name</TableHead>
                 <TableHead className="font-bold">Parent Service</TableHead>
                 <TableHead className="font-bold">Add-on Price</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="text-right"></TableHead>
+                <TableHead className="text-right pr-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,9 +179,9 @@ export default function SubServicesManagementPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-20">Loading tasks...</TableCell></TableRow>
               ) : subServices?.length ? (
                 subServices.map((sub) => (
-                  <TableRow key={sub.id} className="hover:bg-gray-50/50">
-                    <TableCell className="py-4">
-                      <div className="font-bold text-gray-900">{sub.name}</div>
+                  <TableRow key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell className="py-5 pl-8">
+                      <div className="font-bold text-gray-900 leading-tight">{sub.name}</div>
                       <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
                         <Clock size={10} /> {sub.duration}
                       </div>
@@ -193,18 +192,18 @@ export default function SubServicesManagementPage() {
                     <TableCell className="font-black text-primary text-sm">৳{sub.price?.toLocaleString()}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn(
-                        "text-[9px] font-black uppercase",
+                        "text-[9px] font-black uppercase border-none px-2 py-0.5 rounded-md",
                         sub.status === 'Inactive' ? "bg-gray-100 text-gray-500" : "bg-green-50 text-green-700"
                       )}>
                         {sub.status || 'Active'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingSub(sub); setIsDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => { setEditingSub(sub); setIsDialogOpen(true); }}>
                           <Edit size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(sub.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDelete(sub.id)}>
                           <Trash2 size={14} />
                         </Button>
                       </div>

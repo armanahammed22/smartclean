@@ -2,17 +2,20 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  regularPrice?: number;
   description: string;
   shortDescription: string;
   imageUrl: string;
   categoryId: string;
   subCategoryId?: string;
   brandId?: string;
+  brand?: string;
   stockQuantity: number;
   sku?: string;
   type?: 'product';
   status: 'Active' | 'Inactive';
   onSale?: boolean;
+  features?: string[];
 }
 
 export interface MarketingOffer {
@@ -71,5 +74,7 @@ export interface SubService {
   price: number;
   duration: string;
   mainServiceId: string;
+  imageUrl?: string;
   type?: 'sub_service';
+  status?: 'Active' | 'Inactive';
 }
