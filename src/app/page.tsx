@@ -189,7 +189,12 @@ export default function SmartCleanHomePage() {
                   <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-3 group">
                     <div className="p-5 bg-gray-50 rounded-[1.5rem] text-gray-600 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-sm border border-transparent group-hover:border-primary/20 relative w-20 h-20 flex items-center justify-center overflow-hidden">
                       {link.imageUrl ? (
-                        <Image src={link.imageUrl} alt={link.label} fill className="object-contain p-4 group-hover:scale-110 transition-transform" />
+                        <Image 
+                          src={link.imageUrl} 
+                          alt={link.label || 'Navigation Link'} 
+                          fill 
+                          className="object-contain p-4 group-hover:scale-110 transition-transform" 
+                        />
                       ) : (
                         <Icon size={32} />
                       )}
@@ -226,7 +231,7 @@ export default function SmartCleanHomePage() {
                       <div className="relative aspect-[982/500] w-full rounded-xl overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
                         <Image 
                           src={img.imageUrl} 
-                          alt={`Banner ${idx + 1}`} 
+                          alt={img.ctaText || `Banner ${idx + 1}`} 
                           fill 
                           className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                           priority={idx === 0}
@@ -368,7 +373,7 @@ export default function SmartCleanHomePage() {
                     <Link href={`/service/${service.id}`} className="block relative aspect-square overflow-hidden shrink-0">
                       <Image 
                         src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={service.title} 
+                        alt={service.title || 'Service Image'} 
                         fill 
                         className="object-cover group-hover:scale-110 transition-transform duration-700" 
                       />

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -36,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl !== '' ? (
           <Image
             src={product.imageUrl}
-            alt={product.name}
+            alt={product.name || 'Product Image'}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
