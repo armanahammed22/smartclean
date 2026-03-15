@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -25,6 +25,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
 
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
   const NAV_ITEMS = [
     { name: 'Overview', href: '/account/dashboard', icon: LayoutDashboard },
     { name: 'History', href: '/account/history', icon: History },
@@ -33,10 +39,12 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     { name: 'Support', href: '/support', icon: HelpCircle },
   ];
 
-  if (isUserLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
-  if (!user) {
-    router.push('/login');
-    return null;
+  if (isUserLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
   }
 
   return (
@@ -62,7 +70,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <aside className="w-full md:w-64 shrink-0 space-y-1">
           {NAV_ITEMS.map((item) => (
             <Link
-              key={item.href}
+              key={item.name}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm",
