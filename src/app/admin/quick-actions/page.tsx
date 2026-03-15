@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, addDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,7 +90,7 @@ export default function QuickActionsAdminPage() {
                 <Select value={formData.bgGradient} onValueChange={val => setFormData({...formData, bgGradient: val})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {GRADIENTS.map(g => <SelectItem key={link.id} value={g.value}>{g.name}</SelectItem>)}
+                    {GRADIENTS.map(g => <SelectItem key={g.value} value={g.value}>{g.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
