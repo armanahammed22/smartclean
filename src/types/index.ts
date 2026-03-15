@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -17,6 +18,7 @@ export interface Product {
   onSale?: boolean;
   features?: string[];
   specs?: { label: string; value: string }[];
+  size?: string; // Added for speech and size display
 }
 
 export interface MarketingOffer {

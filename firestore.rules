@@ -24,16 +24,27 @@ service cloud.firestore {
     }
 
     // BOOTSTRAP ADMIN: Full access override
-    // This ensures the primary admin can always manage the system.
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
 
     // PUBLIC CATALOG: Unauthenticated read access
-    // We use {id=**} to ensure both document 'get' and collection 'list' operations are permitted.
-    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    // Explicitly allowing list and get on products and services
+    match /products { 
+      allow read, list: if true; 
+    }
+    match /products/{id} { 
+      allow read, get: if true; 
+    }
+    match /services { 
+      allow read, list: if true; 
+    }
+    match /services/{id} { 
+      allow read, get: if true; 
+    }
+    
+    // Catch-all for sub-collections and other public data
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }

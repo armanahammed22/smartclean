@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -15,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ImageUploader } from '@/components/ui/image-uploader';
 
 export default function ProductsManagementPage() {
   const db = useFirestore();
@@ -22,6 +24,7 @@ export default function ProductsManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState('');
 
   // Data Queries
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
@@ -56,8 +59,10 @@ export default function ProductsManagementPage() {
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
       categoryId: formData.get('categoryId') as string,
       brand: formData.get('brand') as string || 'General',
+      size: formData.get('size') as string || '',
       description: formData.get('description') as string,
       shortDescription: formData.get('shortDescription') as string,
+      imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
       status: formData.get('status') as string || 'Active',
       updatedAt: new Date().toISOString()
     };
@@ -72,6 +77,7 @@ export default function ProductsManagementPage() {
       }
       setIsDialogOpen(false);
       setEditingProduct(null);
+      setUploadedImageUrl('');
     } catch (e) {
       toast({ variant: "destructive", title: "Error saving product" });
     } finally {
@@ -85,6 +91,18 @@ export default function ProductsManagementPage() {
     toast({ title: "Product Deleted" });
   };
 
+  const handleOpenEdit = (product: any) => {
+    setEditingProduct(product);
+    setUploadedImageUrl(product.imageUrl || '');
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenNew = () => {
+    setEditingProduct(null);
+    setUploadedImageUrl('');
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -95,20 +113,28 @@ export default function ProductsManagementPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingProduct(null); }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => { setEditingProduct(null); setIsDialogOpen(true); }}>
+            <Button className="gap-2 font-bold shadow-lg h-11" onClick={handleOpenNew}>
               <Plus size={18} /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl rounded-3xl">
+          <DialogContent className="max-w-3xl rounded-3xl overflow-y-auto max-h-[90vh]">
             <form onSubmit={handleSave} className="space-y-6">
               <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle></DialogHeader>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <ImageUploader 
+                    label="Product Photo"
+                    initialUrl={uploadedImageUrl}
+                    aspectRatio="aspect-square"
+                    onUpload={setUploadedImageUrl}
+                  />
+                  
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Product Name</Label>
                     <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-11 bg-gray-50 border-none" />
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Price (BDT)</Label>
@@ -119,19 +145,20 @@ export default function ProductsManagementPage() {
                       <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-11 bg-gray-50 border-none" />
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Stock Qty</Label>
                       <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 bg-gray-50 border-none" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Brand</Label>
-                      <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. LG" className="h-11 bg-gray-50 border-none" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Size / Spec</Label>
+                      <Input name="size" defaultValue={editingProduct?.size} placeholder="e.g. 5L, Large" className="h-11 bg-gray-50 border-none" />
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
                     <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
@@ -141,13 +168,20 @@ export default function ProductsManagementPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Brand</Label>
+                    <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. LG" className="h-11 bg-gray-50 border-none" />
+                  </div>
+
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Short Description</Label>
                     <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Brief summary" className="h-11 bg-gray-50 border-none" />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Description</Label>
-                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none min-h-[100px]" placeholder="Key features and details..." />
+                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none min-h-[120px]" placeholder="Key features and details..." />
                   </div>
                 </div>
               </div>
@@ -224,7 +258,7 @@ export default function ProductsManagementPage() {
                     </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => { setEditingProduct(product); setIsDialogOpen(true); }}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
                           <Edit size={14} />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDelete(product.id)}>
