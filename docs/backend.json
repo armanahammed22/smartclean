@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -29,19 +30,42 @@
       },
       "required": ["id", "title", "basePrice", "status"]
     },
-    "SubService": {
-      "title": "SubService",
+    "CustomerProfile": {
+      "title": "CustomerProfile",
       "type": "object",
-      "description": "Specific tasks within a main service.",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "referredBy": { "type": "string" },
+        "totalEarnings": { "type": "number" }
+      }
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["flat", "percent"] },
+        "value": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "price": { "type": "number" },
-        "duration": { "type": "string" },
-        "mainServiceId": { "type": "string" }
-      },
-      "required": ["id", "name", "price", "mainServiceId"]
+        "customerId": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
+        "createdAt": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -52,6 +76,10 @@
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
     "/sub_services/{id}": { "schema": "#/entities/SubService", "description": "Add-on services." },
     "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
-    "/product_categories/{catId}": { "schema": "#/entities/ProductCategory", "description": "Product hierarchy." }
+    "/orders/{id}": { "schema": "#/entities/Order", "description": "Sales records." },
+    "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },
+    "/coupons/{id}": { "schema": "#/entities/Coupon", "description": "Discount codes." },
+    "/support_tickets/{id}": { "schema": "#/entities/SupportTicket", "description": "Customer support requests." },
+    "/referrals/{id}": { "schema": "#/entities/Referral", "description": "Affiliate tracking." }
   }
 }

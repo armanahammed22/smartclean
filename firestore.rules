@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -17,44 +18,56 @@ service cloud.firestore {
     function isStaff() { 
       return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))); 
     }
+    
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
 
-    // PUBLIC CATALOG: Unauthenticated read access for products, services, and related metadata
+    // PUBLIC CATALOG: Unauthenticated read access
     match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    
     match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    
     match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
-    // CRM DATA: Leads, Orders, Bookings, Customers
-    match /leads/{id} { 
-      allow create: if true; 
-      allow read, update, delete: if isStaff(); 
+    // CUSTOMER DATA
+    match /customer_profiles/{uid} { 
+      allow read, write: if isOwner(uid) || isStaff(); 
     }
-    match /customers/{id} { 
-      allow read, write: if isStaff(); 
+    match /support_tickets/{id} {
+      allow create: if isSignedIn();
+      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update: if isStaff();
     }
+    
+    // CRM DATA
+    match /leads/{id} { allow create: if true; allow read, update, delete: if isStaff(); }
+    match /customers/{id} { allow read, write: if isStaff(); }
     match /orders/{id} {
       allow create: if true;
-      allow read, update, delete: if isStaff();
+      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isStaff();
     }
     match /bookings/{id} {
       allow create: if true;
-      allow read, update, delete: if isStaff();
+      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isStaff();
     }
     
+    match /referrals/{id} {
+      allow create: if isSignedIn();
+      allow read: if isStaff() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+    }
+
     // STAFF & ADMIN PROFILES
     match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // Global Catch-all for Bootstrap Admin
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
