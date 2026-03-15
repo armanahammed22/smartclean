@@ -16,13 +16,17 @@ import {
   Image as ImageIcon, 
   Save, 
   Eye, 
-  Smartphone,
   Loader2,
-  TicketPercent,
-  Trash2,
   Plus,
-  Megaphone
+  Megaphone,
+  BellRing,
+  Trash2,
+  Zap,
+  Info,
+  AlertCircle,
+  Megaphone as MegaphoneIcon
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function SiteCustomizePage() {
   const db = useFirestore();
@@ -30,7 +34,10 @@ export default function SiteCustomizePage() {
   const [isSaving, setIsSubmitting] = useState(false);
 
   const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
-  const { data: customization, isLoading } = useDoc(customizationRef);
+  const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
+  
+  const { data: customization, isLoading: customLoading } = useDoc(customizationRef);
+  const { data: marqueeSettings, isLoading: marqueeLoading } = useDoc(marqueeRef);
 
   const [formData, setFormData] = useState<any>({
     hero: { title: '', subtitle: '', imageUrl: '', ctaText: '', ctaLink: '', enabled: true },
@@ -44,6 +51,15 @@ export default function SiteCustomizePage() {
     marketingContent: ''
   });
 
+  const [marqueeData, setMarqueeData] = useState<any>({
+    text: '',
+    label: 'INFO',
+    iconName: 'BellRing',
+    bgColor: 'bg-primary',
+    radius: 'rounded-full',
+    enabled: true
+  });
+
   useEffect(() => {
     if (customization) {
       setFormData({
@@ -54,12 +70,19 @@ export default function SiteCustomizePage() {
     }
   }, [customization]);
 
+  useEffect(() => {
+    if (marqueeSettings) {
+      setMarqueeData({ ...marqueeData, ...marqueeSettings });
+    }
+  }, [marqueeSettings]);
+
   const handleSave = async () => {
     if (!db) return;
     setIsSubmitting(true);
     try {
       await setDoc(doc(db, 'site_settings', 'homepage'), formData, { merge: true });
-      toast({ title: "Customization Saved", description: "Your homepage has been updated." });
+      await setDoc(doc(db, 'site_settings', 'marquee'), marqueeData, { merge: true });
+      toast({ title: "Customization Saved", description: "Your changes have been updated successfully." });
     } catch (e) {
       toast({ variant: "destructive", title: "Save Failed", description: "Could not update customization." });
     } finally {
@@ -80,14 +103,14 @@ export default function SiteCustomizePage() {
     setFormData({ ...formData, offerBanners: updated });
   };
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Syncing...</div>;
+  if (customLoading || marqueeLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Syncing...</div>;
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Site Customize</h1>
-          <p className="text-muted-foreground text-sm">Control your homepage layout and marketing sections</p>
+          <p className="text-muted-foreground text-sm">Control your homepage layout and visual identity</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="gap-2 font-bold h-11" asChild>
@@ -95,7 +118,7 @@ export default function SiteCustomizePage() {
            </Button>
            <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 shadow-lg">
               {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-              Save Changes
+              Save All Changes
            </Button>
         </div>
       </div>
@@ -104,6 +127,9 @@ export default function SiteCustomizePage() {
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="hero" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Layout size={16} /> Hero
+          </TabsTrigger>
+          <TabsTrigger value="marquee" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <BellRing size={16} /> Marquee
           </TabsTrigger>
           <TabsTrigger value="banners" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <ImageIcon size={16} /> Banners
@@ -150,6 +176,79 @@ export default function SiteCustomizePage() {
                     onChange={(e) => setFormData({...formData, hero: {...formData.hero, imageUrl: e.target.value}})}
                     placeholder="https://..."
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="marquee">
+          <Card className="border-none shadow-sm bg-white rounded-2xl">
+            <CardHeader className="flex flex-row items-center justify-between border-b bg-gray-50/50">
+              <div>
+                <CardTitle className="text-lg font-bold">Announcement Marquee</CardTitle>
+                <CardDescription>Customize the scrolling notification bar</CardDescription>
+              </div>
+              <Switch 
+                checked={marqueeData.enabled} 
+                onCheckedChange={(val) => setMarqueeData({...marqueeData, enabled: val})} 
+              />
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Marquee Text</Label>
+                  <Input 
+                    value={marqueeData.text} 
+                    onChange={(e) => setMarqueeData({...marqueeData, text: e.target.value})}
+                    placeholder="Leave empty to show current date automatically"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Label Text</Label>
+                  <Input 
+                    value={marqueeData.label} 
+                    onChange={(e) => setMarqueeData({...marqueeData, label: e.target.value})}
+                    placeholder="e.g. INFO, UPDATE, HOT"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Icon</Label>
+                  <Select value={marqueeData.iconName} onValueChange={(val) => setMarqueeData({...marqueeData, iconName: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BellRing">Bell (Alert)</SelectItem>
+                      <SelectItem value="Info">Info Circle</SelectItem>
+                      <SelectItem value="Zap">Zap (Flash)</SelectItem>
+                      <SelectItem value="Megaphone">Megaphone</SelectItem>
+                      <SelectItem value="AlertCircle">Alert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Accent Color</Label>
+                  <Select value={marqueeData.bgColor} onValueChange={(val) => setMarqueeData({...marqueeData, bgColor: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bg-primary">Brand Green</SelectItem>
+                      <SelectItem value="bg-blue-600">Blue</SelectItem>
+                      <SelectItem value="bg-red-600">Red</SelectItem>
+                      <SelectItem value="bg-amber-500">Amber</SelectItem>
+                      <SelectItem value="bg-slate-800">Dark Slate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Box Shape</Label>
+                  <Select value={marqueeData.radius} onValueChange={(val) => setMarqueeData({...marqueeData, radius: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rounded-full">Capsule (Full)</SelectItem>
+                      <SelectItem value="rounded-2xl">Rounded (Large)</SelectItem>
+                      <SelectItem value="rounded-xl">Rounded (Medium)</SelectItem>
+                      <SelectItem value="rounded-none">Sharp (Square)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -42,7 +41,10 @@ import {
   Calendar, 
   Share2, 
   CreditCard, 
-  ShieldCheck 
+  ShieldCheck,
+  Info,
+  AlertCircle,
+  Megaphone
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { 
@@ -55,13 +57,12 @@ import {
 import { cn } from '@/lib/utils';
 
 const ICONS: Record<string, any> = {
-  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard, ShieldCheck
+  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard, ShieldCheck, BellRing, Info, AlertCircle, Megaphone
 };
 
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { user } = useUser();
-  const [marqueeText, setMarqueeText] = useState<string>('');
   const [showAllLinks, setShowAllLinks] = useState(false);
   const db = useFirestore();
 
@@ -86,14 +87,21 @@ export default function SmartCleanHomePage() {
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
   const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
 
-  useEffect(() => {
+  const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
+  const { data: marqueeSettings } = useDoc(marqueeRef);
+
+  const carouselOffers = offers?.filter(o => o.placement === 'top');
+
+  // Dynamic Marquee Content
+  const getMarqueeContent = () => {
+    if (marqueeSettings?.text) return marqueeSettings.text;
     const dateStr = new Date().toLocaleDateString(language === 'bn' ? 'bn-BD' : 'en-US', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
-    setMarqueeText(`${dateStr} | ${t('hero_subtitle')}`);
-  }, [language, t]);
+    return `${dateStr} | ${t('hero_subtitle')}`;
+  };
 
-  const carouselOffers = offers?.filter(o => o.placement === 'top');
+  const MarqueeIcon = ICONS[marqueeSettings?.iconName || 'BellRing'] || BellRing;
 
   return (
     <PublicLayout>
@@ -229,18 +237,26 @@ export default function SmartCleanHomePage() {
         </section>
 
         {/* 3. Marquee */}
-        <section className="container mx-auto px-4">
-          <div className="bg-white rounded-full h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden">
-            <div className="h-full bg-primary px-8 flex items-center gap-2 z-10 text-white font-black text-xs uppercase tracking-widest shadow-lg">
-              <BellRing size={18} /> INFO
+        {(!marqueeSettings || marqueeSettings.enabled) && (
+          <section className="container mx-auto px-4">
+            <div className={cn(
+              "bg-white h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden",
+              marqueeSettings?.radius || "rounded-full"
+            )}>
+              <div className={cn(
+                "h-full px-8 flex items-center gap-2 z-10 text-white font-black text-xs uppercase tracking-widest shadow-lg",
+                marqueeSettings?.bgColor || "bg-primary"
+              )}>
+                <MarqueeIcon size={18} /> {marqueeSettings?.label || 'INFO'}
+              </div>
+              <div className="flex-1 overflow-hidden relative h-full flex items-center">
+                 <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-bold text-gray-600 px-6">
+                   {getMarqueeContent()}
+                 </p>
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden relative h-full flex items-center">
-               <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-bold text-gray-600 px-6">
-                 {marqueeText}
-               </p>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* 4. Quick Action Cards */}
         <section className="container mx-auto px-4">
