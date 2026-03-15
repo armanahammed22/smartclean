@@ -287,7 +287,7 @@ export default function SmartCleanHomePage() {
                     <Link href={`/service/${service.id}`} className="block relative aspect-square overflow-hidden shrink-0">
                       <Image 
                         src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={service.title} 
+                        alt={service.title || 'Service Image'} 
                         fill 
                         className="object-cover group-hover:scale-110 transition-transform duration-700" 
                       />

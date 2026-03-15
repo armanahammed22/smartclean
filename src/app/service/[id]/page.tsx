@@ -89,7 +89,7 @@ export default function ServiceDetailsPage() {
               <div className="relative aspect-[21/8] rounded-[3rem] overflow-hidden shadow-2xl bg-[#081621] border border-white/5">
                 <Image 
                   src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/600'} 
-                  alt={service.title} 
+                  alt={service.title || 'Service Banner'} 
                   fill 
                   className="object-cover opacity-50" 
                 />
