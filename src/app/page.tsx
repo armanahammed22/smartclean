@@ -307,7 +307,7 @@ export default function SmartCleanHomePage() {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                 {services?.map((service) => (
-                  <Link key={service.id} href={`/service/${service.id}`} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-primary/20 flex flex-col relative">
+                  <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-primary/20 flex flex-col relative">
                     {isAdmin && (
                       <div className="absolute top-4 right-4 z-20">
                         <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow-xl border-none backdrop-blur-md bg-white/80" asChild>
@@ -315,31 +315,35 @@ export default function SmartCleanHomePage() {
                         </Button>
                       </div>
                     )}
-                    <div className="relative aspect-video overflow-hidden">
-                      <Image 
-                        src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={service.title || 'Cleaning Service'} 
-                        fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
-                      <div className="absolute top-4 left-4">
-                        <Badge className="bg-white/95 text-primary border-none shadow-xl backdrop-blur-sm font-black text-[10px] uppercase hidden sm:inline-flex px-3 py-1 rounded-lg">{service.category || 'General'}</Badge>
-                      </div>
-                    </div>
-                    <div className="p-5 md:p-8 space-y-4 flex-1">
-                      <h3 className="text-sm md:text-2xl font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
-                      <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 hidden sm:block leading-relaxed">{service.description}</p>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('base_price')}</span>
-                          <span className="text-base md:text-2xl font-black text-primary">
-                            ৳{(service.basePrice || 0).toLocaleString()} 
-                          </span>
+                    <Link href={`/service/${service.id}`} className="flex flex-col h-full flex-1">
+                      <div className="relative aspect-video overflow-hidden">
+                        <Image 
+                          src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
+                          alt={service.title || 'Cleaning Service'} 
+                          fill 
+                          className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                        />
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-white/95 text-primary border-none shadow-xl backdrop-blur-sm font-black text-[10px] uppercase hidden sm:inline-flex px-3 py-1 rounded-lg">{service.category || 'General'}</Badge>
                         </div>
-                        <Button size="sm" className="rounded-xl font-black px-6 h-10 md:h-12 text-xs uppercase shadow-lg shadow-primary/10">{t('book_now')}</Button>
                       </div>
-                    </div>
-                  </Link>
+                      <div className="p-5 md:p-8 space-y-4 flex-1">
+                        <h3 className="text-sm md:text-2xl font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight">{service.title}</h3>
+                        <p className="text-[10px] md:text-sm text-muted-foreground line-clamp-2 hidden sm:block leading-relaxed">{service.description}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t gap-4">
+                          <div className="flex flex-col">
+                            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('base_price')}</span>
+                            <span className="text-base md:text-2xl font-black text-primary">
+                              ৳{(service.basePrice || 0).toLocaleString()} 
+                            </span>
+                          </div>
+                          <Button size="sm" className="rounded-xl font-black px-6 h-10 md:h-12 text-xs uppercase shadow-lg shadow-primary/10">
+                            {t('book_now')}
+                          </Button>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}
