@@ -99,7 +99,7 @@ export default function SmartCleanHomePage() {
                 </div>
                 <div className="flex flex-wrap gap-4">
                   <Button className="bg-[#EF4A23] hover:bg-[#D43D1A] rounded-full h-14 px-10 text-lg font-black shadow-2xl" asChild>
-                    <Link href="#contact">
+                    <Link href="/support">
                       Contact Sales
                     </Link>
                   </Button>
@@ -212,35 +212,6 @@ export default function SmartCleanHomePage() {
                </div>
             </section>
           )}
-
-          {/* Contact Section */}
-          <section id="contact" className="py-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center bg-white rounded-3xl p-8 md:p-16 shadow-sm border">
-              <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-black font-headline text-[#081621]">Enterprise Inquiries</h2>
-                <p className="text-muted-foreground text-lg">Deploy Smart Clean technologies for your facility management and maintenance operations.</p>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-xl text-primary"><Phone size={24} /></div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Hotline</p>
-                      <p className="font-black text-lg">+8801919640422</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-xl text-primary"><Mail size={24} /></div>
-                    <div>
-                      <p className="text-xs font-bold text-muted-foreground uppercase">Email</p>
-                      <p className="font-black text-lg">smartclean422@gmail.com</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="relative aspect-square md:aspect-auto h-full min-h-[300px] rounded-2xl overflow-hidden shadow-2xl">
-                <Image src="https://picsum.photos/seed/cleanops/800/800" alt="Enterprise Contact" fill className="object-cover" />
-              </div>
-            </div>
-          </section>
 
         </div>
       </div>
