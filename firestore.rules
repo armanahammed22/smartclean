@@ -24,20 +24,26 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read access
-    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /payment_methods/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    // These collections must be readable by all users to show the site content and checkout options.
+    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // Recursive matching for sub-collections if any exist
+    match /products/{id=**} { allow read: if true; }
+    match /services/{id=**} { allow read: if true; }
+    match /site_settings/{id=**} { allow read: if true; }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
@@ -73,6 +79,7 @@ service cloud.firestore {
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
+    // Fallback for bootstrap admin to manage everything
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
