@@ -64,7 +64,7 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Service Data (Updated Main Services)
+      // 1. Service Data (Main Categories)
       const SERVICE_DATA = [
         { id: 's_home', title: 'Home Cleaning', basePrice: 2000, category: 'Cleaning', description: 'Professional deep cleaning for your residence.' },
         { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning', description: 'Hygienic sanitation for your kitchen and appliances.' },
@@ -95,7 +95,77 @@ export default function AdminDashboard() {
         });
       });
 
-      // 2. Staff
+      // 2. Sub Services
+      const SUB_SERVICES = [
+        // Home Cleaning
+        { mainServiceId: 's_home', name: 'Full Home Deep Cleaning', price: 5000, duration: '6-8 hrs' },
+        { mainServiceId: 's_home', name: 'Bedroom Cleaning', price: 1000, duration: '1 hr' },
+        { mainServiceId: 's_home', name: 'Living Room Cleaning', price: 1200, duration: '1.5 hrs' },
+        { mainServiceId: 's_home', name: 'Dining Room Cleaning', price: 1000, duration: '1 hr' },
+        { mainServiceId: 's_home', name: 'Balcony Cleaning', price: 500, duration: '30 mins' },
+        { mainServiceId: 's_home', name: 'Floor Scrubbing', price: 1500, duration: '2 hrs' },
+        { mainServiceId: 's_home', name: 'Floor Polishing', price: 3000, duration: '4 hrs' },
+        
+        // Kitchen Cleaning
+        { mainServiceId: 's_kitchen', name: 'Kitchen Deep Cleaning', price: 2500, duration: '3 hrs' },
+        { mainServiceId: 's_kitchen', name: 'Stove Cleaning', price: 500, duration: '45 mins' },
+        { mainServiceId: 's_kitchen', name: 'Sink Cleaning', price: 300, duration: '30 mins' },
+        { mainServiceId: 's_kitchen', name: 'Cabinet Cleaning', price: 800, duration: '1 hr' },
+        { mainServiceId: 's_kitchen', name: 'Chimney Cleaning', price: 1200, duration: '1.5 hrs' },
+        { mainServiceId: 's_kitchen', name: 'Exhaust Fan Cleaning', price: 400, duration: '30 mins' },
+        { mainServiceId: 's_kitchen', name: 'Refrigerator Cleaning', price: 800, duration: '1 hr' },
+        { mainServiceId: 's_kitchen', name: 'Microwave Cleaning', price: 400, duration: '30 mins' },
+
+        // Bathroom Cleaning
+        { mainServiceId: 's_bathroom', name: 'Toilet Deep Cleaning', price: 800, duration: '1 hr' },
+        { mainServiceId: 's_bathroom', name: 'Basin Cleaning', price: 300, duration: '20 mins' },
+        { mainServiceId: 's_bathroom', name: 'Shower Area Cleaning', price: 500, duration: '40 mins' },
+        { mainServiceId: 's_bathroom', name: 'Bathroom Tile Cleaning', price: 600, duration: '1 hr' },
+        { mainServiceId: 's_bathroom', name: 'Mirror Cleaning', price: 200, duration: '15 mins' },
+        { mainServiceId: 's_bathroom', name: 'Drain Cleaning', price: 400, duration: '30 mins' },
+
+        // Sofa
+        { mainServiceId: 's_sofa', name: 'Fabric Sofa Cleaning', price: 500, duration: 'per seat' },
+        { mainServiceId: 's_sofa', name: 'Leather Sofa Cleaning', price: 700, duration: 'per seat' },
+        { mainServiceId: 's_sofa', name: 'Chair Cleaning', price: 200, duration: 'per unit' },
+        { mainServiceId: 's_sofa', name: 'Mattress Cleaning', price: 1500, duration: 'per unit' },
+        { mainServiceId: 's_sofa', name: 'Dining Chair Cleaning', price: 250, duration: 'per unit' },
+
+        // AC Services
+        { mainServiceId: 's_ac', name: 'AC Installation', price: 1500, duration: '2 hrs' },
+        { mainServiceId: 's_ac', name: 'AC Uninstallation', price: 800, duration: '1 hr' },
+        { mainServiceId: 's_ac', name: 'AC Servicing', price: 1000, duration: '1.5 hrs' },
+        { mainServiceId: 's_ac', name: 'AC Gas Refill', price: 2500, duration: '1 hr' },
+        { mainServiceId: 's_ac', name: 'AC Repair', price: 500, duration: 'Variable' },
+        { mainServiceId: 's_ac', name: 'AC Deep Cleaning', price: 1800, duration: '2 hrs' },
+        { mainServiceId: 's_ac', name: 'AC Water Leakage Fix', price: 1200, duration: '1 hr' },
+
+        // Electrical
+        { mainServiceId: 's_electrical', name: 'Fan Installation', price: 300, duration: '30 mins' },
+        { mainServiceId: 's_electrical', name: 'Light Installation', price: 200, duration: '20 mins' },
+        { mainServiceId: 's_electrical', name: 'Switch Board Repair', price: 400, duration: '40 mins' },
+        { mainServiceId: 's_electrical', name: 'Wiring Repair', price: 1000, duration: 'Variable' },
+        { mainServiceId: 's_electrical', name: 'Electrical Safety Check', price: 1500, duration: '2 hrs' },
+
+        // Pest Control
+        { mainServiceId: 's_pest', name: 'Cockroach Control', price: 2000, duration: '1 hr' },
+        { mainServiceId: 's_pest', name: 'Termite Control', price: 5000, duration: '3 hrs' },
+        { mainServiceId: 's_pest', name: 'Mosquito Control', price: 1500, duration: '1 hr' },
+        { mainServiceId: 's_pest', name: 'Bed Bug Treatment', price: 2500, duration: '2 hrs' }
+      ];
+
+      SUB_SERVICES.forEach((sub, idx) => {
+        const subId = `sub_${sub.mainServiceId}_${idx}`;
+        batch.set(doc(db, 'sub_services', subId), {
+          ...sub,
+          id: subId,
+          status: 'Active',
+          description: `Professional ${sub.name} for your convenience.`,
+          createdAt: new Date().toISOString()
+        });
+      });
+
+      // 3. Staff
       const STAFF = [
         { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', phone: '01711111111' },
         { id: 'emp2', name: 'Rahim Uddin', role: 'Technician', phone: '01822222222' }
@@ -106,7 +176,7 @@ export default function AdminDashboard() {
         });
       });
 
-      // 3. Products
+      // 4. Products
       const productData = [
         {
           id: 'p1', name: 'Eco-Pro Vacuum Robot', price: 45000, regularPrice: 49500,
@@ -126,7 +196,7 @@ export default function AdminDashboard() {
       productData.forEach(p => batch.set(doc(db, 'products', p.id), p));
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "All main services and demo data populated." });
+      toast({ title: "ERP Database Seeded", description: "Main services and dozens of sub-services populated." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
