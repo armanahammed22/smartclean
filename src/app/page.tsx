@@ -301,18 +301,10 @@ export default function SmartCleanHomePage() {
           
           {/* Services Grid */}
           <section className="space-y-8">
-            <div className="flex justify-between items-end gap-4 border-b pb-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('expert_services')}</h2>
-                <p className="text-xs text-muted-foreground font-bold">{t('service_desc')}</p>
-              </div>
+            <div className="flex justify-between items-center gap-4 border-b pb-4">
+              <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('expert_services')}</h2>
               <div className="flex items-center gap-4 shrink-0">
-                {isAdmin && (
-                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2 font-black border-primary text-primary rounded-xl" asChild>
-                    <Link href="/admin/services"><Plus size={16} /> ADD</Link>
-                  </Button>
-                )}
-                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary" asChild>
+                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
                   <Link href="/services">{t('view_all')} <ChevronRight size={16} /></Link>
                 </Button>
               </div>
@@ -366,18 +358,10 @@ export default function SmartCleanHomePage() {
 
           {/* Products Grid */}
           <section className="space-y-8">
-            <div className="flex justify-between items-end gap-4 border-b pb-6">
-              <div className="space-y-1">
-                <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('professional_tools')}</h2>
-                <p className="text-xs text-muted-foreground font-bold">{t('product_desc')}</p>
-              </div>
+            <div className="flex justify-between items-center gap-4 border-b pb-4">
+              <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tight">{t('professional_tools')}</h2>
               <div className="flex items-center gap-4 shrink-0">
-                {isAdmin && (
-                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2 font-black border-primary text-primary rounded-xl" asChild>
-                    <Link href="/admin/products"><Plus size={16} /> ADD</Link>
-                  </Button>
-                )}
-                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary" asChild>
+                <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0" asChild>
                   <Link href="/products">{t('view_all')} <ChevronRight size={16} /></Link>
                 </Button>
               </div>
