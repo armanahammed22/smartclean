@@ -23,15 +23,16 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG ACCESS: Explicitly allow unauthenticated read (get/list)
-    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+    // We use {id=**} to ensure that listing the collection is permitted
+    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
 
     // OPERATIONAL DATA (Staff only)
     match /orders/{id=**} { allow read, write: if isStaff(); }
