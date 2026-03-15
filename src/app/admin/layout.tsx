@@ -220,7 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           className="absolute -right-4 top-20 bg-white border rounded-full h-8 w-8 z-40 hidden lg:flex shadow-md text-gray-400 hover:text-primary"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size(14) /> : <ChevronLeft size(14) />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </aside>
 
