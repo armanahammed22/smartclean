@@ -13,13 +13,10 @@ import {
   CalendarCheck,
   TrendingUp,
   Clock,
-  CheckCircle2,
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -52,43 +49,39 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Marketing Offers
-      const offers = [
-        { id: 'off1', title: 'Eid Mubarak Sale', placement: 'top', enabled: true, imageUrl: 'https://picsum.photos/seed/eid/1200/400', link: '#', description: 'Huge discounts across all equipment.' },
-        { id: 'off2', title: 'Summer Bundle', placement: 'middle', enabled: true, imageUrl: 'https://picsum.photos/seed/summer/1200/400', link: '#', description: 'Deep clean + AC service bundle.' }
+      // 1. Categories
+      const cats = [
+        { id: 'cat1', name: 'Home Appliances', status: 'Active', slug: 'home-appliances' },
+        { id: 'cat2', name: 'Cleaning Supplies', status: 'Active', slug: 'cleaning-supplies' }
       ];
-      offers.forEach(o => batch.set(doc(db, 'marketing_offers', o.id), o));
+      cats.forEach(c => batch.set(doc(db, 'product_categories', c.id), c));
 
-      // 2. Marketing Campaigns
-      const campaigns = [
-        { id: 'camp1', title: 'Mega Ramadan Fest', type: 'lucky_draw', enabled: true, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), bannerUrl: 'https://picsum.photos/seed/ramadan/1200/600', terms: 'Purchase above ৳5000 to participate.', description: 'Win a Smart Vacuum Robot every Friday during Ramadan!' }
-      ];
-      campaigns.forEach(c => batch.set(doc(db, 'marketing_campaigns', c.id), c));
-
-      // 3. Products
+      // 2. Products
       const products = [
-        { id: 'p1', name: "Smart Vacuum Robot", price: 49999, categoryId: "cat1", category: "Home Appliances", status: "Active", onSale: true, imageUrl: "https://picsum.photos/seed/v1/600/400", stockQuantity: 12, createdAt: new Date().toISOString() },
-        { id: 'p2', name: "Eco-Friendly Kit", price: 4500, categoryId: "cat2", category: "Cleaning Supplies", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v2/600/400", stockQuantity: 45, createdAt: new Date().toISOString() },
+        { id: 'p1', name: "Smart Vacuum Robot", price: 49999, categoryId: "cat1", status: "Active", onSale: true, imageUrl: "https://picsum.photos/seed/v1/600/400", stockQuantity: 12, createdAt: new Date().toISOString() },
+        { id: 'p2', name: "Eco-Friendly Kit", price: 4500, categoryId: "cat2", status: "Active", onSale: false, imageUrl: "https://picsum.photos/seed/v2/600/400", stockQuantity: 45, createdAt: new Date().toISOString() },
       ];
       products.forEach(p => batch.set(doc(db, 'products', p.id), p));
 
-      // 4. Services
+      // 3. Services
       const services = [
         { id: 's1', title: 'Home Deep Clean', basePrice: 15000, description: 'Comprehensive residence cleaning.', status: 'Active', imageUrl: 'https://picsum.photos/seed/s1/800/600', categoryId: 'scat1' },
         { id: 's2', title: 'AC Maintenance', basePrice: 5000, description: 'Expert AC servicing.', status: 'Active', imageUrl: 'https://picsum.photos/seed/s2/800/600', categoryId: 'scat2' }
       ];
       services.forEach(s => batch.set(doc(db, 'services', s.id), s));
 
-      // 5. Product Categories
-      batch.set(doc(db, 'product_categories', 'cat1'), { id: 'cat1', name: 'Home Appliances', status: 'Active', slug: 'home-appliances' });
-      batch.set(doc(db, 'product_categories', 'cat2'), { id: 'cat2', name: 'Cleaning Supplies', status: 'Active', slug: 'cleaning-supplies' });
-
-      // 6. Service Categories
-      batch.set(doc(db, 'service_categories', 'scat1'), { id: 'scat1', name: 'Residential', status: 'Active' });
-      batch.set(doc(db, 'service_categories', 'scat2'), { id: 'scat2', name: 'Maintenance', status: 'Active' });
+      // 4. Sub Services
+      const subServices = [
+        { id: 'sub1', name: 'Standard Room Clean', description: 'Mopping, dusting, and vacuuming.', price: 2000, duration: '1 hr', mainServiceId: 's1' },
+        { id: 'sub2', name: 'Kitchen Deep Clean', description: 'Degreasing and sanitizing.', price: 5000, duration: '2 hrs', mainServiceId: 's1' },
+        { id: 'sub3', name: 'Bathroom Sanitize', description: 'Toilet and tile scrubbing.', price: 3000, duration: '1 hr', mainServiceId: 's1' },
+        { id: 'sub4', name: 'Basic AC Service', description: 'Filter cleaning.', price: 1500, duration: '30 mins', mainServiceId: 's2' },
+        { id: 'sub5', name: 'Gas Charge', description: 'Freon refill.', price: 3500, duration: '1 hr', mainServiceId: 's2' }
+      ];
+      subServices.forEach(ss => batch.set(doc(db, 'sub_services', ss.id), ss));
 
       await batch.commit();
-      toast({ title: "ERP Seeded", description: "Database populated with ERP and Marketing data." });
+      toast({ title: "ERP Seeded", description: "Database populated with ERP and Sub-Service data." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {

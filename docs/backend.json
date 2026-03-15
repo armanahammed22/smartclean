@@ -1,23 +1,17 @@
-
 {
   "entities": {
     "Product": {
       "title": "Product",
       "type": "object",
-      "description": "Fixed-price cleaning supplies and equipment with variant support.",
+      "description": "Fixed-price cleaning supplies and equipment.",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
         "price": { "type": "number" },
         "categoryId": { "type": "string" },
-        "subCategoryId": { "type": "string" },
-        "brandId": { "type": "string" },
         "imageUrl": { "type": "string" },
         "stockQuantity": { "type": "number" },
-        "sku": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "onSale": { "type": "boolean" }
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
       },
       "required": ["id", "name", "price", "categoryId"]
     },
@@ -31,55 +25,33 @@
         "description": { "type": "string" },
         "basePrice": { "type": "number" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "imageUrl": { "type": "string" },
-        "categoryId": { "type": "string" }
+        "imageUrl": { "type": "string" }
       },
       "required": ["id", "title", "basePrice", "status"]
     },
-    "MarketingOffer": {
-      "title": "MarketingOffer",
+    "SubService": {
+      "title": "SubService",
       "type": "object",
-      "description": "Promotional banners with placement logic.",
+      "description": "Specific tasks within a main service.",
       "properties": {
         "id": { "type": "string" },
-        "title": { "type": "string" },
+        "name": { "type": "string" },
         "description": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "link": { "type": "string" },
-        "placement": { "type": "string", "enum": ["top", "middle", "before_products", "after_products"] },
-        "enabled": { "type": "boolean" },
-        "productIds": { "type": "array", "items": { "type": "string" } },
-        "serviceIds": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "MarketingCampaign": {
-      "title": "MarketingCampaign",
-      "type": "object",
-      "description": "Dated promotional events with rewards.",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "bannerUrl": { "type": "string" },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "type": { "type": "string", "enum": ["flat_discount", "percent_discount", "free_gift", "lucky_draw"] },
-        "terms": { "type": "string" },
-        "enabled": { "type": "boolean" },
-        "productIds": { "type": "array", "items": { "type": "string" } }
-      }
+        "price": { "type": "number" },
+        "duration": { "type": "string" },
+        "mainServiceId": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "mainServiceId"]
     }
   },
   "auth": {
     "providers": ["password"]
   },
   "firestore": {
-    "/product_categories/{catId}": { "schema": "#/entities/ProductCategory", "description": "Product hierarchies." },
-    "/service_categories/{catId}": { "schema": "#/entities/ServiceCategory", "description": "Service categories." },
-    "/marketing_offers/{id}": { "schema": "#/entities/MarketingOffer", "description": "Dynamic homepage banners." },
-    "/marketing_campaigns/{id}": { "schema": "#/entities/MarketingCampaign", "description": "Timed sales events." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
-    "/orders/{orderId}": { "schema": "#/entities/Order", "description": "Customer orders." }
+    "/sub_services/{id}": { "schema": "#/entities/SubService", "description": "Add-on services." },
+    "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
+    "/product_categories/{catId}": { "schema": "#/entities/ProductCategory", "description": "Product hierarchy." }
   }
 }

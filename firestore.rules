@@ -23,23 +23,24 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG ACCESS: Explicitly allow unauthenticated read (get/list)
-    // We use {id=**} to ensure that listing the collection is permitted
-    match /products/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    // We use a broader match to ensure top-level collection listing is permitted
+    match /products/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{allPaths=**} { allow read: if true; allow write: if isAdmin(); }
 
-    // OPERATIONAL DATA (Staff only)
-    match /orders/{id=**} { allow read, write: if isStaff(); }
-    match /bookings/{id=**} { allow read, write: if isStaff(); }
-    match /leads/{id=**} { allow read, write: if isStaff(); }
-    match /customers/{id=**} { allow read, write: if isStaff(); }
-    match /employee_profiles/{id=**} { allow read: if isStaff(); allow write: if isAdmin(); }
+    // OPERATIONAL DATA
+    match /orders/{allPaths=**} { allow read, write: if isStaff(); }
+    match /bookings/{allPaths=**} { allow read, write: if isStaff(); }
+    match /leads/{allPaths=**} { allow read, write: if true; } // Allow public lead submission
+    match /customers/{allPaths=**} { allow read, write: if isStaff(); }
+    match /employee_profiles/{allPaths=**} { allow read: if isStaff(); allow write: if isAdmin(); }
     
     // ROLE DEFINITIONS
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }

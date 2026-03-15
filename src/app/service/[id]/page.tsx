@@ -1,24 +1,71 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, CalendarCheck, ShieldCheck, CheckCircle2, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, ShieldCheck, CheckCircle2, Clock, MapPin, Loader2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
-import { getServiceById } from '@/lib/data';
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { language, t } = useLanguage();
   const { addToCart, setCheckoutOpen } = useCart();
-  
-  const service = getServiceById(id as string, language);
+  const db = useFirestore();
+
+  const serviceRef = useMemoFirebase(() => db ? doc(db, 'services', id as string) : null, [db, id]);
+  const { data: service, isLoading: serviceLoading } = useDoc(serviceRef);
+
+  const subServicesQuery = useMemoFirebase(() => {
+    if (!db || !id) return null;
+    return query(collection(db, 'sub_services'), where('mainServiceId', '==', id));
+  }, [db, id]);
+
+  const { data: subServices, isLoading: subLoading } = useCollection(subServicesQuery);
+
+  const [selectedSubServiceIds, setSelectedSubServiceIds] = useState<string[]>([]);
+
+  const totalPrice = useMemo(() => {
+    if (!service) return 0;
+    const subsPrice = subServices
+      ?.filter(s => selectedSubServiceIds.includes(s.id))
+      .reduce((acc, s) => acc + s.price, 0) || 0;
+    return service.basePrice + subsPrice;
+  }, [service, subServices, selectedSubServiceIds]);
+
+  const handleBookNow = () => {
+    if (!service) return;
+    
+    // Create a combined service entry for the cart
+    const selectedSubs = subServices?.filter(s => selectedSubServiceIds.includes(s.id)) || [];
+    const combinedTitle = selectedSubs.length > 0 
+      ? `${service.title} (${selectedSubs.map(s => s.name).join(', ')})`
+      : service.title;
+
+    addToCart({
+      ...service,
+      title: combinedTitle,
+      basePrice: totalPrice,
+    });
+    setCheckoutOpen(true);
+  };
+
+  const toggleSubService = (subId: string) => {
+    setSelectedSubServiceIds(prev => 
+      prev.includes(subId) ? prev.filter(id => id !== subId) : [...prev, subId]
+    );
+  };
+
+  if (serviceLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
   if (!service) {
     return (
@@ -30,11 +77,6 @@ export default function ServiceDetailsPage() {
       </PublicLayout>
     );
   }
-
-  const handleBookNow = () => {
-    addToCart(service);
-    setCheckoutOpen(true);
-  };
 
   const features = language === 'bn' 
     ? ["প্রফেশনাল টিম", "সম্পূর্ণ বীমাকৃত", "পরিবেশ বান্ধব পণ্য", "সন্তুষ্টি গ্যারান্টি"]
@@ -79,6 +121,40 @@ export default function ServiceDetailsPage() {
                     </p>
                   </div>
 
+                  {/* Sub Services Selection */}
+                  {subServices && subServices.length > 0 && (
+                    <div className="pt-8 border-t space-y-6">
+                      <h3 className="text-xl font-bold flex items-center gap-2">
+                        <Info size={20} className="text-primary" /> 
+                        {language === 'bn' ? 'অতিরিক্ত সেবা নির্বাচন করুন' : 'Select Additional Services'}
+                      </h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        {subServices.map(sub => (
+                          <div 
+                            key={sub.id} 
+                            className={cn(
+                              "flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer",
+                              selectedSubServiceIds.includes(sub.id) ? "bg-primary/5 border-primary shadow-sm" : "bg-gray-50 border-transparent hover:border-gray-200"
+                            )}
+                            onClick={() => toggleSubService(sub.id)}
+                          >
+                            <div className="flex items-center gap-4">
+                              <Checkbox checked={selectedSubServiceIds.includes(sub.id)} onCheckedChange={() => toggleSubService(sub.id)} />
+                              <div>
+                                <p className="font-bold text-[#081621]">{sub.name}</p>
+                                <p className="text-xs text-muted-foreground">{sub.description}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-black text-primary">৳{sub.price}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold">{sub.duration}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
                     {features.map((feature, i) => (
                       <div key={i} className="flex items-center gap-3 p-4 bg-[#F2F4F8] rounded-xl">
@@ -97,7 +173,7 @@ export default function ServiceDetailsPage() {
                       <div className="space-y-2">
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('price_from')}</span>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-4xl font-bold text-primary">৳{service.displayPrice}</span>
+                          <span className="text-4xl font-bold text-primary">৳{totalPrice.toLocaleString()}</span>
                           <span className="text-sm text-muted-foreground italic">/ {language === 'bn' ? 'সার্ভিস' : 'service'}</span>
                         </div>
                       </div>

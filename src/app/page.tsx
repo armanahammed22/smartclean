@@ -29,6 +29,7 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   const [timeLeft, setTimeTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -267,8 +268,8 @@ export default function SmartCleanHomePage() {
                           <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest">{t('price_from')}</span>
                           <span className="text-primary font-black text-lg">৳{service.basePrice.toLocaleString()}</span>
                         </div>
-                        <Button onClick={() => { addToCart(service); setCheckoutOpen(true); }} className="w-full gap-2 font-bold bg-primary text-white h-10 text-xs">
-                          {t('book_now')}
+                        <Button asChild className="w-full gap-2 font-bold bg-primary text-white h-10 text-xs">
+                          <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
                         </Button>
                       </div>
                     </CardContent>

@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string;
   name: string;
@@ -56,10 +55,21 @@ export interface Service {
   title: string;
   categoryId: string;
   description: string;
-  icon: string;
+  icon?: string;
   basePrice: number;
-  displayPrice: string;
+  displayPrice?: string;
   imageUrl?: string;
   type?: 'service';
   status: 'Active' | 'Inactive';
+  duration?: string;
+}
+
+export interface SubService {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: string;
+  mainServiceId: string;
+  type?: 'sub_service';
 }
