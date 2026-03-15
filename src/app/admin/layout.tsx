@@ -31,7 +31,8 @@ import {
   Share2,
   Layers,
   AlertCircle,
-  CreditCard
+  CreditCard,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       title: 'CRM & Sales',
       items: [
-        { name: 'Sales Leads', href: '/admin/leads', icon: Users, color: 'text-orange-500' },
+        { name: 'Sales Leads', href: '/admin/leads', icon: Briefcase, color: 'text-orange-500' },
         { name: 'Product Orders', href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-500' },
         { name: 'Service Bookings', href: '/admin/bookings', icon: Calendar, color: 'text-blue-400' },
         { name: 'Customer Directory', href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-500' },
