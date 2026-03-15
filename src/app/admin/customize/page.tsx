@@ -55,9 +55,13 @@ export default function SiteCustomizePage() {
     text: '',
     label: 'INFO',
     iconName: 'BellRing',
-    bgColor: 'bg-primary',
+    bgColor: 'bg-white',
+    textColor: 'text-gray-600',
+    fontSize: 'text-sm',
     radius: 'rounded-full',
-    enabled: true
+    enabled: true,
+    ctaText: '',
+    ctaLink: ''
   });
 
   useEffect(() => {
@@ -103,7 +107,7 @@ export default function SiteCustomizePage() {
     setFormData({ ...formData, offerBanners: updated });
   };
 
-  if (customLoading || marqueeLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Syncing...</div>;
+  if (customLoading || marqueeLoading) return <div className="p-20 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={40} /><span className="text-muted-foreground font-bold">Syncing Site Data...</span></div>;
 
   return (
     <div className="space-y-8 pb-12">
@@ -226,15 +230,40 @@ export default function SiteCustomizePage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Accent Color</Label>
+                  <Label>Bar Background Color</Label>
                   <Select value={marqueeData.bgColor} onValueChange={(val) => setMarqueeData({...marqueeData, bgColor: val})}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="bg-white">Clean White</SelectItem>
                       <SelectItem value="bg-primary">Brand Green</SelectItem>
                       <SelectItem value="bg-blue-600">Blue</SelectItem>
                       <SelectItem value="bg-red-600">Red</SelectItem>
                       <SelectItem value="bg-amber-500">Amber</SelectItem>
                       <SelectItem value="bg-slate-800">Dark Slate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Scrolling Text Color</Label>
+                  <Select value={marqueeData.textColor} onValueChange={(val) => setMarqueeData({...marqueeData, textColor: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text-gray-600">Standard Gray</SelectItem>
+                      <SelectItem value="text-white">Pure White</SelectItem>
+                      <SelectItem value="text-gray-900">Deep Black</SelectItem>
+                      <SelectItem value="text-primary">Brand Green</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Font Size</Label>
+                  <Select value={marqueeData.fontSize} onValueChange={(val) => setMarqueeData({...marqueeData, fontSize: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="text-[10px]">Extra Small</SelectItem>
+                      <SelectItem value="text-xs">Small</SelectItem>
+                      <SelectItem value="text-sm">Medium</SelectItem>
+                      <SelectItem value="text-base">Large</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -249,6 +278,22 @@ export default function SiteCustomizePage() {
                       <SelectItem value="rounded-none">Sharp (Square)</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link Text (Optional)</Label>
+                  <Input 
+                    value={marqueeData.ctaText} 
+                    onChange={(e) => setMarqueeData({...marqueeData, ctaText: e.target.value})}
+                    placeholder="e.g. SHOP NOW"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CTA Link URL (Optional)</Label>
+                  <Input 
+                    value={marqueeData.ctaLink} 
+                    onChange={(e) => setMarqueeData({...marqueeData, ctaLink: e.target.value})}
+                    placeholder="e.g. /products"
+                  />
                 </div>
               </div>
             </CardContent>

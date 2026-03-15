@@ -240,19 +240,35 @@ export default function SmartCleanHomePage() {
         {(!marqueeSettings || marqueeSettings.enabled) && (
           <section className="container mx-auto px-4">
             <div className={cn(
-              "bg-white h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden",
-              marqueeSettings?.radius || "rounded-full"
+              "h-14 shadow-sm border border-gray-100 flex items-center overflow-hidden transition-all duration-500",
+              marqueeSettings?.radius || "rounded-full",
+              marqueeSettings?.bgColor || "bg-white"
             )}>
               <div className={cn(
-                "h-full px-8 flex items-center gap-2 z-10 text-white font-black text-xs uppercase tracking-widest shadow-lg",
-                marqueeSettings?.bgColor || "bg-primary"
+                "h-full px-8 flex items-center gap-2 z-10 font-black text-xs uppercase tracking-widest shadow-lg shrink-0",
+                marqueeSettings?.bgColor === 'bg-white' || !marqueeSettings?.bgColor ? "bg-primary text-white" : "bg-black/20 text-white"
               )}>
                 <MarqueeIcon size={18} /> {marqueeSettings?.label || 'INFO'}
               </div>
               <div className="flex-1 overflow-hidden relative h-full flex items-center">
-                 <p className="animate-marquee inline-block whitespace-nowrap text-xs md:text-sm font-bold text-gray-600 px-6">
-                   {getMarqueeContent()}
-                 </p>
+                 <div className={cn(
+                   "animate-marquee inline-flex items-center whitespace-nowrap px-6 gap-6",
+                   marqueeSettings?.textColor || (marqueeSettings?.bgColor === 'bg-white' ? "text-gray-600" : "text-white"),
+                   marqueeSettings?.fontSize || "text-sm"
+                 )}>
+                   <span className="font-bold">{getMarqueeContent()}</span>
+                   {marqueeSettings?.ctaText && marqueeSettings?.ctaLink && (
+                     <Link 
+                       href={marqueeSettings.ctaLink}
+                       className={cn(
+                         "px-3 py-1 rounded-md text-[10px] uppercase font-black border transition-all hover:scale-105 active:scale-95",
+                         marqueeSettings?.bgColor === 'bg-white' || !marqueeSettings?.bgColor ? "bg-primary text-white border-primary" : "bg-white text-gray-900 border-white"
+                       )}
+                     >
+                       {marqueeSettings.ctaText}
+                     </Link>
+                   )}
+                 </div>
               </div>
             </div>
           </section>
