@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,27 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Megaphone, 
   Zap, 
   Plus, 
   Trash2, 
   Eye, 
   Tag, 
-  Gift, 
-  Trophy, 
-  ImageIcon,
-  TicketPercent,
-  Calendar,
-  Loader2,
-  Upload
+  TicketPercent, 
+  Loader2
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { ImageUploader } from '@/components/ui/image-uploader';
 
 export default function MarketingAdminPage() {
   const db = useFirestore();
@@ -40,19 +34,7 @@ export default function MarketingAdminPage() {
   const couponsQuery = useMemoFirebase(() => db ? query(collection(db, 'coupons'), orderBy('code', 'asc')) : null, [db]);
 
   const { data: offers } = useCollection(offersQuery);
-  const { data: campaigns } = useCollection(campaignsQuery);
   const { data: coupons, isLoading: cLoading } = useCollection(couponsQuery);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, onUpload: (url: string) => void) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onUpload(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleToggleStatus = async (col: string, id: string, current: any) => {
     if (!db) return;
@@ -73,7 +55,7 @@ export default function MarketingAdminPage() {
       title: 'New Offer',
       placement: 'top',
       enabled: false,
-      imageUrl: 'https://picsum.photos/seed/new-offer/1200/400',
+      imageUrl: '',
       link: '#'
     });
   };
@@ -125,65 +107,43 @@ export default function MarketingAdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {offers?.map((offer) => (
               <Card key={offer.id} className="border-none shadow-sm overflow-hidden bg-white rounded-2xl group">
-                <div className="relative aspect-[21/7] bg-gray-50 border-b">
-                  {offer.imageUrl ? (
-                    <Image src={offer.imageUrl} alt={offer.title || 'Offer'} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
-                      <ImageIcon size={48} />
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <Switch checked={offer.enabled} onCheckedChange={() => handleToggleStatus('marketing_offers', offer.id, offer.enabled)} />
-                  </div>
-                </div>
+                <ImageUploader 
+                  initialUrl={offer.imageUrl}
+                  aspectRatio="aspect-[21/7]"
+                  onUpload={(url) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: url })}
+                />
                 <CardContent className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Offer Title</Label>
-                      <Input defaultValue={offer.title} onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { title: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Placement</Label>
-                      <Select defaultValue={offer.placement} onValueChange={(val) => updateDoc(doc(db!, 'marketing_offers', offer.id), { placement: val })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="top">Top Banner</SelectItem>
-                          <SelectItem value="middle">Middle Section</SelectItem>
-                          <SelectItem value="before_products">Before CRM Intro</SelectItem>
-                          <SelectItem value="after_products">After CRM Intro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Image URL or Upload</Label>
-                    <div className="flex gap-2">
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Offer Title</Label>
                       <Input 
-                        defaultValue={offer.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : offer.imageUrl} 
-                        onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: e.target.value })} 
+                        defaultValue={offer.title} 
+                        onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { title: e.target.value })} 
+                        className="h-10 border-none bg-gray-50 focus:bg-white font-bold"
                       />
-                      <div className="relative">
-                        <Input 
-                          type="file" 
-                          className="hidden" 
-                          id={`offer-upload-${offer.id}`} 
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload(e, (url) => {
-                            updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: url });
-                          })}
-                        />
-                        <Button variant="outline" size="icon" asChild>
-                          <label htmlFor={`offer-upload-${offer.id}`} className="cursor-pointer">
-                            <Upload size={16} />
-                          </label>
-                        </Button>
-                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Active</Label>
+                      <Switch checked={offer.enabled} onCheckedChange={() => handleToggleStatus('marketing_offers', offer.id, offer.enabled)} />
                     </div>
                   </div>
-                  <div className="flex justify-between items-center pt-4">
-                    <Badge variant="outline" className="uppercase text-[10px]">{offer.placement}</Badge>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete('marketing_offers', offer.id)}>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Placement Section</Label>
+                    <Select defaultValue={offer.placement} onValueChange={(val) => updateDoc(doc(db!, 'marketing_offers', offer.id), { placement: val })}>
+                      <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="top">Top Banner</SelectItem>
+                        <SelectItem value="middle">Middle Section</SelectItem>
+                        <SelectItem value="before_products">Before CRM Intro</SelectItem>
+                        <SelectItem value="after_products">After CRM Intro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <Badge variant="secondary" className="uppercase text-[9px] font-black">{offer.placement}</Badge>
+                    <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDelete('marketing_offers', offer.id)}>
                       <Trash2 size={16} />
                     </Button>
                   </div>
@@ -251,7 +211,7 @@ export default function MarketingAdminPage() {
             <h2 className="text-lg font-bold">Marketing Campaigns</h2>
             <Button onClick={() => {}} className="gap-2 font-bold"><Plus size={16} /> New Campaign</Button>
           </div>
-          <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic">
+          <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic bg-gray-50/50">
             Campaign designer coming soon.
           </div>
         </TabsContent>

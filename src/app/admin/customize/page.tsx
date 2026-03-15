@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +14,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Layout, 
-  Image as ImageIcon, 
   Save, 
   Eye, 
   Loader2,
@@ -21,15 +21,10 @@ import {
   Megaphone,
   BellRing,
   Trash2,
-  Zap,
-  Info,
-  AlertCircle,
-  Megaphone as MegaphoneIcon,
-  ChevronRight,
-  ChevronLeft,
-  Upload
+  Info
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUploader } from '@/components/ui/image-uploader';
 
 export default function SiteCustomizePage() {
   const db = useFirestore();
@@ -77,7 +72,7 @@ export default function SiteCustomizePage() {
         ...customization,
         hero: { 
           enabled: customization.hero?.enabled ?? true,
-          images: customization.hero?.images || (customization.hero?.imageUrl ? [{ imageUrl: customization.hero.imageUrl, ctaLink: customization.hero.ctaLink || '', ctaText: customization.hero.ctaText || '' }] : [])
+          images: customization.hero?.images || []
         },
         sections: { ...formData.sections, ...(customization.sections || {}) }
       });
@@ -89,17 +84,6 @@ export default function SiteCustomizePage() {
       setMarqueeData({ ...marqueeData, ...marqueeSettings });
     }
   }, [marqueeSettings]);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, onUpload: (url: string) => void) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onUpload(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSave = async () => {
     if (!db) return;
@@ -144,7 +128,7 @@ export default function SiteCustomizePage() {
            <Button variant="outline" className="gap-2 font-bold h-11" asChild>
               <a href="/" target="_blank"><Eye size={16} /> View Live Site</a>
            </Button>
-           <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 shadow-lg">
+           <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 shadow-lg text-primary-foreground bg-primary">
               {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
               Save All Changes
            </Button>
@@ -172,10 +156,13 @@ export default function SiteCustomizePage() {
                 <CardDescription>Manage multiple images for the homepage slider</CardDescription>
               </div>
               <div className="flex items-center gap-4">
-                <Switch 
-                  checked={formData.hero.enabled} 
-                  onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
-                />
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs font-bold">Show Hero</Label>
+                  <Switch 
+                    checked={formData.hero.enabled} 
+                    onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
+                  />
+                </div>
                 <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
                   <Plus size={14} /> Add Slide
                 </Button>
@@ -184,13 +171,13 @@ export default function SiteCustomizePage() {
             <CardContent className="p-6 space-y-6">
               <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700 mb-4">
                 <Info size={14} />
-                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels (Max 1MB)</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels (Max 2MB)</p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-8">
                 {formData.hero.images.map((img: any, idx: number) => (
-                  <div key={idx} className="p-4 border rounded-xl space-y-4 relative bg-gray-50/30">
-                    <div className="flex justify-between items-center mb-2">
+                  <div key={idx} className="p-6 border rounded-2xl space-y-6 relative bg-gray-50/30">
+                    <div className="flex justify-between items-center">
                       <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Slide #{idx + 1}</span>
                       <Button 
                         variant="ghost" 
@@ -201,72 +188,56 @@ export default function SiteCustomizePage() {
                         <Trash2 size={16} />
                       </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs">Image URL or Manual Upload</Label>
-                        <div className="flex gap-2">
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                      <div className="md:col-span-5">
+                        <ImageUploader 
+                          initialUrl={img.imageUrl}
+                          aspectRatio="aspect-[982/500]"
+                          onUpload={(url) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].imageUrl = url;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}
+                          label="Slide Image"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-7 space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">CTA Link</Label>
                           <Input 
-                            value={img.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : img.imageUrl} 
+                            value={img.ctaLink} 
                             onChange={(e) => {
                               const updated = [...formData.hero.images];
-                              updated[idx].imageUrl = e.target.value;
+                              updated[idx].ctaLink = e.target.value;
                               setFormData({...formData, hero: {...formData.hero, images: updated}});
                             }}
-                            placeholder="https://..."
-                            className="h-10 bg-white"
+                            placeholder="e.g. /services"
+                            className="h-11 bg-white"
                           />
-                          <div className="relative">
-                            <Input 
-                              type="file" 
-                              className="hidden" 
-                              id={`hero-upload-${idx}`} 
-                              accept="image/*"
-                              onChange={(e) => handleFileUpload(e, (url) => {
-                                const updated = [...formData.hero.images];
-                                updated[idx].imageUrl = url;
-                                setFormData({...formData, hero: { ...formData.hero, images: updated }});
-                              })}
-                            />
-                            <Button variant="outline" size="icon" asChild title="Manual Upload">
-                              <label htmlFor={`hero-upload-${idx}`} className="cursor-pointer">
-                                <Upload size={16} />
-                              </label>
-                            </Button>
-                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">CTA Link</Label>
-                        <Input 
-                          value={img.ctaLink} 
-                          onChange={(e) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].ctaLink = e.target.value;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}
-                          placeholder="/services"
-                          className="h-10 bg-white"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">Button Text</Label>
-                        <Input 
-                          value={img.ctaText} 
-                          onChange={(e) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].ctaText = e.target.value;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}
-                          placeholder="Book Now"
-                          className="h-10 bg-white"
-                        />
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest">Button Text</Label>
+                          <Input 
+                            value={img.ctaText} 
+                            onChange={(e) => {
+                              const updated = [...formData.hero.images];
+                              updated[idx].ctaText = e.target.value;
+                              setFormData({...formData, hero: {...formData.hero, images: updated}});
+                            }}
+                            placeholder="e.g. Book Now"
+                            className="h-11 bg-white"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
+                
                 {formData.hero.images.length === 0 && (
-                  <div className="p-12 text-center border-2 border-dashed rounded-xl text-muted-foreground italic">
-                    No hero slides added. Using default carousel logic.
+                  <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic bg-gray-50/50">
+                    No slides added. Using default site banner.
                   </div>
                 )}
               </div>

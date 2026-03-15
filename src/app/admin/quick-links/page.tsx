@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,13 +23,12 @@ import {
   Glasses,
   Thermometer,
   Camera,
-  Loader2,
-  Upload,
-  Image as ImageIcon
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
+import { ImageUploader } from '@/components/ui/image-uploader';
 
 const ICONS: Record<string, any> = {
   Satellite,
@@ -53,17 +52,6 @@ export default function QuickLinksAdminPage() {
 
   const linksQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const { data: links, isLoading } = useCollection(linksQuery);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({ ...formData, imageUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,16 +92,16 @@ export default function QuickLinksAdminPage() {
             <CardTitle className="text-lg font-bold">Add New Link</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAdd} className="space-y-4">
+            <form onSubmit={handleAdd} className="space-y-6">
               <div className="space-y-2">
-                <Label>Label</Label>
-                <Input value={formData.label} onChange={e => setFormData({...formData, label: e.target.value})} placeholder="e.g. Starlink" />
+                <Label className="text-[10px] font-black uppercase tracking-widest">Label</Label>
+                <Input value={formData.label} onChange={e => setFormData({...formData, label: e.target.value})} placeholder="e.g. Starlink" className="h-11" />
               </div>
               
               <div className="space-y-2">
-                <Label>Icon (Lucide Fallback)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest">Lucide Icon (Fallback)</Label>
                 <Select value={formData.iconName} onValueChange={val => setFormData({...formData, iconName: val})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.keys(ICONS).map(icon => (
                       <SelectItem key={icon} value={icon}>{icon}</SelectItem>
@@ -122,39 +110,24 @@ export default function QuickLinksAdminPage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Custom Image Icon (Manual Upload)</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    value={formData.imageUrl?.startsWith('data:') ? 'Local Image Loaded' : formData.imageUrl} 
-                    onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
-                    placeholder="https://..." 
-                  />
-                  <div className="relative">
-                    <Input type="file" id="nav-upload" className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    <Button variant="outline" size="icon" asChild>
-                      <label htmlFor="nav-upload" className="cursor-pointer"><Upload size={18} /></label>
-                    </Button>
-                  </div>
-                </div>
-                {formData.imageUrl && (
-                  <div className="mt-2 relative w-12 h-12 border rounded-lg overflow-hidden bg-gray-50">
-                    <Image src={formData.imageUrl} alt="Preview" fill className="object-contain p-1" />
-                  </div>
-                )}
-              </div>
+              <ImageUploader 
+                label="Custom Image Icon"
+                initialUrl={formData.imageUrl}
+                aspectRatio="aspect-square w-24"
+                onUpload={(url) => setFormData({...formData, imageUrl: url})}
+              />
 
               <div className="space-y-2">
-                <Label>Link (URL)</Label>
-                <Input value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} placeholder="/category/starlink" />
+                <Label className="text-[10px] font-black uppercase tracking-widest">Redirection Link (URL)</Label>
+                <Input value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} placeholder="/category/starlink" className="h-11" />
               </div>
               <div className="space-y-2">
-                <Label>Order</Label>
-                <Input type="number" value={formData.order} onChange={e => setFormData({...formData, order: Number(e.target.value)})} />
+                <Label className="text-[10px] font-black uppercase tracking-widest">Sort Order</Label>
+                <Input type="number" value={formData.order} onChange={e => setFormData({...formData, order: Number(e.target.value)})} className="h-11" />
               </div>
-              <Button type="submit" className="w-full gap-2 font-bold h-11" disabled={isSubmitting}>
+              <Button type="submit" className="w-full gap-2 font-bold h-12 text-primary-foreground bg-primary shadow-xl" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={18} />}
-                Add Link
+                Add Navigation Link
               </Button>
             </form>
           </CardContent>
@@ -168,21 +141,21 @@ export default function QuickLinksAdminPage() {
               {links?.map((link) => {
                 const Icon = ICONS[link.iconName] || Grid;
                 return (
-                  <Card key={link.id} className="border-none shadow-sm bg-white group">
+                  <Card key={link.id} className="border-none shadow-sm bg-white group rounded-2xl overflow-hidden">
                     <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                       <div className="p-4 bg-primary/5 rounded-2xl text-primary group-hover:scale-110 transition-transform relative w-16 h-16 flex items-center justify-center">
                         {link.imageUrl ? (
-                          <Image src={link.imageUrl} alt={link.label} fill className="object-contain p-2" />
+                          <Image src={link.imageUrl} alt={link.label || 'Link'} fill className="object-contain p-2" />
                         ) : (
                           <Icon size={32} />
                         )}
                       </div>
                       <div className="space-y-1">
-                        <h4 className="font-bold text-sm">{link.label}</h4>
+                        <h4 className="font-bold text-sm text-gray-900">{link.label}</h4>
                         <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{link.link}</p>
                       </div>
                       <div className="flex gap-2 w-full pt-2">
-                        <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px]" asChild>
+                        <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] font-bold" asChild>
                           <a href={link.link} target="_blank"><ExternalLink size={12} className="mr-1" /> View</a>
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(link.id)}>
