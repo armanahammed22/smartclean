@@ -89,7 +89,7 @@ export default function AdminDashboard() {
       batch.set(doc(db, 'sub_services', sub2.id), sub2);
 
       await batch.commit();
-      toast({ title: "Catalog Seeded", description: "Database populated with Products and Services." });
+      toast({ title: "ERP Data Seeded", description: "Database populated with initial ERP records." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Seed Failed", description: error.message });
     } finally {
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed Catalog Data
+          Seed ERP Data
         </Button>
       </div>
 

@@ -129,7 +129,7 @@ export default function SmartCleanHomePage() {
 
         <div className="container mx-auto px-4 space-y-16 mt-8">
           
-          {/* Services Grid - Restored to 2 columns on mobile */}
+          {/* Services Grid */}
           <section className="space-y-8">
             <div className="flex justify-between items-end">
               <div className="space-y-2">
@@ -171,7 +171,7 @@ export default function SmartCleanHomePage() {
                     </div>
                   </Link>
                 ))}
-                {services?.length === 0 && (
+                {services?.length === 0 && !servicesLoading && (
                   <div className="col-span-full py-12 text-center text-muted-foreground italic">No services available currently.</div>
                 )}
               </div>
@@ -197,7 +197,7 @@ export default function SmartCleanHomePage() {
                 {products?.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 ))}
-                {products?.length === 0 && (
+                {products?.length === 0 && !productsLoading && (
                   <div className="col-span-full py-12 text-center text-muted-foreground italic">No products in stock.</div>
                 )}
               </div>
