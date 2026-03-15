@@ -1,22 +1,37 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Globe, User, ShieldCheck, UserCircle } from 'lucide-react';
+import { Search, Globe, ShieldCheck, UserCircle, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const LOGO_IMAGE = PlaceHolderImages.find(img => img.id === 'app-logo');
 
 export function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const { user } = useUser();
+  const auth = useAuth();
+  const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
+  const { data: adminRole } = useDoc(adminRef);
+  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
   return (
     <header className="w-full z-50 sticky top-0 shadow-sm">
@@ -56,10 +71,32 @@ export function Navbar() {
             </Button>
             
             {user ? (
-              <Link href="/account/dashboard" className="flex items-center gap-2 text-primary hover:text-white transition-colors font-bold">
-                <UserCircle size={24} />
-                <span className="text-xs">My Account</span>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-primary hover:text-white transition-colors font-bold gap-2 p-0 h-auto">
+                    <UserCircle size={24} />
+                    <span className="text-xs">Account</span>
+                    <ChevronDown size={14} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl">
+                  <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">My Portal</DropdownMenuLabel>
+                  <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold">Personal Dashboard</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/account/history" className="font-bold">Service History</Link></DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-widest text-primary">Management</DropdownMenuLabel>
+                      <DropdownMenuItem asChild><Link href="/admin/dashboard" className="font-bold flex items-center gap-2"><LayoutDashboard size={14} /> Admin Portal</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link href="/admin/orders" className="font-bold">Manage Orders</Link></DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut(auth)} className="text-destructive font-bold flex items-center gap-2">
+                    <LogOut size={14} /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/login" className="flex items-center gap-2 hover:text-primary transition-colors">
                 <ShieldCheck className="text-primary" size={20} />
