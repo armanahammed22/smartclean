@@ -112,8 +112,9 @@ const translations: Record<Language, Record<string, string>> = {
     item_referrals: "রেফারাল প্রোগ্রাম",
     item_staff: "স্টাফ ডিরেক্টরি",
     item_couriers: "কুরিয়ার",
-    item_subscription: "সাবস্ক্রিপশন",
+    item_subscription: "সাবস্কৃপশন",
     item_settings: "গ্লোবাল সেটিংস",
+    item_roles: "অ্যাক্সেস কন্ট্রোল",
 
     // Products & Cart
     products_title: "সেরা পণ্যসমূহ",
@@ -306,6 +307,7 @@ const translations: Record<Language, Record<string, string>> = {
     item_couriers: "Couriers",
     item_subscription: "Subscription",
     item_settings: "Global Settings",
+    item_roles: "Access Control",
 
     // Products & Cart
     products_title: "Featured Products",

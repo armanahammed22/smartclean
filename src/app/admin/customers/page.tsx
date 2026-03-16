@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -22,7 +23,9 @@ import {
   Save,
   Users,
   Star,
-  Wallet
+  Wallet,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -34,6 +37,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function CustomersPage() {
   const db = useFirestore();
@@ -43,16 +47,18 @@ export default function CustomersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
 
+  // We use customer_profiles as the primary identity database
   const customersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'customers'), orderBy('name', 'asc'));
+    return query(collection(db, 'customer_profiles'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: customers, isLoading } = useCollection(customersQuery);
 
   const filtered = customers?.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.phone?.includes(searchTerm)
+    c.phone?.includes(searchTerm) ||
+    c.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSaveCustomer = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -66,32 +72,35 @@ export default function CustomersPage() {
       email: formData.get('email') as string,
       phone: formData.get('phone') as string,
       address: formData.get('address') as string,
-      segment: formData.get('segment') as string || 'Regular',
-      totalSpent: editingCustomer?.totalSpent || 0,
       updatedAt: new Date().toISOString()
     };
 
     try {
       if (editingCustomer) {
-        await updateDoc(doc(db, 'customers', editingCustomer.id), customerData);
-        toast({ title: "Customer Updated" });
+        await updateDoc(doc(db, 'customer_profiles', editingCustomer.id), customerData);
+        toast({ title: "Profile Updated" });
       } else {
-        await addDoc(collection(db, 'customers'), { ...customerData, createdAt: new Date().toISOString() });
-        toast({ title: "Customer Registered" });
+        // Manual registration logic (Firestore entry only)
+        await addDoc(collection(db, 'customer_profiles'), { 
+          ...customerData, 
+          createdAt: new Date().toISOString(),
+          totalEarnings: 0
+        });
+        toast({ title: "Customer Created" });
       }
       setIsDialogOpen(false);
       setEditingCustomer(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: "Error", description: "Operation failed." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete customer profile?")) return;
-    await deleteDoc(doc(db, 'customers', id));
-    toast({ title: "Customer Removed" });
+    if (!db || !confirm("Delete user profile? This won't delete their Auth account.")) return;
+    await deleteDoc(doc(db, 'customer_profiles', id));
+    toast({ title: "Record Removed" });
   };
 
   return (
@@ -99,13 +108,13 @@ export default function CustomersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customer Directory</h1>
-          <p className="text-muted-foreground text-sm">Manage client database and engagement history</p>
+          <p className="text-muted-foreground text-sm">Manage registered users and promote them to Staff roles</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={(o) => { setIsDialogOpen(o); if(!o) setEditingCustomer(null); }}>
           <DialogTrigger asChild>
             <Button className="gap-2 font-bold h-11 shadow-lg" onClick={() => { setEditingCustomer(null); setIsDialogOpen(true); }}>
-              <UserPlus size={18} /> Add New Client
+              <UserPlus size={18} /> Register Profile
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -147,7 +156,7 @@ export default function CustomersPage() {
         <Card className="border-none shadow-sm bg-primary text-white">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Clients</p>
+              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Registered</p>
               <h3 className="text-3xl font-black mt-1">{customers?.length || 0}</h3>
             </div>
             <Users size={40} className="opacity-20" />
@@ -156,9 +165,9 @@ export default function CustomersPage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">VIP Segments</p>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Affiliate Partners</p>
               <h3 className="text-3xl font-black mt-1">
-                {customers?.filter(c => c.segment === 'VIP' || (c.totalSpent || 0) > 50000).length || 0}
+                {customers?.filter(c => (c.totalEarnings || 0) > 0).length || 0}
               </h3>
             </div>
             <Star size={40} className="text-amber-500 opacity-20" />
@@ -167,9 +176,9 @@ export default function CustomersPage() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active This Month</p>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active This Week</p>
               <h3 className="text-3xl font-black mt-1">
-                {Math.ceil((customers?.length || 0) * 0.4)}
+                {Math.ceil((customers?.length || 0) * 0.2)}
               </h3>
             </div>
             <Wallet size={40} className="text-green-500 opacity-20" />
@@ -181,13 +190,13 @@ export default function CustomersPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
-            placeholder="Search by name, phone or email..." 
+            placeholder="Search by name, phone, email or UID..." 
             className="pl-10 h-11 border-gray-200"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 gap-2"><Filter size={18} /> Segmentation</Button>
+        <Button variant="outline" className="h-11 gap-2"><Filter size={18} /> Filters</Button>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white">
@@ -195,16 +204,16 @@ export default function CustomersPage() {
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-4">Customer</TableHead>
+                <TableHead className="font-bold py-4">Customer Identity</TableHead>
                 <TableHead className="font-bold">Contact</TableHead>
-                <TableHead className="font-bold">Total Spent</TableHead>
-                <TableHead className="font-bold">Segment</TableHead>
+                <TableHead className="font-bold">Earnings</TableHead>
+                <TableHead className="font-bold">Role Actions</TableHead>
                 <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-20">Loading directory...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-20">Loading registry...</TableCell></TableRow>
               ) : filtered?.length ? (
                 filtered.map((customer) => (
                   <TableRow key={customer.id} className="hover:bg-gray-50/50 transition-colors">
@@ -214,26 +223,26 @@ export default function CustomersPage() {
                           <AvatarFallback className="bg-primary/10 text-primary font-bold">{customer.name?.[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-bold text-sm">{customer.name}</div>
-                          <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <MapPin size={10} /> {customer.address || 'N/A'}
-                          </div>
+                          <div className="font-bold text-sm">{customer.name || 'Anonymous'}</div>
+                          <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-tighter">UID: {customer.id.slice(0, 12)}...</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-0.5">
-                        <div className="flex items-center gap-1.5 text-xs font-medium"><Phone size={10} className="text-primary" /> {customer.phone}</div>
+                        <div className="flex items-center gap-1.5 text-xs font-medium"><Phone size={10} className="text-primary" /> {customer.phone || 'N/A'}</div>
                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><Mail size={10} /> {customer.email}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                       <div className="font-black text-sm text-primary">৳{customer.totalSpent?.toLocaleString() || '0'}</div>
+                       <div className="font-black text-sm text-primary">৳{customer.totalEarnings?.toLocaleString() || '0'}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-tighter">
-                        {customer.segment || 'Regular'}
-                      </Badge>
+                      <Button variant="outline" size="sm" asChild className="h-8 gap-1.5 text-[10px] font-black uppercase tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-white transition-all rounded-full px-4">
+                        <Link href={`/admin/roles?uid=${customer.id}`}>
+                          <UserCheck size={12} /> Promote
+                        </Link>
+                      </Button>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
@@ -248,7 +257,7 @@ export default function CustomersPage() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No customers found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No matching profiles found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldCheck, UserPlus, Trash2, Loader2, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, UserPlus, Trash2, Loader2, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const ROLES = [
   { id: 'admins', label: 'Admin', color: 'bg-red-100 text-red-700' },
@@ -25,9 +26,19 @@ const ROLES = [
 export default function RoleManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const [targetUid, setTargetUid] = useState('');
   const [selectedRole, setSelectedRole] = useState('employees');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const uidFromParam = searchParams.get('uid');
+    if (uidFromParam) {
+      setTargetUid(uidFromParam);
+    }
+  }, [searchParams]);
 
   // We fetch a sample role collection to show existing assignments
   const adminsQuery = useMemoFirebase(() => db ? collection(db, 'roles_admins') : null, [db]);
@@ -56,6 +67,10 @@ export default function RoleManagementPage() {
       });
       toast({ title: "Role Assigned", description: `UID granted ${selectedRole} privileges.` });
       setTargetUid('');
+      // Clean up URL
+      if (searchParams.get('uid')) {
+        router.push('/admin/roles');
+      }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Assignment Failed", description: e.message });
     } finally {
@@ -79,9 +94,14 @@ export default function RoleManagementPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Access Control</h1>
-        <p className="text-muted-foreground text-sm">Dynamically manage platform roles and permissions</p>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => router.back()}>
+          <ArrowLeft size={20} />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Access Control</h1>
+          <p className="text-muted-foreground text-sm">Dynamically manage platform roles and permissions</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -100,7 +120,7 @@ export default function RoleManagementPage() {
                   value={targetUid} 
                   onChange={(e) => setTargetUid(e.target.value)} 
                   placeholder="Paste User UID here" 
-                  className="h-11 bg-gray-50 border-gray-100"
+                  className="h-11 bg-gray-50 border-gray-100 font-mono text-xs"
                 />
               </div>
               <div className="space-y-2">
