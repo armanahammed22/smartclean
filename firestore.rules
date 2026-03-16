@@ -29,22 +29,23 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read/list access
-    match /products/{any=**} { allow read: if true; }
-    match /services/{any=**} { allow read: if true; }
-    match /sub_services/{any=**} { allow read: if true; }
-    match /product_categories/{any=**} { allow read: if true; }
-    match /service_categories/{any=**} { allow read: if true; }
-    match /brands/{any=**} { allow read: if true; }
-    match /site_settings/{any=**} { allow read: if true; }
-    match /quick_links/{any=**} { allow read: if true; }
-    match /quick_actions/{any=**} { allow read: if true; }
-    match /payment_methods/{any=**} { allow read: if true; }
-    match /service_areas/{any=**} { allow read: if true; }
-    match /marketing_offers/{any=**} { allow read: if true; }
-    match /coupons/{any=**} { allow read: if true; }
+    // We use standard wildcards {id} for collection root listing permissions
+    match /products/{id} { allow read, list: if true; }
+    match /services/{id} { allow read, list: if true; }
+    match /sub_services/{id} { allow read, list: if true; }
+    match /product_categories/{id} { allow read, list: if true; }
+    match /service_categories/{id} { allow read, list: if true; }
+    match /brands/{id} { allow read, list: if true; }
+    match /site_settings/{id} { allow read, list: if true; }
+    match /quick_links/{id} { allow read, list: if true; }
+    match /quick_actions/{id} { allow read, list: if true; }
+    match /payment_methods/{id} { allow read, list: if true; }
+    match /service_areas/{id} { allow read, list: if true; }
+    match /marketing_offers/{id} { allow read, list: if true; }
+    match /coupons/{id} { allow read, list: if true; }
 
     // REVIEWS (Public read/list, Authenticated write)
-    match /service_reviews/{any=**} {
+    match /service_reviews/{reviewId} {
       allow read, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
@@ -61,26 +62,26 @@ service cloud.firestore {
     }
     
     // CRM DATA
-    match /leads/{id=**} { allow create: if true; allow read, update, delete: if isStaff(); }
-    match /customers/{id=**} { allow read, write: if isStaff(); }
-    match /orders/{id=**} {
+    match /leads/{id} { allow create: if true; allow read, update, delete: if isStaff(); }
+    match /customers/{id} { allow read, write: if isStaff(); }
+    match /orders/{id} {
       allow create: if true;
       allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isStaff();
     }
-    match /bookings/{id=**} {
+    match /bookings/{id} {
       allow create: if true;
       allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isStaff();
     }
     
-    match /referrals/{id=**} {
+    match /referrals/{id} {
       allow create: if isSignedIn();
       allow read: if isStaff() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
     }
 
     // STAFF & ADMIN PROFILES
-    match /employee_profiles/{id=**} { allow read: if isStaff(); allow write: if isAdmin(); }
+    match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
   }
