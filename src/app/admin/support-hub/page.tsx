@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -25,6 +24,13 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
+const ICONS: Record<string, any> = {
+  MessageCircle,
+  HelpCircle,
+  LifeBuoy,
+  Headphones
+};
 
 export default function SupportHubAdminPage() {
   const db = useFirestore();
