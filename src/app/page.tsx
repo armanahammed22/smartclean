@@ -208,29 +208,29 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Marquee - py-6 md:py-6 */}
+        {/* 2. Marquee - Compact Announcement Bar */}
         {isMounted && (!marqueeSettings || marqueeSettings.enabled) && (
-          <section className="container mx-auto px-4 py-6 md:py-6">
+          <section className="container mx-auto px-4 py-3 md:py-4">
             <div className={cn(
-              "h-14 shadow-md border border-white/10 flex items-center overflow-hidden transition-all duration-500",
+              "h-10 shadow-sm border border-white/10 flex items-center overflow-hidden transition-all duration-500",
               marqueeSettings?.radius || "rounded-full",
               marqueeSettings?.bgColor || "bg-[#081621]"
             )}>
               <div className={cn(
-                "h-full px-8 flex items-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg shrink-0 z-10",
+                "h-full px-4 flex items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-md shrink-0 z-10",
                 "bg-primary text-white"
               )}>
-                <MarqueeIcon size={18} /> {marqueeSettings?.label || 'ALERT'}
+                <MarqueeIcon size={14} /> {marqueeSettings?.label || 'ALERT'}
               </div>
               <div className="flex-1 overflow-hidden relative h-full flex items-center">
                  <div className={cn(
-                   "animate-marquee inline-flex items-center whitespace-nowrap px-6 gap-6",
+                   "animate-marquee inline-flex items-center whitespace-nowrap px-4 gap-4",
                    marqueeSettings?.textColor || "text-white",
-                   marqueeSettings?.fontSize || "text-sm"
+                   marqueeSettings?.fontSize || "text-xs"
                  )}>
                    <span className="font-bold">{getMarqueeContent()}</span>
                    {marqueeSettings?.ctaText && marqueeSettings?.ctaLink && (
-                     <Link href={marqueeSettings.ctaLink} className="px-4 py-1.5 rounded-full text-[10px] uppercase font-black bg-white text-gray-900 shadow-lg">
+                     <Link href={marqueeSettings.ctaLink} className="px-3 py-1 rounded-full text-[9px] uppercase font-black bg-white text-gray-900 shadow-sm">
                        {marqueeSettings.ctaText}
                      </Link>
                    )}
