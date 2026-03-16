@@ -29,18 +29,12 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read access
-    // Explicitly allowing list and get on products and services
-    match /products { 
-      allow read, list: if true; 
-    }
+    // Unified document match handles both 'get' and 'list'
     match /products/{id} { 
-      allow read, get: if true; 
-    }
-    match /services { 
-      allow read, list: if true; 
+      allow read: if true; 
     }
     match /services/{id} { 
-      allow read, get: if true; 
+      allow read: if true; 
     }
     
     // Catch-all for sub-collections and other public data
