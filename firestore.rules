@@ -29,27 +29,29 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read access
-    // Unified document match handles both 'get' and 'list'
-    match /products/{id} { 
+    // Unified document match handles both 'get' and 'list' robustly
+    match /products/{document=**} { 
       allow read: if true; 
     }
-    match /services/{id} { 
+    match /services/{document=**} { 
+      allow read: if true; 
+    }
+    match /sub_services/{document=**} { 
       allow read: if true; 
     }
     
-    // Catch-all for sub-collections and other public data
-    match /product_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_categories/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id=**} { allow read: if true; allow write: if isAdmin(); }
-    match /payment_methods/{id=**} { allow read: if true; allow write: if isAdmin(); }
+    // Explicit matches for other public data
+    match /product_categories/{id=**} { allow read: if true; }
+    match /service_categories/{id=**} { allow read: if true; }
+    match /brands/{id=**} { allow read: if true; }
+    match /site_settings/{id=**} { allow read: if true; }
+    match /marketing_offers/{id=**} { allow read: if true; }
+    match /marketing_campaigns/{id=**} { allow read: if true; }
+    match /coupons/{id=**} { allow read: if true; }
+    match /quick_links/{id=**} { allow read: if true; }
+    match /quick_actions/{id=**} { allow read: if true; }
+    match /payment_methods/{id=**} { allow read: if true; }
+    match /service_areas/{id=**} { allow read: if true; }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
