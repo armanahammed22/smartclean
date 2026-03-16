@@ -1,9 +1,9 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, addDoc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
