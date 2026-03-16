@@ -61,7 +61,7 @@ service cloud.firestore {
     }
     match /support_tickets/{id} {
       allow create: if isSignedIn();
-      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
       allow update: if isStaff();
     }
     
@@ -70,18 +70,18 @@ service cloud.firestore {
     match /customers/{id} { allow read, write: if isStaff(); }
     match /orders/{id} {
       allow create: if true;
-      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
       allow update, delete: if isStaff();
     }
     match /bookings/{id} {
       allow create: if true;
-      allow read: if isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
       allow update, delete: if isStaff();
     }
     
     match /referrals/{id} {
       allow create: if isSignedIn();
-      allow read: if isStaff() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+      allow read: if (isSignedIn() && resource.data.referrerId == request.auth.uid) || isStaff();
     }
 
     // STAFF & ADMIN PROFILES
