@@ -51,7 +51,7 @@ service cloud.firestore {
     }
     
     match /employee_profiles/{uid} {
-      allow read, list: if isSignedIn(); // Customers need to see who is available for auto-assignment
+      allow read, list: if isSignedIn(); 
       allow write: if isAdmin();
     }
     
@@ -60,9 +60,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // CRM DATA - Prioritize static role checks for performance
+    // CRM DATA
     match /orders/{id} {
-      allow create: if true; // Supports guest checkout
+      allow create: if true; 
       allow read, list: if isOrderManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isOrderManager();
     }
@@ -93,8 +93,8 @@ service cloud.firestore {
     }
 
     match /staff_availability/{uid} {
-      allow read, list: if isSignedIn(); // Required for customer-side auto-assignment check
-      allow update: if isSignedIn(); // Allows customers to mark a tech as 'Busy' during booking
+      allow read, list: if isSignedIn(); 
+      allow update: if isSignedIn(); 
       allow write: if isOwner(uid) || isManager();
     }
 

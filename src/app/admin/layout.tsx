@@ -38,7 +38,8 @@ import {
   Zap,
   Wallet,
   Globe,
-  UserCheck
+  UserCheck,
+  Headphones
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: t('item_links'), href: '/admin/quick-links', icon: Grid, color: 'text-indigo-400' },
         { name: t('item_actions'), href: '/admin/quick-actions', icon: Zap, color: 'text-orange-400' },
+        { name: 'Support Hub', href: '/admin/support-hub', icon: Headphones, color: 'text-teal-500' },
         { name: t('item_customize'), href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
       ]
     },

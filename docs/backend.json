@@ -71,6 +71,19 @@
         "rating": { "type": "number" },
         "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
       }
+    },
+    "SupportHubConfig": {
+      "title": "SupportHubConfig",
+      "type": "object",
+      "properties": {
+        "headerTitle": { "type": "string" },
+        "headerSubtitle": { "type": "string" },
+        "bodyText": { "type": "string" },
+        "buttonText": { "type": "string" },
+        "icon": { "type": "string" },
+        "supportLink": { "type": "string" },
+        "isEnabled": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -89,6 +102,7 @@
     "/staff_availability/{uid}": { "schema": "object", "description": "Real-time tech status." },
     "/employee_profiles/{uid}": { "schema": "#/entities/EmployeeProfile", "description": "Staff metadata." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
+    "/site_settings/support_hub": { "schema": "#/entities/SupportHubConfig", "description": "Support Hub UI settings." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
     "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
