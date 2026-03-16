@@ -40,6 +40,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -117,6 +118,44 @@ export default function CheckoutPage() {
       }
 
       const collectionName = hasServices ? 'bookings' : 'orders';
+      let assignedTech = null;
+
+      // Smart Auto-Assignment for Services
+      if (hasServices && db) {
+        const serviceId = items.find(i => i.itemType === 'service')?.id;
+        if (serviceId) {
+          const techQuery = query(
+            collection(db, 'employee_profiles'),
+            where('skills', 'array-contains', serviceId),
+            where('status', '==', 'Active')
+          );
+          
+          const techSnap = await getDocs(techQuery);
+          // Sort by rating in-memory to avoid index complexity
+          const candidates = techSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
+
+          for (const tech of candidates) {
+            const availQuery = query(
+              collection(db, 'staff_availability'), 
+              where('uid', '==', tech.id), 
+              where('status', '==', 'Available')
+            );
+            const availSnap = await getDocs(availQuery);
+            if (!availSnap.empty) {
+              assignedTech = { id: tech.id, name: tech.name };
+              // Mark technician as busy immediately
+              updateDoc(doc(db, 'staff_availability', tech.id as string), { 
+                status: 'Busy', 
+                updatedAt: serverTimestamp() 
+              });
+              break;
+            }
+          }
+        }
+      }
+
       const orderData = {
         customerId: currentUserId || 'guest',
         customerName: values.name,
@@ -126,11 +165,15 @@ export default function CheckoutPage() {
         items,
         totalPrice: subtotal * 1.08,
         paymentMethod: values.paymentMethod,
-        status: 'New',
+        status: assignedTech ? 'Assigned' : 'New',
         notes: values.notes,
         dateTime: values.date?.toISOString() || new Date().toISOString(),
         timeSlot: values.time,
         createdAt: new Date().toISOString(),
+        employeeId: assignedTech?.id || null,
+        employeeName: assignedTech?.name || null,
+        serviceId: items.find(i => i.itemType === 'service')?.id || null,
+        serviceTitle: items.find(i => i.itemType === 'service')?.name || null
       };
 
       const docRef = await addDoc(collection(db, collectionName), orderData);

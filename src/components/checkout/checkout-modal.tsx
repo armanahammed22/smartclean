@@ -163,13 +163,10 @@ export function CheckoutModal() {
         const phoneSnap = await getDocs(phoneCheckQ);
         
         if (!phoneSnap.empty) {
-          // User exists, link to this UID but require login for security if possible
-          // In this prototype, we'll link the order to the existing user.
           currentUserId = phoneSnap.docs[0].id;
         } else {
           // Create new account
           tempPass = Math.random().toString(36).slice(-8);
-          // Use phone-based email fallback for Firebase Auth
           const emailToCreate = values.email || `${values.phone}@smartclean.local`;
           
           try {
@@ -206,18 +203,29 @@ export function CheckoutModal() {
           const techQuery = query(
             collection(db, 'employee_profiles'),
             where('skills', 'array-contains', serviceId),
-            where('status', '==', 'Active'),
-            orderBy('rating', 'desc'),
-            limit(5)
+            where('status', '==', 'Active')
           );
           
           const techSnap = await getDocs(techQuery);
-          for (const techDoc of techSnap.docs) {
-            const availQuery = query(collection(db, 'staff_availability'), where('uid', '==', techDoc.id), where('status', '==', 'Available'));
+          // Sort candidates by rating in-memory
+          const candidates = techSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
+
+          for (const tech of candidates) {
+            const availQuery = query(
+              collection(db, 'staff_availability'), 
+              where('uid', '==', tech.id), 
+              where('status', '==', 'Available')
+            );
             const availSnap = await getDocs(availQuery);
             if (!availSnap.empty) {
-              assignedTech = { id: techDoc.id, name: techDoc.data().name };
-              await updateDoc(doc(db, 'staff_availability', techDoc.id), { status: 'Busy', updatedAt: serverTimestamp() });
+              assignedTech = { id: tech.id, name: tech.name };
+              // Mark tech as busy
+              updateDoc(doc(db, 'staff_availability', tech.id as string), { 
+                status: 'Busy', 
+                updatedAt: serverTimestamp() 
+              });
               break;
             }
           }
