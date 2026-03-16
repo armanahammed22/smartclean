@@ -143,7 +143,7 @@ export default function AdminSettingsPage() {
                   <ImageUploader 
                     label="Site Logo"
                     initialUrl={formData.logoUrl}
-                    aspectRatio="aspect-square w-32"
+                    aspectRatio="aspect-square w-20"
                     onUpload={(url) => setFormData({...formData, logoUrl: url})}
                   />
                   <ImageUploader 

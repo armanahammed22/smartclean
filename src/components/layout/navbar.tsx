@@ -42,7 +42,7 @@ export function Navbar() {
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center border border-white/5">
+            <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center border border-white/5">
               {displayLogo ? (
                 <Image src={displayLogo} alt="Logo" fill className="object-contain p-1.5" />
               ) : (
