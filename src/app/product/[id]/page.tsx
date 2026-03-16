@@ -77,13 +77,19 @@ export default function ProductDetailsPage() {
             {/* Left Side: Product Gallery */}
             <div className="lg:col-span-7 space-y-6">
               <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
-                <Image 
-                  src={product.imageUrl || 'https://picsum.photos/seed/prod/800/800'} 
-                  alt={product.name || 'Product Image'} 
-                  fill 
-                  className="object-contain p-12 transition-transform duration-700 group-hover:scale-110" 
-                  priority
-                />
+                {product.imageUrl ? (
+                  <Image 
+                    src={product.imageUrl} 
+                    alt={product.name || 'Product Image'} 
+                    fill 
+                    className="object-contain p-12 transition-transform duration-700 group-hover:scale-110" 
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                    <Package size={120} />
+                  </div>
+                )}
                 <div className="absolute top-6 left-6">
                   <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">
                     {product.brand || 'Professional'}

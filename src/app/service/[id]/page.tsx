@@ -12,7 +12,8 @@ import {
   Zap,
   Star,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  Wrench
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -89,13 +90,19 @@ export default function ServiceDetailsPage() {
             {/* COLUMN 1: Service Media & Detailed Info (lg:col-span-5) */}
             <div className="lg:col-span-5 space-y-6">
               <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white group">
-                <Image 
-                  src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/800'} 
-                  alt={service.title || 'Service Details'} 
-                  fill 
-                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                  priority
-                />
+                {service.imageUrl ? (
+                  <Image 
+                    src={service.imageUrl} 
+                    alt={service.title || 'Service Details'} 
+                    fill 
+                    className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                    <Wrench size={80} />
+                  </div>
+                )}
                 <div className="absolute top-6 left-6">
                   <Badge className="bg-primary text-white border-none px-5 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">
                     {service.categoryId || 'Premium'}

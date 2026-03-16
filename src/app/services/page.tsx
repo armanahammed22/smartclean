@@ -8,7 +8,7 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, X } from 'lucide-react';
+import { Loader2, Search, Filter, X, Wrench, Package } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -130,12 +130,18 @@ export default function ServicesListPage() {
                 item.itemType === 'service' ? (
                   <div key={item.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                     <Link href={`/service/${item.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
-                      <Image 
-                        src={item.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={item.title || 'Service Image'} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                      />
+                      {item.imageUrl ? (
+                        <Image 
+                          src={item.imageUrl} 
+                          alt={item.title || 'Service Image'} 
+                          fill 
+                          className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                          <Wrench size={40} />
+                        </div>
+                      )}
                       <div className="absolute top-3 left-3">
                         <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">
                           {item.categoryId || 'General'}
@@ -173,7 +179,7 @@ export default function ServicesListPage() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-black text-[#081621] uppercase">No Match Found</h3>
-                <p className="text-muted-foreground font-medium max-w-sm">We couldn't find any services or tools matching your search criteria. Try a different keyword or category.</p>
+                <p className="text-muted-foreground font-medium max-sm">We couldn't find any services or tools matching your search criteria. Try a different keyword or category.</p>
               </div>
               <Button 
                 onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}

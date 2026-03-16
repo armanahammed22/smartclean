@@ -196,20 +196,28 @@ export default function SmartCleanHomePage() {
                     {customization.hero.images.map((img: any, idx: number) => (
                       <CarouselItem key={idx} className="h-full">
                         <div className="relative w-full h-full">
-                          <Image 
-                            src={img.imageUrl} 
-                            alt="Banner Background" 
-                            fill 
-                            className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-                            priority={idx === 0} 
-                          />
+                          {img.imageUrl ? (
+                            <Image 
+                              src={img.imageUrl} 
+                              alt="Banner Background" 
+                              fill 
+                              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                              priority={idx === 0} 
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                              <Sparkles size={120} />
+                            </div>
+                          )}
                         </div>
                       </CarouselItem>
                     ))}
                   </CarouselContent>
                 </Carousel>
               ) : (
-                <Image src="https://picsum.photos/seed/clean/1200/800" alt="Default Hero" fill className="object-cover" />
+                <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                  <Sparkles size={120} />
+                </div>
               )}
 
               {/* Overlay Layer */}
@@ -315,12 +323,18 @@ export default function SmartCleanHomePage() {
                   {services?.map((service) => (
                     <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                       <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
-                        <Image 
-                          src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                          alt={service.title || 'Service Image'} 
-                          fill 
-                          className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                        />
+                        {service.imageUrl ? (
+                          <Image 
+                            src={service.imageUrl} 
+                            alt={service.title || 'Service Image'} 
+                            fill 
+                            className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                            <Wrench size={40} />
+                          </div>
+                        )}
                         <div className="absolute top-3 left-3"><Badge className="bg-white/95 text-primary border-none shadow-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge></div>
                       </Link>
                       <div className="p-3 flex flex-col flex-1 gap-2">

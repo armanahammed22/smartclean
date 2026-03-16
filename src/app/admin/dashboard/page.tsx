@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const [isSeeding, setIsSeeding] = useState(false);
 
   const leadsQuery = useMemoFirebase(() => db ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'customers'), orderBy('name', 'asc')) : null, [db]);
+  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db]);
   const ordersQuery = useMemoFirebase(() => db ? query(collection(db, 'orders')) : null, [db]);
   const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
         status: 'Active',
         duration: 'Variable',
         createdAt: new Date().toISOString(),
-        imageUrl: `https://picsum.photos/seed/${s.id}/800/600`,
+        imageUrl: "", // REMOVED picsum seed
         categoryId: 'Cleaning'
       });
     });
