@@ -48,6 +48,8 @@ export default function SignupPage() {
       const referralCode = user.uid.slice(0, 6).toUpperCase();
       const referredBy = searchParams.get('ref') || null;
 
+      // Automatically create the Firestore document with default 'customer' role.
+      // We use merge: true to avoid overwriting existing role data if the document already exists.
       await setDoc(doc(db, 'customer_profiles', user.uid), {
         uid: user.uid,
         name: formData.name,
@@ -56,8 +58,9 @@ export default function SignupPage() {
         referralCode,
         referredBy,
         totalEarnings: 0,
-        createdAt: new Date().toISOString()
-      });
+        createdAt: new Date().toISOString(),
+        role: 'customer' // Default role field
+      }, { merge: true });
 
       toast({ title: "Account Created!", description: "Welcome to the Smart Clean family." });
       router.push('/account/dashboard');

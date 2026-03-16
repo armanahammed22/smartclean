@@ -21,6 +21,20 @@ export interface Product {
   size?: string;
 }
 
+export interface CustomerProfile {
+  uid: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  referralCode?: string;
+  referredBy?: string | null;
+  totalEarnings?: number;
+  role: 'customer' | 'staff' | 'admin';
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface EmployeeProfile {
   id: string;
   name: string;
