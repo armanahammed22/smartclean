@@ -61,6 +61,7 @@ export default function SiteCustomizePage() {
     bgColor: 'bg-white',
     textColor: 'text-gray-600',
     fontSize: 'text-sm',
+    height: 'h-5',
     radius: 'rounded-full',
     enabled: true,
     ctaText: '',
@@ -334,6 +335,19 @@ export default function SiteCustomizePage() {
                       <SelectItem value="text-xs">Small</SelectItem>
                       <SelectItem value="text-sm">Medium</SelectItem>
                       <SelectItem value="text-base">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Bar Height</Label>
+                  <Select value={marqueeData.height || 'h-5'} onValueChange={(val) => setMarqueeData({...marqueeData, height: val})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="h-5">Ultra Slim (20px)</SelectItem>
+                      <SelectItem value="h-6">Very Slim (24px)</SelectItem>
+                      <SelectItem value="h-8">Slim (32px)</SelectItem>
+                      <SelectItem value="h-10">Standard (40px)</SelectItem>
+                      <SelectItem value="h-12">Large (48px)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

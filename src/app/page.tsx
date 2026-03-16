@@ -212,7 +212,8 @@ export default function SmartCleanHomePage() {
         {isMounted && (!marqueeSettings || marqueeSettings.enabled) && (
           <section className="container mx-auto px-4 py-1">
             <div className={cn(
-              "h-5 shadow-sm border border-white/10 flex items-center overflow-hidden transition-all duration-500",
+              marqueeSettings?.height || "h-5",
+              "shadow-sm border border-white/10 flex items-center overflow-hidden transition-all duration-500",
               marqueeSettings?.radius || "rounded-full",
               marqueeSettings?.bgColor || "bg-[#081621]"
             )}>
