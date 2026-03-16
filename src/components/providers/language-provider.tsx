@@ -113,7 +113,7 @@ const translations: Record<Language, Record<string, string>> = {
     item_staff: "স্টাফ ডিরেক্টরি",
     item_couriers: "কুরিয়ার",
     item_subscription: "সাবস্কৃপশন",
-    item_settings: "গ্লোবাল সেটিংস",
+    item_settings: "গ্লোবাল সেটিিংস",
     item_roles: "অ্যাক্সেস কন্ট্রোল",
 
     // Products & Cart
@@ -169,6 +169,15 @@ const translations: Record<Language, Record<string, string>> = {
     payment_cod: "ক্যাশ অন ডেলিভারি (COD)",
     payment_cash_hand: "ক্যাশ ইন হ্যান্ড (Cash in Hand)",
     
+    // OTP & Guest
+    verify_phone: "ফোন নম্বর যাচাই করুন",
+    send_otp: "ওটিপি পাঠান",
+    enter_otp: "৬-সংখ্যার ওটিপি দিন",
+    otp_sent: "আপনার ফোনে ওটিপি পাঠানো হয়েছে",
+    otp_verified: "ফোন নম্বর সফলভাবে যাচাই করা হয়েছে",
+    invalid_otp: "ভুল ওটিপি, আবার চেষ্টা করুন",
+    guest_note: "অর্ডার সম্পন্ন হলে আপনার জন্য একটি অ্যাকাউন্ট তৈরি করা হবে।",
+
     // Order Success
     order_confirmed: "অর্ডার নিশ্চিত করা হয়েছে!",
     thank_you_order: "আপনার ক্রয়ের জন্য ধন্যবাদ। আপনার অর্ডার গ্রহণ করা হয়েছে এবং প্রসেস করা হচ্ছে।",
@@ -176,6 +185,9 @@ const translations: Record<Language, Record<string, string>> = {
     confirmation_email: "আপনার ইনবক্সে একটি নিশ্চিতকরণ ইমেল পাঠানো হয়েছে।",
     back_to_shop: "দোকানে ফিরে যান",
     continue_shopping: "কেনাকাটা চালিয়ে যান",
+    account_created: "আপনার অ্যাকাউন্ট তৈরি করা হয়েছে!",
+    temp_password: "অস্থায়ী পাসওয়ার্ড",
+    login_info: "ভবিষ্যতে লগইন করার জন্য এই তথ্যগুলো সংরক্ষণ করুন।",
 
     // Footer
     footer_desc: "পুরো বাংলাদেশে প্রফেশনাল ক্লিনিং সেবার সবচেয়ে বিশ্বস্ত নাম। ১০০০+ সন্তুষ্ট গ্রাহকের বিশ্বস্ত।",
@@ -362,6 +374,15 @@ const translations: Record<Language, Record<string, string>> = {
     payment_cod: "Cash on Delivery (COD)",
     payment_cash_hand: "Cash in Hand",
 
+    // OTP & Guest
+    verify_phone: "Verify Phone Number",
+    send_otp: "Send OTP",
+    enter_otp: "Enter 6-digit OTP",
+    otp_sent: "OTP has been sent to your phone",
+    otp_verified: "Phone number verified successfully",
+    invalid_otp: "Invalid OTP, please try again",
+    guest_note: "An account will be created for you upon checkout.",
+
     // Order Success
     order_confirmed: "Order Confirmed!",
     thank_you_order: "Thank you for your purchase. Your order has been received and is being processed.",
@@ -369,6 +390,9 @@ const translations: Record<Language, Record<string, string>> = {
     confirmation_email: "A confirmation email has been sent to your inbox.",
     back_to_shop: "Back to Shop",
     continue_shopping: "Continue Shopping",
+    account_created: "Your account has been created!",
+    temp_password: "Temporary Password",
+    login_info: "Save these details for future logins.",
 
     // Footer
     footer_desc: "The most trusted name for professional cleaning services across Bangladesh. Trusted by 1000+ satisfied clients.",
