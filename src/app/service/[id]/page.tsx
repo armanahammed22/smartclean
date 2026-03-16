@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -12,40 +11,28 @@ import {
   Zap,
   Star,
   CheckCircle2,
-  Info,
-  MessageSquare,
-  Lock,
-  ChevronRight,
-  User
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
-import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc } from 'firebase/firestore';
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { t } = useLanguage();
   const { addToCart, setCheckoutOpen } = useCart();
-  const { user } = useUser();
   const db = useFirestore();
-  const { toast } = useToast();
 
   // Selection States
   const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
-  const [reviewText, setReviewText] = useState("");
-  const [rating, setRating] = useState(5);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // Fetch Service Data
   const serviceRef = useMemoFirebase(() => db ? doc(db, 'services', id as string) : null, [db, id]);
@@ -57,13 +44,6 @@ export default function ServiceDetailsPage() {
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', id), where('status', '==', 'Active'));
   }, [db, id]);
   const { data: subServices, isLoading: subLoading } = useCollection(subServicesQuery);
-
-  // Fetch Reviews
-  const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !id) return null;
-    return query(collection(db, 'service_reviews'), where('serviceId', '==', id), orderBy('createdAt', 'desc'));
-  }, [db, id]);
-  const { data: reviews } = useCollection(reviewsQuery);
 
   // Calculate Totals
   const addonsTotal = useMemo(() => {
@@ -90,28 +70,6 @@ export default function ServiceDetailsPage() {
       basePrice: totalPrice,
     } as any);
     setCheckoutOpen(true);
-  };
-
-  const handleAddReview = async () => {
-    if (!user || !reviewText.trim() || !db) return;
-    setIsSubmittingReview(true);
-    try {
-      await addDoc(collection(db, 'service_reviews'), {
-        serviceId: id,
-        userId: user.uid,
-        userName: user.displayName || 'Customer',
-        userEmail: user.email,
-        rating,
-        text: reviewText,
-        createdAt: new Date().toISOString()
-      });
-      setReviewText("");
-      toast({ title: "Review Shared", description: "Thank you for your feedback!" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to post review." });
-    } finally {
-      setIsSubmittingReview(false);
-    }
   };
 
   if (serviceLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={40} /></div>;
@@ -151,7 +109,7 @@ export default function ServiceDetailsPage() {
                       <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
                       <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
                         <div className="flex items-center gap-1 text-amber-500">
-                          <Star size={16} fill="currentColor" /> {reviews?.length ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : '5.0'}
+                          <Star size={16} fill="currentColor" /> 5.0
                         </div>
                         <span className="opacity-20">|</span>
                         <div className="flex items-center gap-1.5"><Clock size={16} className="text-primary" /> {service.duration || '2-4 Hours'}</div>
@@ -160,69 +118,6 @@ export default function ServiceDetailsPage() {
                     <div className="text-sm text-gray-600 font-medium leading-relaxed border-t pt-6 whitespace-pre-wrap">
                       {service.description}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* REVIEWS SECTION */}
-              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-                <CardHeader className="p-8 pb-0 flex flex-row items-center justify-between">
-                  <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-                    <MessageSquare size={20} className="text-primary" /> Reviews ({reviews?.length || 0})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 space-y-8">
-                  {/* Write a Review */}
-                  {user ? (
-                    <div className="space-y-4 p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                      <p className="text-xs font-black uppercase text-primary tracking-widest">Share Your Experience</p>
-                      <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <button key={s} onClick={() => setRating(s)} className={cn("transition-colors", rating >= s ? "text-amber-500" : "text-gray-300")}>
-                            <Star size={20} fill={rating >= s ? "currentColor" : "none"} />
-                          </button>
-                        ))}
-                      </div>
-                      <Textarea 
-                        placeholder="Type your review here..." 
-                        value={reviewText} 
-                        onChange={(e) => setReviewText(e.target.value)}
-                        className="bg-white border-none rounded-xl text-sm"
-                      />
-                      <Button onClick={handleAddReview} disabled={isSubmittingReview || !reviewText.trim()} className="w-full rounded-xl font-bold h-11">
-                        {isSubmittingReview ? <Loader2 className="animate-spin" /> : "Post Review"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="p-6 bg-gray-50 rounded-3xl border border-dashed text-center space-y-3">
-                      <Lock size={24} className="mx-auto text-gray-400" />
-                      <p className="text-sm font-bold text-gray-600">Want to share your feedback?</p>
-                      <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase tracking-widest border-primary text-primary" asChild>
-                        <Link href="/login">Login to Write Review</Link>
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Review List */}
-                  <div className="space-y-6">
-                    {reviews?.map((review) => (
-                      <div key={review.id} className="space-y-2 border-b border-gray-50 pb-6 last:border-none">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-primary"><User size={16} /></div>
-                            <div>
-                              <p className="text-xs font-bold text-gray-900">{review.userName}</p>
-                              <div className="flex gap-0.5 text-amber-500">
-                                {[...Array(review.rating)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase">{review.createdAt ? format(new Date(review.createdAt), 'MMM dd, yyyy') : 'Recently'}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 leading-relaxed pl-11">{review.text}</p>
-                      </div>
-                    ))}
-                    {!reviews?.length && <p className="text-center text-xs text-muted-foreground italic py-4">No reviews yet. Be the first to share!</p>}
                   </div>
                 </CardContent>
               </Card>
