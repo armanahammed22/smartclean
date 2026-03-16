@@ -34,6 +34,16 @@ const translations: Record<Language, Record<string, string>> = {
     manage_orders: "অর্ডার ম্যানেজ করুন",
     sign_out: "সাইন আউট",
     
+    // Header
+    all_services_title: "সব সেবা",
+    all_services_subtitle: "আপনার প্রয়োজন অনুযায়ী সেবা নির্বাচন করুন",
+    find_service_placeholder: "সেবা খুঁজুন...",
+    cat_all: "সব",
+    cat_cleaning: "ক্লিনিং সার্ভিস",
+    cat_maintenance: "হোম মেইনটেইনেন্স",
+    cat_repair: "রিপেয়ার সার্ভিস",
+    cat_tools: "সরঞ্জাম ও টুলস",
+
     // Hero & Sections
     hero_title: "পরিচ্ছন্ন জীবনের জন্য স্মার্ট সমাধান",
     hero_subtitle: "বাংলাদেশে বিশেষজ্ঞ ক্লিনিং এবং রক্ষণাবেক্ষণ সেবা। হাজার হাজার মানুষের বিশ্বস্ত।",
@@ -216,6 +226,16 @@ const translations: Record<Language, Record<string, string>> = {
     manage_orders: "Manage Orders",
     sign_out: "Sign Out",
     
+    // Header
+    all_services_title: "All Services",
+    all_services_subtitle: "Choose from our wide range of professional solutions",
+    find_service_placeholder: "Find services or tools...",
+    cat_all: "All",
+    cat_cleaning: "Cleaning Services",
+    cat_maintenance: "Home Maintenance",
+    cat_repair: "Repair Services",
+    cat_tools: "Supplies & Tools",
+
     // Hero & Sections
     hero_title: "Smart Solutions for a Clean Life",
     hero_subtitle: "Expert cleaning and maintenance services in Bangladesh. Trusted by thousands.",
