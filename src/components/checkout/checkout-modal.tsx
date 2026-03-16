@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,7 +29,7 @@ import { cn } from '@/lib/utils';
 import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc, orderBy, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -182,6 +183,44 @@ export function CheckoutModal() {
       }
 
       const collName = hasServices ? 'bookings' : 'orders';
+      let assignedTech = null;
+
+      // Smart Auto-Assignment for Services
+      if (hasServices && db) {
+        const serviceId = items.find(i => i.itemType === 'service')?.id;
+        if (serviceId) {
+          // 1. Find enrolled technicians with the skill, sorted by rating
+          const techQuery = query(
+            collection(db, 'employee_profiles'),
+            where('skills', 'array-contains', serviceId),
+            where('status', '==', 'Active'),
+            orderBy('rating', 'desc'),
+            limit(15)
+          );
+          
+          const techSnap = await getDocs(techQuery);
+          for (const techDoc of techSnap.docs) {
+            // 2. Check real-time availability status
+            const availQuery = query(
+              collection(db, 'staff_availability'),
+              where('uid', '==', techDoc.id),
+              where('status', '==', 'Available')
+            );
+            const availSnap = await getDocs(availQuery);
+            
+            if (!availSnap.empty) {
+              assignedTech = { id: techDoc.id, name: techDoc.data().name };
+              // 3. Mark technician as Busy
+              await updateDoc(doc(db, 'staff_availability', techDoc.id), {
+                status: 'Busy',
+                updatedAt: serverTimestamp()
+              });
+              break;
+            }
+          }
+        }
+      }
+
       if (db) {
         const docRef = await addDoc(collection(db, collName), {
           customerId: currentUserId,
@@ -196,7 +235,11 @@ export function CheckoutModal() {
           timeSlot: values.time,
           notes: values.notes,
           createdAt: new Date().toISOString(),
-          status: 'New'
+          status: assignedTech ? 'Assigned' : 'New',
+          employeeId: assignedTech?.id || null,
+          employeeName: assignedTech?.name || null,
+          serviceId: items.find(i => i.itemType === 'service')?.id || null,
+          serviceTitle: items.find(i => i.itemType === 'service')?.name || null
         });
 
         clearCart();

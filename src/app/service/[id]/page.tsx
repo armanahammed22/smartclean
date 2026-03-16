@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -90,7 +91,7 @@ export default function ServiceDetailsPage() {
               <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white group">
                 <Image 
                   src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/800'} 
-                  alt={service.title} 
+                  alt={service.title || 'Service Details'} 
                   fill 
                   className="object-cover transition-transform duration-700 group-hover:scale-105" 
                   priority

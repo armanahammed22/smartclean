@@ -42,6 +42,32 @@
         "role": { "type": "string", "enum": ["customer", "staff", "admin"], "default": "customer" },
         "status": { "type": "string", "enum": ["active", "banned", "disabled"], "default": "active" }
       }
+    },
+    "Booking": {
+      "title": "Booking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceTitle": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] },
+        "totalPrice": { "type": "number" },
+        "dateTime": { "type": "string", "format": "date-time" }
+      }
+    },
+    "EmployeeProfile": {
+      "title": "EmployeeProfile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
+      }
     }
   },
   "auth": {
@@ -52,13 +78,13 @@
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Main services." },
     "/sub_services/{id}": { "schema": "object", "description": "Task add-ons." },
-    "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
+    "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
     "/orders/{id}": { "schema": "object", "description": "Product sales." },
     "/leads/{id}": { "schema": "object", "description": "Sales inquiries." },
     "/support_tickets/{id}": { "schema": "object", "description": "Customer issues." },
     "/referrals/{id}": { "schema": "object", "description": "Affiliate logs." },
     "/staff_availability/{uid}": { "schema": "object", "description": "Real-time tech status." },
-    "/employee_profiles/{uid}": { "schema": "object", "description": "Staff metadata." },
+    "/employee_profiles/{uid}": { "schema": "#/entities/EmployeeProfile", "description": "Staff metadata." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },

@@ -79,7 +79,7 @@ export default function ProductDetailsPage() {
               <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
                 <Image 
                   src={product.imageUrl || 'https://picsum.photos/seed/prod/800/800'} 
-                  alt={product.name} 
+                  alt={product.name || 'Product Image'} 
                   fill 
                   className="object-contain p-12 transition-transform duration-700 group-hover:scale-110" 
                   priority
