@@ -1,14 +1,23 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
 import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock, ShieldAlert, ChevronLeft, LogOut, HardHat, Bell } from 'lucide-react';
+import { Loader2, ShieldAlert, ChevronLeft, LogOut, HardHat, Bell, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -21,7 +30,13 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     return doc(db, 'roles_employees', user.uid);
   }, [db, user]);
 
-  const { data: staffRole, isLoading: roleLoading } = useDoc(staffRoleRef);
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'employee_profiles', user.uid);
+  }, [db, user]);
+
+  const { data: staffRole, isLoading: roleLoading, error: roleError } = useDoc(staffRoleRef);
+  const { data: profile, isLoading: profileLoading } = useDoc(profileRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -34,7 +49,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     router.push('/login');
   };
 
-  if (isUserLoading || (user && roleLoading)) {
+  if (isUserLoading || (user && (roleLoading || profileLoading))) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
         <Loader2 className="animate-spin text-amber-600" size={48} />
@@ -45,6 +60,25 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
   if (!user) return null;
 
+  // Handle DB/Permission Errors with Persistent Logout
+  if (roleError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
+        <div className="p-6 bg-white rounded-full shadow-sm">
+          <AlertCircle size={64} className="text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black uppercase tracking-tight">Access Verification Error</h2>
+          <p className="text-muted-foreground max-w-xs mx-auto font-medium">We were unable to verify your staff credentials. Please check your internet connection or try re-logging.</p>
+        </div>
+        <Button onClick={handleLogout} variant="destructive" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 shadow-lg">
+          <LogOut size={18} /> Sign Out & Retry
+        </Button>
+      </div>
+    );
+  }
+
+  // Handle Unauthorized Role
   if (!staffRole) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
@@ -56,16 +90,33 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your account is not registered in our technician database. Please contact your supervisor.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={handleLogout} className="rounded-xl gap-2"><LogOut size={18} /> Sign Out</Button>
-          <Button asChild className="rounded-xl shadow-lg"><Link href="/">Back to Site</Link></Button>
+          <Button variant="outline" onClick={handleLogout} className="rounded-xl gap-2 font-bold"><LogOut size={18} /> Logout</Button>
+          <Button asChild className="rounded-xl shadow-lg font-bold"><Link href="/">Back to Site</Link></Button>
         </div>
+      </div>
+    );
+  }
+
+  // Handle Blocked/Banned Technicians
+  if (profile?.status === 'Banned' || profile?.status === 'Terminated') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
+        <div className="p-6 bg-white rounded-full shadow-sm">
+          <ShieldAlert size={64} className="text-red-600" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black uppercase tracking-tight">Account Blocked</h2>
+          <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your technician access has been restricted. Status: <span className="font-bold text-red-600 uppercase">{profile.status}</span>.</p>
+        </div>
+        <Button onClick={handleLogout} variant="outline" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 border-2">
+          <LogOut size={18} /> Safe Exit
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
-      {/* Mobile-Friendly Technician Header */}
       <header className="bg-[#081621] text-white border-b border-white/5 sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -102,7 +153,6 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         {children}
       </main>
 
-      {/* Quick Navigation for Staff (Mobile) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] border-t border-white/5 h-16 z-50 flex items-center justify-around px-4">
         <Link href="/staff/dashboard" className="flex flex-col items-center gap-1 text-amber-500">
           <HardHat size={20} />

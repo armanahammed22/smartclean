@@ -31,6 +31,7 @@ export interface CustomerProfile {
   referredBy?: string | null;
   totalEarnings?: number;
   role: 'customer' | 'staff' | 'admin';
+  status: 'active' | 'restricted' | 'disabled' | 'banned';
   createdAt: string;
   updatedAt?: string;
 }
@@ -44,7 +45,7 @@ export interface EmployeeProfile {
   skills: string[]; // Array of Service IDs
   rating: number;
   jobsCompleted: number;
-  status: 'Active' | 'On Leave' | 'Terminated';
+  status: 'Active' | 'On Leave' | 'Terminated' | 'Banned';
   updatedAt?: any;
   createdAt: string;
 }

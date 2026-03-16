@@ -13,18 +13,25 @@ import {
   LogOut,
   ChevronLeft,
   Loader2,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user, isUserLoading } = useUser();
+
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  const { data: profile, isLoading: profileLoading, error: profileError } = useDoc(profileRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -45,11 +52,50 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     router.push('/login');
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
         <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Loading Portal...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  // Session Error State (e.g. Permission Error or Network Issue)
+  if (profileError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
+        <div className="p-6 bg-white rounded-full shadow-sm">
+          <AlertCircle size={64} className="text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black uppercase tracking-tight">System Synchronization Issue</h2>
+          <p className="text-muted-foreground max-w-xs mx-auto font-medium">We encountered an error retrieving your profile data. This could be due to a temporary connection issue.</p>
+        </div>
+        <Button onClick={handleLogout} variant="destructive" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 shadow-lg">
+          <LogOut size={18} /> Logout & Reset Session
+        </Button>
+      </div>
+    );
+  }
+
+  // Account Status Check (Banned/Disabled)
+  const isRestricted = profile?.status && profile.status !== 'active';
+  if (isRestricted) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
+        <div className="p-6 bg-white rounded-full shadow-sm">
+          <ShieldAlert size={64} className="text-orange-500" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black uppercase tracking-tight">Account Restricted</h2>
+          <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your account status is currently: <span className="font-bold text-gray-900 uppercase">{profile?.status}</span>. Please contact support if you believe this is an error.</p>
+        </div>
+        <Button onClick={handleLogout} variant="outline" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 border-2">
+          <LogOut size={18} /> Safe Exit
+        </Button>
       </div>
     );
   }
@@ -64,7 +110,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-black text-gray-900 tracking-tight uppercase leading-none">{user.displayName || 'Customer'}</p>
+              <p className="text-sm font-black text-gray-900 tracking-tight uppercase leading-none">{profile?.name || user.displayName || 'Customer'}</p>
               <p className="text-[10px] text-muted-foreground font-bold mt-1">{user.email}</p>
             </div>
             <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-sm shadow-lg shadow-primary/20 border-2 border-white">

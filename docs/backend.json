@@ -46,7 +46,7 @@
         },
         "rating": { "type": "number" },
         "jobsCompleted": { "type": "number" },
-        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
+        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated", "Banned"] }
       }
     },
     "StaffAvailability": {
@@ -83,7 +83,8 @@
         "phone": { "type": "string" },
         "address": { "type": "string" },
         "referralCode": { "type": "string" },
-        "role": { "type": "string", "enum": ["customer", "staff", "admin"], "default": "customer" }
+        "role": { "type": "string", "enum": ["customer", "staff", "admin"], "default": "customer" },
+        "status": { "type": "string", "enum": ["active", "restricted", "disabled", "banned"], "default": "active" }
       }
     }
   },
