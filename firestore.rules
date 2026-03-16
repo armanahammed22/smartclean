@@ -17,7 +17,6 @@ service cloud.firestore {
     
     function isAdmin() { return isBootstrapAdmin() || hasRole('admins'); }
     function isManager() { return isAdmin() || hasRole('managers'); }
-    function isAccounts() { return isAdmin() || hasRole('accounts'); }
     function isOrderManager() { return isManager() || hasRole('order_managers'); }
     function isStaff() { return isManager() || hasRole('employees'); }
     
@@ -37,14 +36,17 @@ service cloud.firestore {
     match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
     match /brands/{id} { allow read, list: if true; allow write: if isOrderManager(); }
     match /service_areas/{id} { allow read, list: if true; allow write: if isManager(); }
-    match /quick_links/{id} { allow read, list: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
-    // CRM DATA (Swapped conditions for Admin Query optimization)
+    // CRM DATA
     match /customer_profiles/{uid} { 
       allow read, write: if isStaff() || isOwner(uid); 
+    }
+    
+    match /blocked_users/{id} {
+      allow read: if true; // Allow signup check
+      allow write: if isAdmin();
     }
     
     match /orders/{id} {
@@ -72,34 +74,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // MARKETING & GROWTH
-    match /marketing_offers/{id} { allow read, list: if true; allow write: if isAdmin(); }
-    match /marketing_campaigns/{id} { allow read, list: if true; allow write: if isAdmin(); }
-    match /coupons/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /referrals/{id} {
       allow create: if isSignedIn();
       allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
       allow write: if isAdmin();
     }
 
-    // LOGISTICS
-    match /couriers/{id} { allow read, list: if true; allow write: if isOrderManager(); }
-
-    // STAFF PERFORMANCE & EARNINGS
     match /staff_availability/{uid} {
       allow read: if isStaff();
       allow write: if isOwner(uid) || isManager();
-    }
-    match /staff_earnings/{id} {
-      allow read: if isAccounts() || (isSignedIn() && resource.data.staffId == request.auth.uid);
-      allow write: if isAccounts();
     }
 
     // ROLES MANAGEMENT
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isManager(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isManager(); }
   }
 }

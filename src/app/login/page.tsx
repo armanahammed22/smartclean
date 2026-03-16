@@ -1,15 +1,16 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, LayoutDashboard, HardHat, User } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, LayoutDashboard, HardHat, User, ShieldAlert, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
@@ -26,13 +27,18 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   // Role Checks for Authenticated View
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  const { data: profile } = useDoc(profileRef);
+
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
-  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
-
+  
   const staffRef = useMemoFirebase(() => user ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRef);
+
+  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
   const isStaff = !!staffRole;
+  const isBlocked = profile?.status === 'banned' || profile?.status === 'disabled';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +49,6 @@ export default function LoginPage() {
         title: "Welcome Back!",
         description: "You have successfully signed in.",
       });
-      // Initial redirect - roles will be checked via Navbar/Layouts for deeper navigation
       router.push('/account/dashboard');
     } catch (error: any) {
       toast({
@@ -54,6 +59,11 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.refresh();
   };
 
   return (
@@ -73,40 +83,60 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="px-8 pb-8 pt-4">
           {user ? (
-            <div className="p-6 bg-green-50 border border-green-100 rounded-3xl space-y-6">
-              <div className="flex items-center gap-3 text-green-700">
-                <CheckCircle2 size={24} />
-                <p className="text-sm font-black uppercase tracking-widest">Authenticated</p>
-              </div>
-              <p className="text-xs font-bold text-gray-600 truncate bg-white/50 p-3 rounded-xl border">{user.email}</p>
-              
-              <div className="space-y-3">
-                <Button 
-                  onClick={() => router.push('/account/dashboard')} 
-                  className="w-full h-12 bg-white text-gray-900 border hover:bg-gray-50 gap-2 font-black rounded-xl shadow-sm"
-                >
-                  <User size={18} /> Customer Dashboard
-                </Button>
-
-                {isStaff && (
-                  <Button 
-                    onClick={() => router.push('/staff/dashboard')} 
-                    className="w-full h-12 bg-amber-600 hover:bg-amber-700 gap-2 font-black rounded-xl shadow-lg"
-                  >
-                    <HardHat size={18} /> Staff Portal <ArrowRight size={18} />
+            isBlocked ? (
+              <div className="p-8 bg-red-50 border-2 border-red-100 rounded-3xl space-y-6 text-center">
+                <div className="flex justify-center">
+                  <div className="p-4 bg-white rounded-full shadow-sm text-destructive"><ShieldAlert size={48} /></div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black uppercase text-red-900">Account Blocked</h3>
+                  <p className="text-sm font-medium text-red-700 leading-relaxed">Your account has been blocked due to security protocols. Please contact our administrative support for further assistance.</p>
+                </div>
+                <div className="space-y-3 pt-2">
+                  <Button asChild className="w-full h-12 bg-destructive hover:bg-destructive/90 gap-2 font-bold rounded-xl shadow-lg">
+                    <Link href="/support"><HelpCircle size={18} /> Contact Support</Link>
                   </Button>
-                )}
-
-                {isAdmin && (
-                  <Button 
-                    onClick={() => router.push('/admin/dashboard')} 
-                    className="w-full h-12 bg-[#081621] hover:bg-[#0a253a] gap-2 font-black rounded-xl shadow-lg text-white"
-                  >
-                    <LayoutDashboard size={18} /> Admin Console <ArrowRight size={18} />
+                  <Button variant="outline" onClick={handleLogout} className="w-full h-12 border-red-200 text-red-700 hover:bg-red-100 gap-2 font-bold rounded-xl">
+                    Sign Out
                   </Button>
-                )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-6 bg-green-50 border border-green-100 rounded-3xl space-y-6">
+                <div className="flex items-center gap-3 text-green-700">
+                  <CheckCircle2 size={24} />
+                  <p className="text-sm font-black uppercase tracking-widest">Authenticated</p>
+                </div>
+                <p className="text-xs font-bold text-gray-600 truncate bg-white/50 p-3 rounded-xl border">{user.email}</p>
+                
+                <div className="space-y-3">
+                  <Button 
+                    onClick={() => router.push('/account/dashboard')} 
+                    className="w-full h-12 bg-white text-gray-900 border hover:bg-gray-50 gap-2 font-black rounded-xl shadow-sm"
+                  >
+                    <User size={18} /> Customer Dashboard
+                  </Button>
+
+                  {isStaff && (
+                    <Button 
+                      onClick={() => router.push('/staff/dashboard')} 
+                      className="w-full h-12 bg-amber-600 hover:bg-amber-700 gap-2 font-black rounded-xl shadow-lg"
+                    >
+                      <HardHat size={18} /> Staff Portal <ArrowRight size={18} />
+                    </Button>
+                  )}
+
+                  {isAdmin && (
+                    <Button 
+                      onClick={() => router.push('/admin/dashboard')} 
+                      className="w-full h-12 bg-[#081621] hover:bg-[#0a253a] gap-2 font-black rounded-xl shadow-lg text-white"
+                    >
+                      <LayoutDashboard size={18} /> Admin Console <ArrowRight size={18} />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
           ) : (
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">

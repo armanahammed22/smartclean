@@ -17,19 +17,18 @@ import {
   Filter, 
   Phone, 
   Mail, 
-  MapPin, 
   Trash2,
   Edit,
   Loader2,
   Save,
   Users,
   Star,
-  Wallet,
-  ShieldCheck,
   UserCheck,
   Lock,
   LayoutDashboard,
-  Eye
+  ShieldAlert,
+  MoreVertical,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -40,8 +39,27 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function CustomersPage() {
   const db = useFirestore();
@@ -51,8 +69,11 @@ export default function CustomersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  
+  // State for deletion/blocking
+  const [removalTarget, setRemovalTarget] = useState<any>(null);
+  const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
-  // We use customer_profiles as the primary identity database
   const customersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'customer_profiles'), orderBy('createdAt', 'desc'));
@@ -88,6 +109,7 @@ export default function CustomersPage() {
       } else {
         await addDoc(collection(db, 'customer_profiles'), { 
           ...customerData, 
+          uid: 'temp-' + Date.now(), // Real UID comes from Auth, but profile needs a ref
           createdAt: new Date().toISOString(),
           totalEarnings: 0,
           role: 'customer',
@@ -104,6 +126,36 @@ export default function CustomersPage() {
     }
   };
 
+  const handleRemoval = async () => {
+    if (!db || !removalTarget) return;
+    setIsSubmitting(true);
+
+    try {
+      if (removalType === 'block') {
+        // Add to blocked_users blacklist
+        await addDoc(collection(db, 'blocked_users'), {
+          email: removalTarget.email,
+          phone: removalTarget.phone,
+          blockedAt: new Date().toISOString(),
+          reason: 'Administrative Block'
+        });
+        toast({ title: "Customer Blocked", description: "User credentials have been blacklisted." });
+      }
+
+      // Delete the actual profile document
+      await deleteDoc(doc(db, 'customer_profiles', removalTarget.id));
+      
+      // Cleanup UI
+      setRemovalTarget(null);
+      setRemovalType(null);
+      toast({ title: removalType === 'block' ? "Account Blocked" : "Account Removed" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Action Failed", description: "Could not complete operation." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSendReset = async (email: string) => {
     if (!email) return;
     try {
@@ -114,18 +166,8 @@ export default function CustomersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete user profile? This will remove all local data for this customer. Access to dashboard will be revoked.")) return;
-    try {
-      await deleteDoc(doc(db, 'customer_profiles', id));
-      toast({ title: "Record Removed" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Could not remove record." });
-    }
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customer Directory</h1>
@@ -184,9 +226,9 @@ export default function CustomersPage() {
         <Card className="border-none shadow-sm bg-white rounded-3xl">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active This Month</p>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active Status</p>
               <h3 className="text-3xl font-black mt-1 text-primary">
-                {Math.ceil((customers?.length || 0) * 0.4)}
+                {customers?.filter(c => c.status === 'active').length || 0}
               </h3>
             </div>
             <UserCheck size={40} className="text-primary opacity-20" />
@@ -195,12 +237,12 @@ export default function CustomersPage() {
         <Card className="border-none shadow-sm bg-white rounded-3xl">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Partner Network</p>
-              <h3 className="text-3xl font-black mt-1">
-                {customers?.filter(c => (c.totalEarnings || 0) > 0).length || 0}
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Blocked Accounts</p>
+              <h3 className="text-3xl font-black mt-1 text-destructive">
+                {customers?.filter(c => c.status === 'banned').length || 0}
               </h3>
             </div>
-            <Star size={40} className="text-amber-500 opacity-20" />
+            <ShieldAlert size={40} className="text-destructive opacity-20" />
           </CardContent>
         </Card>
       </div>
@@ -225,7 +267,7 @@ export default function CustomersPage() {
               <TableRow>
                 <TableHead className="font-bold py-5 pl-8">Customer Identity</TableHead>
                 <TableHead className="font-bold">Contact Details</TableHead>
-                <TableHead className="font-bold">Affiliate</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="font-bold">Role Management</TableHead>
                 <TableHead className="text-right pr-8">Actions</TableHead>
               </TableRow>
@@ -254,18 +296,22 @@ export default function CustomersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                       <div className="font-black text-sm text-primary">৳{customer.totalEarnings?.toLocaleString() || '0'}</div>
-                       <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter mt-0.5">Total Rewards</p>
+                       <Badge variant="secondary" className={cn(
+                         "text-[9px] font-black uppercase border-none",
+                         customer.status === 'active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                       )}>
+                         {customer.status || 'Active'}
+                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Button variant="outline" size="sm" asChild className="h-8 gap-1.5 text-[9px] font-black uppercase tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-white transition-all rounded-full px-4">
                         <Link href={`/admin/roles?uid=${customer.id}`}>
-                          <UserCheck size={12} /> Promote Account
+                          <UserCheck size={12} /> Promote
                         </Link>
                       </Button>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" asChild title="View Dashboard">
                           <Link href={`/admin/customers/${customer.id}/dashboard`}>
                             <LayoutDashboard size={14} />
@@ -277,9 +323,29 @@ export default function CustomersPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" onClick={() => { setEditingCustomer(customer); setIsDialogOpen(true); }} title="Edit Profile">
                           <Edit size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50" onClick={() => handleDelete(customer.id)} title="Delete Profile">
-                          <Trash2 size={14} />
-                        </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                              <MoreVertical size={14} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl">
+                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest opacity-40">Removal Options</DropdownMenuLabel>
+                            <DropdownMenuItem 
+                              className="text-amber-600 font-bold gap-2 cursor-pointer rounded-lg"
+                              onClick={() => { setRemovalTarget(customer); setRemovalType('delete'); }}
+                            >
+                              <Trash2 size={14} /> Normal Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive font-black gap-2 cursor-pointer rounded-lg"
+                              onClick={() => { setRemovalTarget(customer); setRemovalType('block'); }}
+                            >
+                              <XCircle size={14} /> Permanent Block
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -291,6 +357,32 @@ export default function CustomersPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Removal Confirmation Dialog */}
+      <AlertDialog open={!!removalTarget} onOpenChange={(o) => { if(!o) setRemovalTarget(null); }}>
+        <AlertDialogContent className="rounded-[2rem] max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+              {removalType === 'block' ? <XCircle className="text-destructive" /> : <Trash2 className="text-amber-600" />}
+              {removalType === 'block' ? 'Permanent Blacklist' : 'Delete Account'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium leading-relaxed">
+              {removalType === 'block' 
+                ? `Are you sure you want to block ${removalTarget?.name}? Their email (${removalTarget?.email}) and phone will be blacklisted, preventing any future registration.` 
+                : `This will remove ${removalTarget?.name}'s profile from the system. They will be able to register again in the future.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-4">
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRemoval} 
+              className={cn("rounded-xl font-black px-8", removalType === 'block' ? "bg-destructive hover:bg-destructive/90" : "bg-amber-600 hover:bg-amber-700")}
+            >
+              {removalType === 'block' ? 'Confirm Block' : 'Delete Now'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

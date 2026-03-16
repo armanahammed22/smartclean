@@ -49,28 +49,15 @@
         "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated", "Banned"] }
       }
     },
-    "StaffAvailability": {
-      "title": "StaffAvailability",
+    "BlockedUser": {
+      "title": "BlockedUser",
       "type": "object",
+      "description": "Blacklisted credentials to prevent re-registration.",
       "properties": {
-        "uid": { "type": "string" },
-        "isOnline": { "type": "boolean" },
-        "status": { "type": "string", "enum": ["Available", "Busy", "Offline"] },
-        "lastLocation": { "type": "object" },
-        "activeCity": { "type": "string" },
-        "updatedAt": { "type": "string" }
-      }
-    },
-    "StaffEarnings": {
-      "title": "StaffEarnings",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "staffId": { "type": "string" },
-        "bookingId": { "type": "string" },
-        "amount": { "type": "number" },
-        "type": { "type": "string", "enum": ["commission", "bonus", "base"] },
-        "createdAt": { "type": "string" }
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "blockedAt": { "type": "string" },
+        "reason": { "type": "string" }
       }
     },
     "CustomerProfile": {
@@ -98,12 +85,9 @@
     "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
     "/orders/{id}": { "schema": "#/entities/Order", "description": "Sales records." },
     "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },
-    "/staff_availability/{uid}": { "schema": "#/entities/StaffAvailability", "description": "Technician real-time status." },
-    "/staff_earnings/{id}": { "schema": "#/entities/StaffEarnings", "description": "Technician payout records." },
+    "/blocked_users/{id}": { "schema": "#/entities/BlockedUser", "description": "Blacklisted credentials." },
     "/roles_admins/{uid}": { "schema": "object", "description": "Super Admin access." },
     "/roles_managers/{uid}": { "schema": "object", "description": "Ops Manager access." },
-    "/roles_accounts/{uid}": { "schema": "object", "description": "Finance access." },
-    "/roles_order_managers/{uid}": { "schema": "object", "description": "E-commerce access." },
     "/roles_employees/{uid}": { "schema": "object", "description": "Field staff access." }
   }
 }

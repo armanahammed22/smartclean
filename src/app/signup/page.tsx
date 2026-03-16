@@ -5,13 +5,13 @@ import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, UserPlus, Mail, Lock, User, Phone, CheckCircle2 } from 'lucide-react';
+import { Loader2, UserPlus, Mail, Lock, User, Phone, ShieldAlert, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
@@ -26,6 +26,22 @@ export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  const checkBlockStatus = async (email: string, phone: string) => {
+    if (!db) return false;
+    
+    // Check email block
+    const emailQ = query(collection(db, 'blocked_users'), where('email', '==', email.toLowerCase()));
+    const emailSnap = await getDocs(emailQ);
+    if (!emailSnap.empty) return true;
+
+    // Check phone block
+    const phoneQ = query(collection(db, 'blocked_users'), where('phone', '==', phone));
+    const phoneSnap = await getDocs(phoneQ);
+    if (!phoneSnap.empty) return true;
+
+    return false;
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,24 +58,37 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
+      // 1. Check if user is blocked
+      const isBlocked = await checkBlockStatus(formData.email, formData.phone);
+      if (isBlocked) {
+        toast({ 
+          variant: "destructive", 
+          title: "Registration Denied", 
+          description: "This email or phone number is blocked and cannot be used for registration." 
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Create Auth Account
       const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       await updateProfile(user, { displayName: formData.name });
       
       const referralCode = user.uid.slice(0, 6).toUpperCase();
       const referredBy = searchParams.get('ref') || null;
 
-      // Automatically create the Firestore document with default 'customer' role and 'active' status.
-      await setDoc(doc(db, 'customer_profiles', user.uid), {
+      // 3. Create Firestore Profile
+      await setDoc(doc(db!, 'customer_profiles', user.uid), {
         uid: user.uid,
         name: formData.name,
-        email: formData.email,
+        email: formData.email.toLowerCase(),
         phone: formData.phone,
         referralCode,
         referredBy,
         totalEarnings: 0,
         createdAt: new Date().toISOString(),
         role: 'customer',
-        status: 'active' // New default status field
+        status: 'active'
       }, { merge: true });
 
       toast({ title: "Account Created!", description: "Welcome to the Smart Clean family." });
