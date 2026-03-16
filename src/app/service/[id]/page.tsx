@@ -86,7 +86,6 @@ export default function ServiceDetailsPage() {
 
   return (
     <PublicLayout>
-      {/* Increased bottom padding on mobile to account for both bars */}
       <div className="bg-[#F8FAFC] min-h-screen pb-40 lg:pb-20">
         <div className="container mx-auto px-4 py-8">
           <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
@@ -95,7 +94,6 @@ export default function ServiceDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left Column: Image & Details */}
             <div className="lg:col-span-8 space-y-8">
               <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white">
                 <Image 
@@ -129,7 +127,6 @@ export default function ServiceDetailsPage() {
                   </p>
                 </div>
 
-                {/* Additional Services (Sub Services) */}
                 <div className="space-y-6 pt-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={20} fill="currentColor" /></div>
@@ -172,7 +169,6 @@ export default function ServiceDetailsPage() {
               </div>
             </div>
 
-            {/* Right Column: Sticky Booking Card */}
             <div className="lg:col-span-4 hidden lg:block">
               <Card className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-none overflow-hidden sticky top-24">
                 <CardHeader className="bg-[#081621] text-white p-8">
@@ -269,7 +265,7 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
 
-        {/* Mobile Sticky Action Bar - Adjusted to sit above the bottom nav (bottom-16) */}
+        {/* Mobile Sticky Action Bar - Now sitting above the bottom nav (bottom-16) */}
         <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-50 px-6 py-5 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500 rounded-t-[2rem]">
           <div className="container mx-auto flex items-center justify-between gap-6">
             <div className="flex flex-col">
