@@ -86,7 +86,7 @@ export default function ServiceDetailsPage() {
 
   return (
     <PublicLayout>
-      <div className="bg-[#F8FAFC] min-h-screen pb-40 lg:pb-20">
+      <div className="bg-[#F8FAFC] min-h-screen pb-44 lg:pb-20">
         <div className="container mx-auto px-4 py-8">
           <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
             <ArrowLeft size={18} /> {t('back_to_list')}
@@ -265,21 +265,21 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
 
-        {/* Mobile Sticky Action Bar - Now sitting above the bottom nav (bottom-16) */}
-        <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-50 px-6 py-5 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500 rounded-t-[2rem]">
-          <div className="container mx-auto flex items-center justify-between gap-6">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Total Price</span>
+        {/* Mobile Sticky Action Bar - Refined for visual balance */}
+        <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 z-50 px-6 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-full duration-500 rounded-t-[2.5rem]">
+          <div className="container mx-auto flex items-center justify-between gap-4">
+            <div className="flex flex-col min-w-fit">
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5 ml-0.5">Estimated Total</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
-                <span className="text-[8px] font-black text-muted-foreground uppercase">est.</span>
+                <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-primary uppercase">BDT</span>
               </div>
             </div>
             <Button 
               onClick={handleBookNow} 
-              className="h-16 px-10 rounded-2xl font-black text-base uppercase shadow-xl shadow-primary/30 gap-3 flex-1 max-w-[220px]"
+              className="h-14 px-8 rounded-full font-black text-sm uppercase shadow-lg shadow-primary/30 gap-2 flex-1 max-w-[200px] transition-all active:scale-95"
             >
-              {t('book_now')} <Zap size={20} fill="currentColor" />
+              {t('book_now')} <Zap size={16} fill="currentColor" />
             </Button>
           </div>
         </div>
