@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Globe, ShieldCheck, UserCircle, LayoutDashboard, LogOut, ChevronDown, CalendarCheck } from 'lucide-react';
+import { Search, Globe, ShieldCheck, UserCircle, LayoutDashboard, LogOut, ChevronDown, CalendarCheck, HardHat } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,10 @@ export function Navbar() {
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+
+  const staffRef = useMemoFirebase(() => user ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
+  const { data: staffRole } = useDoc(staffRef);
+  const isStaff = !!staffRole;
 
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
   const logoLink = settings?.logoLink || '/';
@@ -97,6 +101,15 @@ export function Navbar() {
                   <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground px-4 py-3">Personal Portal</DropdownMenuLabel>
                   <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold rounded-xl">{t('personal_dashboard')}</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link href="/account/history" className="font-bold rounded-xl">{t('service_history')}</Link></DropdownMenuItem>
+                  
+                  {isStaff && (
+                    <>
+                      <DropdownMenuSeparator className="bg-gray-50" />
+                      <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-amber-600 px-4 py-3">Operations</DropdownMenuLabel>
+                      <DropdownMenuItem asChild><Link href="/staff/dashboard" className="font-bold flex items-center gap-2 rounded-xl bg-amber-50 text-amber-700"><HardHat size={14} /> Staff Portal</Link></DropdownMenuItem>
+                    </>
+                  )}
+
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator className="bg-gray-50" />
