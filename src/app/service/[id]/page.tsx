@@ -8,15 +8,15 @@ import {
   ArrowLeft, 
   CalendarCheck, 
   ShieldCheck, 
-  CheckCircle2, 
   Clock, 
   MapPin, 
   Loader2, 
   Zap,
   Info,
   ChevronRight,
-  Wrench,
-  Sparkles
+  Star,
+  CheckCircle2,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -24,9 +24,16 @@ import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 export default function ServiceDetailsPage() {
   const { id } = useParams();
@@ -35,18 +42,24 @@ export default function ServiceDetailsPage() {
   const { addToCart, setCheckoutOpen } = useCart();
   const db = useFirestore();
 
+  // Booking States
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [address, setAddress] = useState("");
+  const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
+
+  // Fetch Service Data
   const serviceRef = useMemoFirebase(() => db ? doc(db, 'services', id as string) : null, [db, id]);
   const { data: service, isLoading: serviceLoading } = useDoc(serviceRef);
 
+  // Fetch Linked Sub-Services
   const subServicesQuery = useMemoFirebase(() => {
     if (!db || !id) return null;
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', id), where('status', '==', 'Active'));
   }, [db, id]);
-
   const { data: subServices, isLoading: subLoading } = useCollection(subServicesQuery);
 
-  const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
-
+  // Calculate Totals
   const totalPrice = useMemo(() => {
     if (!service) return 0;
     const subsPrice = subServices
@@ -59,7 +72,7 @@ export default function ServiceDetailsPage() {
     if (!service) return;
     const selectedSubs = subServices?.filter(s => selectedSubIds.includes(s.id)) || [];
     const combinedTitle = selectedSubs.length > 0 
-      ? `${service.title} + ${selectedSubs.map(s => s.name).join(', ')}`
+      ? `${service.title} (${selectedSubs.map(s => s.name).join(', ')})`
       : service.title;
 
     addToCart({
@@ -71,173 +84,173 @@ export default function ServiceDetailsPage() {
   };
 
   if (serviceLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={40} /></div>;
-
-  if (!service) return <div className="p-20 text-center">Service Not Found</div>;
+  if (!service) return <div className="p-20 text-center font-bold text-muted-foreground">Service Not Found</div>;
 
   return (
     <PublicLayout>
-      <div className="bg-[#F2F4F8] min-h-screen pb-20">
-        <div className="container mx-auto px-4 py-12">
-          <Button variant="ghost" onClick={() => router.back()} className="mb-10 gap-2 group font-bold rounded-none">
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Explore All Services
+      <div className="bg-[#F8FAFC] min-h-screen pb-20">
+        <div className="container mx-auto px-4 py-8">
+          <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm">
+            <ArrowLeft size={18} /> {t('back_to_list')}
           </Button>
 
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left Content: Service Builder */}
-            <div className="lg:col-span-8 space-y-12">
-              {/* High Impact Hero */}
-              <div className="relative aspect-[21/8] rounded-none overflow-hidden shadow-2xl bg-[#081621] border border-white/5">
+            {/* Left Side: Media & Details */}
+            <div className="lg:col-span-8 space-y-8">
+              <div className="relative aspect-video rounded-3xl overflow-hidden shadow-xl bg-gray-200 border-4 border-white">
                 <Image 
-                  src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/600'} 
-                  alt={service.title || 'Service Banner'} 
+                  src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/800'} 
+                  alt={service.title} 
                   fill 
-                  className="object-cover opacity-50" 
+                  className="object-cover" 
+                  priority
                 />
-                <div className="absolute inset-0 flex flex-col justify-center p-12 md:p-20">
-                  <div className="max-w-2xl space-y-6">
-                    <Badge className="bg-primary text-white border-none py-1.5 px-5 rounded-none font-black text-xs uppercase tracking-widest">
-                      Premium Solution
-                    </Badge>
-                    <h1 className="text-4xl md:text-6xl font-black text-white leading-tight font-headline uppercase tracking-tight">{service.title}</h1>
-                    <div className="flex flex-wrap gap-6">
-                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-none backdrop-blur-md border border-white/5">
-                        <Clock size={18} className="text-primary" /> {service.duration || '2-3 Hours'}
-                      </div>
-                      <div className="flex items-center gap-3 text-white/90 text-sm font-bold bg-white/10 px-4 py-2 rounded-none backdrop-blur-md border border-white/5">
-                        <Sparkles size={18} className="text-primary" /> Expert Team Assigned
-                      </div>
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg">
+                    {service.categoryId || 'Professional Service'}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                <div className="space-y-2">
+                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight uppercase">{service.title}</h1>
+                  <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
+                    <div className="flex items-center gap-1 text-amber-500">
+                      <Star size={16} fill="currentColor" /> 4.9 (120+ Reviews)
                     </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1"><Clock size={16} /> {service.duration || '2-3 Hours'}</div>
                   </div>
                 </div>
-              </div>
 
-              {/* Service Description */}
-              <div className="bg-white p-10 rounded-none shadow-sm border space-y-6">
-                <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-                  <Info className="text-primary" /> Service Overview
-                </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed font-medium">
+                <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed font-medium">
                   {service.description}
-                </p>
+                </div>
               </div>
 
-              {/* Sub-Service Selection Grid */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between px-4">
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Available Task Add-ons</h2>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Select one or more to personalize your booking</p>
-                  </div>
-                  <div className="p-3 bg-white rounded-none border shadow-sm font-black text-[10px] uppercase text-primary">
-                    {subServices?.length || 0} Specializations
-                  </div>
-                </div>
-
-                {subLoading ? (
-                  <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={32} /></div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {subServices?.map((sub) => (
-                      <div 
-                        key={sub.id} 
-                        className={cn(
-                          "group p-8 rounded-none border-2 transition-all duration-500 cursor-pointer bg-white relative flex flex-col justify-between h-full",
-                          selectedSubIds.includes(sub.id) 
-                            ? "border-primary shadow-2xl shadow-primary/10 ring-1 ring-primary translate-y-[-4px]" 
-                            : "border-transparent hover:border-primary/20 hover:shadow-xl hover:translate-y-[-2px] shadow-sm"
-                        )}
-                        onClick={() => setSelectedSubIds(prev => prev.includes(sub.id) ? prev.filter(i => i !== sub.id) : [...prev, sub.id])}
-                      >
-                        <div className="space-y-6">
-                          <div className="flex justify-between items-start">
-                            <div className={cn(
-                              "w-14 h-14 rounded-none border-2 flex items-center justify-center transition-all duration-500",
-                              selectedSubIds.includes(sub.id) ? "bg-primary border-primary text-white scale-110" : "bg-gray-50 border-gray-100 text-transparent"
-                            )}>
-                              <CheckCircle2 size={32} />
-                            </div>
-                            <Badge variant="secondary" className="bg-gray-50 text-gray-400 font-black uppercase text-[10px] tracking-tighter border-none px-3 rounded-none">Add-on</Badge>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <h4 className="text-xl font-black text-[#081621] leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">{sub.name}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-medium">{sub.description || 'Professional specialization for maximum results.'}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-8 mt-auto border-t border-gray-50">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Pricing</span>
-                            <span className="text-lg font-black text-primary">৳{sub.price.toLocaleString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 bg-gray-50 px-3 py-1.5 rounded-none">
-                            <Clock size={12} /> {sub.duration}
-                          </div>
+              {/* Additional Services (Sub Services) */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-black uppercase tracking-tight text-gray-900 px-2">Additional Services</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {subLoading ? (
+                    <div className="py-10 text-center"><Loader2 className="animate-spin inline text-primary" /></div>
+                  ) : subServices?.map((sub) => (
+                    <div 
+                      key={sub.id} 
+                      className={cn(
+                        "flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer bg-white group",
+                        selectedSubIds.includes(sub.id) ? "border-primary bg-primary/5" : "border-transparent hover:border-gray-200 shadow-sm"
+                      )}
+                      onClick={() => setSelectedSubIds(prev => prev.includes(sub.id) ? prev.filter(i => i !== sub.id) : [...prev, sub.id])}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Checkbox 
+                          checked={selectedSubIds.includes(sub.id)} 
+                          className="h-6 w-6 rounded-md data-[state=checked]:bg-primary border-gray-300"
+                        />
+                        <div>
+                          <p className="font-bold text-gray-900 group-hover:text-primary transition-colors">{sub.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{sub.duration}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <span className="font-black text-primary">৳{sub.price.toLocaleString()}</span>
+                    </div>
+                  ))}
+                  {!subServices?.length && !subLoading && (
+                    <div className="p-8 text-center text-muted-foreground italic bg-white rounded-2xl border-2 border-dashed">
+                      No additional tasks available for this service.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Right: Booking Summary Board */}
+            {/* Right Side: Sticky Booking Panel */}
             <div className="lg:col-span-4">
-              <div className="sticky top-24 space-y-8">
-                <Card className="rounded-none shadow-2xl border-none overflow-hidden bg-white group">
-                  <div className="bg-[#081621] p-10 text-white relative overflow-hidden rounded-none">
-                    <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform duration-700"><Wrench size={160} /></div>
-                    <div className="relative z-10 space-y-6">
-                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Live Booking Summary</h3>
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <p className="text-5xl font-black text-white tracking-tighter">৳{totalPrice.toLocaleString()}</p>
-                          <p className="text-[10px] font-bold text-white/40 uppercase mt-2 tracking-widest">Calculated Price (Estimated)</p>
-                        </div>
-                        <div className="p-4 bg-white/10 rounded-none backdrop-blur-md border border-white/5">
-                          <CalendarCheck className="text-primary" size={32} />
-                        </div>
+              <Card className="rounded-3xl shadow-2xl border-none overflow-hidden sticky top-24">
+                <CardHeader className="bg-[#081621] text-white p-6 md:p-8">
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg font-black uppercase tracking-widest text-primary">Booking Details</CardTitle>
+                    <div className="p-2 bg-white/10 rounded-xl"><CalendarCheck size={20} className="text-primary" /></div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 md:p-8 space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Select Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full h-12 justify-start gap-2 font-bold rounded-xl border-gray-200">
+                            <CalendarIcon size={16} className="text-primary" />
+                            {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="end">
+                          <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} disabled={(d) => d < new Date()} />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Preferred Time</Label>
+                      <Select onValueChange={setSelectedTime} value={selectedTime}>
+                        <SelectTrigger className="h-12 rounded-xl border-gray-200 font-bold">
+                          <SelectValue placeholder="Select Slot" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-xl">
+                          <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
+                          <SelectItem value="afternoon">Afternoon (12pm-4pm)</SelectItem>
+                          <SelectItem value="evening">Evening (4pm-8pm)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Service Address</Label>
+                      <Input 
+                        placeholder="House, Street, Area..." 
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="h-12 rounded-xl border-gray-200 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-gray-100 space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground font-bold uppercase tracking-tighter">Base Price</span>
+                      <span className="font-black">৳{service.basePrice.toLocaleString()}</span>
+                    </div>
+                    {selectedSubIds.length > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground font-bold uppercase tracking-tighter">Add-ons ({selectedSubIds.length})</span>
+                        <span className="font-black">৳{(totalPrice - service.basePrice).toLocaleString()}</span>
                       </div>
+                    )}
+                    <div className="flex justify-between items-end pt-2">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Total Price</span>
+                        <span className="text-3xl font-black text-gray-900 tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                      </div>
+                      <Badge className="bg-green-50 text-green-700 border-none font-black text-[9px] px-3 mb-1">VAT INCLUDED</Badge>
                     </div>
                   </div>
-                  <CardContent className="p-10 space-y-10">
-                    <div className="space-y-6">
-                      {[
-                        { icon: MapPin, label: "Area Availability", val: "Nationwide Dhaka Coverage" },
-                        { icon: ShieldCheck, label: "Trust Seal", val: "100% Satisfaction Guaranteed" },
-                        { icon: Zap, label: "Pricing Model", val: "Pay after service completion" }
-                      ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-5 group/item">
-                          <div className="p-3 bg-primary/5 rounded-none transition-colors group-hover/item:bg-primary group-hover/item:text-white text-primary">
-                            <item.icon size={20} />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">{item.label}</span>
-                            <span className="text-xs font-bold text-gray-700">{item.val}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
 
-                    <Button 
-                      onClick={handleBookNow} 
-                      size="lg" 
-                      className="w-full h-20 rounded-none gap-4 text-xl font-black shadow-2xl shadow-primary/20 uppercase tracking-tighter transition-all hover:scale-[1.02] active:scale-95"
-                    >
-                      Book This Appointment <ChevronRight size={20} />
-                    </Button>
-                  </CardContent>
-                </Card>
+                  <Button 
+                    onClick={handleBookNow} 
+                    className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 uppercase tracking-tight gap-2"
+                  >
+                    Confirm Booking <Zap size={20} fill="currentColor" />
+                  </Button>
 
-                <div className="bg-white p-8 rounded-none border border-gray-100 shadow-sm flex items-center gap-6 group cursor-pointer hover:border-primary/30 transition-all hover:shadow-md">
-                  <div className="w-16 h-16 bg-primary/10 rounded-none flex items-center justify-center shadow-inner text-primary font-black text-lg group-hover:scale-110 transition-transform">AI</div>
-                  <div>
-                    <p className="text-sm font-black text-[#081621] uppercase tracking-tight mb-1">Service Consultant</p>
-                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Confused about add-ons? Let our AI suggest the best package for your needs.</p>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl text-[10px] text-muted-foreground font-bold uppercase leading-relaxed">
+                    <ShieldCheck size={24} className="text-primary shrink-0" />
+                    <span>Secure Booking with Professional Staff Guarantee</span>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
