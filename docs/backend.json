@@ -30,31 +30,26 @@
       },
       "required": ["id", "title", "basePrice", "status"]
     },
-    "ServiceReview": {
-      "title": "ServiceReview",
+    "StaffAvailability": {
+      "title": "StaffAvailability",
       "type": "object",
-      "description": "Customer feedback for services.",
       "properties": {
-        "id": { "type": "string" },
-        "serviceId": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "rating": { "type": "number" },
-        "text": { "type": "string" },
-        "createdAt": { "type": "string" }
+        "uid": { "type": "string" },
+        "isOnline": { "type": "boolean" },
+        "lastLocation": { "type": "object" },
+        "activeCity": { "type": "string" },
+        "updatedAt": { "type": "string" }
       }
     },
-    "ProductReview": {
-      "title": "ProductReview",
+    "StaffEarnings": {
+      "title": "StaffEarnings",
       "type": "object",
-      "description": "Customer feedback for products.",
       "properties": {
         "id": { "type": "string" },
-        "productId": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "rating": { "type": "number" },
-        "text": { "type": "string" },
+        "staffId": { "type": "string" },
+        "bookingId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["commission", "bonus", "base"] },
         "createdAt": { "type": "string" }
       }
     },
@@ -67,70 +62,7 @@
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "address": { "type": "string" },
-        "referralCode": { "type": "string" },
-        "referredBy": { "type": "string" },
-        "totalEarnings": { "type": "number" }
-      }
-    },
-    "Coupon": {
-      "title": "Coupon",
-      "type": "object",
-      "properties": {
-        "code": { "type": "string" },
-        "discountType": { "type": "string", "enum": ["flat", "percent"] },
-        "value": { "type": "number" },
-        "expiryDate": { "type": "string" },
-        "status": { "type": "string" }
-      }
-    },
-    "SupportTicket": {
-      "title": "SupportTicket",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "customerId": { "type": "string" },
-        "subject": { "type": "string" },
-        "message": { "type": "string" },
-        "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
-        "createdAt": { "type": "string" }
-      }
-    },
-    "QuickLink": {
-      "title": "QuickLink",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string" },
-        "iconName": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "link": { "type": "string" },
-        "order": { "type": "number" }
-      }
-    },
-    "QuickAction": {
-      "title": "QuickAction",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "iconName": { "type": "string" },
-        "link": { "type": "string" },
-        "bgGradient": { "type": "string" }
-      }
-    },
-    "PaymentMethod": {
-      "title": "PaymentMethod",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "type": { "type": "string" },
-        "accountNumber": { "type": "string" },
-        "instructions": { "type": "string" },
-        "isEnabled": { "type": "boolean" },
-        "isDefaultForProducts": { "type": "boolean" },
-        "isDefaultForServices": { "type": "boolean" },
-        "apiKey": { "type": "string" }
+        "referralCode": { "type": "string" }
       }
     }
   },
@@ -140,17 +72,15 @@
   "firestore": {
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
-    "/sub_services/{id}": { "schema": "#/entities/SubService", "description": "Add-on services." },
-    "/service_reviews/{id}": { "schema": "#/entities/ServiceReview", "description": "User service reviews." },
-    "/product_reviews/{id}": { "schema": "#/entities/ProductReview", "description": "User product reviews." },
     "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
     "/orders/{id}": { "schema": "#/entities/Order", "description": "Sales records." },
     "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },
-    "/coupons/{id}": { "schema": "#/entities/Coupon", "description": "Discount codes." },
-    "/support_tickets/{id}": { "schema": "#/entities/SupportTicket", "description": "Customer support requests." },
-    "/referrals/{id}": { "schema": "#/entities/Referral", "description": "Affiliate tracking." },
-    "/quick_links/{id}": { "schema": "#/entities/QuickLink", "description": "Home icon grid links." },
-    "/quick_actions/{id}": { "schema": "#/entities/QuickAction", "description": "Home prominent action cards." },
-    "/payment_methods/{id}": { "schema": "#/entities/PaymentMethod", "description": "Payment gateway configuration." }
+    "/staff_availability/{uid}": { "schema": "#/entities/StaffAvailability", "description": "Technician real-time status." },
+    "/staff_earnings/{id}": { "schema": "#/entities/StaffEarnings", "description": "Technician payout records." },
+    "/roles_admins/{uid}": { "schema": "object", "description": "Super Admin access." },
+    "/roles_managers/{uid}": { "schema": "object", "description": "Ops Manager access." },
+    "/roles_accounts/{uid}": { "schema": "object", "description": "Finance access." },
+    "/roles_order_managers/{uid}": { "schema": "object", "description": "E-commerce access." },
+    "/roles_employees/{uid}": { "schema": "object", "description": "Field staff access." }
   }
 }

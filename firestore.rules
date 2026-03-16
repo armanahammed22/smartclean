@@ -7,17 +7,19 @@ service cloud.firestore {
       return request.auth != null; 
     }
     
+    function hasRole(role) {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_$(role)/$(request.auth.uid));
+    }
+
     function isBootstrapAdmin() { 
       return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"; 
     }
     
-    function isAdmin() { 
-      return isBootstrapAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))); 
-    }
-    
-    function isStaff() { 
-      return isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))); 
-    }
+    function isAdmin() { return isBootstrapAdmin() || hasRole('admins'); }
+    function isManager() { return isAdmin() || hasRole('managers'); }
+    function isAccounts() { return isAdmin() || hasRole('accounts'); }
+    function isOrderManager() { return isManager() || hasRole('order_managers'); }
+    function isStaff() { return isManager() || hasRole('employees'); }
     
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
@@ -28,65 +30,49 @@ service cloud.firestore {
       allow read, write: if isBootstrapAdmin();
     }
 
-    // PUBLIC CATALOG: Unauthenticated read/list access
-    match /products/{id} { allow read, list: if true; }
-    match /services/{id} { allow read, list: if true; }
-    match /sub_services/{id} { allow read, list: if true; }
-    match /product_categories/{id} { allow read, list: if true; }
-    match /service_categories/{id} { allow read, list: if true; }
-    match /brands/{id} { allow read, list: if true; }
-    match /site_settings/{id} { allow read, list: if true; }
-    match /quick_links/{id} { allow read, list: if true; }
-    match /quick_actions/{id} { allow read, list: if true; }
-    match /payment_methods/{id} { allow read, list: if true; }
-    match /service_areas/{id} { allow read, list: if true; }
-    match /marketing_offers/{id} { allow read, list: if true; }
-    match /coupons/{id} { allow read, list: if true; }
-
-    // REVIEWS (Public read/list, Authenticated write)
-    match /service_reviews/{reviewId} {
-      allow read, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-    }
-    match /product_reviews/{reviewId} {
-      allow read, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-    }
+    // PUBLIC CATALOG
+    match /products/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /services/{id} { allow read, list: if true; allow write: if isManager(); }
+    match /sub_services/{id} { allow read, list: if true; allow write: if isManager(); }
+    match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /quick_links/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /site_settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
       allow read, write: if isOwner(uid) || isStaff(); 
     }
-    match /support_tickets/{id} {
-      allow create: if isSignedIn();
-      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
-      allow update: if isStaff();
-    }
     
-    // CRM DATA
-    match /leads/{id} { allow create: if true; allow read, update, delete: if isStaff(); }
-    match /customers/{id} { allow read, write: if isStaff(); }
     match /orders/{id} {
       allow create: if true;
-      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
-      allow update, delete: if isStaff();
-    }
-    match /bookings/{id} {
-      allow create: if true;
-      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isStaff();
-      allow update, delete: if isStaff();
-    }
-    
-    match /referrals/{id} {
-      allow create: if isSignedIn();
-      allow read: if (isSignedIn() && resource.data.referrerId == request.auth.uid) || isStaff();
+      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isOrderManager();
+      allow update, delete: if isOrderManager();
     }
 
-    // STAFF & ADMIN PROFILES
-    match /employee_profiles/{id} { allow read: if isStaff(); allow write: if isAdmin(); }
+    match /bookings/{id} {
+      allow create: if true;
+      allow read: if (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid)) || isManager();
+      // Staff can only update status and location
+      allow update: if isManager() || (isOwner(resource.data.employeeId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastLocation']));
+      allow delete: if isManager();
+    }
+
+    // STAFF PERFORMANCE & EARNINGS
+    match /staff_availability/{uid} {
+      allow read: if isStaff();
+      allow write: if isOwner(uid) || isManager();
+    }
+    match /staff_earnings/{id} {
+      allow read: if (isSignedIn() && resource.data.staffId == request.auth.uid) || isAccounts();
+      allow write: if isAccounts();
+    }
+
+    // ROLES MANAGEMENT
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
-    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isManager(); }
+    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isManager(); }
   }
 }

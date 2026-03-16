@@ -18,64 +18,44 @@ export interface Product {
   onSale?: boolean;
   features?: string[];
   specs?: { label: string; value: string }[];
-  size?: string; // Added for speech and size display
+  size?: string;
 }
 
-export interface ServiceReview {
+export interface Booking {
   id: string;
-  serviceId: string;
-  userId: string;
-  userName: string;
-  userEmail?: string;
-  rating: number;
-  text: string;
+  customerId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  address: string;
+  items: any[];
+  totalPrice: number;
+  status: 'New' | 'Assigned' | 'On The Way' | 'Service Started' | 'Completed' | 'Cancelled';
+  employeeId?: string;
+  employeeName?: string;
+  dateTime: string;
+  timeSlot?: string;
+  notes?: string;
+  updatedAt?: any;
   createdAt: string;
 }
 
-export interface ProductReview {
+export interface StaffAvailability {
+  uid: string;
+  isOnline: boolean;
+  activeCity?: string;
+  preferredShift?: string;
+  lastLocation?: { lat: number; lng: number };
+  updatedAt: any;
+}
+
+export interface StaffEarnings {
   id: string;
-  productId: string;
-  userId: string;
-  userName: string;
-  userEmail?: string;
-  rating: number;
-  text: string;
+  staffId: string;
+  bookingId: string;
+  amount: number;
+  type: 'commission' | 'bonus' | 'base';
   createdAt: string;
-}
-
-export interface MarketingOffer {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  link: string;
-  placement: 'top' | 'middle' | 'before_products' | 'after_products';
-  enabled: boolean;
-  productIds?: string[];
-  serviceIds?: string[];
-}
-
-export interface MarketingCampaign {
-  id: string;
-  title: string;
-  description: string;
-  bannerUrl: string;
-  startDate: string;
-  endDate: string;
-  type: 'flat_discount' | 'percent_discount' | 'free_gift' | 'lucky_draw';
-  terms: string;
-  enabled: boolean;
-  productIds?: string[];
-}
-
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  imageUrl: string;
-  category: string;
-  quantity: number;
-  itemType: 'product' | 'service';
 }
 
 export interface Service {
@@ -102,4 +82,14 @@ export interface SubService {
   imageUrl?: string;
   type?: 'sub_service';
   status?: 'Active' | 'Inactive';
+}
+
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  quantity: number;
+  itemType: 'product' | 'service';
 }
