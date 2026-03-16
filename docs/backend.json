@@ -84,6 +84,29 @@
         "supportLink": { "type": "string" },
         "isEnabled": { "type": "boolean" }
       }
+    },
+    "HeroBannerSettings": {
+      "title": "HeroBannerSettings",
+      "type": "object",
+      "properties": {
+        "titleText": { "type": "string" },
+        "subtitleText": { "type": "string" },
+        "titleSize": { "type": "string" },
+        "titleColor": { "type": "string" },
+        "textAlignment": { "type": "string", "enum": ["left", "center", "right"] },
+        "textPosition": { "type": "string", "enum": ["top", "center", "bottom"] },
+        "buttonText": { "type": "string" },
+        "buttonLink": { "type": "string" },
+        "buttonSize": { "type": "string", "enum": ["sm", "md", "lg"] },
+        "buttonColor": { "type": "string" },
+        "buttonShape": { "type": "string", "enum": ["rounded", "pill", "square"] },
+        "buttonPosition": { "type": "string", "enum": ["left", "center", "right"] },
+        "overlayColor": { "type": "string" },
+        "overlayOpacity": { "type": "number" },
+        "isEnabled": { "type": "boolean" },
+        "isButtonEnabled": { "type": "boolean" },
+        "isTextEnabled": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -103,6 +126,7 @@
     "/employee_profiles/{uid}": { "schema": "#/entities/EmployeeProfile", "description": "Staff metadata." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
     "/site_settings/support_hub": { "schema": "#/entities/SupportHubConfig", "description": "Support Hub UI settings." },
+    "/heroBannerSettings/current": { "schema": "#/entities/HeroBannerSettings", "description": "Homepage hero content management." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
     "/coupons/{id}": { "schema": "object", "description": "Discount codes." },

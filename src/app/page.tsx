@@ -83,6 +83,9 @@ export default function SmartCleanHomePage() {
   const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
   const { data: customization } = useDoc(customizationRef);
 
+  const heroBannerRef = useMemoFirebase(() => db ? doc(db, 'heroBannerSettings', 'current') : null, [db]);
+  const { data: heroSettings } = useDoc(heroBannerRef);
+
   const linksQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const { data: quickLinks } = useCollection(linksQuery);
 
@@ -111,6 +114,31 @@ export default function SmartCleanHomePage() {
   const handleDirectServiceCheckout = (service: any) => {
     addToCart(service);
     setCheckoutOpen(true);
+  };
+
+  // UI Helpers for Hero Positioning
+  const getPosClass = (pos: string) => {
+    if (pos === 'top') return 'justify-start pt-12 md:pt-24';
+    if (pos === 'bottom') return 'justify-end pb-12 md:pb-24';
+    return 'justify-center';
+  };
+
+  const getAlignClass = (align: string) => {
+    if (align === 'left') return 'items-start text-left';
+    if (align === 'right') return 'items-end text-right';
+    return 'items-center text-center';
+  };
+
+  const getButtonShape = (shape: string) => {
+    if (shape === 'pill') return 'rounded-full';
+    if (shape === 'square') return 'rounded-none';
+    return 'rounded-2xl';
+  };
+
+  const getButtonSize = (size: string) => {
+    if (size === 'sm') return 'h-10 px-6 text-sm';
+    if (size === 'lg') return 'h-16 px-12 text-xl';
+    return 'h-14 px-10 text-lg';
   };
 
   return (
@@ -157,52 +185,95 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* Hero Slider */}
+        {/* Hero Slider with Managed Content */}
         <section className="container mx-auto px-4 py-6">
           <div className="max-w-[982px] mx-auto">
-            {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
-              <Carousel className="w-full" opts={{ loop: true }}>
-                <CarouselContent>
-                  {customization.hero.images.map((img: any, idx: number) => {
-                    const SlideIcon = ICONS[img.btnIcon || 'ArrowRight'] || ArrowRight;
-                    const alignClass = img.alignment === 'left' ? 'items-start text-left' : img.alignment === 'right' ? 'items-end text-right' : 'items-center text-center';
-                    
-                    return (
-                      <CarouselItem key={idx}>
-                        <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
-                          <Image src={img.imageUrl} alt={img.title || 'Promo Banner'} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" priority={idx === 0} />
-                          <div className={cn("absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16", alignClass)}>
-                             <div className="max-w-2xl space-y-4">
-                                <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase font-headline tracking-tighter drop-shadow-lg">{img.title || customization.hero.title}</h2>
-                                <Button asChild size="lg" className={cn("h-14 px-10 rounded-full font-black text-lg shadow-2xl text-white border-none transition-all hover:scale-105", img.btnColor || 'bg-primary')}>
-                                  <Link href={img.ctaLink || '/services'}>{img.ctaText || 'Book Now'} <SlideIcon className="ml-2" /></Link>
-                                </Button>
-                             </div>
-                          </div>
+            <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+              {/* Background Layer */}
+              {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
+                <Carousel className="w-full h-full" opts={{ loop: true }}>
+                  <CarouselContent className="h-full">
+                    {customization.hero.images.map((img: any, idx: number) => (
+                      <CarouselItem key={idx} className="h-full">
+                        <div className="relative w-full h-full">
+                          <Image 
+                            src={img.imageUrl} 
+                            alt="Banner Background" 
+                            fill 
+                            className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                            priority={idx === 0} 
+                          />
                         </div>
                       </CarouselItem>
-                    );
-                  })}
-                </CarouselContent>
-                {customization.hero.images.length > 1 && (
-                  <>
-                    <CarouselPrevious className="hidden md:flex left-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md rounded-full" />
-                    <CarouselNext className="hidden md:flex right-6 bg-white/10 text-white border-none hover:bg-white/30 backdrop-blur-md rounded-full" />
-                  </>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              ) : (
+                <Image src="https://picsum.photos/seed/clean/1200/800" alt="Default Hero" fill className="object-cover" />
+              )}
+
+              {/* Overlay Layer */}
+              {heroSettings?.isEnabled && (
+                <div 
+                  className={cn("absolute inset-0 transition-opacity duration-500", heroSettings.overlayColor || 'bg-black')} 
+                  style={{ opacity: heroSettings.overlayOpacity ?? 0.5 }} 
+                />
+              )}
+
+              {/* Content Layer */}
+              <div className={cn(
+                "absolute inset-0 flex flex-col p-8 md:p-16 z-10 transition-all duration-500",
+                getPosClass(heroSettings?.textPosition || 'center'),
+                getAlignClass(heroSettings?.textAlignment || 'center')
+              )}>
+                {heroSettings?.isEnabled && (
+                  <div className={cn("max-w-3xl space-y-6 transition-all duration-700 animate-in fade-in slide-in-from-bottom-4")}>
+                    {/* Text Section */}
+                    {heroSettings?.isTextEnabled && (
+                      <div className="space-y-4">
+                        <h2 className={cn(
+                          "font-black uppercase font-headline tracking-tighter leading-tight drop-shadow-2xl",
+                          heroSettings.titleSize || "text-4xl md:text-6xl",
+                          heroSettings.titleColor || "text-white"
+                        )}>
+                          {heroSettings.titleText || t('hero_title')}
+                        </h2>
+                        <p className={cn(
+                          "text-base md:text-xl font-medium opacity-90 leading-relaxed max-w-xl mx-auto md:mx-0",
+                          heroSettings.titleColor || "text-white",
+                          heroSettings.textAlignment === 'center' ? 'mx-auto' : heroSettings.textAlignment === 'right' ? 'ml-auto' : 'mr-auto'
+                        )}>
+                          {heroSettings.subtitleText || t('hero_subtitle')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Button Section */}
+                    {heroSettings?.isButtonEnabled && (
+                      <div className={cn(
+                        "flex w-full",
+                        heroSettings.buttonPosition === 'center' ? 'justify-center' : heroSettings.buttonPosition === 'right' ? 'justify-end' : 'justify-start'
+                      )}>
+                        <Button 
+                          asChild 
+                          className={cn(
+                            "font-black shadow-2xl transition-all hover:scale-105 active:scale-95 uppercase tracking-tight",
+                            getButtonShape(heroSettings.buttonShape),
+                            getButtonSize(heroSettings.buttonSize),
+                            heroSettings.buttonColor || 'bg-primary'
+                          )}
+                        >
+                          <Link href={heroSettings.buttonLink || '/services'}>
+                            {heroSettings.buttonText || t('hero_cta')} 
+                            <ArrowRight className="ml-2" />
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </Carousel>
-            ) : (
-              <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden bg-[#081621] flex flex-col justify-center text-white border border-white/5 shadow-2xl p-8 md:p-16 items-center text-center">
-                <div className="space-y-6 max-w-4xl relative z-10">
-                  <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1.5 rounded-full shadow-lg">Premier Maintenance</Badge>
-                  <h2 className="text-3xl md:text-6xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
-                  <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-xl shadow-2xl transition-all hover:scale-105 bg-primary">
-                    <Link href="/services">{t('hero_cta')} <ArrowRight className="ml-2" /></Link>
-                  </Button>
-                </div>
-                <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/1200/800')] bg-cover mix-blend-overlay" />
               </div>
-            )}
+            </div>
           </div>
         </section>
 
@@ -244,7 +315,7 @@ export default function SmartCleanHomePage() {
                   {services?.map((service) => (
                     <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                       <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
-                        <Image src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} alt={service.title || 'Service Image'} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <Image src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} alt={service.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                         <div className="absolute top-3 left-3"><Badge className="bg-white/95 text-primary border-none shadow-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge></div>
                       </Link>
                       <div className="p-3 flex flex-col flex-1 gap-2">

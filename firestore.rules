@@ -36,6 +36,7 @@ service cloud.firestore {
     match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
     match /service_areas/{id} { allow read, list: if true; allow write: if isManager(); }
     match /site_settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /heroBannerSettings/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /quick_links/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }

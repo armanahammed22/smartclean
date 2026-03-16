@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -31,7 +32,9 @@ import {
   Briefcase,
   AlignCenter,
   AlignLeft,
-  AlignRight
+  AlignRight,
+  Palette,
+  Type
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -57,13 +60,39 @@ const ALIGNMENTS = [
   { value: 'right', label: 'Right', icon: AlignRight }
 ];
 
+const POSITIONS = [
+  { value: 'top', label: 'Top' },
+  { value: 'center', label: 'Center' },
+  { value: 'bottom', label: 'Bottom' }
+];
+
+const BUTTON_SHAPES = [
+  { value: 'rounded', label: 'Rounded' },
+  { value: 'pill', label: 'Pill' },
+  { value: 'square', label: 'Square' }
+];
+
+const BUTTON_SIZES = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' }
+];
+
 const COLORS = [
   { name: 'Brand Green', value: 'bg-primary' },
   { name: 'Professional Blue', value: 'bg-blue-600' },
   { name: 'Urgent Red', value: 'bg-red-600' },
   { name: 'Dark Slate', value: 'bg-slate-900' },
   { name: 'Warning Orange', value: 'bg-orange-500' },
-  { name: 'Luxury Purple', value: 'bg-purple-600' }
+  { name: 'Luxury Purple', value: 'bg-purple-600' },
+  { name: 'Clean White', value: 'bg-white' }
+];
+
+const TEXT_COLORS = [
+  { name: 'Pure White', value: 'text-white' },
+  { name: 'Deep Black', value: 'text-gray-900' },
+  { name: 'Brand Green', value: 'text-primary' },
+  { name: 'Slate Gray', value: 'text-slate-600' }
 ];
 
 export default function SiteCustomizePage() {
@@ -73,9 +102,11 @@ export default function SiteCustomizePage() {
 
   const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
   const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
+  const heroRef = useMemoFirebase(() => db ? doc(db, 'heroBannerSettings', 'current') : null, [db]);
   
   const { data: customization, isLoading: customLoading } = useDoc(customizationRef);
   const { data: marqueeSettings, isLoading: marqueeLoading } = useDoc(marqueeRef);
+  const { data: heroSettings, isLoading: heroLoading } = useDoc(heroRef);
 
   const [formData, setFormData] = useState<any>({
     hero: { 
@@ -113,6 +144,26 @@ export default function SiteCustomizePage() {
     ctaLink: ''
   });
 
+  const [heroBannerData, setHeroBannerData] = useState<any>({
+    titleText: 'PREMIUM CLEANING SERVICE',
+    subtitleText: 'Expert solutions for home and office.',
+    titleSize: 'text-4xl md:text-6xl',
+    titleColor: 'text-white',
+    textAlignment: 'center',
+    textPosition: 'center',
+    buttonText: 'Book Now',
+    buttonLink: '/services',
+    buttonSize: 'lg',
+    buttonColor: 'bg-primary',
+    buttonShape: 'pill',
+    buttonPosition: 'center',
+    overlayColor: 'bg-black',
+    overlayOpacity: 0.5,
+    isEnabled: true,
+    isButtonEnabled: true,
+    isTextEnabled: true
+  });
+
   useEffect(() => {
     if (customization) {
       setFormData({
@@ -140,16 +191,24 @@ export default function SiteCustomizePage() {
     }
   }, [marqueeSettings]);
 
+  useEffect(() => {
+    if (heroSettings) {
+      setHeroBannerData({ ...heroBannerData, ...heroSettings });
+    }
+  }, [heroSettings]);
+
   const handleSave = () => {
     if (!db) return;
     setIsSubmitting(true);
     
     const homeRef = doc(db, 'site_settings', 'homepage');
     const mqRef = doc(db, 'site_settings', 'marquee');
+    const hbRef = doc(db, 'heroBannerSettings', 'current');
 
     Promise.all([
       setDoc(homeRef, formData, { merge: true }),
-      setDoc(mqRef, marqueeData, { merge: true })
+      setDoc(mqRef, marqueeData, { merge: true }),
+      setDoc(hbRef, heroBannerData, { merge: true })
     ]).then(() => {
       toast({ title: "Customization Saved", description: "Your changes have been updated successfully." });
     }).catch(async (err) => {
@@ -188,7 +247,7 @@ export default function SiteCustomizePage() {
     setFormData({ ...formData, hero: { ...formData.hero, images: updated } });
   };
 
-  if (customLoading || marqueeLoading) return <div className="p-20 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={40} /><span className="text-muted-foreground font-bold">Syncing Site Data...</span></div>;
+  if (customLoading || marqueeLoading || heroLoading) return <div className="p-20 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={40} /><span className="text-muted-foreground font-bold">Syncing Site Data...</span></div>;
 
   return (
     <div className="space-y-8 pb-12">
@@ -211,7 +270,10 @@ export default function SiteCustomizePage() {
       <Tabs defaultValue="hero" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="hero" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Layout size={16} /> Hero Section
+            <Layout size={16} /> Hero Layout
+          </TabsTrigger>
+          <TabsTrigger value="hero-content" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Type size={16} /> Hero Banner Settings
           </TabsTrigger>
           <TabsTrigger value="marquee" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <BellRing size={16} /> Marquee
@@ -225,105 +287,11 @@ export default function SiteCustomizePage() {
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Global Hero Fallback</CardTitle>
-                <CardDescription>Default text and button settings when no slides are active</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-bold">Show Hero Section</Label>
-                <Switch 
-                  checked={formData.hero.enabled} 
-                  onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Default Title</Label>
-                  <Input 
-                    value={formData.hero.title} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, title: e.target.value}})}
-                    placeholder="Main heading text"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Default Subtitle</Label>
-                  <Input 
-                    value={formData.hero.subtitle} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, subtitle: e.target.value}})}
-                    placeholder="Small text below heading"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Button Text</Label>
-                  <Input 
-                    value={formData.hero.buttonText} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, buttonText: e.target.value}})}
-                    placeholder="e.g. Book Now"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Button Link</Label>
-                  <Input 
-                    value={formData.hero.buttonLink} 
-                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, buttonLink: e.target.value}})}
-                    placeholder="e.g. /services"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Button Color</Label>
-                  <Select value={formData.hero.buttonColor} onValueChange={(val) => setFormData({...formData, hero: {...formData.hero, buttonColor: val}})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {COLORS.map(c => (
-                        <SelectItem key={c.value} value={c.value}>
-                          <div className="flex items-center gap-2">
-                            <div className={cn("w-3 h-3 rounded-full", c.value)} />
-                            {c.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Button Icon</Label>
-                  <Select value={formData.hero.buttonIcon} onValueChange={(val) => setFormData({...formData, hero: {...formData.hero, buttonIcon: val}})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(BUTTON_ICONS).map(icon => (
-                        <SelectItem key={icon} value={icon}>{icon}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Content Alignment</Label>
-                  <div className="flex gap-2">
-                    {ALIGNMENTS.map(a => (
-                      <Button
-                        key={a.value}
-                        variant={formData.hero.alignment === a.value ? 'default' : 'outline'}
-                        className="flex-1 gap-2"
-                        onClick={() => setFormData({...formData, hero: {...formData.hero, alignment: a.value}})}
-                      >
-                        <a.icon size={16} /> {a.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold">Carousel Slides (982x500)</CardTitle>
-                <CardDescription>Add and customize multiple hero slides</CardDescription>
+                <CardTitle className="text-lg font-bold">Slide Images (982x500)</CardTitle>
+                <CardDescription>Manage the background visuals for your hero section</CardDescription>
               </div>
               <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
-                <Plus size={14} /> Add Slide
+                <Plus size={14} /> Add Background
               </Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
@@ -334,109 +302,243 @@ export default function SiteCustomizePage() {
                       <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Slide #{idx + 1}</span>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeHeroImage(idx)}><Trash2 size={16} /></Button>
                     </div>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                      <div className="lg:col-span-4">
-                        <ImageUploader 
-                          initialUrl={img.imageUrl}
-                          aspectRatio="aspect-[982/500]"
-                          onUpload={(url) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].imageUrl = url;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}
-                          label="Slide Image"
-                        />
-                      </div>
-                      
-                      <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Slide Title (Optional)</Label>
-                          <Input 
-                            value={img.title} 
-                            onChange={(e) => {
-                              const updated = [...formData.hero.images];
-                              updated[idx].title = e.target.value;
-                              setFormData({...formData, hero: {...formData.hero, images: updated}});
-                            }}
-                            placeholder="Slide-specific title"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Slide Subtitle (Optional)</Label>
-                          <Input 
-                            value={img.subtitle} 
-                            onChange={(e) => {
-                              const updated = [...formData.hero.images];
-                              updated[idx].subtitle = e.target.value;
-                              setFormData({...formData, hero: {...formData.hero, images: updated}});
-                            }}
-                            placeholder="Slide-specific subtitle"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>CTA Link</Label>
-                          <Input 
-                            value={img.ctaLink} 
-                            onChange={(e) => {
-                              const updated = [...formData.hero.images];
-                              updated[idx].ctaLink = e.target.value;
-                              setFormData({...formData, hero: {...formData.hero, images: updated}});
-                            }}
-                            placeholder="/services"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Button Text</Label>
-                          <Input 
-                            value={img.ctaText} 
-                            onChange={(e) => {
-                              const updated = [...formData.hero.images];
-                              updated[idx].ctaText = e.target.value;
-                              setFormData({...formData, hero: {...formData.hero, images: updated}});
-                            }}
-                            placeholder="Book Now"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Button Color</Label>
-                          <Select value={img.btnColor || 'bg-primary'} onValueChange={(val) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].btnColor = val;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Content Alignment</Label>
-                          <Select value={img.alignment || 'center'} onValueChange={(val) => {
-                            const updated = [...formData.hero.images];
-                            updated[idx].alignment = val;
-                            setFormData({...formData, hero: {...formData.hero, images: updated}});
-                          }}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {ALIGNMENTS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
+                    <ImageUploader 
+                      initialUrl={img.imageUrl}
+                      aspectRatio="aspect-[982/500]"
+                      onUpload={(url) => {
+                        const updated = [...formData.hero.images];
+                        updated[idx].imageUrl = url;
+                        setFormData({...formData, hero: {...formData.hero, images: updated}});
+                      }}
+                      label="Slide Image"
+                    />
                   </div>
                 ))}
-                
                 {formData.hero.images.length === 0 && (
                   <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic bg-gray-50/50">
-                    No slides added. Using global hero fallback.
+                    No images added. Using system default background.
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="hero-content" className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Text Management */}
+            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Type className="text-primary" size={20} />
+                  <div>
+                    <CardTitle className="text-lg font-bold">Hero Text Management</CardTitle>
+                    <CardDescription>Customize the main and subtitle messages</CardDescription>
+                  </div>
+                </div>
+                <Switch 
+                  checked={heroBannerData.isTextEnabled} 
+                  onCheckedChange={(val) => setHeroBannerData({...heroBannerData, isTextEnabled: val})} 
+                />
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <Label>Main Title Text</Label>
+                  <Input 
+                    value={heroBannerData.titleText} 
+                    onChange={(e) => setHeroBannerData({...heroBannerData, titleText: e.target.value})}
+                    placeholder="e.g. PREMIUM CLEANING SERVICE"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Subtitle / Description Text</Label>
+                  <Textarea 
+                    value={heroBannerData.subtitleText} 
+                    onChange={(e) => setHeroBannerData({...heroBannerData, subtitleText: e.target.value})}
+                    placeholder="Special offers or brand slogan"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Title Font Size</Label>
+                    <Select value={heroBannerData.titleSize} onValueChange={(val) => setHeroBannerData({...heroBannerData, titleSize: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text-2xl md:text-4xl">Small</SelectItem>
+                        <SelectItem value="text-3xl md:text-5xl">Medium</SelectItem>
+                        <SelectItem value="text-4xl md:text-6xl">Large (Default)</SelectItem>
+                        <SelectItem value="text-5xl md:text-7xl">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Text Color</Label>
+                    <Select value={heroBannerData.titleColor} onValueChange={(val) => setHeroBannerData({...heroBannerData, titleColor: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TEXT_COLORS.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Text Alignment</Label>
+                    <Select value={heroBannerData.textAlignment} onValueChange={(val) => setHeroBannerData({...heroBannerData, textAlignment: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALIGNMENTS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Vertical Position</Label>
+                    <Select value={heroBannerData.textPosition} onValueChange={(val) => setHeroBannerData({...heroBannerData, textPosition: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {POSITIONS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Button Management */}
+            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="text-primary" size={20} />
+                  <div>
+                    <CardTitle className="text-lg font-bold">Button Management</CardTitle>
+                    <CardDescription>Customize the main call-to-action button</CardDescription>
+                  </div>
+                </div>
+                <Switch 
+                  checked={heroBannerData.isButtonEnabled} 
+                  onCheckedChange={(val) => setHeroBannerData({...heroBannerData, isButtonEnabled: val})} 
+                />
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Button Text</Label>
+                    <Input 
+                      value={heroBannerData.buttonText} 
+                      onChange={(e) => setHeroBannerData({...heroBannerData, buttonText: e.target.value})}
+                      placeholder="Book Now"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Link</Label>
+                    <Input 
+                      value={heroBannerData.buttonLink} 
+                      onChange={(e) => setHeroBannerData({...heroBannerData, buttonLink: e.target.value})}
+                      placeholder="/services"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Button Size</Label>
+                    <Select value={heroBannerData.buttonSize} onValueChange={(val) => setHeroBannerData({...heroBannerData, buttonSize: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {BUTTON_SIZES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Color</Label>
+                    <Select value={heroBannerData.buttonColor} onValueChange={(val) => setHeroBannerData({...heroBannerData, buttonColor: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COLORS.map(c => (
+                          <SelectItem key={c.value} value={c.value}>
+                            <div className="flex items-center gap-2">
+                              <div className={cn("w-3 h-3 rounded-full", c.value)} />
+                              {c.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Button Shape</Label>
+                    <Select value={heroBannerData.buttonShape} onValueChange={(val) => setHeroBannerData({...heroBannerData, buttonShape: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {BUTTON_SHAPES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Position</Label>
+                    <Select value={heroBannerData.buttonPosition} onValueChange={(val) => setHeroBannerData({...heroBannerData, buttonPosition: val})}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALIGNMENTS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Overlay Settings */}
+            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden lg:col-span-2">
+              <CardHeader className="bg-gray-50/50 border-b">
+                <div className="flex items-center gap-2">
+                  <Palette className="text-primary" size={20} />
+                  <div>
+                    <CardTitle className="text-lg font-bold">Background Overlay</CardTitle>
+                    <CardDescription>Control the visual layering over the banner image</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Overlay Color</Label>
+                      <Select value={heroBannerData.overlayColor} onValueChange={(val) => setHeroBannerData({...heroBannerData, overlayColor: val})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bg-black">True Black</SelectItem>
+                          <SelectItem value="bg-gray-900">Dark Gray</SelectItem>
+                          <SelectItem value="bg-primary">Brand Green</SelectItem>
+                          <SelectItem value="bg-blue-900">Deep Blue</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Overlay Opacity (0 to 1)</Label>
+                      <div className="flex gap-4 items-center">
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="1" 
+                          step="0.1" 
+                          value={heroBannerData.overlayOpacity} 
+                          onChange={(e) => setHeroBannerData({...heroBannerData, overlayOpacity: parseFloat(e.target.value)})} 
+                        />
+                        <span className="text-xs font-bold text-muted-foreground">{heroBannerData.overlayOpacity * 100}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center space-y-2">
+                    <Info size={24} className="mx-auto text-primary opacity-40" />
+                    <p className="text-xs font-medium text-muted-foreground italic">Overlays help maintain high contrast between text and background images.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="marquee">
