@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { Navbar } from './navbar';
 import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
+import { WhatsAppContact } from './whatsapp-contact';
 import { CheckoutModal } from '@/components/checkout/checkout-modal';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -48,13 +49,14 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
   }, [settings]);
 
   return (
-    <div className="flex flex-col min-h-screen pb-16 lg:pb-0">
+    <div className="flex flex-col min-h-screen pb-16 lg:pb-0 relative">
       <Navbar />
       <main className="flex-1">
         {children}
       </main>
       <Footer />
       <BottomNav />
+      <WhatsAppContact />
       <CheckoutModal />
     </div>
   );

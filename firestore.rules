@@ -29,7 +29,6 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read/list access
-    // We use standard wildcards {id} for collection root listing permissions
     match /products/{id} { allow read, list: if true; }
     match /services/{id} { allow read, list: if true; }
     match /sub_services/{id} { allow read, list: if true; }
@@ -45,6 +44,7 @@ service cloud.firestore {
     match /coupons/{id} { allow read, list: if true; }
 
     // REVIEWS (Public read/list, Authenticated write)
+    // Fixed: Explicit list permission for unauthenticated users
     match /service_reviews/{reviewId} {
       allow read, list: if true;
       allow create: if isSignedIn();

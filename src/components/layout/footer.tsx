@@ -124,19 +124,10 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-medium text-center md:text-left">
+        <div className="pt-8 border-t border-white/5">
+          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-medium text-center">
             {settings?.footerContent || t('footer_rights')}
           </p>
-          
-          <Link 
-            href={`https://wa.me/${settings?.contactPhone?.replace(/\D/g, '') || '8801919640422'}`} 
-            className="flex items-center gap-3 bg-[#25D366] text-white px-8 py-3.5 rounded-full hover:scale-105 transition-transform shadow-[0_8px_20px_rgba(37,211,102,0.3)] font-bold text-sm"
-            target="_blank"
-          >
-            <MessageCircle size={22} fill="white" />
-            <span>{t('chat_wa')}</span>
-          </Link>
         </div>
       </div>
     </footer>
