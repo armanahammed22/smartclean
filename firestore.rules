@@ -35,28 +35,55 @@ service cloud.firestore {
     match /services/{id} { allow read, list: if true; allow write: if isManager(); }
     match /sub_services/{id} { allow read, list: if true; allow write: if isManager(); }
     match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /brands/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /service_areas/{id} { allow read, list: if true; allow write: if isManager(); }
     match /quick_links/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
-    // CUSTOMER DATA
+    // CRM DATA (Swapped conditions for Admin Query optimization)
     match /customer_profiles/{uid} { 
-      allow read, write: if isOwner(uid) || isStaff(); 
+      allow read, write: if isStaff() || isOwner(uid); 
     }
     
     match /orders/{id} {
       allow create: if true;
-      allow read: if (isSignedIn() && resource.data.customerId == request.auth.uid) || isOrderManager();
+      allow read: if isOrderManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isOrderManager();
     }
 
     match /bookings/{id} {
       allow create: if true;
-      allow read: if (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid)) || isManager();
-      // Staff can only update status and location
+      allow read: if isManager() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
       allow update: if isManager() || (isOwner(resource.data.employeeId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastLocation']));
       allow delete: if isManager();
     }
+
+    match /leads/{id} {
+      allow create: if true;
+      allow read, write: if isManager();
+    }
+
+    match /support_tickets/{id} {
+      allow create: if true;
+      allow read: if isManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    // MARKETING & GROWTH
+    match /marketing_offers/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /referrals/{id} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // LOGISTICS
+    match /couriers/{id} { allow read, list: if true; allow write: if isOrderManager(); }
 
     // STAFF PERFORMANCE & EARNINGS
     match /staff_availability/{uid} {
@@ -64,7 +91,7 @@ service cloud.firestore {
       allow write: if isOwner(uid) || isManager();
     }
     match /staff_earnings/{id} {
-      allow read: if (isSignedIn() && resource.data.staffId == request.auth.uid) || isAccounts();
+      allow read: if isAccounts() || (isSignedIn() && resource.data.staffId == request.auth.uid);
       allow write: if isAccounts();
     }
 
