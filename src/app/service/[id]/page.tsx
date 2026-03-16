@@ -86,7 +86,8 @@ export default function ServiceDetailsPage() {
 
   return (
     <PublicLayout>
-      <div className="bg-[#F8FAFC] min-h-screen pb-24 lg:pb-20">
+      {/* Increased bottom padding on mobile to account for both bars */}
+      <div className="bg-[#F8FAFC] min-h-screen pb-40 lg:pb-20">
         <div className="container mx-auto px-4 py-8">
           <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
             <ArrowLeft size={18} /> {t('back_to_list')}
@@ -268,8 +269,8 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
 
-        {/* Mobile Sticky Action Bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-50 px-6 py-5 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500 rounded-t-[2rem]">
+        {/* Mobile Sticky Action Bar - Adjusted to sit above the bottom nav (bottom-16) */}
+        <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 z-50 px-6 py-5 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500 rounded-t-[2rem]">
           <div className="container mx-auto flex items-center justify-between gap-6">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">Total Price</span>
