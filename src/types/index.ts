@@ -21,6 +21,20 @@ export interface Product {
   size?: string;
 }
 
+export interface EmployeeProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  skills: string[]; // Array of Service IDs
+  rating: number;
+  jobsCompleted: number;
+  status: 'Active' | 'On Leave' | 'Terminated';
+  updatedAt?: any;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   customerId: string;
@@ -33,6 +47,8 @@ export interface Booking {
   status: 'New' | 'Assigned' | 'On The Way' | 'Service Started' | 'Completed' | 'Cancelled';
   employeeId?: string;
   employeeName?: string;
+  serviceId?: string; // Reference to main service for skill matching
+  serviceTitle?: string;
   dateTime: string;
   timeSlot?: string;
   notes?: string;
@@ -43,6 +59,7 @@ export interface Booking {
 export interface StaffAvailability {
   uid: string;
   isOnline: boolean;
+  status: 'Available' | 'Busy' | 'Offline';
   activeCity?: string;
   preferredShift?: string;
   lastLocation?: { lat: number; lng: number };

@@ -30,12 +30,32 @@
       },
       "required": ["id", "title", "basePrice", "status"]
     },
+    "EmployeeProfile": {
+      "title": "EmployeeProfile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "skills": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "List of Service IDs this technician is qualified for."
+        },
+        "rating": { "type": "number" },
+        "jobsCompleted": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
+      }
+    },
     "StaffAvailability": {
       "title": "StaffAvailability",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
         "isOnline": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Available", "Busy", "Offline"] },
         "lastLocation": { "type": "object" },
         "activeCity": { "type": "string" },
         "updatedAt": { "type": "string" }
@@ -72,6 +92,7 @@
   "firestore": {
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
+    "/employee_profiles/{id}": { "schema": "#/entities/EmployeeProfile", "description": "Technician skill and rating data." },
     "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
     "/orders/{id}": { "schema": "#/entities/Order", "description": "Sales records." },
     "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },

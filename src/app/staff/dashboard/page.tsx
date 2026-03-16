@@ -19,12 +19,15 @@ import {
   Activity,
   User,
   Phone,
-  LayoutDashboard
+  LayoutDashboard,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const STATUS_ORDER = ['Assigned', 'On The Way', 'Service Started', 'Completed'];
 
@@ -48,10 +51,12 @@ export default function StaffDashboard() {
   }, [db, user]);
 
   const availabilityRef = useMemoFirebase(() => user ? doc(db!, 'staff_availability', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => user ? doc(db!, 'employee_profiles', user.uid) : null, [db, user]);
 
   const { data: bookings, isLoading } = useCollection(myBookingsQuery);
   const { data: earnings } = useCollection(earningsQuery);
   const { data: availability } = useDoc(availabilityRef);
+  const { data: profile } = useDoc(profileRef);
 
   const totalEarned = earnings?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
@@ -66,21 +71,30 @@ export default function StaffDashboard() {
         status: nextStatus,
         updatedAt: serverTimestamp()
       });
+
+      // If completing, free the technician
+      if (nextStatus === 'Completed') {
+        await updateDoc(doc(db!, 'staff_availability', user!.uid), {
+          status: 'Available',
+          updatedAt: serverTimestamp()
+        });
+      }
+
       toast({ title: `Job ${nextStatus}`, description: "Status updated successfully." });
     } catch (e) {
       toast({ variant: "destructive", title: "Update Failed", description: "Insufficient permissions." });
     }
   };
 
-  const toggleOnline = async () => {
+  const updateWorkStatus = async (status: string) => {
     if (!availabilityRef) return;
-    const newState = !availability?.isOnline;
     await setDoc(availabilityRef, {
-      isOnline: newState,
+      status,
+      isOnline: status !== 'Offline',
       uid: user?.uid,
       updatedAt: serverTimestamp()
     }, { merge: true });
-    toast({ title: newState ? "You are Online" : "You are Offline" });
+    toast({ title: "Status Updated", description: `You are now ${status}` });
   };
 
   if (!user) return <div className="p-8 text-center">Please login to view your portal.</div>;
@@ -93,18 +107,21 @@ export default function StaffDashboard() {
           <p className="text-muted-foreground text-sm font-medium">Field Operations & Performance</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button 
-            onClick={toggleOnline} 
-            variant={availability?.isOnline ? "default" : "outline"}
-            className={cn(
-              "rounded-xl font-bold h-12 px-6 flex-1 md:flex-none gap-2 shadow-lg transition-all",
-              availability?.isOnline ? "bg-green-600 hover:bg-green-700 shadow-green-200" : "bg-white"
-            )}
-          >
-            <div className={cn("w-2 h-2 rounded-full animate-pulse", availability?.isOnline ? "bg-white" : "bg-red-500")} />
-            {availability?.isOnline ? 'Active & Online' : 'Go Online'}
-          </Button>
-          <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl bg-white" asChild>
+          <Select value={availability?.status || 'Offline'} onValueChange={updateWorkStatus}>
+            <SelectTrigger className={cn(
+              "h-12 w-full md:w-[180px] rounded-xl font-bold border-none shadow-lg transition-all",
+              availability?.status === 'Available' ? "bg-green-600 text-white" : 
+              availability?.status === 'Busy' ? "bg-amber-500 text-white" : "bg-gray-400 text-white"
+            )}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="Available">Available</SelectItem>
+              <SelectItem value="Busy">Busy (On Site)</SelectItem>
+              <SelectItem value="Offline">Offline</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl bg-white shadow-sm border-none" asChild>
             <Link href="/staff/availability"><Calendar size={20} /></Link>
           </Button>
         </div>
@@ -116,7 +133,7 @@ export default function StaffDashboard() {
           { label: "Today's Jobs", val: bookings?.filter(b => b.status !== 'Completed').length || 0, icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Total Earnings", val: `৳${totalEarned}`, icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
           { label: "Career Jobs", val: earnings?.length || 0, icon: CheckCircle2, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Rating", val: "4.9", icon: Star, color: "text-amber-600", bg: "bg-amber-50" }
+          { label: "Rating", val: profile?.rating?.toFixed(1) || "5.0", icon: Star, color: "text-amber-600", bg: "bg-amber-50" }
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex flex-col gap-3">
@@ -156,7 +173,7 @@ export default function StaffDashboard() {
                             <Clock size={14} className="text-primary" /> 
                             {booking.dateTime ? format(new Date(booking.dateTime), 'hh:mm a') : 'N/A'}
                             <span className="opacity-30">•</span>
-                            <Badge variant="secondary" className="text-[9px] font-black px-2">{booking.status}</Badge>
+                            <Badge variant="secondary" className="text-[9px] font-black px-2 uppercase tracking-widest">{booking.status}</Badge>
                           </div>
                         </div>
                         <Button variant="ghost" size="icon" className="h-10 w-10 bg-primary/5 text-primary rounded-full group-hover:bg-primary group-hover:text-white transition-all">
@@ -172,7 +189,7 @@ export default function StaffDashboard() {
                           </div>
                           <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground pl-1">
                             <MapPin size={14} className="text-primary" />
-                            {booking.address || 'Sector 4, Uttara, Dhaka'}
+                            {booking.address}
                           </div>
                         </div>
                         <div className="flex items-end justify-end">
@@ -232,14 +249,22 @@ export default function StaffDashboard() {
 
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="p-6 border-b bg-gray-50/30">
-              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><Phone size={16} className="text-primary" /> Support Hub</CardTitle>
+              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><ShieldCheck size={16} className="text-primary" /> Verified Expertise</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed italic">"Facing issues at a job site? Contact the operations manager immediately."</p>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full h-11 rounded-xl font-bold gap-2 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10">Call Manager</Button>
-                <Button variant="ghost" className="w-full h-11 rounded-xl font-bold gap-2 text-muted-foreground">Emergency Help</Button>
+              <div className="flex flex-wrap gap-2">
+                {profile?.skills?.map((sId: string) => (
+                  <Badge key={sId} variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black uppercase px-2 py-1">
+                    Certification Active
+                  </Badge>
+                ))}
+                {(!profile?.skills || profile.skills.length === 0) && (
+                  <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold">
+                    <AlertCircle size={14} /> No active certifications.
+                  </div>
+                )}
               </div>
+              <p className="text-[10px] text-muted-foreground font-medium italic">Contact admin to add more skills to your profile.</p>
             </CardContent>
           </Card>
         </div>

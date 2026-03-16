@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -24,10 +25,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name required"),
@@ -53,6 +54,7 @@ export function CheckoutModal() {
   const [couponError, setCouponError] = useState('');
 
   const hasServices = items.some(i => i.itemType === 'service');
+  const mainServiceItem = items.find(i => i.itemType === 'service');
   
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods } = useCollection(methodsQuery);
@@ -70,7 +72,6 @@ export function CheckoutModal() {
     },
   });
 
-  // Set Default Payment Method based on cart content
   useEffect(() => {
     if (availableMethods?.length) {
       const defaultMethod = availableMethods.find(m => 
@@ -102,10 +103,70 @@ export function CheckoutModal() {
     }
   };
 
+  /**
+   * Smart Auto-Assignment Logic
+   * Finds the best technician based on skills, availability, and rating.
+   */
+  const findBestTechnician = async (serviceId: string) => {
+    if (!db) return null;
+
+    // 1. Find technicians with the required skill
+    const staffQuery = query(
+      collection(db, 'employee_profiles'),
+      where('skills', 'array-contains', serviceId),
+      where('status', '==', 'Active')
+    );
+    const staffSnap = await getDocs(staffQuery);
+    const qualifiedIds = staffSnap.docs.map(doc => doc.id);
+
+    if (qualifiedIds.length === 0) return null;
+
+    // 2. Filter by current availability status
+    const availQuery = query(
+      collection(db, 'staff_availability'),
+      where('uid', 'in', qualifiedIds),
+      where('isOnline', '==', true),
+      where('status', '==', 'Available')
+    );
+    const availSnap = await getDocs(availQuery);
+    const availableIds = availSnap.docs.map(doc => doc.id);
+
+    if (availableIds.length === 0) return null;
+
+    // 3. Select the best rated from available pool
+    const bestRated = staffSnap.docs
+      .filter(doc => availableIds.includes(doc.id))
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))[0];
+
+    return bestRated;
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
       const collName = hasServices ? 'bookings' : 'orders';
+      let assignmentData: any = { status: 'New' };
+
+      // Trigger Smart Assignment for services
+      if (hasServices && mainServiceItem) {
+        const bestStaff: any = await findBestTechnician(mainServiceItem.id);
+        if (bestStaff) {
+          assignmentData = {
+            status: 'Assigned',
+            employeeId: bestStaff.id,
+            employeeName: bestStaff.name,
+            assignedAt: new Date().toISOString()
+          };
+          
+          // Mark staff as busy immediately
+          await updateDoc(doc(db!, 'staff_availability', bestStaff.id), {
+            status: 'Busy',
+            updatedAt: serverTimestamp()
+          });
+        }
+      }
+
       const docRef = await addDoc(collection(db!, collName), {
         customerId: user?.uid || 'guest',
         customerName: values.name,
@@ -114,13 +175,15 @@ export function CheckoutModal() {
         totalPrice: finalTotal,
         paymentMethod: selectedMethod?.name || 'Unknown',
         paymentStatus: 'Pending',
-        status: 'New',
         address: values.address,
         dateTime: values.date?.toISOString() || new Date().toISOString(),
         timeSlot: values.time,
         notes: values.notes,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        serviceId: mainServiceItem?.id || null,
+        ...assignmentData
       });
+
       clearCart();
       setCheckoutOpen(false);
       router.push(`/order-success?id=${docRef.id}`);
@@ -208,7 +271,12 @@ export function CheckoutModal() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full h-16 font-black text-lg rounded-2xl shadow-xl mt-6 uppercase tracking-tight" disabled={isSubmitting || items.length === 0}>
+                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+                  <Zap className="text-primary" size={20} fill="currentColor" />
+                  <p className="text-[10px] font-bold uppercase text-primary leading-tight">Smart auto-assignment will match the best available technician once you confirm.</p>
+                </div>
+
+                <Button type="submit" className="w-full h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight" disabled={isSubmitting || items.length === 0}>
                   {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirm & Place Order"}
                 </Button>
               </form>
