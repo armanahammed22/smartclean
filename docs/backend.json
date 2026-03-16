@@ -44,6 +44,20 @@
         "createdAt": { "type": "string" }
       }
     },
+    "ProductReview": {
+      "title": "ProductReview",
+      "type": "object",
+      "description": "Customer feedback for products.",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
     "CustomerProfile": {
       "title": "CustomerProfile",
       "type": "object",
@@ -127,7 +141,8 @@
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Service offerings." },
     "/sub_services/{id}": { "schema": "#/entities/SubService", "description": "Add-on services." },
-    "/service_reviews/{id}": { "schema": "#/entities/ServiceReview", "description": "User reviews." },
+    "/service_reviews/{id}": { "schema": "#/entities/ServiceReview", "description": "User service reviews." },
+    "/product_reviews/{id}": { "schema": "#/entities/ProductReview", "description": "User product reviews." },
     "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
     "/orders/{id}": { "schema": "#/entities/Order", "description": "Sales records." },
     "/customer_profiles/{uid}": { "schema": "#/entities/CustomerProfile", "description": "User profiles." },

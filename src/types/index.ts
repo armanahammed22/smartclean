@@ -21,6 +21,28 @@ export interface Product {
   size?: string; // Added for speech and size display
 }
 
+export interface ServiceReview {
+  id: string;
+  serviceId: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  rating: number;
+  text: string;
+  createdAt: string;
+}
+
+export interface ProductReview {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  rating: number;
+  text: string;
+  createdAt: string;
+}
+
 export interface MarketingOffer {
   id: string;
   title: string;

@@ -44,8 +44,12 @@ service cloud.firestore {
     match /coupons/{id} { allow read, list: if true; }
 
     // REVIEWS (Public read/list, Authenticated write)
-    // Fixed: Explicit list permission for unauthenticated users
     match /service_reviews/{reviewId} {
+      allow read, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+    match /product_reviews/{reviewId} {
       allow read, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
