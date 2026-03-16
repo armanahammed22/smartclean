@@ -29,18 +29,18 @@ service cloud.firestore {
     }
 
     // PUBLIC CATALOG: Unauthenticated read access
-    // Unified document match handles both 'get' and 'list' robustly
-    match /products/{document=**} { 
+    // Recursive wildcard ensures both 'list' and 'get' operations are permitted for public catalogs
+    match /products/{id=**} { 
       allow read: if true; 
     }
-    match /services/{document=**} { 
+    match /services/{id=**} { 
       allow read: if true; 
     }
-    match /sub_services/{document=**} { 
+    match /sub_services/{id=**} { 
       allow read: if true; 
     }
     
-    // Explicit matches for other public data
+    // Explicit matches for other public metadata and marketing configuration
     match /product_categories/{id=**} { allow read: if true; }
     match /service_categories/{id=**} { allow read: if true; }
     match /brands/{id=**} { allow read: if true; }
