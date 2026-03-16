@@ -88,6 +88,7 @@
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
+    "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
     "/quick_links/{id}": { "schema": "object", "description": "UI Grid links." },
     "/quick_actions/{id}": { "schema": "object", "description": "UI Feature cards." },
     "/blocked_users/{id}": { "schema": "object", "description": "Blacklisted credentials." },

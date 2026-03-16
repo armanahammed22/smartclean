@@ -41,27 +41,28 @@ service cloud.firestore {
     match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /couriers/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
     // USER PROFILES
     match /users/{uid} {
-      allow create: if isOwner(uid);
+      allow create: if isOwner(uid) || (isSignedIn() && !exists(/databases/$(database)/documents/users/$(uid)));
       allow read, update: if isAdmin() || isStaff() || isOwner(uid);
       allow delete: if isAdmin();
     }
     
     match /employee_profiles/{uid} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn(); // Customers need to see who is available for auto-assignment
       allow write: if isAdmin();
     }
     
     match /blocked_users/{id} {
-      allow read: if true; // Public for signup check
+      allow read: if true; 
       allow write: if isAdmin();
     }
     
     // CRM DATA - Prioritize static role checks for performance
     match /orders/{id} {
-      allow create: if true;
+      allow create: if true; // Supports guest checkout (account created during process)
       allow read, list: if isOrderManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isOrderManager();
     }
@@ -69,7 +70,7 @@ service cloud.firestore {
     match /bookings/{id} {
       allow create: if true;
       allow read, list: if isManager() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
-      allow update: if isManager() || (isOwner(resource.data.employeeId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastLocation']));
+      allow update: if isManager() || (isSignedIn() && resource.data.customerId == request.auth.uid) || (isOwner(resource.data.employeeId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastLocation']));
       allow delete: if isManager();
     }
 
@@ -92,7 +93,8 @@ service cloud.firestore {
     }
 
     match /staff_availability/{uid} {
-      allow read, list: if isStaff() || isManager();
+      allow read, list: if isSignedIn(); // Required for customer-side auto-assignment check
+      allow update: if isSignedIn(); // Allows customers to mark a tech as 'Busy' during booking
       allow write: if isOwner(uid) || isManager();
     }
 
