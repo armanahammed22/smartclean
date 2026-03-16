@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -27,7 +27,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -37,8 +37,8 @@ const formSchema = z.object({
   phone: z.string().min(10, "Valid phone required"),
   email: z.string().email("Valid email required"),
   address: z.string().min(10, "Address required"),
-  date: z.date().optional(),
-  time: z.string().optional(),
+  date: z.date({ required_error: "Please select a date" }),
+  time: z.string().min(1, "Please select a time slot"),
   paymentMethod: z.string(),
   coupon: z.string().optional(),
   notes: z.string().optional(),
@@ -57,6 +57,11 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponData, setCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
+
+  // Global Settings for OTP Config
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: globalSettings } = useDoc(settingsRef);
+  const isOtpSystemEnabled = !!globalSettings?.otpEnabled;
 
   // OTP States
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -77,7 +82,8 @@ export function CheckoutModal() {
       phone: "", 
       email: user?.email || "", 
       address: "", 
-      time: "", 
+      date: new Date(new Date().setDate(new Date().getDate() + 1)), // Default to tomorrow
+      time: "morning", 
       paymentMethod: "", 
       notes: "",
       otp: ""
@@ -104,16 +110,14 @@ export function CheckoutModal() {
       return;
     }
     setIsVerifying(true);
-    // Simulate API Call
     setTimeout(() => {
       const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(mockOtp);
       setIsOtpSent(true);
       setIsVerifying(false);
-      // In development, show OTP in console/toast
-      console.log("MOCK SMS OTP:", mockOtp);
+      console.log("SMS OTP (MOCK):", mockOtp);
       toast({ title: t('otp_sent'), description: `Verification code: ${mockOtp}` });
-    }, 1500);
+    }, 1200);
   };
 
   const handleVerifyOtp = () => {
@@ -128,16 +132,17 @@ export function CheckoutModal() {
 
   const handleApplyCoupon = async () => {
     const code = form.getValues('coupon');
-    if (!code) return;
+    if (!code || !db) return;
     setCouponError('');
     try {
-      const q = query(collection(db!, 'coupons'), where('code', '==', code.toUpperCase()), where('status', '==', 'Active'));
+      const q = query(collection(db, 'coupons'), where('code', '==', code.toUpperCase()), where('status', '==', 'Active'));
       const snap = await getDocs(q);
       if (snap.empty) {
         setCouponError('Invalid coupon.');
         setCouponData(null);
       } else {
         setCouponData(snap.docs[0].data());
+        toast({ title: "Coupon Applied", description: `You saved ৳${couponData?.value}` });
       }
     } catch (e) {
       setCouponError('Error validating coupon.');
@@ -150,16 +155,23 @@ export function CheckoutModal() {
     const staffSnap = await getDocs(staffQuery);
     const qualifiedIds = staffSnap.docs.map(doc => doc.id);
     if (qualifiedIds.length === 0) return null;
+    
     const availQuery = query(collection(db, 'staff_availability'), where('uid', 'in', qualifiedIds), where('isOnline', '==', true), where('status', '==', 'Available'));
     const availSnap = await getDocs(availQuery);
     const availableIds = availSnap.docs.map(doc => doc.id);
     if (availableIds.length === 0) return null;
-    const bestRated = staffSnap.docs.filter(doc => availableIds.includes(doc.id)).map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))[0];
+    
+    const bestRated = staffSnap.docs
+      .filter(doc => availableIds.includes(doc.id))
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))[0];
+    
     return bestRated;
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user && !isVerified) {
+    // Enforcement check if OTP is enabled globally
+    if (isOtpSystemEnabled && !user && !isVerified) {
       toast({ variant: "destructive", title: "Verification Required", description: "Please verify your phone number to continue." });
       return;
     }
@@ -170,15 +182,14 @@ export function CheckoutModal() {
 
     try {
       // 1. Handle Guest Auto-Account Creation
-      if (!user) {
+      if (!user && db) {
         tempPass = Math.random().toString(36).slice(-8);
         try {
           const userCred = await createUserWithEmailAndPassword(auth, values.email, tempPass);
           currentUserId = userCred.user.uid;
           await updateProfile(userCred.user, { displayName: values.name });
           
-          // Create User Doc
-          await setDoc(doc(db!, 'users', currentUserId), {
+          await setDoc(doc(db, 'users', currentUserId), {
             uid: currentUserId,
             name: values.name,
             email: values.email.toLowerCase(),
@@ -189,7 +200,7 @@ export function CheckoutModal() {
           });
         } catch (authError: any) {
           if (authError.code === 'auth/email-already-in-use') {
-            toast({ variant: "destructive", title: "Account Exists", description: "This email is already registered. Please sign in first." });
+            toast({ variant: "destructive", title: "Account Exists", description: "Please sign in first." });
             setIsSubmitting(false);
             return;
           }
@@ -197,11 +208,11 @@ export function CheckoutModal() {
         }
       }
 
-      // 2. Logic for assignments and ordering
+      // 2. Booking / Order Logic
       const collName = hasServices ? 'bookings' : 'orders';
       let assignmentData: any = { status: 'New' };
 
-      if (hasServices && mainServiceItem) {
+      if (hasServices && mainServiceItem && db) {
         const bestStaff: any = await findBestTechnician(mainServiceItem.id);
         if (bestStaff) {
           assignmentData = {
@@ -210,30 +221,32 @@ export function CheckoutModal() {
             employeeName: bestStaff.name,
             assignedAt: new Date().toISOString()
           };
-          await updateDoc(doc(db!, 'staff_availability', bestStaff.id), { status: 'Busy', updatedAt: serverTimestamp() });
+          await updateDoc(doc(db, 'staff_availability', bestStaff.id), { status: 'Busy', updatedAt: serverTimestamp() });
         }
       }
 
-      const docRef = await addDoc(collection(db!, collName), {
-        customerId: currentUserId,
-        customerName: values.name,
-        customerPhone: values.phone,
-        customerEmail: values.email,
-        items,
-        totalPrice: finalTotal,
-        paymentMethod: selectedMethod?.name || 'Unknown',
-        address: values.address,
-        dateTime: values.date?.toISOString() || new Date().toISOString(),
-        timeSlot: values.time,
-        notes: values.notes,
-        createdAt: new Date().toISOString(),
-        serviceId: mainServiceItem?.id || null,
-        ...assignmentData
-      });
+      if (db) {
+        const docRef = await addDoc(collection(db, collName), {
+          customerId: currentUserId,
+          customerName: values.name,
+          customerPhone: values.phone,
+          customerEmail: values.email,
+          items,
+          totalPrice: finalTotal,
+          paymentMethod: selectedMethod?.name || 'Unknown',
+          address: values.address,
+          dateTime: values.date?.toISOString(),
+          timeSlot: values.time,
+          notes: values.notes,
+          createdAt: new Date().toISOString(),
+          serviceId: mainServiceItem?.id || null,
+          ...assignmentData
+        });
 
-      clearCart();
-      setCheckoutOpen(false);
-      router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email}` : ''}`);
+        clearCart();
+        setCheckoutOpen(false);
+        router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email}` : ''}`);
+      }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
@@ -265,11 +278,13 @@ export function CheckoutModal() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('full_name')}</FormLabel>
-                    <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100" /></FormControl></FormItem>
+                    <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl" /></FormControl>
+                    <FormMessage /></FormItem>
                   )} />
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Email Address</FormLabel>
-                    <FormControl><Input placeholder="name@example.com" {...field} className="h-12 bg-gray-50 border-gray-100" /></FormControl></FormItem>
+                    <FormControl><Input placeholder="name@example.com" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl" /></FormControl>
+                    <FormMessage /></FormItem>
                   )} />
                 </div>
 
@@ -278,20 +293,21 @@ export function CheckoutModal() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('phone_number')}</FormLabel>
                       <div className="flex gap-2">
-                        <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-12 bg-gray-50 border-gray-100 flex-1" /></FormControl>
-                        {!user && !isVerified && (
+                        <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-12 bg-gray-50 border-gray-100 flex-1 rounded-xl" /></FormControl>
+                        {isOtpSystemEnabled && !user && !isVerified && (
                           <Button 
                             type="button" 
                             variant="secondary" 
                             onClick={handleSendOtp} 
                             disabled={isVerifying}
-                            className="h-12 px-6 font-black uppercase text-[10px]"
+                            className="h-12 px-6 font-black uppercase text-[10px] rounded-xl"
                           >
                             {isVerifying ? <Loader2 className="animate-spin" /> : t('send_otp')}
                           </Button>
                         )}
                         {isVerified && <div className="h-12 px-4 bg-green-50 text-green-600 rounded-xl border border-green-100 flex items-center gap-2"><CheckCircle2 size={16} /> <span className="text-[10px] font-black">VERIFIED</span></div>}
                       </div>
+                      <FormMessage />
                     </FormItem>
                   )} />
 
@@ -299,17 +315,18 @@ export function CheckoutModal() {
                     <div className="flex gap-2 animate-in slide-in-from-top-2">
                       <FormField control={form.control} name="otp" render={({ field }) => (
                         <FormItem className="flex-1">
-                          <FormControl><Input placeholder={t('enter_otp')} {...field} className="h-12 bg-white border-primary/30" /></FormControl>
+                          <FormControl><Input placeholder={t('enter_otp')} {...field} className="h-12 bg-white border-primary/30 rounded-xl" /></FormControl>
                         </FormItem>
                       )} />
-                      <Button type="button" onClick={handleVerifyOtp} className="h-12 px-8 font-black uppercase text-[10px]">VERIFY</Button>
+                      <Button type="button" onClick={handleVerifyOtp} className="h-12 px-8 font-black uppercase text-[10px] rounded-xl">VERIFY</Button>
                     </div>
                   )}
                 </div>
 
                 <FormField control={form.control} name="address" render={({ field }) => (
                   <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('delivery_address')}</FormLabel>
-                  <FormControl><Textarea placeholder="Full detailed address..." {...field} className="bg-gray-50 border-gray-100 min-h-[80px]" /></FormControl></FormItem>
+                  <FormControl><Textarea placeholder="Full detailed address..." {...field} className="bg-gray-50 border-gray-100 min-h-[80px] rounded-xl" /></FormControl>
+                  <FormMessage /></FormItem>
                 )} />
 
                 {hasServices && (
@@ -317,14 +334,41 @@ export function CheckoutModal() {
                     <FormField control={form.control} name="date" render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel className="text-[10px] font-black uppercase text-primary tracking-widest">{t('booking_date')}</FormLabel>
-                        <Popover><PopoverTrigger asChild><Button variant="outline" className="h-12 bg-white justify-start gap-2 font-bold">{field.value ? format(field.value, "PPP") : <span>{t('pick_date')}</span>}<CalendarIcon size={14} /></Button></PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 border-none shadow-xl"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} /></PopoverContent></Popover>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="h-12 bg-white justify-start gap-2 font-bold rounded-xl border-gray-200">
+                              {field.value ? format(field.value, "PPP") : <span>{t('pick_date')}</span>}
+                              <CalendarIcon size={14} className="ml-auto opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 border-none shadow-xl rounded-2xl" align="start">
+                            <Calendar 
+                              mode="single" 
+                              selected={field.value} 
+                              onSelect={field.onChange} 
+                              disabled={(d) => d < new Date()} 
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="time" render={({ field }) => (
                       <FormItem><FormLabel className="text-[10px] font-black uppercase text-primary tracking-widest">{t('booking_time')}</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-12 bg-white font-bold"><SelectValue placeholder={t('select_time')} /></SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-xl"><SelectItem value="morning">{t('morning')}</SelectItem><SelectItem value="afternoon">{t('afternoon')}</SelectItem><SelectItem value="evening">{t('evening')}</SelectItem></SelectContent></Select></FormItem>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 bg-white font-bold rounded-xl border-gray-200">
+                            <SelectValue placeholder={t('select_time')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl border-none shadow-xl">
+                          <SelectItem value="morning">{t('morning')}</SelectItem>
+                          <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
+                          <SelectItem value="evening">{t('evening')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage /></FormItem>
                     )} />
                   </div>
                 )}
@@ -374,8 +418,8 @@ export function CheckoutModal() {
 
             <div className="space-y-5 pt-8 border-t border-gray-200">
               <div className="flex gap-2">
-                <Input placeholder="Coupon Code" {...form.register('coupon')} className="h-10 text-xs bg-white border-gray-200 uppercase font-bold" />
-                <Button variant="outline" size="sm" onClick={handleApplyCoupon} className="h-10 px-4 font-black bg-white border-primary text-primary hover:bg-primary/5">APPLY</Button>
+                <Input placeholder="Coupon Code" {...form.register('coupon')} className="h-10 text-xs bg-white border-gray-200 uppercase font-bold rounded-lg" />
+                <Button variant="outline" size="sm" onClick={handleApplyCoupon} className="h-10 px-4 font-black bg-white border-primary text-primary hover:bg-primary/5 rounded-lg">APPLY</Button>
               </div>
               
               <div className="space-y-3 text-sm pt-4">

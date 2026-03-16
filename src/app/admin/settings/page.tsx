@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +18,8 @@ import {
   Save, 
   Search, 
   Loader2,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -43,7 +46,8 @@ export default function AdminSettingsPage() {
     defaultLanguage: 'bn',
     seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
     seoDescription: 'Expert cleaning services for home and office.',
-    footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.'
+    footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
+    otpEnabled: false
   });
 
   useEffect(() => {
@@ -83,7 +87,7 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Global Settings</h1>
-          <p className="text-muted-foreground text-sm">Configure website core details and business info</p>
+          <p className="text-muted-foreground text-sm">Configure website core details and security</p>
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 shadow-lg text-primary-foreground bg-primary">
           {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
@@ -92,12 +96,15 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="bg-white border p-1 h-12 rounded-xl">
+        <TabsList className="bg-white border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="general" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Globe size={16} /> General
           </TabsTrigger>
           <TabsTrigger value="contact" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Mail size={16} /> Contact & Social
+          </TabsTrigger>
+          <TabsTrigger value="security" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <ShieldCheck size={16} /> Security
           </TabsTrigger>
           <TabsTrigger value="seo" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Search size={16} /> SEO & Footer
@@ -154,7 +161,7 @@ export default function AdminSettingsPage() {
 
                 <div className="grid grid-cols-1 gap-6">
                   <ImageUploader 
-                    label="Site Logo (Auto-Adjust Enabled)"
+                    label="Site Logo"
                     initialUrl={formData.logoUrl}
                     aspectRatio="aspect-square w-20"
                     onUpload={(url) => setFormData({...formData, logoUrl: url})}
@@ -166,6 +173,27 @@ export default function AdminSettingsPage() {
                     onUpload={(url) => setFormData({...formData, faviconUrl: url})}
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security">
+          <Card className="border-none shadow-sm bg-white rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Security & Authentication</CardTitle>
+              <CardDescription>Manage global security protocols</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                <div className="space-y-1">
+                  <Label className="text-sm font-black text-blue-900 uppercase">OTP Verification System</Label>
+                  <p className="text-xs text-blue-700/70 font-medium">When enabled, users must verify their phone number via SMS OTP during login, signup, and booking.</p>
+                </div>
+                <Switch 
+                  checked={formData.otpEnabled} 
+                  onCheckedChange={(val) => setFormData({...formData, otpEnabled: val})} 
+                />
               </div>
             </CardContent>
           </Card>
