@@ -26,8 +26,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Role Checks for Authenticated View
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  // Role Checks for Authenticated View - Updated to 'users' collection
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);

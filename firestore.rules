@@ -40,8 +40,10 @@ service cloud.firestore {
     match /payment_methods/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
     // CRM DATA
-    match /customer_profiles/{uid} { 
-      allow read, write: if isStaff() || isOwner(uid); 
+    match /users/{uid} {
+      allow create: if isOwner(uid);
+      allow read, update: if isOwner(uid) || isStaff();
+      allow delete: if isAdmin();
     }
     
     match /blocked_users/{id} {

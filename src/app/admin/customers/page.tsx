@@ -74,9 +74,10 @@ export default function CustomersPage() {
   const [removalTarget, setRemovalTarget] = useState<any>(null);
   const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
+  // Updated to 'users' collection
   const customersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'customer_profiles'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'users'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: customers, isLoading } = useCollection(customersQuery);
@@ -104,12 +105,12 @@ export default function CustomersPage() {
 
     try {
       if (editingCustomer) {
-        await updateDoc(doc(db, 'customer_profiles', editingCustomer.id), customerData);
+        await updateDoc(doc(db, 'users', editingCustomer.id), customerData);
         toast({ title: "Profile Updated", description: "The customer record has been modified." });
       } else {
-        await addDoc(collection(db, 'customer_profiles'), { 
+        await addDoc(collection(db, 'users'), { 
           ...customerData, 
-          uid: 'temp-' + Date.now(), // Real UID comes from Auth, but profile needs a ref
+          uid: 'temp-' + Date.now(), 
           createdAt: new Date().toISOString(),
           totalEarnings: 0,
           role: 'customer',
@@ -142,8 +143,8 @@ export default function CustomersPage() {
         toast({ title: "Customer Blocked", description: "User credentials have been blacklisted." });
       }
 
-      // Delete the actual profile document
-      await deleteDoc(doc(db, 'customer_profiles', removalTarget.id));
+      // Delete the actual profile document in 'users' collection
+      await deleteDoc(doc(db, 'users', removalTarget.id));
       
       // Cleanup UI
       setRemovalTarget(null);

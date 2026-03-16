@@ -30,7 +30,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  // Updated to 'users' collection
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile, isLoading: profileLoading, error: profileError } = useDoc(profileRef);
 
   useEffect(() => {

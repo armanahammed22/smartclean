@@ -18,7 +18,8 @@ export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  // Updated to 'users' collection
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   const [formData, setFormData] = useState({
@@ -43,7 +44,7 @@ export default function ProfileSettingsPage() {
     setIsSaving(true);
 
     try {
-      // 1. Update Firestore Profile
+      // 1. Update Firestore Profile in 'users' collection
       await updateDoc(profileRef, {
         name: formData.name,
         phone: formData.phone,

@@ -77,8 +77,8 @@ export default function SignupPage() {
       const referralCode = user.uid.slice(0, 6).toUpperCase();
       const referredBy = searchParams.get('ref') || null;
 
-      // 3. Create Firestore Profile
-      await setDoc(doc(db!, 'customer_profiles', user.uid), {
+      // 3. Create Firestore Profile in the 'users' collection
+      await setDoc(doc(db!, 'users', user.uid), {
         uid: user.uid,
         name: formData.name,
         email: formData.email.toLowerCase(),
