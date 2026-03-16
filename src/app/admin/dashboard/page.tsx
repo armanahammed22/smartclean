@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Badge } from '@/components/ui/badge';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const CHART_DATA = [
   { name: 'Jan', leads: 45, conversion: 12 },
@@ -59,76 +61,78 @@ export default function AdminDashboard() {
   const { data: subServices } = useCollection(subServicesQuery);
   const { data: employees } = useCollection(employeesQuery);
 
-  const handleSeedData = async () => {
+  const handleSeedData = () => {
     if (!db) return;
     setIsSeeding(true);
-    try {
-      const batch = writeBatch(db);
+    
+    const batch = writeBatch(db);
 
-      // 1. Service Data (Main Categories)
-      const SERVICE_DATA = [
-        { id: 's_home', title: 'Home Cleaning', basePrice: 2000, category: 'Cleaning', description: 'Professional deep cleaning for your residence.' },
-        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, category: 'Cleaning', description: 'Hygienic sanitation for your kitchen and appliances.' },
-        { id: 's_bathroom', title: 'Bathroom Cleaning', basePrice: 1000, category: 'Cleaning', description: 'Deep cleaning and disinfection of bathrooms.' },
-        { id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200, category: 'Cleaning', description: 'Professional upholstery and furniture cleaning.' },
-        { id: 's_glass', title: 'Glass & Window Cleaning', basePrice: 800, category: 'Cleaning', description: 'Crystal clear cleaning for windows and glass surfaces.' },
-        { id: 's_office', title: 'Office Cleaning', basePrice: 5000, category: 'Cleaning', description: 'Customized cleaning solutions for corporate spaces.' },
-        { id: 's_post_const', title: 'Post Construction Cleaning', basePrice: 8000, category: 'Cleaning', description: 'Thorough cleaning after construction or renovation.' },
-        { id: 's_carpet', title: 'Carpet & Curtain Cleaning', basePrice: 1500, category: 'Cleaning', description: 'Deep cleaning for carpets, rugs, and curtains.' },
-        { id: 's_outdoor', title: 'Outdoor Cleaning', basePrice: 2000, category: 'Cleaning', description: 'Cleaning for balconies, patios, and outdoor areas.' },
-        { id: 's_ac', title: 'AC Services', basePrice: 1200, category: 'Home Services', description: 'AC installation, repair, and regular servicing.' },
-        { id: 's_electrical', title: 'Electrical Services', basePrice: 500, category: 'Home Services', description: 'Expert electrical repairs and installations.' },
-        { id: 's_plumbing', title: 'Plumbing Services', basePrice: 500, category: 'Home Services', description: 'Fixing leaks, blockages, and plumbing installs.' },
-        { id: 's_carpentry', title: 'Carpentry Services', basePrice: 1000, category: 'Home Services', description: 'Furniture repair and custom woodwork.' },
-        { id: 's_appliance', title: 'Appliance Repair', basePrice: 800, category: 'Home Services', description: 'Repairing fridges, washers, and other appliances.' },
-        { id: 's_painting', title: 'Painting Services', basePrice: 10000, category: 'Home Services', description: 'Professional interior and exterior painting.' },
-        { id: 's_pest', title: 'Pest Control', basePrice: 2500, category: 'Cleaning', description: 'Effective solutions for cockroaches, termites, and more.' }
-      ];
+    // Main Services
+    const SERVICE_DATA = [
+      { id: 's_home', title: 'Home Cleaning', basePrice: 2000 },
+      { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500 },
+      { id: 's_bathroom', title: 'Bathroom Cleaning', basePrice: 1000 },
+      { id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200 },
+      { id: 's_glass', title: 'Glass & Window Cleaning', basePrice: 800 },
+      { id: 's_office', title: 'Office Cleaning', basePrice: 5000 },
+      { id: 's_post_const', title: 'Post Construction Cleaning', basePrice: 8000 },
+      { id: 's_carpet', title: 'Carpet & Curtain Cleaning', basePrice: 1500 },
+      { id: 's_outdoor', title: 'Outdoor Cleaning', basePrice: 2000 },
+      { id: 's_ac', title: 'AC Services', basePrice: 1200 },
+      { id: 's_electrical', title: 'Electrical Services', basePrice: 500 },
+      { id: 's_plumbing', title: 'Plumbing Services', basePrice: 500 },
+      { id: 's_carpentry', title: 'Carpentry Services', basePrice: 1000 },
+      { id: 's_appliance', title: 'Appliance Repair', basePrice: 800 },
+      { id: 's_painting', title: 'Painting Services', basePrice: 10000 },
+      { id: 's_pest', title: 'Pest Control', basePrice: 2500 }
+    ];
 
-      SERVICE_DATA.forEach(s => {
-        batch.set(doc(db, 'services', s.id), {
-          ...s,
-          status: 'Active',
-          duration: 'Variable',
-          createdAt: new Date().toISOString(),
-          imageUrl: `https://picsum.photos/seed/${s.id}/800/600`,
-          categoryId: s.category
-        });
+    SERVICE_DATA.forEach(s => {
+      batch.set(doc(db, 'services', s.id), {
+        ...s,
+        status: 'Active',
+        duration: 'Variable',
+        createdAt: new Date().toISOString(),
+        imageUrl: `https://picsum.photos/seed/${s.id}/800/600`,
+        categoryId: 'Cleaning'
       });
+    });
 
-      // 2. Sub Services
-      const SUB_SERVICES = [
-        { mainServiceId: 's_home', name: 'Full Home Deep Cleaning', price: 5000, duration: '6-8 hrs' },
-        { mainServiceId: 's_home', name: 'Bedroom Cleaning', price: 1000, duration: '1 hr' },
-        { mainServiceId: 's_kitchen', name: 'Kitchen Deep Cleaning', price: 2500, duration: '3 hrs' },
-        { mainServiceId: 's_bathroom', name: 'Toilet Deep Cleaning', price: 800, duration: '1 hr' },
-        { mainServiceId: 's_sofa', name: 'Fabric Sofa Cleaning', price: 500, duration: 'per seat' },
-        { mainServiceId: 's_ac', name: 'AC Servicing', price: 1000, duration: '1.5 hrs' },
-        { mainServiceId: 's_pest', name: 'Cockroach Control', price: 2000, duration: '1 hr' }
-      ];
+    // Sub Services
+    const SUB_SERVICES = [
+      { mainServiceId: 's_home', name: 'Full Home Deep Cleaning', price: 5000, duration: '6-8 hrs' },
+      { mainServiceId: 's_kitchen', name: 'Kitchen Deep Cleaning', price: 2500, duration: '3 hrs' },
+      { mainServiceId: 's_ac', name: 'AC Servicing', price: 1000, duration: '1.5 hrs' }
+    ];
 
-      SUB_SERVICES.forEach((sub, idx) => {
-        const subId = `sub_${sub.mainServiceId}_${idx}`;
-        batch.set(doc(db, 'sub_services', subId), {
-          ...sub,
-          id: subId,
-          status: 'Active',
-          description: `Professional ${sub.name} for your convenience.`,
-          createdAt: new Date().toISOString()
-        });
+    SUB_SERVICES.forEach((sub, idx) => {
+      const subId = `sub_${sub.mainServiceId}_${idx}`;
+      batch.set(doc(db, 'sub_services', subId), {
+        ...sub,
+        id: subId,
+        status: 'Active',
+        description: `Professional ${sub.name} for your convenience.`,
+        createdAt: new Date().toISOString()
       });
+    });
 
-      // 3. Admin & Staff Setup
-      batch.set(doc(db, 'employee_profiles', 'emp1'), { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', createdAt: new Date().toISOString() });
-      batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', role: 'Bootstrap Admin' });
+    // Staff
+    batch.set(doc(db, 'employee_profiles', 'emp1'), { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', createdAt: new Date().toISOString() });
+    batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', role: 'Bootstrap Admin' });
 
-      await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Main services and sub-services populated." });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Seed Failed", description: error.message });
-    } finally {
-      setIsSeeding(false);
-    }
+    batch.commit()
+      .then(() => {
+        toast({ title: "ERP Database Seeded" });
+      })
+      .catch((err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'batch',
+          operation: 'write'
+        }));
+      })
+      .finally(() => {
+        setIsSeeding(false);
+      });
   };
 
   if (isUserLoading) return <div className="p-8 text-center">{t('ops_overview')}...</div>;

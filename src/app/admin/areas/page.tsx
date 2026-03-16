@@ -11,6 +11,8 @@ import { MapPin, Plus, Trash2, Edit, Globe, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ServiceAreasPage() {
   const db = useFirestore();
@@ -24,26 +26,55 @@ export default function ServiceAreasPage() {
 
   const { data: areas, isLoading } = useCollection(areasQuery);
 
-  const handleAddArea = async (e: React.FormEvent) => {
+  const handleAddArea = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !newArea.trim()) return;
-    try {
-      await addDoc(collection(db, 'service_areas'), {
-        name: newArea.trim(),
-        status: 'Active',
-        createdAt: new Date().toISOString()
+    
+    const data = {
+      name: newArea.trim(),
+      status: 'Active',
+      createdAt: new Date().toISOString()
+    };
+
+    const colRef = collection(db, 'service_areas');
+    addDoc(colRef, data)
+      .then(() => {
+        setNewArea('');
+        toast({ title: "Area Added", description: `${newArea} is now a supported service region.` });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: colRef.path,
+          operation: 'create',
+          requestResourceData: data
+        }));
       });
-      setNewArea('');
-      toast({ title: "Area Added", description: `${newArea} is now a supported service region.` });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to add area." });
-    }
   };
 
-  const toggleStatus = async (id: string, current: string) => {
+  const toggleStatus = (id: string, current: string) => {
     if (!db) return;
     const newStatus = current === 'Active' ? 'Inactive' : 'Active';
-    await updateDoc(doc(db, 'service_areas', id), { status: newStatus });
+    const docRef = doc(db, 'service_areas', id);
+    updateDoc(docRef, { status: newStatus })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'update',
+          requestResourceData: { status: newStatus }
+        }));
+      });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!db || !confirm("Delete this area?")) return;
+    const docRef = doc(db, 'service_areas', id);
+    deleteDoc(docRef)
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'delete'
+        }));
+      });
   };
 
   return (
@@ -59,7 +90,7 @@ export default function ServiceAreasPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Card className="border-none shadow-sm h-fit bg-white rounded-2xl">
           <CardHeader>
             <CardTitle className="text-lg font-bold">Add New Region</CardTitle>
@@ -82,14 +113,14 @@ export default function ServiceAreasPage() {
           </CardContent>
         </Card>
 
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2">
            {isLoading ? (
              <div className="p-20 text-center flex flex-col items-center gap-3">
                <Loader2 className="animate-spin text-primary" size={32} />
                <span className="text-muted-foreground font-medium">Syncing areas...</span>
              </div>
            ) : (
-             <div className="grid grid-cols-2 gap-4 md:gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                {areas?.map((area) => (
                  <Card key={area.id} className="border-none shadow-sm group hover:shadow-md transition-all bg-white rounded-2xl">
                     <CardContent className="p-5 flex items-center justify-between">
@@ -120,7 +151,7 @@ export default function ServiceAreasPage() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg"
-                            onClick={() => deleteDoc(doc(db!, 'service_areas', area.id))}
+                            onClick={() => handleDelete(area.id)}
                           >
                             <Trash2 size={14} />
                           </Button>

@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploader } from '@/components/ui/image-uploader';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function SiteCustomizePage() {
   const db = useFirestore();
@@ -85,18 +87,27 @@ export default function SiteCustomizePage() {
     }
   }, [marqueeSettings]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!db) return;
     setIsSubmitting(true);
-    try {
-      await setDoc(doc(db, 'site_settings', 'homepage'), formData, { merge: true });
-      await setDoc(doc(db, 'site_settings', 'marquee'), marqueeData, { merge: true });
+    
+    const homeRef = doc(db, 'site_settings', 'homepage');
+    const mqRef = doc(db, 'site_settings', 'marquee');
+
+    Promise.all([
+      setDoc(homeRef, formData, { merge: true }),
+      setDoc(mqRef, marqueeData, { merge: true })
+    ]).then(() => {
       toast({ title: "Customization Saved", description: "Your changes have been updated successfully." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not update customization." });
-    } finally {
+    }).catch(async (err) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: homeRef.path,
+        operation: 'write',
+        requestResourceData: formData
+      }));
+    }).finally(() => {
       setIsSubmitting(false);
-    }
+    });
   };
 
   const addHeroImage = () => {

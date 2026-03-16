@@ -7,36 +7,72 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import wav from 'wav';
 
 const ProductSpeechInputSchema = z.object({
   text: z.string().describe('The text to convert to speech.'),
 });
+export type ProductSpeechInput = z.infer<typeof ProductSpeechInputSchema>;
 
-export async function generateProductSpeech(text: string) {
-  const { media } = await ai.generate({
-    model: 'googleai/gemini-2.0-flash-exp', // Using standard flash for text input
-    config: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName: 'Algenib' },
-        },
-      },
-    },
-    prompt: `Speak the following product information naturally: ${text}`,
-  });
+const ProductSpeechOutputSchema = z.object({
+  audioUri: z.string().describe('The data URI of the generated WAV audio.'),
+});
+export type ProductSpeechOutput = z.infer<typeof ProductSpeechOutputSchema>;
 
-  if (!media?.url) {
-    throw new Error('Failed to generate speech');
-  }
-
-  // Gemini returns audio/pcm or similar, we wrap it in a data URI
-  // Note: Standard Gemini API returns base64 media.
-  return media.url;
+export async function generateProductSpeech(text: string): Promise<string> {
+  const output = await productSpeechFlow({ text });
+  return output.audioUri;
 }
 
+const prompt = ai.definePrompt({
+  name: 'productSpeechPrompt',
+  input: { schema: ProductSpeechInputSchema },
+  config: {
+    responseModalities: ['AUDIO'],
+    speechConfig: {
+      voiceConfig: {
+        prebuiltVoiceConfig: { voiceName: 'Algenib' },
+      },
+    },
+  },
+  prompt: `Speak the following product information naturally: {{{text}}}`,
+});
+
+const productSpeechFlow = ai.defineFlow(
+  {
+    name: 'productSpeechFlow',
+    inputSchema: ProductSpeechInputSchema,
+    outputSchema: ProductSpeechOutputSchema,
+  },
+  async input => {
+    const { media } = await ai.generate({
+      model: googleAI.model('gemini-2.0-flash-exp'),
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+          },
+        },
+      },
+      prompt: `Speak the following product information naturally: ${input.text}`,
+    });
+
+    if (!media?.url) {
+      throw new Error('Failed to generate speech');
+    }
+
+    // Standard Gemini returns base64 or PCM data URI
+    return { audioUri: media.url };
+  }
+);
+
+/**
+ * Utility to convert PCM to WAV if required. 
+ * Standard Gemini API media parts are often already encoded.
+ */
 async function toWav(
   pcmData: Buffer,
   channels = 1,

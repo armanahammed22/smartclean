@@ -19,6 +19,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AdminSettingsPage() {
   const db = useFirestore();
@@ -53,17 +55,24 @@ export default function AdminSettingsPage() {
     }
   }, [settings]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!db) return;
     setIsSubmitting(true);
-    try {
-      await setDoc(doc(db, 'site_settings', 'global'), formData, { merge: true });
-      toast({ title: "Settings Saved", description: "Global configuration updated successfully." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to save settings." });
-    } finally {
-      setIsSubmitting(false);
-    }
+    const docRef = doc(db, 'site_settings', 'global');
+    setDoc(docRef, formData, { merge: true })
+      .then(() => {
+        toast({ title: "Settings Saved", description: "Global configuration updated successfully." });
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: docRef.path,
+          operation: 'write',
+          requestResourceData: formData
+        }));
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Loading Settings...</div>;
