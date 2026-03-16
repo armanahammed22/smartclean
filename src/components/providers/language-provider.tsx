@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 type Language = 'bn' | 'en';
 
@@ -403,7 +403,21 @@ const translations: Record<Language, Record<string, string>> = {
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('bn');
+  // Default to Bangla ('bn')
+  const [language, setLanguageState] = useState<Language>('bn');
+
+  // Load language from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('app_lang');
+    if (saved === 'en' || saved === 'bn') {
+      setLanguageState(saved as Language);
+    }
+  }, []);
+
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('app_lang', lang);
+  }, []);
 
   const t = useCallback((key: string) => {
     return translations[language][key] || key;
