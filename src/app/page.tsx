@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -44,7 +43,9 @@ import {
   Info,
   AlertCircle,
   Megaphone,
-  Sparkles
+  Sparkles,
+  Play,
+  CheckCircle2
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { 
@@ -57,7 +58,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const ICONS: Record<string, any> = {
-  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard, ShieldCheck, BellRing, Info, AlertCircle, Megaphone
+  Satellite, Thermometer, Plane, Camera, Tv, Smartphone, Tablet, Glasses, Watch, Video, Grid, Monitor, Zap, Wrench, Package, LayoutDashboard, Users, ShoppingCart, Briefcase, Settings, Calendar, Share2, CreditCard, ShieldCheck, BellRing, Info, AlertCircle, Megaphone, Sparkles, Play, ArrowRight, CheckCircle2
 };
 
 export default function SmartCleanHomePage() {
@@ -110,11 +111,13 @@ export default function SmartCleanHomePage() {
 
   const MarqueeIcon = ICONS[marqueeSettings?.iconName || 'BellRing'] || BellRing;
 
+  const HeroBtnIconGlobal = ICONS[customization?.hero?.buttonIcon || 'ArrowRight'] || ArrowRight;
+
   return (
     <PublicLayout>
       <div className="flex flex-col bg-[#F2F4F8]">
         
-        {/* 0. Admin Dashboard Summary - py-6 md:py-6 */}
+        {/* 0. Admin Dashboard Summary */}
         {isAdmin && (
           <section className="container mx-auto px-4 py-6 md:py-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/5">
@@ -157,33 +160,48 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 1. Interactive Hero Slider - py-6 md:py-6 */}
+        {/* 1. Interactive Hero Slider */}
         <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="max-w-[982px] mx-auto">
             {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
               <Carousel className="w-full" opts={{ loop: true }}>
                 <CarouselContent>
-                  {customization.hero.images.map((img: any, idx: number) => (
-                    <CarouselItem key={idx}>
-                      <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
-                        <Image 
-                          src={img.imageUrl} 
-                          alt={img.ctaText || `Banner ${idx + 1}`} 
-                          fill 
-                          className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-                          priority={idx === 0}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-8 md:p-16">
-                           <div className="max-w-xl space-y-4">
-                              <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase font-headline tracking-tighter">{img.ctaText || t('hero_title')}</h2>
-                              <Button asChild size="lg" className="h-14 px-10 rounded-full font-black text-lg shadow-2xl bg-primary text-white border-none hover:bg-primary/90">
-                                <Link href={img.ctaLink || '/services'}>Book This Service <ChevronRight className="ml-2" /></Link>
-                              </Button>
-                           </div>
+                  {customization.hero.images.map((img: any, idx: number) => {
+                    const SlideIcon = ICONS[img.btnIcon || 'ArrowRight'] || ArrowRight;
+                    const alignClass = img.alignment === 'left' ? 'items-start text-left' : img.alignment === 'right' ? 'items-end text-right' : 'items-center text-center';
+                    
+                    return (
+                      <CarouselItem key={idx}>
+                        <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+                          <Image 
+                            src={img.imageUrl} 
+                            alt={img.title || img.ctaText || `Banner ${idx + 1}`} 
+                            fill 
+                            className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                            priority={idx === 0}
+                          />
+                          <div className={cn("absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-16", alignClass)}>
+                             <div className="max-w-2xl space-y-4">
+                                <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase font-headline tracking-tighter drop-shadow-lg">
+                                  {img.title || customization.hero.title || t('hero_title')}
+                                </h2>
+                                {(img.subtitle || customization.hero.subtitle) && (
+                                  <p className="text-white/80 text-sm md:text-lg font-medium drop-shadow-md">
+                                    {img.subtitle || customization.hero.subtitle}
+                                  </p>
+                                )}
+                                <Button asChild size="lg" className={cn("h-14 px-10 rounded-full font-black text-lg shadow-2xl text-white border-none transition-all hover:scale-105", img.btnColor || customization.hero.buttonColor || 'bg-primary')}>
+                                  <Link href={img.ctaLink || customization.hero.buttonLink || '/services'}>
+                                    {img.ctaText || customization.hero.buttonText || 'Book Now'} 
+                                    <SlideIcon className="ml-2" />
+                                  </Link>
+                                </Button>
+                             </div>
+                          </div>
                         </div>
-                      </div>
-                    </CarouselItem>
-                  ))}
+                      </CarouselItem>
+                    );
+                  })}
                 </CarouselContent>
                 {customization.hero.images.length > 1 && (
                   <>
@@ -193,13 +211,23 @@ export default function SmartCleanHomePage() {
                 )}
               </Carousel>
             ) : (
-              <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden bg-[#081621] flex items-center justify-center text-white border border-white/5 shadow-2xl">
-                <div className="text-center space-y-6 px-8 max-w-4xl relative z-10">
+              <div className={cn(
+                "relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden bg-[#081621] flex flex-col justify-center text-white border border-white/5 shadow-2xl p-8 md:p-16",
+                customization?.hero?.alignment === 'left' ? 'items-start text-left' : customization?.hero?.alignment === 'right' ? 'items-end text-right' : 'items-center text-center'
+              )}>
+                <div className="space-y-6 max-w-4xl relative z-10">
                   <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1.5 rounded-full shadow-lg shadow-primary/20">Premier Maintenance</Badge>
-                  <h2 className="text-3xl md:text-6xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
-                  <p className="text-sm md:text-xl opacity-60 font-medium leading-relaxed max-w-2xl mx-auto">{t('hero_subtitle')}</p>
-                  <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-xl shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
-                    <Link href="/services">{t('hero_cta')}</Link>
+                  <h2 className="text-3xl md:text-6xl font-black uppercase font-headline tracking-tighter leading-none">
+                    {customization?.hero?.title || t('hero_title')}
+                  </h2>
+                  <p className="text-sm md:text-xl opacity-60 font-medium leading-relaxed max-w-2xl">
+                    {customization?.hero?.subtitle || t('hero_subtitle')}
+                  </p>
+                  <Button asChild size="lg" className={cn("h-16 px-12 rounded-full font-black text-xl shadow-2xl transition-all hover:scale-105 active:scale-95", customization?.hero?.buttonColor || 'bg-primary')}>
+                    <Link href={customization?.hero?.buttonLink || '/services'}>
+                      {customization?.hero?.buttonText || t('hero_cta')}
+                      <HeroBtnIconGlobal className="ml-2" />
+                    </Link>
                   </Button>
                 </div>
                 <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/1200/800')] bg-cover mix-blend-overlay" />
@@ -208,7 +236,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Marquee - Ultra Compact Announcement Bar */}
+        {/* 2. Marquee */}
         {isMounted && (!marqueeSettings || marqueeSettings.enabled) && (
           <section className="container mx-auto px-4 py-1">
             <div className={cn(
@@ -241,7 +269,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 3. Primary Service Actions - py-6 md:py-6 */}
+        {/* 3. Primary Service Actions */}
         <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -262,7 +290,7 @@ export default function SmartCleanHomePage() {
         </section>
 
         <div className="container mx-auto px-4">
-          {/* Services Grid (Main) - py-6 md:py-6 */}
+          {/* Services Grid */}
           <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
@@ -313,7 +341,7 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
 
-          {/* Products Grid (Secondary) - py-6 md:py-6 */}
+          {/* Products Grid */}
           <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">

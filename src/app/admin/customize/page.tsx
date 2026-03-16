@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -21,12 +20,51 @@ import {
   Megaphone,
   BellRing,
   Trash2,
-  Info
+  Info,
+  Zap,
+  Calendar,
+  ArrowRight,
+  ShoppingCart,
+  Wrench,
+  CheckCircle2,
+  Play,
+  Briefcase,
+  AlignCenter,
+  AlignLeft,
+  AlignRight
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
+
+const BUTTON_ICONS: Record<string, any> = {
+  Zap,
+  Calendar,
+  ArrowRight,
+  ShoppingCart,
+  Wrench,
+  CheckCircle2,
+  Play,
+  Briefcase,
+  Info
+};
+
+const ALIGNMENTS = [
+  { value: 'left', label: 'Left', icon: AlignLeft },
+  { value: 'center', label: 'Center', icon: AlignCenter },
+  { value: 'right', label: 'Right', icon: AlignRight }
+];
+
+const COLORS = [
+  { name: 'Brand Green', value: 'bg-primary' },
+  { name: 'Professional Blue', value: 'bg-blue-600' },
+  { name: 'Urgent Red', value: 'bg-red-600' },
+  { name: 'Dark Slate', value: 'bg-slate-900' },
+  { name: 'Warning Orange', value: 'bg-orange-500' },
+  { name: 'Luxury Purple', value: 'bg-purple-600' }
+];
 
 export default function SiteCustomizePage() {
   const db = useFirestore();
@@ -42,6 +80,13 @@ export default function SiteCustomizePage() {
   const [formData, setFormData] = useState<any>({
     hero: { 
       enabled: true,
+      title: '',
+      subtitle: '',
+      buttonText: '',
+      buttonLink: '',
+      buttonColor: 'bg-primary',
+      buttonIcon: 'ArrowRight',
+      alignment: 'center',
       images: [] 
     },
     sections: { 
@@ -75,6 +120,13 @@ export default function SiteCustomizePage() {
         ...customization,
         hero: { 
           enabled: customization.hero?.enabled ?? true,
+          title: customization.hero?.title || '',
+          subtitle: customization.hero?.subtitle || '',
+          buttonText: customization.hero?.buttonText || '',
+          buttonLink: customization.hero?.buttonLink || '',
+          buttonColor: customization.hero?.buttonColor || 'bg-primary',
+          buttonIcon: customization.hero?.buttonIcon || 'ArrowRight',
+          alignment: customization.hero?.alignment || 'center',
           images: customization.hero?.images || []
         },
         sections: { ...formData.sections, ...(customization.sections || {}) }
@@ -116,7 +168,16 @@ export default function SiteCustomizePage() {
       ...formData,
       hero: {
         ...formData.hero,
-        images: [...formData.hero.images, { imageUrl: '', ctaLink: '', ctaText: '' }]
+        images: [...formData.hero.images, { 
+          imageUrl: '', 
+          title: '', 
+          subtitle: '', 
+          ctaLink: '', 
+          ctaText: '',
+          btnColor: 'bg-primary',
+          btnIcon: 'ArrowRight',
+          alignment: 'center'
+        }]
       }
     });
   };
@@ -150,7 +211,7 @@ export default function SiteCustomizePage() {
       <Tabs defaultValue="hero" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="hero" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Layout size={16} /> Hero Carousel
+            <Layout size={16} /> Hero Section
           </TabsTrigger>
           <TabsTrigger value="marquee" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <BellRing size={16} /> Marquee
@@ -160,49 +221,122 @@ export default function SiteCustomizePage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="hero">
+        <TabsContent value="hero" className="space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Hero Banners (982x500)</CardTitle>
-                <CardDescription>Manage multiple images for the homepage slider</CardDescription>
+                <CardTitle className="text-lg font-bold">Global Hero Fallback</CardTitle>
+                <CardDescription>Default text and button settings when no slides are active</CardDescription>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs font-bold">Show Hero</Label>
-                  <Switch 
-                    checked={formData.hero.enabled} 
-                    onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
-                  />
-                </div>
-                <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
-                  <Plus size={14} /> Add Slide
-                </Button>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs font-bold">Show Hero Section</Label>
+                <Switch 
+                  checked={formData.hero.enabled} 
+                  onCheckedChange={(val) => setFormData({...formData, hero: {...formData.hero, enabled: val}})} 
+                />
               </div>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2 text-blue-700 mb-4">
-                <Info size={14} />
-                <p className="text-[10px] font-bold uppercase tracking-wider">Recommended Size: 982 x 500 pixels (Max 2MB)</p>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Default Title</Label>
+                  <Input 
+                    value={formData.hero.title} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, title: e.target.value}})}
+                    placeholder="Main heading text"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Default Subtitle</Label>
+                  <Input 
+                    value={formData.hero.subtitle} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, subtitle: e.target.value}})}
+                    placeholder="Small text below heading"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Button Text</Label>
+                  <Input 
+                    value={formData.hero.buttonText} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, buttonText: e.target.value}})}
+                    placeholder="e.g. Book Now"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Button Link</Label>
+                  <Input 
+                    value={formData.hero.buttonLink} 
+                    onChange={(e) => setFormData({...formData, hero: {...formData.hero, buttonLink: e.target.value}})}
+                    placeholder="e.g. /services"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Button Color</Label>
+                  <Select value={formData.hero.buttonColor} onValueChange={(val) => setFormData({...formData, hero: {...formData.hero, buttonColor: val}})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {COLORS.map(c => (
+                        <SelectItem key={c.value} value={c.value}>
+                          <div className="flex items-center gap-2">
+                            <div className={cn("w-3 h-3 rounded-full", c.value)} />
+                            {c.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Button Icon</Label>
+                  <Select value={formData.hero.buttonIcon} onValueChange={(val) => setFormData({...formData, hero: {...formData.hero, buttonIcon: val}})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(BUTTON_ICONS).map(icon => (
+                        <SelectItem key={icon} value={icon}>{icon}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Content Alignment</Label>
+                  <div className="flex gap-2">
+                    {ALIGNMENTS.map(a => (
+                      <Button
+                        key={a.value}
+                        variant={formData.hero.alignment === a.value ? 'default' : 'outline'}
+                        className="flex-1 gap-2"
+                        onClick={() => setFormData({...formData, hero: {...formData.hero, alignment: a.value}})}
+                      >
+                        <a.icon size={16} /> {a.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
+          <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">Carousel Slides (982x500)</CardTitle>
+                <CardDescription>Add and customize multiple hero slides</CardDescription>
+              </div>
+              <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
+                <Plus size={14} /> Add Slide
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
               <div className="space-y-8">
                 {formData.hero.images.map((img: any, idx: number) => (
                   <div key={idx} className="p-6 border rounded-2xl space-y-6 relative bg-gray-50/30">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center border-b pb-4">
                       <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Slide #{idx + 1}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => removeHeroImage(idx)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeHeroImage(idx)}><Trash2 size={16} /></Button>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                      <div className="md:col-span-5">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                      <div className="lg:col-span-4">
                         <ImageUploader 
                           initialUrl={img.imageUrl}
                           aspectRatio="aspect-[982/500]"
@@ -215,9 +349,33 @@ export default function SiteCustomizePage() {
                         />
                       </div>
                       
-                      <div className="md:col-span-7 space-y-4">
+                      <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest">CTA Link</Label>
+                          <Label>Slide Title (Optional)</Label>
+                          <Input 
+                            value={img.title} 
+                            onChange={(e) => {
+                              const updated = [...formData.hero.images];
+                              updated[idx].title = e.target.value;
+                              setFormData({...formData, hero: {...formData.hero, images: updated}});
+                            }}
+                            placeholder="Slide-specific title"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Slide Subtitle (Optional)</Label>
+                          <Input 
+                            value={img.subtitle} 
+                            onChange={(e) => {
+                              const updated = [...formData.hero.images];
+                              updated[idx].subtitle = e.target.value;
+                              setFormData({...formData, hero: {...formData.hero, images: updated}});
+                            }}
+                            placeholder="Slide-specific subtitle"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>CTA Link</Label>
                           <Input 
                             value={img.ctaLink} 
                             onChange={(e) => {
@@ -225,12 +383,11 @@ export default function SiteCustomizePage() {
                               updated[idx].ctaLink = e.target.value;
                               setFormData({...formData, hero: {...formData.hero, images: updated}});
                             }}
-                            placeholder="e.g. /services"
-                            className="h-11 bg-white"
+                            placeholder="/services"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest">Button Text</Label>
+                          <Label>Button Text</Label>
                           <Input 
                             value={img.ctaText} 
                             onChange={(e) => {
@@ -238,9 +395,34 @@ export default function SiteCustomizePage() {
                               updated[idx].ctaText = e.target.value;
                               setFormData({...formData, hero: {...formData.hero, images: updated}});
                             }}
-                            placeholder="e.g. Book Now"
-                            className="h-11 bg-white"
+                            placeholder="Book Now"
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Button Color</Label>
+                          <Select value={img.btnColor || 'bg-primary'} onValueChange={(val) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].btnColor = val;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Content Alignment</Label>
+                          <Select value={img.alignment || 'center'} onValueChange={(val) => {
+                            const updated = [...formData.hero.images];
+                            updated[idx].alignment = val;
+                            setFormData({...formData, hero: {...formData.hero, images: updated}});
+                          }}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {ALIGNMENTS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
@@ -249,7 +431,7 @@ export default function SiteCustomizePage() {
                 
                 {formData.hero.images.length === 0 && (
                   <div className="p-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground italic bg-gray-50/50">
-                    No slides added. Using default site banner.
+                    No slides added. Using global hero fallback.
                   </div>
                 )}
               </div>

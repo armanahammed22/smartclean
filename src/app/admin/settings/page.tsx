@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -16,7 +15,8 @@ import {
   Mail, 
   Save, 
   Search, 
-  Loader2
+  Loader2,
+  Link as LinkIcon
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState<any>({
     websiteName: 'Smart Clean',
     logoUrl: '',
+    logoLink: '/',
     faviconUrl: '',
     contactEmail: 'smartclean422@gmail.com',
     contactPhone: '+8801919640422',
@@ -121,6 +122,18 @@ export default function AdminSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Logo Redirection Link</Label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        value={formData.logoLink} 
+                        onChange={(e) => setFormData({...formData, logoLink: e.target.value})}
+                        className="h-11 pl-10"
+                        placeholder="/"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest">Currency Symbol</Label>
                     <Input 
                       value={formData.currency} 
@@ -141,7 +154,7 @@ export default function AdminSettingsPage() {
 
                 <div className="grid grid-cols-1 gap-6">
                   <ImageUploader 
-                    label="Site Logo"
+                    label="Site Logo (Auto-Adjust Enabled)"
                     initialUrl={formData.logoUrl}
                     aspectRatio="aspect-square w-20"
                     onUpload={(url) => setFormData({...formData, logoUrl: url})}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -36,12 +35,13 @@ export function Navbar() {
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
+  const logoLink = settings?.logoLink || '/';
 
   return (
     <header className="w-full z-50 sticky top-0 shadow-sm border-b border-white/10">
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href={logoLink} className="flex items-center gap-3 shrink-0">
             <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center border border-white/5">
               {displayLogo ? (
                 <Image src={displayLogo} alt="Logo" fill className="object-contain p-1.5" />
