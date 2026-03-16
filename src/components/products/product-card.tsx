@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ShoppingCart, Package } from 'lucide-react';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import { useCart } from '@/components/providers/cart-provider';
 import { useLanguage } from '@/components/providers/language-provider';
 
@@ -48,26 +48,26 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         <div className="absolute top-2 left-2">
           <span className="bg-white/90 text-primary text-[8px] font-black px-2 py-0.5 rounded-full backdrop-blur-sm uppercase tracking-tighter shadow-sm border border-primary/10">
-            {product.category}
+            {product.category || 'Supplies'}
           </span>
         </div>
       </Link>
-      <div className="p-3 flex flex-col flex-1 gap-1.5">
-        <CardHeader className="p-0 space-y-0">
+      <div className="p-3 flex flex-col flex-1 gap-1">
+        <CardHeader className="p-0 space-y-0.5">
           <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors block">
             <h3 className="font-bold text-[13px] md:text-[14px] line-clamp-1 leading-tight text-gray-900 group-hover:text-primary">{product.name}</h3>
           </Link>
           <div className="flex items-center gap-1.5">
-            <span className="font-black text-primary text-base">৳{product.price.toLocaleString()}</span>
+            <span className="font-black text-primary text-sm">৳{product.price.toLocaleString()}</span>
             {product.regularPrice && product.regularPrice > product.price && (
               <span className="text-[10px] text-gray-400 line-through">৳{product.regularPrice.toLocaleString()}</span>
             )}
           </div>
         </CardHeader>
         
-        <CardFooter className="p-0 pt-1 gap-1.5 mt-auto flex items-center">
+        <CardFooter className="p-0 pt-1.5 gap-1.5 mt-auto flex items-center">
           <Button 
-            className="flex-1 text-[10px] font-black h-9 rounded-full bg-primary hover:bg-primary/90 shadow-md uppercase tracking-tight transition-transform active:scale-95" 
+            className="flex-1 text-[10px] font-black h-8 rounded-full bg-primary hover:bg-primary/90 shadow-md uppercase tracking-tight transition-transform active:scale-95" 
             onClick={handleOrderNow}
           >
             {t('order_now')}
@@ -75,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-9 w-9 rounded-full hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white shadow-sm"
+            className="shrink-0 h-8 w-8 rounded-full hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white shadow-sm"
             onClick={handleAddToCart}
             title={t('add_to_cart')}
           >

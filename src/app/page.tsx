@@ -114,9 +114,9 @@ export default function SmartCleanHomePage() {
     <PublicLayout>
       <div className="flex flex-col bg-[#F2F4F8]">
         
-        {/* 0. Admin Dashboard Summary - py-6 md:py-10 (24px to 40px) */}
+        {/* 0. Admin Dashboard Summary - py-6 md:py-6 */}
         {isAdmin && (
-          <section className="container mx-auto px-4 py-6 md:py-10">
+          <section className="container mx-auto px-4 py-6 md:py-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/5">
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
                 <LayoutDashboard size={160} />
@@ -157,8 +157,8 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 1. Interactive Hero Slider - py-6 md:py-10 */}
-        <section className="container mx-auto px-4 py-6 md:py-10">
+        {/* 1. Interactive Hero Slider - py-6 md:py-6 */}
+        <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="max-w-[982px] mx-auto">
             {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
               <Carousel className="w-full" opts={{ loop: true }}>
@@ -208,9 +208,9 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* 2. Marquee - py-6 md:py-10 */}
+        {/* 2. Marquee - py-6 md:py-6 */}
         {isMounted && (!marqueeSettings || marqueeSettings.enabled) && (
-          <section className="container mx-auto px-4 py-6 md:py-10">
+          <section className="container mx-auto px-4 py-6 md:py-6">
             <div className={cn(
               "h-14 shadow-md border border-white/10 flex items-center overflow-hidden transition-all duration-500",
               marqueeSettings?.radius || "rounded-full",
@@ -240,8 +240,8 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* 3. Primary Service Actions - py-6 md:py-10 */}
-        <section className="container mx-auto px-4 py-6 md:py-10">
+        {/* 3. Primary Service Actions - py-6 md:py-6 */}
+        <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'Deep Cleaning', link: '/service/s_home', icon: Sparkles, grad: 'from-blue-600 to-indigo-700' },
@@ -261,8 +261,8 @@ export default function SmartCleanHomePage() {
         </section>
 
         <div className="container mx-auto px-4">
-          {/* Services Grid (Main) - py-6 md:py-10 */}
-          <section className="py-6 md:py-10">
+          {/* Services Grid (Main) - py-6 md:py-6 */}
+          <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
                 <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Expert Solutions</Badge>
@@ -312,8 +312,8 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
 
-          {/* Products Grid (Secondary) - py-6 md:py-10 */}
-          <section className="py-6 md:py-10">
+          {/* Products Grid (Secondary) - py-6 md:py-6 */}
+          <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
                 <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Supply Store</Badge>

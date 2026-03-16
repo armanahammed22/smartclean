@@ -30,17 +30,9 @@ service cloud.firestore {
 
     // PUBLIC CATALOG: Unauthenticated read access
     // Recursive wildcard ensures both 'list' and 'get' operations are permitted for public catalogs
-    match /products/{id=**} { 
-      allow read: if true; 
-    }
-    match /services/{id=**} { 
-      allow read: if true; 
-    }
-    match /sub_services/{id=**} { 
-      allow read: if true; 
-    }
-    
-    // Explicit matches for other public metadata and marketing configuration
+    match /products/{id=**} { allow read: if true; }
+    match /services/{id=**} { allow read: if true; }
+    match /sub_services/{id=**} { allow read: if true; }
     match /product_categories/{id=**} { allow read: if true; }
     match /service_categories/{id=**} { allow read: if true; }
     match /brands/{id=**} { allow read: if true; }
