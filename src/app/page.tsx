@@ -112,11 +112,11 @@ export default function SmartCleanHomePage() {
 
   return (
     <PublicLayout>
-      <div className="flex flex-col pb-10 bg-[#F2F4F8]">
+      <div className="flex flex-col bg-[#F2F4F8]">
         
         {/* 0. Admin Dashboard Summary */}
         {isAdmin && (
-          <section className="container mx-auto px-4 py-3 md:py-4">
+          <section className="container mx-auto px-4 py-6 md:py-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/5">
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
                 <LayoutDashboard size={160} />
@@ -158,7 +158,7 @@ export default function SmartCleanHomePage() {
         )}
 
         {/* 1. Interactive Hero Slider */}
-        <section className="container mx-auto px-4 py-3 md:py-4">
+        <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="max-w-[982px] mx-auto">
             {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
               <Carousel className="w-full" opts={{ loop: true }}>
@@ -241,7 +241,7 @@ export default function SmartCleanHomePage() {
         )}
 
         {/* 3. Primary Service Actions */}
-        <section className="container mx-auto px-4 py-3 md:py-4">
+        <section className="container mx-auto px-4 py-6 md:py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'Deep Cleaning', link: '/service/s_home', icon: Sparkles, grad: 'from-blue-600 to-indigo-700' },
@@ -260,9 +260,9 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 space-y-4">
+        <div className="container mx-auto px-4">
           {/* Services Grid (Main) */}
-          <section className="space-y-4 py-4 md:py-8">
+          <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
                 <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Expert Solutions</Badge>
@@ -273,45 +273,47 @@ export default function SmartCleanHomePage() {
               </Button>
             </div>
             
-            {servicesLoading ? (
-              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {services?.map((service) => (
-                  <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
-                    <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
-                      <Image 
-                        src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
-                        alt={service.title || 'Service Image'} 
-                        fill 
-                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                      />
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge>
-                      </div>
-                    </Link>
-                    <div className="p-3 flex flex-col flex-1 gap-2">
-                      <div className="space-y-0.5">
-                        <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors block">
-                          <h3 className="text-sm md:text-base font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">{service.title}</h3>
-                        </Link>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-black text-primary tracking-tighter">৳{(service.basePrice || 0).toLocaleString()}</span>
-                          <span className="text-[9px] font-black uppercase text-gray-400">{t('price_from')}</span>
+            <div className="mt-4">
+              {servicesLoading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {services?.map((service) => (
+                    <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
+                      <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
+                        <Image 
+                          src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
+                          alt={service.title || 'Service Image'} 
+                          fill 
+                          className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                        />
+                        <div className="absolute top-3 left-3">
+                          <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge>
                         </div>
+                      </Link>
+                      <div className="p-3 flex flex-col flex-1 gap-2">
+                        <div className="space-y-0.5">
+                          <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors block">
+                            <h3 className="text-sm md:text-base font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">{service.title}</h3>
+                          </Link>
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-black text-primary tracking-tighter">৳{(service.basePrice || 0).toLocaleString()}</span>
+                            <span className="text-[9px] font-black uppercase text-gray-400">{t('price_from')}</span>
+                          </div>
+                        </div>
+                        <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
+                          <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
+                        </Button>
                       </div>
-                      <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
-                        <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Products Grid (Secondary) */}
-          <section className="space-y-4 py-4 md:py-8">
+          <section className="py-6 md:py-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
                 <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Supply Store</Badge>
@@ -322,15 +324,17 @@ export default function SmartCleanHomePage() {
               </Button>
             </div>
             
-            {productsLoading ? (
-              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                {products?.map((product) => (
-                  <ProductCard key={product.id} product={product as any} />
-                ))}
-              </div>
-            )}
+            <div className="mt-4">
+              {productsLoading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                  {products?.map((product) => (
+                    <ProductCard key={product.id} product={product as any} />
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </div>
