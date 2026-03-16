@@ -42,10 +42,10 @@ service cloud.firestore {
     match /service_areas/{id=**} { allow read: if true; }
     match /marketing_offers/{id=**} { allow read: if true; }
     match /coupons/{id=**} { allow read: if true; }
+    match /service_reviews/{id=**} { allow read: if true; }
 
-    // REVIEWS
+    // REVIEWS (Write Permissions)
     match /service_reviews/{id} {
-      allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
