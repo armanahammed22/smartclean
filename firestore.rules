@@ -28,8 +28,7 @@ service cloud.firestore {
       allow read, write: if isBootstrapAdmin();
     }
 
-    // PUBLIC CATALOG: Unauthenticated read access
-    // Recursive wildcard ensures both 'list' and 'get' operations are permitted for public catalogs
+    // PUBLIC CATALOG: Unauthenticated read/list access
     match /products/{id=**} { allow read: if true; }
     match /services/{id=**} { allow read: if true; }
     match /sub_services/{id=**} { allow read: if true; }
@@ -37,13 +36,19 @@ service cloud.firestore {
     match /service_categories/{id=**} { allow read: if true; }
     match /brands/{id=**} { allow read: if true; }
     match /site_settings/{id=**} { allow read: if true; }
-    match /marketing_offers/{id=**} { allow read: if true; }
-    match /marketing_campaigns/{id=**} { allow read: if true; }
-    match /coupons/{id=**} { allow read: if true; }
     match /quick_links/{id=**} { allow read: if true; }
     match /quick_actions/{id=**} { allow read: if true; }
     match /payment_methods/{id=**} { allow read: if true; }
     match /service_areas/{id=**} { allow read: if true; }
+    match /marketing_offers/{id=**} { allow read: if true; }
+    match /coupons/{id=**} { allow read: if true; }
+
+    // REVIEWS
+    match /service_reviews/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
 
     // CUSTOMER DATA
     match /customer_profiles/{uid} { 
