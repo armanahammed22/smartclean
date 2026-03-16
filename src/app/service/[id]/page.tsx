@@ -94,7 +94,8 @@ export default function ServiceDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <div className="lg:col-span-8 space-y-8">
+            <div className="lg:col-span-8 space-y-6">
+              {/* Main Service Image */}
               <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white">
                 <Image 
                   src={service.imageUrl || 'https://picsum.photos/seed/srv/1200/800'} 
@@ -110,24 +111,30 @@ export default function ServiceDetailsPage() {
                 </div>
               </div>
 
-              <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
-                    <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star size={18} fill="currentColor" /> 4.9 (250+ Bookings)
+              {/* Service Header Info Card */}
+              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                <CardContent className="p-8 md:p-10 space-y-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
+                      <div className="flex items-center gap-4 text-sm font-bold text-muted-foreground">
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star size={18} fill="currentColor" /> 4.9 (250+ Bookings)
+                        </div>
+                        <span className="opacity-20">|</span>
+                        <div className="flex items-center gap-1.5"><Clock size={18} className="text-primary" /> {service.duration || '2-4 Hours'}</div>
                       </div>
-                      <span className="opacity-20">|</span>
-                      <div className="flex items-center gap-1.5"><Clock size={18} className="text-primary" /> {service.duration || '2-4 Hours'}</div>
                     </div>
+                    <p className="text-lg text-gray-600 font-medium leading-relaxed border-t pt-6">
+                      {service.description}
+                    </p>
                   </div>
-                  <p className="text-lg text-gray-600 font-medium leading-relaxed">
-                    {service.description}
-                  </p>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-6 pt-4">
+              {/* Additional Services Card */}
+              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                <CardContent className="p-8 md:p-10 space-y-6">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={20} fill="currentColor" /></div>
                     <h3 className="text-2xl font-black uppercase tracking-tight text-gray-900">Additional Services</h3>
@@ -165,8 +172,8 @@ export default function ServiceDetailsPage() {
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
 
             <div className="lg:col-span-4 hidden lg:block">
