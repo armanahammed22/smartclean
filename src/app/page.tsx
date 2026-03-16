@@ -17,7 +17,6 @@ import {
   Wrench, 
   ChevronRight, 
   Loader2, 
-  ChevronDown, 
   Satellite, 
   Thermometer, 
   Plane, 
@@ -38,7 +37,6 @@ import {
   UserCheck, 
   Briefcase, 
   Settings, 
-  Plus, 
   Calendar, 
   Share2, 
   CreditCard, 
@@ -65,7 +63,6 @@ const ICONS: Record<string, any> = {
 export default function SmartCleanHomePage() {
   const { language, t } = useLanguage();
   const { user } = useUser();
-  const [showAllLinks, setShowAllLinks] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
 
@@ -99,8 +96,6 @@ export default function SmartCleanHomePage() {
 
   const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
   const { data: marqueeSettings } = useDoc(marqueeRef);
-
-  const carouselOffers = offers?.filter(o => o.placement === 'top');
 
   // Dynamic Marquee Content
   const getMarqueeContent = () => {
@@ -181,7 +176,7 @@ export default function SmartCleanHomePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-8 md:p-16">
                            <div className="max-w-xl space-y-4">
                               <h2 className="text-3xl md:text-5xl font-black text-white leading-tight uppercase font-headline tracking-tighter">{img.ctaText || t('hero_title')}</h2>
-                              <Button asChild size="lg" className="h-14 px-10 rounded-xl font-black text-lg shadow-2xl bg-primary text-white border-none hover:bg-primary/90">
+                              <Button asChild size="lg" className="h-14 px-10 rounded-full font-black text-lg shadow-2xl bg-primary text-white border-none hover:bg-primary/90">
                                 <Link href={img.ctaLink || '/services'}>Book This Service <ChevronRight className="ml-2" /></Link>
                               </Button>
                            </div>
@@ -203,7 +198,7 @@ export default function SmartCleanHomePage() {
                   <Badge className="bg-primary text-white border-none uppercase tracking-[0.3em] font-black text-xs px-4 py-1.5 rounded-full shadow-lg shadow-primary/20">Premier Maintenance</Badge>
                   <h2 className="text-3xl md:text-6xl font-black uppercase font-headline tracking-tighter leading-none">{t('hero_title')}</h2>
                   <p className="text-sm md:text-xl opacity-60 font-medium leading-relaxed max-w-2xl mx-auto">{t('hero_subtitle')}</p>
-                  <Button asChild size="lg" className="h-16 px-12 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
+                  <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-xl shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
                     <Link href="/services">{t('hero_cta')}</Link>
                   </Button>
                 </div>
@@ -254,7 +249,7 @@ export default function SmartCleanHomePage() {
               { label: 'Pest Control', link: '/service/s_pest', icon: ShieldCheck, grad: 'from-orange-500 to-red-600' },
               { label: 'Home Repair', link: '/services', icon: Settings, grad: 'from-slate-700 to-slate-900' }
             ].map((action, i) => (
-              <Link key={i} href={action.link} className={cn("relative h-24 md:h-32 rounded-3xl overflow-hidden group shadow-xl transition-all hover:scale-[1.02]", `bg-gradient-to-br ${action.grad}`)}>
+              <Link key={i} href={action.link} className={cn("relative h-24 md:h-32 rounded-[2rem] overflow-hidden group shadow-xl transition-all hover:scale-[1.02]", `bg-gradient-to-br ${action.grad}`)}>
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
                   <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/10"><action.icon className="text-white w-6 h-6 md:w-8 md:h-8" /></div>
                   <h3 className="text-white text-[10px] md:text-sm font-black uppercase tracking-widest">{action.label}</h3>
@@ -265,53 +260,49 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 space-y-24 mt-12">
+        <div className="container mx-auto px-4 space-y-16 mt-12">
           {/* Services Grid (Main) */}
-          <section className="space-y-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-primary/10 pb-8">
-              <div className="space-y-2">
-                <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.3em] font-black py-1.5 px-5 rounded-full text-[10px]">Expert Solutions</Badge>
-                <h2 className="text-3xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('expert_services')}</h2>
-                <p className="text-muted-foreground text-sm font-medium max-w-xl">{t('services_subtitle')}</p>
+          <section className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6">
+              <div className="space-y-1">
+                <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Expert Solutions</Badge>
+                <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('expert_services')}</h2>
               </div>
-              <Button variant="outline" className="gap-2 font-black uppercase text-xs tracking-widest border-primary/20 text-primary rounded-xl h-12 px-8 hover:bg-primary/5 shadow-sm" asChild>
-                <Link href="/services">{t('view_all')} <ChevronRight size={16} /></Link>
+              <Button variant="outline" className="gap-2 font-black uppercase text-[10px] tracking-widest border-primary/20 text-primary rounded-full h-10 px-6 hover:bg-primary/5" asChild>
+                <Link href="/services">{t('view_all')} <ChevronRight size={14} /></Link>
               </Button>
             </div>
             
             {servicesLoading ? (
-              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={48} /></div>
+              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {services?.map((service) => (
-                  <div key={service.id} className="group bg-white rounded-none overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(34,99,192,0.1)] transition-all duration-700 border border-transparent hover:border-primary/20 flex flex-col relative h-full">
-                    <Link href={`/service/${service.id}`} className="block relative aspect-square overflow-hidden shrink-0">
+                  <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
+                    <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
                       <Image 
                         src={service.imageUrl || 'https://picsum.photos/seed/srv/600/400'} 
                         alt={service.title || 'Service Image'} 
                         fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
                       />
-                      <div className="absolute top-4 left-4">
-                        <Badge className="bg-white/95 text-primary border-none shadow-xl backdrop-blur-md font-black text-[9px] uppercase px-3 py-1 rounded-none">{service.categoryId || 'General'}</Badge>
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge>
                       </div>
                     </Link>
-                    <div className="p-6 flex flex-col flex-1 gap-4">
-                      <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors block">
-                        <h3 className="text-base md:text-lg font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">{service.title}</h3>
-                      </Link>
-                      <div className="flex flex-col border-t border-gray-50 pt-4 gap-4 mt-auto">
-                        <div className="flex justify-between items-center">
-                          <div className="flex flex-col">
-                            <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{t('price_from')}</span>
-                            <span className="text-xl font-black text-primary tracking-tighter">৳{(service.basePrice || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="p-2 bg-gray-50 rounded-none text-gray-400"><Wrench size={16} /></div>
+                    <div className="p-3 flex flex-col flex-1 gap-2">
+                      <div className="space-y-0.5">
+                        <Link href={`/service/${service.id}`} className="hover:text-primary transition-colors block">
+                          <h3 className="text-sm md:text-base font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">{service.title}</h3>
+                        </Link>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-black text-primary tracking-tighter">৳{(service.basePrice || 0).toLocaleString()}</span>
+                          <span className="text-[9px] font-black uppercase text-gray-400">{t('price_from')}</span>
                         </div>
-                        <Button size="lg" className="w-full rounded-none font-black text-xs uppercase shadow-xl h-12 tracking-widest transition-all hover:translate-y-[-2px] active:scale-95" asChild>
-                          <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
-                        </Button>
                       </div>
+                      <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
+                        <Link href={`/service/${service.id}`}>{t('book_now')}</Link>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -320,22 +311,21 @@ export default function SmartCleanHomePage() {
           </section>
 
           {/* Products Grid (Secondary) */}
-          <section className="space-y-10">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-primary/10 pb-8">
-              <div className="space-y-2">
-                <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.3em] font-black py-1.5 px-5 rounded-full text-[10px]">Supply Store</Badge>
-                <h2 className="text-3xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('professional_tools')}</h2>
-                <p className="text-muted-foreground text-sm font-medium">{t('products_subtitle')}</p>
+          <section className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6">
+              <div className="space-y-1">
+                <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Supply Store</Badge>
+                <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('professional_tools')}</h2>
               </div>
-              <Button variant="link" className="gap-2 font-black uppercase text-xs tracking-widest text-primary p-0 h-auto" asChild>
-                <Link href="/products">{t('view_all')} <ChevronRight size={16} /></Link>
+              <Button variant="link" className="gap-2 font-black uppercase text-[10px] tracking-widest text-primary p-0 h-auto" asChild>
+                <Link href="/products">{t('view_all')} <ChevronRight size={14} /></Link>
               </Button>
             </div>
             
             {productsLoading ? (
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                 {products?.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 ))}

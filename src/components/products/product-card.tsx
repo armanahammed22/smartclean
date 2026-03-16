@@ -32,8 +32,8 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden group flex flex-col h-full hover:shadow-xl transition-all duration-300 border-border/50 bg-white rounded-none">
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden shrink-0">
+    <Card className="overflow-hidden group flex flex-col h-full hover:shadow-xl transition-all duration-300 border-gray-100 bg-white rounded-2xl shadow-sm">
+      <Link href={`/product/${product.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
         {product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl !== '' ? (
           <Image
             src={product.imageUrl}
@@ -43,33 +43,31 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground/30">
-            <Package size={40} />
+            <Package size={32} />
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <span className="bg-primary/95 text-white text-[8px] font-black px-2 py-0.5 rounded-none backdrop-blur-sm uppercase tracking-tighter shadow-sm">
+          <span className="bg-white/90 text-primary text-[8px] font-black px-2 py-0.5 rounded-full backdrop-blur-sm uppercase tracking-tighter shadow-sm border border-primary/10">
             {product.category}
           </span>
         </div>
       </Link>
-      <div className="p-3 flex flex-col flex-1 gap-2">
-        <CardHeader className="p-0 space-y-0.5">
+      <div className="p-3 flex flex-col flex-1 gap-1.5">
+        <CardHeader className="p-0 space-y-0">
           <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors block">
-            <h3 className="font-bold text-[12px] md:text-[13px] line-clamp-1 leading-tight text-gray-900">{product.name}</h3>
+            <h3 className="font-bold text-[13px] md:text-[14px] line-clamp-1 leading-tight text-gray-900 group-hover:text-primary">{product.name}</h3>
           </Link>
-          <div className="flex flex-col">
-            <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{t('fixed_price')}</span>
-            <span className="font-black text-primary text-sm md:text-base">৳{product.price.toLocaleString()}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-black text-primary text-base">৳{product.price.toLocaleString()}</span>
+            {product.regularPrice && product.regularPrice > product.price && (
+              <span className="text-[10px] text-gray-400 line-through">৳{product.regularPrice.toLocaleString()}</span>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="p-0 flex-1">
-          <p className="text-[10px] text-muted-foreground line-clamp-1 leading-relaxed">
-            {product.shortDescription || product.description}
-          </p>
-        </CardContent>
-        <CardFooter className="p-0 pt-2 gap-1.5 mt-auto border-t border-gray-50 flex items-center">
+        
+        <CardFooter className="p-0 pt-1 gap-1.5 mt-auto flex items-center">
           <Button 
-            className="flex-1 gap-1 text-[10px] font-black h-8 rounded-none bg-primary hover:bg-primary/90 shadow-sm uppercase tracking-tighter" 
+            className="flex-1 text-[10px] font-black h-9 rounded-full bg-primary hover:bg-primary/90 shadow-md uppercase tracking-tight transition-transform active:scale-95" 
             onClick={handleOrderNow}
           >
             {t('order_now')}
@@ -77,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0 h-8 w-8 rounded-none hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white"
+            className="shrink-0 h-9 w-9 rounded-full hover:bg-primary hover:text-white transition-all border-primary/20 text-primary bg-white shadow-sm"
             onClick={handleAddToCart}
             title={t('add_to_cart')}
           >
