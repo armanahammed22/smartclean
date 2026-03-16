@@ -44,7 +44,7 @@ service cloud.firestore {
     match /coupons/{any=**} { allow read: if true; }
 
     // REVIEWS (Public read/list, Authenticated write)
-    match /service_reviews/{id} {
+    match /service_reviews/{any=**} {
       allow read, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
