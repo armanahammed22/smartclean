@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -16,7 +15,8 @@ import {
   ChevronRight,
   Star,
   CheckCircle2,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  ShoppingCart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -88,7 +88,7 @@ export default function ServiceDetailsPage() {
 
   return (
     <PublicLayout>
-      <div className="bg-[#F8FAFC] min-h-screen pb-20">
+      <div className="bg-[#F8FAFC] min-h-screen pb-24 lg:pb-20">
         <div className="container mx-auto px-4 py-8">
           <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm">
             <ArrowLeft size={18} /> {t('back_to_list')}
@@ -125,7 +125,7 @@ export default function ServiceDetailsPage() {
                   </div>
                 </div>
 
-                <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed font-medium">
+                <div className="prose prose-slate max-w-none text-gray-600 font-medium leading-relaxed">
                   {service.description}
                 </div>
               </div>
@@ -167,8 +167,8 @@ export default function ServiceDetailsPage() {
               </div>
             </div>
 
-            {/* Right Side: Sticky Booking Panel */}
-            <div className="lg:col-span-4">
+            {/* Right Side: Sticky Booking Panel (Desktop) */}
+            <div className="lg:col-span-4 hidden lg:block">
               <Card className="rounded-3xl shadow-2xl border-none overflow-hidden sticky top-24">
                 <CardHeader className="bg-[#081621] text-white p-6 md:p-8">
                   <div className="flex justify-between items-center">
@@ -252,6 +252,22 @@ export default function ServiceDetailsPage() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Sticky Booking Bar */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 px-4 py-4 shadow-[0_-8px_20px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-full duration-300">
+          <div className="container mx-auto flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Total Price</span>
+              <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+            </div>
+            <Button 
+              onClick={handleBookNow} 
+              className="h-14 px-8 rounded-2xl font-black text-base uppercase shadow-lg shadow-primary/30 gap-2 flex-1 max-w-[200px]"
+            >
+              {t('book_now')} <Zap size={18} fill="currentColor" />
+            </Button>
           </div>
         </div>
       </div>
