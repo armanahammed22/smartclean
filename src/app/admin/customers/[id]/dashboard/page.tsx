@@ -17,7 +17,7 @@ export default function AdminCustomerDashboardView() {
   const router = useRouter();
   const db = useFirestore();
 
-  const profileRef = useMemoFirebase(() => id ? doc(db, 'customer_profiles', id as string) : null, [db, id]);
+  const profileRef = useMemoFirebase(() => id ? doc(db, 'users', id as string) : null, [db, id]);
   const { data: profile, isLoading: profileLoading } = useDoc(profileRef);
 
   const bookingsQuery = useMemoFirebase(() => id ? query(collection(db, 'bookings'), where('customerId', '==', id), orderBy('createdAt', 'desc'), limit(5)) : null, [db, id]);

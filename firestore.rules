@@ -45,7 +45,7 @@ service cloud.firestore {
 
     // USER PROFILES
     match /users/{uid} {
-      allow create: if isOwner(uid) || (isSignedIn() && !exists(/databases/$(database)/documents/users/$(uid)));
+      allow create: if isOwner(uid) || isAdmin() || (isSignedIn() && !exists(/databases/$(database)/documents/users/$(uid)));
       allow read, update: if isAdmin() || isStaff() || isOwner(uid);
       allow delete: if isAdmin();
     }
@@ -62,7 +62,7 @@ service cloud.firestore {
     
     // CRM DATA - Prioritize static role checks for performance
     match /orders/{id} {
-      allow create: if true; // Supports guest checkout (account created during process)
+      allow create: if true; // Supports guest checkout
       allow read, list: if isOrderManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isOrderManager();
     }

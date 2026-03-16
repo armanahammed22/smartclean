@@ -40,7 +40,10 @@
         "phone": { "type": "string" },
         "address": { "type": "string" },
         "role": { "type": "string", "enum": ["customer", "staff", "admin"], "default": "customer" },
-        "status": { "type": "string", "enum": ["active", "banned", "disabled"], "default": "active" }
+        "status": { "type": "string", "enum": ["active", "restricted", "disabled", "banned"], "default": "active" },
+        "referralCode": { "type": "string" },
+        "totalEarnings": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
     "Booking": {

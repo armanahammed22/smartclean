@@ -16,7 +16,7 @@ export default function CustomerDashboard() {
   const { user } = useUser();
   const db = useFirestore();
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   const bookingsQuery = useMemoFirebase(() => user ? query(collection(db, 'bookings'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)) : null, [db, user]);

@@ -20,7 +20,7 @@ export default function AffiliatePage() {
     setIsMounted(true);
   }, []);
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'customer_profiles', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   const referralLink = isMounted ? `${window.location.origin}/signup?ref=${profile?.referralCode}` : '';
