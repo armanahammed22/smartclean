@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc, orderBy, limit } from 'firebase/firestore';
@@ -36,7 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 const formSchema = z.object({
   name: z.string().min(2, "Name required"),
   phone: z.string().min(10, "Valid phone required"),
-  email: z.string().email("Valid email required"),
+  email: z.string().email("Valid email required").optional().or(z.literal('')),
   address: z.string().min(10, "Address required"),
   date: z.date({ required_error: "Please select a date" }),
   time: z.string().min(1, "Please select a time slot"),
@@ -102,8 +102,8 @@ export function CheckoutModal() {
   const finalTotal = subtotal * 1.08 - (couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0);
 
   const handleSendOtp = () => {
-    const phone = form.getValues('phone');
-    if (!phone || phone.length < 10) {
+    const phoneVal = form.getValues('phone');
+    if (!phoneVal || phoneVal.length < 10) {
       toast({ variant: "destructive", title: "Invalid Phone" });
       return;
     }
@@ -148,7 +148,7 @@ export function CheckoutModal() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (isOtpSystemEnabled && !user && !isVerified) {
-      toast({ variant: "destructive", title: "Verification Required" });
+      toast({ variant: "destructive", title: "Phone Verification Required" });
       return;
     }
 
@@ -157,28 +157,42 @@ export function CheckoutModal() {
     let tempPass = '';
 
     try {
+      // 1. Check if user already exists with this phone if NOT logged in
       if (!user && db) {
-        tempPass = Math.random().toString(36).slice(-8);
-        try {
-          const userCred = await createUserWithEmailAndPassword(auth, values.email, tempPass);
-          currentUserId = userCred.user.uid;
-          await updateProfile(userCred.user, { displayName: values.name });
-          await setDoc(doc(db, 'users', currentUserId), {
-            uid: currentUserId,
-            name: values.name,
-            email: values.email.toLowerCase(),
-            phone: values.phone,
-            role: 'customer',
-            status: 'active',
-            createdAt: new Date().toISOString()
-          });
-        } catch (authError: any) {
-          if (authError.code === 'auth/email-already-in-use') {
-            toast({ variant: "destructive", title: "Account Exists", description: "Please sign in first." });
-            setIsSubmitting(false);
-            return;
+        const phoneCheckQ = query(collection(db, 'users'), where('phone', '==', values.phone));
+        const phoneSnap = await getDocs(phoneCheckQ);
+        
+        if (!phoneSnap.empty) {
+          // User exists, link to this UID but require login for security if possible
+          // In this prototype, we'll link the order to the existing user.
+          currentUserId = phoneSnap.docs[0].id;
+        } else {
+          // Create new account
+          tempPass = Math.random().toString(36).slice(-8);
+          // Use phone-based email fallback for Firebase Auth
+          const emailToCreate = values.email || `${values.phone}@smartclean.local`;
+          
+          try {
+            const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
+            currentUserId = userCred.user.uid;
+            await updateProfile(userCred.user, { displayName: values.name });
+            await setDoc(doc(db, 'users', currentUserId), {
+              uid: currentUserId,
+              name: values.name,
+              email: values.email?.toLowerCase() || null,
+              phone: values.phone,
+              role: 'customer',
+              status: 'active',
+              createdAt: new Date().toISOString()
+            });
+          } catch (authError: any) {
+            if (authError.code === 'auth/email-already-in-use') {
+              toast({ variant: "destructive", title: "Account Exists", description: "This email is already taken. Please login." });
+              setIsSubmitting(false);
+              return;
+            }
+            throw authError;
           }
-          throw authError;
         }
       }
 
@@ -189,32 +203,21 @@ export function CheckoutModal() {
       if (hasServices && db) {
         const serviceId = items.find(i => i.itemType === 'service')?.id;
         if (serviceId) {
-          // 1. Find enrolled technicians with the skill, sorted by rating
           const techQuery = query(
             collection(db, 'employee_profiles'),
             where('skills', 'array-contains', serviceId),
             where('status', '==', 'Active'),
             orderBy('rating', 'desc'),
-            limit(15)
+            limit(5)
           );
           
           const techSnap = await getDocs(techQuery);
           for (const techDoc of techSnap.docs) {
-            // 2. Check real-time availability status
-            const availQuery = query(
-              collection(db, 'staff_availability'),
-              where('uid', '==', techDoc.id),
-              where('status', '==', 'Available')
-            );
+            const availQuery = query(collection(db, 'staff_availability'), where('uid', '==', techDoc.id), where('status', '==', 'Available'));
             const availSnap = await getDocs(availQuery);
-            
             if (!availSnap.empty) {
               assignedTech = { id: techDoc.id, name: techDoc.data().name };
-              // 3. Mark technician as Busy
-              await updateDoc(doc(db, 'staff_availability', techDoc.id), {
-                status: 'Busy',
-                updatedAt: serverTimestamp()
-              });
+              await updateDoc(doc(db, 'staff_availability', techDoc.id), { status: 'Busy', updatedAt: serverTimestamp() });
               break;
             }
           }
@@ -226,7 +229,7 @@ export function CheckoutModal() {
           customerId: currentUserId,
           customerName: values.name,
           customerPhone: values.phone,
-          customerEmail: values.email,
+          customerEmail: values.email || null,
           items,
           totalPrice: finalTotal,
           paymentMethod: selectedMethod?.name || 'Unknown',
@@ -244,7 +247,7 @@ export function CheckoutModal() {
 
         clearCart();
         setCheckoutOpen(false);
-        router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email}` : ''}`);
+        router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
       }
     } catch (e: any) {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
@@ -277,77 +280,71 @@ export function CheckoutModal() {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                {/* Information Group */}
                 <div className="space-y-6">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                     <User size={14} className="text-blue-600" /> {t('delivery_info')}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="name" render={({ field }) => (
-                      <FormItem>
-                        <FormControl><Input placeholder={t('full_name')} {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="email" render={({ field }) => (
-                      <FormItem>
-                        <FormControl><Input placeholder="Email Address" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
+                  
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('full_name')}</FormLabel>
+                      <FormControl><Input placeholder="Your full name" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
                   <div className="space-y-4">
                     <FormField control={form.control} name="phone" render={({ field }) => (
                       <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
                         <div className="flex gap-2">
-                          <FormControl><Input placeholder={t('phone_number')} {...field} disabled={isVerified} className="h-14 bg-gray-50 border-gray-100 flex-1 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                          <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-14 bg-gray-50 border-gray-100 flex-1 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
                           {isOtpSystemEnabled && !user && !isVerified && (
-                            <Button 
-                              type="button" 
-                              variant="secondary" 
-                              onClick={handleSendOtp} 
-                              disabled={isVerifying}
-                              className="h-14 px-6 font-black uppercase text-[10px] rounded-2xl shadow-sm"
-                            >
+                            <Button type="button" variant="secondary" onClick={handleSendOtp} disabled={isVerifying} className="h-14 px-6 font-black uppercase text-[10px] rounded-2xl">
                               {isVerifying ? <Loader2 className="animate-spin" /> : t('send_otp')}
                             </Button>
                           )}
-                          {isVerified && <div className="h-14 px-4 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2 animate-in zoom-in-95"><CheckCircle2 size={18} /> <span className="text-[10px] font-black">VERIFIED</span></div>}
+                          {isVerified && <div className="h-14 px-4 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2"><CheckCircle2 size={18} /> <span className="text-[10px] font-black">VERIFIED</span></div>}
                         </div>
                         <FormMessage />
                       </FormItem>
                     )} />
 
                     {isOtpSent && !isVerified && (
-                      <div className="flex gap-2 animate-in slide-in-from-top-2 duration-300">
+                      <div className="flex gap-2 animate-in slide-in-from-top-2">
                         <FormField control={form.control} name="otp" render={({ field }) => (
                           <FormItem className="flex-1">
-                            <FormControl><Input placeholder={t('enter_otp')} {...field} className="h-14 bg-white border-green-600/30 rounded-2xl text-center text-xl font-black tracking-[0.5em]" /></FormControl>
+                            <FormControl><Input placeholder="OTP Code" {...field} className="h-14 bg-white border-green-600/30 rounded-2xl text-center text-xl font-black tracking-widest" /></FormControl>
                           </FormItem>
                         )} />
-                        <Button type="button" onClick={handleVerifyOtp} className="h-14 px-8 font-black uppercase text-[10px] rounded-2xl bg-green-600 text-white hover:bg-green-700">VERIFY</Button>
+                        <Button type="button" onClick={handleVerifyOtp} className="h-14 px-8 font-black uppercase text-[10px] rounded-2xl bg-green-600 text-white">VERIFY</Button>
                       </div>
                     )}
                   </div>
 
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('email_optional')}</FormLabel>
+                      <FormControl><Input placeholder="example@mail.com (optional)" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
                   <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
                       <div className="relative">
                         <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                        <FormControl><Textarea placeholder={t('delivery_address')} {...field} className="bg-gray-50 border-gray-100 min-h-[100px] rounded-2xl focus:bg-white transition-all pl-12 pt-4 text-base" /></FormControl>
+                        <FormControl><Textarea placeholder="House, Street, Area" {...field} className="bg-gray-50 border-gray-100 min-h-[100px] rounded-2xl focus:bg-white transition-all pl-12 pt-4 text-base" /></FormControl>
                       </div>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
 
-                {/* Service Specific Scheduling */}
                 {hasServices && (
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                      <Clock size={14} className="text-orange-500" /> Booking Schedule
-                    </h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-orange-500" /> Booking Schedule</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-orange-50/50 rounded-3xl border border-orange-100">
                       <FormField control={form.control} name="date" render={({ field }) => (
                         <FormItem className="flex flex-col">
@@ -359,13 +356,7 @@ export function CheckoutModal() {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
-                              <Calendar 
-                                mode="single" 
-                                selected={field.value} 
-                                onSelect={field.onChange} 
-                                disabled={(d) => d < new Date()} 
-                                initialFocus
-                              />
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
                             </PopoverContent>
                           </Popover>
                           <FormMessage />
@@ -373,36 +364,27 @@ export function CheckoutModal() {
                       )} />
                       <FormField control={form.control} name="time" render={({ field }) => (
                         <FormItem>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 bg-white font-bold rounded-2xl border-orange-200 text-orange-950">
-                              <SelectValue placeholder={t('select_time')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-xl">
-                            <SelectItem value="morning">{t('morning')}</SelectItem>
-                            <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
-                            <SelectItem value="evening">{t('evening')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage /></FormItem>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="h-14 bg-white font-bold rounded-2xl border-orange-200 text-orange-950"><SelectValue placeholder={t('select_time')} /></SelectTrigger></FormControl>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="morning">{t('morning')}</SelectItem>
+                              <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
+                              <SelectItem value="evening">{t('evening')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
                       )} />
                     </div>
                   </div>
                 )}
 
-                {/* Payment Selection */}
                 <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                    <Wallet size={14} className="text-green-600" /> {t('payment_method')}
-                  </h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-green-600" /> {t('payment_method')}</h4>
                   <FormField control={form.control} name="paymentMethod" render={({ field }) => (
                     <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {availableMethods?.map(m => (
-                        <div key={m.id} className={cn(
-                          "flex items-center space-x-2 rounded-2xl border-2 p-4 hover:bg-gray-50 cursor-pointer transition-all",
-                          field.value === m.id ? "border-green-600 bg-green-50 shadow-sm" : "border-gray-50"
-                        )}>
+                        <div key={m.id} className={cn("flex items-center space-x-2 rounded-2xl border-2 p-4 hover:bg-gray-50 cursor-pointer transition-all", field.value === m.id ? "border-green-600 bg-green-50 shadow-sm" : "border-gray-50")}>
                           <RadioGroupItem value={m.id} id={m.id} className="sr-only" />
                           <label htmlFor={m.id} className="text-xs font-black uppercase flex items-center gap-3 w-full cursor-pointer text-[#081621]">
                              <div className={cn("p-2 rounded-xl", field.value === m.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400")}>
@@ -418,10 +400,7 @@ export function CheckoutModal() {
 
                 <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl mt-4 uppercase tracking-tight bg-green-600 hover:bg-green-700 text-white gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
                   {isSubmitting ? <Loader2 className="animate-spin h-8 w-8" /> : (
-                    <>
-                      {hasServices ? 'Book My Service' : t('place_order')}
-                      <Zap size={24} fill="currentColor" />
-                    </>
+                    <>{hasServices ? 'Book My Service' : t('place_order')} <Zap size={24} fill="currentColor" /></>
                   )}
                 </Button>
               </form>
@@ -437,7 +416,7 @@ export function CheckoutModal() {
             
             <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar mb-8">
               {items.map(item => (
-                <div key={item.id} className="flex justify-between items-start gap-4 animate-in slide-in-from-right-4 duration-300">
+                <div key={item.id} className="flex justify-between items-start gap-4">
                   <div className="min-w-0 flex flex-col gap-1">
                     <p className="text-sm font-black uppercase text-[#081621] truncate">{item.name}</p>
                     <div className="flex items-center gap-2">
@@ -471,27 +450,14 @@ export function CheckoutModal() {
                     <span>-৳{couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value}</span>
                   </div>
                 )}
-                
-                <div className="pt-6 border-t border-gray-200">
-                  <div className="flex justify-between items-end">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-green-600 uppercase tracking-[0.3em] mb-1 leading-none">{t('total')}</span>
-                      <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
-                    </div>
-                    <Badge className="bg-[#081621] text-white border-none font-black text-[9px] px-3 py-1 rounded-full shadow-lg">BDT</Badge>
+                <div className="pt-6 border-t border-gray-200 flex justify-between items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-green-600 uppercase tracking-[0.3em] mb-1 leading-none">{t('total')}</span>
+                    <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
                   </div>
+                  <Badge className="bg-[#081621] text-white border-none font-black text-[9px] px-3 py-1 rounded-full shadow-lg">BDT</Badge>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-10 space-y-4">
-               <div className="p-5 bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 flex items-center gap-4 group">
-                  <div className="p-3 bg-blue-50 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform"><ShieldCheck size={20} /></div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-[#081621] leading-none mb-1">{t('secure_checkout')}</p>
-                    <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">SSL Encrypted</p>
-                  </div>
-               </div>
             </div>
           </div>
         </div>

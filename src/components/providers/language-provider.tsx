@@ -150,7 +150,7 @@ const translations: Record<Language, Record<string, string>> = {
     checkout_title: "চেকআউট ও বুকিং",
     delivery_info: "বুকিং ও ডেলিভারি তথ্য",
     full_name: "পুরো নাম",
-    phone_number: "ফোন নম্বর",
+    phone_number: "ফোন নম্বর (আবশ্যক)",
     email_optional: "ইমেল ঠিকানা (ঐচ্ছিক)",
     delivery_address: "সেবার ঠিকানা / ডেলিভারি ঠিকানা",
     booking_date: "পছন্দসই তারিখ",
@@ -176,7 +176,11 @@ const translations: Record<Language, Record<string, string>> = {
     otp_sent: "আপনার ফোনে ওটিপি পাঠানো হয়েছে",
     otp_verified: "ফোন নম্বর সফলভাবে যাচাই করা হয়েছে",
     invalid_otp: "ভুল ওটিপি, আবার চেষ্টা করুন",
-    guest_note: "অর্ডার সম্পন্ন হলে আপনার জন্য একটি অ্যাকাউন্ট তৈরি করা হবে।",
+    guest_note: "অর্ডার সম্পন্ন হলে আপনার ফোন নম্বর ব্যবহার করে একটি অ্যাকাউন্ট তৈরি করা হবে।",
+    phone_login: "ফোন নম্বর দিয়ে লগইন",
+    email_login: "ইমেল দিয়ে লগইন",
+    login_required_desc: "এই অ্যাকশনটি সম্পন্ন করতে আপনার ফোন নম্বর দিয়ে লগইন বা রেজিস্ট্রেশন করা আবশ্যক।",
+    phone_exists_error: "এই ফোন নম্বরটি ইতিমধ্যে নিবন্ধিত। অনুগ্রহ করে লগইন করুন।",
 
     // Order Success
     order_confirmed: "অর্ডার নিশ্চিত করা হয়েছে!",
@@ -355,7 +359,7 @@ const translations: Record<Language, Record<string, string>> = {
     checkout_title: "Checkout & Booking",
     delivery_info: "Booking & Delivery Information",
     full_name: "Full Name",
-    phone_number: "Phone Number",
+    phone_number: "Phone Number (Required)",
     email_optional: "Email Address (Optional)",
     delivery_address: "Service Address / Delivery Address",
     booking_date: "Preferred Date",
@@ -381,7 +385,11 @@ const translations: Record<Language, Record<string, string>> = {
     otp_sent: "OTP has been sent to your phone",
     otp_verified: "Phone number verified successfully",
     invalid_otp: "Invalid OTP, please try again",
-    guest_note: "An account will be created for you upon checkout.",
+    guest_note: "An account will be created using your phone number upon checkout.",
+    phone_login: "Login with Phone",
+    email_login: "Login with Email",
+    login_required_desc: "You must login or register with your phone number to complete this action.",
+    phone_exists_error: "This phone number is already registered. Please login.",
 
     // Order Success
     order_confirmed: "Order Confirmed!",

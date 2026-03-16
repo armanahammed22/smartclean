@@ -22,7 +22,6 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   
   // OTP Logic
-  const [otpStep, setOtpStep] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [isVerified, setIsVerified] = useState(false);
@@ -30,7 +29,6 @@ export default function SignupPage() {
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -38,23 +36,27 @@ export default function SignupPage() {
   const { data: globalSettings } = useDoc(settingsRef);
   const isOtpEnabled = !!globalSettings?.otpEnabled;
 
-  const checkBlockStatus = async (email: string, phone: string) => {
+  const checkExistingUser = async (phone: string) => {
     if (!db) return false;
-    const emailQ = query(collection(db, 'blocked_users'), where('email', '==', email.toLowerCase()));
-    const emailSnap = await getDocs(emailQ);
-    if (!emailSnap.empty) return true;
-    const phoneQ = query(collection(db, 'blocked_users'), where('phone', '==', phone));
-    const phoneSnap = await getDocs(phoneQ);
-    if (!phoneSnap.empty) return true;
-    return false;
+    const q = query(collection(db, 'users'), where('phone', '==', phone));
+    const snap = await getDocs(q);
+    return !snap.empty;
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!formData.phone || formData.phone.length < 10) {
       toast({ variant: "destructive", title: "Invalid Phone" });
       return;
     }
+    
     setIsLoading(true);
+    const exists = await checkExistingUser(formData.phone);
+    if (exists) {
+      toast({ variant: "destructive", title: t('phone_exists_error') });
+      setIsLoading(false);
+      return;
+    }
+
     setTimeout(() => {
       const mock = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(mock);
@@ -76,14 +78,22 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.phone) {
+      toast({ variant: "destructive", title: "Phone number is required." });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({ variant: "destructive", title: "Passwords Mismatch" });
       return;
     }
+    
     if (!agreed) {
       toast({ variant: "destructive", title: "Terms & Conditions" });
       return;
     }
+
     if (isOtpEnabled && !isVerified) {
       toast({ variant: "destructive", title: "Phone Verification Required" });
       return;
@@ -91,21 +101,19 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const isBlocked = await checkBlockStatus(formData.email, formData.phone);
-      if (isBlocked) {
-        toast({ variant: "destructive", title: "Registration Denied", description: "This account is blocked." });
-        setIsLoading(false);
-        return;
-      }
+      // Use phone number as part of the email if email is not provided to satisfy Firebase Auth requirement
+      // OR if email is provided, use it normally. 
+      // For this implementation, we will encourage email but allow it to be optional.
+      const emailToUse = formData.email || `${formData.phone}@smartclean.local`;
 
-      const { user } = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const { user } = await createUserWithEmailAndPassword(auth, emailToUse, formData.password);
       await updateProfile(user, { displayName: formData.name });
       
       if (db) {
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           name: formData.name,
-          email: formData.email.toLowerCase(),
+          email: formData.email.toLowerCase() || null,
           phone: formData.phone,
           totalEarnings: 0,
           createdAt: new Date().toISOString(),
@@ -142,14 +150,11 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
-                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</Label>
-                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" placeholder="017XXXXXXXX" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} required disabled={isVerified} />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</Label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="01XXXXXXXXX" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} required disabled={isVerified} />
               </div>
             </div>
 
@@ -169,6 +174,14 @@ export default function SignupPage() {
             )}
 
             {isVerified && <div className="flex items-center gap-2 text-green-600 font-bold bg-green-50 p-3 rounded-xl border border-green-100"><CheckCircle2 size={18} /> Verified Phone</div>}
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('email_optional')}</Label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" type="email" placeholder="john@example.com (optional)" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
