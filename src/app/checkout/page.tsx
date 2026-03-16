@@ -32,11 +32,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, CheckCircle2, CalendarIcon, Wallet, CreditCard } from 'lucide-react';
+import { Loader2, CheckCircle2, CalendarIcon, Wallet, CreditCard, User, MapPin, Clock, Info, ShieldCheck, ShoppingCart, Zap } from 'lucide-react';
 import { useFirestore, useUser } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { PublicLayout } from '@/components/layout/public-layout';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -67,7 +68,7 @@ export default function CheckoutPage() {
       phone: "",
       email: user?.email || "",
       address: "",
-      time: "",
+      time: "morning",
       paymentMethod: defaultPayment,
       notes: "",
     },
@@ -117,160 +118,204 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-24 text-center">
-        <h2 className="text-2xl font-bold mb-4">{t('empty_cart')}</h2>
-        <Button onClick={() => router.push('/')} className="rounded-full px-8">{t('browse_catalog')}</Button>
-      </div>
+      <PublicLayout>
+        <div className="container mx-auto px-4 py-24 text-center">
+          <h2 className="text-2xl font-bold mb-4">{t('empty_cart')}</h2>
+          <Button onClick={() => router.push('/')} className="rounded-full px-8">{t('browse_catalog')}</Button>
+        </div>
+      </PublicLayout>
     );
   }
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-12">
-      <div className="container mx-auto px-4">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-bold mb-10 font-headline text-[#081621]">{t('checkout_title')}</h1>
+    <PublicLayout>
+      <div className="bg-[#F8FAFC] min-h-screen py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <header className="mb-12 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full mb-4">
+                <ShieldCheck size={16} />
+                <span className="text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight">
+                {t('checkout_title')}
+              </h1>
+            </header>
 
-          <div className="grid lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-8">
-              <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
-                <CardHeader className="bg-white border-b p-6">
-                  <CardTitle className="text-xl font-bold">{t('delivery_info')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-8">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">{t('full_name')}</FormLabel>
-                              <FormControl>
-                                <Input placeholder="John Doe" {...field} className="h-12 bg-[#F9FAFB]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">{t('phone_number')}</FormLabel>
-                              <FormControl>
-                                <Input placeholder="+880 1XXX-XXXXXX" {...field} className="h-12 bg-[#F9FAFB]" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-bold">{t('email_optional')}</FormLabel>
-                            <FormControl>
-                              <Input placeholder="john@example.com" {...field} className="h-12 bg-[#F9FAFB]" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-bold">{t('delivery_address')}</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="House, Street, Area, City" 
-                                className="min-h-[100px] bg-[#F9FAFB]"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {hasServices && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-primary/5 rounded-xl border border-primary/20">
+            <div className="grid lg:grid-cols-12 gap-10 items-start">
+              <div className="lg:col-span-8 space-y-8">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    {/* Section 1: Customer Info */}
+                    <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+                      <CardHeader className="bg-blue-600 text-white p-8">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+                            <User size={24} />
+                          </div>
+                          <CardTitle className="text-xl font-black uppercase tracking-tight">{t('delivery_info')}</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-8 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormField
                             control={form.control}
-                            name="date"
+                            name="name"
                             render={({ field }) => (
-                              <FormItem className="flex flex-col">
-                                <FormLabel className="font-bold">{t('booking_date')}</FormLabel>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                          "h-12 w-full pl-3 text-left font-normal bg-white",
-                                          !field.value && "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value ? (
-                                          format(field.value, "PPP")
-                                        ) : (
-                                          <span>{t('pick_date')}</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                      mode="single"
-                                      selected={field.value}
-                                      onSelect={field.onChange}
-                                      disabled={(date) =>
-                                        date < new Date() || date < new Date("1900-01-01")
-                                      }
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                              <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('full_name')}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="John Doe" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-
                           <FormField
                             control={form.control}
-                            name="time"
+                            name="phone"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="font-bold">{t('booking_time')}</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-12 bg-white">
-                                      <SelectValue placeholder={t('select_time')} />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="morning">{t('morning')}</SelectItem>
-                                    <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
-                                    <SelectItem value="evening">{t('evening')}</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="+880 1XXX-XXXXXX" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         </div>
-                      )}
 
-                      <div className="space-y-4">
-                        <FormLabel className="font-bold text-lg">{t('payment_method')}</FormLabel>
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('email_optional')}</FormLabel>
+                              <FormControl>
+                                <Input placeholder="john@example.com" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
+                              <div className="relative">
+                                <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="House, Street, Area, City" 
+                                    className="min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base pt-4"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Section 2: Booking Details (Service Only) */}
+                    {hasServices && (
+                      <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+                        <CardHeader className="bg-orange-500 text-white p-8">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+                              <Clock size={24} />
+                            </div>
+                            <CardTitle className="text-xl font-black uppercase tracking-tight">Schedule Your Service</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-8">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center p-6 bg-orange-50/50 rounded-3xl border border-orange-100">
+                            <FormField
+                              control={form.control}
+                              name="date"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-orange-700 ml-1">{t('booking_date')}</FormLabel>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant={"outline"}
+                                          className={cn(
+                                            "h-14 w-full pl-4 text-left font-bold bg-white rounded-2xl border-orange-200 text-orange-950",
+                                            !field.value && "text-muted-foreground"
+                                          )}
+                                        >
+                                          {field.value ? (
+                                            format(field.value, "PPP")
+                                          ) : (
+                                            <span>{t('pick_date')}</span>
+                                          )}
+                                          <CalendarIcon className="ml-auto h-5 w-5 opacity-50" />
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 border-none rounded-2xl shadow-2xl" align="start">
+                                      <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) =>
+                                          date < new Date()
+                                        }
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="time"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-orange-700 ml-1">{t('booking_time')}</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-14 bg-white rounded-2xl border-orange-200 font-bold text-orange-950">
+                                        <SelectValue placeholder={t('select_time')} />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="rounded-xl">
+                                      <SelectItem value="morning">{t('morning')}</SelectItem>
+                                      <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
+                                      <SelectItem value="evening">{t('evening')}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Section 3: Payment Method */}
+                    <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+                      <CardHeader className="bg-gray-900 text-white p-8">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+                            <Wallet size={24} />
+                          </div>
+                          <CardTitle className="text-xl font-black uppercase tracking-tight">{t('payment_method')}</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-8">
                         <FormField
                           control={form.control}
                           name="paymentMethod"
@@ -280,33 +325,40 @@ export default function CheckoutPage() {
                                 <RadioGroup
                                   onValueChange={field.onChange}
                                   defaultValue={field.value}
-                                  className="grid grid-cols-1 gap-4"
+                                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
                                 >
-                                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border p-4 cursor-pointer hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                  <FormItem className={cn(
+                                    "flex items-center space-x-3 space-y-0 rounded-2xl border-2 p-5 cursor-pointer transition-all",
+                                    field.value === 'cod' ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
+                                  )}>
                                     <FormControl>
-                                      <RadioGroupItem value="cod" disabled={hasServices} />
+                                      <RadioGroupItem value="cod" disabled={hasServices} className="sr-only" />
                                     </FormControl>
-                                    <FormLabel className="font-medium flex items-center gap-3 cursor-pointer w-full">
-                                      <div className="p-2 bg-muted rounded-full text-muted-foreground group-checked:text-primary">
-                                        <Wallet size={18} />
+                                    <FormLabel className="font-bold flex items-center gap-4 cursor-pointer w-full text-base">
+                                      <div className={cn("p-3 rounded-xl", field.value === 'cod' ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400")}>
+                                        <Wallet size={20} />
                                       </div>
                                       <div className="flex flex-col">
-                                        <span>{t('payment_cod')}</span>
-                                        {hasServices && <span className="text-[10px] text-destructive">Products only</span>}
+                                        <span className="uppercase tracking-tight">{t('payment_cod')}</span>
+                                        {hasServices && <span className="text-[10px] text-red-500 font-black">UNAVAILABLE FOR SERVICES</span>}
                                       </div>
                                     </FormLabel>
                                   </FormItem>
-                                  <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border p-4 cursor-pointer hover:bg-muted/50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+
+                                  <FormItem className={cn(
+                                    "flex items-center space-x-3 space-y-0 rounded-2xl border-2 p-5 cursor-pointer transition-all",
+                                    field.value === 'cash_in_hand' ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
+                                  )}>
                                     <FormControl>
-                                      <RadioGroupItem value="cash_in_hand" />
+                                      <RadioGroupItem value="cash_in_hand" className="sr-only" />
                                     </FormControl>
-                                    <FormLabel className="font-medium flex items-center gap-3 cursor-pointer w-full">
-                                      <div className="p-2 bg-muted rounded-full text-muted-foreground">
-                                        <CreditCard size={18} />
+                                    <FormLabel className="font-bold flex items-center gap-4 cursor-pointer w-full text-base">
+                                      <div className={cn("p-3 rounded-xl", field.value === 'cash_in_hand' ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400")}>
+                                        <CreditCard size={20} />
                                       </div>
                                       <div className="flex flex-col">
-                                        <span>{t('payment_cash_hand')}</span>
-                                        <span className="text-[10px] text-muted-foreground italic">Preferred for bookings</span>
+                                        <span className="uppercase tracking-tight">{t('payment_cash_hand')}</span>
+                                        <span className="text-[10px] text-green-600 font-black">MOST POPULAR</span>
                                       </div>
                                     </FormLabel>
                                   </FormItem>
@@ -316,95 +368,97 @@ export default function CheckoutPage() {
                             </FormItem>
                           )}
                         />
-                      </div>
+                      </CardContent>
+                    </Card>
 
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-bold">{t('order_notes')}</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="..." 
-                                className="bg-[#F9FAFB]"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button type="submit" className="w-full h-14 font-bold text-lg rounded-xl shadow-lg" size="lg" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            {t('processing')}
-                          </>
-                        ) : (
-                          t('place_order')
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="lg:col-span-4">
-              <Card className="rounded-2xl border-none shadow-sm sticky top-24">
-                <CardHeader className="p-6 border-b">
-                  <CardTitle className="text-lg font-bold">{t('order_summary')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-start gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-[#081621]">
-                            {item.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            x{item.quantity} {item.itemType === 'service' ? `(${t('price_from')})` : ''}
-                          </span>
-                        </div>
-                        <span className="font-bold text-sm">৳{(item.price * item.quantity).toLocaleString()}</span>
-                      </div>
-                    ))}
-                    <div className="border-t pt-4 space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('subtotal')}</span>
-                        <span className="font-medium">৳{subtotal.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('tax')}</span>
-                        <span className="font-medium">৳{(subtotal * 0.08).toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between font-black text-xl pt-2 text-primary border-t-2 border-primary/10">
-                        <span>{t('total')}</span>
-                        <span>৳{(subtotal * 1.08).toLocaleString()}</span>
-                      </div>
-                      {hasServices && (
-                        <p className="text-[10px] text-center italic text-muted-foreground mt-2">
-                          {t('service_billing_note')}
-                        </p>
+                    <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight transition-transform active:scale-95 gap-3" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                          {t('processing')}
+                        </>
+                      ) : (
+                        <>
+                          {hasServices ? 'Complete Booking' : t('place_order')}
+                          <Zap size={24} fill="currentColor" />
+                        </>
                       )}
+                    </Button>
+                  </form>
+                </Form>
+              </div>
+
+              {/* Order Summary Sidebar */}
+              <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+                <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
+                  <CardHeader className="p-8 border-b border-gray-50">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-black uppercase tracking-widest text-[#081621]">{t('order_summary')}</CardTitle>
+                      <ShoppingCart size={20} className="text-green-600" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="space-y-6">
+                      {items.map((item) => (
+                        <div key={item.id} className="flex justify-between items-start gap-4">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs font-black text-[#081621] uppercase leading-tight">
+                              {item.name}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="bg-gray-100 text-gray-500 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                ×{item.quantity}
+                              </span>
+                              {item.itemType === 'service' && <span className="text-[9px] font-black text-blue-600 uppercase">Service</span>}
+                            </div>
+                          </div>
+                          <span className="font-black text-sm text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</span>
+                        </div>
+                      ))}
+                      
+                      <div className="border-t border-dashed pt-6 space-y-4">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          <span>{t('subtotal')}</span>
+                          <span className="text-gray-900">৳{subtotal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                          <span>{t('tax')} (8%)</span>
+                          <span className="text-gray-900">৳{(subtotal * 0.08).toLocaleString()}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
+                            <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08).toLocaleString()}</span>
+                          </div>
+                          <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">
+                            BDT
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="p-6 bg-blue-600 rounded-[2rem] text-white shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+                    <ShieldCheck size={100} />
+                  </div>
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="p-3 bg-white/20 rounded-2xl">
+                      <CheckCircle2 size={24} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest mb-0.5">Secure Transaction</p>
+                      <p className="text-[10px] text-white/70 font-medium leading-tight">Your data is fully encrypted using enterprise-grade security protocols.</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <div className="mt-6 flex items-center gap-3 p-5 bg-white rounded-2xl text-[#081621] text-sm shadow-sm">
-                <div className="p-2 bg-primary/10 rounded-full text-primary">
-                  <CheckCircle2 size={20} />
                 </div>
-                <p className="font-semibold">{t('secure_checkout')}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </PublicLayout>
   );
 }
