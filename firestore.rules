@@ -43,14 +43,11 @@ service cloud.firestore {
     match /marketing_offers/{any=**} { allow read: if true; }
     match /coupons/{any=**} { allow read: if true; }
 
-    // REVIEWS (Public read, Authenticated write)
-    match /service_reviews {
-      allow list: if true;
-      match /{id} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      }
+    // REVIEWS (Public read/list, Authenticated write)
+    match /service_reviews/{id} {
+      allow read, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
     // CUSTOMER DATA
