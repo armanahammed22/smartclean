@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -35,9 +36,9 @@ export function Footer() {
           {/* Column 1: Brand */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative w-20 h-20 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden border border-white/5">
+              <div className="relative w-16 h-16 flex items-center justify-center">
                 {displayLogo ? (
-                  <Image src={displayLogo} alt="Logo" fill className="object-contain p-1.5" />
+                  <Image src={displayLogo} alt="Logo" fill className="object-contain" />
                 ) : (
                   <span className="text-primary font-bold text-2xl">S</span>
                 )}
