@@ -112,11 +112,11 @@ export default function SmartCleanHomePage() {
 
   return (
     <PublicLayout>
-      <div className="flex flex-col gap-6 pb-16 bg-[#F2F4F8]">
+      <div className="flex flex-col gap-2 pb-10 bg-[#F2F4F8]">
         
         {/* 0. Admin Dashboard Summary */}
         {isAdmin && (
-          <section className="container mx-auto px-4 pt-6">
+          <section className="container mx-auto px-4 py-4 md:py-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/5">
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 group-hover:rotate-0 transition-transform duration-700 pointer-events-none">
                 <LayoutDashboard size={160} />
@@ -158,7 +158,7 @@ export default function SmartCleanHomePage() {
         )}
 
         {/* 1. Interactive Hero Slider */}
-        <section className="container mx-auto px-4 pt-6">
+        <section className="container mx-auto px-4 py-4 md:py-6">
           <div className="max-w-[982px] mx-auto">
             {customization?.hero?.enabled && customization.hero.images?.length > 0 ? (
               <Carousel className="w-full" opts={{ loop: true }}>
@@ -210,7 +210,7 @@ export default function SmartCleanHomePage() {
 
         {/* 2. Marquee */}
         {isMounted && (!marqueeSettings || marqueeSettings.enabled) && (
-          <section className="container mx-auto px-4">
+          <section className="container mx-auto px-4 py-2">
             <div className={cn(
               "h-14 shadow-md border border-white/10 flex items-center overflow-hidden transition-all duration-500",
               marqueeSettings?.radius || "rounded-full",
@@ -241,8 +241,8 @@ export default function SmartCleanHomePage() {
         )}
 
         {/* 3. Primary Service Actions */}
-        <section className="container mx-auto px-4 mt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <section className="container mx-auto px-4 py-4 md:py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'Deep Cleaning', link: '/service/s_home', icon: Sparkles, grad: 'from-blue-600 to-indigo-700' },
               { label: 'AC Maintenance', link: '/service/s_ac', icon: Wrench, grad: 'from-emerald-500 to-teal-600' },
@@ -260,10 +260,10 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        <div className="container mx-auto px-4 space-y-16 mt-12">
+        <div className="container mx-auto px-4 space-y-10 mt-6">
           {/* Services Grid (Main) */}
-          <section className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6">
+          <section className="space-y-6 py-6 md:py-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-4">
               <div className="space-y-1">
                 <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Expert Solutions</Badge>
                 <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('expert_services')}</h2>
@@ -274,9 +274,9 @@ export default function SmartCleanHomePage() {
             </div>
             
             {servicesLoading ? (
-              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {services?.map((service) => (
                   <div key={service.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                     <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
@@ -311,8 +311,8 @@ export default function SmartCleanHomePage() {
           </section>
 
           {/* Products Grid (Secondary) */}
-          <section className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6">
+          <section className="space-y-6 py-6 md:py-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-4">
               <div className="space-y-1">
                 <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Supply Store</Badge>
                 <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('professional_tools')}</h2>
@@ -323,9 +323,9 @@ export default function SmartCleanHomePage() {
             </div>
             
             {productsLoading ? (
-              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {products?.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 ))}
