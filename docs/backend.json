@@ -6,42 +6,13 @@
       "description": "Represents a dynamic content page managed via the Pages Management System.",
       "type": "object",
       "properties": {
-        "slug": {
-          "type": "string",
-          "description": "URL-friendly identifier for the page."
-        },
-        "title": {
-          "type": "string",
-          "description": "Human-readable title of the page."
-        },
-        "content": {
-          "type": "string",
-          "description": "HTML or rich text content of the page."
-        },
-        "isPublished": {
-          "type": "boolean",
-          "description": "Whether the page is visible to the public."
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "isPublished": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["slug", "title", "content", "isPublished", "updatedAt"]
-    },
-    "HeroBanner": {
-      "title": "HeroBanner",
-      "description": "Represents a slide in the homepage hero carousel.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "subtitle": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "order": { "type": "number" },
-        "buttonText": { "type": "string" },
-        "buttonLink": { "type": "string" }
-      }
     },
     "Lead": {
       "title": "Lead",
@@ -94,37 +65,30 @@
         "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "EmployeeProfile": {
+      "title": "EmployeeProfile",
+      "description": "Information about a staff member.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } }
+      }
     }
   },
   "auth": {
     "providers": ["password", "phone"]
   },
   "firestore": {
-    "/hero_banners/{id}": {
-      "schema": "HeroBanner",
-      "description": "Dynamic slides for the homepage hero carousel."
-    },
-    "/pages_management/{slug}": {
-      "schema": "Page",
-      "description": "Stores content for dynamic static pages."
-    },
-    "/users/{uid}": {
-      "description": "Core user profile data."
-    },
-    "/roles_admins/{uid}": {
-      "description": "Authorized admin users."
-    },
-    "/leads/{id}": {
-      "schema": "Lead",
-      "description": "Sales leads."
-    },
-    "/orders/{id}": {
-      "schema": "Order",
-      "description": "Product sales orders."
-    },
-    "/bookings/{id}": {
-      "schema": "Booking",
-      "description": "Service bookings."
-    }
+    "/hero_banners/{id}": { "schema": "HeroBanner", "description": "Dynamic homepage banners." },
+    "/pages_management/{slug}": { "schema": "Page", "description": "CMS pages." },
+    "/users/{uid}": { "description": "User profiles." },
+    "/leads/{id}": { "schema": "Lead", "description": "Sales leads." },
+    "/orders/{id}": { "schema": "Order", "description": "Product orders." },
+    "/bookings/{id}": { "schema": "Booking", "description": "Service bookings." },
+    "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
+    "/service_areas/{id}": { "description": "Regions where services are offered." }
   }
 }

@@ -2,8 +2,8 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.4
- * Fixed prioritized administrative access for operational listing.
+ * Rules Version: 1.5
+ * Refined administrative access and collection permissions.
  */
 
 rules_version = '2';
@@ -23,7 +23,10 @@ service cloud.firestore {
     function isAdmin() {
       // Prioritize bootstrap admin check to avoid unnecessary exists() calls
       return isBootstrapAdmin() || (
-        isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
+        isSignedIn() && (
+          exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
+          exists(/databases/$(database)/documents/roles_managers/$(request.auth.uid))
+        )
       );
     }
 
@@ -98,6 +101,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /marketing_campaigns/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /pages_management/{slug} {
       allow get: if resource == null || resource.data.isPublished == true || isAdmin();
       allow list: if true;
@@ -113,6 +121,11 @@ service cloud.firestore {
     }
 
     match /roles_admins/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /roles_managers/{uid} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
@@ -133,7 +146,6 @@ service cloud.firestore {
     }
 
     match /bookings/{id} {
-      // Explicitly allow admins to list the entire collection
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
       allow create: if isSignedIn();
@@ -141,7 +153,6 @@ service cloud.firestore {
     }
 
     match /orders/{id} {
-      // Explicitly allow admins to list the entire collection
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow create: if isSignedIn();
@@ -171,19 +182,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // --- CRM & Leads ---
     match /leads/{id} {
       allow list: if isAdmin();
       allow get, write: if isAdmin();
     }
 
-    // --- Marketing Campaigns ---
-    match /marketing_campaigns/{id} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // --- Product Attributes Templates ---
     match /reusable_features/{id} {
       allow read: if true;
       allow write: if isAdmin();
@@ -197,7 +200,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // --- Staff Operations & Logistics ---
     match /staff_earnings/{id} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
       allow write: if isAdmin();
@@ -211,12 +213,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // --- Additional Roles ---
-    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-
-    // --- Security Blacklist ---
     match /blocked_users/{id} {
       allow read, write: if isAdmin();
     }
