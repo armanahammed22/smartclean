@@ -6,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X, Image as ImageIcon } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X, Image as ImageIcon, Sparkles, ListChecks, Shapes } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -37,8 +37,10 @@ export default function ProductsManagementPage() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   
-  // Specifications State
-  const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
+  // Dynamic Fields States
+  const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
+  const [features, setFeatures] = useState<string[]>([]);
+  const [variants, setVariants] = useState<{ name: string; options: string[] }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // Data Queries
@@ -58,7 +60,7 @@ export default function ProductsManagementPage() {
   useEffect(() => {
     if (isDialogOpen && !editingProduct && selectedCategory) {
       const suggestedKeys = CATEGORY_SPECS[selectedCategory] || CATEGORY_SPECS['General'];
-      setSpecs(suggestedKeys.map(key => ({ key, value: '' })));
+      setSpecifications(suggestedKeys.map(key => ({ key, value: '' })));
     }
   }, [selectedCategory, isDialogOpen, editingProduct]);
 
@@ -88,7 +90,9 @@ export default function ProductsManagementPage() {
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
       galleryImages: galleryImages,
       status: formData.get('status') as string || 'Active',
-      specs: specs.filter(s => s.key.trim() !== ''),
+      specifications: specifications.filter(s => s.key.trim() !== ''),
+      features: features.filter(f => f.trim() !== ''),
+      variants: variants.filter(v => v.name.trim() !== ''),
       updatedAt: new Date().toISOString()
     };
 
@@ -113,7 +117,9 @@ export default function ProductsManagementPage() {
     setEditingProduct(null);
     setUploadedImageUrl('');
     setGalleryImages([]);
-    setSpecs([]);
+    setSpecifications([]);
+    setFeatures([]);
+    setVariants([]);
     setSelectedCategory('');
   };
 
@@ -121,7 +127,9 @@ export default function ProductsManagementPage() {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
     setGalleryImages(product.galleryImages || []);
-    setSpecs(product.specs || []);
+    setSpecifications(product.specifications || product.specs || []);
+    setFeatures(product.features || []);
+    setVariants(product.variants || []);
     setSelectedCategory(product.categoryId || '');
     setIsDialogOpen(true);
   };
@@ -131,12 +139,35 @@ export default function ProductsManagementPage() {
     setIsDialogOpen(true);
   };
 
-  const addSpecField = () => setSpecs([...specs, { key: '', value: '' }]);
-  const removeSpecField = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
+  // Specifications Handlers
+  const addSpecField = () => setSpecifications([...specifications, { key: '', value: '' }]);
+  const removeSpecField = (index: number) => setSpecifications(specifications.filter((_, i) => i !== index));
   const updateSpec = (index: number, field: 'key' | 'value', val: string) => {
-    const updated = [...specs];
+    const updated = [...specifications];
     updated[index][field] = val;
-    setSpecs(updated);
+    setSpecifications(updated);
+  };
+
+  // Features Handlers
+  const addFeatureField = () => setFeatures([...features, '']);
+  const removeFeatureField = (index: number) => setFeatures(features.filter((_, i) => i !== index));
+  const updateFeature = (index: number, val: string) => {
+    const updated = [...features];
+    updated[index] = val;
+    setFeatures(updated);
+  };
+
+  // Variants Handlers
+  const addVariantField = () => setVariants([...variants, { name: '', options: [] }]);
+  const removeVariantField = (index: number) => setVariants(variants.filter((_, i) => i !== index));
+  const updateVariant = (index: number, field: 'name' | 'options', val: any) => {
+    const updated = [...variants];
+    if (field === 'options') {
+      updated[index].options = val.split(',').map((o: string) => o.trim()).filter((o: string) => o !== '');
+    } else {
+      updated[index].name = val;
+    }
+    setVariants(updated);
   };
 
   const addToGallery = (url: string) => {
@@ -303,7 +334,59 @@ export default function ProductsManagementPage() {
                   </div>
                 </div>
 
-                {/* DYNAMIC EXTRA SPECIFICATIONS SECTION */}
+                {/* MODULE: VARIANTS */}
+                <div className="space-y-6 pt-10 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shapes className="text-primary" size={20} />
+                      <Label className="text-sm font-black uppercase tracking-tight">Product Variants</Label>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addVariantField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
+                      <Plus size={14} /> Add Variant Type
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {variants.map((v, idx) => (
+                      <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3 relative group">
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeVariantField(idx)} className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></Button>
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Variant Name</Label>
+                          <Input value={v.name} onChange={(e) => updateVariant(idx, 'name', e.target.value)} placeholder="e.g. Color" className="h-9 text-xs font-bold" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Options (Comma Separated)</Label>
+                          <Input value={v.options.join(', ')} onChange={(e) => updateVariant(idx, 'options', e.target.value)} placeholder="e.g. Red, Blue, Black" className="h-9 text-xs" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* MODULE: KEY FEATURES */}
+                <div className="space-y-6 pt-10 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="text-primary" size={20} />
+                      <Label className="text-sm font-black uppercase tracking-tight">Key Features (Bullet Points)</Label>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addFeatureField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
+                      <Plus size={14} /> Add Feature
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {features.map((f, idx) => (
+                      <div key={idx} className="flex gap-2 items-center animate-in slide-in-from-left-1">
+                        <div className="flex-1 relative">
+                          <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40" size={14} />
+                          <Input value={f} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="Enter a product highlight..." className="h-10 pl-9 text-xs bg-gray-50 border-none rounded-xl" />
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFeatureField(idx)} className="h-10 w-10 text-destructive"><Trash2 size={14} /></Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* MODULE: SPECIFICATIONS */}
                 <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -316,7 +399,7 @@ export default function ProductsManagementPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {specs.map((spec, idx) => (
+                    {specifications.map((spec, idx) => (
                       <div key={idx} className="flex gap-2 items-end animate-in fade-in slide-in-from-top-1 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
                         <div className="flex-1 space-y-1.5">
                           <Input 
@@ -343,11 +426,6 @@ export default function ProductsManagementPage() {
                         </Button>
                       </div>
                     ))}
-                    {specs.length === 0 && (
-                      <div className="col-span-full py-8 text-center border-2 border-dashed rounded-3xl text-muted-foreground text-xs italic">
-                        No extra specifications added.
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -401,8 +479,19 @@ export default function ProductsManagementPage() {
                 <TableRow><TableCell colSpan={6} className="text-center py-20">Syncing inventory...</TableCell></TableRow>
               ) : products?.length ? (
                 products.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                    <TableCell className="font-bold text-gray-900 py-5 pl-8 uppercase text-xs">{product.name}</TableCell>
+                  <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <TableCell className="py-5 pl-8">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden border bg-gray-50 shrink-0">
+                          {product.imageUrl ? (
+                            <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300"><Package size={16} /></div>
+                          )}
+                        </div>
+                        <span className="font-bold text-gray-900 uppercase text-[11px] leading-tight max-w-[200px] truncate">{product.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="text-xs font-bold text-gray-700">{product.brand || 'No Brand'}</div>
                       <div className="text-[10px] text-muted-foreground uppercase">{product.categoryId || 'General'}</div>
@@ -428,7 +517,7 @@ export default function ProductsManagementPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
                           <Edit size={14} />
                         </Button>
