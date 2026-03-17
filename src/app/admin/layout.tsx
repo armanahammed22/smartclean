@@ -39,7 +39,11 @@ import {
   Link as LinkIcon,
   MousePointer2,
   FileText,
-  Plus
+  Plus,
+  TicketPercent,
+  Percent,
+  Tag,
+  Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -103,20 +107,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      title: "Pages Management (CMS)",
+      title: "PAGES MANAGEMENT",
       items: [
         { name: "All Site Pages", href: '/admin/pages', icon: FileText, color: 'text-amber-400' },
         { name: "Create New Page", href: '/admin/pages/new', icon: Plus, color: 'text-green-400' },
       ]
     },
     {
-      title: "Site Visuals",
+      title: "OFFER & PROMOTION",
+      items: [
+        { name: "Offers", href: '/admin/marketing', icon: Tag, color: 'text-orange-400' },
+        { name: "Campaigns", href: '/admin/marketing', icon: Zap, color: 'text-yellow-400' },
+        { name: "Coupons", href: '/admin/marketing', icon: TicketPercent, color: 'text-rose-400' },
+        { name: "Discounts", href: '/admin/marketing', icon: Percent, color: 'text-pink-400' },
+        { name: "Referrals", href: '/admin/referrals', icon: Share2, color: 'text-indigo-400' },
+      ]
+    },
+    {
+      title: "SITE CUSTOMIZE",
       items: [
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout, color: 'text-purple-400' },
-        { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon, color: 'text-indigo-400' },
-        { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: MousePointer2, color: 'text-pink-400' },
-        { name: "Homepage Layout", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
-        { name: "Offers & Promotions", href: '/admin/marketing', icon: Zap, color: 'text-orange-400' },
+        { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon, color: 'text-indigo-400' },
+        { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2, color: 'text-pink-400' },
+        { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
+        { name: "Header Settings", href: '/admin/settings', icon: Settings2, color: 'text-blue-400' },
+        { name: "Footer Settings", href: '/admin/settings', icon: FileText, color: 'text-gray-400' },
       ]
     },
     {
@@ -151,11 +166,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      title: "SUPPORT",
+      items: [
+        { name: "Contact Info", href: '/admin/settings', icon: Mail, color: 'text-blue-400' },
+        { name: "Social Link", href: '/admin/settings', icon: Globe, color: 'text-cyan-400' },
+        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones, color: 'text-teal-400' },
+      ]
+    },
+    {
       title: t('group_system'),
       items: [
         { name: t('item_payments'), href: '/admin/payments', icon: Wallet, color: 'text-emerald-500' },
         { name: t('item_settings'), href: '/admin/settings', icon: Settings, color: 'text-gray-400' },
-        { name: t('item_supporthub'), href: '/admin/support-hub', icon: Headphones, color: 'text-teal-400' },
       ]
     }
   ];
