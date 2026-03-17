@@ -80,12 +80,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
-  // New Reorganized Navigation Structure
   const NAV_GROUPS = [
     {
       title: "Dashboard",
       items: [
-        { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
+        { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
         { name: "Reports", href: '/admin/reports', icon: BarChart3, color: 'text-cyan-400' },
       ]
     },
@@ -116,10 +115,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       title: "Attributes & Brands",
       items: [
-        { name: "Brands", href: '/admin/products/attributes', icon: Globe, color: 'text-pink-400' },
-        { name: "Variants", href: '/admin/products/attributes', icon: Shapes, color: 'text-violet-400' },
-        { name: "Key Features", href: '/admin/products/attributes', icon: ListChecks, color: 'text-teal-400' },
-        { name: "Specifications", href: '/admin/products/attributes', icon: Settings2, color: 'text-slate-400' },
+        { name: "Brands", href: '/admin/attributes/brands', icon: Globe, color: 'text-pink-400' },
+        { name: "Variants", href: '/admin/attributes/variants', icon: Shapes, color: 'text-violet-400' },
+        { name: "Key Features", href: '/admin/attributes/features', icon: ListChecks, color: 'text-teal-400' },
+        { name: "Specifications", href: '/admin/attributes/specifications', icon: Settings2, color: 'text-slate-400' },
       ]
     },
     {
@@ -141,7 +140,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "System",
       items: [
         { name: "Payment Management", href: '/admin/payments', icon: Wallet, color: 'text-emerald-500' },
-        { name: "Notifications", href: '/admin/settings', icon: Bell, color: 'text-yellow-500' },
         { name: "Global Settings", href: '/admin/settings', icon: Settings, color: 'text-gray-400' },
         { name: "Site Customize", href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
       ]

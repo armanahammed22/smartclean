@@ -12,6 +12,7 @@
         "regularPrice": { "type": "number" },
         "categoryId": { "type": "string" },
         "imageUrl": { "type": "string" },
+        "galleryImages": { "type": "array", "items": { "type": "string" } },
         "stockQuantity": { "type": "number" },
         "brand": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
