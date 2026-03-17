@@ -195,21 +195,39 @@ export default function SmartCleanHomePage() {
                   <CarouselContent className="h-full">
                     {customization.hero.images.map((img: any, idx: number) => (
                       <CarouselItem key={idx} className="h-full">
-                        <div className="relative w-full h-full">
-                          {img.imageUrl ? (
-                            <Image 
-                              src={img.imageUrl} 
-                              alt="Banner Background" 
-                              fill 
-                              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-                              priority={idx === 0} 
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
-                              <Sparkles size={120} />
-                            </div>
-                          )}
-                        </div>
+                        {img.ctaLink ? (
+                          <Link href={img.ctaLink} className="relative block w-full h-full group overflow-hidden">
+                            {img.imageUrl ? (
+                              <Image 
+                                src={img.imageUrl} 
+                                alt="Hero Slide" 
+                                fill 
+                                className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                                priority={idx === 0} 
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                                <Sparkles size={120} />
+                              </div>
+                            )}
+                          </Link>
+                        ) : (
+                          <div className="relative w-full h-full overflow-hidden">
+                            {img.imageUrl ? (
+                              <Image 
+                                src={img.imageUrl} 
+                                alt="Hero Slide" 
+                                fill 
+                                className="object-cover transition-transform duration-1000" 
+                                priority={idx === 0} 
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                                <Sparkles size={120} />
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </CarouselItem>
                     ))}
                   </CarouselContent>
@@ -223,19 +241,19 @@ export default function SmartCleanHomePage() {
               {/* Overlay Layer */}
               {heroSettings?.isEnabled && (
                 <div 
-                  className={cn("absolute inset-0 transition-opacity duration-500", heroSettings.overlayColor || 'bg-black')} 
+                  className={cn("absolute inset-0 transition-opacity duration-500 pointer-events-none", heroSettings.overlayColor || 'bg-black')} 
                   style={{ opacity: heroSettings.overlayOpacity ?? 0.5 }} 
                 />
               )}
 
               {/* Content Layer */}
               <div className={cn(
-                "absolute inset-0 flex flex-col p-8 md:p-16 z-10 transition-all duration-500",
+                "absolute inset-0 flex flex-col p-8 md:p-16 z-10 transition-all duration-500 pointer-events-none",
                 getPosClass(heroSettings?.textPosition || 'center'),
                 getAlignClass(heroSettings?.textAlignment || 'center')
               )}>
                 {heroSettings?.isEnabled && (
-                  <div className={cn("max-w-3xl space-y-6 transition-all duration-700 animate-in fade-in slide-in-from-bottom-4")}>
+                  <div className={cn("max-w-3xl space-y-6 transition-all duration-700 animate-in fade-in slide-in-from-bottom-4 pointer-events-auto")}>
                     {/* Text Section */}
                     {heroSettings?.isTextEnabled && (
                       <div className="space-y-4">
@@ -335,7 +353,11 @@ export default function SmartCleanHomePage() {
                             <Wrench size={40} />
                           </div>
                         )}
-                        <div className="absolute top-3 left-3"><Badge className="bg-white/95 text-primary border-none shadow-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">{service.categoryId || 'General'}</Badge></div>
+                        <div className="absolute top-3 left-3">
+                          <Badge className="bg-white/95 text-primary border-none shadow-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full">
+                            {service.categoryId || 'General'}
+                          </Badge>
+                        </div>
                       </Link>
                       <div className="p-3 flex flex-col flex-1 gap-2">
                         <h3 className="text-sm md:text-base font-bold line-clamp-1 uppercase tracking-tight">{service.title}</h3>

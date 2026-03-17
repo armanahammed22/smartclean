@@ -34,25 +34,14 @@ import {
   AlignLeft,
   AlignRight,
   Palette,
-  Type
+  Type,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
-
-const BUTTON_ICONS: Record<string, any> = {
-  Zap,
-  Calendar,
-  ArrowRight,
-  ShoppingCart,
-  Wrench,
-  CheckCircle2,
-  Play,
-  Briefcase,
-  Info
-};
 
 const ALIGNMENTS = [
   { value: 'left', label: 'Left', icon: AlignLeft },
@@ -288,7 +277,7 @@ export default function SiteCustomizePage() {
             <CardHeader className="bg-gray-50/50 border-b flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Slide Images (982x500)</CardTitle>
-                <CardDescription>Manage the background visuals for your hero section</CardDescription>
+                <CardDescription>Manage the background visuals and their links for your hero section</CardDescription>
               </div>
               <Button onClick={addHeroImage} size="sm" className="gap-2 font-bold">
                 <Plus size={14} /> Add Background
@@ -302,16 +291,38 @@ export default function SiteCustomizePage() {
                       <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Slide #{idx + 1}</span>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeHeroImage(idx)}><Trash2 size={16} /></Button>
                     </div>
-                    <ImageUploader 
-                      initialUrl={img.imageUrl}
-                      aspectRatio="aspect-[982/500]"
-                      onUpload={(url) => {
-                        const updated = [...formData.hero.images];
-                        updated[idx].imageUrl = url;
-                        setFormData({...formData, hero: {...formData.hero, images: updated}});
-                      }}
-                      label="Slide Image"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <ImageUploader 
+                        initialUrl={img.imageUrl}
+                        aspectRatio="aspect-[982/500]"
+                        onUpload={(url) => {
+                          const updated = [...formData.hero.images];
+                          updated[idx].imageUrl = url;
+                          setFormData({...formData, hero: {...formData.hero, images: updated}});
+                        }}
+                        label="Slide Image"
+                      />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                            <LinkIcon size={12} /> Redirection URL
+                          </Label>
+                          <Input 
+                            value={img.ctaLink || ''}
+                            onChange={(e) => {
+                              const updated = [...formData.hero.images];
+                              updated[idx].ctaLink = e.target.value;
+                              setFormData({...formData, hero: {...formData.hero, images: updated}});
+                            }}
+                            placeholder="e.g. /products or /service/id"
+                            className="h-11 bg-white"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                          Enter a relative path (like /services) or a full URL. If provided, the background image will become clickable.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
                 {formData.hero.images.length === 0 && (
