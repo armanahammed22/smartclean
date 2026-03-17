@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection, query, orderBy, limit, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, writeBatch, getDocs, where } from 'firebase/firestore';
 import { 
   Users, 
   Database,
@@ -36,6 +36,12 @@ const CHART_DATA = [
   { name: 'Jun', leads: 67, conversion: 22 },
 ];
 
+const DEFAULT_PAGES = [
+  { slug: 'about-us', title: 'About Us', content: '<h2>About Smart Clean</h2><p>Smart Clean is the leading provider of professional cleaning and maintenance services in Bangladesh.</p>' },
+  { slug: 'faq', title: 'Frequently Asked Questions', content: '<h2>Got Questions? We Have Answers.</h2><h3>How do I book?</h3><p>You can book directly through our website.</p>' },
+  { slug: 'testimonials', title: 'Client Testimonials', content: '<h2>What Our Customers Say</h2><p>Read feedback from our thousands of satisfied clients.</p>' }
+];
+
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
@@ -61,91 +67,83 @@ export default function AdminDashboard() {
   const { data: subServices } = useCollection(subServicesQuery);
   const { data: employees } = useCollection(employeesQuery);
 
-  const handleSeedData = () => {
+  const handleSeedData = async () => {
     if (!db) return;
     setIsSeeding(true);
     
-    const batch = writeBatch(db);
+    try {
+      const batch = writeBatch(db);
 
-    // Initial Hero Banner Seed
-    batch.set(doc(db, 'hero_banners', 'default_promo'), {
-      id: 'default_promo',
-      title: 'Smart Cleaning Solutions',
-      subtitle: 'Expert deep cleaning and maintenance for your home and office.',
-      imageUrl: 'https://picsum.photos/seed/clean/1200/600',
-      buttonText: 'Book Service',
-      buttonLink: '/services',
-      isActive: true,
-      order: 0,
-      createdAt: new Date().toISOString()
-    });
-
-    // Main Services
-    const SERVICE_DATA = [
-      { id: 's_home', title: 'Home Cleaning', basePrice: 2000 },
-      { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500 },
-      { id: 's_bathroom', title: 'Bathroom Cleaning', basePrice: 1000 },
-      { id: 's_sofa', title: 'Sofa & Furniture Cleaning', basePrice: 1200 },
-      { id: 's_glass', title: 'Glass & Window Cleaning', basePrice: 800 },
-      { id: 's_office', title: 'Office Cleaning', basePrice: 5000 },
-      { id: 's_post_const', title: 'Post Construction Cleaning', basePrice: 8000 },
-      { id: 's_carpet', title: 'Carpet & Curtain Cleaning', basePrice: 1500 },
-      { id: 's_outdoor', title: 'Outdoor Cleaning', basePrice: 2000 },
-      { id: 's_ac', title: 'AC Services', basePrice: 1200 },
-      { id: 's_electrical', title: 'Electrical Services', basePrice: 500 },
-      { id: 's_plumbing', title: 'Plumbing Services', basePrice: 500 },
-      { id: 's_carpentry', title: 'Carpentry Services', basePrice: 1000 },
-      { id: 's_appliance', title: 'Appliance Repair', basePrice: 800 },
-      { id: 's_painting', title: 'Painting Services', basePrice: 10000 },
-      { id: 's_pest', title: 'Pest Control', basePrice: 2500 }
-    ];
-
-    SERVICE_DATA.forEach(s => {
-      batch.set(doc(db, 'services', s.id), {
-        ...s,
-        status: 'Active',
-        duration: 'Variable',
-        createdAt: new Date().toISOString(),
-        imageUrl: `https://picsum.photos/seed/${s.id}/800/600`, 
-        categoryId: 'Cleaning'
-      });
-    });
-
-    // Sub Services
-    const SUB_SERVICES = [
-      { mainServiceId: 's_home', name: 'Full Home Deep Cleaning', price: 5000, duration: '6-8 hrs' },
-      { mainServiceId: 's_kitchen', name: 'Kitchen Deep Cleaning', price: 2500, duration: '3 hrs' },
-      { mainServiceId: 's_ac', name: 'AC Servicing', price: 1000, duration: '1.5 hrs' }
-    ];
-
-    SUB_SERVICES.forEach((sub, idx) => {
-      const subId = `sub_${sub.mainServiceId}_${idx}`;
-      batch.set(doc(db, 'sub_services', subId), {
-        ...sub,
-        id: subId,
-        status: 'Active',
-        description: `Professional ${sub.name} for your convenience.`,
+      // 1. Initial Hero Banner Seed
+      batch.set(doc(db, 'hero_banners', 'default_promo'), {
+        id: 'default_promo',
+        title: 'Smart Cleaning Solutions',
+        subtitle: 'Expert deep cleaning and maintenance for your home and office.',
+        imageUrl: 'https://picsum.photos/seed/clean/1200/600',
+        buttonText: 'Book Service',
+        buttonLink: '/services',
+        isActive: true,
+        order: 0,
         createdAt: new Date().toISOString()
       });
-    });
 
-    // Staff
-    batch.set(doc(db, 'employee_profiles', 'emp1'), { id: 'emp1', name: 'Zayed Khan', role: 'Cleaner', status: 'Active', createdAt: new Date().toISOString() });
-    batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', role: 'Bootstrap Admin' });
+      // 2. Main Services
+      const SERVICE_DATA = [
+        { id: 's_home', title: 'Home Cleaning', basePrice: 2000 },
+        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500 },
+        { id: 's_ac', title: 'AC Services', basePrice: 1200 }
+      ];
 
-    batch.commit()
-      .then(() => {
-        toast({ title: "ERP Database Seeded" });
-      })
-      .catch((err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: 'batch',
-          operation: 'write'
-        }));
-      })
-      .finally(() => {
-        setIsSeeding(false);
+      SERVICE_DATA.forEach(s => {
+        batch.set(doc(db, 'services', s.id), {
+          ...s,
+          status: 'Active',
+          duration: 'Variable',
+          createdAt: new Date().toISOString(),
+          imageUrl: `https://picsum.photos/seed/${s.id}/800/600`, 
+          categoryId: 'Cleaning'
+        });
       });
+
+      // 3. System Pages (Conditional)
+      for (const page of DEFAULT_PAGES) {
+        const q = query(collection(db, 'pages_management'), where('slug', '==', page.slug));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          const newRef = doc(collection(db, 'pages_management'));
+          batch.set(newRef, {
+            ...page,
+            isPublished: true,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+
+      // 4. Staff
+      batch.set(doc(db, 'employee_profiles', 'emp1'), { 
+        id: 'emp1', 
+        name: 'Zayed Khan', 
+        role: 'Cleaner', 
+        status: 'Active', 
+        createdAt: new Date().toISOString(),
+        skills: ['s_home', 's_kitchen']
+      });
+      
+      batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { 
+        uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', 
+        role: 'Bootstrap Admin' 
+      });
+
+      await batch.commit();
+      toast({ title: "ERP Database Seeded", description: "Standard products, services, and pages initialized." });
+    } catch (err) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: 'batch',
+        operation: 'write'
+      }));
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   if (isUserLoading) return <div className="p-8 text-center">{t('ops_overview')}...</div>;
