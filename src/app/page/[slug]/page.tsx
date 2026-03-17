@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -25,7 +26,7 @@ export default function DynamicContentPage() {
   if (isLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
       <Loader2 className="animate-spin text-primary" size={48} />
-      <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Page...</p>
+      <p className="text-xs font-black uppercase tracking-widest text-gray-400">Syncing Page Content...</p>
     </div>
   );
 
@@ -33,8 +34,8 @@ export default function DynamicContentPage() {
     <PublicLayout>
       <div className="container mx-auto px-4 py-32 text-center space-y-6">
         <h1 className="text-6xl font-black text-gray-200 uppercase tracking-tighter">404</h1>
-        <p className="text-muted-foreground font-bold uppercase tracking-widest">The requested page is not available.</p>
-        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-10 h-12 font-black uppercase text-xs">Back to Home</Button>
+        <p className="text-muted-foreground font-bold uppercase tracking-widest">Content Not Found or Unpublished.</p>
+        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-10 h-12 font-black uppercase text-xs">Return to Home</Button>
       </div>
     </PublicLayout>
   );
@@ -42,7 +43,6 @@ export default function DynamicContentPage() {
   return (
     <PublicLayout>
       <div className="bg-[#F9FAFB] min-h-screen pb-24">
-        {/* Simplified Header */}
         <header className="bg-white border-b py-12 md:py-20 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12 pointer-events-none">
             <FileText size={240} />
@@ -59,18 +59,17 @@ export default function DynamicContentPage() {
             <h1 className="text-4xl md:text-6xl font-black text-[#081621] font-headline tracking-tighter uppercase leading-tight">
               {page.title}
             </h1>
-            <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest">
               <Calendar size={14} className="text-primary" />
-              Last Updated: {new Date(page.updatedAt).toLocaleDateString()}
+              Published: {new Date(page.updatedAt).toLocaleDateString()}
             </div>
           </div>
         </header>
 
-        {/* Dynamic Content Renderer */}
         <div className="container mx-auto px-4 max-w-4xl py-16">
           <div className="bg-white p-8 md:p-16 rounded-[3rem] shadow-sm border border-gray-100">
             <article 
-              className="prose prose-slate max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-600 prose-p:leading-loose prose-li:text-gray-600 prose-strong:text-gray-900"
+              className="prose prose-slate max-w-none prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight prose-p:text-gray-600 prose-p:leading-loose prose-li:text-gray-600 prose-strong:text-gray-900 prose-h2:text-2xl prose-h2:mb-6 prose-h2:mt-10 first:prose-h2:mt-0"
               dangerouslySetInnerHTML={{ __html: page.content }} 
             />
           </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -17,13 +18,11 @@ import {
   MapPin,
   BarChart3,
   Menu,
-  Paintbrush,
   ShoppingCart,
   Truck,
   Package,
   Wrench,
   Tags,
-  HelpCircle,
   Share2,
   Calendar,
   Grid,
@@ -37,9 +36,6 @@ import {
   Search,
   Headphones,
   Layout,
-  MessageSquare,
-  HelpCircle as FaqIcon,
-  Info,
   Link as LinkIcon,
   MousePointer2,
   FileText,
@@ -107,24 +103,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      title: "Pages Management",
+      title: "Pages Management (CMS)",
       items: [
-        { name: "All Pages", href: '/admin/pages', icon: FileText, color: 'text-amber-400' },
-        { name: "Create Page", href: '/admin/pages/new', icon: Plus, color: 'text-green-400' },
+        { name: "All Site Pages", href: '/admin/pages', icon: FileText, color: 'text-amber-400' },
+        { name: "Create New Page", href: '/admin/pages/new', icon: Plus, color: 'text-green-400' },
       ]
     },
     {
-      title: "Site Customize",
+      title: "Site Visuals",
       items: [
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout, color: 'text-purple-400' },
         { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon, color: 'text-indigo-400' },
         { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: MousePointer2, color: 'text-pink-400' },
-        { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
+        { name: "Homepage Layout", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
         { name: "Offers & Promotions", href: '/admin/marketing', icon: Zap, color: 'text-orange-400' },
-        { name: "Header Settings", href: '/admin/customize/header', icon: Menu, color: 'text-slate-400' },
-        { name: "Footer Settings", href: '/admin/customize/footer', icon: Layout, color: 'text-slate-400' },
-        { name: "Contact Info", href: '/admin/customize/contact', icon: Headphones, color: 'text-teal-400' },
-        { name: "Social Links", href: '/admin/customize/social', icon: Share2, color: 'text-blue-400' },
       ]
     },
     {
@@ -148,15 +140,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: t('item_services'), href: '/admin/services', icon: Wrench, color: 'text-blue-500' },
         { name: t('item_subservices'), href: '/admin/services/sub-services', icon: Grid, color: 'text-sky-500' },
         { name: t('item_areas'), href: '/admin/areas', icon: MapPin, color: 'text-red-400' },
-      ]
-    },
-    {
-      title: t('group_attributes'),
-      items: [
-        { name: t('item_brands'), href: '/admin/attributes/brands', icon: Globe, color: 'text-pink-400' },
-        { name: t('item_variants'), href: '/admin/attributes/variants', icon: Shapes, color: 'text-violet-400' },
-        { name: t('item_features'), href: '/admin/attributes/features', icon: ListChecks, color: 'text-teal-400' },
-        { name: t('item_specs'), href: '/admin/attributes/specifications', icon: Settings2, color: 'text-slate-400' },
       ]
     },
     {

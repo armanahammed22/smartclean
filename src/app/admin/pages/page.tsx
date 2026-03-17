@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,7 @@ import {
   Edit, 
   Eye, 
   Loader2, 
-  Search,
-  Globe,
-  Settings2
+  Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -46,22 +45,12 @@ export default function PagesManagementPage() {
     }
   };
 
-  const togglePublish = async (id: string, current: boolean) => {
-    if (!db) return;
-    try {
-      await updateDoc(doc(db, 'pages_management', id), { isPublished: !current });
-      toast({ title: !current ? "Page Published" : "Page Unpulished" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Status Update Failed" });
-    }
-  };
-
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-tight">Pages Management</h1>
-          <p className="text-muted-foreground text-sm font-medium">Control dynamic content and legal policies</p>
+          <p className="text-muted-foreground text-sm font-medium">Control dynamic content and informational pages</p>
         </div>
         <Button asChild className="gap-2 font-bold h-11 px-6 rounded-xl shadow-lg">
           <Link href="/admin/pages/new">
@@ -74,7 +63,7 @@ export default function PagesManagementPage() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
-            placeholder="Search by title or slug..." 
+            placeholder="Search by title or slug (e.g. faq, testimonials)..." 
             className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -140,7 +129,7 @@ export default function PagesManagementPage() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No pages found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No pages found. Create your first dynamic page.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
