@@ -21,38 +21,18 @@
       },
       "required": ["id", "name", "price", "categoryId"]
     },
-    "Brand": {
-      "title": "Brand",
+    "HeroBanner": {
+      "title": "HeroBanner",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "status": { "type": "string" }
-      }
-    },
-    "VariantType": {
-      "title": "VariantType",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "options": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "ReusableFeature": {
-      "title": "ReusableFeature",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" }
-      }
-    },
-    "ReusableSpec": {
-      "title": "ReusableSpec",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "key": { "type": "string" }
+        "imageUrl": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "buttonText": { "type": "string" },
+        "buttonLink": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "number" }
       }
     }
   },
@@ -63,14 +43,19 @@
     "/users/{uid}": { "schema": "#/entities/User", "description": "Unified user accounts." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/product_categories/{id}": { "schema": "object", "description": "Product groupings." },
-    "/brands/{id}": { "schema": "#/entities/Brand", "description": "Product brands." },
-    "/variant_types/{id}": { "schema": "#/entities/VariantType", "description": "Reusable variant types." },
-    "/reusable_features/{id}": { "schema": "#/entities/ReusableFeature", "description": "Standard features." },
-    "/reusable_specs/{id}": { "schema": "#/entities/ReusableSpec", "description": "Technical specification keys." },
+    "/brands/{id}": { "schema": "object", "description": "Product brands." },
+    "/variant_types/{id}": { "schema": "object", "description": "Reusable variant types." },
+    "/reusable_features/{id}": { "schema": "object", "description": "Standard features." },
+    "/reusable_specs/{id}": { "schema": "object", "description": "Technical specification keys." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Main services." },
+    "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
+    "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
-    "/heroBannerSettings/{id}": { "schema": "object", "description": "Homepage hero content." },
-    "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
-    "/orders/{id}": { "schema": "object", "description": "Product sales." }
+    "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
+    "/orders/{id}": { "schema": "object", "description": "Product sales." },
+    "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
+    "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
+    "/employee_profiles/{id}": { "schema": "object", "description": "Staff data." },
+    "/staff_availability/{id}": { "schema": "object", "description": "Staff live status." }
   }
 }

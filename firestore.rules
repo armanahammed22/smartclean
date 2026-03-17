@@ -12,6 +12,7 @@ service cloud.firestore {
       allow read, write: if isBootstrapAdmin();
     }
 
+    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /products/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /product_categories/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /brands/{id} { allow read: if true; allow write: if isOrderManager(); }
@@ -20,15 +21,21 @@ service cloud.firestore {
     match /reusable_specs/{id} { allow read: if true; allow write: if isOrderManager(); }
     
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /heroBannerSettings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
     
     match /users/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
       allow write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
     }
 
+    match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn(); }
+
     match /orders/{id} { allow create: if true; allow read: if isSignedIn(); allow write: if isOrderManager(); }
     match /bookings/{id} { allow create: if true; allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /leads/{id} { allow create: if true; allow read: if isAdmin(); }
   }
 }
