@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -42,7 +41,8 @@ import {
   HelpCircle as FaqIcon,
   Info,
   Link as LinkIcon,
-  MousePointer2
+  MousePointer2,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -106,15 +106,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      title: "Pages Management",
+      items: [
+        { name: "All Pages", href: '/admin/pages', icon: FileText, color: 'text-amber-400' },
+        { name: "Create Page", href: '/admin/pages/new', icon: Plus, color: 'text-green-400' },
+      ]
+    },
+    {
       title: "Site Customize",
       items: [
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout, color: 'text-purple-400' },
         { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon, color: 'text-indigo-400' },
         { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: MousePointer2, color: 'text-pink-400' },
         { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
-        { name: "Offers & Promotions", href: '/admin/customize/offers', icon: Zap, color: 'text-orange-400' },
-        { name: "Testimonials", href: '/admin/customize/testimonials', icon: MessageSquare, color: 'text-yellow-400' },
-        { name: "FAQ", href: '/admin/customize/faq', icon: FaqIcon, color: 'text-sky-400' },
+        { name: "Offers & Promotions", href: '/admin/marketing', icon: Zap, color: 'text-orange-400' },
         { name: "Header Settings", href: '/admin/customize/header', icon: Menu, color: 'text-slate-400' },
         { name: "Footer Settings", href: '/admin/customize/footer', icon: Layout, color: 'text-slate-400' },
         { name: "Contact Info", href: '/admin/customize/contact', icon: Headphones, color: 'text-teal-400' },
