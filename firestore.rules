@@ -2,8 +2,8 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.3
- * Fixed administrative listing permissions for bookings, orders, and leads.
+ * Rules Version: 1.4
+ * Fixed prioritized administrative access for operational listing.
  */
 
 rules_version = '2';
@@ -21,6 +21,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // Prioritize bootstrap admin check to avoid unnecessary exists() calls
       return isBootstrapAdmin() || (
         isSignedIn() && exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
@@ -132,6 +133,7 @@ service cloud.firestore {
     }
 
     match /bookings/{id} {
+      // Explicitly allow admins to list the entire collection
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
       allow create: if isSignedIn();
@@ -139,6 +141,7 @@ service cloud.firestore {
     }
 
     match /orders/{id} {
+      // Explicitly allow admins to list the entire collection
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow create: if isSignedIn();
@@ -170,7 +173,8 @@ service cloud.firestore {
 
     // --- CRM & Leads ---
     match /leads/{id} {
-      allow read, write: if isAdmin();
+      allow list: if isAdmin();
+      allow get, write: if isAdmin();
     }
 
     // --- Marketing Campaigns ---
