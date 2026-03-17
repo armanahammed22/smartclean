@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Page": {
@@ -55,6 +56,44 @@
         "status": { "type": "string", "enum": ["New", "Contacted", "Qualified", "Lost"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Inventory item for sale.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "regularPrice": { "type": "number" },
+        "stockQuantity": { "type": "number" },
+        "categoryId": { "type": "string" },
+        "brand": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A scheduled service appointment.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "serviceTitle": { "type": "string" },
+        "dateTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] }
+      }
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A product purchase record.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -67,10 +106,9 @@
     },
     "/pages_management/{slug}": {
       "schema": "Page",
-      "description": "Stores content for dynamic static pages like About Us, careers, etc."
+      "description": "Stores content for dynamic static pages."
     },
     "/users/{uid}": {
-      "schema": "UserProfile",
       "description": "Core user profile data."
     },
     "/roles_admins/{uid}": {
@@ -78,7 +116,15 @@
     },
     "/leads/{id}": {
       "schema": "Lead",
-      "description": "Sales leads for tracking potential customers."
+      "description": "Sales leads."
+    },
+    "/orders/{id}": {
+      "schema": "Order",
+      "description": "Product sales orders."
+    },
+    "/bookings/{id}": {
+      "schema": "Booking",
+      "description": "Service bookings."
     }
   }
 }

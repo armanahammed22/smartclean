@@ -1,7 +1,8 @@
+
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.1
+ * Rules Version: 1.2
  * Updated to fix administrative listing permissions for the bootstrap UID.
  */
 
