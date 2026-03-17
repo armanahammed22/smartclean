@@ -31,9 +31,11 @@ service cloud.firestore {
 
     // PUBLIC CATALOG - Read for all
     match /products/{id} { allow read, list: if true; allow write: if isOrderManager(); }
-    match /services/{id} { allow read, list: if true; allow write: if isManager(); }
-    match /sub_services/{id} { allow read, list: if true; allow write: if isManager(); }
     match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /brands/{id} { allow read, list: if true; allow write: if isOrderManager(); }
+    match /services/{id} { allow read, list: if true; allow write: if isManager(); }
+    match /service_categories/{id} { allow read, list: if true; allow write: if isManager(); }
+    match /sub_services/{id} { allow read, list: if true; allow write: if isManager(); }
     match /service_areas/{id} { allow read, list: if true; allow write: if isManager(); }
     match /site_settings/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /heroBannerSettings/{id} { allow read, list: if true; allow write: if isAdmin(); }
@@ -41,6 +43,7 @@ service cloud.firestore {
     match /quick_links/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /quick_actions/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    match /marketing_campaigns/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /couriers/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /coupons/{id} { allow read, list: if true; allow write: if isAdmin(); }
 
