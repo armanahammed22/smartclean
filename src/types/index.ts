@@ -7,6 +7,7 @@ export interface Product {
   description: string;
   shortDescription: string;
   imageUrl: string;
+  galleryImages?: string[];
   categoryId: string;
   subCategoryId?: string;
   brandId?: string;

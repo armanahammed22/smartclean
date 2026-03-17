@@ -18,7 +18,9 @@ import {
   Minus,
   Star,
   Info,
-  Settings2
+  Settings2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -29,6 +31,7 @@ import { useCart } from '@/components/providers/cart-provider';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -38,9 +41,19 @@ export default function ProductDetailsPage() {
   
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
 
   const productRef = useMemoFirebase(() => db ? doc(db, 'products', id as string) : null, [db, id]);
   const { data: product, isLoading } = useDoc(productRef);
+
+  const allImages = React.useMemo(() => {
+    if (!product) return [];
+    const images = [product.imageUrl];
+    if (product.galleryImages?.length) {
+      images.push(...product.galleryImages);
+    }
+    return images.filter(img => !!img);
+  }, [product]);
 
   const handleSpeak = async () => {
     if (!product || isSpeaking) return;
@@ -78,24 +91,48 @@ export default function ProductDetailsPage() {
             {/* Left Side: Product Gallery */}
             <div className="lg:col-span-7 space-y-6">
               <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
-                {product.imageUrl ? (
-                  <Image 
-                    src={product.imageUrl} 
-                    alt={product.name || 'Product Image'} 
-                    fill 
-                    className="object-contain p-12 transition-transform duration-700 group-hover:scale-110" 
-                    priority
-                  />
+                {allImages.length > 0 ? (
+                  <>
+                    <Image 
+                      src={allImages[activeImageIdx]} 
+                      alt={product.name || 'Product Image'} 
+                      fill 
+                      className="object-contain p-12 transition-all duration-500" 
+                      priority
+                    />
+                    {allImages.length > 1 && (
+                      <div className="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="rounded-full shadow-lg h-10 w-10"
+                          onClick={() => setActiveImageIdx(prev => (prev === 0 ? allImages.length - 1 : prev - 1))}
+                        >
+                          <ChevronLeft size={20} />
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="rounded-full shadow-lg h-10 w-10"
+                          onClick={() => setActiveImageIdx(prev => (prev === allImages.length - 1 ? 0 : prev + 1))}
+                        >
+                          <ChevronRight size={20} />
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
                     <Package size={120} />
                   </div>
                 )}
+                
                 <div className="absolute top-6 left-6">
                   <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">
                     {product.brand || 'Professional'}
                   </Badge>
                 </div>
+                
                 <Button 
                   onClick={handleSpeak} 
                   disabled={isSpeaking}
@@ -104,6 +141,24 @@ export default function ProductDetailsPage() {
                   {isSpeaking ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
                 </Button>
               </div>
+
+              {/* Thumbnails Carousel */}
+              {allImages.length > 1 && (
+                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+                  {allImages.map((img, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setActiveImageIdx(idx)}
+                      className={cn(
+                        "relative w-24 h-24 rounded-2xl overflow-hidden border-4 transition-all shrink-0 bg-white",
+                        activeImageIdx === idx ? "border-primary shadow-lg scale-105" : "border-transparent opacity-60 hover:opacity-100"
+                      )}
+                    >
+                      <Image src={img} alt={`Preview ${idx}`} fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right Side: Product Actions */}

@@ -6,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
+import Image from 'next/image';
 
 const CATEGORY_SPECS: Record<string, string[]> = {
   'Cleaning': ['Concentration', 'pH Level', 'Fragrance', 'Volume', 'Surface Compatibility'],
@@ -31,7 +32,10 @@ export default function ProductsManagementPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Media States
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   
   // Specifications State
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
@@ -82,6 +86,7 @@ export default function ProductsManagementPage() {
       description: formData.get('description') as string,
       shortDescription: formData.get('shortDescription') as string,
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
+      galleryImages: galleryImages,
       status: formData.get('status') as string || 'Active',
       specs: specs.filter(s => s.key.trim() !== ''),
       updatedAt: new Date().toISOString()
@@ -107,6 +112,7 @@ export default function ProductsManagementPage() {
   const resetForm = () => {
     setEditingProduct(null);
     setUploadedImageUrl('');
+    setGalleryImages([]);
     setSpecs([]);
     setSelectedCategory('');
   };
@@ -114,6 +120,7 @@ export default function ProductsManagementPage() {
   const handleOpenEdit = (product: any) => {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
+    setGalleryImages(product.galleryImages || []);
     setSpecs(product.specs || []);
     setSelectedCategory(product.categoryId || '');
     setIsDialogOpen(true);
@@ -132,6 +139,16 @@ export default function ProductsManagementPage() {
     setSpecs(updated);
   };
 
+  const addToGallery = (url: string) => {
+    if (url && !galleryImages.includes(url)) {
+      setGalleryImages([...galleryImages, url]);
+    }
+  };
+
+  const removeFromGallery = (index: number) => {
+    setGalleryImages(galleryImages.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -146,31 +163,100 @@ export default function ProductsManagementPage() {
               <Plus size={18} /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl rounded-3xl overflow-y-auto max-h-[90vh] p-0 border-none shadow-2xl">
-            <form onSubmit={handleSave} className="flex flex-col">
-              <DialogHeader className="p-8 bg-[#081621] text-white">
+          <DialogContent className="max-w-5xl w-[95vw] rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
+            <form onSubmit={handleSave} className="flex flex-col h-full max-h-[90vh]">
+              <DialogHeader className="p-8 bg-[#081621] text-white shrink-0">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
                   <Package className="text-primary" /> {editingProduct ? 'Edit Product Catalog' : 'Add New Inventory Item'}
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="p-8 space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  {/* Left Column */}
-                  <div className="space-y-6">
-                    <ImageUploader 
-                      label="Product Photo"
-                      initialUrl={uploadedImageUrl}
-                      aspectRatio="aspect-square"
-                      onUpload={setUploadedImageUrl}
-                    />
-                    
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Product Name</Label>
-                      <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+              <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                  {/* LEFT COLUMN: MEDIA */}
+                  <div className="lg:col-span-5 space-y-8">
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <ImageIcon size={14} /> Primary Product Photo
+                      </Label>
+                      <ImageUploader 
+                        initialUrl={uploadedImageUrl}
+                        aspectRatio="aspect-square"
+                        onUpload={setUploadedImageUrl}
+                        label=""
+                      />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Product Gallery</Label>
+                        <Badge variant="outline" className="text-[9px] font-bold opacity-60 uppercase">{galleryImages.length} Photos</Badge>
+                      </div>
+                      
+                      <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar min-h-[100px] items-center">
+                        {galleryImages.map((img, idx) => (
+                          <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-100 shrink-0 group">
+                            <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
+                            <button 
+                              type="button"
+                              onClick={() => removeFromGallery(idx)}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                        <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50/50 shrink-0">
+                          <ImageIcon size={24} className="text-gray-300" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold text-muted-foreground italic">Add extra angles or detail shots:</p>
+                        <div className="flex gap-2">
+                          <Input 
+                            id="prod-gallery-input"
+                            placeholder="Paste image URL..." 
+                            className="h-10 bg-gray-50 border-gray-100 text-xs" 
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = (e.target as HTMLInputElement).value;
+                                if (val) {
+                                  addToGallery(val);
+                                  (e.target as HTMLInputElement).value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            variant="secondary" 
+                            size="sm" 
+                            className="h-10 px-4 font-bold"
+                            onClick={() => {
+                              const input = document.getElementById('prod-gallery-input') as HTMLInputElement;
+                              if (input.value) {
+                                addToGallery(input.value);
+                                input.value = '';
+                              }
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: CORE DATA */}
+                  <div className="lg:col-span-7 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Product Name</Label>
+                        <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
+
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Price (BDT)</Label>
                         <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
@@ -179,12 +265,7 @@ export default function ProductsManagementPage() {
                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Reg. Price</Label>
                         <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Right Column */}
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Stock Qty</Label>
                         <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
@@ -193,26 +274,26 @@ export default function ProductsManagementPage() {
                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Unit/Size</Label>
                         <Input name="size" defaultValue={editingProduct?.size} placeholder="e.g. 5L, 1kg" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Category</Label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl">
-                          <SelectValue placeholder="Select Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cleaning">Cleaning Supplies</SelectItem>
-                          <SelectItem value="Tools">Equipment & Tools</SelectItem>
-                          <SelectItem value="Electronics">Gadgets & Tech</SelectItem>
-                          {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Category</Label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl">
+                            <SelectValue placeholder="Select Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cleaning">Cleaning Supplies</SelectItem>
+                            <SelectItem value="Tools">Equipment & Tools</SelectItem>
+                            <SelectItem value="Electronics">Gadgets & Tech</SelectItem>
+                            {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Brand</Label>
-                      <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. Samsung" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Brand</Label>
+                        <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. Samsung" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -223,11 +304,11 @@ export default function ProductsManagementPage() {
                 </div>
 
                 {/* DYNAMIC SPECIFICATIONS SECTION */}
-                <div className="space-y-6 pt-6 border-t border-gray-100">
+                <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Settings2 className="text-primary" size={20} />
-                      <Label className="text-sm font-black uppercase tracking-tight">Product Specifications</Label>
+                      <Label className="text-sm font-black uppercase tracking-tight">Technical Specifications</Label>
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={addSpecField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
                       <Plus size={14} /> Add Custom Spec
@@ -241,13 +322,13 @@ export default function ProductsManagementPage() {
                           <Input 
                             value={spec.key} 
                             onChange={(e) => updateSpec(idx, 'key', e.target.value)} 
-                            placeholder="Specification Name"
+                            placeholder="Spec Name (e.g. Voltage)"
                             className="h-10 text-xs font-bold bg-gray-50/50 border-none"
                           />
                           <Input 
                             value={spec.value} 
                             onChange={(e) => updateSpec(idx, 'value', e.target.value)} 
-                            placeholder="Value"
+                            placeholder="Value (e.g. 220V)"
                             className="h-10 text-xs bg-gray-50 border-none"
                           />
                         </div>
@@ -262,25 +343,20 @@ export default function ProductsManagementPage() {
                         </Button>
                       </div>
                     ))}
-                    {specs.length === 0 && (
-                      <div className="col-span-full py-10 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Select a category or add custom specs manually.</p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-6">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Full Product Description</Label>
                   <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none focus:bg-white min-h-[150px] rounded-2xl p-4" placeholder="Detailed features, how to use, etc..." />
                 </div>
               </div>
 
-              <DialogFooter className="p-8 bg-gray-50 border-t">
+              <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 uppercase tracking-tighter">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
-                  Save Product
+                  Save Product Information
                 </Button>
               </DialogFooter>
             </form>
@@ -349,10 +425,10 @@ export default function ProductsManagementPage() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
-                          <Edit size={14} />
+                          <Edit size(14) />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => deleteDoc(doc(db!, 'products', product.id))}>
-                          <Trash2 size={14} />
+                          <Trash2 size(14) />
                         </Button>
                       </div>
                     </TableCell>
