@@ -26,6 +26,7 @@ import {
   CarouselContent, 
   CarouselItem
 } from '@/components/ui/carousel';
+import { cn } from '@/lib/utils';
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
@@ -43,7 +44,7 @@ export default function SmartCleanHomePage() {
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Data Fetching - Fetch all banners then filter/sort in memory to avoid Index/Permission complexity
+  // Data Fetching
   const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners')) : null, [db]);
   const { data: banners, isLoading: bannersLoading } = useCollection(bannersQuery);
 
@@ -95,7 +96,7 @@ export default function SmartCleanHomePage() {
 
         {/* Dynamic Hero Carousel */}
         <section className="container mx-auto px-4 py-6">
-          <div className="max-w-[1200px] mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="relative aspect-[21/9] md:aspect-[21/7] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
               
               {bannersLoading ? (
@@ -122,26 +123,55 @@ export default function SmartCleanHomePage() {
                               <Sparkles size={120} />
                             </div>
                           )}
-                          {/* Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                          {/* Dynamic Overlay */}
+                          <div 
+                            className="absolute inset-0 transition-opacity duration-500" 
+                            style={{ 
+                              backgroundColor: banner.overlayColor || '#000000',
+                              opacity: (banner.overlayOpacity || 40) / 100 
+                            }} 
+                          />
                         </div>
 
-                        {/* Banner Content */}
-                        <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-8 md:p-16 space-y-6">
-                          <div className="space-y-4 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <h2 className="text-3xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight drop-shadow-lg">
-                              {banner.title}
-                            </h2>
-                            <p className="text-sm md:text-xl font-medium text-white/90 drop-shadow-md">
-                              {banner.subtitle}
-                            </p>
-                            <div className="pt-4">
-                              <Button asChild className="h-12 md:h-14 px-8 md:px-10 rounded-2xl font-black text-sm md:text-lg uppercase tracking-tight shadow-2xl bg-primary hover:bg-primary/90">
-                                <Link href={banner.buttonLink || '/products'}>
-                                  {banner.buttonText || 'Discover Now'} <ArrowRight className="ml-2" />
-                                </Link>
-                              </Button>
-                            </div>
+                        {/* Banner Content Container */}
+                        <div className={cn(
+                          "relative z-10 h-full flex flex-col p-8 md:p-20",
+                          banner.textPosition === 'top' ? 'justify-start' : 
+                          banner.textPosition === 'bottom' ? 'justify-end' : 'justify-center',
+                          banner.textAlignment === 'left' ? 'items-start text-left' :
+                          banner.textAlignment === 'right' ? 'items-end text-right' : 'items-center text-center'
+                        )}>
+                          <div className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            {banner.isTextEnabled !== false && (
+                              <>
+                                <h2 
+                                  className={cn("font-black uppercase tracking-tighter leading-tight drop-shadow-xl", banner.titleSize || 'text-4xl md:text-7xl')}
+                                  style={{ color: banner.titleColor || '#ffffff' }}
+                                >
+                                  {banner.title}
+                                </h2>
+                                <p className="text-sm md:text-2xl font-medium text-white/90 drop-shadow-md max-w-2xl">
+                                  {banner.subtitle}
+                                </p>
+                              </>
+                            )}
+                            
+                            {banner.isButtonEnabled !== false && banner.buttonText && (
+                              <div className="pt-4">
+                                <Button 
+                                  asChild 
+                                  className={cn(
+                                    "h-12 md:h-16 px-10 md:px-14 font-black text-sm md:text-xl uppercase tracking-tight shadow-2xl transition-all hover:scale-105 active:scale-95",
+                                    banner.buttonShape || 'rounded-2xl'
+                                  )}
+                                  style={{ backgroundColor: banner.buttonColor || '#22c55e' }}
+                                >
+                                  <Link href={banner.buttonLink || '/products'}>
+                                    {banner.buttonText} <ArrowRight className="ml-2" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CarouselItem>
@@ -169,10 +199,9 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Home Sections Below */}
+        {/* Rest of page content... */}
         <div className="container mx-auto px-4 mt-8 space-y-16 pb-24">
-          
-          {/* Service Grid */}
+          {/* ... existing services and products grids ... */}
           <section>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
@@ -214,7 +243,6 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
 
-          {/* Featured Products */}
           <section>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">

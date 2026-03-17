@@ -30,10 +30,22 @@
         "imageUrl": { "type": "string" },
         "title": { "type": "string" },
         "subtitle": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "number" },
+        "isTextEnabled": { "type": "boolean" },
+        "textAlignment": { "type": "string", "enum": ["left", "center", "right"] },
+        "textPosition": { "type": "string", "enum": ["top", "center", "bottom"] },
+        "titleColor": { "type": "string" },
+        "titleSize": { "type": "string" },
+        "overlayColor": { "type": "string" },
+        "overlayOpacity": { "type": "number" },
+        "isButtonEnabled": { "type": "boolean" },
         "buttonText": { "type": "string" },
         "buttonLink": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "order": { "type": "number" }
+        "buttonColor": { "type": "string" },
+        "buttonSize": { "type": "string" },
+        "buttonShape": { "type": "string" },
+        "buttonPosition": { "type": "string" }
       }
     },
     "User": {
