@@ -3,8 +3,8 @@
 
 import React, { useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, query, orderBy, addDoc, updateDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { collection, doc, deleteDoc, query, orderBy, addDoc, updateDoc } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,20 +14,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Layout, 
-  Save, 
   Eye, 
   Loader2,
   Plus,
-  Megaphone,
   BellRing,
   Trash2,
-  Zap,
-  ArrowRight,
   Type,
-  Link as LinkIcon,
-  Image as ImageIcon,
   Palette,
-  Move
+  MousePointer2,
+  Settings2
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -39,16 +34,10 @@ import { Slider } from '@/components/ui/slider';
 export default function SiteCustomizePage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const [isSaving, setIsSubmitting] = useState(false);
 
   // Queries
   const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners'), orderBy('order', 'asc')) : null, [db]);
-  const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
-  const customizationRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage') : null, [db]);
-  
   const { data: banners, isLoading: bannersLoading } = useCollection(bannersQuery);
-  const { data: marqueeSettings, isLoading: marqueeLoading } = useCollection(marqueeRef as any);
-  const { data: customization, isLoading: customLoading } = useCollection(customizationRef as any);
 
   const handleAddBanner = async () => {
     if (!db) return;
@@ -57,7 +46,7 @@ export default function SiteCustomizePage() {
         title: 'New Dynamic Slide',
         subtitle: 'Experience the next level of cleaning',
         imageUrl: '',
-        isActive: false,
+        isActive: true,
         order: banners?.length || 0,
         isTextEnabled: true,
         textAlignment: 'center',
@@ -102,14 +91,14 @@ export default function SiteCustomizePage() {
     }
   };
 
-  if (bannersLoading || marqueeLoading || customLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
+  if (bannersLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Site Customize</h1>
-          <p className="text-muted-foreground text-sm">Control your homepage dynamic layout and messaging</p>
+          <p className="text-muted-foreground text-sm">Control your dynamic hero slider and global layout</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="gap-2 font-bold h-11" asChild>
@@ -130,7 +119,7 @@ export default function SiteCustomizePage() {
 
         <TabsContent value="hero" className="space-y-8">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold">Manage Slides ({banners?.length || 0})</h2>
+            <h2 className="text-lg font-bold uppercase tracking-tight">Manage Slides ({banners?.length || 0})</h2>
             <Button onClick={handleAddBanner} className="gap-2 font-black shadow-lg uppercase text-xs">
               <Plus size={16} /> New Dynamic Slide
             </Button>
@@ -138,13 +127,13 @@ export default function SiteCustomizePage() {
 
           <div className="space-y-10">
             {banners?.map((banner) => (
-              <Card key={banner.id} className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group">
+              <Card key={banner.id} className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-12">
-                  {/* Visual Preview & Status */}
+                  {/* Left: Media & Basic Control */}
                   <div className="lg:col-span-4 p-8 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
                     <ImageUploader 
                       initialUrl={banner.imageUrl}
-                      label="Slide Background"
+                      label="Slide Background Image"
                       aspectRatio="aspect-[21/9]"
                       onUpload={(url) => handleUpdateBanner(banner.id, { imageUrl: url })}
                     />
@@ -161,7 +150,7 @@ export default function SiteCustomizePage() {
                         </div>
                       </div>
                       <div className="p-4 bg-white rounded-2xl border border-gray-100 space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Order</Label>
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground">Sort Order</Label>
                         <Input 
                           type="number" 
                           defaultValue={banner.order} 
@@ -182,24 +171,43 @@ export default function SiteCustomizePage() {
                         onValueCommit={(val) => handleUpdateBanner(banner.id, { overlayOpacity: val[0] })}
                       />
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Overlay Color</Label>
+                      <Input 
+                        type="color"
+                        defaultValue={banner.overlayColor || '#000000'}
+                        onBlur={(e) => handleUpdateBanner(banner.id, { overlayColor: e.target.value })}
+                        className="h-10 w-full p-1 bg-white border-gray-200"
+                      />
+                    </div>
                   </div>
 
-                  {/* Settings Pane */}
+                  {/* Right: Rich Configuration */}
                   <div className="lg:col-span-8 p-10 space-y-10">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-black uppercase tracking-widest text-primary text-xs flex items-center gap-2">
-                        <Type size={16} /> Content & Typography
-                      </h3>
+                      <div className="flex items-center gap-4">
+                        <h3 className="font-black uppercase tracking-widest text-primary text-xs flex items-center gap-2">
+                          <Type size={16} /> Content & Layout
+                        </h3>
+                        <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+                          <Switch 
+                            checked={banner.isTextEnabled !== false} 
+                            onCheckedChange={(val) => handleUpdateBanner(banner.id, { isTextEnabled: val })} 
+                          />
+                          <span className="text-[10px] font-bold uppercase">Show Text</span>
+                        </div>
+                      </div>
                       <Button variant="ghost" size="icon" className="text-destructive h-8 w-8 hover:bg-red-50" onClick={() => handleDeleteBanner(banner.id)}>
                         <Trash2 size={16} />
                       </Button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Text Controls */}
+                      {/* Typography Settings */}
                       <div className="space-y-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Title Text</Label>
+                          <Label className="text-[10px] font-black uppercase">Main Title</Label>
                           <Input 
                             defaultValue={banner.title} 
                             onBlur={(e) => handleUpdateBanner(banner.id, { title: e.target.value })}
@@ -225,7 +233,21 @@ export default function SiteCustomizePage() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase">Alignment</Label>
+                            <Label className="text-[10px] font-black uppercase">Title Size</Label>
+                            <Select defaultValue={banner.titleSize || 'text-4xl'} onValueChange={(val) => handleUpdateBanner(banner.id, { titleSize: val })}>
+                              <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text-2xl">Small</SelectItem>
+                                <SelectItem value="text-4xl">Medium</SelectItem>
+                                <SelectItem value="text-6xl">Large</SelectItem>
+                                <SelectItem value="text-8xl">Extra Large</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase">Text Alignment</Label>
                             <Select defaultValue={banner.textAlignment || 'center'} onValueChange={(val) => handleUpdateBanner(banner.id, { textAlignment: val })}>
                               <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -235,11 +257,30 @@ export default function SiteCustomizePage() {
                               </SelectContent>
                             </Select>
                           </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase">Content Position</Label>
+                            <Select defaultValue={banner.textPosition || 'center'} onValueChange={(val) => handleUpdateBanner(banner.id, { textPosition: val })}>
+                              <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="top">Top</SelectItem>
+                                <SelectItem value="center">Middle</SelectItem>
+                                <SelectItem value="bottom">Bottom</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Button & Layout Controls */}
+                      {/* CTA Action Settings */}
                       <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MousePointer2 size={12}/> Button Action</Label>
+                          <Switch 
+                            checked={banner.isButtonEnabled !== false} 
+                            onCheckedChange={(val) => handleUpdateBanner(banner.id, { isButtonEnabled: val })} 
+                          />
+                        </div>
+                        
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase">Button Label</Label>
                           <Input 
@@ -253,24 +294,23 @@ export default function SiteCustomizePage() {
                           <Input 
                             defaultValue={banner.buttonLink} 
                             onBlur={(e) => handleUpdateBanner(banner.id, { buttonLink: e.target.value })}
-                            placeholder="/products"
+                            placeholder="/services"
                             className="h-11 bg-gray-50 border-none"
                           />
                         </div>
+                        
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase">Text Position</Label>
-                            <Select defaultValue={banner.textPosition || 'center'} onValueChange={(val) => handleUpdateBanner(banner.id, { textPosition: val })}>
-                              <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="top">Top</SelectItem>
-                                <SelectItem value="center">Center</SelectItem>
-                                <SelectItem value="bottom">Bottom</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Label className="text-[10px] font-black uppercase">Button Color</Label>
+                            <Input 
+                              type="color"
+                              defaultValue={banner.buttonColor || '#22c55e'}
+                              onBlur={(e) => handleUpdateBanner(banner.id, { buttonColor: e.target.value })}
+                              className="h-10 w-full p-1 bg-gray-50 border-none"
+                            />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase">Button Style</Label>
+                            <Label className="text-[10px] font-black uppercase">Button Shape</Label>
                             <Select defaultValue={banner.buttonShape || 'rounded-xl'} onValueChange={(val) => handleUpdateBanner(banner.id, { buttonShape: val })}>
                               <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -281,6 +321,12 @@ export default function SiteCustomizePage() {
                             </Select>
                           </div>
                         </div>
+                        
+                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                          <p className="text-[10px] font-bold text-primary flex items-center gap-2">
+                            <Settings2 size={12}/> Design Hint: Use high contrast colors for the button to increase conversion rates.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -290,7 +336,7 @@ export default function SiteCustomizePage() {
 
             {banners?.length === 0 && (
               <div className="p-24 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic">
-                No dynamic slides found. Click "New Dynamic Slide" to start building your carousel.
+                No dynamic slides found. Click "New Dynamic Slide" to start building your professional hero slider.
               </div>
             )}
           </div>
@@ -300,11 +346,10 @@ export default function SiteCustomizePage() {
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 p-8 border-b">
               <CardTitle className="text-lg font-bold">Top Announcement Bar</CardTitle>
-              <CardDescription>A scrolling notification bar at the very top of the site.</CardDescription>
             </CardHeader>
             <CardContent className="p-8">
               <div className="p-20 text-center border-2 border-dashed rounded-[2rem] text-muted-foreground italic">
-                Marquee management module coming in next update.
+                Global announcement management module is scheduled for the next system update.
               </div>
             </CardContent>
           </Card>

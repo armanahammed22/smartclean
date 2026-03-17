@@ -70,7 +70,7 @@ export default function SmartCleanHomePage() {
     <PublicLayout>
       <div className="flex flex-col bg-[#F2F4F8]">
         
-        {/* Admin Center (Shortcut) */}
+        {/* Admin Center Shortcut */}
         {isAdmin && (
           <section className="container mx-auto px-4 py-6">
             <div className="bg-[#081621] text-white p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/5">
@@ -94,7 +94,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* Dynamic Hero Carousel */}
+        {/* Unified Dynamic Hero Carousel */}
         <section className="container mx-auto px-4 py-6">
           <div className="max-w-[1400px] mx-auto">
             <div className="relative aspect-[21/9] md:aspect-[21/7] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
@@ -108,12 +108,12 @@ export default function SmartCleanHomePage() {
                   <CarouselContent className="h-full">
                     {activeBanners.map((banner) => (
                       <CarouselItem key={banner.id} className="h-full relative">
-                        {/* Background Image */}
+                        {/* Slide Background */}
                         <div className="absolute inset-0">
                           {banner.imageUrl ? (
                             <Image 
                               src={banner.imageUrl} 
-                              alt={banner.title || 'Promo'} 
+                              alt={banner.title || 'Slide'} 
                               fill 
                               className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                               priority
@@ -123,7 +123,7 @@ export default function SmartCleanHomePage() {
                               <Sparkles size={120} />
                             </div>
                           )}
-                          {/* Dynamic Overlay */}
+                          {/* Dynamic Color Overlay */}
                           <div 
                             className="absolute inset-0 transition-opacity duration-500" 
                             style={{ 
@@ -133,7 +133,7 @@ export default function SmartCleanHomePage() {
                           />
                         </div>
 
-                        {/* Banner Content Container */}
+                        {/* Slide Content Layer */}
                         <div className={cn(
                           "relative z-10 h-full flex flex-col p-8 md:p-20",
                           banner.textPosition === 'top' ? 'justify-start' : 
@@ -145,7 +145,7 @@ export default function SmartCleanHomePage() {
                             {banner.isTextEnabled !== false && (
                               <>
                                 <h2 
-                                  className={cn("font-black uppercase tracking-tighter leading-tight drop-shadow-xl", banner.titleSize || 'text-4xl md:text-7xl')}
+                                  className={cn("font-black uppercase tracking-tighter leading-tight drop-shadow-2xl", banner.titleSize || 'text-4xl md:text-7xl')}
                                   style={{ color: banner.titleColor || '#ffffff' }}
                                 >
                                   {banner.title}
@@ -166,7 +166,7 @@ export default function SmartCleanHomePage() {
                                   )}
                                   style={{ backgroundColor: banner.buttonColor || '#22c55e' }}
                                 >
-                                  <Link href={banner.buttonLink || '/products'}>
+                                  <Link href={banner.buttonLink || '/services'}>
                                     {banner.buttonText} <ArrowRight className="ml-2" />
                                   </Link>
                                 </Button>
@@ -179,18 +179,18 @@ export default function SmartCleanHomePage() {
                   </CarouselContent>
                 </Carousel>
               ) : (
-                /* Fallback Static Banner */
+                /* Static Fallback Banner */
                 <div className="relative w-full h-full flex flex-col justify-center items-center text-center p-12 bg-[#081621]">
                   <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/1200/600')] bg-cover" />
                   <div className="relative z-10 space-y-6">
                     <h2 className="text-3xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight">
-                      {t('hero_title')}
+                      Expert Cleaning Solutions
                     </h2>
-                    <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto">
-                      {t('hero_subtitle')}
+                    <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto font-medium">
+                      Professional home and office maintenance across Bangladesh.
                     </p>
-                    <Button asChild className="h-12 md:h-14 px-8 md:px-10 rounded-2xl font-black text-sm md:text-lg uppercase shadow-xl bg-primary hover:bg-primary/90">
-                      <Link href="/services">{t('hero_cta')}</Link>
+                    <Button asChild className="h-12 md:h-14 px-10 rounded-2xl font-black text-sm md:text-lg uppercase shadow-xl bg-primary hover:bg-primary/90">
+                      <Link href="/services">View Our Services</Link>
                     </Button>
                   </div>
                 </div>
@@ -199,9 +199,9 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Rest of page content... */}
+        {/* Content Grids */}
         <div className="container mx-auto px-4 mt-8 space-y-16 pb-24">
-          {/* ... existing services and products grids ... */}
+          {/* Services Section */}
           <section>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
@@ -243,6 +243,7 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
 
+          {/* Products Section */}
           <section>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
               <div className="space-y-1">
