@@ -11,13 +11,7 @@ service cloud.firestore {
     function isAdmin() { return isBootstrapAdmin() || hasRole('admins'); }
     function isManager() { return isAdmin() || hasRole('managers'); }
     function isOrderManager() { return isManager() || hasRole('order_managers'); }
-    function isAccountant() { return isAdmin() || hasRole('accounts'); }
     function isStaff() { return hasRole('employees'); }
-
-    // Global Overrides
-    match /{document=**} {
-      allow read, write: if isBootstrapAdmin();
-    }
 
     // Public Content (Anyone can view)
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -85,5 +79,10 @@ service cloud.firestore {
     match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    // Global Fallback
+    match /{document=**} {
+      allow read, write: if isBootstrapAdmin();
+    }
   }
 }

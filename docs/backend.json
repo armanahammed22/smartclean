@@ -48,12 +48,15 @@
         "status": { "type": "string" }
       }
     },
-    "SecuritySettings": {
-      "title": "SecuritySettings",
+    "Order": {
+      "title": "Order",
       "type": "object",
       "properties": {
-        "minSessionDate": { "type": "string", "format": "date-time" },
-        "maintenanceMode": { "type": "boolean" }
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } }
       }
     }
   },
@@ -76,9 +79,9 @@
     "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
     "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
     "/site_settings/global": { "schema": "object", "description": "Global config & UI." },
-    "/site_settings/security": { "schema": "#/entities/SecuritySettings", "description": "Global security protocols." },
+    "/site_settings/support_hub": { "schema": "object", "description": "Floating support agent config." },
     "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
-    "/orders/{id}": { "schema": "object", "description": "Product sales." },
+    "/orders/{id}": { "schema": "#/entities/Order", "description": "Product sales." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
     "/employee_profiles/{id}": { "schema": "object", "description": "Staff data." },
