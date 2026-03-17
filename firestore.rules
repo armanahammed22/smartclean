@@ -2,40 +2,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Basic Auth Helpers
     function isSignedIn() { return request.auth != null; }
     function isBootstrapAdmin() { return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"; }
     function hasRole(role) { return isSignedIn() && exists(/databases/$(database)/documents/roles_$(role)/$(request.auth.uid)); }
+    
+    // Role Helpers
     function isAdmin() { return isBootstrapAdmin() || hasRole('admins'); }
-    function isOrderManager() { return isAdmin() || hasRole('managers') || hasRole('order_managers'); }
+    function isManager() { return isAdmin() || hasRole('managers'); }
+    function isOrderManager() { return isManager() || hasRole('order_managers'); }
+    function isAccountant() { return isAdmin() || hasRole('accounts'); }
+    function isStaff() { return hasRole('employees'); }
 
+    // Global Overrides
     match /{document=**} {
       allow read, write: if isBootstrapAdmin();
     }
 
+    // Public Content (Anyone can view)
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
     match /products/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /product_categories/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /brands/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /variant_types/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /reusable_features/{id} { allow read: if true; allow write: if isOrderManager(); }
     match /reusable_specs/{id} { allow read: if true; allow write: if isOrderManager(); }
-    
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
     match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
-    
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /couriers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // User & Profile Data
     match /users/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
       allow write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
     }
+    match /employee_profiles/{id} {
+      allow read: if true; // Public bios
+      allow write: if isAdmin();
+    }
+    match /staff_availability/{id} {
+      allow read: if true; // Read for auto-assignment engine
+      allow write: if isSignedIn() && (request.auth.uid == id || isAdmin());
+    }
 
-    match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn(); }
+    // Transactions & Leads (Public Create, Secure Read)
+    match /orders/{id} { 
+      allow create: if true; 
+      allow read: if isSignedIn() && (request.resource.data.customerId == request.auth.uid || isOrderManager());
+      allow write: if isOrderManager(); 
+    }
+    match /bookings/{id} { 
+      allow create: if true; 
+      allow read: if isSignedIn() && (request.resource.data.customerId == request.auth.uid || isAdmin() || isStaff());
+      allow write: if isAdmin() || isStaff(); 
+    }
+    match /leads/{id} { 
+      allow create: if true; 
+      allow read: if isAdmin(); 
+    }
+    match /support_tickets/{id} {
+      allow create: if true;
+      allow read: if isAdmin() || (isSignedIn() && request.resource.data.customerId == request.auth.uid);
+      allow update: if isAdmin();
+    }
 
-    match /orders/{id} { allow create: if true; allow read: if isSignedIn(); allow write: if isOrderManager(); }
-    match /bookings/{id} { allow create: if true; allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /leads/{id} { allow create: if true; allow read: if isAdmin(); }
+    // Referral System
+    match /referrals/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // Role Assignments (Internal Only)
+    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
+    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    allow read: if isSignedIn(); // Allow all roles collections to be checked by functions
   }
 }

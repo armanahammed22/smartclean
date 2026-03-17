@@ -34,20 +34,36 @@
         "isActive": { "type": "boolean" },
         "order": { "type": "number" }
       }
+    },
+    "User": {
+      "title": "User",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" }
+      }
     }
   },
   "auth": {
-    "providers": ["password"]
+    "providers": ["password", "phone"]
   },
   "firestore": {
     "/users/{uid}": { "schema": "#/entities/User", "description": "Unified user accounts." },
-    "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
+    "/roles_admins/{uid}": { "schema": "object", "description": "Admin authorization mapping." },
+    "/roles_managers/{uid}": { "schema": "object", "description": "Manager authorization mapping." },
+    "/roles_order_managers/{uid}": { "schema": "object", "description": "Order manager mapping." },
+    "/roles_employees/{uid}": { "schema": "object", "description": "Staff authorization mapping." },
+    "/products/{id}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/product_categories/{id}": { "schema": "object", "description": "Product groupings." },
     "/brands/{id}": { "schema": "object", "description": "Product brands." },
     "/variant_types/{id}": { "schema": "object", "description": "Reusable variant types." },
     "/reusable_features/{id}": { "schema": "object", "description": "Standard features." },
     "/reusable_specs/{id}": { "schema": "object", "description": "Technical specification keys." },
-    "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Main services." },
+    "/services/{id}": { "schema": "object", "description": "Main services catalog." },
     "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
     "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
@@ -56,6 +72,13 @@
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
     "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
     "/employee_profiles/{id}": { "schema": "object", "description": "Staff data." },
-    "/staff_availability/{id}": { "schema": "object", "description": "Staff live status." }
+    "/staff_availability/{id}": { "schema": "object", "description": "Staff live status." },
+    "/leads/{id}": { "schema": "object", "description": "Sales leads." },
+    "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
+    "/quick_actions/{id}": { "schema": "object", "description": "Home screen shortcuts." },
+    "/quick_links/{id}": { "schema": "object", "description": "Home screen navigation grid." },
+    "/support_tickets/{id}": { "schema": "object", "description": "Customer support requests." },
+    "/marketing_offers/{id}": { "schema": "object", "description": "Promotional banners." },
+    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." }
   }
 }
