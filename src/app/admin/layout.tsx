@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -75,6 +74,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+
+  // Global Refresh Redirect Logic
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.performance) {
+      const navigationEntries = performance.getEntriesByType('navigation');
+      if (navigationEntries.length > 0) {
+        const navType = (navigationEntries[0] as PerformanceNavigationTiming).type;
+        // Detect if the page was reloaded/refreshed
+        if (navType === 'reload' && pathname !== '/admin/dashboard' && pathname.startsWith('/admin')) {
+          router.replace('/admin/dashboard');
+        }
+      }
+    }
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
