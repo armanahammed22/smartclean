@@ -55,12 +55,12 @@ service cloud.firestore {
     // Transactions & Leads (Public Create, Secure Read)
     match /orders/{id} { 
       allow create: if true; 
-      allow read: if isSignedIn() && (request.resource.data.customerId == request.auth.uid || isOrderManager());
+      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isOrderManager());
       allow write: if isOrderManager(); 
     }
     match /bookings/{id} { 
       allow create: if true; 
-      allow read: if isSignedIn() && (request.resource.data.customerId == request.auth.uid || isAdmin() || isStaff());
+      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin() || isStaff());
       allow write: if isAdmin() || isStaff(); 
     }
     match /leads/{id} { 
@@ -69,7 +69,7 @@ service cloud.firestore {
     }
     match /support_tickets/{id} {
       allow create: if true;
-      allow read: if isAdmin() || (isSignedIn() && request.resource.data.customerId == request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update: if isAdmin();
     }
 
@@ -82,6 +82,8 @@ service cloud.firestore {
     // Role Assignments (Internal Only)
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
     match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    allow read: if isSignedIn(); // Allow all roles collections to be checked by functions
+    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
   }
 }

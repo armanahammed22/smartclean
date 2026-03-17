@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
-import { collection, query, doc, limit, orderBy } from 'firebase/firestore';
+import { collection, query, doc, limit } from 'firebase/firestore';
 import { 
   ArrowRight, 
   Wrench, 
@@ -43,13 +43,16 @@ export default function SmartCleanHomePage() {
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Data Fetching - Fetch all then filter in memory to avoid Index requirements
-  const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners'), orderBy('order', 'asc')) : null, [db]);
+  // Data Fetching - Fetch all banners then filter/sort in memory to avoid Index/Permission complexity
+  const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners')) : null, [db]);
   const { data: banners, isLoading: bannersLoading } = useCollection(bannersQuery);
 
-  const activeBanners = React.useMemo(() => 
-    banners?.filter(b => b.isActive === true) || [], 
-  [banners]);
+  const activeBanners = React.useMemo(() => {
+    if (!banners) return [];
+    return banners
+      .filter(b => b.isActive === true)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [banners]);
 
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(10)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(15)) : null, [db]);
