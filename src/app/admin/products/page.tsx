@@ -303,7 +303,7 @@ export default function ProductsManagementPage() {
                   </div>
                 </div>
 
-                {/* DYNAMIC SPECIFICATIONS SECTION */}
+                {/* DYNAMIC EXTRA SPECIFICATIONS SECTION */}
                 <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -311,25 +311,25 @@ export default function ProductsManagementPage() {
                       <Label className="text-sm font-black uppercase tracking-tight">Technical Specifications</Label>
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={addSpecField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
-                      <Plus size={14} /> Add Custom Spec
+                      <Plus size={14} /> Add Extra Specification
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {specs.map((spec, idx) => (
-                      <div key={idx} className="flex gap-2 items-end animate-in fade-in slide-in-from-top-1">
+                      <div key={idx} className="flex gap-2 items-end animate-in fade-in slide-in-from-top-1 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
                         <div className="flex-1 space-y-1.5">
                           <Input 
                             value={spec.key} 
                             onChange={(e) => updateSpec(idx, 'key', e.target.value)} 
-                            placeholder="Spec Name (e.g. Voltage)"
-                            className="h-10 text-xs font-bold bg-gray-50/50 border-none"
+                            placeholder="Specification Name (e.g. Battery)"
+                            className="h-9 text-xs font-bold bg-white border-gray-200"
                           />
                           <Input 
                             value={spec.value} 
                             onChange={(e) => updateSpec(idx, 'value', e.target.value)} 
-                            placeholder="Value (e.g. 220V)"
-                            className="h-10 text-xs bg-gray-50 border-none"
+                            placeholder="Value (e.g. 5000mAh)"
+                            className="h-9 text-xs bg-white border-gray-200"
                           />
                         </div>
                         <Button 
@@ -337,12 +337,17 @@ export default function ProductsManagementPage() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => removeSpecField(idx)} 
-                          className="h-10 w-10 text-destructive hover:bg-red-50"
+                          className="h-9 w-9 text-destructive hover:bg-red-50"
                         >
-                          <X size={16} />
+                          <Trash2 size={14} />
                         </Button>
                       </div>
                     ))}
+                    {specs.length === 0 && (
+                      <div className="col-span-full py-8 text-center border-2 border-dashed rounded-3xl text-muted-foreground text-xs italic">
+                        No extra specifications added.
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -425,10 +430,10 @@ export default function ProductsManagementPage() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
-                          <Edit size(14) />
+                          <Edit size={14} />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => deleteDoc(doc(db!, 'products', product.id))}>
-                          <Trash2 size(14) />
+                          <Trash2 size={14} />
                         </Button>
                       </div>
                     </TableCell>

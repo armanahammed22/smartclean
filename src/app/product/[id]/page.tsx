@@ -82,7 +82,7 @@ export default function ProductDetailsPage() {
     <PublicLayout>
       <div className="bg-[#F8FAFC] min-h-screen pb-20">
         <div className="container mx-auto px-4 py-8">
-          <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm">
+          <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
             <ArrowLeft size={18} /> Back to Catalog
           </Button>
 
@@ -90,7 +90,7 @@ export default function ProductDetailsPage() {
             
             {/* Left Side: Product Gallery */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
+              <div className="relative aspect-square rounded-[2.5rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
                 {allImages.length > 0 ? (
                   <>
                     <Image 
@@ -163,7 +163,7 @@ export default function ProductDetailsPage() {
 
             {/* Right Side: Product Actions */}
             <div className="lg:col-span-5 space-y-8">
-              <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-sm border border-gray-100 space-y-8">
+              <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">{product.categoryId || 'General Supply'}</p>
@@ -233,12 +233,12 @@ export default function ProductDetailsPage() {
               <Tabs defaultValue="description" className="w-full">
                 <TabsList className="bg-white border p-1 h-14 rounded-2xl shadow-sm mb-8 w-full md:w-fit overflow-x-auto no-scrollbar whitespace-nowrap">
                   <TabsTrigger value="description" className="rounded-xl px-8 h-full font-black uppercase text-[11px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Full Description</TabsTrigger>
-                  <TabsTrigger value="specs" className="rounded-xl px-8 h-full font-black uppercase text-[11px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Specifications</TabsTrigger>
+                  <TabsTrigger value="specs" className="rounded-xl px-8 h-full font-black uppercase text-[11px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Extra Specifications</TabsTrigger>
                   <TabsTrigger value="reviews" className="rounded-xl px-8 h-full font-black uppercase text-[11px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Reviews (12)</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="description">
-                  <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-white">
+                  <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
                     <CardContent className="p-10 prose prose-slate max-w-none">
                       <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 mb-6 flex items-center gap-2">
                         <Info className="text-primary" /> Detailed Overview
@@ -251,44 +251,59 @@ export default function ProductDetailsPage() {
                 </TabsContent>
 
                 <TabsContent value="specs">
-                  <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-white">
+                  <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
                     <CardContent className="p-10 space-y-10">
-                      <div className="space-y-6">
-                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
-                          <Settings2 className="text-primary" /> Technical Specifications
-                        </h2>
+                      <div className="space-y-8">
+                        <div className="flex items-center justify-between border-b pb-4 border-gray-100">
+                          <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
+                            <Settings2 className="text-primary" size={28} /> Product Specifications
+                          </h2>
+                          <Badge variant="secondary" className="uppercase font-black text-[9px] px-3 tracking-widest">Technical Data</Badge>
+                        </div>
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {/* Built-in Specs */}
+                          {/* Built-in Base Specs */}
                           {[
-                            { label: 'Brand', val: product.brand || 'Smart Clean Pro' },
-                            { label: 'Model ID', val: product.id.slice(0, 8).toUpperCase() },
-                            { label: 'Category', val: product.categoryId || 'Cleaning Equipment' },
-                            { label: 'Standard Size', val: product.size || 'N/A' },
-                            { label: 'Stock Status', val: product.stockQuantity > 0 ? 'Available' : 'Out of Stock' },
+                            { label: 'Brand Name', val: product.brand || 'Smart Clean Pro' },
+                            { label: 'Product Model', val: product.id.slice(0, 8).toUpperCase() },
+                            { label: 'Main Category', val: product.categoryId || 'Cleaning Equipment' },
+                            { label: 'Standard Unit', val: product.size || 'N/A' },
+                            { label: 'Inventory Status', val: product.stockQuantity > 0 ? 'In Stock' : 'Pre-Order' },
                           ].map((spec, i) => (
-                            <div key={i} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-1">
-                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{spec.label}</span>
+                            <div key={i} className="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex flex-col gap-1.5 transition-all hover:bg-white hover:shadow-md">
+                              <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">{spec.label}</span>
                               <span className="text-sm font-bold text-gray-900">{spec.val}</span>
                             </div>
                           ))}
                           
-                          {/* Dynamic Custom Specs */}
+                          {/* Dynamic Extra Specs */}
                           {product.specs?.map((spec: any, i: number) => (
-                            <div key={`dynamic-${i}`} className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col gap-1 animate-in fade-in">
-                              <span className="text-[10px] font-black uppercase text-primary tracking-widest">{spec.key}</span>
-                              <span className="text-sm font-bold text-gray-900">{spec.value || 'N/A'}</span>
+                            <div key={`dynamic-${i}`} className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex flex-col gap-1.5 transition-all hover:bg-white hover:shadow-md animate-in fade-in">
+                              <span className="text-[9px] font-black uppercase text-primary tracking-widest">{spec.key}</span>
+                              <span className="text-sm font-black text-gray-900">{spec.value || 'N/A'}</span>
                             </div>
                           ))}
                         </div>
+
+                        {(!product.specs || product.specs.length === 0) && (
+                          <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                            <Box size={40} className="text-gray-300" />
+                            <p className="text-sm font-medium text-gray-400 italic">No extra technical data provided for this item.</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
 
                 <TabsContent value="reviews">
-                  <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-white">
-                    <CardContent className="p-20 text-center text-muted-foreground italic font-medium">
-                      Customer reviews are loading from the database...
+                  <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                    <CardContent className="p-20 text-center flex flex-col items-center gap-4">
+                      <div className="p-4 bg-gray-50 rounded-full text-muted-foreground/30"><Star size={48} /></div>
+                      <div>
+                        <p className="text-lg font-bold text-gray-900 uppercase tracking-tight">Reviews Coming Soon</p>
+                        <p className="text-sm font-medium text-muted-foreground italic">Be the first to review this product after your purchase!</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
