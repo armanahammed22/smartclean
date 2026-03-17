@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -29,8 +30,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
-  // Updated to 'users' collection
   const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile, isLoading: profileLoading, error: profileError } = useDoc(profileRef);
 
@@ -39,6 +40,18 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  // Active Purge: Logout banned or restricted users automatically
+  const isRestricted = profile?.status && profile.status !== 'active';
+  useEffect(() => {
+    if (!isUserLoading && !profileLoading && user && (isRestricted || profileError)) {
+      const reason = isRestricted ? `Account ${profile.status}` : "Session Error";
+      toast({ variant: "destructive", title: "Security Purge", description: `${reason}. Please contact support.` });
+      signOut(auth).then(() => {
+        router.push('/login');
+      });
+    }
+  }, [isRestricted, profileError, isUserLoading, profileLoading, user, auth, router, toast, profile?.status]);
 
   const NAV_ITEMS = [
     { name: 'Dashboard', href: '/account/dashboard', icon: LayoutDashboard },
@@ -62,44 +75,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     );
   }
 
-  if (!user) return null;
-
-  // Session Error State (e.g. Permission Error or Network Issue)
-  if (profileError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-6 bg-white rounded-full shadow-sm">
-          <AlertCircle size={64} className="text-destructive" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">System Synchronization Issue</h2>
-          <p className="text-muted-foreground max-w-xs mx-auto font-medium">We encountered an error retrieving your profile data. This could be due to a temporary connection issue.</p>
-        </div>
-        <Button onClick={handleLogout} variant="destructive" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 shadow-lg">
-          <LogOut size={18} /> Logout & Reset Session
-        </Button>
-      </div>
-    );
-  }
-
-  // Account Status Check (Banned/Disabled)
-  const isRestricted = profile?.status && profile.status !== 'active';
-  if (isRestricted) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-6 bg-white rounded-full shadow-sm">
-          <ShieldAlert size={64} className="text-orange-500" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Account Restricted</h2>
-          <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your account status is currently: <span className="font-bold text-gray-900 uppercase">{profile?.status}</span>. Please contact support if you believe this is an error.</p>
-        </div>
-        <Button onClick={handleLogout} variant="outline" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 border-2">
-          <LogOut size={18} /> Safe Exit
-        </Button>
-      </div>
-    );
-  }
+  if (!user || isRestricted || profileError) return null;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">

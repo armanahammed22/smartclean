@@ -47,6 +47,14 @@
         "role": { "type": "string" },
         "status": { "type": "string" }
       }
+    },
+    "SecuritySettings": {
+      "title": "SecuritySettings",
+      "type": "object",
+      "properties": {
+        "minSessionDate": { "type": "string", "format": "date-time" },
+        "maintenanceMode": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -67,7 +75,8 @@
     "/services/{id}": { "schema": "object", "description": "Main services catalog." },
     "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
     "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
-    "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
+    "/site_settings/global": { "schema": "object", "description": "Global config & UI." },
+    "/site_settings/security": { "schema": "#/entities/SecuritySettings", "description": "Global security protocols." },
     "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
     "/orders/{id}": { "schema": "object", "description": "Product sales." },
     "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
@@ -80,6 +89,7 @@
     "/quick_links/{id}": { "schema": "object", "description": "Home screen navigation grid." },
     "/support_tickets/{id}": { "schema": "object", "description": "Customer support requests." },
     "/marketing_offers/{id}": { "schema": "object", "description": "Promotional banners." },
-    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." }
+    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." },
+    "/blocked_users/{id}": { "schema": "object", "description": "Blacklisted credentials." }
   }
 }

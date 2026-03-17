@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const auth = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const staffRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -44,6 +46,20 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isUserLoading, router]);
 
+  // Active Purge: Logout restricted staff automatically
+  const isUnauthorized = !staffRole && !roleLoading && user;
+  const isBanned = (profile?.status === 'Banned' || profile?.status === 'Terminated') && !profileLoading;
+
+  useEffect(() => {
+    if (!isUserLoading && (isUnauthorized || isBanned || roleError)) {
+      const reason = isBanned ? "Account Restricted" : "Unauthorized Access";
+      toast({ variant: "destructive", title: "Staff Security Purge", description: `${reason}. Please contact supervisor.` });
+      signOut(auth).then(() => {
+        router.push('/login');
+      });
+    }
+  }, [isUnauthorized, isBanned, roleError, isUserLoading, auth, router, toast]);
+
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
@@ -58,62 +74,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user) return null;
-
-  // Handle DB/Permission Errors with Persistent Logout
-  if (roleError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-6 bg-white rounded-full shadow-sm">
-          <AlertCircle size={64} className="text-destructive" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Access Verification Error</h2>
-          <p className="text-muted-foreground max-w-xs mx-auto font-medium">We were unable to verify your staff credentials. Please check your internet connection or try re-logging.</p>
-        </div>
-        <Button onClick={handleLogout} variant="destructive" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 shadow-lg">
-          <LogOut size={18} /> Sign Out & Retry
-        </Button>
-      </div>
-    );
-  }
-
-  // Handle Unauthorized Role
-  if (!staffRole) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-6 bg-white rounded-full shadow-sm">
-          <ShieldAlert size={64} className="text-red-500" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Staff Access Denied</h2>
-          <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your account is not registered in our technician database. Please contact your supervisor.</p>
-        </div>
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={handleLogout} className="rounded-xl gap-2 font-bold"><LogOut size={18} /> Logout</Button>
-          <Button asChild className="rounded-xl shadow-lg font-bold"><Link href="/">Back to Site</Link></Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle Blocked/Banned Technicians
-  if (profile?.status === 'Banned' || profile?.status === 'Terminated') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-6 bg-white rounded-full shadow-sm">
-          <ShieldAlert size={64} className="text-red-600" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black uppercase tracking-tight">Account Blocked</h2>
-          <p className="text-muted-foreground max-w-xs mx-auto font-medium">Your technician access has been restricted. Status: <span className="font-bold text-red-600 uppercase">{profile.status}</span>.</p>
-        </div>
-        <Button onClick={handleLogout} variant="outline" className="rounded-xl px-10 h-12 font-black uppercase tracking-widest gap-2 border-2">
-          <LogOut size={18} /> Safe Exit
-        </Button>
-      </div>
-    );
-  }
+  if (!user || isUnauthorized || isBanned || roleError) return null;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">

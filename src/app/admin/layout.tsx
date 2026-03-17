@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/sheet";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useLanguage } from '@/components/providers/language-provider';
+import { useToast } from '@/hooks/use-toast';
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
@@ -72,6 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { language, setLanguage, t } = useLanguage();
+  const { toast } = useToast();
 
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -79,6 +81,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [db, user]);
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
+
+  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+
+  // Active Purge: Logout non-admins trying to access admin portal
+  useEffect(() => {
+    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
+      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required. Logging out..." });
+      signOut(auth).then(() => {
+        router.push('/login');
+      });
+    }
+  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   const NAV_GROUPS = [
     {
@@ -101,7 +121,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Products", href: '/admin/products', icon: Box, color: 'text-indigo-400' },
         { name: "Categories", href: '/admin/products/categories', icon: Tags, color: 'text-rose-400' },
-        { name: "Sub Categories", href: '/admin/products/categories', icon: Layers, color: 'text-orange-400' },
       ]
     },
     {
@@ -167,30 +186,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-6">
-        <div className="p-4 bg-white rounded-full shadow-sm">
-          <Lock size={48} className="text-gray-400" />
-        </div>
-        <h2 className="text-2xl font-bold">Authentication Required</h2>
-        <Button asChild className="rounded-xl"><Link href="/login">Go to Login</Link></Button>
-      </div>
-    );
-  }
-
-  const isAuthorized = !!adminRole || user.uid === BOOTSTRAP_ADMIN_UID;
-
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-50 text-center gap-4">
-        <AlertTriangle size={64} className="text-orange-500" />
-        <h2 className="text-2xl font-bold">Unauthorized Access</h2>
-        <p className="text-muted-foreground max-w-xs mx-auto">Your account does not have admin privileges.</p>
-        <Button variant="outline" onClick={handleLogout} className="rounded-xl">Logout</Button>
-      </div>
-    );
-  }
+  if (!user || !isAuthorized) return null;
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
     <>
