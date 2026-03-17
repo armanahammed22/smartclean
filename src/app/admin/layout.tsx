@@ -42,7 +42,8 @@ import {
   Info,
   Link as LinkIcon,
   MousePointer2,
-  FileText
+  FileText,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
