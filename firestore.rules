@@ -162,5 +162,54 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // --- CRM & Leads ---
+    match /leads/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // --- Marketing Campaigns ---
+    match /marketing_campaigns/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Product Attributes Templates ---
+    match /reusable_features/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /reusable_specs/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /variant_types/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Staff Operations & Logistics ---
+    match /staff_earnings/{id} {
+      allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+    match /service_areas/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /couriers/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Additional Roles ---
+    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    // --- Security Blacklist ---
+    match /blocked_users/{id} {
+      allow read, write: if isAdmin();
+    }
   }
 }

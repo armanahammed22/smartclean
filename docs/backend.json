@@ -41,6 +41,20 @@
         "buttonText": { "type": "string" },
         "buttonLink": { "type": "string" }
       }
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "A potential sales inquiry.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "source": { "type": "string" },
+        "status": { "type": "string", "enum": ["New", "Contacted", "Qualified", "Lost"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -61,6 +75,10 @@
     },
     "/roles_admins/{uid}": {
       "description": "Authorized admin users."
+    },
+    "/leads/{id}": {
+      "schema": "Lead",
+      "description": "Sales leads for tracking potential customers."
     }
   }
 }
