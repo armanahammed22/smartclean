@@ -67,6 +67,19 @@ export default function AdminDashboard() {
     
     const batch = writeBatch(db);
 
+    // Initial Hero Banner Seed
+    batch.set(doc(db, 'hero_banners', 'default_promo'), {
+      id: 'default_promo',
+      title: 'Smart Cleaning Solutions',
+      subtitle: 'Expert deep cleaning and maintenance for your home and office.',
+      imageUrl: 'https://picsum.photos/seed/clean/1200/600',
+      buttonText: 'Book Service',
+      buttonLink: '/services',
+      isActive: true,
+      order: 0,
+      createdAt: new Date().toISOString()
+    });
+
     // Main Services
     const SERVICE_DATA = [
       { id: 's_home', title: 'Home Cleaning', basePrice: 2000 },
@@ -93,7 +106,7 @@ export default function AdminDashboard() {
         status: 'Active',
         duration: 'Variable',
         createdAt: new Date().toISOString(),
-        imageUrl: "", // REMOVED picsum seed
+        imageUrl: `https://picsum.photos/seed/${s.id}/800/600`, 
         categoryId: 'Cleaning'
       });
     });

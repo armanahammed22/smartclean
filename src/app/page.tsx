@@ -9,19 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
-import { collection, query, doc, where, limit, orderBy } from 'firebase/firestore';
+import { collection, query, doc, limit, orderBy } from 'firebase/firestore';
 import { 
-  BellRing, 
   ArrowRight, 
   Wrench, 
   ChevronRight, 
   Loader2, 
-  Zap, 
   LayoutDashboard, 
-  ShoppingCart, 
-  TrendingUp, 
-  UserCheck, 
-  Briefcase, 
   ShieldCheck,
   Sparkles
 } from 'lucide-react';
@@ -32,10 +26,9 @@ import {
   CarouselContent, 
   CarouselItem
 } from '@/components/ui/carousel';
-import { cn } from '@/lib/utils';
 
 export default function SmartCleanHomePage() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useUser();
   const { addToCart, setCheckoutOpen } = useCart();
   const [isMounted, setIsMounted] = useState(false);
@@ -50,18 +43,19 @@ export default function SmartCleanHomePage() {
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Data Fetching - V2 Unified Hero Banners
-  const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners'), where('isActive', '==', true), orderBy('order', 'asc')) : null, [db]);
-  const { data: activeBanners, isLoading: bannersLoading } = useCollection(bannersQuery);
+  // Data Fetching - Fetch all then filter in memory to avoid Index requirements
+  const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners'), orderBy('order', 'asc')) : null, [db]);
+  const { data: banners, isLoading: bannersLoading } = useCollection(bannersQuery);
+
+  const activeBanners = React.useMemo(() => 
+    banners?.filter(b => b.isActive === true) || [], 
+  [banners]);
 
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(10)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(15)) : null, [db]);
 
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
   const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
-
-  const marqueeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'marquee') : null, [db]);
-  const { data: marqueeSettings } = useDoc(marqueeRef as any);
 
   const handleDirectServiceCheckout = (service: any) => {
     addToCart(service);
@@ -98,14 +92,14 @@ export default function SmartCleanHomePage() {
 
         {/* Dynamic Hero Carousel */}
         <section className="container mx-auto px-4 py-6">
-          <div className="max-w-[982px] mx-auto">
-            <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+          <div className="max-w-[1200px] mx-auto">
+            <div className="relative aspect-[21/9] md:aspect-[21/7] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
               
               {bannersLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                   <Loader2 className="animate-spin text-primary" size={40} />
                 </div>
-              ) : activeBanners && activeBanners.length > 0 ? (
+              ) : activeBanners.length > 0 ? (
                 <Carousel className="w-full h-full" opts={{ loop: true }}>
                   <CarouselContent className="h-full">
                     {activeBanners.map((banner) => (
@@ -115,7 +109,7 @@ export default function SmartCleanHomePage() {
                           {banner.imageUrl ? (
                             <Image 
                               src={banner.imageUrl} 
-                              alt={banner.title} 
+                              alt={banner.title || 'Promo'} 
                               fill 
                               className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                               priority
@@ -132,14 +126,14 @@ export default function SmartCleanHomePage() {
                         {/* Banner Content */}
                         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-8 md:p-16 space-y-6">
                           <div className="space-y-4 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <h2 className="text-4xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight drop-shadow-lg">
+                            <h2 className="text-3xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight drop-shadow-lg">
                               {banner.title}
                             </h2>
-                            <p className="text-base md:text-xl font-medium text-white/90 drop-shadow-md">
+                            <p className="text-sm md:text-xl font-medium text-white/90 drop-shadow-md">
                               {banner.subtitle}
                             </p>
                             <div className="pt-4">
-                              <Button asChild className="h-14 px-10 rounded-2xl font-black text-lg uppercase tracking-tight shadow-2xl bg-primary hover:bg-primary/90">
+                              <Button asChild className="h-12 md:h-14 px-8 md:px-10 rounded-2xl font-black text-sm md:text-lg uppercase tracking-tight shadow-2xl bg-primary hover:bg-primary/90">
                                 <Link href={banner.buttonLink || '/products'}>
                                   {banner.buttonText || 'Discover Now'} <ArrowRight className="ml-2" />
                                 </Link>
@@ -156,13 +150,13 @@ export default function SmartCleanHomePage() {
                 <div className="relative w-full h-full flex flex-col justify-center items-center text-center p-12 bg-[#081621]">
                   <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/1200/600')] bg-cover" />
                   <div className="relative z-10 space-y-6">
-                    <h2 className="text-4xl md:text-6xl font-black uppercase text-white tracking-tighter">
+                    <h2 className="text-3xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight">
                       {t('hero_title')}
                     </h2>
-                    <p className="text-lg text-white/70 max-w-xl mx-auto">
+                    <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto">
                       {t('hero_subtitle')}
                     </p>
-                    <Button asChild className="h-14 px-10 rounded-2xl font-black text-lg uppercase shadow-xl">
+                    <Button asChild className="h-12 md:h-14 px-8 md:px-10 rounded-2xl font-black text-sm md:text-lg uppercase shadow-xl bg-primary hover:bg-primary/90">
                       <Link href="/services">{t('hero_cta')}</Link>
                     </Button>
                   </div>
@@ -172,7 +166,7 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
-        {/* Marquee & Content Below */}
+        {/* Home Sections Below */}
         <div className="container mx-auto px-4 mt-8 space-y-16 pb-24">
           
           {/* Service Grid */}
