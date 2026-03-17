@@ -48,27 +48,38 @@
         "buttonPosition": { "type": "string" }
       }
     },
-    "User": {
-      "title": "User",
+    "Testimonial": {
+      "title": "Testimonial",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string" },
+        "id": { "type": "string" },
         "name": { "type": "string" },
-        "phone": { "type": "string" },
         "role": { "type": "string" },
-        "status": { "type": "string" }
+        "content": { "type": "string" },
+        "rating": { "type": "number" },
+        "avatarUrl": { "type": "string" }
       }
     },
-    "Order": {
-      "title": "Order",
+    "FAQ": {
+      "title": "FAQ",
       "type": "object",
       "properties": {
-        "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "totalPrice": { "type": "number" },
-        "status": { "type": "string" },
-        "items": { "type": "array", "items": { "type": "object" } }
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "order": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      }
+    },
+    "HomepageSection": {
+      "title": "HomepageSection",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "order": { "type": "number" },
+        "isActive": { "type": "boolean" }
       }
     }
   },
@@ -79,7 +90,6 @@
     "/users/{uid}": { "schema": "#/entities/User", "description": "Unified user accounts." },
     "/roles_admins/{uid}": { "schema": "object", "description": "Admin authorization mapping." },
     "/roles_managers/{uid}": { "schema": "object", "description": "Manager authorization mapping." },
-    "/roles_order_managers/{uid}": { "schema": "object", "description": "Order manager mapping." },
     "/roles_employees/{uid}": { "schema": "object", "description": "Staff authorization mapping." },
     "/products/{id}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/product_categories/{id}": { "schema": "object", "description": "Product groupings." },
@@ -90,21 +100,21 @@
     "/services/{id}": { "schema": "object", "description": "Main services catalog." },
     "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
     "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
+    "/quick_actions/{id}": { "schema": "object", "description": "Home screen shortcuts." },
+    "/quick_links/{id}": { "schema": "object", "description": "Home screen navigation grid." },
+    "/homepage_sections/{id}": { "schema": "#/entities/HomepageSection", "description": "Dynamic homepage layout blocks." },
+    "/offers/{id}": { "schema": "object", "description": "Promotional deals." },
+    "/testimonials/{id}": { "schema": "#/entities/Testimonial", "description": "Customer social proof." },
+    "/faq/{id}": { "schema": "#/entities/FAQ", "description": "Frequently asked questions." },
+    "/footer_settings/{id}": { "schema": "object", "description": "Global footer configuration." },
+    "/header_settings/{id}": { "schema": "object", "description": "Global header configuration." },
+    "/contact_info/{id}": { "schema": "object", "description": "Business contact details." },
+    "/social_links/{id}": { "schema": "object", "description": "Social media profiles." },
     "/site_settings/global": { "schema": "object", "description": "Global config & UI." },
     "/site_settings/support_hub": { "schema": "object", "description": "Floating support agent config." },
     "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
     "/orders/{id}": { "schema": "#/entities/Order", "description": "Product sales." },
-    "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
-    "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
-    "/employee_profiles/{id}": { "schema": "object", "description": "Staff data." },
-    "/staff_availability/{id}": { "schema": "object", "description": "Staff live status." },
-    "/leads/{id}": { "schema": "object", "description": "Sales leads." },
-    "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
-    "/quick_actions/{id}": { "schema": "object", "description": "Home screen shortcuts." },
-    "/quick_links/{id}": { "schema": "object", "description": "Home screen navigation grid." },
     "/support_tickets/{id}": { "schema": "object", "description": "Customer support requests." },
-    "/marketing_offers/{id}": { "schema": "object", "description": "Promotional banners." },
-    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." },
-    "/blocked_users/{id}": { "schema": "object", "description": "Blacklisted credentials." }
+    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." }
   }
 }
