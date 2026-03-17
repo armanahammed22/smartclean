@@ -13,12 +13,10 @@ import {
   ChevronRight,
   ChevronLeft,
   ShieldCheck,
-  AlertTriangle,
   Loader2,
   Lock,
   MapPin,
   BarChart3,
-  TicketPercent,
   Menu,
   Paintbrush,
   ShoppingCart,
@@ -28,23 +26,17 @@ import {
   Tags,
   HelpCircle,
   Share2,
-  AlertCircle,
-  CreditCard,
-  Briefcase,
   Calendar,
   Grid,
   Zap,
   Wallet,
   Globe,
-  UserCheck,
-  Headphones,
   Settings2,
-  Bell,
   Box,
-  Layers,
   Shapes,
   ListChecks,
-  Search
+  Search,
+  Headphones
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
 
   const adminRoleRef = useMemoFirebase(() => {
@@ -84,7 +76,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  // Active Purge: Logout non-admins trying to access admin portal
   useEffect(() => {
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required. Logging out..." });
@@ -190,52 +181,52 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
     <>
-      <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0 bg-[#081621]">
-        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2.5 bg-primary rounded-2xl text-white shrink-0 shadow-lg shadow-primary/20"><ShieldCheck size={22} /></div>
+      <div className="p-4 flex items-center justify-between border-b border-white/5 h-16 shrink-0 bg-[#081621]">
+        <div className={cn("flex items-center gap-2.5 transition-all duration-300", collapsed && "justify-center w-full")}>
+          <div className="p-2 bg-primary rounded-xl text-white shrink-0 shadow-lg shadow-primary/20"><ShieldCheck size={18} /></div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-black tracking-tighter text-sm text-white">ADMIN PORTAL</h1>
-              <p className="text-[9px] text-primary font-black uppercase tracking-widest leading-none mt-0.5">Smart Clean</p>
+              <h1 className="font-black tracking-tighter text-xs text-white">ADMIN PORTAL</h1>
+              <p className="text-[8px] text-primary font-black uppercase tracking-widest leading-none mt-0.5">Smart Clean</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scrollbar bg-gradient-to-b from-[#081621] to-[#050d14]">
+      <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar bg-gradient-to-b from-[#081621] to-[#050d14]">
         {NAV_GROUPS.map((group) => (
-          <div key={group.title} className="space-y-1.5">
+          <div key={group.title} className="space-y-1">
             {!collapsed && (
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-4 mb-3">
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] px-3 mb-1">
                 {group.title}
               </p>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {group.items.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center px-4 py-2.5 rounded-xl transition-all group relative h-11",
+                    "flex items-center px-3 py-1.5 rounded-lg transition-all group relative h-9",
                     pathname === item.href 
-                      ? "bg-primary text-white shadow-xl shadow-primary/20" 
+                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
                       : "text-gray-400 hover:bg-white/5 hover:text-white",
                     collapsed ? "justify-center" : "justify-start"
                   )}
                 >
                   <item.icon 
-                    size={collapsed ? 22 : 18} 
+                    size={collapsed ? 20 : 16} 
                     className={cn(
                       "shrink-0 transition-colors duration-300",
                       pathname === item.href ? "text-white" : item.color,
                       !collapsed && "mr-3"
                     )} 
                   />
-                  {!collapsed && <span className="text-xs font-bold truncate tracking-tight">{item.name}</span>}
+                  {!collapsed && <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>}
                   
                   {pathname === item.href && !collapsed && (
-                    <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <div className="absolute right-2 w-1 h-1 rounded-full bg-white animate-pulse" />
                   )}
                 </Link>
               ))}
@@ -245,17 +236,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {!mobileOnly && (
-        <div className="p-4 border-t border-white/5 shrink-0 mb-16 lg:mb-0 bg-[#050d14]">
+        <div className="p-3 border-t border-white/5 shrink-0 mb-16 lg:mb-0 bg-[#050d14]">
           <Button 
             variant="ghost" 
             className={cn(
-              "w-full text-gray-400 hover:text-destructive hover:bg-red-500/10 gap-3 transition-all rounded-xl h-12",
+              "w-full text-gray-400 hover:text-destructive hover:bg-red-500/10 gap-3 transition-all rounded-lg h-10",
               collapsed ? "justify-center" : "justify-start"
             )} 
             onClick={handleLogout}
           >
-            <LogOut size={20} />
-            {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Sign Out</span>}
+            <LogOut size={18} />
+            {!collapsed && <span className="font-black text-[9px] uppercase tracking-widest">Sign Out</span>}
           </Button>
         </div>
       )}
@@ -267,30 +258,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside 
         className={cn(
           "hidden lg:flex flex-col h-full bg-[#081621] text-white transition-all duration-300 z-30 relative shadow-2xl",
-          isCollapsed ? "w-20" : "w-64"
+          isCollapsed ? "w-16" : "w-60"
         )}
       >
         <SidebarContent collapsed={isCollapsed} />
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute -right-4 top-24 bg-white border border-gray-100 rounded-full h-8 w-8 z-40 hidden lg:flex shadow-xl text-gray-400 hover:text-primary transition-all hover:scale-110"
+          className="absolute -right-3 top-20 bg-white border border-gray-100 rounded-full h-6 w-6 z-40 hidden lg:flex shadow-xl text-gray-400 hover:text-primary transition-all hover:scale-110"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </Button>
       </aside>
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shrink-0 z-10 shadow-sm">
+        <header className="h-14 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl hover:bg-gray-50">
-                  <Menu size={24} />
+                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-lg hover:bg-gray-50">
+                  <Menu size={20} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64 shadow-2xl">
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-60 shadow-2xl">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Menu</SheetTitle>
                 </SheetHeader>
@@ -300,36 +291,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-1">Navigation</h2>
-              <span className="text-sm font-bold text-gray-900 leading-none">
+              <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-0.5">Navigation</h2>
+              <span className="text-xs font-bold text-gray-900 leading-none">
                 {NAV_GROUPS.flatMap(g => g.items).find(i => i.href === pathname)?.name || 'Admin Console'}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
               <input 
                 type="text" 
-                placeholder="Quick Search..." 
-                className="bg-gray-50 border-none rounded-full h-9 pl-9 pr-4 text-xs font-medium w-48 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                placeholder="Search..." 
+                className="bg-gray-50 border-none rounded-full h-8 pl-8 pr-3 text-[11px] font-medium w-40 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               />
             </div>
             <Button 
               variant="ghost" 
-              className="text-gray-600 hover:text-primary gap-2 h-9 px-3 rounded-xl hover:bg-primary/5"
+              className="text-gray-600 hover:text-primary gap-1.5 h-8 px-2 rounded-lg hover:bg-primary/5"
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
             >
-              <Globe size={18} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
+              <Globe size={16} />
+              <span className="text-[9px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
             </Button>
-            <div className="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm border-2 border-white shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xs border-2 border-white shadow-sm">
               {user?.email?.[0].toUpperCase()}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-24 lg:pb-8 custom-scrollbar">
           {children}
         </main>
 
