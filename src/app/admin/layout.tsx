@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -63,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { toast } = useToast();
 
   const adminRoleRef = useMemoFirebase(() => {
@@ -106,72 +107,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const NAV_GROUPS = [
     {
-      title: "Dashboard",
+      title: t('group_dashboard'),
       items: [
-        { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
-        { name: "Reports", href: '/admin/reports', icon: BarChart3, color: 'text-cyan-400' },
+        { name: t('item_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
+        { name: t('item_reports'), href: '/admin/reports', icon: BarChart3, color: 'text-cyan-400' },
       ]
     },
     {
-      title: "Orders & Booking",
+      title: t('group_orders'),
       items: [
-        { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-400' },
-        { name: "Service Booking", href: '/admin/bookings', icon: Calendar, color: 'text-blue-400' },
-        { name: "Order Tracking", href: '/admin/couriers', icon: Truck, color: 'text-emerald-400' },
+        { name: t('item_orders'), href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-400' },
+        { name: t('item_bookings'), href: '/admin/bookings', icon: Calendar, color: 'text-blue-400' },
+        { name: t('item_tracking'), href: '/admin/couriers', icon: Truck, color: 'text-emerald-400' },
       ]
     },
     {
-      title: "Inventory",
+      title: t('group_inventory'),
       items: [
-        { name: "Products", href: '/admin/products', icon: Box, color: 'text-indigo-400' },
-        { name: "Categories", href: '/admin/products/categories', icon: Tags, color: 'text-rose-400' },
+        { name: t('item_products'), href: '/admin/products', icon: Box, color: 'text-indigo-400' },
+        { name: t('item_categories'), href: '/admin/products/categories', icon: Tags, color: 'text-rose-400' },
       ]
     },
     {
-      title: "Services",
+      title: t('group_services'),
       items: [
-        { name: "Service List", href: '/admin/services', icon: Wrench, color: 'text-blue-500' },
-        { name: "Sub Services", href: '/admin/services/sub-services', icon: Grid, color: 'text-sky-500' },
-        { name: "Service Areas", href: '/admin/areas', icon: MapPin, color: 'text-red-400' },
+        { name: t('item_services'), href: '/admin/services', icon: Wrench, color: 'text-blue-500' },
+        { name: t('item_subservices'), href: '/admin/services/sub-services', icon: Grid, color: 'text-sky-500' },
+        { name: t('item_areas'), href: '/admin/areas', icon: MapPin, color: 'text-red-400' },
       ]
     },
     {
-      title: "Attributes & Brands",
+      title: t('group_attributes'),
       items: [
-        { name: "Brands", href: '/admin/attributes/brands', icon: Globe, color: 'text-pink-400' },
-        { name: "Variants", href: '/admin/attributes/variants', icon: Shapes, color: 'text-violet-400' },
-        { name: "Key Features", href: '/admin/attributes/features', icon: ListChecks, color: 'text-teal-400' },
-        { name: "Specifications", href: '/admin/attributes/specifications', icon: Settings2, color: 'text-slate-400' },
+        { name: t('item_brands'), href: '/admin/attributes/brands', icon: Globe, color: 'text-pink-400' },
+        { name: t('item_variants'), href: '/admin/attributes/variants', icon: Shapes, color: 'text-violet-400' },
+        { name: t('item_features'), href: '/admin/attributes/features', icon: ListChecks, color: 'text-teal-400' },
+        { name: t('item_specs'), href: '/admin/attributes/specifications', icon: Settings2, color: 'text-slate-400' },
       ]
     },
     {
-      title: "CRM & Users",
+      title: t('group_crm'),
       items: [
-        { name: "Customer Directory", href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-400' },
-        { name: "Staff Directory", href: '/admin/employees', icon: Users, color: 'text-green-400' },
-        { name: "Access Control", href: '/admin/roles', icon: Lock, color: 'text-red-500' },
+        { name: t('item_customers'), href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-400' },
+        { name: t('item_staff'), href: '/admin/employees', icon: Users, color: 'text-green-400' },
+        { name: t('item_roles'), href: '/admin/roles', icon: Lock, color: 'text-red-500' },
       ]
     },
     {
-      title: "Marketing",
+      title: t('group_marketing'),
       items: [
-        { name: "Campaigns", href: '/admin/marketing', icon: Zap, color: 'text-orange-500' },
-        { name: "Referral Program", href: '/admin/referrals', icon: Share2, color: 'text-purple-400' },
+        { name: t('item_campaigns'), href: '/admin/marketing', icon: Zap, color: 'text-orange-500' },
+        { name: t('item_referrals'), href: '/admin/referrals', icon: Share2, color: 'text-purple-400' },
       ]
     },
     {
-      title: "System",
+      title: t('group_system'),
       items: [
-        { name: "Payment Management", href: '/admin/payments', icon: Wallet, color: 'text-emerald-500' },
-        { name: "Global Settings", href: '/admin/settings', icon: Settings, color: 'text-gray-400' },
-        { name: "Site Customize", href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
+        { name: t('item_payments'), href: '/admin/payments', icon: Wallet, color: 'text-emerald-500' },
+        { name: t('item_settings'), href: '/admin/settings', icon: Settings, color: 'text-gray-400' },
+        { name: t('item_customize'), href: '/admin/customize', icon: Paintbrush, color: 'text-violet-500' },
       ]
     },
     {
-      title: "Support",
+      title: t('group_support'),
       items: [
-        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones, color: 'text-teal-400' },
-        { name: "Support Tickets", href: '/admin/support', icon: HelpCircle, color: 'text-rose-400' },
+        { name: t('item_supporthub'), href: '/admin/support-hub', icon: Headphones, color: 'text-teal-400' },
+        { name: t('item_tickets'), href: '/admin/support', icon: HelpCircle, color: 'text-rose-400' },
       ]
     }
   ];
@@ -259,7 +260,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={handleLogout}
           >
             <LogOut size={18} />
-            {!collapsed && <span className="font-black text-[9px] uppercase tracking-widest">Sign Out</span>}
+            {!collapsed && <span className="font-black text-[9px] uppercase tracking-widest">{t('sign_out')}</span>}
           </Button>
         </div>
       )}
@@ -315,7 +316,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
               <input 
                 type="text" 
-                placeholder="Search..." 
+                placeholder={t('search_placeholder')}
                 className="bg-gray-50 border-none rounded-full h-8 pl-8 pr-3 text-[11px] font-medium w-40 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               />
             </div>

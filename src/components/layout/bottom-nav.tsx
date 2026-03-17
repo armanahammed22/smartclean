@@ -44,9 +44,9 @@ export function BottomNav() {
           <div className="absolute -top-5">
             <Link 
               href="/" 
-              className="bg-primary p-3 rounded-full shadow-[0_10px_25px_rgba(34,99,192,0.4)] border-[5px] border-[#081621] flex items-center justify-center transition-transform hover:scale-110 active:scale-90 overflow-hidden w-14 h-14"
+              className="bg-primary p-1.5 rounded-full shadow-[0_10px_25px_rgba(34,99,192,0.4)] border-[5px] border-[#081621] flex items-center justify-center transition-transform hover:scale-110 active:scale-90 overflow-hidden w-14 h-14"
             >
-              <div className="relative w-8 h-8">
+              <div className="relative w-full h-full">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 
@@ -55,7 +55,9 @@ export function BottomNav() {
                     className="object-contain" 
                   />
                 ) : (
-                  <Home size={24} className="text-white" />
+                  <div className="flex items-center justify-center w-full h-full">
+                    <Home size={24} className="text-white" />
+                  </div>
                 )}
               </div>
             </Link>

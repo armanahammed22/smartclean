@@ -82,13 +82,15 @@ const translations: Record<Language, Record<string, string>> = {
     engagement_metrics: "রিয়েল-টাইম এনগেজমেন্ট ম্যাট্রিক্স",
 
     // Admin Sidebar Groups
-    group_main: "মেইন ও অ্যানালিটিক্স",
-    group_crm: "CRM ও সেলস",
-    group_inventory: "ইনভেন্টরি ও প্রোডাক্ট",
-    group_service: "সার্ভিস অপারেশন",
-    group_page: "পেজ কম্পোনেন্ট",
-    group_growth: "গ্রোথ ও রিওয়ার্ড",
-    group_system: "সিস্টেম ও লজিস্টিক",
+    group_dashboard: "ড্যাশবোর্ড",
+    group_orders: "অর্ডার ও বুকিং",
+    group_inventory: "ইনভেন্টরি",
+    group_services: "সেবা সমূহ",
+    group_attributes: "অ্যাট্রিবিউট ও ব্র্যান্ড",
+    group_crm: "CRM ও ইউজার",
+    group_marketing: "মার্কেটিং",
+    group_system: "সিস্টেম",
+    group_support: "সাপোর্ট",
 
     // Admin Sidebar Items
     item_dashboard: "ড্যাশবোর্ড",
@@ -96,25 +98,26 @@ const translations: Record<Language, Record<string, string>> = {
     item_leads: "সেলস লিড",
     item_orders: "প্রোডাক্ট অর্ডার",
     item_bookings: "সার্ভিস বুকিং",
-    item_customers: "কাস্টমার ডিরেক্টরি",
-    item_tickets: "সাপোর্ট টিকিট",
-    item_products: "প্রোডাক্টস",
+    item_tracking: "অর্ডার ট্র্যাকিং",
+    item_products: "পণ্য তালিকা",
     item_categories: "ক্যাটাগরি",
-    item_brands: "ব্র্যান্ডস",
-    item_alerts: "স্টক অ্যালার্ট",
     item_services: "সার্ভিস লিস্ট",
-    item_subservices: "সাব-সার্ভিস",
+    item_subservices: "সাব সার্ভিস",
     item_areas: "সার্ভিস এরিয়া",
-    item_links: "কুইক লিংক",
-    item_actions: "কুইক অ্যাকশন",
-    item_customize: "সাইট কাস্টমাইজ",
-    item_marketing: "মার্কেটিং ও কুপন",
-    item_referrals: "রেফারাল প্রোগ্রাম",
+    item_brands: "ব্র্যান্ডস",
+    item_variants: "ভ্যারিয়েন্ট",
+    item_features: "কি-ফিচার",
+    item_specs: "স্পেসিফিকেশন",
+    item_customers: "কাস্টমার ডিরেক্টরি",
     item_staff: "স্টাফ ডিরেক্টরি",
-    item_couriers: "কুরিয়ার",
-    item_subscription: "সাবস্কৃপশন",
-    item_settings: "গ্লোবাল সেটিিংস",
     item_roles: "অ্যাক্সেস কন্ট্রোল",
+    item_campaigns: "ক্যাম্পেইন",
+    item_referrals: "রেফারাল প্রোগ্রাম",
+    item_payments: "পেমেন্ট ম্যানেজমেন্ট",
+    item_settings: "গ্লোবাল সেটিংস",
+    item_customize: "সাইট কাস্টমাইজ",
+    item_supporthub: "সাপোর্ট হাব",
+    item_tickets: "সাপোর্ট টিকিট",
 
     // Products & Cart
     products_title: "সেরা পণ্যসমূহ",
@@ -211,17 +214,7 @@ const translations: Record<Language, Record<string, string>> = {
     cart_added: "অর্ডারে যোগ করা হয়েছে",
     cart_desc: "আইটেমটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।",
     service_billing_note: "দ্রষ্টব্য: পরিষেবার পরিমাণগুলি বেস প্রাইস এবং কাজের প্রয়োজনীয়তার ভিত্তিতে পরিবর্তিত হতে পারে।",
-    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন",
-
-    // Dynamic Labels
-    "PC Builder": "পিসি বিল্ডার",
-    "Laptop Finder": "ল্যাপটপ ফাইন্ডার",
-    "TV Offer": "টিভি অফার",
-    "Camera": "ক্যামেরা",
-    "Smartphone": "স্মার্টফোন",
-    "Tablet": "ট্যাবলেট",
-    "Drone": "ড্রোন",
-    "Starlink": "স্টারলিংক"
+    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন"
   },
   en: {
     // Navbar
@@ -291,13 +284,15 @@ const translations: Record<Language, Record<string, string>> = {
     engagement_metrics: "Real-time engagement metrics",
 
     // Admin Sidebar Groups
-    group_main: "Main & Analytics",
-    group_crm: "CRM & Sales",
-    group_inventory: "Inventory & Products",
-    group_service: "Service Operations",
-    group_page: "Page Components",
-    group_growth: "Growth & Rewards",
-    group_system: "System & Logistics",
+    group_dashboard: "Dashboard",
+    group_orders: "Orders & Booking",
+    group_inventory: "Inventory",
+    group_services: "Services",
+    group_attributes: "Attributes & Brands",
+    group_crm: "CRM & Users",
+    group_marketing: "Marketing",
+    group_system: "System",
+    group_support: "Support",
 
     // Admin Sidebar Items
     item_dashboard: "Dashboard",
@@ -305,25 +300,26 @@ const translations: Record<Language, Record<string, string>> = {
     item_leads: "Sales Leads",
     item_orders: "Product Orders",
     item_bookings: "Service Bookings",
-    item_customers: "Customer Directory",
-    item_tickets: "Support Tickets",
+    item_tracking: "Order Tracking",
     item_products: "Products",
     item_categories: "Categories",
-    item_brands: "Brands",
-    item_alerts: "Stock Alerts",
     item_services: "Service List",
-    item_subservices: "Sub-Services",
+    item_subservices: "Sub Services",
     item_areas: "Service Areas",
-    item_links: "Quick Links",
-    item_actions: "Quick Actions",
-    item_customize: "Site Customize",
-    item_marketing: "Marketing & Coupons",
-    item_referrals: "Referral Program",
+    item_brands: "Brands",
+    item_variants: "Variants",
+    item_features: "Key Features",
+    item_specs: "Specifications",
+    item_customers: "Customer Directory",
     item_staff: "Staff Directory",
-    item_couriers: "Couriers",
-    item_subscription: "Subscription",
-    item_settings: "Global Settings",
     item_roles: "Access Control",
+    item_campaigns: "Campaigns",
+    item_referrals: "Referral Program",
+    item_payments: "Payment Management",
+    item_settings: "Global Settings",
+    item_customize: "Site Customize",
+    item_supporthub: "Support Hub",
+    item_tickets: "Support Tickets",
 
     // Products & Cart
     products_title: "Featured Products",
@@ -420,22 +416,12 @@ const translations: Record<Language, Record<string, string>> = {
     cart_added: "Added to Order",
     cart_desc: "Item has been added to your order list.",
     service_billing_note: "Note: Service amounts are base prices and may vary based on actual work requirements.",
-    chat_wa: "Chat via WhatsApp",
-
-    // Dynamic Labels
-    "PC Builder": "PC Builder",
-    "Laptop Finder": "Laptop Finder",
-    "TV Offer": "TV Offer",
-    "Camera": "Camera",
-    "Smartphone": "Smartphone",
-    "Tablet": "Tablet",
-    "Drone": "Drone",
-    "Starlink": "Starlink"
+    chat_wa: "Chat via WhatsApp"
   }
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Default to Bangla ('bn')
+  // Default to Bangla ('bn') as requested
   const [language, setLanguageState] = useState<Language>('bn');
 
   // Load language from localStorage on mount
