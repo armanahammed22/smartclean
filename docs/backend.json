@@ -77,19 +77,6 @@
         "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
       }
     },
-    "SupportHubConfig": {
-      "title": "SupportHubConfig",
-      "type": "object",
-      "properties": {
-        "headerTitle": { "type": "string" },
-        "headerSubtitle": { "type": "string" },
-        "bodyText": { "type": "string" },
-        "buttonText": { "type": "string" },
-        "icon": { "type": "string" },
-        "supportLink": { "type": "string" },
-        "isEnabled": { "type": "boolean" }
-      }
-    },
     "HeroBannerSettings": {
       "title": "HeroBannerSettings",
       "type": "object",

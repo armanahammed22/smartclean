@@ -29,7 +29,7 @@ service cloud.firestore {
       allow read, write: if isBootstrapAdmin();
     }
 
-    // PUBLIC CATALOG - Read for all
+    // PUBLIC CATALOG & SETTINGS - Read for all (including guests)
     match /products/{id} { allow read, list: if true; allow write: if isOrderManager(); }
     match /product_categories/{id} { allow read, list: if true; allow write: if isOrderManager(); }
     match /brands/{id} { allow read, list: if true; allow write: if isOrderManager(); }
@@ -46,6 +46,17 @@ service cloud.firestore {
     match /marketing_campaigns/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /couriers/{id} { allow read, list: if true; allow write: if isAdmin(); }
     match /coupons/{id} { allow read, list: if true; allow write: if isAdmin(); }
+    
+    // STAFF LOOKUP - Required for client-side auto-assignment
+    match /employee_profiles/{uid} {
+      allow read, list: if true; 
+      allow write: if isAdmin();
+    }
+    match /staff_availability/{uid} {
+      allow read, list: if true; 
+      allow update: if isSignedIn() || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])); 
+      allow write: if isOwner(uid) || isManager();
+    }
 
     // USER PROFILES
     match /users/{uid} {
@@ -54,17 +65,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    match /employee_profiles/{uid} {
-      allow read, list: if isSignedIn(); 
-      allow write: if isAdmin();
-    }
-    
     match /blocked_users/{id} {
       allow read: if true; 
       allow write: if isAdmin();
     }
     
-    // CRM DATA
+    // CRM DATA - Allow public create for guest checkout
     match /orders/{id} {
       allow create: if true; 
       allow read, list: if isOrderManager() || (isSignedIn() && resource.data.customerId == request.auth.uid);
@@ -94,12 +100,6 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow read, list: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
       allow write: if isAdmin();
-    }
-
-    match /staff_availability/{uid} {
-      allow read, list: if isSignedIn(); 
-      allow update: if isSignedIn(); 
-      allow write: if isOwner(uid) || isManager();
     }
 
     match /staff_earnings/{id} {

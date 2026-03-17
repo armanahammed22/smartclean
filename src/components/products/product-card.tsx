@@ -42,12 +42,12 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground/30">
-            <Package size={32} />
+          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+            <Package size={40} />
           </div>
         )}
         <div className="absolute top-2 left-2">
-          <span className="bg-white/90 text-primary text-[8px] font-black px-2 py-0.5 rounded-full backdrop-blur-sm uppercase tracking-tighter shadow-sm border border-primary/10">
+          <span className="bg-white/95 text-primary text-[8px] font-black px-2 py-0.5 rounded-full backdrop-blur-md uppercase tracking-tighter shadow-sm border border-primary/10">
             {product.category || 'Supplies'}
           </span>
         </div>
@@ -55,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="p-3 flex flex-col flex-1 gap-1">
         <CardHeader className="p-0 space-y-0.5">
           <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors block">
-            <h3 className="font-bold text-[13px] md:text-[14px] line-clamp-1 leading-tight text-gray-900 group-hover:text-primary">{product.name}</h3>
+            <h3 className="font-bold text-[13px] md:text-[14px] line-clamp-1 leading-tight text-gray-900 group-hover:text-primary uppercase tracking-tight">{product.name}</h3>
           </Link>
           <div className="flex items-center gap-1.5">
             <span className="font-black text-primary text-sm">৳{product.price.toLocaleString()}</span>
