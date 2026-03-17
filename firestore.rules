@@ -1,65 +1,108 @@
+/**
+ * Firestore Security Rules
+ *
+ * Core Philosophy:
+ * This ruleset implements a dual-access model for a dynamic Pages Management System (CMS).
+ * 1. Administrative Access (DBAC): Full CRUD permissions are granted to users whose UIDs 
+ *    exist within the `/admin_roles` collection. This follows the "Existence over Content" 
+ *    principle for global roles.
+ * 2. Public Read Access: Specifically for the `pages_management` collection, unauthenticated 
+ *    or standard users can retrieve individual pages only if the `isPublished` flag is set 
+ *    to true.
+ *
+ * Data Structure:
+ * - /admin_roles/{uid}: A flat collection where the presence of a document authorizes 
+ *   administrative capabilities.
+ * - /pages_management/{pageSlug}: A collection of content pages where the document ID 
+ *   is the URL-friendly slug, ensuring uniqueness and efficient lookups.
+ *
+ * Key Security Decisions:
+ * - Relational Integrity: On creation of pages, the internal `slug` field must match 
+ *   the document ID to ensure consistency between the routing logic and the data.
+ * - List Operations: Public listing of all pages (including drafts) is strictly forbidden 
+ *   to comply with security best practices regarding "Rules are not Filters". Listing is 
+ *   reserved for administrators.
+ * - Destructive Operations: All updates and deletes require a verified existing 
+ *   administrative session and an existence check on the resource.
+ *
+ * Denormalization for Authorization:
+ * - The `isPublished` flag is denormalized onto every `Page` document to allow for 
+ *   instant authorization checks without secondary lookups.
+ */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Basic Auth Helpers
-    function isSignedIn() { return request.auth != null; }
-    function isBootstrapAdmin() { return isSignedIn() && request.auth.uid == "gcp03WmpjROVvRdpLNsghNU4zHa2"; }
-    function hasRole(role) { return isSignedIn() && exists(/databases/$(database)/documents/roles_$(role)/$(request.auth.uid)); }
-    
-    // Role Helpers
-    function isAdmin() { return isBootstrapAdmin() || hasRole('admins'); }
-    function isManager() { return isAdmin() || hasRole('managers'); }
-    function isOrderManager() { return isManager() || hasRole('order_managers'); }
-    function isStaff() { return hasRole('employees'); }
 
-    // Public Content (Anyone can view)
-    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /testimonials/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /faq/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /header_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /footer_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /contact_info/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /social_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /products/{id} { allow read: if true; allow write: if isOrderManager(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isOrderManager(); }
-    match /brands/{id} { allow read: if true; allow write: if isOrderManager(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+    // --- Helper Functions ---
 
-    // User & Profile Data
-    match /users/{uid} {
-      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+    /** 
+     * @description Checks if the request is from an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Transactions
-    match /orders/{id} { 
-      allow create: if true; 
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isOrderManager());
-      allow write: if isOrderManager(); 
-    }
-    match /bookings/{id} { 
-      allow create: if true; 
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin() || isStaff());
-      allow write: if isAdmin() || isStaff(); 
+    /** 
+     * @description Checks if the authenticated user's UID exists in the admin_roles collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admin_roles/$(request.auth.uid));
     }
 
-    // Role Assignments
-    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isBootstrapAdmin(); }
-    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-
-    // Global Fallback
-    match /{document=**} {
-      allow read, write: if isBootstrapAdmin();
+    /** 
+     * @description Ensures a document exists and the user is an admin. Used for update/delete.
+     */
+    function isExistingAdmin() {
+      return isAdmin() && resource != null;
     }
+
+    /** 
+     * @description Checks if the document is marked as published.
+     */
+    function isPublished() {
+      return resource.data.isPublished == true;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Administrative roles collection. Existence of a UID here grants global admin rights.
+     * @path /admin_roles/{uid}
+     * @allow (get) If the user is an admin.
+     * @deny (create) If the user is not an admin (prevents self-promotion).
+     * @principle Global Roles (DBAC) using existence checks.
+     */
+    match /admin_roles/{uid} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Management of dynamic content pages (About Us, FAQ, etc.).
+     * @path /pages_management/{pageSlug}
+     * @allow (get) If the page isPublished or the user is an admin.
+     * @allow (create) If the user is an admin and the slug matches the document ID.
+     * @deny (list) For non-admin users to prevent unauthorized draft discovery.
+     * @principle Public read with owner-only (admin) writes and relational integrity validation.
+     */
+    match /pages_management/{pageSlug} {
+      
+      // Read Permissions
+      allow get: if isPublished() || isAdmin();
+      allow list: if isAdmin();
+
+      // Write Permissions
+      // On Create: Validate slug matches path for relational integrity.
+      allow create: if isAdmin() && request.resource.data.slug == pageSlug;
+      
+      // On Update: Verify document exists and ensure slug remains immutable.
+      allow update: if isExistingAdmin() && request.resource.data.slug == resource.data.slug;
+      
+      // On Delete: Verify document exists and user is admin.
+      allow delete: if isExistingAdmin();
+    }
+
   }
 }

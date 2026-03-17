@@ -1,6 +1,6 @@
 export const firebaseConfig = {
   "projectId": "studio-5425564660-b1f7f",
-  "appId": "1:1012639715946:web:c5bda72aff647d14d1b013",
+  "appId": "1:1012639715946:web:f4f37c0b8e044812d1b013",
   "apiKey": "AIzaSyA2LPcx8rgQNwzgerxh1PoXynBkvOcrHE0",
   "authDomain": "studio-5425564660-b1f7f.firebaseapp.com",
   "measurementId": "",

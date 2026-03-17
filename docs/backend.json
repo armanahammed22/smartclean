@@ -1,120 +1,82 @@
-
 {
   "entities": {
-    "Product": {
-      "title": "Product",
+    "Page": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Page",
       "type": "object",
-      "description": "Fixed-price cleaning supplies and equipment.",
+      "description": "Represents a dynamic content page within the application, managed via the Pages Management System. This includes static content pages like 'About Us', 'Careers', 'Privacy Policy', 'Terms of Service', 'Refund Policy', 'Testimonials', and 'FAQ'.",
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "price": { "type": "number" },
-        "regularPrice": { "type": "number" },
-        "categoryId": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "galleryImages": { "type": "array", "items": { "type": "string" } },
-        "stockQuantity": { "type": "number" },
-        "brand": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "variants": { "type": "array", "items": { "type": "object" } },
-        "features": { "type": "array", "items": { "type": "string" } },
-        "specifications": { "type": "array", "items": { "type": "object" } }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Page entity."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly, unique identifier for the page (e.g., 'about-us', 'testimonials'). This is used for dynamic routing and must be unique across all pages."
+        },
+        "title": {
+          "type": "string",
+          "description": "The human-readable title of the page, displayed in the navigation and on the page itself."
+        },
+        "content": {
+          "type": "string",
+          "description": "The rich text or HTML content of the page, supporting various formatting such as headings, bold text, lists, and links."
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "A flag indicating whether the page is publicly accessible (true) or currently in a draft state (false)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "A timestamp indicating the last time the page content was modified.",
+          "format": "date-time"
+        }
       },
-      "required": ["id", "name", "price", "categoryId"]
-    },
-    "HeroBanner": {
-      "title": "HeroBanner",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "title": { "type": "string" },
-        "subtitle": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "order": { "type": "number" },
-        "isTextEnabled": { "type": "boolean" },
-        "textAlignment": { "type": "string", "enum": ["left", "center", "right"] },
-        "textPosition": { "type": "string", "enum": ["top", "center", "bottom"] },
-        "titleColor": { "type": "string" },
-        "titleSize": { "type": "string" },
-        "overlayColor": { "type": "string" },
-        "overlayOpacity": { "type": "number" },
-        "isButtonEnabled": { "type": "boolean" },
-        "buttonText": { "type": "string" },
-        "buttonLink": { "type": "string" },
-        "buttonColor": { "type": "string" },
-        "buttonSize": { "type": "string" },
-        "buttonShape": { "type": "string" },
-        "buttonPosition": { "type": "string" }
-      }
-    },
-    "Testimonial": {
-      "title": "Testimonial",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "content": { "type": "string" },
-        "rating": { "type": "number" },
-        "avatarUrl": { "type": "string" }
-      }
-    },
-    "FAQ": {
-      "title": "FAQ",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "question": { "type": "string" },
-        "answer": { "type": "string" },
-        "order": { "type": "number" },
-        "isActive": { "type": "boolean" }
-      }
-    },
-    "HomepageSection": {
-      "title": "HomepageSection",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "type": { "type": "string" },
-        "order": { "type": "number" },
-        "isActive": { "type": "boolean" }
-      }
+      "required": [
+        "id",
+        "slug",
+        "title",
+        "content",
+        "isPublished",
+        "updatedAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["password", "phone"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{uid}": { "schema": "#/entities/User", "description": "Unified user accounts." },
-    "/roles_admins/{uid}": { "schema": "object", "description": "Admin authorization mapping." },
-    "/roles_managers/{uid}": { "schema": "object", "description": "Manager authorization mapping." },
-    "/roles_employees/{uid}": { "schema": "object", "description": "Staff authorization mapping." },
-    "/products/{id}": { "schema": "#/entities/Product", "description": "Inventory items." },
-    "/product_categories/{id}": { "schema": "object", "description": "Product groupings." },
-    "/brands/{id}": { "schema": "object", "description": "Product brands." },
-    "/variant_types/{id}": { "schema": "object", "description": "Reusable variant types." },
-    "/reusable_features/{id}": { "schema": "object", "description": "Standard features." },
-    "/reusable_specs/{id}": { "schema": "object", "description": "Technical specification keys." },
-    "/services/{id}": { "schema": "object", "description": "Main services catalog." },
-    "/sub_services/{id}": { "schema": "object", "description": "Service add-ons." },
-    "/hero_banners/{id}": { "schema": "#/entities/HeroBanner", "description": "Home page hero slides." },
-    "/quick_actions/{id}": { "schema": "object", "description": "Home screen shortcuts." },
-    "/quick_links/{id}": { "schema": "object", "description": "Home screen navigation grid." },
-    "/homepage_sections/{id}": { "schema": "#/entities/HomepageSection", "description": "Dynamic homepage layout blocks." },
-    "/offers/{id}": { "schema": "object", "description": "Promotional deals." },
-    "/testimonials/{id}": { "schema": "#/entities/Testimonial", "description": "Customer social proof." },
-    "/faq/{id}": { "schema": "#/entities/FAQ", "description": "Frequently asked questions." },
-    "/footer_settings/{id}": { "schema": "object", "description": "Global footer configuration." },
-    "/header_settings/{id}": { "schema": "object", "description": "Global header configuration." },
-    "/contact_info/{id}": { "schema": "object", "description": "Business contact details." },
-    "/social_links/{id}": { "schema": "object", "description": "Social media profiles." },
-    "/site_settings/global": { "schema": "object", "description": "Global config & UI." },
-    "/site_settings/support_hub": { "schema": "object", "description": "Floating support agent config." },
-    "/bookings/{id}": { "schema": "object", "description": "Service appointments." },
-    "/orders/{id}": { "schema": "#/entities/Order", "description": "Product sales." },
-    "/support_tickets/{id}": { "schema": "object", "description": "Customer support requests." },
-    "/service_areas/{id}": { "schema": "object", "description": "Supported coverage zones." }
+    "structure": [
+      {
+        "path": "/pages_management/{pageSlug}",
+        "definition": {
+          "entityName": "Page",
+          "schema": {
+            "$ref": "#/backend/entities/Page"
+          },
+          "description": "Stores individual dynamic content pages (e.g., About Us, Careers, Testimonials, FAQ). The document ID is the 'slug' of the page for efficient lookup and to enforce slug uniqueness. Includes the 'isPublished' field for authorization independence and QAP compliance for public read access.",
+          "params": [
+            {
+              "name": "pageSlug",
+              "description": "The unique, URL-friendly identifier for the page (e.g., 'about-us', 'testimonials'). This is also the document ID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admin_roles/{uid}",
+        "definition": {
+          "entityName": "admin_role",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores a reference to an administrator's UID, used for Database Access Control (DBAC). The existence of a document at this path for a given UID grants administrative privileges to manage all pages. This adheres to the 'Global Roles (DBAC)' mandate using 'Existence over Content'."
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure utilizes a single top-level collection, `pages_management`, as requested by the user. Each document within this collection represents a 'Page' entity. To ensure robust and easily debuggable security rules while adhering to the 'Authorization Independence' and 'QAPs (Rules are not Filters)' principles, the `slug` field from the 'Page' entity will serve as the document ID for each page. This design choice directly addresses the requirement to prevent duplicate slugs, as Firestore guarantees unique document IDs within a collection. It also simplifies dynamic routing (`/page/:slug`) by allowing direct fetching of a page document using its slug.\n\n**Authorization Independence:** The design achieves authorization independence by storing all necessary authorization context directly within each `Page` document or leveraging a global role. Public read access is determined solely by the `isPublished` field within the `Page` document itself, eliminating any need for `get()` calls to parent or related documents in security rules. Admin write and read access will be granted based on the user's UID existing in a dedicated 'admin_roles' collection (following the DBAC mandate), which is an independent check.\n\n**QAPs (Rules are not Filters):** This structure supports QAPs by enforcing distinct security postures for different user types:\n1.  **Admin Access:** Authenticated administrators (whose UIDs are present in a `/admin_roles/{uid}` collection) will have full `read`, `create`, `update`, and `delete` access to all documents within `/pages_management`. This allows administrators to list and view all pages, including drafts, without requiring specific query filters in their requests.\n2.  **Public Access:** Unauthenticated users or regular authenticated users (not administrators) will only have `read` access to `Page` documents where the `isPublished` field is `true`. This rule applies universally to both single document fetches (`get`) and multi-document queries (`list`). When a public user performs a `list` operation on `/pages_management`, the security rule `if resource.data.isPublished == true` ensures that only published documents are ever returned. If a user attempts to query for `isPublished == false`, no documents will satisfy the `read` condition, thus preventing access to drafts. This approach effectively segregates access at the rule level, ensuring that no unauthorized data is ever exposed, even with a single collection for both published and draft content, thereby satisfying the spirit of QAPs by preventing rules from acting as mere filters.\n\n**Denormalization:** In this specific case, the `Page` documents are essentially top-level, so traditional denormalization of parent attributes into children is not required. The `isPublished` field serves as the denormalized authorization context for public visibility.\n\nThis structure prioritizes security, debuggability, and aligns with the core principles by making authorization explicit and ensuring safe data access for all defined roles."
   }
 }
