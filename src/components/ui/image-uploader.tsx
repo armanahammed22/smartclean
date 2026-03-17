@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -133,7 +132,7 @@ export function ImageUploader({
           <div 
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              "relative group cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden transition-all duration-300 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-100/50 min-h-[160px]",
+              "relative group cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden transition-all duration-300 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-100/50 min-h-[140px]",
               aspectRatio,
               error ? "border-destructive/50 bg-destructive/5" : "border-gray-200 hover:border-primary/50",
               preview && activeTab === 'upload' && preview.startsWith('data:') ? "border-solid border-primary/20" : ""
@@ -193,7 +192,7 @@ export function ImageUploader({
           </div>
           
           <div className={cn(
-            "relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center min-h-[160px]",
+            "relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center min-h-[140px]",
             aspectRatio
           )}>
             {preview && (!preview.startsWith('data:') || activeTab === 'url') ? (

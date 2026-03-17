@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -129,8 +128,8 @@ export default function SiteCustomizePage() {
             {banners?.map((banner) => (
               <Card key={banner.id} className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-12">
-                  {/* Left: Media & Basic Control */}
-                  <div className="lg:col-span-4 p-8 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
+                  {/* Left: Media & Basic Control - Increased span to lg:col-span-5 and reduced padding */}
+                  <div className="lg:col-span-5 p-6 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
                     <ImageUploader 
                       initialUrl={banner.imageUrl}
                       label="Slide Background Image"
@@ -183,8 +182,8 @@ export default function SiteCustomizePage() {
                     </div>
                   </div>
 
-                  {/* Right: Rich Configuration */}
-                  <div className="lg:col-span-8 p-10 space-y-10">
+                  {/* Right: Rich Configuration - Reduced span to lg:col-span-7 */}
+                  <div className="lg:col-span-7 p-8 space-y-10">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-4">
                         <h3 className="font-black uppercase tracking-widest text-primary text-xs flex items-center gap-2">
