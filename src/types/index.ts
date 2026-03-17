@@ -95,10 +95,12 @@ export interface Service {
   title: string;
   categoryId: string;
   description: string;
+  shortDescription?: string;
   icon?: string;
   basePrice: number;
   displayPrice?: string;
   imageUrl?: string;
+  galleryImages?: string[];
   type?: 'service';
   status: 'Active' | 'Inactive';
   duration?: string;
