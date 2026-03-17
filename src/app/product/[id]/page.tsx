@@ -17,7 +17,8 @@ import {
   Plus,
   Minus,
   Star,
-  Info
+  Info,
+  Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
@@ -196,24 +197,34 @@ export default function ProductDetailsPage() {
 
                 <TabsContent value="specs">
                   <Card className="rounded-3xl border-none shadow-sm overflow-hidden bg-white">
-                    <CardContent className="p-10 space-y-8">
-                      <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 mb-6 flex items-center gap-2">
-                        <Box className="text-primary" /> Technical Specs
-                      </h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                          { label: 'Brand', val: product.brand || 'Smart Clean Pro' },
-                          { label: 'Model ID', val: product.id.slice(0, 8).toUpperCase() },
-                          { label: 'Category', val: product.categoryId || 'Cleaning Equipment' },
-                          { label: 'Standard Size', val: product.size || 'N/A' },
-                          { label: 'Stock Status', val: product.stockQuantity > 0 ? 'Available' : 'Out of Stock' },
-                          { label: 'Compliance', val: 'ISO Certified' }
-                        ].map((spec, i) => (
-                          <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-1">
-                            <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{spec.label}</span>
-                            <span className="text-sm font-bold text-gray-900">{spec.val}</span>
-                          </div>
-                        ))}
+                    <CardContent className="p-10 space-y-10">
+                      <div className="space-y-6">
+                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
+                          <Settings2 className="text-primary" /> Technical Specifications
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {/* Built-in Specs */}
+                          {[
+                            { label: 'Brand', val: product.brand || 'Smart Clean Pro' },
+                            { label: 'Model ID', val: product.id.slice(0, 8).toUpperCase() },
+                            { label: 'Category', val: product.categoryId || 'Cleaning Equipment' },
+                            { label: 'Standard Size', val: product.size || 'N/A' },
+                            { label: 'Stock Status', val: product.stockQuantity > 0 ? 'Available' : 'Out of Stock' },
+                          ].map((spec, i) => (
+                            <div key={i} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-1">
+                              <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{spec.label}</span>
+                              <span className="text-sm font-bold text-gray-900">{spec.val}</span>
+                            </div>
+                          ))}
+                          
+                          {/* Dynamic Custom Specs */}
+                          {product.specs?.map((spec: any, i: number) => (
+                            <div key={`dynamic-${i}`} className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col gap-1 animate-in fade-in">
+                              <span className="text-[10px] font-black uppercase text-primary tracking-widest">{spec.key}</span>
+                              <span className="text-sm font-bold text-gray-900">{spec.value || 'N/A'}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

@@ -17,7 +17,7 @@ export interface Product {
   status: 'Active' | 'Inactive';
   onSale?: boolean;
   features?: string[];
-  specs?: { label: string; value: string }[];
+  specs?: { key: string; value: string }[];
   size?: string;
 }
 

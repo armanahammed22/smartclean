@@ -1,12 +1,12 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, CheckCircle2 } from 'lucide-react';
+import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -18,6 +18,13 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 
+const CATEGORY_SPECS: Record<string, string[]> = {
+  'Cleaning': ['Concentration', 'pH Level', 'Fragrance', 'Volume', 'Surface Compatibility'],
+  'Tools': ['Material', 'Power Source', 'Voltage', 'Weight', 'Warranty Period'],
+  'Electronics': ['Battery Capacity', 'Connectivity', 'Model Year', 'Certification'],
+  'General': ['Manufacturer', 'Origin', 'Material', 'Color']
+};
+
 export default function ProductsManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -25,6 +32,10 @@ export default function ProductsManagementPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
+  
+  // Specifications State
+  const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // Data Queries
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
@@ -38,6 +49,14 @@ export default function ProductsManagementPage() {
   const { data: services } = useCollection(servicesQuery);
   const { data: subServices } = useCollection(subServicesQuery);
   const { data: employees } = useCollection(employeesQuery);
+
+  // Auto-populate specs based on category
+  useEffect(() => {
+    if (isDialogOpen && !editingProduct && selectedCategory) {
+      const suggestedKeys = CATEGORY_SPECS[selectedCategory] || CATEGORY_SPECS['General'];
+      setSpecs(suggestedKeys.map(key => ({ key, value: '' })));
+    }
+  }, [selectedCategory, isDialogOpen, editingProduct]);
 
   const KPI_STATS = [
     { label: "Total Products", value: products?.length || 0, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
@@ -57,13 +76,14 @@ export default function ProductsManagementPage() {
       price: parseFloat(formData.get('price') as string),
       regularPrice: parseFloat(formData.get('regularPrice') as string) || 0,
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
-      categoryId: formData.get('categoryId') as string,
+      categoryId: selectedCategory,
       brand: formData.get('brand') as string || 'General',
       size: formData.get('size') as string || '',
       description: formData.get('description') as string,
       shortDescription: formData.get('shortDescription') as string,
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
       status: formData.get('status') as string || 'Active',
+      specs: specs.filter(s => s.key.trim() !== ''),
       updatedAt: new Date().toISOString()
     };
 
@@ -76,8 +96,7 @@ export default function ProductsManagementPage() {
         toast({ title: "Product Added" });
       }
       setIsDialogOpen(false);
-      setEditingProduct(null);
-      setUploadedImageUrl('');
+      resetForm();
     } catch (e) {
       toast({ variant: "destructive", title: "Error saving product" });
     } finally {
@@ -85,22 +104,32 @@ export default function ProductsManagementPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete this product?")) return;
-    await deleteDoc(doc(db, 'products', id));
-    toast({ title: "Product Deleted" });
+  const resetForm = () => {
+    setEditingProduct(null);
+    setUploadedImageUrl('');
+    setSpecs([]);
+    setSelectedCategory('');
   };
 
   const handleOpenEdit = (product: any) => {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
+    setSpecs(product.specs || []);
+    setSelectedCategory(product.categoryId || '');
     setIsDialogOpen(true);
   };
 
   const handleOpenNew = () => {
-    setEditingProduct(null);
-    setUploadedImageUrl('');
+    resetForm();
     setIsDialogOpen(true);
+  };
+
+  const addSpecField = () => setSpecs([...specs, { key: '', value: '' }]);
+  const removeSpecField = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
+  const updateSpec = (index: number, field: 'key' | 'value', val: string) => {
+    const updated = [...specs];
+    updated[index][field] = val;
+    setSpecs(updated);
   };
 
   return (
@@ -111,85 +140,146 @@ export default function ProductsManagementPage() {
           <p className="text-muted-foreground text-sm">Control your cleaning equipment and supply catalog</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingProduct(null); }}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button className="gap-2 font-bold shadow-lg h-11" onClick={handleOpenNew}>
               <Plus size={18} /> Add New Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl rounded-3xl overflow-y-auto max-h-[90vh]">
-            <form onSubmit={handleSave} className="space-y-6">
-              <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-4xl rounded-3xl overflow-y-auto max-h-[90vh] p-0 border-none shadow-2xl">
+            <form onSubmit={handleSave} className="flex flex-col">
+              <DialogHeader className="p-8 bg-[#081621] text-white">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+                  <Package className="text-primary" /> {editingProduct ? 'Edit Product Catalog' : 'Add New Inventory Item'}
+                </DialogTitle>
+              </DialogHeader>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <ImageUploader 
-                    label="Product Photo"
-                    initialUrl={uploadedImageUrl}
-                    aspectRatio="aspect-square"
-                    onUpload={setUploadedImageUrl}
-                  />
-                  
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Product Name</Label>
-                    <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-11 bg-gray-50 border-none" />
+              <div className="p-8 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {/* Left Column */}
+                  <div className="space-y-6">
+                    <ImageUploader 
+                      label="Product Photo"
+                      initialUrl={uploadedImageUrl}
+                      aspectRatio="aspect-square"
+                      onUpload={setUploadedImageUrl}
+                    />
+                    
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Product Name</Label>
+                      <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Price (BDT)</Label>
+                        <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Reg. Price</Label>
+                        <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Price (BDT)</Label>
-                      <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-11 bg-gray-50 border-none" />
+                  {/* Right Column */}
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Stock Qty</Label>
+                        <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Unit/Size</Label>
+                        <Input name="size" defaultValue={editingProduct?.size} placeholder="e.g. 5L, 1kg" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Reg. Price</Label>
-                      <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-11 bg-gray-50 border-none" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Category</Label>
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl">
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Cleaning">Cleaning Supplies</SelectItem>
+                          <SelectItem value="Tools">Equipment & Tools</SelectItem>
+                          <SelectItem value="Electronics">Gadgets & Tech</SelectItem>
+                          {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Brand</Label>
+                      <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. Samsung" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Short Description</Label>
+                      <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Quick summary..." className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Stock Qty</Label>
-                      <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 bg-gray-50 border-none" />
+                {/* DYNAMIC SPECIFICATIONS SECTION */}
+                <div className="space-y-6 pt-6 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings2 className="text-primary" size={20} />
+                      <Label className="text-sm font-black uppercase tracking-tight">Product Specifications</Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Size / Spec</Label>
-                      <Input name="size" defaultValue={editingProduct?.size} placeholder="e.g. 5L, Large" className="h-11 bg-gray-50 border-none" />
-                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={addSpecField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
+                      <Plus size={14} /> Add Custom Spec
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
-                    <Select name="categoryId" defaultValue={editingProduct?.categoryId || ""}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none"><SelectValue placeholder="Select Category" /></SelectTrigger>
-                      <SelectContent>
-                        {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {specs.map((spec, idx) => (
+                      <div key={idx} className="flex gap-2 items-end animate-in fade-in slide-in-from-top-1">
+                        <div className="flex-1 space-y-1.5">
+                          <Input 
+                            value={spec.key} 
+                            onChange={(e) => updateSpec(idx, 'key', e.target.value)} 
+                            placeholder="Specification Name"
+                            className="h-10 text-xs font-bold bg-gray-50/50 border-none"
+                          />
+                          <Input 
+                            value={spec.value} 
+                            onChange={(e) => updateSpec(idx, 'value', e.target.value)} 
+                            placeholder="Value"
+                            className="h-10 text-xs bg-gray-50 border-none"
+                          />
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => removeSpecField(idx)} 
+                          className="h-10 w-10 text-destructive hover:bg-red-50"
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                    {specs.length === 0 && (
+                      <div className="col-span-full py-10 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">Select a category or add custom specs manually.</p>
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Brand</Label>
-                    <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. LG" className="h-11 bg-gray-50 border-none" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Short Description</Label>
-                    <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Brief summary" className="h-11 bg-gray-50 border-none" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Description</Label>
-                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none min-h-[120px]" placeholder="Key features and details..." />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Full Product Description</Label>
+                  <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none focus:bg-white min-h-[150px] rounded-2xl p-4" placeholder="Detailed features, how to use, etc..." />
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold px-8">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
+              <DialogFooter className="p-8 bg-gray-50 border-t">
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 uppercase tracking-tighter">
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
                   Save Product
                 </Button>
               </DialogFooter>
@@ -204,7 +294,7 @@ export default function ProductsManagementPage() {
             <CardContent className="p-5 flex items-center gap-4">
               <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}><stat.icon size={20} /></div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{stat.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{stat.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
               </div>
             </CardContent>
@@ -222,7 +312,7 @@ export default function ProductsManagementPage() {
                 <TableHead className="font-bold">Pricing</TableHead>
                 <TableHead className="font-bold">Stock</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="text-right pr-8"></TableHead>
+                <TableHead className="text-right pr-8">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -231,10 +321,10 @@ export default function ProductsManagementPage() {
               ) : products?.length ? (
                 products.map((product) => (
                   <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                    <TableCell className="font-bold text-gray-900 py-5 pl-8">{product.name}</TableCell>
+                    <TableCell className="font-bold text-gray-900 py-5 pl-8 uppercase text-xs">{product.name}</TableCell>
                     <TableCell>
                       <div className="text-xs font-bold text-gray-700">{product.brand || 'No Brand'}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase">{categories?.find(c => c.id === product.categoryId)?.name || 'General'}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">{product.categoryId || 'General'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</div>
@@ -242,7 +332,7 @@ export default function ProductsManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn(
-                        "text-[9px] font-black border-none px-2 py-0.5",
+                        "text-[9px] font-black border-none px-2 py-0.5 rounded-md",
                         product.stockQuantity < 5 ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-600"
                       )}>
                         {product.stockQuantity || 0} Units
@@ -250,7 +340,7 @@ export default function ProductsManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn(
-                        "text-[9px] font-black uppercase border-none",
+                        "text-[9px] font-black uppercase border-none px-2.5 py-1 rounded-full",
                         product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                       )}>
                         {product.status}
@@ -261,7 +351,7 @@ export default function ProductsManagementPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
                           <Edit size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => handleDelete(product.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => deleteDoc(doc(db!, 'products', product.id))}>
                           <Trash2 size={14} />
                         </Button>
                       </div>
