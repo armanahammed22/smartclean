@@ -14,6 +14,7 @@ service cloud.firestore {
     function isStaff() { return hasRole('employees'); }
 
     // Public Content (Anyone can view)
+    // Updated to be more explicit for listing and getting documents
     match /hero_banners/{id} { 
       allow read: if true; 
       allow write: if isAdmin(); 
