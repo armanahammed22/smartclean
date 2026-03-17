@@ -1,10 +1,8 @@
 /**
  * Firestore Security Rules
  *
- * Core Philosophy:
- * 1. Global Admin Access: Users in the 'roles_admins' collection or the bootstrap UID have full CRUD.
- * 2. Public Read: Marketing and catalog data (banners, products, services) are public.
- * 3. User Privacy: Customers can only read/write their own profiles and bookings.
+ * Rules Version: 1.1
+ * Updated to fix administrative listing permissions for the bootstrap UID.
  */
 
 rules_version = '2';
@@ -19,8 +17,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
-        request.auth.uid == 'gcp03WmpjROVvRdpLNsghNU4zHa2'
+        request.auth.uid == 'gcp03WmpjROVvRdpLNsghNU4zHa2' ||
+        exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
     }
 
@@ -130,19 +128,22 @@ service cloud.firestore {
     }
 
     match /bookings/{id} {
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow get: if isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid || isAdmin());
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
     match /orders/{id} {
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow get: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
     match /support_tickets/{id} {
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow get: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
