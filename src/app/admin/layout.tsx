@@ -29,7 +29,6 @@ import {
   Award,
   HelpCircle,
   Share2,
-  Layers,
   AlertCircle,
   CreditCard,
   Briefcase,
@@ -39,7 +38,8 @@ import {
   Wallet,
   Globe,
   UserCheck,
-  Headphones
+  Headphones,
+  Settings2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -98,7 +98,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: t('item_products'), href: '/admin/products', icon: Package, color: 'text-emerald-500' },
         { name: t('item_categories'), href: '/admin/products/categories', icon: Tags, color: 'text-green-500' },
-        { name: t('item_brands'), href: '/admin/products/brands', icon: Award, color: 'text-rose-500' },
+        { name: 'Attributes & Brands', href: '/admin/products/attributes', icon: Settings2, color: 'text-rose-500' },
         { name: t('item_alerts'), href: '/admin/inventory/alerts', icon: AlertCircle, color: 'text-orange-500' },
       ]
     },
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: t('group_service'),
       items: [
         { name: t('item_services'), href: '/admin/services', icon: Wrench, color: 'text-indigo-500' },
-        { name: t('item_subservices'), href: '/admin/services/sub-services', icon: Layers, color: 'text-blue-600' },
+        { name: t('item_subservices'), href: '/admin/services/sub-services', icon: Grid, color: 'text-blue-600' },
         { name: t('item_areas'), href: '/admin/areas', icon: MapPin, color: 'text-red-500' },
       ]
     },

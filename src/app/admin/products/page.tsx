@@ -6,7 +6,26 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Trash2, Edit, Tag, ShoppingCart, Loader2, Save, Layers, Wrench, Users, Settings2, X, Image as ImageIcon, Sparkles, ListChecks, Shapes } from 'lucide-react';
+import { 
+  Package, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  Tag, 
+  ShoppingCart, 
+  Loader2, 
+  Save, 
+  Layers, 
+  Wrench, 
+  Users, 
+  Settings2, 
+  X, 
+  Image as ImageIcon, 
+  Sparkles, 
+  ListChecks, 
+  Shapes,
+  CheckCircle2
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -18,13 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
-
-const CATEGORY_SPECS: Record<string, string[]> = {
-  'Cleaning': ['Concentration', 'pH Level', 'Fragrance', 'Volume', 'Surface Compatibility'],
-  'Tools': ['Material', 'Power Source', 'Voltage', 'Weight', 'Warranty Period'],
-  'Electronics': ['Battery Capacity', 'Connectivity', 'Model Year', 'Certification'],
-  'General': ['Manufacturer', 'Origin', 'Material', 'Color']
-};
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function ProductsManagementPage() {
   const db = useFirestore();
@@ -43,33 +56,20 @@ export default function ProductsManagementPage() {
   const [variants, setVariants] = useState<{ name: string; options: string[] }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Data Queries
+  // Data Queries (Reusable Attributes)
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
   const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
-  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
-  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
+  const brandsQuery = useMemoFirebase(() => db ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db]);
+  const variantTypesQuery = useMemoFirebase(() => db ? query(collection(db, 'variant_types'), orderBy('name', 'asc')) : null, [db]);
+  const reusableFeaturesQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_features'), orderBy('name', 'asc')) : null, [db]);
+  const reusableSpecsQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_specs'), orderBy('key', 'asc')) : null, [db]);
 
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);
-  const { data: services } = useCollection(servicesQuery);
-  const { data: subServices } = useCollection(subServicesQuery);
-  const { data: employees } = useCollection(employeesQuery);
-
-  // Auto-populate specs based on category
-  useEffect(() => {
-    if (isDialogOpen && !editingProduct && selectedCategory) {
-      const suggestedKeys = CATEGORY_SPECS[selectedCategory] || CATEGORY_SPECS['General'];
-      setSpecifications(suggestedKeys.map(key => ({ key, value: '' })));
-    }
-  }, [selectedCategory, isDialogOpen, editingProduct]);
-
-  const KPI_STATS = [
-    { label: "Total Products", value: products?.length || 0, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Total Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Sub-Services", value: subServices?.length || 0, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
-  ];
+  const { data: brands } = useCollection(brandsQuery);
+  const { data: variantTypes } = useCollection(variantTypesQuery);
+  const { data: reusableFeatures } = useCollection(reusableFeaturesQuery);
+  const { data: reusableSpecs } = useCollection(reusableSpecsQuery);
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -127,7 +127,7 @@ export default function ProductsManagementPage() {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
     setGalleryImages(product.galleryImages || []);
-    setSpecifications(product.specifications || product.specs || []);
+    setSpecifications(product.specifications || []);
     setFeatures(product.features || []);
     setVariants(product.variants || []);
     setSelectedCategory(product.categoryId || '');
@@ -139,45 +139,19 @@ export default function ProductsManagementPage() {
     setIsDialogOpen(true);
   };
 
-  // Specifications Handlers
-  const addSpecField = () => setSpecifications([...specifications, { key: '', value: '' }]);
-  const removeSpecField = (index: number) => setSpecifications(specifications.filter((_, i) => i !== index));
-  const updateSpec = (index: number, field: 'key' | 'value', val: string) => {
-    const updated = [...specifications];
-    updated[index][field] = val;
-    setSpecifications(updated);
+  // Handlers for Attributes
+  const toggleFeature = (name: string) => {
+    setFeatures(prev => prev.includes(name) ? prev.filter(f => f !== name) : [...prev, name]);
   };
 
-  // Features Handlers
-  const addFeatureField = () => setFeatures([...features, '']);
-  const removeFeatureField = (index: number) => setFeatures(features.filter((_, i) => i !== index));
-  const updateFeature = (index: number, val: string) => {
-    const updated = [...features];
-    updated[index] = val;
-    setFeatures(updated);
+  const addSpecFromTemplate = (key: string) => {
+    if (specifications.find(s => s.key === key)) return;
+    setSpecifications([...specifications, { key, value: '' }]);
   };
 
-  // Variants Handlers
-  const addVariantField = () => setVariants([...variants, { name: '', options: [] }]);
-  const removeVariantField = (index: number) => setVariants(variants.filter((_, i) => i !== index));
-  const updateVariant = (index: number, field: 'name' | 'options', val: any) => {
-    const updated = [...variants];
-    if (field === 'options') {
-      updated[index].options = val.split(',').map((o: string) => o.trim()).filter((o: string) => o !== '');
-    } else {
-      updated[index].name = val;
-    }
-    setVariants(updated);
-  };
-
-  const addToGallery = (url: string) => {
-    if (url && !galleryImages.includes(url)) {
-      setGalleryImages([...galleryImages, url]);
-    }
-  };
-
-  const removeFromGallery = (index: number) => {
-    setGalleryImages(galleryImages.filter((_, i) => i !== index));
+  const addVariantFromTemplate = (vType: any) => {
+    if (variants.find(v => v.name === vType.name)) return;
+    setVariants([...variants, { name: vType.name, options: vType.options || [] }]);
   };
 
   return (
@@ -204,7 +178,6 @@ export default function ProductsManagementPage() {
               
               <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                  {/* LEFT COLUMN: MEDIA */}
                   <div className="lg:col-span-5 space-y-8">
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
@@ -217,119 +190,67 @@ export default function ProductsManagementPage() {
                         label=""
                       />
                     </div>
-
                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Product Gallery</Label>
-                        <Badge variant="outline" className="text-[9px] font-bold opacity-60 uppercase">{galleryImages.length} Photos</Badge>
-                      </div>
-                      
-                      <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar min-h-[100px] items-center">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Gallery</Label>
+                      <div className="flex gap-2 overflow-x-auto pb-2">
                         {galleryImages.map((img, idx) => (
-                          <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-100 shrink-0 group">
-                            <Image src={img} alt={`Gallery ${idx}`} fill className="object-cover" />
-                            <button 
-                              type="button"
-                              onClick={() => removeFromGallery(idx)}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X size={12} />
-                            </button>
+                          <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-100 group shrink-0">
+                            <Image src={img} alt="Gallery" fill className="object-cover" />
+                            <button type="button" onClick={() => setGalleryImages(galleryImages.filter((_, i) => i !== idx))} className="absolute inset-0 bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
                           </div>
                         ))}
-                        <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50/50 shrink-0">
-                          <ImageIcon size={24} className="text-gray-300" />
-                        </div>
                       </div>
-
-                      <div className="space-y-3">
-                        <p className="text-[10px] font-bold text-muted-foreground italic">Add extra angles or detail shots:</p>
-                        <div className="flex gap-2">
-                          <Input 
-                            id="prod-gallery-input"
-                            placeholder="Paste image URL..." 
-                            className="h-10 bg-gray-50 border-gray-100 text-xs" 
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const val = (e.target as HTMLInputElement).value;
-                                if (val) {
-                                  addToGallery(val);
-                                  (e.target as HTMLInputElement).value = '';
-                                }
-                              }
-                            }}
-                          />
-                          <Button 
-                            type="button" 
-                            variant="secondary" 
-                            size="sm" 
-                            className="h-10 px-4 font-bold"
-                            onClick={() => {
-                              const input = document.getElementById('prod-gallery-input') as HTMLInputElement;
-                              if (input.value) {
-                                addToGallery(input.value);
-                                input.value = '';
-                              }
-                            }}
-                          >
-                            Add
-                          </Button>
-                        </div>
-                      </div>
+                      <Input placeholder="Paste image URL..." onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = (e.target as HTMLInputElement).value;
+                          if (val) { setGalleryImages([...galleryImages, val]); (e.target as HTMLInputElement).value = ''; }
+                        }
+                      }} className="h-9 text-xs" />
                     </div>
                   </div>
 
-                  {/* RIGHT COLUMN: CORE DATA */}
                   <div className="lg:col-span-7 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Product Name</Label>
-                        <Input name="name" defaultValue={editingProduct?.name} required placeholder="e.g. Industrial Vacuum" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Price (BDT)</Label>
-                        <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Product Name</Label>
+                        <Input name="name" defaultValue={editingProduct?.name} required placeholder="Product Title" className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Reg. Price</Label>
-                        <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Stock Qty</Label>
-                        <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Sale Price (BDT)</Label>
+                        <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Unit/Size</Label>
-                        <Input name="size" defaultValue={editingProduct?.size} placeholder="e.g. 5L, 1kg" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Regular Price</Label>
+                        <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
-
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Category</Label>
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl">
-                            <SelectValue placeholder="Select Category" />
-                          </SelectTrigger>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Stock</Label>
+                        <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Brand</Label>
+                        <Select name="brand" defaultValue={editingProduct?.brand || "General"}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Cleaning">Cleaning Supplies</SelectItem>
-                            <SelectItem value="Tools">Equipment & Tools</SelectItem>
-                            <SelectItem value="Electronics">Gadgets & Tech</SelectItem>
+                            <SelectItem value="General">General</SelectItem>
+                            {brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Category</Label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue placeholder="Category" /></SelectTrigger>
+                          <SelectContent>
                             {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Brand</Label>
-                        <Input name="brand" defaultValue={editingProduct?.brand} placeholder="e.g. Samsung" className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
-                      </div>
                     </div>
-
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Short Description</Label>
-                      <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Quick summary..." className="h-12 bg-gray-50 border-none focus:bg-white rounded-xl" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Short Summary</Label>
+                      <Input name="shortDescription" defaultValue={editingProduct?.shortDescription} placeholder="Quick highlight" className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
                 </div>
@@ -337,26 +258,34 @@ export default function ProductsManagementPage() {
                 {/* MODULE: VARIANTS */}
                 <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shapes className="text-primary" size={20} />
-                      <Label className="text-sm font-black uppercase tracking-tight">Product Variants</Label>
+                    <Label className="text-sm font-black uppercase tracking-tight flex items-center gap-2"><Shapes size={18} /> Variants</Label>
+                    <div className="flex gap-2">
+                      <Select onValueChange={(val) => {
+                        const vt = variantTypes?.find(v => v.id === val);
+                        if (vt) addVariantFromTemplate(vt);
+                      }}>
+                        <SelectTrigger className="h-8 w-[150px] text-[10px] font-bold uppercase"><SelectValue placeholder="Load Type" /></SelectTrigger>
+                        <SelectContent>{variantTypes?.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setVariants([...variants, { name: '', options: [] }])} className="h-8 rounded-lg font-bold text-[10px] uppercase border-primary/20 text-primary">
+                        <Plus size={14} /> Custom
+                      </Button>
                     </div>
-                    <Button type="button" variant="outline" size="sm" onClick={addVariantField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
-                      <Plus size={14} /> Add Variant Type
-                    </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {variants.map((v, idx) => (
                       <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3 relative group">
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeVariantField(idx)} className="absolute top-2 right-2 h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></Button>
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Variant Name</Label>
-                          <Input value={v.name} onChange={(e) => updateVariant(idx, 'name', e.target.value)} placeholder="e.g. Color" className="h-9 text-xs font-bold" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Options (Comma Separated)</Label>
-                          <Input value={v.options.join(', ')} onChange={(e) => updateVariant(idx, 'options', e.target.value)} placeholder="e.g. Red, Blue, Black" className="h-9 text-xs" />
-                        </div>
+                        <button type="button" onClick={() => setVariants(variants.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
+                        <Input value={v.name} onChange={(e) => {
+                          const updated = [...variants];
+                          updated[idx].name = e.target.value;
+                          setVariants(updated);
+                        }} placeholder="Variant Type (e.g. Size)" className="h-9 text-xs font-bold" />
+                        <Input value={v.options.join(', ')} onChange={(e) => {
+                          const updated = [...variants];
+                          updated[idx].options = e.target.value.split(',').map(o => o.trim()).filter(o => !!o);
+                          setVariants(updated);
+                        }} placeholder="Options: Large, Small" className="h-9 text-xs" />
                       </div>
                     ))}
                   </div>
@@ -365,22 +294,28 @@ export default function ProductsManagementPage() {
                 {/* MODULE: KEY FEATURES */}
                 <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <ListChecks className="text-primary" size={20} />
-                      <Label className="text-sm font-black uppercase tracking-tight">Key Features (Bullet Points)</Label>
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={addFeatureField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
-                      <Plus size={14} /> Add Feature
+                    <Label className="text-sm font-black uppercase tracking-tight flex items-center gap-2"><ListChecks size={18} /> Features</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setFeatures([...features, ''])} className="h-8 rounded-lg font-bold text-[10px] uppercase border-primary/20 text-primary">
+                      <Plus size={14} /> Add Manual
                     </Button>
                   </div>
-                  <div className="space-y-3">
-                    {features.map((f, idx) => (
-                      <div key={idx} className="flex gap-2 items-center animate-in slide-in-from-left-1">
-                        <div className="flex-1 relative">
-                          <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40" size={14} />
-                          <Input value={f} onChange={(e) => updateFeature(idx, e.target.value)} placeholder="Enter a product highlight..." className="h-10 pl-9 text-xs bg-gray-50 border-none rounded-xl" />
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFeatureField(idx)} className="h-10 w-10 text-destructive"><Trash2 size={14} /></Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {reusableFeatures?.map(f => (
+                      <div key={f.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer" onClick={() => toggleFeature(f.name)}>
+                        <Checkbox checked={features.includes(f.name)} />
+                        <span className="text-[11px] font-bold text-gray-600 uppercase truncate">{f.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    {features.filter(f => !reusableFeatures?.some(rf => rf.name === f)).map((f, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <Input value={f} onChange={(e) => {
+                          const updated = [...features];
+                          updated[idx] = e.target.value;
+                          setFeatures(updated);
+                        }} className="h-10 text-xs bg-gray-50 border-none rounded-xl" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => setFeatures(features.filter((_, i) => i !== idx))}><Trash2 size={14} /></Button>
                       </div>
                     ))}
                   </div>
@@ -389,55 +324,47 @@ export default function ProductsManagementPage() {
                 {/* MODULE: SPECIFICATIONS */}
                 <div className="space-y-6 pt-10 border-t border-gray-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Settings2 className="text-primary" size={20} />
-                      <Label className="text-sm font-black uppercase tracking-tight">Technical Specifications</Label>
+                    <Label className="text-sm font-black uppercase tracking-tight flex items-center gap-2"><Settings2 size={18} /> Technical Specs</Label>
+                    <div className="flex gap-2">
+                      <Select onValueChange={addSpecFromTemplate}>
+                        <SelectTrigger className="h-8 w-[150px] text-[10px] font-bold uppercase"><SelectValue placeholder="Add Key" /></SelectTrigger>
+                        <SelectContent>{reusableSpecs?.map(s => <SelectItem key={s.id} value={s.key}>{s.key}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} className="h-8 rounded-lg font-bold text-[10px] uppercase border-primary/20 text-primary">
+                        <Plus size={14} /> Custom
+                      </Button>
                     </div>
-                    <Button type="button" variant="outline" size="sm" onClick={addSpecField} className="h-8 rounded-lg font-bold gap-1 text-[10px] uppercase border-primary/20 text-primary">
-                      <Plus size={14} /> Add Extra Specification
-                    </Button>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {specifications.map((spec, idx) => (
-                      <div key={idx} className="flex gap-2 items-end animate-in fade-in slide-in-from-top-1 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <div key={idx} className="flex gap-2 items-end bg-gray-50 p-3 rounded-2xl border border-gray-100 group relative">
+                        <button type="button" onClick={() => setSpecifications(specifications.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
                         <div className="flex-1 space-y-1.5">
-                          <Input 
-                            value={spec.key} 
-                            onChange={(e) => updateSpec(idx, 'key', e.target.value)} 
-                            placeholder="Specification Name (e.g. Battery)"
-                            className="h-9 text-xs font-bold bg-white border-gray-200"
-                          />
-                          <Input 
-                            value={spec.value} 
-                            onChange={(e) => updateSpec(idx, 'value', e.target.value)} 
-                            placeholder="Value (e.g. 5000mAh)"
-                            className="h-9 text-xs bg-white border-gray-200"
-                          />
+                          <Input value={spec.key} onChange={(e) => {
+                            const updated = [...specifications];
+                            updated[idx].key = e.target.value;
+                            setSpecifications(updated);
+                          }} placeholder="Key" className="h-8 text-xs font-bold bg-white" />
+                          <Input value={spec.value} onChange={(e) => {
+                            const updated = [...specifications];
+                            updated[idx].value = e.target.value;
+                            setSpecifications(updated);
+                          }} placeholder="Value" className="h-8 text-xs bg-white" />
                         </div>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => removeSpecField(idx)} 
-                          className="h-9 w-9 text-destructive hover:bg-red-50"
-                        >
-                          <Trash2 size={14} />
-                        </Button>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-6">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Full Product Description</Label>
-                  <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none focus:bg-white min-h-[150px] rounded-2xl p-4" placeholder="Detailed features, how to use, etc..." />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Full Product Description</Label>
+                  <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none min-h-[150px] rounded-2xl p-4" placeholder="Detailed features..." />
                 </div>
               </div>
 
               <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 uppercase tracking-tighter">
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl uppercase tracking-tighter">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
                   Save Product Information
                 </Button>
@@ -445,20 +372,6 @@ export default function ProductsManagementPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {KPI_STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
-            <CardContent className="p-5 flex items-center gap-4">
-              <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}><stat.icon size={20} /></div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{stat.label}</p>
-                <h3 className="text-xl font-black text-gray-900">{stat.value}</h3>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
@@ -519,7 +432,7 @@ export default function ProductsManagementPage() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleOpenEdit(product)}>
-                          <Edit size={14} />
+                          <Edit size={16} />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg" onClick={() => deleteDoc(doc(db!, 'products', product.id))}>
                           <Trash2 size={14} />

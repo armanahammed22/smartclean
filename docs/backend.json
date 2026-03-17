@@ -14,90 +14,45 @@
         "imageUrl": { "type": "string" },
         "stockQuantity": { "type": "number" },
         "brand": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "variants": { "type": "array", "items": { "type": "object" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "specifications": { "type": "array", "items": { "type": "object" } }
       },
       "required": ["id", "name", "price", "categoryId"]
     },
-    "Service": {
-      "title": "Service",
-      "type": "object",
-      "description": "Cleaning and maintenance service offerings.",
-      "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "basePrice": { "type": "number" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "imageUrl": { "type": "string" },
-        "categoryId": { "type": "string" }
-      },
-      "required": ["id", "title", "basePrice", "status"]
-    },
-    "User": {
-      "title": "User",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "address": { "type": "string" },
-        "role": { "type": "string", "enum": ["customer", "staff", "admin"], "default": "customer" },
-        "status": { "type": "string", "enum": ["active", "restricted", "disabled", "banned"], "default": "active" },
-        "referralCode": { "type": "string" },
-        "totalEarnings": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Booking": {
-      "title": "Booking",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "serviceId": { "type": "string" },
-        "serviceTitle": { "type": "string" },
-        "employeeId": { "type": "string" },
-        "employeeName": { "type": "string" },
-        "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] },
-        "totalPrice": { "type": "number" },
-        "dateTime": { "type": "string", "format": "date-time" },
-        "address": { "type": "string" }
-      }
-    },
-    "EmployeeProfile": {
-      "title": "EmployeeProfile",
+    "Brand": {
+      "title": "Brand",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "skills": { "type": "array", "items": { "type": "string" } },
-        "rating": { "type": "number" },
-        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] }
+        "status": { "type": "string" }
       }
     },
-    "HeroBannerSettings": {
-      "title": "HeroBannerSettings",
+    "VariantType": {
+      "title": "VariantType",
       "type": "object",
       "properties": {
-        "titleText": { "type": "string" },
-        "subtitleText": { "type": "string" },
-        "titleSize": { "type": "string" },
-        "titleColor": { "type": "string" },
-        "textAlignment": { "type": "string", "enum": ["left", "center", "right"] },
-        "textPosition": { "type": "string", "enum": ["top", "center", "bottom"] },
-        "buttonText": { "type": "string" },
-        "buttonLink": { "type": "string" },
-        "buttonSize": { "type": "string", "enum": ["sm", "md", "lg"] },
-        "buttonColor": { "type": "string" },
-        "buttonShape": { "type": "string", "enum": ["rounded", "pill", "square"] },
-        "buttonPosition": { "type": "string", "enum": ["left", "center", "right"] },
-        "overlayColor": { "type": "string" },
-        "overlayOpacity": { "type": "number" },
-        "isEnabled": { "type": "boolean" },
-        "isButtonEnabled": { "type": "boolean" },
-        "isTextEnabled": { "type": "boolean" }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ReusableFeature": {
+      "title": "ReusableFeature",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "ReusableSpec": {
+      "title": "ReusableSpec",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "key": { "type": "string" }
       }
     }
   },
@@ -108,33 +63,14 @@
     "/users/{uid}": { "schema": "#/entities/User", "description": "Unified user accounts." },
     "/products/{productId}": { "schema": "#/entities/Product", "description": "Inventory items." },
     "/product_categories/{id}": { "schema": "object", "description": "Product groupings." },
-    "/brands/{id}": { "schema": "object", "description": "Supply brands." },
+    "/brands/{id}": { "schema": "#/entities/Brand", "description": "Product brands." },
+    "/variant_types/{id}": { "schema": "#/entities/VariantType", "description": "Reusable variant types." },
+    "/reusable_features/{id}": { "schema": "#/entities/ReusableFeature", "description": "Standard features." },
+    "/reusable_specs/{id}": { "schema": "#/entities/ReusableSpec", "description": "Technical specification keys." },
     "/services/{serviceId}": { "schema": "#/entities/Service", "description": "Main services." },
-    "/service_categories/{id}": { "schema": "object", "description": "Service groupings." },
-    "/sub_services/{id}": { "schema": "object", "description": "Task add-ons." },
-    "/service_areas/{id}": { "schema": "object", "description": "Operational regions." },
-    "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
-    "/orders/{id}": { "schema": "object", "description": "Product sales." },
-    "/leads/{id}": { "schema": "object", "description": "Sales inquiries." },
-    "/support_tickets/{id}": { "schema": "object", "description": "Customer issues." },
-    "/referrals/{id}": { "schema": "object", "description": "Affiliate logs." },
-    "/marketing_offers/{id}": { "schema": "object", "description": "UI Banners." },
-    "/marketing_campaigns/{id}": { "schema": "object", "description": "Growth campaigns." },
-    "/staff_availability/{uid}": { "schema": "object", "description": "Real-time tech status." },
-    "/staff_earnings/{id}": { "schema": "object", "description": "Payroll logs." },
-    "/employee_profiles/{uid}": { "schema": "#/entities/EmployeeProfile", "description": "Staff metadata." },
     "/site_settings/{id}": { "schema": "object", "description": "Global config & UI." },
-    "/heroBannerSettings/{id}": { "schema": "#/entities/HeroBannerSettings", "description": "Homepage hero content." },
-    "/payment_methods/{id}": { "schema": "object", "description": "Gateway configs." },
-    "/couriers/{id}": { "schema": "object", "description": "Logistics partners." },
-    "/coupons/{id}": { "schema": "object", "description": "Discount codes." },
-    "/quick_links/{id}": { "schema": "object", "description": "UI Grid links." },
-    "/quick_actions/{id}": { "schema": "object", "description": "UI Feature cards." },
-    "/blocked_users/{id}": { "schema": "object", "description": "Blacklisted credentials." },
-    "/roles_admins/{uid}": { "schema": "object", "description": "Admin privileges." },
-    "/roles_managers/{uid}": { "schema": "object", "description": "Manager privileges." },
-    "/roles_employees/{uid}": { "schema": "object", "description": "Staff privileges." },
-    "/roles_accounts/{uid}": { "schema": "object", "description": "Accounting privileges." },
-    "/roles_order_managers/{uid}": { "schema": "object", "description": "Sales privileges." }
+    "/heroBannerSettings/{id}": { "schema": "object", "description": "Homepage hero content." },
+    "/bookings/{id}": { "schema": "#/entities/Booking", "description": "Service appointments." },
+    "/orders/{id}": { "schema": "object", "description": "Product sales." }
   }
 }
