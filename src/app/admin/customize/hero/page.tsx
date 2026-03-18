@@ -95,7 +95,7 @@ export default function HeroBannersAdminPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Hero Slider Management</h1>
-          <p className="text-muted-foreground text-sm">Create and style high-conversion promotional slides (982x500 Ratio)</p>
+          <p className="text-muted-foreground text-sm">Create and style high-conversion promotional slides (Exact 982x500 Fit)</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="gap-2 font-bold h-11" asChild>
@@ -112,12 +112,14 @@ export default function HeroBannersAdminPage() {
           <Card key={banner.id} className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100">
             <div className="grid grid-cols-1 lg:grid-cols-12">
               <div className="lg:col-span-5 p-6 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
-                <ImageUploader 
-                  initialUrl={banner.imageUrl}
-                  label="Slide Background (982x500)"
-                  aspectRatio="aspect-[982/500]"
-                  onUpload={(url) => handleUpdateBanner(banner.id, { imageUrl: url })}
-                />
+                <div className="max-w-[350px] mx-auto w-full">
+                  <ImageUploader 
+                    initialUrl={banner.imageUrl}
+                    label="Slide Background (982x500)"
+                    aspectRatio="aspect-[982/500]"
+                    onUpload={(url) => handleUpdateBanner(banner.id, { imageUrl: url })}
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-white rounded-2xl border border-gray-100 space-y-2">

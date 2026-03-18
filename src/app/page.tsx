@@ -20,7 +20,9 @@ import {
   Sparkles,
   TrendingUp,
   Clock,
-  Zap
+  Zap,
+  Package,
+  ShoppingCart
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -123,7 +125,7 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* Hero Carousel */}
+        {/* Hero Carousel - FIXED 982x500 */}
         <section className="container mx-auto px-4 py-6">
           <div className="max-w-[982px] mx-auto">
             <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">

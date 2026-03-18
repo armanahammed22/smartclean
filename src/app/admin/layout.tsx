@@ -115,6 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Products", href: '/admin/products', icon: Box },
         { name: "Categories", href: '/admin/products/categories', icon: Tags },
+        { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
       ]
     },
     {
@@ -167,8 +168,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon },
         { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2 },
         { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },
-        { name: "Header Settings", href: '/admin/settings', icon: Settings2 },
-        { name: "Footer Settings", href: '/admin/settings', icon: FileText },
       ]
     },
     {
@@ -185,9 +184,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "SUPPORT",
       icon: Headphones,
       items: [
-        { name: "Contact Info", href: '/admin/settings', icon: Mail },
-        { name: "Social Link", href: '/admin/settings', icon: Globe },
         { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
+        { name: "Support Tickets", href: '/admin/support', icon: Mail },
       ]
     }
   ];

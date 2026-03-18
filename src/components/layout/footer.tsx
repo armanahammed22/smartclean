@@ -34,24 +34,28 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative h-16 w-48 flex items-center justify-start overflow-hidden">
+              <div className="relative h-12 w-auto min-w-[40px] max-w-[180px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 
                     alt="Logo" 
-                    fill
-                    className="object-contain object-left" 
+                    width={180}
+                    height={48}
+                    className="object-contain h-full w-auto" 
                     data-ai-hint="company logo"
                   />
                 ) : (
-                  <span className="text-primary font-bold text-2xl">S</span>
+                  <div className="bg-primary p-2 rounded-lg">
+                    <span className="text-white font-bold text-xl">S</span>
+                  </div>
                 )}
               </div>
-              {!displayLogo && (
-                <span className="text-2xl font-black tracking-tighter font-headline uppercase">
+              <div className="flex flex-col">
+                <span className="text-xl font-black tracking-tighter font-headline uppercase leading-none">
                   {settings?.websiteName || 'SMART CLEAN'}
                 </span>
-              )}
+                <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em] mt-1">Reliable Cleaning</span>
+              </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
               {settings?.seoDescription || t('footer_desc')}

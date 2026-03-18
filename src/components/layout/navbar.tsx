@@ -47,18 +47,21 @@ export function Navbar() {
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href={logoLink} className="flex items-center gap-3 shrink-0">
-            <div className="relative h-10 md:h-12 w-32 md:w-44 flex items-center justify-center overflow-hidden">
+            <div className="relative h-10 md:h-12 w-auto min-w-[40px] max-w-[180px] flex items-center justify-center overflow-hidden">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
-                  fill
-                  className="object-contain" 
+                  width={180}
+                  height={48}
+                  className="object-contain h-full w-auto" 
                   priority 
                   data-ai-hint="company logo"
                 />
               ) : (
-                <span className="text-primary font-black text-xl">S</span>
+                <div className="bg-primary p-2 rounded-lg">
+                  <span className="text-white font-black text-xl">S</span>
+                </div>
               )}
             </div>
             <div className="flex flex-col">
