@@ -20,7 +20,8 @@
         "description": { "type": "string" },
         "galleryImages": { "type": "array", "items": { "type": "string" } },
         "features": { "type": "array", "items": { "type": "string" } },
-        "specifications": { "type": "array", "items": { "type": "object" } }
+        "specifications": { "type": "array", "items": { "type": "object" } },
+        "variants": { "type": "array", "items": { "type": "object" } }
       },
       "required": ["name", "price", "stockQuantity", "status"]
     },
@@ -36,7 +37,8 @@
         "categoryId": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
         "isPopular": { "type": "boolean" },
-        "imageUrl": { "type": "string" }
+        "imageUrl": { "type": "string" },
+        "galleryImages": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["title", "basePrice", "status"]
     },
@@ -59,10 +61,13 @@
       "properties": {
         "customerId": { "type": "string" },
         "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerEmail": { "type": "string" },
         "items": { "type": "array" },
         "totalPrice": { "type": "number" },
         "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
         "paymentMethod": { "type": "string" },
+        "address": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -73,12 +78,16 @@
       "properties": {
         "customerId": { "type": "string" },
         "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerEmail": { "type": "string" },
         "serviceId": { "type": "string" },
         "serviceTitle": { "type": "string" },
         "dateTime": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] },
         "employeeId": { "type": "string" },
-        "employeeName": { "type": "string" }
+        "employeeName": { "type": "string" },
+        "address": { "type": "string" },
+        "totalPrice": { "type": "number" }
       }
     },
     "UserProfile": {
@@ -102,9 +111,12 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
         "role": { "type": "string" },
         "skills": { "type": "array", "items": { "type": "string" } },
         "rating": { "type": "number" },
+        "jobsCompleted": { "type": "number" },
         "status": { "type": "string" }
       }
     },
@@ -114,9 +126,12 @@
       "type": "object",
       "properties": {
         "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
         "subject": { "type": "string" },
         "message": { "type": "string" },
         "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
+        "adminReply": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -129,7 +144,8 @@
         "logoUrl": { "type": "string" },
         "contactEmail": { "type": "string" },
         "contactPhone": { "type": "string" },
-        "otpEnabled": { "type": "boolean" }
+        "otpEnabled": { "type": "boolean" },
+        "socialLinks": { "type": "object" }
       }
     }
   },
@@ -138,8 +154,12 @@
   },
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
+    "/product_categories/{id}": { "description": "Inventory taxonomy." },
+    "/brands/{id}": { "description": "Product manufacturers." },
     "/services/{id}": { "schema": "Service", "description": "Professional services catalog." },
     "/sub_services/{id}": { "schema": "SubService", "description": "Task add-ons." },
+    "/service_categories/{id}": { "description": "Service taxonomy." },
+    "/service_areas/{id}": { "description": "Coverage regions." },
     "/orders/{id}": { "schema": "Order", "description": "Product purchase records." },
     "/bookings/{id}": { "schema": "Booking", "description": "Service appointment records." },
     "/users/{uid}": { "schema": "UserProfile", "description": "User account data." },
@@ -151,11 +171,15 @@
     "/hero_banners/{id}": { "description": "Hero slider data." },
     "/quick_links/{id}": { "description": "Icon navigation." },
     "/quick_actions/{id}": { "description": "Homepage feature cards." },
+    "/homepage_sections/{id}": { "description": "Layout control blocks." },
     "/marketing_offers/{id}": { "description": "Banners and promotions." },
     "/coupons/{id}": { "description": "Discount codes." },
     "/referrals/{id}": { "description": "Affiliate tracking." },
     "/payment_methods/{id}": { "description": "Configured gateways." },
     "/staff_availability/{uid}": { "description": "Technician real-time status." },
-    "/staff_earnings/{id}": { "description": "Commission and base pay records." }
+    "/staff_earnings/{id}": { "description": "Commission and base pay records." },
+    "/reusable_features/{id}": { "description": "Product highlight templates." },
+    "/reusable_specs/{id}": { "description": "Technical data templates." },
+    "/variant_types/{id}": { "description": "Product variation templates." }
   }
 }

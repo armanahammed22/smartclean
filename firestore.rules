@@ -2,7 +2,7 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 2.4
+ * Rules Version: 2.5
  * Standardized permissions for public catalogs and administrative oversight.
  */
 
@@ -32,6 +32,12 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/roles_order_managers/$(request.auth.uid)) ||
           exists(/databases/$(database)/documents/roles_accounts/$(request.auth.uid))
         )
+      );
+    }
+
+    function isStaff() {
+      return isSignedIn() && (
+        isAdmin() || exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))
       );
     }
 
@@ -128,10 +134,11 @@ service cloud.firestore {
     // --- Transactions ---
 
     match /bookings/{id} {
-      allow list: if isAdmin();
-      allow get: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
+      allow list: if isAdmin() || isStaff();
+      allow get: if isAdmin() || isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow create: if true; // Allow guests to create bookings during checkout
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
+      allow delete: if isAdmin();
     }
 
     match /orders/{id} {
@@ -144,7 +151,7 @@ service cloud.firestore {
     match /support_tickets/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if isSignedIn();
+      allow create: if true; // Allow guests to submit tickets
       allow update, delete: if isAdmin();
     }
 
@@ -179,5 +186,9 @@ service cloud.firestore {
       allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100);
       allow write: if isAdmin();
     }
+
+    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
   }
 }
