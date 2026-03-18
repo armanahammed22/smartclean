@@ -89,9 +89,9 @@ export default function AdminDashboard() {
 
       // 2. Main Services
       const SERVICE_DATA = [
-        { id: 's_home', title: 'Home Cleaning', basePrice: 2000 },
-        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500 },
-        { id: 's_ac', title: 'AC Services', basePrice: 1200 }
+        { id: 's_home', title: 'Home Cleaning', basePrice: 2000, isPopular: true },
+        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, isPopular: false },
+        { id: 's_ac', title: 'AC Services', basePrice: 1200, isPopular: true }
       ];
 
       SERVICE_DATA.forEach(s => {
@@ -105,7 +105,27 @@ export default function AdminDashboard() {
         });
       });
 
-      // 3. System Pages (Conditional)
+      // 3. Products
+      const PRODUCT_DATA = [
+        { id: 'p_robot', name: 'Smart Vacuum Robot', price: 45000, isPopular: true, salesCount: 150 },
+        { id: 'p_kit', name: 'Eco-Friendly Kit', price: 2500, isPopular: true, salesCount: 300 },
+        { id: 'p_steam', name: 'Pro Steam Mop', price: 12000, isPopular: false, salesCount: 80 }
+      ];
+
+      PRODUCT_DATA.forEach(p => {
+        batch.set(doc(db, 'products', p.id), {
+          ...p,
+          status: 'Active',
+          stockQuantity: 50,
+          createdAt: new Date().toISOString(),
+          imageUrl: `https://picsum.photos/seed/${p.id}/600/400`,
+          categoryId: 'Tools',
+          brand: 'SmartClean',
+          description: 'High-quality professional cleaning tool.'
+        });
+      });
+
+      // 4. System Pages
       for (const page of DEFAULT_PAGES) {
         const q = query(collection(db, 'pages_management'), where('slug', '==', page.slug));
         const snap = await getDocs(q);
@@ -119,7 +139,7 @@ export default function AdminDashboard() {
         }
       }
 
-      // 4. Staff
+      // 5. Staff
       batch.set(doc(db, 'employee_profiles', 'emp1'), { 
         id: 'emp1', 
         name: 'Zayed Khan', 
@@ -135,7 +155,7 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Standard products, services, and pages initialized." });
+      toast({ title: "ERP Database Seeded", description: "Standard products, services, and pages initialized with metadata." });
     } catch (err) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'batch',

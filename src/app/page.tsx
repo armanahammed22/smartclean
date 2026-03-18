@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
-import { collection, query, doc, limit } from 'firebase/firestore';
+import { collection, query, doc, limit, where, orderBy } from 'firebase/firestore';
 import { 
   ArrowRight, 
   Wrench, 
@@ -17,7 +17,10 @@ import {
   Loader2, 
   LayoutDashboard, 
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  TrendingUp,
+  Clock,
+  Zap
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -44,7 +47,7 @@ export default function SmartCleanHomePage() {
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Data Fetching
+  // Data Fetching: Hero Banners
   const bannersQuery = useMemoFirebase(() => db ? query(collection(db, 'hero_banners')) : null, [db]);
   const { data: banners, isLoading: bannersLoading } = useCollection(bannersQuery);
 
@@ -55,16 +58,42 @@ export default function SmartCleanHomePage() {
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [banners]);
 
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(10)) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(15)) : null, [db]);
+  // Data Fetching: Categorized Products
+  const popularProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), where('isPopular', '==', true), limit(5)) : null, [db]);
+  const recentProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
+  const bestSellingProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('salesCount', 'desc'), limit(5)) : null, [db]);
 
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
-  const { data: services, isLoading: servicesLoading } = useCollection(servicesQuery);
+  // Data Fetching: Categorized Services
+  const popularServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), where('isPopular', '==', true), limit(5)) : null, [db]);
+  const recentServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
+
+  const { data: popularProducts, isLoading: pPLoading } = useCollection(popularProductsQuery);
+  const { data: recentProducts, isLoading: rPLoading } = useCollection(recentProductsQuery);
+  const { data: bestSellingProducts, isLoading: bPLoading } = useCollection(bestSellingProductsQuery);
+  const { data: popularServices, isLoading: pSLoading } = useCollection(popularServicesQuery);
+  const { data: recentServices, isLoading: rSLoading } = useCollection(recentServicesQuery);
 
   const handleDirectServiceCheckout = (service: any) => {
     addToCart(service);
     setCheckoutOpen(true);
   };
+
+  const SectionHeader = ({ icon: Icon, title, subtitle, link }: { icon: any, title: string, subtitle: string, link: string }) => (
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3 mb-8">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+            <Icon size={16} />
+          </div>
+          <Badge className="bg-primary/5 text-primary border-none uppercase tracking-[0.2em] font-black py-0.5 px-3 rounded-full text-[8px]">{subtitle}</Badge>
+        </div>
+        <h2 className="text-2xl md:text-3xl font-black font-headline text-[#081621] uppercase tracking-tighter">{title}</h2>
+      </div>
+      <Button variant="link" className="gap-2 font-black uppercase text-[10px] tracking-widest text-primary p-0 h-auto" asChild>
+        <Link href={link}>{t('view_all')} <ChevronRight size={14} /></Link>
+      </Button>
+    </div>
+  );
 
   return (
     <PublicLayout>
@@ -94,11 +123,10 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* Unified Dynamic Hero Carousel - Updated to 982x500 Aspect Ratio and Width */}
+        {/* Hero Carousel */}
         <section className="container mx-auto px-4 py-6">
           <div className="max-w-[982px] mx-auto">
             <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
-              
               {bannersLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                   <Loader2 className="animate-spin text-primary" size={40} />
@@ -108,7 +136,6 @@ export default function SmartCleanHomePage() {
                   <CarouselContent className="h-full">
                     {activeBanners.map((banner) => (
                       <CarouselItem key={banner.id} className="h-full relative">
-                        {/* Slide Background */}
                         <div className="absolute inset-0">
                           {banner.imageUrl ? (
                             <Image 
@@ -123,7 +150,6 @@ export default function SmartCleanHomePage() {
                               <Sparkles size={120} />
                             </div>
                           )}
-                          {/* Dynamic Color Overlay */}
                           <div 
                             className="absolute inset-0 transition-opacity duration-500" 
                             style={{ 
@@ -132,8 +158,6 @@ export default function SmartCleanHomePage() {
                             }} 
                           />
                         </div>
-
-                        {/* Slide Content Layer */}
                         <div className={cn(
                           "relative z-10 h-full flex flex-col p-8 md:p-12",
                           banner.textPosition === 'top' ? 'justify-start' : 
@@ -155,7 +179,6 @@ export default function SmartCleanHomePage() {
                                 </p>
                               </>
                             )}
-                            
                             {banner.isButtonEnabled !== false && banner.buttonText && (
                               <div className="pt-2">
                                 <Button 
@@ -179,7 +202,6 @@ export default function SmartCleanHomePage() {
                   </CarouselContent>
                 </Carousel>
               ) : (
-                /* Static Fallback Banner */
                 <div className="relative w-full h-full flex flex-col justify-center items-center text-center p-8 bg-[#081621]">
                   <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/982/500')] bg-cover" />
                   <div className="relative z-10 space-y-4">
@@ -200,70 +222,96 @@ export default function SmartCleanHomePage() {
         </section>
 
         {/* Content Grids */}
-        <div className="container mx-auto px-4 mt-8 space-y-16 pb-24">
-          {/* Services Section */}
+        <div className="container mx-auto px-4 mt-8 space-y-24 pb-24">
+          
+          {/* POPULAR SERVICES */}
           <section>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
-              <div className="space-y-1">
-                <Badge className="bg-primary/10 text-primary border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Expert Solutions</Badge>
-                <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('expert_services')}</h2>
-              </div>
-              <Button variant="outline" className="gap-2 font-black uppercase text-[10px] tracking-widest border-primary/20 text-primary rounded-full h-10 px-6" asChild>
-                <Link href="/services">{t('view_all')} <ChevronRight size={14} /></Link>
-              </Button>
-            </div>
-            
-            <div className="mt-8">
-              {servicesLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                  {services?.map((service) => (
-                    <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
-                      <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
-                        {service.imageUrl ? (
-                          <Image src={service.imageUrl} alt={service.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-                        ) : (
-                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
-                        )}
-                      </Link>
-                      <div className="p-4 flex flex-col flex-1 gap-3">
-                        <h3 className="text-sm font-black uppercase tracking-tight line-clamp-1">{service.title}</h3>
-                        <div className="flex items-center justify-between mt-auto">
-                          <span className="text-lg font-black text-primary">৳{service.basePrice?.toLocaleString()}</span>
-                          <Button size="sm" variant="secondary" className="rounded-full h-8 px-4 text-[10px] font-black uppercase" onClick={() => handleDirectServiceCheckout(service)}>
-                            Book
-                          </Button>
-                        </div>
+            <SectionHeader icon={TrendingUp} title="Popular Services" subtitle="Highest Rated" link="/services" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {pSLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                popularServices?.map((service) => (
+                  <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
+                    <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
+                      {service.imageUrl ? (
+                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
+                      )}
+                    </Link>
+                    <div className="p-4 flex flex-col flex-1 gap-3">
+                      <h3 className="text-[13px] font-black uppercase tracking-tight line-clamp-1">{service.title}</h3>
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="text-lg font-black text-primary">৳{service.basePrice?.toLocaleString()}</span>
+                        <Button size="sm" variant="secondary" className="rounded-full h-8 px-4 text-[10px] font-black uppercase" onClick={() => handleDirectServiceCheckout(service)}>
+                          Book
+                        </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))
+              }
             </div>
           </section>
 
-          {/* Products Section */}
+          {/* BEST SELLING PRODUCTS */}
           <section>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-3">
-              <div className="space-y-1">
-                <Badge className="bg-slate-100 text-slate-600 border-none uppercase tracking-[0.2em] font-black py-1 px-4 rounded-full text-[9px]">Supply Store</Badge>
-                <h2 className="text-2xl md:text-4xl font-black font-headline text-[#081621] uppercase tracking-tighter">{t('professional_tools')}</h2>
-              </div>
-              <Button variant="link" className="gap-2 font-black uppercase text-[10px] tracking-widest text-primary p-0 h-auto" asChild>
-                <Link href="/products">{t('view_all')} <ChevronRight size={14} /></Link>
-              </Button>
-            </div>
-            <div className="mt-8">
-              {productsLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" size={40} /></div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                  {products?.map((product) => <ProductCard key={product.id} product={product as any} />)}
-                </div>
-              )}
+            <SectionHeader icon={Zap} title="Best Selling Products" subtitle="Most Ordered" link="/products" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {bPLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                bestSellingProducts?.map((product) => <ProductCard key={product.id} product={product as any} />)
+              }
             </div>
           </section>
+
+          {/* POPULAR PRODUCTS */}
+          <section>
+            <SectionHeader icon={TrendingUp} title="Popular Products" subtitle="Customer Choice" link="/products" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {pPLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                popularProducts?.map((product) => <ProductCard key={product.id} product={product as any} />)
+              }
+            </div>
+          </section>
+
+          {/* RECENT SERVICES */}
+          <section>
+            <SectionHeader icon={Clock} title="New Services" subtitle="Recently Added" link="/services" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {rSLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                recentServices?.map((service) => (
+                  <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
+                    <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
+                      {service.imageUrl ? (
+                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
+                      )}
+                    </Link>
+                    <div className="p-4 flex flex-col flex-1 gap-3">
+                      <h3 className="text-[13px] font-black uppercase tracking-tight line-clamp-1">{service.title}</h3>
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="text-lg font-black text-primary">৳{service.basePrice?.toLocaleString()}</span>
+                        <Button size="sm" variant="secondary" className="rounded-full h-8 px-4 text-[10px] font-black uppercase" onClick={() => handleDirectServiceCheckout(service)}>
+                          Book
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </section>
+
+          {/* RECENT PRODUCTS */}
+          <section>
+            <SectionHeader icon={Clock} title="Recently Added Supplies" subtitle="New Arrivals" link="/products" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {rPLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                recentProducts?.map((product) => <ProductCard key={product.id} product={product as any} />)
+              }
+            </div>
+          </section>
+
         </div>
       </div>
     </PublicLayout>

@@ -17,10 +17,14 @@ export interface Product {
   type?: 'product';
   status: 'Active' | 'Inactive';
   onSale?: boolean;
+  isPopular?: boolean;
+  salesCount?: number;
   features?: string[];
   specifications?: { key: string; value: string }[];
   variants?: { name: string; options: string[] }[];
   size?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CustomerProfile {
@@ -105,7 +109,10 @@ export interface Service {
   galleryImages?: string[];
   type?: 'service';
   status: 'Active' | 'Inactive';
+  isPopular?: boolean;
   duration?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SubService {
