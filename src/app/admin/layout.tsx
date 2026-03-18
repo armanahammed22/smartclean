@@ -87,6 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
+  // STRICT SERIAL ORDER AS REQUESTED
   const NAV_GROUPS = [
     {
       id: 'dashboard',
@@ -240,7 +241,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-black tracking-tighter text-sm text-white">ADMIN CENTER</h1>
+              <h1 className="font-black tracking-tighter text-sm text-white uppercase">Admin Center</h1>
               <p className="text-[9px] text-green-400 font-black uppercase tracking-widest leading-none mt-0.5">Management Pro</p>
             </div>
           )}
@@ -268,8 +269,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {!collapsed && <span className="text-[11px] font-black uppercase tracking-[0.15em]">{group.title}</span>}
                 </div>
                 {!collapsed && (
-                  <div className={cn("shrink-0 transition-transform duration-300", isGroupExpanded ? "rotate-180" : "rotate-0")}>
-                    <ChevronDown size={14} className="opacity-40" />
+                  <div className={cn("shrink-0 transition-transform duration-300", isGroupExpanded ? "rotate-90" : "rotate-0")}>
+                    <ChevronRight size={14} className="opacity-40" />
                   </div>
                 )}
               </button>

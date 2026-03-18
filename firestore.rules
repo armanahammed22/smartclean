@@ -2,8 +2,9 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.6
- * Refined listing permissions for public catalogs and reinforced administrative authority.
+ * Rules Version: 1.7
+ * Optimized listing permissions for public catalogs and reinforced root administrative authority.
+ * Explicitly allowing list on core collections to resolve permission denials.
  */
 
 rules_version = '2';

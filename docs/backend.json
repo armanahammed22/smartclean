@@ -43,6 +43,19 @@
         "status": { "type": "string", "enum": ["Active", "Inactive"] }
       }
     },
+    "Service": {
+      "title": "Service",
+      "description": "A professional cleaning or maintenance offering.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "duration": { "type": "string" },
+        "description": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
+    },
     "Booking": {
       "title": "Booking",
       "description": "A scheduled service appointment.",
@@ -89,6 +102,8 @@
     "/orders/{id}": { "schema": "Order", "description": "Product orders." },
     "/bookings/{id}": { "schema": "Booking", "description": "Service bookings." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
-    "/service_areas/{id}": { "description": "Regions where services are offered." }
+    "/service_areas/{id}": { "description": "Regions where services are offered." },
+    "/services/{id}": { "schema": "Service", "description": "Service catalog." },
+    "/products/{id}": { "schema": "Product", "description": "Product catalog." }
   }
 }
