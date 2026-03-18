@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -128,12 +129,11 @@ export default function SiteCustomizePage() {
             {banners?.map((banner) => (
               <Card key={banner.id} className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100">
                 <div className="grid grid-cols-1 lg:grid-cols-12">
-                  {/* Left: Media & Basic Control - Increased span to lg:col-span-5 and reduced padding */}
                   <div className="lg:col-span-5 p-6 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
                     <ImageUploader 
                       initialUrl={banner.imageUrl}
-                      label="Slide Background Image"
-                      aspectRatio="aspect-[21/9]"
+                      label="Slide Background (982x500)"
+                      aspectRatio="aspect-[982/500]"
                       onUpload={(url) => handleUpdateBanner(banner.id, { imageUrl: url })}
                     />
                     
@@ -182,7 +182,6 @@ export default function SiteCustomizePage() {
                     </div>
                   </div>
 
-                  {/* Right: Rich Configuration - Reduced span to lg:col-span-7 */}
                   <div className="lg:col-span-7 p-8 space-y-10">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-4">
@@ -203,7 +202,6 @@ export default function SiteCustomizePage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Typography Settings */}
                       <div className="space-y-6">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase">Main Title</Label>
@@ -244,33 +242,8 @@ export default function SiteCustomizePage() {
                             </Select>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase">Text Alignment</Label>
-                            <Select defaultValue={banner.textAlignment || 'center'} onValueChange={(val) => handleUpdateBanner(banner.id, { textAlignment: val })}>
-                              <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="left">Left</SelectItem>
-                                <SelectItem value="center">Center</SelectItem>
-                                <SelectItem value="right">Right</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase">Content Position</Label>
-                            <Select defaultValue={banner.textPosition || 'center'} onValueChange={(val) => handleUpdateBanner(banner.id, { textPosition: val })}>
-                              <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="top">Top</SelectItem>
-                                <SelectItem value="center">Middle</SelectItem>
-                                <SelectItem value="bottom">Bottom</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
                       </div>
 
-                      {/* CTA Action Settings */}
                       <div className="space-y-6">
                         <div className="flex items-center justify-between">
                           <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MousePointer2 size={12}/> Button Action</Label>
@@ -320,24 +293,12 @@ export default function SiteCustomizePage() {
                             </Select>
                           </div>
                         </div>
-                        
-                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                          <p className="text-[10px] font-bold text-primary flex items-center gap-2">
-                            <Settings2 size={12}/> Design Hint: Use high contrast colors for the button to increase conversion rates.
-                          </p>
-                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </Card>
             ))}
-
-            {banners?.length === 0 && (
-              <div className="p-24 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic">
-                No dynamic slides found. Click "New Dynamic Slide" to start building your professional hero slider.
-              </div>
-            )}
           </div>
         </TabsContent>
 

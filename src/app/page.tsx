@@ -94,10 +94,10 @@ export default function SmartCleanHomePage() {
           </section>
         )}
 
-        {/* Unified Dynamic Hero Carousel */}
+        {/* Unified Dynamic Hero Carousel - Updated to 982x500 Aspect Ratio and Width */}
         <section className="container mx-auto px-4 py-6">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="relative aspect-[21/9] md:aspect-[21/7] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
+          <div className="max-w-[982px] mx-auto">
+            <div className="relative aspect-[982/500] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 group bg-gray-100">
               
               {bannersLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
@@ -135,33 +135,33 @@ export default function SmartCleanHomePage() {
 
                         {/* Slide Content Layer */}
                         <div className={cn(
-                          "relative z-10 h-full flex flex-col p-8 md:p-20",
+                          "relative z-10 h-full flex flex-col p-8 md:p-12",
                           banner.textPosition === 'top' ? 'justify-start' : 
                           banner.textPosition === 'bottom' ? 'justify-end' : 'justify-center',
                           banner.textAlignment === 'left' ? 'items-start text-left' :
                           banner.textAlignment === 'right' ? 'items-end text-right' : 'items-center text-center'
                         )}>
-                          <div className="space-y-6 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                          <div className="space-y-4 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
                             {banner.isTextEnabled !== false && (
                               <>
                                 <h2 
-                                  className={cn("font-black uppercase tracking-tighter leading-tight drop-shadow-2xl", banner.titleSize || 'text-4xl md:text-7xl')}
+                                  className={cn("font-black uppercase tracking-tighter leading-tight drop-shadow-2xl", banner.titleSize || 'text-3xl md:text-5xl')}
                                   style={{ color: banner.titleColor || '#ffffff' }}
                                 >
                                   {banner.title}
                                 </h2>
-                                <p className="text-sm md:text-2xl font-medium text-white/90 drop-shadow-md max-w-2xl">
+                                <p className="text-xs md:text-lg font-medium text-white/90 drop-shadow-md max-w-xl mx-auto">
                                   {banner.subtitle}
                                 </p>
                               </>
                             )}
                             
                             {banner.isButtonEnabled !== false && banner.buttonText && (
-                              <div className="pt-4">
+                              <div className="pt-2">
                                 <Button 
                                   asChild 
                                   className={cn(
-                                    "h-12 md:h-16 px-10 md:px-14 font-black text-sm md:text-xl uppercase tracking-tight shadow-2xl transition-all hover:scale-105 active:scale-95",
+                                    "h-10 md:h-12 px-8 md:px-10 font-black text-xs md:text-base uppercase tracking-tight shadow-2xl transition-all hover:scale-105 active:scale-95",
                                     banner.buttonShape || 'rounded-2xl'
                                   )}
                                   style={{ backgroundColor: banner.buttonColor || '#22c55e' }}
@@ -180,16 +180,16 @@ export default function SmartCleanHomePage() {
                 </Carousel>
               ) : (
                 /* Static Fallback Banner */
-                <div className="relative w-full h-full flex flex-col justify-center items-center text-center p-12 bg-[#081621]">
-                  <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/1200/600')] bg-cover" />
-                  <div className="relative z-10 space-y-6">
-                    <h2 className="text-3xl md:text-6xl font-black uppercase text-white tracking-tighter leading-tight">
+                <div className="relative w-full h-full flex flex-col justify-center items-center text-center p-8 bg-[#081621]">
+                  <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/clean/982/500')] bg-cover" />
+                  <div className="relative z-10 space-y-4">
+                    <h2 className="text-2xl md:text-5xl font-black uppercase text-white tracking-tighter leading-tight">
                       Expert Cleaning Solutions
                     </h2>
-                    <p className="text-sm md:text-lg text-white/70 max-w-xl mx-auto font-medium">
+                    <p className="text-xs md:text-base text-white/70 max-w-md mx-auto font-medium">
                       Professional home and office maintenance across Bangladesh.
                     </p>
-                    <Button asChild className="h-12 md:h-14 px-10 rounded-2xl font-black text-sm md:text-lg uppercase shadow-xl bg-primary hover:bg-primary/90">
+                    <Button asChild className="h-10 md:h-12 px-8 rounded-2xl font-black text-xs md:text-base uppercase shadow-xl bg-primary hover:bg-primary/90">
                       <Link href="/services">View Our Services</Link>
                     </Button>
                   </div>
