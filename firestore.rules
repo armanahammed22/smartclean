@@ -2,9 +2,8 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 2.3
+ * Rules Version: 2.4
  * Standardized permissions for public catalogs and administrative oversight.
- * Explicitly allowing public 'list' for products/services to fix guest access denials.
  */
 
 rules_version = '2';
@@ -121,19 +120,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /staff_availability/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
     // --- Transactions ---
 
     match /bookings/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
-      allow create: if true;
+      allow create: if true; // Allow guests to create bookings during checkout
       allow update, delete: if isAdmin();
     }
 
     match /orders/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if true;
+      allow create: if true; // Allow guests to place orders
       allow update, delete: if isAdmin();
     }
 
@@ -154,5 +158,26 @@ service cloud.firestore {
     match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    
+    match /staff_earnings/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+    
+    match /coupons/{id} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /payment_methods/{id} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /referrals/{id} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100);
+      allow write: if isAdmin();
+    }
   }
 }

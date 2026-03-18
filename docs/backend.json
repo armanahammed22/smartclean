@@ -119,6 +119,18 @@
         "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
         "createdAt": { "type": "string", "format": "date-time" }
       }
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Global configuration for the website.",
+      "type": "object",
+      "properties": {
+        "websiteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "otpEnabled": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -135,13 +147,15 @@
     "/support_tickets/{id}": { "schema": "SupportTicket", "description": "Customer support inquiries." },
     "/pages_management/{slug}": { "description": "Dynamic CMS content." },
     "/leads/{id}": { "description": "Sales inquiries." },
-    "/site_settings/{id}": { "description": "Global configuration." },
+    "/site_settings/{id}": { "schema": "SiteSettings", "description": "Global configuration." },
     "/hero_banners/{id}": { "description": "Hero slider data." },
     "/quick_links/{id}": { "description": "Icon navigation." },
     "/quick_actions/{id}": { "description": "Homepage feature cards." },
     "/marketing_offers/{id}": { "description": "Banners and promotions." },
     "/coupons/{id}": { "description": "Discount codes." },
     "/referrals/{id}": { "description": "Affiliate tracking." },
-    "/payment_methods/{id}": { "description": "Configured gateways." }
+    "/payment_methods/{id}": { "description": "Configured gateways." },
+    "/staff_availability/{uid}": { "description": "Technician real-time status." },
+    "/staff_earnings/{id}": { "description": "Commission and base pay records." }
   }
 }
