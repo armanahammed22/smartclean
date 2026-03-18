@@ -2,9 +2,9 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.8
- * Optimized public access for catalogs and refined administrative roles.
- * Explicitly allowing listing for public content to resolve guest permission denials.
+ * Rules Version: 1.9
+ * Explicitly allowing public list/get for catalogs to resolve guest permission denials.
+ * Reinforced administrative roles for full operational oversight.
  */
 
 rules_version = '2';

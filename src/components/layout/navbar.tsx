@@ -47,14 +47,14 @@ export function Navbar() {
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href={logoLink} className="flex items-center gap-3 shrink-0">
-            <div className="relative min-w-[80px] h-10 md:h-12 flex items-center justify-center overflow-hidden">
+            <div className="relative h-10 md:h-12 flex items-center justify-center overflow-hidden">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
                   width={160} 
                   height={48} 
-                  className="object-contain h-full w-auto" 
+                  className="object-contain h-full w-auto max-w-[180px]" 
                   priority 
                   data-ai-hint="company logo"
                 />

@@ -15,7 +15,10 @@
         "imageUrl": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
         "isPopular": { "type": "boolean" },
-        "salesCount": { "type": "number" }
+        "salesCount": { "type": "number" },
+        "shortDescription": { "type": "string" },
+        "description": { "type": "string" },
+        "galleryImages": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["name", "price", "stockQuantity", "status"]
     },
@@ -30,9 +33,22 @@
         "description": { "type": "string" },
         "categoryId": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "isPopular": { "type": "boolean" }
+        "isPopular": { "type": "boolean" },
+        "imageUrl": { "type": "string" }
       },
       "required": ["title", "basePrice", "status"]
+    },
+    "SubService": {
+      "title": "SubService",
+      "description": "A specialized task add-on for a main service.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "string" },
+        "mainServiceId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      }
     },
     "Order": {
       "title": "Order",
@@ -40,9 +56,11 @@
       "type": "object",
       "properties": {
         "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
         "items": { "type": "array" },
         "totalPrice": { "type": "number" },
         "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "paymentMethod": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
     },
@@ -52,10 +70,13 @@
       "type": "object",
       "properties": {
         "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
         "serviceId": { "type": "string" },
+        "serviceTitle": { "type": "string" },
         "dateTime": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] },
-        "employeeId": { "type": "string" }
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" }
       }
     },
     "UserProfile": {
@@ -67,19 +88,34 @@
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "role": { "type": "string" },
+        "status": { "type": "string" },
+        "address": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "totalEarnings": { "type": "number" }
+      }
+    },
+    "EmployeeProfile": {
+      "title": "EmployeeProfile",
+      "description": "Information about cleaning staff.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "number" },
         "status": { "type": "string" }
       }
     },
-    "Page": {
-      "title": "Page",
-      "description": "A CMS page managed through the Pages Management module.",
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "A customer inquiry or support request.",
       "type": "object",
       "properties": {
-        "slug": { "type": "string" },
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "isPublished": { "type": "boolean" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "customerId": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["Open", "Replied", "Closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -89,12 +125,14 @@
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
     "/services/{id}": { "schema": "Service", "description": "Professional services catalog." },
+    "/sub_services/{id}": { "schema": "SubService", "description": "Task add-ons." },
     "/orders/{id}": { "schema": "Order", "description": "Product purchase records." },
     "/bookings/{id}": { "schema": "Booking", "description": "Service appointment records." },
     "/users/{uid}": { "schema": "UserProfile", "description": "User account data." },
-    "/pages_management/{id}": { "schema": "Page", "description": "Informational CMS pages." },
+    "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff metadata." },
+    "/support_tickets/{id}": { "schema": "SupportTicket", "description": "Customer support inquiries." },
+    "/pages_management/{id}": { "description": "Dynamic CMS content." },
     "/leads/{id}": { "description": "Sales inquiries." },
-    "/hero_banners/{id}": { "description": "Dynamic homepage slides." },
-    "/site_settings/{id}": { "description": "Global website configuration." }
+    "/site_settings/{id}": { "description": "Global configuration." }
   }
 }
