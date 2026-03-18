@@ -2,8 +2,9 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 2.5
+ * Rules Version: 2.0
  * Standardized permissions for public catalogs and administrative oversight.
+ * Version 2.0: Explicitly opened public listing for catalogs to resolve guest access denials.
  */
 
 rules_version = '2';

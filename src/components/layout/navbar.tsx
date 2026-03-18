@@ -47,7 +47,7 @@ export function Navbar() {
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-10 md:h-12 w-48 max-w-[180px] flex items-center justify-start overflow-hidden">
+            <div className="relative h-10 md:h-12 w-auto min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 

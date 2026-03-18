@@ -34,7 +34,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-48 max-w-[180px] flex items-center justify-start overflow-hidden">
+              <div className="relative h-12 w-auto min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 

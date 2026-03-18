@@ -25,6 +25,27 @@
       },
       "required": ["name", "price", "stockQuantity", "status"]
     },
+    "ProductCategory": {
+      "title": "ProductCategory",
+      "description": "Hierarchy for grouping products.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "parentId": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "Brand": {
+      "title": "Brand",
+      "description": "Manufacturer or brand registry.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
     "Service": {
       "title": "Service",
       "description": "A professional cleaning or maintenance offering.",
@@ -95,6 +116,7 @@
       "description": "Metadata for registered customers.",
       "type": "object",
       "properties": {
+        "uid": { "type": "string" },
         "name": { "type": "string" },
         "email": { "type": "string" },
         "phone": { "type": "string" },
@@ -154,8 +176,8 @@
   },
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
-    "/product_categories/{id}": { "description": "Inventory taxonomy." },
-    "/brands/{id}": { "description": "Product manufacturers." },
+    "/product_categories/{id}": { "schema": "ProductCategory", "description": "Inventory taxonomy." },
+    "/brands/{id}": { "schema": "Brand", "description": "Product manufacturers." },
     "/services/{id}": { "schema": "Service", "description": "Professional services catalog." },
     "/sub_services/{id}": { "schema": "SubService", "description": "Task add-ons." },
     "/service_categories/{id}": { "description": "Service taxonomy." },
