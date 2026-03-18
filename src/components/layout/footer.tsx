@@ -34,17 +34,15 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-auto min-w-[40px] max-w-[180px] flex items-center justify-start overflow-hidden">
+              <div className="relative h-12 w-48 max-w-[180px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
-                  <div className="relative h-full w-40">
-                    <Image 
-                      src={displayLogo} 
-                      alt="Logo" 
-                      fill
-                      className="object-contain object-left" 
-                      data-ai-hint="company logo"
-                    />
-                  </div>
+                  <Image 
+                    src={displayLogo} 
+                    alt="Logo" 
+                    fill
+                    className="object-contain object-left" 
+                    data-ai-hint="company logo"
+                  />
                 ) : (
                   <div className="bg-primary p-2 rounded-lg">
                     <span className="text-white font-bold text-xl">S</span>

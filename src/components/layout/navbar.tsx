@@ -46,19 +46,17 @@ export function Navbar() {
     <header className="w-full z-50 sticky top-0 shadow-sm border-b border-white/10">
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
-          <Link href={logoLink} className="flex items-center gap-3 shrink-0">
-            <div className="relative h-10 md:h-12 w-auto min-w-[40px] max-w-[180px] flex items-center justify-start overflow-hidden">
+          <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
+            <div className="relative h-10 md:h-12 w-48 max-w-[180px] flex items-center justify-start overflow-hidden">
               {displayLogo ? (
-                <div className="relative h-full w-40">
-                  <Image 
-                    src={displayLogo} 
-                    alt="Logo" 
-                    fill
-                    className="object-contain object-left" 
-                    priority 
-                    data-ai-hint="company logo"
-                  />
-                </div>
+                <Image 
+                  src={displayLogo} 
+                  alt="Logo" 
+                  fill
+                  className="object-contain object-left transition-transform group-hover:scale-105" 
+                  priority 
+                  data-ai-hint="company logo"
+                />
               ) : (
                 <div className="bg-primary p-2 rounded-lg">
                   <span className="text-white font-black text-xl">S</span>

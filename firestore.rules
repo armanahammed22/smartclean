@@ -2,7 +2,7 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 2.2
+ * Rules Version: 2.3
  * Standardized permissions for public catalogs and administrative oversight.
  * Explicitly allowing public 'list' for products/services to fix guest access denials.
  */
@@ -73,48 +73,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /reusable_features/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /reusable_specs/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /variant_types/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /couriers/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /payment_methods/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /coupons/{id} {
-      allow get: if true;
-      allow list, write: if isAdmin();
-    }
-
-    match /marketing_offers/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /marketing_campaigns/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    // --- Layout & CMS Content ---
-
     match /hero_banners/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
@@ -135,12 +93,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /site_settings/{id} {
+    match /marketing_offers/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /pages_management/{slug} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /site_settings/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
@@ -158,46 +121,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /staff_availability/{id} {
-      allow get, list: if true;
-      allow write: if isOwner(id) || isAdmin();
-    }
-
-    match /staff_earnings/{id} {
-      allow get: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin());
-      allow list: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
-      allow write: if isAdmin();
-    }
-
-    // --- Roles ---
-
-    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /blocked_users/{id} { allow read, write: if isAdmin(); }
-
-    // --- Transactions & Communication ---
+    // --- Transactions ---
 
     match /bookings/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.employeeId == request.auth.uid));
-      allow create: if isSignedIn();
+      allow create: if true;
       allow update, delete: if isAdmin();
     }
 
     match /orders/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if isSignedIn();
+      allow create: if true;
       allow update, delete: if isAdmin();
-    }
-
-    match /referrals/{id} {
-      allow get: if isSignedIn() && (resource.data.referrerId == request.auth.uid || isAdmin());
-      allow list: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
-      allow write: if isAdmin();
     }
 
     match /support_tickets/{id} {
@@ -210,5 +147,12 @@ service cloud.firestore {
     match /leads/{id} {
       allow get, list, write: if isAdmin();
     }
+
+    match /blocked_users/{id} { allow read, write: if isAdmin(); }
+    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
   }
 }

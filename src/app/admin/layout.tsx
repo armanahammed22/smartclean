@@ -20,7 +20,7 @@ import {
   Menu,
   ShoppingCart,
   Truck,
-  Package,
+  Box,
   Wrench,
   Tags,
   Share2,
@@ -29,11 +29,6 @@ import {
   Zap,
   Wallet,
   Globe,
-  Settings2,
-  Box,
-  Shapes,
-  ListChecks,
-  Search,
   Headphones,
   Layout,
   Link as LinkIcon,
@@ -45,7 +40,8 @@ import {
   Tag,
   Mail,
   Palette,
-  AlertCircle
+  AlertCircle,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -75,7 +71,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   const adminRoleRef = useMemoFirebase(() => {
@@ -208,18 +204,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required. Logging out..." });
+      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {
         router.push('/login');
       });
     }
   }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -228,6 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
     <div className="flex flex-col h-full bg-[#0f172a] text-white relative overflow-hidden">
+      {/* Glassmorphism Background Blobs */}
       <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] -left-[20%] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -238,8 +229,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-black tracking-tighter text-sm text-white uppercase">Admin Center</h1>
-              <p className="text-[9px] text-green-400 font-black uppercase tracking-widest leading-none mt-0.5">Management Pro</p>
+              <h1 className="font-black tracking-tighter text-sm text-white uppercase leading-none">Admin Center</h1>
+              <p className="text-[9px] text-green-400 font-black uppercase tracking-widest leading-none mt-1">Management Pro</p>
             </div>
           )}
         </div>
@@ -283,7 +274,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <Link
                         key={item.name}
                         href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={() => mobileOnly && setIsMobileMenuOpen(false)}
                         className={cn(
                           "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 group relative h-10 hover:scale-[1.02] border border-transparent",
                           isActive 
@@ -306,23 +297,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </div>
 
-      {!mobileOnly && (
-        <div className="p-4 border-t border-white/5 shrink-0 mb-16 lg:mb-0 relative z-10 backdrop-blur-md bg-white/5">
-          <Button 
-            variant="ghost" 
-            className={cn(
-              "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12 hover:scale-[1.02] border border-transparent hover:border-red-500/20",
-              collapsed ? "justify-center" : "justify-start"
-            )} 
-            onClick={handleLogout}
-          >
-            <LogOut size={18} />
-            {!collapsed && <span className="font-black text-[10px] uppercase tracking-[0.2em]">{t('sign_out')}</span>}
-          </Button>
-        </div>
-      )}
+      <div className="p-4 border-t border-white/5 shrink-0 relative z-10 backdrop-blur-md bg-white/5">
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12 hover:scale-[1.02]",
+            collapsed ? "justify-center" : "justify-start"
+          )} 
+          onClick={handleLogout}
+        >
+          <LogOut size={18} />
+          {!collapsed && <span className="font-black text-[10px] uppercase tracking-[0.2em]">Logout</span>}
+        </Button>
+      </div>
     </div>
   );
+
+  if (isUserLoading || (user && roleLoading)) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
+        <Loader2 className="animate-spin text-primary" size={48} />
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Verifying Admin Access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
@@ -336,7 +334,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute -right-3 top-24 bg-green-500 border-2 border-[#0f172a] rounded-full h-7 w-7 z-40 hidden lg:flex shadow-xl text-white hover:bg-green-400 transition-all hover:scale-110"
+          className="absolute -right-3 top-24 bg-green-500 border-2 border-[#0f172a] rounded-full h-7 w-7 z-40 hidden lg:flex shadow-xl text-white hover:bg-green-400 transition-all"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -348,17 +346,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl hover:bg-gray-50 h-10 w-10">
+                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl h-10 w-10">
                   <Menu size={22} />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#0f172a] border-none w-72 shadow-2xl overflow-hidden">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>Admin Menu</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col h-full text-white">
-                  <SidebarContent mobileOnly />
-                </div>
+                <SheetHeader className="sr-only"><SheetTitle>Menu</SheetTitle></SheetHeader>
+                <SidebarContent mobileOnly />
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
@@ -374,15 +368,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input 
                 type="text" 
-                placeholder={t('search_placeholder')}
+                placeholder="Search..."
                 className="bg-gray-100 border-none rounded-xl h-10 pl-10 pr-4 text-[11px] font-medium w-48 focus:ring-2 focus:ring-green-500/20 transition-all outline-none"
               />
             </div>
-            <Button 
-              variant="ghost" 
-              className="text-gray-600 hover:text-green-600 gap-2 h-10 px-3 rounded-xl hover:bg-green-50 transition-all font-bold"
-              onClick={() => router.push('/')}
-            >
+            <Button variant="ghost" className="text-gray-600 hover:text-green-600 gap-2 h-10 px-3 rounded-xl font-bold" onClick={() => router.push('/')}>
               <Globe size={18} />
               <span className="text-[10px] font-black tracking-widest uppercase">Site</span>
             </Button>
