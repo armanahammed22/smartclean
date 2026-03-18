@@ -227,22 +227,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/login');
   };
 
-  if (isUserLoading || (user && roleLoading)) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
-        <Loader2 className="animate-spin text-primary" size={40} />
-        <p className="text-sm font-medium text-muted-foreground">Verifying access...</p>
-      </div>
-    );
-  }
-
-  if (!user || !isAuthorized) return null;
-
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
-    <div className="flex flex-col h-full bg-[#0f172a] text-white">
-      <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0">
+    <div className="flex flex-col h-full bg-[#0f172a] text-white relative overflow-hidden">
+      {/* Background Decor for Glassmorphism depth */}
+      <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] -left-[20%] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0 relative z-10 backdrop-blur-md bg-white/5">
         <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2.5 bg-gradient-to-br from-green-500 to-lime-400 rounded-xl text-white shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+          <div className="p-2.5 bg-gradient-to-br from-green-500 to-lime-400 rounded-xl text-white shrink-0 shadow-[0_0_20px_rgba(34,197,94,0.4)] border border-white/10">
             <ShieldCheck size={20} />
           </div>
           {!collapsed && (
@@ -254,7 +247,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar relative z-10">
         {NAV_GROUPS.map((group) => {
           const isGroupExpanded = expandedGroups[group.id];
           const isGroupActive = group.items.some(item => pathname === item.href);
@@ -264,8 +257,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <button
                 onClick={() => toggleGroup(group.id)}
                 className={cn(
-                  "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 text-left group hover:scale-[1.02]",
-                  isGroupActive ? "bg-white/10 text-white" : "text-white/40 hover:bg-white/5 hover:text-white"
+                  "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 text-left group hover:scale-[1.02] border border-transparent backdrop-blur-sm",
+                  isGroupActive 
+                    ? "bg-white/10 text-white border-white/10 shadow-lg shadow-black/20" 
+                    : "text-white/40 hover:bg-white/5 hover:text-white"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -292,9 +287,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         href={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 group relative h-10 hover:scale-[1.02]",
+                          "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 group relative h-10 hover:scale-[1.02] border border-transparent",
                           isActive 
-                            ? "bg-gradient-to-r from-green-500 to-lime-400 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)]" 
+                            ? "bg-gradient-to-r from-green-500 to-lime-400 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)] border-white/10" 
                             : "text-white/50 hover:bg-white/5 hover:text-white"
                         )}
                       >
@@ -314,11 +309,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {!mobileOnly && (
-        <div className="p-4 border-t border-white/5 shrink-0 mb-16 lg:mb-0">
+        <div className="p-4 border-t border-white/5 shrink-0 mb-16 lg:mb-0 relative z-10 backdrop-blur-md bg-white/5">
           <Button 
             variant="ghost" 
             className={cn(
-              "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12 hover:scale-[1.02]",
+              "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12 hover:scale-[1.02] border border-transparent hover:border-red-500/20",
               collapsed ? "justify-center" : "justify-start"
             )} 
             onClick={handleLogout}
@@ -359,7 +354,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Menu size={22} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#0f172a] border-none w-72 shadow-2xl">
+              <SheetContent side="left" className="p-0 bg-[#0f172a] border-none w-72 shadow-2xl overflow-hidden">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Menu</SheetTitle>
                 </SheetHeader>
