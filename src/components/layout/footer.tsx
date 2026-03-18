@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -30,14 +31,19 @@ export function Footer() {
   return (
     <footer className="bg-[#050505] text-white border-t border-white/10 pt-16 pb-8 mt-auto">
       <div className="container mx-auto px-4">
-        {/* 4-Column Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Column 1: Brand */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative w-32 h-16 flex items-center justify-start">
+              <div className="relative min-w-[120px] h-16 flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
-                  <Image src={displayLogo} alt="Logo" fill className="object-contain object-left" />
+                  <Image 
+                    src={displayLogo} 
+                    alt="Logo" 
+                    width={160} 
+                    height={64} 
+                    className="object-contain h-full w-auto" 
+                    data-ai-hint="company logo"
+                  />
                 ) : (
                   <span className="text-primary font-bold text-2xl">S</span>
                 )}
@@ -52,7 +58,6 @@ export function Footer() {
               {settings?.seoDescription || t('footer_desc')}
             </p>
             
-            {/* Social Media Links */}
             <div className="flex gap-4 pt-2">
               {settings?.socialLinks?.facebook && (
                 <Link href={settings.socialLinks.facebook} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
@@ -77,7 +82,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Services */}
           <div>
             <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_services')}</h4>
             <ul className="space-y-4 text-[13px] text-gray-400">
@@ -89,19 +93,17 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Company */}
           <div>
             <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_company')}</h4>
             <ul className="space-y-4 text-[13px] text-gray-400">
-              <li><Link href="#" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">{t('footer_careers')}</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">{t('footer_refund')}</Link></li>
+              <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
+              <li><Link href="/page/careers" className="hover:text-primary transition-colors">{t('footer_careers')}</Link></li>
+              <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
+              <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
+              <li><Link href="/page/refund-policy" className="hover:text-primary transition-colors">{t('footer_refund')}</Link></li>
             </ul>
           </div>
 
-          {/* Column 4: Contact */}
           <div className="space-y-6">
             <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_contact')}</h4>
             <div className="space-y-4">
@@ -125,7 +127,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/5">
           <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-medium text-center">
             {settings?.footerContent || t('footer_rights')}

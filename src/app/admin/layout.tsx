@@ -75,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const { toast } = useToast();
 
   const adminRoleRef = useMemoFirebase(() => {
@@ -230,7 +230,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
     <div className="flex flex-col h-full bg-[#0f172a] text-white relative overflow-hidden">
-      {/* Background Decor for Glassmorphism depth */}
       <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] -left-[20%] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -384,10 +383,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Button 
               variant="ghost" 
               className="text-gray-600 hover:text-green-600 gap-2 h-10 px-3 rounded-xl hover:bg-green-50 transition-all font-bold"
-              onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+              onClick={() => router.push('/')}
             >
               <Globe size={18} />
-              <span className="text-[10px] font-black tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
+              <span className="text-[10px] font-black tracking-widest uppercase">Site</span>
             </Button>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/10 to-lime-400/10 text-green-600 flex items-center justify-center font-black text-xs border-2 border-white shadow-md">
               {user?.email?.[0].toUpperCase()}

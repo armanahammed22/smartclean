@@ -1,36 +1,9 @@
 
 {
   "entities": {
-    "Page": {
-      "title": "Page",
-      "description": "Represents a dynamic content page managed via the Pages Management System.",
-      "type": "object",
-      "properties": {
-        "slug": { "type": "string" },
-        "title": { "type": "string" },
-        "content": { "type": "string" },
-        "isPublished": { "type": "boolean" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["slug", "title", "content", "isPublished", "updatedAt"]
-    },
-    "Lead": {
-      "title": "Lead",
-      "description": "A potential sales inquiry.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "address": { "type": "string" },
-        "source": { "type": "string" },
-        "status": { "type": "string", "enum": ["New", "Contacted", "Qualified", "Lost"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
     "Product": {
       "title": "Product",
-      "description": "Inventory item for sale.",
+      "description": "An inventory item or equipment for sale.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -40,8 +13,11 @@
         "categoryId": { "type": "string" },
         "brand": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
-      }
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "isPopular": { "type": "boolean" },
+        "salesCount": { "type": "number" }
+      },
+      "required": ["name", "price", "stockQuantity", "status"]
     },
     "Service": {
       "title": "Service",
@@ -53,7 +29,21 @@
         "duration": { "type": "string" },
         "description": { "type": "string" },
         "categoryId": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "isPopular": { "type": "boolean" }
+      },
+      "required": ["title", "basePrice", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A purchase record for physical products.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "items": { "type": "array" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
     "Booking": {
@@ -62,32 +52,34 @@
       "type": "object",
       "properties": {
         "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "serviceTitle": { "type": "string" },
+        "serviceId": { "type": "string" },
         "dateTime": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] }
+        "status": { "type": "string", "enum": ["New", "Assigned", "On The Way", "Service Started", "Completed", "Cancelled"] },
+        "employeeId": { "type": "string" }
       }
     },
-    "Order": {
-      "title": "Order",
-      "description": "A product purchase record.",
-      "type": "object",
-      "properties": {
-        "customerId": { "type": "string" },
-        "totalPrice": { "type": "number" },
-        "status": { "type": "string", "enum": ["New", "Processing", "Shipped", "Delivered", "Cancelled"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "EmployeeProfile": {
-      "title": "EmployeeProfile",
-      "description": "Information about a staff member.",
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Metadata for registered customers.",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
         "role": { "type": "string" },
-        "status": { "type": "string" },
-        "skills": { "type": "array", "items": { "type": "string" } }
+        "status": { "type": "string" }
+      }
+    },
+    "Page": {
+      "title": "Page",
+      "description": "A CMS page managed through the Pages Management module.",
+      "type": "object",
+      "properties": {
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "isPublished": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -95,15 +87,14 @@
     "providers": ["password", "phone"]
   },
   "firestore": {
-    "/hero_banners/{id}": { "schema": "HeroBanner", "description": "Dynamic homepage banners." },
-    "/pages_management/{slug}": { "schema": "Page", "description": "CMS pages." },
-    "/users/{uid}": { "description": "User profiles." },
-    "/leads/{id}": { "schema": "Lead", "description": "Sales leads." },
-    "/orders/{id}": { "schema": "Order", "description": "Product orders." },
-    "/bookings/{id}": { "schema": "Booking", "description": "Service bookings." },
-    "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
-    "/service_areas/{id}": { "description": "Regions where services are offered." },
-    "/services/{id}": { "schema": "Service", "description": "Service catalog." },
-    "/products/{id}": { "schema": "Product", "description": "Product catalog." }
+    "/products/{id}": { "schema": "Product", "description": "Product catalog." },
+    "/services/{id}": { "schema": "Service", "description": "Professional services catalog." },
+    "/orders/{id}": { "schema": "Order", "description": "Product purchase records." },
+    "/bookings/{id}": { "schema": "Booking", "description": "Service appointment records." },
+    "/users/{uid}": { "schema": "UserProfile", "description": "User account data." },
+    "/pages_management/{id}": { "schema": "Page", "description": "Informational CMS pages." },
+    "/leads/{id}": { "description": "Sales inquiries." },
+    "/hero_banners/{id}": { "description": "Dynamic homepage slides." },
+    "/site_settings/{id}": { "description": "Global website configuration." }
   }
 }

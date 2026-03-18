@@ -2,9 +2,9 @@
 /**
  * Firestore Security Rules
  *
- * Rules Version: 1.7
- * Optimized listing permissions for public catalogs and reinforced root administrative authority.
- * Explicitly allowing list on core collections to resolve permission denials.
+ * Rules Version: 1.8
+ * Optimized public access for catalogs and refined administrative roles.
+ * Explicitly allowing listing for public content to resolve guest permission denials.
  */
 
 rules_version = '2';
@@ -25,7 +25,8 @@ service cloud.firestore {
       return isBootstrapAdmin() || (
         isSignedIn() && (
           exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
-          exists(/databases/$(database)/documents/roles_managers/$(request.auth.uid))
+          exists(/databases/$(database)/documents/roles_managers/$(request.auth.uid)) ||
+          exists(/databases/$(database)/documents/roles_order_managers/$(request.auth.uid))
         )
       );
     }
@@ -86,27 +87,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /testimonials/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /faq/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
     match /site_settings/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /marketing_offers/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /marketing_campaigns/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
@@ -131,6 +117,11 @@ service cloud.firestore {
     }
 
     match /roles_managers/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /roles_order_managers/{uid} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
@@ -171,22 +162,6 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    match /referrals/{id} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
-    }
-
-    match /payment_methods/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /coupons/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
     match /leads/{id} {
       allow get, list, write: if isAdmin();
     }
@@ -204,10 +179,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /staff_earnings/{id} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
-      allow write: if isAdmin();
-    }
     match /service_areas/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
@@ -215,10 +186,6 @@ service cloud.firestore {
     match /couriers/{id} {
       allow get, list: if true;
       allow write: if isAdmin();
-    }
-
-    match /blocked_users/{id} {
-      allow read, write: if isAdmin();
     }
   }
 }
