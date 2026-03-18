@@ -87,7 +87,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  // Exact fixed serial order requested
   const NAV_GROUPS = [
     {
       id: 'dashboard',
@@ -192,7 +191,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   ];
 
-  // Auto-expand group based on active pathname
   useEffect(() => {
     const activeGroup = NAV_GROUPS.find(group => 
       group.items.some(item => pathname === item.href)
@@ -241,20 +239,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user || !isAuthorized) return null;
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
-    <>
-      <div className="p-4 flex items-center justify-between border-b border-white/5 h-16 shrink-0 bg-[#081621]">
-        <div className={cn("flex items-center gap-2.5 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2 bg-primary rounded-xl text-white shrink-0 shadow-lg shadow-primary/20"><ShieldCheck size={18} /></div>
+    <div className="flex flex-col h-full bg-[#0f172a] text-white">
+      <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0">
+        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
+          <div className="p-2.5 bg-gradient-to-br from-green-500 to-lime-400 rounded-xl text-white shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+            <ShieldCheck size={20} />
+          </div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-black tracking-tighter text-xs text-white">ADMIN PORTAL</h1>
-              <p className="text-[8px] text-primary font-black uppercase tracking-widest leading-none mt-0.5">Smart Clean</p>
+              <h1 className="font-black tracking-tighter text-sm text-white">ADMIN CENTER</h1>
+              <p className="text-[9px] text-green-400 font-black uppercase tracking-widest leading-none mt-0.5">Management Pro</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-gradient-to-b from-[#081621] to-[#050d14]">
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
           const isGroupExpanded = expandedGroups[group.id];
           const isGroupActive = group.items.some(item => pathname === item.href);
@@ -264,45 +264,48 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <button
                 onClick={() => toggleGroup(group.id)}
                 className={cn(
-                  "flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group",
-                  isGroupActive ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white"
+                  "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-300 text-left group hover:scale-[1.02]",
+                  isGroupActive ? "bg-white/10 text-white" : "text-white/40 hover:bg-white/5 hover:text-white"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <group.icon size={18} className={cn("shrink-0", isGroupActive ? "text-primary" : "text-white/40")} />
-                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest">{group.title}</span>}
+                  <group.icon size={18} className={cn("shrink-0 transition-colors", isGroupActive ? "text-green-400" : "text-white/20 group-hover:text-white/60")} />
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-[0.15em]">{group.title}</span>}
                 </div>
                 {!collapsed && (
-                  <div className="shrink-0 transition-transform duration-200">
-                    {isGroupExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  <div className={cn("shrink-0 transition-transform duration-300", isGroupExpanded ? "rotate-180" : "rotate-0")}>
+                    <ChevronDown size={14} className="opacity-40" />
                   </div>
                 )}
               </button>
 
               <div className={cn(
                 "overflow-hidden transition-all duration-300 ease-in-out pl-4",
-                isGroupExpanded && !collapsed ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"
+                isGroupExpanded && !collapsed ? "max-h-[500px] opacity-100 mt-2" : "max-h-0 opacity-0"
               )}>
-                <div className="space-y-0.5 border-l border-white/5 pl-2">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center px-3 py-2 rounded-lg transition-all group relative h-9",
-                        pathname === item.href 
-                          ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                          : "text-gray-400 hover:bg-white/5 hover:text-white"
-                      )}
-                    >
-                      <item.icon size={14} className={cn("shrink-0 mr-3", pathname === item.href ? "text-white" : "text-gray-500")} />
-                      <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>
-                      {pathname === item.href && (
-                        <div className="absolute right-2 w-1 h-1 rounded-full bg-white animate-pulse" />
-                      )}
-                    </Link>
-                  ))}
+                <div className="space-y-1 border-l border-white/5 pl-3">
+                  {group.items.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 group relative h-10 hover:scale-[1.02]",
+                          isActive 
+                            ? "bg-gradient-to-r from-green-500 to-lime-400 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)]" 
+                            : "text-white/50 hover:bg-white/5 hover:text-white"
+                        )}
+                      >
+                        <item.icon size={16} className={cn("shrink-0 mr-3 transition-colors", isActive ? "text-white" : "text-white/20 group-hover:text-green-400")} />
+                        <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>
+                        {isActive && (
+                          <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -311,52 +314,52 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {!mobileOnly && (
-        <div className="p-3 border-t border-white/5 shrink-0 mb-16 lg:mb-0 bg-[#050d14]">
+        <div className="p-4 border-t border-white/5 shrink-0 mb-16 lg:mb-0">
           <Button 
             variant="ghost" 
             className={cn(
-              "w-full text-gray-400 hover:text-destructive hover:bg-red-500/10 gap-3 transition-all rounded-lg h-10",
+              "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12 hover:scale-[1.02]",
               collapsed ? "justify-center" : "justify-start"
             )} 
             onClick={handleLogout}
           >
             <LogOut size={18} />
-            {!collapsed && <span className="font-black text-[9px] uppercase tracking-widest">{t('sign_out')}</span>}
+            {!collapsed && <span className="font-black text-[10px] uppercase tracking-[0.2em]">{t('sign_out')}</span>}
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside 
         className={cn(
-          "hidden lg:flex flex-col h-full bg-[#081621] text-white transition-all duration-300 z-30 relative shadow-2xl",
-          isCollapsed ? "w-16" : "w-64"
+          "hidden lg:flex flex-col h-full bg-[#0f172a] shadow-2xl transition-all duration-300 z-30 relative",
+          isCollapsed ? "w-20" : "w-72"
         )}
       >
         <SidebarContent collapsed={isCollapsed} />
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute -right-3 top-20 bg-white border border-gray-100 rounded-full h-6 w-6 z-40 hidden lg:flex shadow-xl text-gray-400 hover:text-primary transition-all hover:scale-110"
+          className="absolute -right-3 top-24 bg-green-500 border-2 border-[#0f172a] rounded-full h-7 w-7 z-40 hidden lg:flex shadow-xl text-white hover:bg-green-400 transition-all hover:scale-110"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </aside>
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        <header className="h-14 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-sm">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-lg hover:bg-gray-50">
-                  <Menu size={20} />
+                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl hover:bg-gray-50 h-10 w-10">
+                  <Menu size={22} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64 shadow-2xl">
+              <SheetContent side="left" className="p-0 bg-[#0f172a] border-none w-72 shadow-2xl">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Menu</SheetTitle>
                 </SheetHeader>
@@ -366,36 +369,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <h2 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 leading-none mb-0.5">Navigation</h2>
-              <span className="text-xs font-bold text-gray-900 leading-none">
+              <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-400 leading-none mb-1">Navigation</h2>
+              <span className="text-xs font-bold text-gray-900 leading-none flex items-center gap-2">
                 {NAV_GROUPS.flatMap(g => g.items).find(i => i.href === pathname)?.name || 'Admin Console'}
+                <div className="w-1 h-1 rounded-full bg-green-500" />
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="relative hidden sm:block">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input 
                 type="text" 
                 placeholder={t('search_placeholder')}
-                className="bg-gray-50 border-none rounded-full h-8 pl-8 pr-3 text-[11px] font-medium w-40 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                className="bg-gray-100 border-none rounded-xl h-10 pl-10 pr-4 text-[11px] font-medium w-48 focus:ring-2 focus:ring-green-500/20 transition-all outline-none"
               />
             </div>
             <Button 
               variant="ghost" 
-              className="text-gray-600 hover:text-primary gap-1.5 h-8 px-2 rounded-lg hover:bg-primary/5"
+              className="text-gray-600 hover:text-green-600 gap-2 h-10 px-3 rounded-xl hover:bg-green-50 transition-all font-bold"
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
             >
-              <Globe size={16} />
-              <span className="text-[9px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
+              <Globe size={18} />
+              <span className="text-[10px] font-black tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
             </Button>
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xs border-2 border-white shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/10 to-lime-400/10 text-green-600 flex items-center justify-center font-black text-xs border-2 border-white shadow-md">
               {user?.email?.[0].toUpperCase()}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F9FAFB] pb-24 lg:pb-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
           {children}
         </main>
 
