@@ -36,14 +36,15 @@ export function Footer() {
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-auto min-w-[40px] max-w-[180px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
-                  <Image 
-                    src={displayLogo} 
-                    alt="Logo" 
-                    width={180}
-                    height={48}
-                    className="object-contain h-full w-auto" 
-                    data-ai-hint="company logo"
-                  />
+                  <div className="relative h-full w-40">
+                    <Image 
+                      src={displayLogo} 
+                      alt="Logo" 
+                      fill
+                      className="object-contain object-left" 
+                      data-ai-hint="company logo"
+                    />
+                  </div>
                 ) : (
                   <div className="bg-primary p-2 rounded-lg">
                     <span className="text-white font-bold text-xl">S</span>
