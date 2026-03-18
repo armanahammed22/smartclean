@@ -18,7 +18,9 @@
         "salesCount": { "type": "number" },
         "shortDescription": { "type": "string" },
         "description": { "type": "string" },
-        "galleryImages": { "type": "array", "items": { "type": "string" } }
+        "galleryImages": { "type": "array", "items": { "type": "string" } },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "specifications": { "type": "array", "items": { "type": "object" } }
       },
       "required": ["name", "price", "stockQuantity", "status"]
     },
@@ -131,8 +133,15 @@
     "/users/{uid}": { "schema": "UserProfile", "description": "User account data." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff metadata." },
     "/support_tickets/{id}": { "schema": "SupportTicket", "description": "Customer support inquiries." },
-    "/pages_management/{id}": { "description": "Dynamic CMS content." },
+    "/pages_management/{slug}": { "description": "Dynamic CMS content." },
     "/leads/{id}": { "description": "Sales inquiries." },
-    "/site_settings/{id}": { "description": "Global configuration." }
+    "/site_settings/{id}": { "description": "Global configuration." },
+    "/hero_banners/{id}": { "description": "Hero slider data." },
+    "/quick_links/{id}": { "description": "Icon navigation." },
+    "/quick_actions/{id}": { "description": "Homepage feature cards." },
+    "/marketing_offers/{id}": { "description": "Banners and promotions." },
+    "/coupons/{id}": { "description": "Discount codes." },
+    "/referrals/{id}": { "description": "Affiliate tracking." },
+    "/payment_methods/{id}": { "description": "Configured gateways." }
   }
 }
