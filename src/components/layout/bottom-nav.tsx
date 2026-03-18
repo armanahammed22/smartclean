@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -52,7 +51,7 @@ export function BottomNav() {
                     src={displayLogo} 
                     alt="Home" 
                     fill 
-                    className="object-contain" 
+                    className="object-contain p-1" 
                   />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full">

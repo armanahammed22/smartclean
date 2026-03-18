@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -47,15 +46,15 @@ export function Navbar() {
       <div className="bg-[#081621] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between gap-8">
           <Link href={logoLink} className="flex items-center gap-3 shrink-0">
-            <div className="relative w-14 h-14 flex items-center justify-center overflow-hidden">
+            <div className="relative w-20 h-10 md:w-28 md:h-12 flex items-center justify-center overflow-hidden">
               {displayLogo ? (
-                <Image src={displayLogo} alt="Logo" fill className="object-contain" priority />
+                <Image src={displayLogo} alt="Logo" fill className="object-contain object-left" priority />
               ) : (
                 <span className="text-primary font-black text-xl">S</span>
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-tighter font-headline text-white uppercase leading-none">
+              <span className="text-xl md:text-2xl font-black tracking-tighter font-headline text-white uppercase leading-none">
                 {settings?.websiteName || 'SMART CLEAN'}
               </span>
               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mt-1">Expert Solutions</span>
