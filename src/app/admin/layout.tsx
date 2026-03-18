@@ -43,7 +43,9 @@ import {
   TicketPercent,
   Percent,
   Tag,
-  Mail
+  Mail,
+  Palette,
+  ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,6 +68,8 @@ const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
@@ -83,6 +87,128 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
+  // Exact fixed serial order requested
+  const NAV_GROUPS = [
+    {
+      id: 'dashboard',
+      title: "DASHBOARD",
+      icon: LayoutDashboard,
+      items: [
+        { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: "Reports", href: '/admin/reports', icon: BarChart3 },
+      ]
+    },
+    {
+      id: 'orders',
+      title: "ORDER & BOOKING",
+      icon: ShoppingCart,
+      items: [
+        { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart },
+        { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
+        { name: "Order Tracking", href: '/admin/couriers', icon: Truck },
+      ]
+    },
+    {
+      id: 'inventory',
+      title: "INVENTORY",
+      icon: Box,
+      items: [
+        { name: "Products", href: '/admin/products', icon: Box },
+        { name: "Categories", href: '/admin/products/categories', icon: Tags },
+      ]
+    },
+    {
+      id: 'services',
+      title: "SERVICES",
+      icon: Wrench,
+      items: [
+        { name: "Service List", href: '/admin/services', icon: Wrench },
+        { name: "Sub Services", href: '/admin/services/sub-services', icon: Grid },
+        { name: "Service Areas", href: '/admin/areas', icon: MapPin },
+      ]
+    },
+    {
+      id: 'crm',
+      title: "CRM & USERS",
+      icon: Users,
+      items: [
+        { name: "Customers", href: '/admin/customers', icon: UserSquare2 },
+        { name: "Staff", href: '/admin/employees', icon: Users },
+        { name: "Access Control", href: '/admin/roles', icon: Lock },
+      ]
+    },
+    {
+      id: 'marketing',
+      title: "OFFER & PROMOTION",
+      icon: Tag,
+      items: [
+        { name: "Offers", href: '/admin/marketing', icon: Tag },
+        { name: "Campaigns", href: '/admin/marketing', icon: Zap },
+        { name: "Coupons", href: '/admin/marketing', icon: TicketPercent },
+        { name: "Discounts", href: '/admin/marketing', icon: Percent },
+        { name: "Referrals", href: '/admin/referrals', icon: Share2 },
+      ]
+    },
+    {
+      id: 'pages',
+      title: "PAGE MANAGEMENT",
+      icon: FileText,
+      items: [
+        { name: "All Site Pages", href: '/admin/pages', icon: FileText },
+        { name: "Create New Page", href: '/admin/pages/new', icon: Plus },
+      ]
+    },
+    {
+      id: 'customize',
+      title: "SITE CUSTOMIZE",
+      icon: Palette,
+      items: [
+        { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+        { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon },
+        { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2 },
+        { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },
+        { name: "Header Settings", href: '/admin/settings', icon: Settings2 },
+        { name: "Footer Settings", href: '/admin/settings', icon: FileText },
+      ]
+    },
+    {
+      id: 'system',
+      title: "SYSTEM",
+      icon: Settings,
+      items: [
+        { name: "Payments", href: '/admin/payments', icon: Wallet },
+        { name: "Settings", href: '/admin/settings', icon: Settings },
+      ]
+    },
+    {
+      id: 'support',
+      title: "SUPPORT",
+      icon: Headphones,
+      items: [
+        { name: "Contact Info", href: '/admin/settings', icon: Mail },
+        { name: "Social Link", href: '/admin/settings', icon: Globe },
+        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
+      ]
+    }
+  ];
+
+  // Auto-expand group based on active pathname
+  useEffect(() => {
+    const activeGroup = NAV_GROUPS.find(group => 
+      group.items.some(item => pathname === item.href)
+    );
+    if (activeGroup) {
+      setExpandedGroups(prev => ({ ...prev, [activeGroup.id]: true }));
+    }
+  }, [pathname]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   useEffect(() => {
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required. Logging out..." });
@@ -97,90 +223,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
-
-  const NAV_GROUPS = [
-    {
-      title: t('group_dashboard'),
-      items: [
-        { name: t('item_dashboard'), href: '/admin/dashboard', icon: LayoutDashboard, color: 'text-blue-400' },
-        { name: t('item_reports'), href: '/admin/reports', icon: BarChart3, color: 'text-cyan-400' },
-      ]
-    },
-    {
-      title: "PAGES MANAGEMENT",
-      items: [
-        { name: "All Site Pages", href: '/admin/pages', icon: FileText, color: 'text-amber-400' },
-        { name: "Create New Page", href: '/admin/pages/new', icon: Plus, color: 'text-green-400' },
-      ]
-    },
-    {
-      title: "OFFER & PROMOTION",
-      items: [
-        { name: "Offers", href: '/admin/marketing', icon: Tag, color: 'text-orange-400' },
-        { name: "Campaigns", href: '/admin/marketing', icon: Zap, color: 'text-yellow-400' },
-        { name: "Coupons", href: '/admin/marketing', icon: TicketPercent, color: 'text-rose-400' },
-        { name: "Discounts", href: '/admin/marketing', icon: Percent, color: 'text-pink-400' },
-        { name: "Referrals", href: '/admin/referrals', icon: Share2, color: 'text-indigo-400' },
-      ]
-    },
-    {
-      title: "SITE CUSTOMIZE",
-      items: [
-        { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout, color: 'text-purple-400' },
-        { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon, color: 'text-indigo-400' },
-        { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2, color: 'text-pink-400' },
-        { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid, color: 'text-emerald-400' },
-        { name: "Header Settings", href: '/admin/settings', icon: Settings2, color: 'text-blue-400' },
-        { name: "Footer Settings", href: '/admin/settings', icon: FileText, color: 'text-gray-400' },
-      ]
-    },
-    {
-      title: t('group_orders'),
-      items: [
-        { name: t('item_orders'), href: '/admin/orders', icon: ShoppingCart, color: 'text-amber-400' },
-        { name: t('item_bookings'), href: '/admin/bookings', icon: Calendar, color: 'text-blue-400' },
-        { name: t('item_tracking'), href: '/admin/couriers', icon: Truck, color: 'text-emerald-400' },
-      ]
-    },
-    {
-      title: t('group_inventory'),
-      items: [
-        { name: t('item_products'), href: '/admin/products', icon: Box, color: 'text-indigo-400' },
-        { name: t('item_categories'), href: '/admin/products/categories', icon: Tags, color: 'text-rose-400' },
-      ]
-    },
-    {
-      title: t('group_services'),
-      items: [
-        { name: t('item_services'), href: '/admin/services', icon: Wrench, color: 'text-blue-500' },
-        { name: t('item_subservices'), href: '/admin/services/sub-services', icon: Grid, color: 'text-sky-500' },
-        { name: t('item_areas'), href: '/admin/areas', icon: MapPin, color: 'text-red-400' },
-      ]
-    },
-    {
-      title: t('group_crm'),
-      items: [
-        { name: t('item_customers'), href: '/admin/customers', icon: UserSquare2, color: 'text-yellow-400' },
-        { name: t('item_staff'), href: '/admin/employees', icon: Users, color: 'text-green-400' },
-        { name: t('item_roles'), href: '/admin/roles', icon: Lock, color: 'text-red-500' },
-      ]
-    },
-    {
-      title: "SUPPORT",
-      items: [
-        { name: "Contact Info", href: '/admin/settings', icon: Mail, color: 'text-blue-400' },
-        { name: "Social Link", href: '/admin/settings', icon: Globe, color: 'text-cyan-400' },
-        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones, color: 'text-teal-400' },
-      ]
-    },
-    {
-      title: t('group_system'),
-      items: [
-        { name: t('item_payments'), href: '/admin/payments', icon: Wallet, color: 'text-emerald-500' },
-        { name: t('item_settings'), href: '/admin/settings', icon: Settings, color: 'text-gray-400' },
-      ]
-    }
-  ];
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -212,46 +254,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-5 custom-scrollbar bg-gradient-to-b from-[#081621] to-[#050d14]">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.title} className="space-y-1">
-            {!collapsed && (
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] px-3 mb-1">
-                {group.title}
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center px-3 py-1.5 rounded-lg transition-all group relative h-9",
-                    pathname === item.href 
-                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                      : "text-gray-400 hover:bg-white/5 hover:text-white",
-                    collapsed ? "justify-center" : "justify-start"
-                  )}
-                >
-                  <item.icon 
-                    size={collapsed ? 20 : 16} 
-                    className={cn(
-                      "shrink-0 transition-colors duration-300",
-                      pathname === item.href ? "text-white" : item.color,
-                      !collapsed && "mr-3"
-                    )} 
-                  />
-                  {!collapsed && <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>}
-                  
-                  {pathname === item.href && !collapsed && (
-                    <div className="absolute right-2 w-1 h-1 rounded-full bg-white animate-pulse" />
-                  )}
-                </Link>
-              ))}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-gradient-to-b from-[#081621] to-[#050d14]">
+        {NAV_GROUPS.map((group) => {
+          const isGroupExpanded = expandedGroups[group.id];
+          const isGroupActive = group.items.some(item => pathname === item.href);
+          
+          return (
+            <div key={group.id} className="space-y-1">
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className={cn(
+                  "flex items-center justify-between w-full px-3 py-2.5 rounded-lg transition-all text-left group",
+                  isGroupActive ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <group.icon size={18} className={cn("shrink-0", isGroupActive ? "text-primary" : "text-white/40")} />
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest">{group.title}</span>}
+                </div>
+                {!collapsed && (
+                  <div className="shrink-0 transition-transform duration-200">
+                    {isGroupExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </div>
+                )}
+              </button>
+
+              <div className={cn(
+                "overflow-hidden transition-all duration-300 ease-in-out pl-4",
+                isGroupExpanded && !collapsed ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"
+              )}>
+                <div className="space-y-0.5 border-l border-white/5 pl-2">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center px-3 py-2 rounded-lg transition-all group relative h-9",
+                        pathname === item.href 
+                          ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                          : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      )}
+                    >
+                      <item.icon size={14} className={cn("shrink-0 mr-3", pathname === item.href ? "text-white" : "text-gray-500")} />
+                      <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>
+                      {pathname === item.href && (
+                        <div className="absolute right-2 w-1 h-1 rounded-full bg-white animate-pulse" />
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {!mobileOnly && (
@@ -277,7 +333,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside 
         className={cn(
           "hidden lg:flex flex-col h-full bg-[#081621] text-white transition-all duration-300 z-30 relative shadow-2xl",
-          isCollapsed ? "w-16" : "w-60"
+          isCollapsed ? "w-16" : "w-64"
         )}
       >
         <SidebarContent collapsed={isCollapsed} />
@@ -300,7 +356,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Menu size={20} />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-60 shadow-2xl">
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-64 shadow-2xl">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Menu</SheetTitle>
                 </SheetHeader>
