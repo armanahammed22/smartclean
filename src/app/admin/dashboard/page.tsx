@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc, writeBatch, getDocs, where } from 'firebase/firestore';
 import { 
   Users, 
@@ -48,14 +48,25 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Strictly guard queries with (db && user) to prevent background permission errors for guests
-  const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
-  const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('createdAt', 'desc')) : null, [db, user]);
-  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders'), limit(100)) : null, [db, user]);
-  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user]);
-  const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), limit(100)) : null, [db, user]);
-  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), limit(100)) : null, [db, user]);
-  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user]);
+  // Verifying role status before querying restricted collections
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'roles_admins', user.uid);
+  }, [db, user]);
+  const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
+  
+  const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+
+  // Strictly guard queries with (db && user && isAuthorized) to prevent permission errors
+  const leadsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user, isAuthorized]);
+  const customersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('createdAt', 'desc')) : null, [db, user, isAuthorized]);
+  const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'orders'), limit(100)) : null, [db, user, isAuthorized]);
+  const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user, isAuthorized]);
+  
+  // Public-ish collections still guarded by auth for dashboard safety
+  const productsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, user, isAuthorized]);
+  const servicesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'services'), limit(100)) : null, [db, user, isAuthorized]);
+  const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user, isAuthorized]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
   const { data: customers } = useCollection(customersQuery);
@@ -66,7 +77,7 @@ export default function AdminDashboard() {
   const { data: employees } = useCollection(employeesQuery);
 
   const handleSeedData = async () => {
-    if (!db || !user) return;
+    if (!db || !user || !isAuthorized) return;
     setIsSeeding(true);
     
     try {
@@ -192,10 +203,17 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading) return <div className="p-8 text-center flex flex-col items-center gap-4">
+  if (isUserLoading || roleLoading) return <div className="p-8 text-center flex flex-col items-center gap-4">
     <Loader2 className="animate-spin text-primary" size={40} />
     <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Operations Hub...</p>
   </div>;
+
+  if (!isAuthorized) return (
+    <div className="p-20 text-center space-y-4">
+      <h2 className="text-2xl font-bold">Unauthorized Access</h2>
+      <p className="text-muted-foreground">You do not have administrative privileges.</p>
+    </div>
+  );
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },

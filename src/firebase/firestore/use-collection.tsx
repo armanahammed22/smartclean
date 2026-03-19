@@ -65,10 +65,11 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
+        // Only log and emit if it's not a background query that failed due to auth delay
+        // We avoid crashing the whole app for transient guest listing attempts
         const path = getPathFromTarget(memoizedTargetRefOrQuery);
         
-        // Log the error but don't crash if it's a transient permission check
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
@@ -77,7 +78,9 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Only emit if it's not a background query that failed due to auth delay
+        // Background permission checks for public collections shouldn't trigger the global listener instantly
+        // if they are likely to resolve upon auth state completion.
+        // However, for debugging we emit it.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
