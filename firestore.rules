@@ -1,10 +1,7 @@
 
 /**
  * Firestore Security Rules
- *
- * Rules Version: 2.0
- * Standardized permissions for public catalogs and administrative oversight.
- * Version 2.0: Explicitly opened public listing for catalogs to resolve guest access denials.
+ * Version 2.2: Standardized public access for catalogs and strictly enforced admin oversight.
  */
 
 rules_version = '2';
@@ -137,7 +134,7 @@ service cloud.firestore {
     match /bookings/{id} {
       allow list: if isAdmin() || isStaff();
       allow get: if isAdmin() || isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if true; // Allow guests to create bookings during checkout
+      allow create: if true; 
       allow update: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
       allow delete: if isAdmin();
     }
@@ -145,14 +142,14 @@ service cloud.firestore {
     match /orders/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if true; // Allow guests to place orders
+      allow create: if true; 
       allow update, delete: if isAdmin();
     }
 
     match /support_tickets/{id} {
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if true; // Allow guests to submit tickets
+      allow create: if true; 
       allow update, delete: if isAdmin();
     }
 
