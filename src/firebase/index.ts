@@ -1,45 +1,45 @@
 'use client';
 
-import { firebaseConfig } from './config';
+import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, Firestore } from 'firebase/firestore';
 
 /**
- * Standard Firebase initialization for the client.
- * Returns core service instances to be used by providers.
+ * Initializes Firebase and returns the required service instances.
  */
-export function initializeFirebase(): {
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-} {
-  let firebaseApp: FirebaseApp;
-
+export function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore } {
+  let app: FirebaseApp;
+  
   if (!getApps().length) {
-    firebaseApp = initializeApp(firebaseConfig);
-    // Initialize Firestore with long polling to ensure better reliability 
-    // in various network environments.
-    initializeFirestore(firebaseApp, {
+    app = initializeApp(firebaseConfig);
+    // Initialize Firestore with specific settings to ensure stability in various environments
+    initializeFirestore(app, {
       experimentalForceLongPolling: true,
     });
   } else {
-    firebaseApp = getApp();
+    app = getApp();
   }
 
-  const auth = getAuth(firebaseApp);
-  const firestore = getFirestore(firebaseApp);
+  const authInstance = getAuth(app);
+  const firestoreInstance = getFirestore(app);
 
-  return { firebaseApp, firestore, auth };
+  return { 
+    firebaseApp: app, 
+    auth: authInstance, 
+    firestore: firestoreInstance 
+  };
 }
 
-// Re-export core hooks and providers for centralized access
-export * from './provider';
-export * from './client-provider';
-export * from './firestore/use-collection';
-export * from './firestore/use-doc';
-
-// Direct service exports for non-hook usage (where necessary)
+/**
+ * Singleton instances for internal firebase folder usage (e.g., hooks)
+ */
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Barrel exports for consistent usage throughout the app
+export * from './provider';
+export * from './firestore/use-collection';
+export * from './firestore/use-doc';
+export { FirebaseClientProvider } from './client-provider';
