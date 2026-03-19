@@ -84,6 +84,10 @@
     "/site_settings/{id}": { "description": "Global config." },
     "/payment_methods/{id}": { "description": "Payment gateways." },
     "/coupons/{id}": { "description": "Marketing coupons." },
-    "/staff_availability/{uid}": { "description": "Technician status." }
+    "/staff_availability/{uid}": { "description": "Technician status." },
+    "/product_categories/{id}": { "description": "Product category hierarchy." },
+    "/brands/{id}": { "description": "Authorized brand list." },
+    "/sub_services/{id}": { "description": "Task add-ons for services." },
+    "/service_areas/{id}": { "description": "Operational service regions." }
   }
 }
