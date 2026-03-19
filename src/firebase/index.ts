@@ -6,8 +6,8 @@
  */
 
 export * from './provider';
-export * from './firestore/use-collection';
-export * from './firestore/use-doc';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
 export { FirebaseClientProvider } from './client-provider';
 export { FirebaseProvider } from './provider';
 export { initializeFirebase } from './init';

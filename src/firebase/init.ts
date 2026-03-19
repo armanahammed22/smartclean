@@ -8,14 +8,13 @@ import { firebaseConfig } from './config';
 /**
  * Idempotent Firebase initialization.
  * Returns core service instances for the application.
- * Only intended for use within Client Components.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore } {
   let app: FirebaseApp;
   
   if (!getApps().length) {
     app = initializeApp(firebaseConfig);
-    // Use experimentalForceLongPolling for stability in restricted network environments
+    // Use experimentalForceLongPolling for stability in restricted network environments like Studio
     initializeFirestore(app, {
       experimentalForceLongPolling: true,
     });

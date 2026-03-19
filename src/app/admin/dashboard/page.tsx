@@ -48,14 +48,12 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // CRITICAL: Queries are now dependent on 'user' presence to prevent firing for unauthenticated requests during mount/redirect
   const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
   const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db, user]);
   const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders')) : null, [db, user]);
   const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products')) : null, [db, user]);
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services')) : null, [db, user]);
-  const subServicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'sub_services')) : null, [db, user]);
   const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
@@ -64,7 +62,6 @@ export default function AdminDashboard() {
   const { data: bookings } = useCollection(bookingsQuery);
   const { data: products } = useCollection(productsQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: subServices } = useCollection(subServicesQuery);
   const { data: employees } = useCollection(employeesQuery);
 
   const handleSeedData = async () => {
@@ -74,7 +71,6 @@ export default function AdminDashboard() {
     try {
       const batch = writeBatch(db);
 
-      // 1. Initial Hero Banner Seed
       batch.set(doc(db, 'hero_banners', 'default_promo'), {
         id: 'default_promo',
         title: 'Smart Cleaning Solutions',
@@ -87,7 +83,6 @@ export default function AdminDashboard() {
         createdAt: new Date().toISOString()
       });
 
-      // 2. Main Services
       const SERVICE_DATA = [
         { id: 's_home', title: 'Home Cleaning', basePrice: 2000, isPopular: true },
         { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, isPopular: false },
@@ -105,7 +100,12 @@ export default function AdminDashboard() {
         });
       });
 
-      // 3. Products
+      const AREA_DATA = ['Uttara', 'Gulshan', 'Banani', 'Dhanmondi', 'Mirpur'];
+      AREA_DATA.forEach(area => {
+        const ref = doc(collection(db, 'service_areas'));
+        batch.set(ref, { name: area, status: 'Active', createdAt: new Date().toISOString() });
+      });
+
       const PRODUCT_DATA = [
         { id: 'p_robot', name: 'Smart Vacuum Robot', price: 45000, isPopular: true, salesCount: 150 },
         { id: 'p_kit', name: 'Eco-Friendly Kit', price: 2500, isPopular: true, salesCount: 300 },
@@ -125,7 +125,6 @@ export default function AdminDashboard() {
         });
       });
 
-      // 4. System Pages
       for (const page of DEFAULT_PAGES) {
         const q = query(collection(db, 'pages_management'), where('slug', '==', page.slug));
         const snap = await getDocs(q);
@@ -139,14 +138,14 @@ export default function AdminDashboard() {
         }
       }
 
-      // 5. Staff
       batch.set(doc(db, 'employee_profiles', 'emp1'), { 
         id: 'emp1', 
         name: 'Zayed Khan', 
         role: 'Cleaner', 
         status: 'Active', 
         createdAt: new Date().toISOString(),
-        skills: ['s_home', 's_kitchen']
+        skills: ['s_home', 's_kitchen'],
+        rating: 5.0
       });
       
       batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { 
@@ -155,7 +154,7 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Standard products, services, and pages initialized with metadata." });
+      toast({ title: "ERP Database Seeded", description: "Standard products, services, areas, and pages initialized." });
     } catch (err) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'batch',
@@ -166,7 +165,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading) return <div className="p-8 text-center">{t('ops_overview')}...</div>;
+  if (isUserLoading) return <div className="p-8 text-center">Loading Operations...</div>;
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
@@ -237,7 +236,6 @@ export default function AdminDashboard() {
                 {[
                   { label: "Products", val: products?.length || 0, icon: Package },
                   { label: "Services", val: services?.length || 0, icon: Wrench },
-                  { label: "Sub-Tasks", val: subServices?.length || 0, icon: Layers },
                   { label: "Staff", val: employees?.length || 0, icon: Users }
                 ].map((kpi, idx) => (
                   <div key={idx} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5">

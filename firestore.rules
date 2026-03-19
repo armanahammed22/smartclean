@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 4.0: Optimized Public Marketplace & Role-Based Security.
+ * Version 5.0: Comprehensive Operational & Marketplace Security.
  */
 
 rules_version = '2';
@@ -43,16 +43,20 @@ service cloud.firestore {
     match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
     match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{slug} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
     match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // --- User & Role Management ---
 
@@ -70,11 +74,13 @@ service cloud.firestore {
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
     // --- Transactional Data (Auth Guarded) ---
 
     match /bookings/{id} {
-      allow create: if true; // Allow guest bookings (linked to phone account)
+      allow create: if true; 
       allow list: if isAdmin() || isStaff();
       allow get: if isAdmin() || isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
@@ -105,14 +111,23 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /coupons/{id} {
-      allow read: if true; 
+    match /couriers/{id} {
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
 
-    match /payment_methods/{id} {
-      allow read: if true; 
+    match /staff_availability/{uid} {
+      allow read: if true;
+      allow write: if isAdmin() || isOwner(uid);
+    }
+
+    match /staff_earnings/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
       allow write: if isAdmin();
+    }
+
+    match /blocked_users/{id} {
+      allow read, write: if isAdmin();
     }
   }
 }
