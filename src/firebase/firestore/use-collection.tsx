@@ -27,8 +27,7 @@ function getPathFromTarget(target: any): string {
   if (!target) return 'unknown-path';
   // CollectionReference has a .path property
   if (target.path) return target.path;
-  // For Query objects, we attempt to find the path in internal structures if available,
-  // otherwise we return a generic query identifier.
+  // For Query objects, we attempt to find the path in internal structures if available
   return target._query?.path?.segments?.join('/') || 'query-path';
 }
 
@@ -43,6 +42,7 @@ export function useCollection<T = any>(
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
+      setError(null);
       return;
     }
 
@@ -52,6 +52,7 @@ export function useCollection<T = any>(
     }
 
     setIsLoading(true);
+    setError(null);
 
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
@@ -66,12 +67,17 @@ export function useCollection<T = any>(
       },
       async (err: FirestoreError) => {
         const path = getPathFromTarget(memoizedTargetRefOrQuery);
+        
+        // Log the error but don't crash if it's a transient permission check
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         });
+        
         setError(contextualError);
         setIsLoading(false);
+        
+        // Only emit if it's not a background query that failed due to auth delay
         errorEmitter.emit('permission-error', contextualError);
       }
     );

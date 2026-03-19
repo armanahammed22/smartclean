@@ -43,3 +43,4 @@ export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export { FirebaseClientProvider } from './client-provider';
 export { FirebaseProvider } from './provider';
+export * from "./config"
