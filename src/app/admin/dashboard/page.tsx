@@ -48,14 +48,14 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Guarded queries to prevent guest permission errors
+  // Strictly guard queries with (db && user) to prevent background permission errors for guests
   const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
-  const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db, user]);
-  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders')) : null, [db, user]);
-  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
-  const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products')) : null, [db, user]);
-  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services')) : null, [db, user]);
-  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
+  const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('createdAt', 'desc')) : null, [db, user]);
+  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders'), limit(100)) : null, [db, user]);
+  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user]);
+  const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), limit(100)) : null, [db, user]);
+  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), limit(100)) : null, [db, user]);
+  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
   const { data: customers } = useCollection(customersQuery);
@@ -176,7 +176,8 @@ export default function AdminDashboard() {
       
       batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { 
         uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', 
-        role: 'Bootstrap Admin' 
+        role: 'Bootstrap Admin',
+        assignedAt: new Date().toISOString()
       });
 
       await batch.commit();
