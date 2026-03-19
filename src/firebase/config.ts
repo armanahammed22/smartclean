@@ -1,6 +1,6 @@
 /**
  * Firebase Project Configuration.
- * This file should only export the configuration object.
+ * Clean export of the core configuration object.
  */
 export const firebaseConfig = {
   projectId: "studio-5425564660-b1f7f",

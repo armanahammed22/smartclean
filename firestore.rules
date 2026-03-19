@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 3.0: Unified access control for Marketplace and Admin Operations.
+ * Version 4.0: Standardized public read access and hardened administrative controls.
  */
 
 rules_version = '2';

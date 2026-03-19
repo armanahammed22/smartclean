@@ -71,10 +71,6 @@ export function useCollection<T = any>(
       return;
     }
 
-    if (!memoizedTargetRefOrQuery.__memo) {
-      console.warn('Firestore query/reference was not properly memoized using useMemoFirebase.');
-    }
-
     setIsLoading(true);
     setError(null);
 
