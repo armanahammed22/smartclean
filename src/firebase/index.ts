@@ -1,49 +1,45 @@
-
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
+import { firebaseConfig } from './config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
+/**
+ * Standard Firebase initialization for the client.
+ * Returns core service instances to be used by providers.
+ */
+export function initializeFirebase(): {
+  firebaseApp: FirebaseApp;
+  firestore: Firestore;
+  auth: Auth;
+} {
+  let firebaseApp: FirebaseApp;
+
   if (!getApps().length) {
-    let firebaseApp;
-    try {
-      firebaseApp = initializeApp();
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-
-    // Fix for INTERNAL ASSERTION FAILED in cloud workstations and proxies
-    // experimentalForceLongPolling ensures a stable connection when WebSockets fail
+    firebaseApp = initializeApp(firebaseConfig);
+    // Initialize Firestore with long polling to ensure better reliability 
+    // in various network environments.
     initializeFirestore(firebaseApp, {
       experimentalForceLongPolling: true,
     });
-
-    return getSdks(firebaseApp);
+  } else {
+    firebaseApp = getApp();
   }
 
-  return getSdks(getApp());
+  const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
+
+  return { firebaseApp, firestore, auth };
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
-  };
-}
-
+// Re-export core hooks and providers for centralized access
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './non-blocking-updates';
-export * from './non-blocking-login';
-export * from './errors';
-export * from './error-emitter';
+
+// Direct service exports for non-hook usage (where necessary)
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
