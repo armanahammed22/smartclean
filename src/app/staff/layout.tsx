@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -42,7 +41,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.push('/staff/login');
     }
   }, [user, isUserLoading, router]);
 
@@ -55,14 +54,14 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
       const reason = isBanned ? "Account Restricted" : "Unauthorized Access";
       toast({ variant: "destructive", title: "Staff Security Purge", description: `${reason}. Please contact supervisor.` });
       signOut(auth).then(() => {
-        router.push('/login');
+        router.push('/staff/login');
       });
     }
   }, [isUnauthorized, isBanned, roleError, isUserLoading, auth, router, toast]);
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/login');
+    router.push('/staff/login');
   };
 
   if (isUserLoading || (user && (roleLoading || profileLoading))) {

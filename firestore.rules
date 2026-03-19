@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 4.0: Standardized public read access and hardened administrative controls.
+ * Optimized for Smart Clean SaaS - Reliable public access and hardened admin controls.
  */
 
 rules_version = '2';
@@ -37,6 +37,7 @@ service cloud.firestore {
     }
 
     // --- 1. Public Marketplace Access (Everyone can Read) ---
+    // Includes catalogs and site configurations required for guests
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -113,6 +114,11 @@ service cloud.firestore {
 
     match /staff_earnings/{id} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    match /employee_profiles/{id} {
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 

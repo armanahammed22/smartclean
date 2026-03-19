@@ -34,10 +34,7 @@ import {
   MousePointer2,
   FileText,
   Plus,
-  TicketPercent,
-  Percent,
   Tag,
-  Mail,
   Palette,
   AlertCircle,
   Search
@@ -82,10 +79,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  // Protect Admin Route: Immediate redirection logic
+  // Protect Admin Route: Dedicated login page
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.replace('/login');
+      router.replace('/admin/login');
     }
   }, [user, isUserLoading, router]);
 
@@ -93,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {
-        router.replace('/login');
+        router.replace('/admin/login');
       });
     }
   }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
@@ -215,7 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push('/login');
+    router.push('/admin/login');
   };
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (

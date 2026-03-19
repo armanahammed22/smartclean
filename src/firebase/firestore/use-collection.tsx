@@ -98,12 +98,12 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // CRITICAL FIX: Only emit to global listener (which crashes the app) 
-        // if it's NOT a public collection. This prevents guest loops.
+        // Only emit to global listener if it's NOT a public collection. 
+        // This prevents the guest experience from crashing due to background admin queries.
         if (!isPublic) {
           errorEmitter.emit('permission-error', contextualError);
         } else {
-          console.warn(`Transient permission denial for public collection: ${path}. This usually resolves once Firebase Auth stabilizes.`);
+          console.warn(`Permission warning for public collection: ${path}. Access will retry.`);
         }
       }
     );

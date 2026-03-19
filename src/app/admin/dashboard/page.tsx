@@ -2,26 +2,22 @@
 
 import React, { useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, writeBatch, getDocs, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, writeBatch, where } from 'firebase/firestore';
 import { 
   Users, 
   Database,
   Loader2,
   TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
   ShoppingCart,
   Calendar,
   Package,
-  Wrench,
-  Layers
+  Wrench
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useLanguage } from '@/components/providers/language-provider';
 import { Badge } from '@/components/ui/badge';
 
 const CHART_DATA = [
@@ -48,18 +44,16 @@ export default function AdminDashboard() {
   
   const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Strictly guard queries with (db && user && isAuthorized) to prevent permission errors
+  // Strictly guard queries with (isAuthorized) to prevent permission errors
   const leadsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user, isAuthorized]);
-  const customersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('createdAt', 'desc')) : null, [db, user, isAuthorized]);
   const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'orders'), limit(100)) : null, [db, user, isAuthorized]);
   const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user, isAuthorized]);
-  
-  const productsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, user, isAuthorized]);
-  const servicesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'services'), limit(100)) : null, [db, user, isAuthorized]);
   const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user, isAuthorized]);
+  
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(100)) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(100)) : null, [db]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
-  const { data: customers } = useCollection(customersQuery);
   const { data: orders } = useCollection(ordersQuery);
   const { data: bookings } = useCollection(bookingsQuery);
   const { data: products } = useCollection(productsQuery);
@@ -98,7 +92,7 @@ export default function AdminDashboard() {
 
   if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
 
-  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic">Unauthorized Access. Admin role required.</div>;
+  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session. Redirecting...</div>;
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
@@ -114,7 +108,7 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Service Operations Hub</h1>
           <p className="text-muted-foreground text-sm">Real-time control over bookings, staff, and inventory</p>
         </div>
-        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold rounded-xl">
+        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold rounded-xl shadow-sm">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
           Seed ERP Data
         </Button>

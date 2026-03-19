@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -13,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, LayoutDashboard, HardHat, User, ShieldAlert, HelpCircle, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
 
@@ -68,7 +66,6 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     
-    // 1. Verify user exists with this phone
     if (db) {
       const q = query(collection(db, 'users'), where('phone', '==', phone));
       const snap = await getDocs(q);
@@ -79,13 +76,11 @@ export default function LoginPage() {
       }
     }
 
-    // 2. Send Mock OTP
     setTimeout(() => {
       const mock = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(mock);
       setIsOtpSent(true);
       setIsLoading(false);
-      console.log("Login OTP (MOCK):", mock);
       toast({ title: t('otp_sent'), description: `Code: ${mock}` });
     }, 1000);
   };
@@ -98,29 +93,8 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    try {
-      // For the prototype, we assume phone validation links to the existing user.
-      // In a production app, we would use signInWithPhoneNumber which manages the session.
-      // Here, if they verify the phone, we fetch their email and sign in via password or custom token.
-      if (db) {
-        const q = query(collection(db, 'users'), where('phone', '==', phone));
-        const snap = await getDocs(q);
-        const userData = snap.docs[0].data();
-        
-        // Use the phone-email or real email to sign in
-        const emailToLogin = userData.email || `${phone}@smartclean.local`;
-        
-        // Note: For this prototype to work without knowing the password, 
-        // we simulate the session or require one successful email login first.
-        // For production, Phone Auth is the correct path.
-        toast({ title: "Verification Successful", description: "Routing to dashboard..." });
-        router.push('/account/dashboard');
-      }
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Login Error", description: e.message });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({ title: "Verification Successful", description: "Routing to dashboard..." });
+    router.push('/account/dashboard');
   };
 
   const handleLogout = async () => {
@@ -133,9 +107,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white">
         <div className="h-2 bg-primary w-full" />
         <CardHeader className="space-y-2 text-center pt-10">
-          <div className="flex justify-center mb-4"><div className="p-4 bg-primary/10 rounded-2xl text-primary"><ShieldCheck size={40} /></div></div>
-          <CardTitle className="text-3xl font-black tracking-tight uppercase font-headline">Portal Access</CardTitle>
-          <CardDescription className="text-sm font-medium text-muted-foreground">Sign in to your account</CardDescription>
+          <div className="flex justify-center mb-4"><div className="p-4 bg-primary/10 rounded-2xl text-primary"><User size={40} /></div></div>
+          <CardTitle className="text-3xl font-black tracking-tight uppercase">Customer Portal</CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground">Sign in to manage your bookings</CardDescription>
         </CardHeader>
         <CardContent className="px-8 pb-8 pt-4">
           {user ? (
@@ -169,7 +143,7 @@ export default function LoginPage() {
                 <TabsTrigger value="email" className="rounded-lg font-black uppercase text-[10px] tracking-widest">{t('email_login')}</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="phone" className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
+              <TabsContent value="phone" className="space-y-5">
                 <form onSubmit={handlePhoneLogin} className="space-y-5">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</Label>
@@ -184,7 +158,7 @@ export default function LoginPage() {
                       {isLoading ? <Loader2 className="animate-spin mr-2" /> : null} {t('send_otp')}
                     </Button>
                   ) : (
-                    <div className="space-y-5 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-5">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('enter_otp')}</Label>
                         <Input className="h-12 rounded-xl bg-gray-50 border-gray-100 text-center text-xl font-black tracking-[0.5em]" placeholder="000000" value={otp} onChange={(e) => setOtp(e.target.value)} required />
@@ -198,7 +172,7 @@ export default function LoginPage() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="email" className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
+              <TabsContent value="email" className="space-y-5">
                 <form onSubmit={handleEmailLogin} className="space-y-5">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
@@ -210,7 +184,6 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                      <Link href="#" className="text-[10px] font-black text-primary hover:underline">Forgot?</Link>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -228,7 +201,10 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-6">
           <p className="text-xs font-bold text-muted-foreground">Don't have an account? <Link href="/signup" className="text-primary hover:underline font-black">Register Now</Link></p>
-          <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-primary" asChild><Link href="/">Back to Home</Link></Button>
+          <div className="flex gap-4 pt-2">
+            <Link href="/admin/login" className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-primary">Admin Access</Link>
+            <Link href="/staff/login" className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-amber-600">Staff Portal</Link>
+          </div>
         </CardFooter>
       </Card>
     </div>
