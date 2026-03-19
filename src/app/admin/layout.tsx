@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -83,6 +82,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
+  // Protect Admin Route: Immediate redirection logic
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
+      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
+      signOut(auth).then(() => {
+        router.replace('/login');
+      });
+    }
+  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
+
   const NAV_GROUPS = [
     {
       id: 'dashboard',
@@ -138,10 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "OFFER & PROMOTION",
       icon: Tag,
       items: [
-        { name: "Offers", href: '/admin/marketing', icon: Tag },
-        { name: "Campaigns", href: '/admin/marketing', icon: Zap },
-        { name: "Coupons", href: '/admin/marketing', icon: TicketPercent },
-        { name: "Discounts", href: '/admin/marketing', icon: Percent },
+        { name: "Marketing Hub", href: '/admin/marketing', icon: Zap },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]
     },
@@ -185,22 +197,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   ];
 
-  // Protect Admin Route: Redirect if not logged in or not authorized
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
-      signOut(auth).then(() => {
-        router.push('/login');
-      });
-    }
-  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
-
   useEffect(() => {
     const activeGroup = NAV_GROUPS.find(group => 
       group.items.some(item => pathname === item.href)
@@ -224,7 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
     <div className="flex flex-col h-full bg-[#0f172a] text-white relative overflow-hidden">
-      <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] -left-[20%] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0 relative z-10 backdrop-blur-md bg-white/5">
