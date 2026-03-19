@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { useUser, useDoc, useMemoFirebase, useFirestore, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Loader2, ShieldAlert, ChevronLeft, LogOut, HardHat, Bell, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { 
   DropdownMenu,
@@ -24,7 +23,10 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
+
+  const isLoginPage = pathname === '/staff/login';
 
   const staffRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -40,16 +42,18 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const { data: profile, isLoading: profileLoading } = useDoc(profileRef);
 
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isUserLoading && !user) {
       router.push('/staff/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isLoginPage]);
 
   // Active Purge: Logout restricted staff automatically
   const isUnauthorized = !staffRole && !roleLoading && user;
   const isBanned = (profile?.status === 'Banned' || profile?.status === 'Terminated') && !profileLoading;
 
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isUserLoading && (isUnauthorized || isBanned || roleError)) {
       const reason = isBanned ? "Account Restricted" : "Unauthorized Access";
       toast({ variant: "destructive", title: "Staff Security Purge", description: `${reason}. Please contact supervisor.` });
@@ -57,7 +61,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         router.push('/staff/login');
       });
     }
-  }, [isUnauthorized, isBanned, roleError, isUserLoading, auth, router, toast]);
+  }, [isUnauthorized, isBanned, roleError, isUserLoading, auth, router, toast, isLoginPage]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -72,6 +76,9 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
+
+  // Allow the login page to render without protection or sidebar
+  if (isLoginPage) return <>{children}</>;
 
   if (!user || isUnauthorized || isBanned || roleError) return null;
 

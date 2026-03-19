@@ -37,7 +37,8 @@ import {
   Tag,
   Palette,
   AlertCircle,
-  Search
+  Search,
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { t } = useLanguage();
   const { toast } = useToast();
 
+  const isLoginPage = pathname === '/admin/login';
+
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admins', user.uid);
@@ -81,19 +84,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Protect Admin Route: Dedicated login page
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isUserLoading && !user) {
       router.replace('/admin/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isLoginPage]);
 
   useEffect(() => {
+    if (isLoginPage) return;
     if (!isUserLoading && !roleLoading && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {
         router.replace('/admin/login');
       });
     }
-  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast]);
+  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
 
   const NAV_GROUPS = [
     {
@@ -189,7 +194,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Headphones,
       items: [
         { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
-        { name: "Support Tickets", href: '/admin/support', icon: Mail },
+        { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
       ]
     }
   ];
@@ -319,6 +324,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
+
+  // Allow the login page to render without protection or sidebar
+  if (isLoginPage) return <>{children}</>;
 
   if (!user || !isAuthorized) return null;
 
