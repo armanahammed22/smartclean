@@ -1,7 +1,6 @@
-
 /**
  * Firestore Security Rules
- * Version 2.2: Standardized public access for catalogs and strictly enforced admin oversight.
+ * Version 2.3: Explicitly defined public access for catalogs and strictly enforced admin oversight.
  */
 
 rules_version = '2';

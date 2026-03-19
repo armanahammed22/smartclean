@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -49,14 +48,15 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  const leadsQuery = useMemoFirebase(() => db ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db]);
-  const ordersQuery = useMemoFirebase(() => db ? query(collection(db, 'orders')) : null, [db]);
-  const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
+  // Queries are now dependent on 'user' to prevent firing for unauthenticated requests
+  const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
+  const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db, user]);
+  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders')) : null, [db, user]);
+  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
-  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
+  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
   const { data: customers } = useCollection(customersQuery);

@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { auth } from "@/firebase";
 
 export type WithId<T> = T & { id: string };
 
@@ -19,6 +18,18 @@ export interface UseCollectionResult<T> {
   data: WithId<T>[] | null;
   isLoading: boolean;
   error: FirestoreError | Error | null;
+}
+
+/**
+ * Extracts a path string from either a CollectionReference or a Query.
+ */
+function getPathFromTarget(target: any): string {
+  if (!target) return 'unknown-path';
+  // CollectionReference has a .path property
+  if (target.path) return target.path;
+  // For Query objects, we attempt to find the path in internal structures if available,
+  // otherwise we return a generic query identifier.
+  return target._query?.path?.segments?.join('/') || 'query-path';
 }
 
 export function useCollection<T = any>(
@@ -53,8 +64,8 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
-        const path = (memoizedTargetRefOrQuery as any).path || 'query-path';
+      async (err: FirestoreError) => {
+        const path = getPathFromTarget(memoizedTargetRefOrQuery);
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
