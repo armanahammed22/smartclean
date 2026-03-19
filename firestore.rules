@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 2.4: Optimized for public marketplace access and strict administrative oversight.
+ * Version 2.5: Optimized for public marketplace access and strict administrative oversight.
  */
 
 rules_version = '2';
@@ -38,90 +38,90 @@ service cloud.firestore {
       );
     }
 
-    // --- Public Catalogs (Read-Only for all, Write for Admins) ---
+    // --- Public Catalogs (Explicitly allow get/list for guests) ---
 
     match /products/{productId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /product_categories/{categoryId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /brands/{brandId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /services/{serviceId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /sub_services/{subId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /service_categories/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /service_areas/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /hero_banners/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /quick_links/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /quick_actions/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /homepage_sections/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /marketing_offers/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /pages_management/{slug} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /site_settings/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /variant_types/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /reusable_features/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /reusable_specs/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
@@ -134,7 +134,7 @@ service cloud.firestore {
     }
 
     match /employee_profiles/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
@@ -184,12 +184,12 @@ service cloud.firestore {
     }
     
     match /coupons/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
     
     match /payment_methods/{id} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
     

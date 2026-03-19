@@ -48,14 +48,14 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Queries are now dependent on 'user' to prevent firing for unauthenticated requests
+  // CRITICAL: Queries are now dependent on 'user' presence to prevent firing for unauthenticated requests during mount/redirect
   const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
   const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db, user]);
   const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders')) : null, [db, user]);
   const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services')) : null, [db]);
-  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products')) : null, [db, user]);
+  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services')) : null, [db, user]);
+  const subServicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'sub_services')) : null, [db, user]);
   const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
 
   const { data: recentLeads } = useCollection(leadsQuery);
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
   const { data: employees } = useCollection(employeesQuery);
 
   const handleSeedData = async () => {
-    if (!db) return;
+    if (!db || !user) return;
     setIsSeeding(true);
     
     try {
