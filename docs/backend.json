@@ -37,7 +37,8 @@
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
         "isPopular": { "type": "boolean" },
         "imageUrl": { "type": "string" }
-      }
+      },
+      "required": ["title", "basePrice", "status"]
     },
     "Booking": {
       "title": "Booking",
@@ -50,6 +51,18 @@
         "dateTime": { "type": "string", "format": "date-time" },
         "status": { "type": "string" },
         "totalPrice": { "type": "number" }
+      },
+      "required": ["customerId", "serviceId", "dateTime", "status"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Global website configuration.",
+      "type": "object",
+      "properties": {
+        "websiteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "otpEnabled": { "type": "boolean" }
       }
     }
   },
@@ -68,6 +81,9 @@
     "/quick_links/{id}": { "description": "Icon navigation." },
     "/quick_actions/{id}": { "description": "Feature cards." },
     "/pages_management/{slug}": { "description": "CMS pages." },
-    "/site_settings/{id}": { "description": "Global config." }
+    "/site_settings/{id}": { "description": "Global config." },
+    "/payment_methods/{id}": { "description": "Payment gateways." },
+    "/coupons/{id}": { "description": "Marketing coupons." },
+    "/staff_availability/{uid}": { "description": "Technician status." }
   }
 }

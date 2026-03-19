@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
+  // Guarded queries to prevent guest permission errors
   const leadsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user]);
   const customersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'users'), orderBy('name', 'asc')) : null, [db, user]);
   const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders')) : null, [db, user]);
@@ -70,6 +71,31 @@ export default function AdminDashboard() {
     
     try {
       const batch = writeBatch(db);
+
+      // Global Settings
+      batch.set(doc(db, 'site_settings', 'global'), {
+        websiteName: 'Smart Clean',
+        logoUrl: 'https://picsum.photos/seed/smartclean-logo/200/200',
+        contactEmail: 'smartclean422@gmail.com',
+        contactPhone: '+8801919640422',
+        address: 'Wireless Gate, Mohakhali, Dhaka-1212',
+        currency: 'BDT',
+        defaultLanguage: 'bn',
+        otpEnabled: false,
+        seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
+        seoDescription: 'Expert cleaning services for home and office.'
+      }, { merge: true });
+
+      // Support Hub
+      batch.set(doc(db, 'site_settings', 'support_hub'), {
+        headerTitle: 'Smart Clean Agent',
+        headerSubtitle: 'Support Hub',
+        bodyText: 'আসসালামু আলাইকুম! আমাদের সেবা সম্পর্কে জানতে সরাসরি চ্যাট করুন।',
+        buttonText: 'Chat on WhatsApp',
+        supportLink: 'https://wa.me/8801919640422',
+        icon: 'MessageCircle',
+        isEnabled: true
+      }, { merge: true });
 
       batch.set(doc(db, 'hero_banners', 'default_promo'), {
         id: 'default_promo',
@@ -154,7 +180,7 @@ export default function AdminDashboard() {
       });
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Standard products, services, areas, and pages initialized." });
+      toast({ title: "ERP Database Seeded", description: "Standard products, services, areas, pages, and settings initialized." });
     } catch (err) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'batch',
@@ -165,7 +191,10 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading) return <div className="p-8 text-center">Loading Operations...</div>;
+  if (isUserLoading) return <div className="p-8 text-center flex flex-col items-center gap-4">
+    <Loader2 className="animate-spin text-primary" size={40} />
+    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Operations Hub...</p>
+  </div>;
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
