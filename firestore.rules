@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 5.0: Comprehensive Operational & Marketplace Security.
+ * Version 5.1: Optimized Public Catalog Access & Auth-Aware Security.
  */
 
 rules_version = '2';
@@ -36,14 +36,14 @@ service cloud.firestore {
       );
     }
 
-    // --- Public Catalogs (READ for everyone, WRITE for admins) ---
-
+    // --- 1. Public Catalogs (EXPLICIT READ for Everyone) ---
+    
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -58,7 +58,7 @@ service cloud.firestore {
     match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    // --- User & Role Management ---
+    // --- 2. User & Role Management (Guarded) ---
 
     match /users/{uid} {
       allow get: if isOwner(uid) || isAdmin();
@@ -77,7 +77,7 @@ service cloud.firestore {
     match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // --- Transactional Data (Auth Guarded) ---
+    // --- 3. Transactional Data (Restricted) ---
 
     match /bookings/{id} {
       allow create: if true; 

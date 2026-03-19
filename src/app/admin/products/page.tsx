@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +39,7 @@ import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function ProductsManagementPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,13 +56,13 @@ export default function ProductsManagementPage() {
   const [variants, setVariants] = useState<{ name: string; options: string[] }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Data Queries (Reusable Attributes)
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'product_categories')) : null, [db]);
-  const brandsQuery = useMemoFirebase(() => db ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db]);
-  const variantTypesQuery = useMemoFirebase(() => db ? query(collection(db, 'variant_types'), orderBy('name', 'asc')) : null, [db]);
-  const reusableFeaturesQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_features'), orderBy('name', 'asc')) : null, [db]);
-  const reusableSpecsQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_specs'), orderBy('key', 'asc')) : null, [db]);
+  // Data Queries (Auth Guarded to prevent transient permission errors)
+  const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
+  const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'product_categories')) : null, [db, user]);
+  const brandsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db, user]);
+  const variantTypesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'variant_types'), orderBy('name', 'asc')) : null, [db, user]);
+  const reusableFeaturesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'reusable_features'), orderBy('name', 'asc')) : null, [db, user]);
+  const reusableSpecsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'reusable_specs'), orderBy('key', 'asc')) : null, [db, user]);
 
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);

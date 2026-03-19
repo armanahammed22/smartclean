@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 
 export default function ServicesManagementPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,11 +32,11 @@ export default function ServicesManagementPage() {
   
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Data Queries
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'service_categories')) : null, [db]);
-  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
-  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
+  // Data Queries (Auth Guarded to prevent transient permission errors)
+  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
+  const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'service_categories')) : null, [db, user]);
+  const subServicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'sub_services')) : null, [db, user]);
+  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
 
   const { data: services, isLoading } = useCollection(servicesQuery);
   const { data: categories } = useCollection(categoriesQuery);
