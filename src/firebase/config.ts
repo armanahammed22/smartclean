@@ -1,12 +1,16 @@
-/**
- * Firebase Project Configuration.
- * Clean export of the core configuration object.
- */
-export const firebaseConfig = {
-  projectId: "studio-5425564660-b1f7f",
-  appId: "1:1012639715946:web:c5bda72aff647d14d1b013",
-  apiKey: "AIzaSyA2LPcx8rgQWwzgerxhlPoXynBkvOcrHE0",
+"use client";
+
+import { initializeApp, getApps, getApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2LPcx8rgQNwzgerxh1PoXynBkvOcrHE0",
   authDomain: "studio-5425564660-b1f7f.firebaseapp.com",
-  measurementId: "",
-  messagingSenderId: "1012639715946"
+  projectId: "studio-5425564660-b1f7f",
 };
+
+const app = !getApps().length 
+  ? initializeApp(firebaseConfig) 
+  : getApp();
+
+export default app;
+export { firebaseConfig } ;
