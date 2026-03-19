@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -28,18 +27,19 @@ import {
 } from "@/components/ui/select";
 
 export default function BookingsPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'));
-  }, [db]);
+  }, [db, user]);
 
   const employeesQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'employee_profiles'), orderBy('name', 'asc'));
-  }, [db]);
+  }, [db, user]);
 
   const { data: bookings, isLoading } = useCollection(bookingsQuery);
   const { data: employees } = useCollection(employeesQuery);

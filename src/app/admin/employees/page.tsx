@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function EmployeesPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,10 +26,10 @@ export default function EmployeesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // Data Queries
-  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db]);
-  const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
+  // Data Queries (Auth Guarded)
+  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db, user]);
+  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
+  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
   const { data: bookings } = useCollection(bookingsQuery);

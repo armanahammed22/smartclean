@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,13 +20,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 export default function BrandsManagementPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const brandsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db]);
+    (db && user) ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db, user]);
   const { data: brands, isLoading } = useCollection(brandsQuery);
 
   const handleAddBrand = async (e: React.FormEvent<HTMLFormElement>) => {

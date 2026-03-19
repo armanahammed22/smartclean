@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,14 +14,15 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ServiceAreasPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [newArea, setNewArea] = useState('');
 
   const areasQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'service_areas'), orderBy('name', 'asc'));
-  }, [db]);
+  }, [db, user]);
 
   const { data: areas, isLoading } = useCollection(areasQuery);
 

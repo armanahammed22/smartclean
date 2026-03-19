@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 2.5: Optimized for public marketplace access and strict administrative oversight.
+ * Version 3.0: Public Marketplace Access & Auth-Guarded Operations.
  */
 
 rules_version = '2';
@@ -38,92 +38,27 @@ service cloud.firestore {
       );
     }
 
-    // --- Public Catalogs (Explicitly allow get/list for guests) ---
+    // --- Public Catalogs (Explicitly allow READ for everyone) ---
 
-    match /products/{productId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /product_categories/{categoryId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /brands/{brandId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /services/{serviceId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /sub_services/{subId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /service_categories/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /service_areas/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /hero_banners/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /quick_links/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /quick_actions/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /homepage_sections/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /marketing_offers/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /pages_management/{slug} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /site_settings/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /variant_types/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /reusable_features/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    match /reusable_specs/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
+    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /pages_management/{slug} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // --- User & Role Data ---
 
@@ -134,7 +69,7 @@ service cloud.firestore {
     }
 
     match /employee_profiles/{id} {
-      allow get, list: if true;
+      allow read: if true; 
       allow write: if isAdmin();
     }
 
@@ -180,16 +115,6 @@ service cloud.firestore {
     
     match /staff_earnings/{id} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
-      allow write: if isAdmin();
-    }
-    
-    match /coupons/{id} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-    
-    match /payment_methods/{id} {
-      allow get, list: if true;
       allow write: if isAdmin();
     }
     
