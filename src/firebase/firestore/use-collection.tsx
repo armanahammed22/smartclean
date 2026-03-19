@@ -39,7 +39,10 @@ const PUBLIC_COLLECTIONS = [
   'reusable_features',
   'reusable_specs',
   'variant_types',
-  'homepage_sections'
+  'homepage_sections',
+  'payment_methods',
+  'coupons',
+  'service_areas'
 ];
 
 /**

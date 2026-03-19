@@ -47,6 +47,20 @@
         "status": { "type": "string" },
         "totalPrice": { "type": "number" }
       }
+    },
+    "PaymentMethod": {
+      "title": "Payment Method",
+      "description": "Configuration for a payment gateway.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["cod", "cash", "mobile", "card"] },
+        "accountNumber": { "type": "string" },
+        "instructions": { "type": "string" },
+        "isEnabled": { "type": "boolean" },
+        "isDefaultForProducts": { "type": "boolean" },
+        "isDefaultForServices": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -72,7 +86,7 @@
     "/reusable_specs/{id}": { "description": "Spec templates." },
     "/variant_types/{id}": { "description": "Variant templates." },
     "/coupons/{id}": { "description": "Discount codes." },
-    "/payment_methods/{id}": { "description": "Payment gateways." },
+    "/payment_methods/{id}": { "schema": "PaymentMethod", "description": "Payment gateways." },
     "/support_tickets/{id}": { "description": "Help requests." },
     "/referrals/{id}": { "description": "Affiliate logs." },
     "/hero_banners/{id}": { "description": "Homepage slider content." },

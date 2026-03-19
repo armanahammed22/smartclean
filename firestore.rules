@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 2.6: Optimized for public marketplace access and hardened admin controls.
+ * Version 3.0: Unified access control for Marketplace and Admin Operations.
  */
 
 rules_version = '2';
@@ -36,8 +36,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- 1. Public Marketplace Catalogs (Explicit Read for Everyone) ---
-    // Combined "get" and "list" into "read" for broad public access
+    // --- 1. Public Marketplace Access (Everyone can Read) ---
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -52,10 +51,12 @@ service cloud.firestore {
     match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
     match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // --- 2. Identity & Role Access ---
 
@@ -71,7 +72,7 @@ service cloud.firestore {
     match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // --- 3. Protected Transactional Data ---
+    // --- 3. Transactional Data (Protected) ---
 
     match /bookings/{id} {
       allow create: if true; 
@@ -121,11 +122,6 @@ service cloud.firestore {
     
     match /couriers/{id} {
       allow read, write: if isAdmin();
-    }
-    
-    match /coupons/{id} {
-      allow read: if true;
-      allow write: if isAdmin();
     }
   }
 }

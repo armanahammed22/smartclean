@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +28,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 export default function PaymentManagementPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), orderBy('name', 'asc')) : null, [db]);
+  // Verifying role status before querying restricted collections
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'roles_admins', user.uid);
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminRoleRef);
+  const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+
+  const methodsQuery = useMemoFirebase(() => 
+    (db && user && isAuthorized) ? query(collection(db, 'payment_methods'), orderBy('name', 'asc')) : null, [db, user, isAuthorized]);
   const { data: methods, isLoading } = useCollection(methodsQuery);
 
   const handleToggleStatus = async (id: string, current: boolean) => {
@@ -43,6 +53,7 @@ export default function PaymentManagementPage() {
 
   const handleDelete = async (id: string) => {
     if (!db) return;
+    if (!confirm("Remove this gateway?")) return;
     await deleteDoc(doc(db, 'payment_methods', id));
     toast({ title: "Gateway Removed" });
   };
@@ -70,6 +81,8 @@ export default function PaymentManagementPage() {
     }
   };
 
+  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic">Verifying Access...</div>;
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -78,7 +91,7 @@ export default function PaymentManagementPage() {
           <p className="text-muted-foreground text-sm">Configure numbers, API keys, and payment instructions</p>
         </div>
         <div className="flex gap-2">
-           <Button variant="outline" onClick={handleAddDefault} disabled={isSubmitting} className="gap-2 font-bold bg-white">
+           <Button variant="outline" onClick={handleAddDefault} disabled={isSubmitting} className="gap-2 font-bold bg-white rounded-xl h-11 border-primary/20 text-primary">
               {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
               Load Default BD Methods
            </Button>
@@ -101,7 +114,8 @@ export default function PaymentManagementPage() {
                   <Switch checked={m.isEnabled} onCheckedChange={() => handleToggleStatus(m.id, m.isEnabled)} />
                </div>
              ))}
-             {!methods?.length && <p className="text-xs text-muted-foreground italic text-center py-4">No gateways configured.</p>}
+             {!methods?.length && !isLoading && <p className="text-xs text-muted-foreground italic text-center py-4">No gateways configured.</p>}
+             {isLoading && <div className="flex justify-center py-4"><Loader2 className="animate-spin text-primary" size={20} /></div>}
           </CardContent>
         </Card>
 
@@ -138,7 +152,7 @@ export default function PaymentManagementPage() {
                            <Input 
                              defaultValue={method.name} 
                              onBlur={(e) => updateDoc(doc(db!, 'payment_methods', method.id), { name: e.target.value })}
-                             className="h-11 bg-gray-50/50"
+                             className="h-11 bg-gray-50/50 rounded-xl"
                            />
                         </div>
                         <div className="space-y-2">
@@ -147,7 +161,7 @@ export default function PaymentManagementPage() {
                              defaultValue={method.accountNumber} 
                              placeholder="e.g. 019XXXXXXXX"
                              onBlur={(e) => updateDoc(doc(db!, 'payment_methods', method.id), { accountNumber: e.target.value })}
-                             className="h-11 bg-gray-50/50"
+                             className="h-11 bg-gray-50/50 rounded-xl"
                            />
                         </div>
                         <div className="space-y-2 md:col-span-2">
@@ -156,7 +170,7 @@ export default function PaymentManagementPage() {
                              defaultValue={method.instructions} 
                              placeholder="How should the customer pay?"
                              onBlur={(e) => updateDoc(doc(db!, 'payment_methods', method.id), { instructions: e.target.value })}
-                             className="min-h-[80px] bg-gray-50/50"
+                             className="min-h-[80px] bg-gray-50/50 rounded-xl"
                            />
                         </div>
                         {method.type === 'card' && (
@@ -166,7 +180,7 @@ export default function PaymentManagementPage() {
                                defaultValue={method.apiKey} 
                                type="password"
                                onBlur={(e) => updateDoc(doc(db!, 'payment_methods', method.id), { apiKey: e.target.value })}
-                               className="h-11 bg-gray-50/50"
+                               className="h-11 bg-gray-50/50 rounded-xl"
                              />
                           </div>
                         )}
