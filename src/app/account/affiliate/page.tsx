@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,28 +6,30 @@ import { doc, collection, query, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Share2, Users, Wallet, Trophy, CheckCircle2 } from 'lucide-react';
+import { Copy, Users, Wallet, Trophy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AffiliatePage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const [referralLink, setReferralLink] = useState('');
 
   const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
-  const referralLink = isMounted ? `${window.location.origin}/signup?ref=${profile?.referralCode}` : '';
+  useEffect(() => {
+    if (typeof window !== 'undefined' && profile?.referralCode) {
+      setReferralLink(`${window.location.origin}/signup?ref=${profile.referralCode}`);
+    }
+  }, [profile?.referralCode]);
 
-  const referralsQuery = useMemoFirebase(() => user ? query(collection(db, 'referrals'), where('referrerId', '==', user.uid)) : null, [db, user]);
+  const referralsQuery = useMemoFirebase(() => 
+    user ? query(collection(db, 'referrals'), where('referrerId', '==', user.uid)) : null, [db, user]);
   const { data: referrals } = useCollection(referralsQuery);
 
   const copyToClipboard = () => {
+    if (!referralLink) return;
     navigator.clipboard.writeText(referralLink);
     toast({ title: "Link Copied!", description: "Share it with your friends." });
   };

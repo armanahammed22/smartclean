@@ -13,7 +13,6 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { auth } from "@/firebase";
 
-/** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
 
 export interface UseCollectionResult<T> {
@@ -22,88 +21,52 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
-export interface InternalQuery extends Query<DocumentData> {
-  _query?: {
-    path?: {
-      canonicalString?(): string;
-      toString?(): string;
-    }
-  }
-}
-
 export function useCollection<T = any>(
   memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
 ): UseCollectionResult<T> {
-
-  type ResultItemType = WithId<T>;
-  type StateDataType = ResultItemType[] | null;
-
-  const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [data, setData] = useState<WithId<T>[] | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
-      setError(null);
       return;
     }
 
+    // Enforce memoization to prevent infinite render loops
+    if (!memoizedTargetRefOrQuery.__memo) {
+      console.warn('Firestore query/reference was not properly memoized using useMemoFirebase. This can cause significant performance issues.');
+    }
+
     setIsLoading(true);
-    setError(null);
 
-    let unsubscribeSnapshot: any = null;
+    const unsubscribe = onSnapshot(
+      memoizedTargetRefOrQuery,
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        const results = snapshot.docs.map(doc => ({
+          ...(doc.data() as T),
+          id: doc.id
+        }));
+        setData(results);
+        setError(null);
+        setIsLoading(false);
+      },
+      (err: FirestoreError) => {
+        const path = (memoizedTargetRefOrQuery as any).path || 'query-path';
+        const contextualError = new FirestorePermissionError({
+          operation: 'list',
+          path,
+        });
+        setError(contextualError);
+        setIsLoading(false);
+        errorEmitter.emit('permission-error', contextualError);
+      }
+    );
 
-    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      if (!user) return;
-
-      unsubscribeSnapshot = onSnapshot(
-        memoizedTargetRefOrQuery,
-        (snapshot: QuerySnapshot<DocumentData>) => {
-          const results: ResultItemType[] = [];
-          for (const doc of snapshot.docs) {
-            results.push({ ...(doc.data() as T), id: doc.id });
-          }
-          setData(results);
-          setError(null);
-          setIsLoading(false);
-        },
-        (error: FirestoreError) => {
-          let path = 'unknown-path';
-          try {
-            if ((memoizedTargetRefOrQuery as any).type === 'collection') {
-              path = (memoizedTargetRefOrQuery as CollectionReference).path;
-            } else {
-              const iq = memoizedTargetRefOrQuery as unknown as InternalQuery;
-              path = iq._query?.path?.canonicalString?.() || 'query-path';
-            }
-          } catch (e) {}
-
-          const contextualError = new FirestorePermissionError({
-            operation: 'list',
-            path,
-          });
-
-          setError(contextualError);
-          setData(null);
-          setIsLoading(false);
-
-          errorEmitter.emit('permission-error', contextualError);
-        }
-      );
-    });
-
-    return () => {
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-      unsubscribeAuth();
-    };
-
+    return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]);
-
-  if (memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error('Firestore query/reference was not properly memoized using useMemoFirebase');
-  }
 
   return { data, isLoading, error };
 }
