@@ -88,7 +88,8 @@ export function useCollection<T = any>(
       },
       (err: FirestoreError) => {
         const path = getPathFromTarget(memoizedTargetRefOrQuery);
-        const isPublic = PUBLIC_COLLECTIONS.some(pc => path.includes(catPath(pc)));
+        // Check if any segment of the path matches our public list
+        const isPublic = PUBLIC_COLLECTIONS.some(pc => path.includes(pc));
         
         const contextualError = new FirestorePermissionError({
           operation: 'list',
@@ -112,9 +113,4 @@ export function useCollection<T = any>(
   }, [memoizedTargetRefOrQuery]);
 
   return { data, isLoading, error };
-}
-
-// Helper to check path matching
-function catPath(col: string) {
-  return col.startsWith('/') ? col : `/${col}`;
 }

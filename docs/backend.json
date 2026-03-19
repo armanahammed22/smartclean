@@ -63,6 +63,7 @@
     "/site_settings/{id}": { "description": "Global config." },
     "/staff_availability/{uid}": { "description": "Technician status." },
     "/product_categories/{id}": { "description": "Product hierarchy." },
+    "/service_categories/{id}": { "description": "Service hierarchy." },
     "/brands/{id}": { "description": "Authorized brand list." },
     "/sub_services/{id}": { "description": "Task add-ons." },
     "/service_areas/{id}": { "description": "Service regions." },
@@ -73,6 +74,9 @@
     "/coupons/{id}": { "description": "Discount codes." },
     "/payment_methods/{id}": { "description": "Payment gateways." },
     "/support_tickets/{id}": { "description": "Help requests." },
-    "/referrals/{id}": { "description": "Affiliate logs." }
+    "/referrals/{id}": { "description": "Affiliate logs." },
+    "/hero_banners/{id}": { "description": "Homepage slider content." },
+    "/homepage_sections/{id}": { "description": "Visibility toggles for main UI." },
+    "/pages_management/{id}": { "description": "CMS for dynamic pages." }
   }
 }

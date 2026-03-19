@@ -23,8 +23,6 @@ import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Badge } from '@/components/ui/badge';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 const CHART_DATA = [
   { name: 'Jan', leads: 45, conversion: 12 },
@@ -35,17 +33,10 @@ const CHART_DATA = [
   { name: 'Jun', leads: 67, conversion: 22 },
 ];
 
-const DEFAULT_PAGES = [
-  { slug: 'about-us', title: 'About Us', content: '<h2>About Smart Clean</h2><p>Smart Clean is the leading provider of professional cleaning and maintenance services in Bangladesh.</p>' },
-  { slug: 'faq', title: 'Frequently Asked Questions', content: '<h2>Got Questions? We Have Answers.</h2><h3>How do I book?</h3><p>You can book directly through our website.</p>' },
-  { slug: 'testimonials', title: 'Client Testimonials', content: '<h2>What Our Customers Say</h2><p>Read feedback from our thousands of satisfied clients.</p>' }
-];
-
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const { t } = useLanguage();
   const [isSeeding, setIsSeeding] = useState(false);
 
   // Verifying role status before querying restricted collections

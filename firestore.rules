@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 2.5: Optimized Public Access & Hardened Admin Controls.
+ * Version 2.6: Optimized for public marketplace access and hardened admin controls.
  */
 
 rules_version = '2';
@@ -37,6 +37,7 @@ service cloud.firestore {
     }
 
     // --- 1. Public Marketplace Catalogs (Explicit Read for Everyone) ---
+    // Combined "get" and "list" into "read" for broad public access
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
