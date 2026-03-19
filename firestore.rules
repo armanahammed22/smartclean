@@ -1,6 +1,6 @@
 /**
  * Firestore Security Rules
- * Version 9.0: Explicit Public Access & Hardened Admin Controls.
+ * Version 2.5: Optimized Public Access & Hardened Admin Controls.
  */
 
 rules_version = '2';
@@ -32,8 +32,11 @@ service cloud.firestore {
       );
     }
 
-    // --- 1. Public Marketplace Catalogs (Read for Everyone) ---
-    // Using broad match to ensure 'list' operations work for guests
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- 1. Public Marketplace Catalogs (Explicit Read for Everyone) ---
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -51,16 +54,14 @@ service cloud.firestore {
     match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
     match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // --- 2. Identity & Role Access ---
 
     match /users/{uid} {
-      allow get: if request.auth.uid == uid || isAdmin();
+      allow get: if isOwner(uid) || isAdmin();
       allow list: if isAdmin();
-      allow write: if request.auth.uid == uid || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
     }
 
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
@@ -73,7 +74,7 @@ service cloud.firestore {
 
     match /bookings/{id} {
       allow create: if true; 
-      allow list: if isAdmin() || isStaff() || (isSignedIn() && request.query.limit <= 100);
+      allow list: if isAdmin() || isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow get: if isAdmin() || isStaff() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update: if isAdmin() || (isStaff() && resource.data.employeeId == request.auth.uid);
       allow delete: if isAdmin();
@@ -81,14 +82,14 @@ service cloud.firestore {
 
     match /orders/{id} {
       allow create: if true; 
-      allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
     match /support_tickets/{id} {
       allow create: if true;
-      allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
@@ -99,13 +100,13 @@ service cloud.firestore {
 
     match /referrals/{id} {
       allow get: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
-      allow list: if isAdmin() || (isSignedIn() && request.query.limit <= 100);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
       allow write: if isAdmin();
     }
 
     match /staff_availability/{uid} {
       allow read: if true;
-      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+      allow write: if isAdmin() || isOwner(uid);
     }
 
     match /staff_earnings/{id} {
@@ -119,6 +120,11 @@ service cloud.firestore {
     
     match /couriers/{id} {
       allow read, write: if isAdmin();
+    }
+    
+    match /coupons/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

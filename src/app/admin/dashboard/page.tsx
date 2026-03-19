@@ -63,7 +63,6 @@ export default function AdminDashboard() {
   const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'orders'), limit(100)) : null, [db, user, isAuthorized]);
   const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user, isAuthorized]);
   
-  // Public-ish collections still guarded by auth for dashboard safety
   const productsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, user, isAuthorized]);
   const servicesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'services'), limit(100)) : null, [db, user, isAuthorized]);
   const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user, isAuthorized]);
@@ -97,123 +96,18 @@ export default function AdminDashboard() {
         seoDescription: 'Expert cleaning services for home and office.'
       }, { merge: true });
 
-      // Support Hub
-      batch.set(doc(db, 'site_settings', 'support_hub'), {
-        headerTitle: 'Smart Clean Agent',
-        headerSubtitle: 'Support Hub',
-        bodyText: 'আসসালামু আলাইকুম! আমাদের সেবা সম্পর্কে জানতে সরাসরি চ্যাট করুন।',
-        buttonText: 'Chat on WhatsApp',
-        supportLink: 'https://wa.me/8801919640422',
-        icon: 'MessageCircle',
-        isEnabled: true
-      }, { merge: true });
-
-      batch.set(doc(db, 'hero_banners', 'default_promo'), {
-        id: 'default_promo',
-        title: 'Smart Cleaning Solutions',
-        subtitle: 'Expert deep cleaning and maintenance for your home and office.',
-        imageUrl: 'https://picsum.photos/seed/clean/1200/600',
-        buttonText: 'Book Service',
-        buttonLink: '/services',
-        isActive: true,
-        order: 0,
-        createdAt: new Date().toISOString()
-      });
-
-      const SERVICE_DATA = [
-        { id: 's_home', title: 'Home Cleaning', basePrice: 2000, isPopular: true },
-        { id: 's_kitchen', title: 'Kitchen Cleaning', basePrice: 1500, isPopular: false },
-        { id: 's_ac', title: 'AC Services', basePrice: 1200, isPopular: true }
-      ];
-
-      SERVICE_DATA.forEach(s => {
-        batch.set(doc(db, 'services', s.id), {
-          ...s,
-          status: 'Active',
-          duration: 'Variable',
-          createdAt: new Date().toISOString(),
-          imageUrl: `https://picsum.photos/seed/${s.id}/800/600`, 
-          categoryId: 'Cleaning'
-        });
-      });
-
-      const AREA_DATA = ['Uttara', 'Gulshan', 'Banani', 'Dhanmondi', 'Mirpur'];
-      AREA_DATA.forEach(area => {
-        const ref = doc(collection(db, 'service_areas'));
-        batch.set(ref, { name: area, status: 'Active', createdAt: new Date().toISOString() });
-      });
-
-      const PRODUCT_DATA = [
-        { id: 'p_robot', name: 'Smart Vacuum Robot', price: 45000, isPopular: true, salesCount: 150 },
-        { id: 'p_kit', name: 'Eco-Friendly Kit', price: 2500, isPopular: true, salesCount: 300 },
-        { id: 'p_steam', name: 'Pro Steam Mop', price: 12000, isPopular: false, salesCount: 80 }
-      ];
-
-      PRODUCT_DATA.forEach(p => {
-        batch.set(doc(db, 'products', p.id), {
-          ...p,
-          status: 'Active',
-          stockQuantity: 50,
-          createdAt: new Date().toISOString(),
-          imageUrl: `https://picsum.photos/seed/${p.id}/600/400`,
-          categoryId: 'Tools',
-          brand: 'SmartClean',
-          description: 'High-quality professional cleaning tool.'
-        });
-      });
-
-      for (const page of DEFAULT_PAGES) {
-        const q = query(collection(db, 'pages_management'), where('slug', '==', page.slug));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          const newRef = doc(collection(db, 'pages_management'));
-          batch.set(newRef, {
-            ...page,
-            isPublished: true,
-            updatedAt: new Date().toISOString()
-          });
-        }
-      }
-
-      batch.set(doc(db, 'employee_profiles', 'emp1'), { 
-        id: 'emp1', 
-        name: 'Zayed Khan', 
-        role: 'Cleaner', 
-        status: 'Active', 
-        createdAt: new Date().toISOString(),
-        skills: ['s_home', 's_kitchen'],
-        rating: 5.0
-      });
-      
-      batch.set(doc(db, 'roles_admins', 'gcp03WmpjROVvRdpLNsghNU4zHa2'), { 
-        uid: 'gcp03WmpjROVvRdpLNsghNU4zHa2', 
-        role: 'Bootstrap Admin',
-        assignedAt: new Date().toISOString()
-      });
-
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "Standard products, services, areas, pages, and settings initialized." });
+      toast({ title: "ERP Database Seeded" });
     } catch (err) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: 'batch',
-        operation: 'write'
-      }));
+      toast({ variant: "destructive", title: "Seeding failed" });
     } finally {
       setIsSeeding(false);
     }
   };
 
-  if (isUserLoading || roleLoading) return <div className="p-8 text-center flex flex-col items-center gap-4">
-    <Loader2 className="animate-spin text-primary" size={40} />
-    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Operations Hub...</p>
-  </div>;
+  if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
 
-  if (!isAuthorized) return (
-    <div className="p-20 text-center space-y-4">
-      <h2 className="text-2xl font-bold">Unauthorized Access</h2>
-      <p className="text-muted-foreground">You do not have administrative privileges.</p>
-    </div>
-  );
+  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic">Unauthorized Access. Admin role required.</div>;
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
@@ -229,7 +123,7 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Service Operations Hub</h1>
           <p className="text-muted-foreground text-sm">Real-time control over bookings, staff, and inventory</p>
         </div>
-        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold shadow-sm border-primary/20 text-primary hover:bg-primary/5 transition-all rounded-xl">
+        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold rounded-xl">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
           Seed ERP Data
         </Button>
@@ -237,13 +131,12 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {STATS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm group hover:shadow-md transition-all duration-300 bg-white rounded-2xl">
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl">
             <CardContent className="p-4 md:p-6">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className={cn("p-2.5 rounded-xl transition-colors", stat.bg, stat.color)}><stat.icon size={20} /></div>
-                  <div className={cn("flex items-center gap-0.5 text-[10px] md:text-xs font-bold px-2 py-1 rounded-full", stat.isUp ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600")}>
-                    {stat.isUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  <div className={cn("p-2.5 rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
+                  <div className={cn("flex items-center gap-0.5 text-[10px] font-bold px-2 py-1 rounded-full", stat.isUp ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600")}>
                     {stat.trend}
                   </div>
                 </div>
@@ -296,7 +189,7 @@ export default function AdminDashboard() {
                 ))}
              </div>
              <Button className="w-full bg-white text-primary hover:bg-white/90 font-black h-12 mt-4 shadow-xl rounded-2xl uppercase tracking-tighter">
-               View Performance Log
+               Performance Log
              </Button>
           </CardContent>
         </Card>

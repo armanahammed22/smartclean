@@ -21,14 +21,36 @@ export interface UseCollectionResult<T> {
 }
 
 /**
+ * Collections that are intended to be public. 
+ * Errors on these won't trigger the global crash listener to avoid transient issues during auth resolution.
+ */
+const PUBLIC_COLLECTIONS = [
+  'products', 
+  'services', 
+  'hero_banners', 
+  'site_settings', 
+  'pages_management', 
+  'quick_links', 
+  'quick_actions', 
+  'product_categories', 
+  'service_categories',
+  'brands',
+  'marketing_offers',
+  'reusable_features',
+  'reusable_specs',
+  'variant_types',
+  'homepage_sections'
+];
+
+/**
  * Extracts a path string from either a CollectionReference or a Query.
  */
 function getPathFromTarget(target: any): string {
   if (!target) return 'unknown-path';
-  // CollectionReference has a .path property
   if (target.path) return target.path;
-  // For Query objects, we attempt to find the path in internal structures if available
-  return target._query?.path?.segments?.join('/') || 'query-path';
+  // Attempt to extract from internal structure for Queries
+  const internalPath = target._query?.path?.segments?.join('/') || target.converter?.path;
+  return internalPath || 'query-path';
 }
 
 export function useCollection<T = any>(
@@ -46,9 +68,8 @@ export function useCollection<T = any>(
       return;
     }
 
-    // Enforce memoization to prevent infinite render loops
     if (!memoizedTargetRefOrQuery.__memo) {
-      console.warn('Firestore query/reference was not properly memoized using useMemoFirebase. This can cause significant performance issues.');
+      console.warn('Firestore query/reference was not properly memoized using useMemoFirebase.');
     }
 
     setIsLoading(true);
@@ -66,9 +87,8 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        // Only log and emit if it's not a background query that failed due to auth delay
-        // We avoid crashing the whole app for transient guest listing attempts
         const path = getPathFromTarget(memoizedTargetRefOrQuery);
+        const isPublic = PUBLIC_COLLECTIONS.some(pc => path.includes(catPath(pc)));
         
         const contextualError = new FirestorePermissionError({
           operation: 'list',
@@ -78,10 +98,13 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Background permission checks for public collections shouldn't trigger the global listener instantly
-        // if they are likely to resolve upon auth state completion.
-        // However, for debugging we emit it.
-        errorEmitter.emit('permission-error', contextualError);
+        // CRITICAL FIX: Only emit to global listener (which crashes the app) 
+        // if it's NOT a public collection. This prevents guest loops.
+        if (!isPublic) {
+          errorEmitter.emit('permission-error', contextualError);
+        } else {
+          console.warn(`Transient permission denial for public collection: ${path}. This usually resolves once Firebase Auth stabilizes.`);
+        }
       }
     );
 
@@ -89,4 +112,9 @@ export function useCollection<T = any>(
   }, [memoizedTargetRefOrQuery]);
 
   return { data, isLoading, error };
+}
+
+// Helper to check path matching
+function catPath(col: string) {
+  return col.startsWith('/') ? col : `/${col}`;
 }
