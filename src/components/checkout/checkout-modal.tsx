@@ -59,6 +59,11 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponData, setCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: globalSettings } = useDoc(settingsRef);
@@ -84,7 +89,7 @@ export function CheckoutModal() {
       phone: "", 
       email: user?.email || "", 
       address: "", 
-      date: new Date(new Date().setDate(new Date().getDate() + 1)),
+      date: undefined as any,
       time: "morning", 
       paymentMethod: "", 
       deliveryOption: "",
@@ -92,6 +97,15 @@ export function CheckoutModal() {
       otp: ""
     },
   });
+
+  // Hydration fix: Initialize date only after mount
+  useEffect(() => {
+    if (isCheckoutOpen && mounted) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      form.setValue('date', tomorrow);
+    }
+  }, [isCheckoutOpen, mounted, form]);
 
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
@@ -273,6 +287,8 @@ export function CheckoutModal() {
       setIsSubmitting(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>

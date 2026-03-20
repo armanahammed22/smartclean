@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ import {
   Calendar, 
   TrendingUp, 
   ArrowUpRight, 
-  Truck,
+  Truck, 
   ShieldAlert
 } from 'lucide-react';
 import { 
@@ -36,6 +36,12 @@ import {
 
 export default function ReportsPage() {
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const ordersRef = useMemoFirebase(() => db ? collection(db, 'orders') : null, [db]);
   const { data: orders, isLoading } = useCollection(ordersRef);
 
@@ -65,6 +71,10 @@ export default function ReportsPage() {
     };
   }, [orders]);
 
+  const totalRevenue = useMemo(() => {
+    return orders?.reduce((acc, o) => acc + (o.totalPrice || 0), 0) || 0;
+  }, [orders]);
+
   return (
     <div className="p-8 space-y-8 bg-[#F9FAFB] min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -83,7 +93,7 @@ export default function ReportsPage() {
              <div className="flex justify-between items-start">
                 <div>
                    <p className="text-xs font-bold text-muted-foreground uppercase">Revenue Insight</p>
-                   <h3 className="text-2xl font-black mt-1">৳{(orders?.reduce((acc, o) => acc + (o.totalPrice || 0), 0) || 0).toLocaleString()}</h3>
+                   <h3 className="text-2xl font-black mt-1">৳{mounted ? totalRevenue.toLocaleString() : '0'}</h3>
                    <p className="text-[10px] text-green-600 font-bold mt-2 flex items-center gap-1"><ArrowUpRight size={14} /> Total Lifetime Sales</p>
                 </div>
                 <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>

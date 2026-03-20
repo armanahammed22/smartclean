@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,10 +55,15 @@ export default function OrdersManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShipping, setIsShipping] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<Record<string, 'pending' | 'success' | 'failed'>>({});
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -205,7 +210,7 @@ export default function OrdersManagementPage() {
                   <TableCell className="py-5 pl-8">
                     <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
                     <div className="text-[9px] text-muted-foreground font-bold mt-1">
-                      {order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
+                      {mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
                     </div>
                   </TableCell>
                   <TableCell>
