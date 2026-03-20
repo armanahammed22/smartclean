@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -213,8 +212,8 @@ export default function SmartCleanHomePage() {
               </div>
             </div>
 
-            {/* Side Small Banners (Right) */}
-            <div className="lg:col-span-3 flex flex-col gap-4">
+            {/* Side Small Banners (Right) - HIDDEN ON MOBILE */}
+            <div className="hidden lg:flex lg:col-span-3 flex-col gap-4">
               {[0, 1].map((idx) => {
                 const banner = sideBanners?.[idx];
                 return (
