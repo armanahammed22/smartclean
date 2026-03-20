@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -83,10 +82,10 @@ export default function ProductDetailsPage() {
   if (!product) return <div className="p-20 text-center font-bold text-muted-foreground">Product Not Found</div>;
 
   return (
-    <PublicLayout>
+    <PublicLayout minimalMobile={true}>
       <div className="bg-[#F8FAFC] min-h-screen pb-20">
         <div className="container mx-auto px-4 py-8">
-          <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
+          <Button variant="ghost" onClick={() => router.back()} className="hidden lg:flex mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
             <ArrowLeft size={18} /> Back to Catalog
           </Button>
 
@@ -221,7 +220,7 @@ export default function ProductDetailsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button 
                     variant="outline"
                     className="h-16 rounded-2xl font-black text-base uppercase border-2 border-primary text-primary hover:bg-primary/5 gap-2"
@@ -282,7 +281,6 @@ export default function ProductDetailsPage() {
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {/* Built-in Base Specs */}
                           {[
                             { label: 'Brand Name', val: product.brand || 'Smart Clean Pro' },
                             { label: 'Product Model', val: product.id.slice(0, 8).toUpperCase() },
@@ -296,7 +294,6 @@ export default function ProductDetailsPage() {
                             </div>
                           ))}
                           
-                          {/* Dynamic Extra Specs */}
                           {product.specifications?.map((spec: any, i: number) => (
                             <div key={`dynamic-${i}`} className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex flex-col gap-1.5 transition-all hover:bg-white hover:shadow-md animate-in fade-in">
                               <span className="text-[9px] font-black uppercase text-primary tracking-widest">{spec.key}</span>
@@ -330,6 +327,23 @@ export default function ProductDetailsPage() {
               </Tabs>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Sticky Action Bar */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 z-50 px-6 py-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-[2.5rem] flex gap-3">
+          <Button 
+            variant="outline"
+            className="h-14 flex-1 rounded-2xl font-black text-[10px] uppercase border-2 border-primary text-primary hover:bg-primary/5 gap-2"
+            onClick={() => addToCart(product as any, quantity)}
+          >
+            <ShoppingCart size={16} /> Cart
+          </Button>
+          <Button 
+            className="h-14 flex-[1.5] rounded-2xl font-black text-[10px] uppercase shadow-xl shadow-primary/30 gap-2"
+            onClick={handleOrderNow}
+          >
+            Order Now <Zap size={16} fill="currentColor" />
+          </Button>
         </div>
       </div>
     </PublicLayout>

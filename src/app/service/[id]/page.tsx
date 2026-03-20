@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -83,10 +82,10 @@ export default function ServiceDetailsPage() {
   if (!service) return <div className="p-20 text-center font-bold text-muted-foreground">Service Not Found</div>;
 
   return (
-    <PublicLayout>
+    <PublicLayout minimalMobile={true}>
       <div className="bg-[#F8FAFC] min-h-screen pb-24 lg:pb-12">
         <div className="container mx-auto px-4 py-8">
-          <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
+          <Button variant="ghost" onClick={() => router.back()} className="hidden lg:flex mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all">
             <ArrowLeft size={18} /> {t('back_to_list')}
           </Button>
 
@@ -130,7 +129,6 @@ export default function ServiceDetailsPage() {
                       </div>
                     </div>
                     
-                    {/* Minimum Base Charge Warning */}
                     <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 space-y-2">
                       <div className="flex items-center gap-2 text-[9px] font-black uppercase text-orange-600">
                         <Truck size={14} /> Service Base Charges
@@ -253,19 +251,19 @@ export default function ServiceDetailsPage() {
         </div>
 
         {/* Mobile Sticky Action Bar */}
-        <div className="lg:hidden fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 z-50 px-6 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-[2rem]">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 z-50 px-6 py-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-[2.5rem]">
           <div className="container mx-auto flex items-center justify-between gap-4">
             <div className="flex flex-col min-w-fit">
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Total Estimated</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Estimated Total</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
               </div>
             </div>
             <Button 
               onClick={handleContinueBooking} 
-              className="h-14 px-8 rounded-full font-black text-xs uppercase shadow-lg shadow-primary/30 gap-2 flex-1 transition-all active:scale-95"
+              className="h-14 px-8 rounded-2xl font-black text-xs uppercase shadow-xl shadow-primary/30 gap-2 flex-1 transition-all active:scale-95 bg-primary hover:bg-primary/90"
             >
-              Continue <ChevronRight size={16} />
+              Book Now <ChevronRight size={16} />
             </Button>
           </div>
         </div>
