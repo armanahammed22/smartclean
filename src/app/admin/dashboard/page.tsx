@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -36,7 +35,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
 
-  // Verifying role status before querying restricted collections
+  // Authorization Check
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admins', user.uid);
@@ -45,14 +44,12 @@ export default function AdminDashboard() {
   
   const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Restricted queries
-  const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'orders'), limit(100)) : null, [db, user, isAuthorized]);
-  const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user, isAuthorized]);
-  const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user, isAuthorized]);
-  
-  // Public queries
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(100)) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(100)) : null, [db]);
+  // Resilient Queries
+  const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? collection(db, 'orders') : null, [db, user, isAuthorized]);
+  const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? collection(db, 'bookings') : null, [db, user, isAuthorized]);
+  const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? collection(db, 'employee_profiles') : null, [db, user, isAuthorized]);
+  const productsQuery = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
 
   const { data: orders } = useCollection(ordersQuery);
   const { data: bookings } = useCollection(bookingsQuery);
@@ -68,7 +65,7 @@ export default function AdminDashboard() {
       const batch = writeBatch(db);
       const now = new Date().toISOString();
 
-      // Global Settings
+      // 1. Global Settings
       batch.set(doc(db, 'site_settings', 'global'), {
         websiteName: 'Smart Clean',
         logoUrl: 'https://picsum.photos/seed/smartclean-logo/200/200',
@@ -83,25 +80,47 @@ export default function AdminDashboard() {
         updatedAt: now
       }, { merge: true });
 
-      // Ensure some default categories exist
-      const catRef = doc(collection(db, 'service_categories'));
-      batch.set(catRef, { name: 'Cleaning', status: 'Active', createdAt: now });
+      // 2. Sample Services
+      const servicesToSeed = [
+        { title: 'Residential Deep Cleaning', basePrice: 5000, status: 'Active', isPopular: true, duration: '4-6 Hours', categoryId: 'Cleaning', imageUrl: 'https://picsum.photos/seed/service1/800/600' },
+        { title: 'Sofa & Upholstery Care', basePrice: 1500, status: 'Active', isPopular: true, duration: '1-2 Hours', categoryId: 'Cleaning', imageUrl: 'https://picsum.photos/seed/service2/800/600' },
+        { title: 'AC Master Service', basePrice: 3500, status: 'Active', isPopular: false, duration: '2-3 Hours', categoryId: 'Maintenance', imageUrl: 'https://picsum.photos/seed/service3/800/600' }
+      ];
 
-      // Ensure a sample service exists
-      const serviceRef = doc(collection(db, 'services'));
-      batch.set(serviceRef, {
-        title: 'Residential Deep Cleaning',
-        basePrice: 5000,
-        status: 'Active',
-        isPopular: true,
-        duration: '4-6 Hours',
-        description: 'Complete home sanitization and deep cleaning service.',
-        createdAt: now
+      servicesToSeed.forEach(s => {
+        const ref = doc(collection(db, 'services'));
+        batch.set(ref, { ...s, createdAt: now, updatedAt: now });
+      });
+
+      // 3. Sample Products
+      const productsToSeed = [
+        { name: 'Smart Vacuum Robot X1', price: 45000, regularPrice: 55000, stockQuantity: 12, status: 'Active', isPopular: true, categoryId: 'Equipment', brand: 'SmartPro', imageUrl: 'https://picsum.photos/seed/prod1/600/600' },
+        { name: 'Eco Cleaning Solution Kit', price: 3500, regularPrice: 4200, stockQuantity: 50, status: 'Active', isPopular: true, categoryId: 'Supplies', brand: 'NatureClean', imageUrl: 'https://picsum.photos/seed/prod2/600/600' },
+        { name: 'Professional Steam Mop', price: 12000, regularPrice: 15000, stockQuantity: 8, status: 'Active', isPopular: false, categoryId: 'Equipment', brand: 'SmartPro', imageUrl: 'https://picsum.photos/seed/prod3/600/600' }
+      ];
+
+      productsToSeed.forEach(p => {
+        const ref = doc(collection(db, 'products'));
+        batch.set(ref, { ...p, createdAt: now, updatedAt: now });
+      });
+
+      // 4. Sample Banners
+      const bannersToSeed = [
+        { title: 'Premium Home Cleaning', subtitle: 'Experience the next level of hygiene with AI mapping.', imageUrl: 'https://picsum.photos/seed/hero1/1200/600', isActive: true, type: 'main', order: 0, buttonText: 'Book Now', buttonLink: '/services', overlayOpacity: 40 },
+        { title: 'Special Monsoon Offer', subtitle: 'Get 20% off on all deep cleaning services.', imageUrl: 'https://picsum.photos/seed/hero2/1200/600', isActive: true, type: 'main', order: 1, buttonText: 'Explore Offers', buttonLink: '/marketing', overlayOpacity: 40 },
+        { title: 'SmartClean App', imageUrl: 'https://picsum.photos/seed/side1/600/800', isActive: true, type: 'side', order: 0, buttonLink: '/#download' },
+        { title: 'Profit Calculator', imageUrl: 'https://picsum.photos/seed/side2/600/800', isActive: true, type: 'side', order: 1, buttonLink: '/#calc' }
+      ];
+
+      bannersToSeed.forEach(b => {
+        const ref = doc(collection(db, 'hero_banners'));
+        batch.set(ref, { ...b, createdAt: now, updatedAt: now });
       });
 
       await batch.commit();
-      toast({ title: "ERP Database Seeded" });
+      toast({ title: "ERP Database Seeded", description: "All catalog sections are now populated." });
     } catch (err) {
+      console.error(err);
       toast({ variant: "destructive", title: "Seeding failed" });
     } finally {
       setIsSeeding(false);
@@ -110,7 +129,7 @@ export default function AdminDashboard() {
 
   if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
 
-  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session. Redirecting...</div>;
+  if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
   const STATS = [
     { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50", trend: "+15%", isUp: true },
