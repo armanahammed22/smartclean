@@ -38,14 +38,16 @@ export default function SmartCleanHomePage() {
   const db = useFirestore();
 
   // Role Checks
-  const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
-  const { data: adminRole } = useDoc(adminRef);
+  const adminRoleRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'roles_admins', user.uid);
+  }, [db, user]);
+  const { data: adminRole } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
   /**
    * DATA FETCHING:
-   * Fetching full collections to handle filtering in-memory.
-   * This is the most reliable method to avoid Firestore Index errors.
+   * Using raw collections to handle filtering in-memory for stability.
    */
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
