@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2 } from 'lucide-react';
+import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2, Truck } from 'lucide-react';
 import { useFirestore, useUser, useAuth, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, addDoc, query, where, getDocs, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -44,6 +44,7 @@ const formSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().min(10, "Please provide a complete address"),
   paymentMethod: z.string().min(1, "Please select a payment method"),
+  deliveryOption: z.string().min(1, "Please select a delivery option"),
   notes: z.string().optional(),
 });
 
@@ -63,6 +64,10 @@ export default function CheckoutPage() {
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods, isLoading: mLoading } = useCollection(methodsQuery);
 
+  // Fetch Delivery Options
+  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
+  const { data: deliveryOptions, isLoading: dLoading } = useCollection(deliveryQuery);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -71,9 +76,15 @@ export default function CheckoutPage() {
       email: user?.email || "",
       address: "",
       paymentMethod: "",
+      deliveryOption: "",
       notes: "",
     },
   });
+
+  // Watch delivery selection for calculation
+  const selectedDeliveryId = form.watch('deliveryOption');
+  const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
+  const deliveryCharge = selectedDelivery?.amount || 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
@@ -83,6 +94,12 @@ export default function CheckoutPage() {
       form.setValue('paymentMethod', defaultMethod.id);
     }
   }, [availableMethods, hasServices, form]);
+
+  useEffect(() => {
+    if (deliveryOptions?.length) {
+      form.setValue('deliveryOption', deliveryOptions[0].id);
+    }
+  }, [deliveryOptions, form]);
 
   const assessRisk = async (phone: string) => {
     if (!db) return { level: 'Low', suspicious: false };
@@ -138,7 +155,11 @@ export default function CheckoutPage() {
         customerEmail: values.email || null,
         address: values.address,
         items,
-        totalPrice: subtotal * 1.08,
+        subtotal: subtotal,
+        tax: subtotal * 0.08,
+        deliveryCharge: deliveryCharge,
+        deliveryMethod: selectedDelivery?.label || 'Standard',
+        totalPrice: (subtotal * 1.08) + deliveryCharge,
         paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || values.paymentMethod,
         status: 'New',
         riskLevel: riskData.level,
@@ -236,6 +257,30 @@ export default function CheckoutPage() {
                             <FormMessage />
                           </FormItem>
                         )} />
+                        
+                        {/* Delivery Method Selection */}
+                        <div className="space-y-4 pt-4 border-t border-gray-50">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                            <Truck size={14} /> {hasServices ? 'Service Region' : 'Delivery Method'}
+                          </h4>
+                          <FormField control={form.control} name="deliveryOption" render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {deliveryOptions?.map((opt) => (
+                                <div key={opt.id} className={cn(
+                                  "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all",
+                                  field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                                )}>
+                                  <RadioGroupItem value={opt.id} id={opt.id} className="sr-only" />
+                                  <label htmlFor={opt.id} className="flex flex-col gap-1 cursor-pointer w-full">
+                                    <span className="text-xs font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
+                                    <span className="text-sm font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
+                                  </label>
+                                </div>
+                              ))}
+                            </RadioGroup>
+                          )} />
+                        </div>
+
                         <FormField control={form.control} name="notes" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('order_notes')}</FormLabel>
@@ -281,10 +326,14 @@ export default function CheckoutPage() {
                               <span>{t('tax')} (8%)</span>
                               <span className="text-gray-900">৳{(subtotal * 0.08).toLocaleString()}</span>
                             </div>
+                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-primary">
+                              <span>Delivery / Base Charge</span>
+                              <span className="font-black">৳{deliveryCharge.toLocaleString()}</span>
+                            </div>
                             <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
                               <div className="flex flex-col">
                                 <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
-                                <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08).toLocaleString()}</span>
+                                <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{((subtotal * 1.08) + deliveryCharge).toLocaleString()}</span>
                               </div>
                               <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
                             </div>
@@ -293,7 +342,7 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Payment Section - Positioned below Order Summary */}
+                    {/* Payment Section */}
                     <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-gray-900 text-white p-6">
                         <div className="flex items-center gap-3">
@@ -338,7 +387,7 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Place Order Button - Positioned at bottom right */}
+                    {/* Place Order Button */}
                     <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</>

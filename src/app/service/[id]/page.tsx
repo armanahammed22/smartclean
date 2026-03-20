@@ -13,13 +13,14 @@ import {
   Star,
   CheckCircle2,
   ChevronRight,
-  Wrench
+  Wrench,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -46,6 +47,10 @@ export default function ServiceDetailsPage() {
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', id), where('status', '==', 'Active'));
   }, [db, id]);
   const { data: subServices, isLoading: subLoading } = useCollection(subServicesQuery);
+
+  // Fetch Delivery/Base Charges
+  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
+  const { data: deliveryOptions } = useCollection(deliveryQuery);
 
   // Calculate Totals
   const addonsTotal = useMemo(() => {
@@ -87,7 +92,7 @@ export default function ServiceDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* COLUMN 1: Service Media & Info (Reduced from span-5 to span-4) */}
+            {/* COLUMN 1: Service Media & Info */}
             <div className="lg:col-span-4 space-y-6">
               <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white group">
                 {service.imageUrl ? (
@@ -124,6 +129,21 @@ export default function ServiceDetailsPage() {
                         <div className="flex items-center gap-1.5"><Clock size={16} className="text-primary" /> {service.duration || '2-4 Hours'}</div>
                       </div>
                     </div>
+                    
+                    {/* Minimum Base Charge Warning */}
+                    <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 space-y-2">
+                      <div className="flex items-center gap-2 text-[9px] font-black uppercase text-orange-600">
+                        <Truck size={14} /> Service Base Charges
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {deliveryOptions?.map(opt => (
+                          <div key={opt.id} className="bg-white px-2 py-1.5 rounded-lg border border-orange-50 text-[10px] font-bold">
+                            {opt.label}: ৳{opt.amount}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="text-[13px] text-gray-600 font-medium leading-relaxed border-t pt-6 whitespace-pre-wrap">
                       {service.description}
                     </div>
@@ -132,7 +152,7 @@ export default function ServiceDetailsPage() {
               </Card>
             </div>
 
-            {/* COLUMN 2: Additional Services (Increased from span-4 to span-5) */}
+            {/* COLUMN 2: Additional Services */}
             <div className="lg:col-span-5 space-y-6">
               <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white h-full min-h-[400px]">
                 <CardHeader className="p-8 border-b bg-gray-50/30">
@@ -177,7 +197,7 @@ export default function ServiceDetailsPage() {
               </Card>
             </div>
 
-            {/* COLUMN 3: Booking Summary (lg:col-span-3) */}
+            {/* COLUMN 3: Booking Summary */}
             <div className="lg:col-span-3 hidden lg:block sticky top-24">
               <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden">
                 <CardHeader className="bg-[#081621] text-white p-8">

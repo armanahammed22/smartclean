@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock, Phone } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc, orderBy, limit } from 'firebase/firestore';
@@ -41,6 +41,7 @@ const formSchema = z.object({
   date: z.date({ required_error: "Please select a date" }),
   time: z.string().min(1, "Please select a time slot"),
   paymentMethod: z.string(),
+  deliveryOption: z.string().min(1, "Required"),
   coupon: z.string().optional(),
   notes: z.string().optional(),
   otp: z.string().optional(),
@@ -73,6 +74,9 @@ export function CheckoutModal() {
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods } = useCollection(methodsQuery);
 
+  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
+  const { data: deliveryOptions } = useCollection(deliveryQuery);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { 
@@ -83,23 +87,32 @@ export function CheckoutModal() {
       date: new Date(new Date().setDate(new Date().getDate() + 1)),
       time: "morning", 
       paymentMethod: "", 
+      deliveryOption: "",
       notes: "",
       otp: ""
     },
   });
+
+  const selectedDeliveryId = form.watch('deliveryOption');
+  const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
+  const deliveryCharge = selectedDelivery?.amount || 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
       const defaultMethod = availableMethods.find(m => 
         hasServices ? m.isDefaultForServices : m.isDefaultForProducts
       ) || availableMethods[0];
-      
       form.setValue('paymentMethod', defaultMethod.id);
     }
   }, [availableMethods, hasServices, form]);
 
-  const selectedMethod = availableMethods?.find(m => m.id === form.watch('paymentMethod'));
-  const finalTotal = subtotal * 1.08 - (couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0);
+  useEffect(() => {
+    if (deliveryOptions?.length) {
+      form.setValue('deliveryOption', deliveryOptions[0].id);
+    }
+  }, [deliveryOptions, form]);
+
+  const finalTotal = (subtotal * 1.08 + deliveryCharge) - (couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0);
 
   const handleSendOtp = () => {
     const phoneVal = form.getValues('phone');
@@ -234,8 +247,10 @@ export function CheckoutModal() {
           customerPhone: values.phone,
           customerEmail: values.email || null,
           items,
+          subtotal: subtotal,
+          deliveryCharge: deliveryCharge,
           totalPrice: finalTotal,
-          paymentMethod: selectedMethod?.name || 'Unknown',
+          paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || 'Unknown',
           address: values.address,
           dateTime: values.date?.toISOString(),
           timeSlot: values.time,
@@ -339,6 +354,29 @@ export function CheckoutModal() {
                   )} />
                 </div>
 
+                {/* Delivery Options Selection */}
+                <div className="space-y-6 pt-6 border-t">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                    <Truck size={14} className="text-primary" /> Delivery / Zone Charges
+                  </h4>
+                  <FormField control={form.control} name="deliveryOption" render={({ field }) => (
+                    <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {deliveryOptions?.map(opt => (
+                        <div key={opt.id} className={cn(
+                          "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all bg-white", 
+                          field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"
+                        )}>
+                          <RadioGroupItem value={opt.id} id={`modal-del-${opt.id}`} className="sr-only" />
+                          <label htmlFor={`modal-del-${opt.id}`} className="flex flex-col cursor-pointer w-full">
+                            <span className="text-[10px] font-black uppercase text-[#081621]">{opt.label}</span>
+                            <span className="text-sm font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
+                          </label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )} />
+                </div>
+
                 {hasServices && (
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-orange-500" /> Booking Schedule</h4>
@@ -402,10 +440,18 @@ export function CheckoutModal() {
                   <span>{t('subtotal')}</span>
                   <span>৳{subtotal.toLocaleString()}</span>
                 </div>
+                <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
+                  <span>{t('tax')} (8%)</span>
+                  <span>৳{(subtotal * 0.08).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-black uppercase text-primary">
+                  <span>{selectedDelivery?.label || 'Delivery'}</span>
+                  <span>৳{deliveryCharge.toLocaleString()}</span>
+                </div>
                 <div className="flex justify-between items-end pt-4">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Total Due</span>
-                    <span className="text-3xl font-black text-[#081621] tracking-tighter">৳{(subtotal * 1.08).toLocaleString()}</span>
+                    <span className="text-3xl font-black text-[#081621] tracking-tighter">৳{finalTotal.toLocaleString()}</span>
                   </div>
                   <Badge className="bg-[#081621] text-white border-none font-black text-[8px] px-2 rounded-full">VAT INC</Badge>
                 </div>
@@ -424,8 +470,8 @@ export function CheckoutModal() {
                             "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all bg-white", 
                             field.value === m.id ? "border-green-600 shadow-sm" : "border-gray-100"
                           )}>
-                            <RadioGroupItem value={m.id} id={m.id} className="sr-only" />
-                            <label htmlFor={m.id} className="text-[10px] font-black uppercase flex items-center gap-3 w-full cursor-pointer text-[#081621]">
+                            <RadioGroupItem value={m.id} id={`modal-pay-${m.id}`} className="sr-only" />
+                            <label htmlFor={`modal-pay-${m.id}`} className="text-[10px] font-black uppercase flex items-center gap-3 w-full cursor-pointer text-[#081621]">
                                <div className={cn("p-2 rounded-xl", field.value === m.id ? "bg-green-600 text-white" : "bg-gray-50 text-gray-400")}>
                                   {m.type === 'mobile' ? <Smartphone size={14} /> : m.type === 'card' ? <CreditCard size={14} /> : <Wallet size={14} />}
                                </div>

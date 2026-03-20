@@ -20,11 +20,12 @@ import {
   Info,
   Settings2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { generateProductSpeech } from '@/ai/flows/tts-flow';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCart } from '@/components/providers/cart-provider';
@@ -45,6 +46,9 @@ export default function ProductDetailsPage() {
 
   const productRef = useMemoFirebase(() => db ? doc(db, 'products', id as string) : null, [db, id]);
   const { data: product, isLoading } = useDoc(productRef);
+
+  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
+  const { data: deliveryOptions } = useCollection(deliveryQuery);
 
   const allImages = React.useMemo(() => {
     if (!product) return [];
@@ -88,7 +92,7 @@ export default function ProductDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* Left Side: Product Gallery (Reduced size from span-7 to span-5) */}
+            {/* Left Side: Product Gallery */}
             <div className="lg:col-span-5 space-y-6">
               <div className="relative aspect-square rounded-[2.5rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
                 {allImages.length > 0 ? (
@@ -162,7 +166,7 @@ export default function ProductDetailsPage() {
               )}
             </div>
 
-            {/* Right Side: Product Actions (Increased size from span-5 to span-7) */}
+            {/* Right Side: Product Actions */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
                 <div className="space-y-4">
@@ -185,6 +189,21 @@ export default function ProductDetailsPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground font-medium italic">Standard local taxes and shipping rates apply at checkout.</p>
+                </div>
+
+                {/* Delivery Information Box */}
+                <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 space-y-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+                    <Truck size={16} /> Delivery Information
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    {deliveryOptions?.map(opt => (
+                      <div key={opt.id} className="bg-white px-3 py-2 rounded-xl border border-blue-50 flex flex-col">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase leading-none mb-1">{opt.label}</span>
+                        <span className="text-xs font-black text-blue-700">৳{opt.amount}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">

@@ -188,6 +188,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Settings,
       items: [
         { name: "Payments", href: '/admin/payments', icon: Wallet },
+        { name: "Delivery Settings", href: '/admin/settings/delivery', icon: Truck },
         { name: "Settings", href: '/admin/settings', icon: Settings },
       ]
     },

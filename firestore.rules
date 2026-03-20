@@ -59,6 +59,7 @@ service cloud.firestore {
     match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
     match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // --- 2. Identity & Role Access ---
 
