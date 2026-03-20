@@ -38,7 +38,6 @@ service cloud.firestore {
     }
 
     // --- 1. Public Marketplace Access (Everyone can Read) ---
-    // Read includes both 'get' (single doc) and 'list' (collection queries)
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -129,7 +128,8 @@ service cloud.firestore {
     }
     
     match /couriers/{id} {
-      allow read, write: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

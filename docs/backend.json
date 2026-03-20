@@ -21,6 +21,23 @@
       },
       "required": ["name", "price", "stockQuantity", "status"]
     },
+    "Courier": {
+      "title": "Courier",
+      "description": "A logistics provider with dynamic API configuration.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "description": { "type": "string" },
+        "apiEndpoint": { "type": "string" },
+        "apiKey": { "type": "string" },
+        "apiSecret": { "type": "string" },
+        "trackingUrl": { "type": "string" },
+        "fieldMapping": { "type": "string", "description": "JSON string mapping internal fields to API fields." },
+        "color": { "type": "string" }
+      },
+      "required": ["name", "apiEndpoint", "status"]
+    },
     "Service": {
       "title": "Service",
       "description": "A professional cleaning or maintenance offering.",
@@ -104,6 +121,7 @@
     "/referrals/{id}": { "description": "Affiliate logs." },
     "/hero_banners/{id}": { "description": "Homepage slider content." },
     "/homepage_sections/{id}": { "description": "Visibility toggles for main UI." },
-    "/pages_management/{id}": { "description": "CMS for dynamic pages." }
+    "/pages_management/{id}": { "description": "CMS for dynamic pages." },
+    "/couriers/{id}": { "schema": "Courier", "description": "Dynamic logistics providers." }
   }
 }
