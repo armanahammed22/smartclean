@@ -3,73 +3,88 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Menu, Home, Package, Wrench, TicketPercent } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { 
+  Home, 
+  ShoppingCart, 
+  TicketPercent, 
+  ClipboardList, 
+  User 
+} from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useCart } from '@/components/providers/cart-provider';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
   const { t } = useLanguage();
-  const db = useFirestore();
+  const { itemCount } = useCart();
+  const pathname = usePathname();
 
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const { data: settings } = useDoc(settingsRef);
-
-  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
-
-  const NAV_LINK_CLASS = "flex flex-col items-center justify-center gap-1 flex-1 group transition-all h-full pt-1";
-  const ICON_SIZE = 22;
-  const LABEL_CLASS = "text-[8px] font-bold uppercase tracking-wider transition-colors";
+  const NAV_ITEMS = [
+    { 
+      label: t('nav_offers'), 
+      href: '/#offers', 
+      icon: TicketPercent 
+    },
+    { 
+      label: t('cart_title'), 
+      href: '/cart', 
+      icon: ShoppingCart,
+      badge: itemCount 
+    },
+    { 
+      label: t('nav_home'), 
+      href: '/', 
+      icon: Home 
+    },
+    { 
+      label: t('service_history'), 
+      href: '/account/history', 
+      icon: ClipboardList 
+    },
+    { 
+      label: t('nav_account'), 
+      href: '/account/dashboard', 
+      icon: User 
+    },
+  ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[100] border-t border-white/10 h-16 shadow-[0_-4px_15px_rgba(0,0,0,0.4)] safe-area-pb">
-      <div className="flex items-center justify-between h-full px-1 relative">
-        <Link href="/services" className={NAV_LINK_CLASS}>
-          <Wrench size={ICON_SIZE} className="text-white/60 group-hover:text-primary transition-colors" />
-          <span className={cn(LABEL_CLASS, "text-white/40 group-hover:text-primary")}>{t('nav_services')}</span>
-        </Link>
-        
-        <Link href="/products" className={NAV_LINK_CLASS}>
-          <Package size={ICON_SIZE} className="text-white/60 group-hover:text-primary transition-colors" />
-          <span className={cn(LABEL_CLASS, "text-white/40 group-hover:text-primary")}>Supplies</span>
-        </Link>
-        
-        <div className="flex-1 flex justify-center relative h-full">
-          <div className="absolute -top-5">
-            <Link 
-              href="/" 
-              className="bg-primary p-1 rounded-full shadow-[0_10px_25px_rgba(34,99,192,0.4)] border-[5px] border-[#081621] flex items-center justify-center transition-transform hover:scale-110 active:scale-90 overflow-hidden w-14 h-14"
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white z-[100] border-t border-gray-100 h-14 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] safe-area-pb">
+      <div className="flex items-center justify-around h-full px-1">
+        {NAV_ITEMS.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors relative",
+                isActive ? "text-[#22C55E]" : "text-[#6B7280]"
+              )}
             >
-              <div className="relative w-full h-full">
-                {displayLogo ? (
-                  <Image 
-                    src={displayLogo} 
-                    alt="Home" 
-                    fill 
-                    className="object-contain p-1" 
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <Home size={24} className="text-white" />
-                  </div>
+              <div className="relative">
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 bg-[#22C55E] text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                    {item.badge}
+                  </span>
                 )}
               </div>
+              <span className="text-[9px] font-bold uppercase tracking-tighter">
+                {item.label === t('cart_title') ? 'Cart' : 
+                 item.label === t('nav_offers') ? 'Offer' : 
+                 item.label === t('nav_home') ? 'Home' : 
+                 item.label === t('service_history') ? 'Orders' : 'Profile'}
+              </span>
+              {isActive && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#22C55E] rounded-b-full" />
+              )}
             </Link>
-          </div>
-        </div>
-        
-        <Link href="/#offers" className={NAV_LINK_CLASS}>
-          <TicketPercent size={ICON_SIZE} className="text-white/60 group-hover:text-primary transition-colors" />
-          <span className={cn(LABEL_CLASS, "text-white/40 group-hover:text-primary")}>{t('nav_offers')}</span>
-        </Link>
-        
-        <Link href="/account/dashboard" className={NAV_LINK_CLASS}>
-          <Menu size={ICON_SIZE} className="text-white/60 group-hover:text-primary transition-colors" />
-          <span className={cn(LABEL_CLASS, "text-white/40 group-hover:text-primary")}>Portal</span>
-        </Link>
+          );
+        })}
       </div>
     </nav>
   );
