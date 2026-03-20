@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -16,7 +17,8 @@ import {
   User,
   History,
   LogIn,
-  ShoppingCart
+  ShoppingCart,
+  Menu
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
@@ -64,183 +66,108 @@ export function Navbar() {
   };
 
   return (
-    <header className="w-full z-50 sticky top-0 shadow-sm border-b border-white/10">
-      <div className="bg-[#081621] text-white py-4">
-        <div className="container mx-auto px-4 flex items-center justify-between gap-8">
+    <header className="w-full z-50 sticky top-0 shadow-sm">
+      {/* Top Utility Bar - Hidden on Mobile */}
+      <div className="hidden lg:block bg-gray-50 border-b py-1">
+        <div className="container mx-auto px-4 flex justify-end gap-6">
+          <Link href="/page/about-us" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">About Us</Link>
+          <Link href="/page/careers" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">Careers</Link>
+          <Link href="/support" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">Support</Link>
+          <button onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black text-primary uppercase tracking-widest">
+            {language === 'bn' ? "English" : "বাংলা"}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Daraz-style Header */}
+      <div className="bg-white border-b py-3 md:py-4">
+        <div className="container mx-auto px-4 flex items-center gap-4 md:gap-8">
+          
+          {/* Mobile Menu Button */}
+          <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 text-gray-600 shrink-0">
+            <Menu size={24} />
+          </Button>
+
           {/* Logo Section */}
-          <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-10 md:h-12 w-auto min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
+          <Link href={logoLink} className="flex items-center shrink-0">
+            <div className="relative h-8 md:h-10 w-auto min-w-[100px] md:min-w-[140px] flex items-center justify-start overflow-hidden">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
                   fill
-                  className="object-contain object-left transition-transform group-hover:scale-105" 
+                  className="object-contain object-left" 
                   priority 
                   unoptimized
-                  data-ai-hint="company logo"
                 />
               ) : (
-                <div className="bg-primary p-2 rounded-lg">
-                  <span className="text-white font-black text-xl">S</span>
+                <div className="bg-primary p-1.5 rounded-lg">
+                  <span className="text-white font-black text-lg">S</span>
                 </div>
               )}
             </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-xl md:text-2xl font-black tracking-tighter font-headline text-white uppercase leading-none">
-                {settings?.websiteName || 'SMART CLEAN'}
-              </span>
-              <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mt-1">Expert Solutions</span>
-            </div>
           </Link>
 
-          {/* Desktop Search */}
-          <div className="flex-1 max-w-md relative hidden md:block">
+          {/* Daraz-style Search Bar */}
+          <div className="flex-1 relative">
             <div className="relative group">
               <Input 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('search_placeholder')}
-                className="w-full bg-white/5 hover:bg-white/10 focus:bg-white text-white focus:text-black h-11 pr-12 rounded-xl border border-white/10 focus:border-primary transition-all font-medium placeholder:text-white/40"
+                className="w-full bg-gray-100 border-none h-10 md:h-11 pr-12 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-gray-400 text-sm"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-primary transition-colors" size={18} />
+              <button className="absolute right-0 top-0 h-full w-12 bg-primary flex items-center justify-center rounded-r-lg text-white hover:bg-primary/90 transition-colors">
+                <Search size={20} />
+              </button>
             </div>
           </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-6">
-            <nav className="flex items-center gap-6 mr-2">
-              <Link href="/services" className="text-[11px] font-black uppercase tracking-widest text-white/70 hover:text-primary transition-colors">Services</Link>
-              <Link href="/products" className="text-[11px] font-black uppercase tracking-widest text-white/70 hover:text-primary transition-colors">Store</Link>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              {/* Cart Icon Desktop */}
-              <Link href="/cart" className="relative p-2 text-white hover:text-primary transition-colors group">
-                <ShoppingCart size={22} />
-                {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black h-5 w-5 flex items-center justify-center rounded-full shadow-lg border-2 border-[#081621] animate-in zoom-in">
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
-
-              <Button 
-                variant="ghost" 
-                className="text-white hover:text-primary hover:bg-transparent gap-2 px-0 h-auto rounded-xl"
-                onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-              >
-                <Globe size={18} className="text-primary" />
-                <span className="text-[11px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
-              </Button>
-            </div>
-            
-            <div className="h-8 w-px bg-white/10" />
-
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="hover:bg-white/5 p-1 h-auto rounded-full gap-2 group">
-                    <Avatar className="h-9 w-9 border-2 border-primary/20 transition-all group-hover:border-primary shadow-sm">
-                      <AvatarImage src={user.photoURL || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-black uppercase text-xs">
-                        {user.displayName?.[0] || user.email?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <ChevronDown size={14} className="text-white/40 group-hover:text-primary transition-colors mr-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 mt-2 rounded-[1.5rem] p-2 border-none shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                  <DropdownMenuLabel className="flex flex-col px-4 py-3">
-                    <span className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Logged in as</span>
-                    <span className="font-bold text-gray-900 truncate">{user.displayName || user.email}</span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-50" />
-                  
-                  <DropdownMenuItem asChild className="rounded-xl focus:bg-primary/5 focus:text-primary cursor-pointer p-3">
-                    <Link href="/account/dashboard" className="flex items-center gap-3 w-full font-bold">
-                      <LayoutDashboard size={18} /> {t('personal_dashboard')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl focus:bg-primary/5 focus:text-primary cursor-pointer p-3">
-                    <Link href="/account/history" className="flex items-center gap-3 w-full font-bold">
-                      <History size={18} /> {t('service_history')}
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  {isStaff && (
-                    <>
-                      <DropdownMenuSeparator className="bg-gray-50" />
-                      <DropdownMenuItem asChild className="rounded-xl bg-amber-50 text-amber-700 focus:bg-amber-100 focus:text-amber-800 cursor-pointer p-3 m-1">
-                        <Link href="/staff/dashboard" className="flex items-center gap-3 w-full font-black uppercase text-[10px] tracking-widest">
-                          <HardHat size={18} /> Staff Portal
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-
-                  {isAdmin && (
-                    <>
-                      <DropdownMenuSeparator className="bg-gray-50" />
-                      <DropdownMenuItem asChild className="rounded-xl bg-primary/10 text-primary focus:bg-primary focus:text-white cursor-pointer p-3 m-1">
-                        <Link href="/admin/dashboard" className="flex items-center gap-3 w-full font-black uppercase text-[10px] tracking-widest">
-                          <ShieldCheck size={18} /> {t('admin_portal')}
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  
-                  <DropdownMenuSeparator className="bg-gray-50" />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black flex items-center gap-3 rounded-xl uppercase text-[10px] tracking-widest hover:bg-red-50 focus:bg-red-50 focus:text-destructive cursor-pointer p-3">
-                    <LogOut size={18} /> {t('sign_out')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button asChild variant="ghost" className="text-white hover:text-primary hover:bg-white/5 gap-2 h-11 px-5 rounded-xl font-black uppercase text-[11px] tracking-widest border border-white/10">
-                <Link href="/login">
-                  <ShieldCheck size={18} className="text-primary" />
-                  {t('portal_access')}
+          {/* Actions Section */}
+          <div className="flex items-center gap-2 md:gap-6 shrink-0">
+            {/* User Profile / Login */}
+            <div className="hidden md:block">
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 text-gray-700 hover:text-primary transition-colors font-bold text-sm">
+                      <Avatar className="h-8 w-8 border-2 border-gray-100">
+                        <AvatarImage src={user.photoURL || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-black text-xs uppercase">
+                          {user.displayName?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="max-w-[100px] truncate">{user.displayName?.split(' ')[0] || 'Account'}</span>
+                      <ChevronDown size={14} className="opacity-40" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-2 border-none shadow-2xl">
+                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/dashboard" className="flex items-center gap-3 font-bold"><LayoutDashboard size={18} /> Dashboard</Link></DropdownMenuItem>
+                    {isAdmin && <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-primary/5 text-primary mt-1"><Link href="/admin/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]"><ShieldCheck size={18} /> Admin Portal</Link></DropdownMenuItem>}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black p-3 rounded-lg cursor-pointer"><LogOut size={18} className="mr-2" /> {t('sign_out')}</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/login" className="flex items-center gap-2 text-gray-700 hover:text-primary font-bold text-sm">
+                  <User size={20} className="text-gray-400" />
+                  <span>Login / Signup</span>
                 </Link>
-              </Button>
-            )}
-            
-            <Button asChild className="bg-primary hover:bg-primary/90 font-black px-8 h-12 rounded-[1.25rem] text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:translate-y-[-2px] active:scale-95 uppercase text-[11px] tracking-widest">
-              <Link href="/services"><CalendarCheck size={18} className="mr-2" /> Book Now</Link>
-            </Button>
-          </div>
-          
-          {/* Mobile & Tablet Icons */}
-          <div className="flex lg:hidden items-center gap-4">
-            {/* Cart Icon Mobile */}
-            <Link href="/cart" className="relative p-2 text-white hover:text-primary transition-colors">
-              <ShoppingCart size={22} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full shadow-lg border border-[#081621]">
-                  {itemCount}
-                </span>
               )}
+            </div>
+
+            {/* Mobile User Icon */}
+            <Link href={user ? "/account/dashboard" : "/login"} className="md:hidden p-2 text-gray-600 hover:text-primary transition-colors">
+              <User size={24} />
             </Link>
 
-            <Button variant="ghost" size="sm" className="text-white hover:text-primary p-0 h-auto rounded-xl" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}>
-              <div className="flex flex-col items-center">
-                <Globe size={20} className="text-primary" />
-                <span className="text-[9px] font-black mt-0.5">{language === 'bn' ? "EN" : "বাং"}</span>
-              </div>
-            </Button>
-            
-            <Link href={user ? "/account/dashboard" : "/login"} className="relative group">
-              {user ? (
-                <Avatar className="h-9 w-9 border-2 border-primary shadow-sm">
-                  <AvatarImage src={user.photoURL || undefined} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
-                    {user.displayName?.[0] || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <div className="p-2.5 bg-white/5 rounded-xl border border-white/10 text-white hover:text-primary hover:border-primary/50 transition-all">
-                  <User size={20} />
-                </div>
+            {/* Cart Icon */}
+            <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary transition-colors group">
+              <ShoppingCart size={24} />
+              {itemCount > 0 && (
+                <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-black h-5 w-5 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-in zoom-in">
+                  {itemCount}
+                </span>
               )}
             </Link>
           </div>
