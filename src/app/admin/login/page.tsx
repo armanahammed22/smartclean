@@ -13,6 +13,11 @@ import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRi
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
+/**
+ * Admin Login Page
+ * Simplified to use standard Email and Password fields.
+ * Admin Credentials: smartclean422@gmail.com / admin123
+ */
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,9 +45,13 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      // Logic handled in useEffect for redirection
+      // Post-login redirection is handled by the useEffect above
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Admin Login Failed", description: error.message });
+      toast({ 
+        variant: "destructive", 
+        title: "Authentication Failed", 
+        description: "Invalid credentials. Please check your email and password." 
+      });
       setIsLoading(false);
     }
   };
@@ -77,12 +86,12 @@ export default function AdminLoginPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Security Key</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
+                  placeholder="Enter admin password" 
                   className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
