@@ -42,7 +42,8 @@ const PUBLIC_COLLECTIONS = [
   'homepage_sections',
   'payment_methods',
   'coupons',
-  'service_areas'
+  'service_areas',
+  'delivery_options'
 ];
 
 /**
