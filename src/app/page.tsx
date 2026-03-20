@@ -135,7 +135,7 @@ export default function SmartCleanHomePage() {
                 {cat.name}
               </Link>
             )) : !topNavLoading && (
-              ["Desktop", "Laptop", "Component", "Monitor", "Power", "Phone", "Tablet", "Appliance"].map(cat => (
+              ["Home Cleaning", "Office", "Deep Clean", "Appliances", "Sanitize", "Pest Control"].map(cat => (
                 <Link key={cat} href={`/services?category=${cat}`} className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors px-1">{cat}</Link>
               ))
             )}
@@ -185,7 +185,7 @@ export default function SmartCleanHomePage() {
                               <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Sparkles size={80} /></div>
                             )}
                             <div 
-                              className="absolute inset-0" 
+                              className="absolute inset-0 z-0" 
                               style={{ 
                                 backgroundColor: banner.overlayColor || '#000000',
                                 opacity: (banner.overlayOpacity || 0) / 100 
@@ -234,7 +234,7 @@ export default function SmartCleanHomePage() {
             {sideBanners.length > 0 && (
               <div className="hidden lg:flex lg:col-span-3 flex-col gap-4">
                 {sideBanners.map((banner) => (
-                  <Link key={banner.id} href={banner.buttonLink || '#'} className="flex-1 relative rounded-[1.5rem] overflow-hidden shadow-lg group border border-gray-100">
+                  <Link key={banner.id} href={banner.buttonLink || '#'} className="flex-1 relative rounded-[1.5rem] overflow-hidden shadow-lg group border border-gray-100 bg-white">
                     {banner.imageUrl ? (
                       <Image 
                         src={banner.imageUrl} 
@@ -257,7 +257,7 @@ export default function SmartCleanHomePage() {
         </section>
 
         {/* CATALOG SECTIONS */}
-        <div className="container mx-auto px-4 py-12 space-y-24 pb-32">
+        <div className="container mx-auto px-4 py-8 space-y-16 pb-24">
           
           {/* PROFESSIONAL SERVICES */}
           <section>
