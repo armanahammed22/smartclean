@@ -33,12 +33,6 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 
-const TOP_CATEGORIES = [
-  "Desktop", "Laptop", "Component", "Monitor", "Power", "Phone", "Tablet", 
-  "Office Equipment", "Camera", "Security", "Networking", "Software", 
-  "Server & Storage", "Accessories", "Gadget", "Gaming", "TV", "Appliance"
-];
-
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const { user } = useUser();
@@ -73,6 +67,13 @@ export default function SmartCleanHomePage() {
     limit(2)
   ) : null, [db]);
   const { data: sideBanners, isLoading: sideLoading } = useCollection(sideBannersQuery);
+
+  // Data Fetching: Top Navigation Categories
+  const topNavQuery = useMemoFirebase(() => db ? query(
+    collection(db, 'top_nav_categories'),
+    orderBy('order', 'asc')
+  ) : null, [db]);
+  const { data: topNavCategories } = useCollection(topNavQuery);
 
   // Categorized Products & Services
   const popularProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), where('isPopular', '==', true), limit(5)) : null, [db]);
@@ -110,15 +111,20 @@ export default function SmartCleanHomePage() {
         {/* Top Category Scroller */}
         <div className="bg-white border-b overflow-x-auto no-scrollbar py-2">
           <div className="container mx-auto px-4 flex items-center justify-between gap-6 whitespace-nowrap min-w-max">
-            {TOP_CATEGORIES.map((cat) => (
+            {topNavCategories?.length ? topNavCategories.map((cat) => (
               <Link 
-                key={cat} 
-                href={`/services?category=${cat}`} 
+                key={cat.id} 
+                href={cat.link || `/services?category=${cat.name}`} 
                 className="text-[11px] font-bold text-gray-700 hover:text-primary transition-colors px-1"
               >
-                {cat}
+                {cat.name}
               </Link>
-            ))}
+            )) : (
+              // Fallback static categories
+              ["Desktop", "Laptop", "Component", "Monitor", "Power", "Phone", "Tablet", "Appliance"].map(cat => (
+                <Link key={cat} href={`/services?category=${cat}`} className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors px-1">{cat}</Link>
+              ))
+            )}
           </div>
         </div>
 

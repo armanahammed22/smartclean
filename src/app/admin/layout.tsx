@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -38,7 +39,8 @@ import {
   Palette,
   AlertCircle,
   Search,
-  MessageCircle
+  MessageCircle,
+  List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -174,6 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Palette,
       items: [
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+        { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
         { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon },
         { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2 },
         { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },

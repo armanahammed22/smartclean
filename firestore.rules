@@ -1,3 +1,4 @@
+
 /**
  * Firestore Security Rules
  * Optimized for Smart Clean SaaS - Reliable public access and hardened admin controls.
@@ -43,6 +44,7 @@ service cloud.firestore {
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /product_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /service_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }

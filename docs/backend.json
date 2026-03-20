@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -61,6 +62,17 @@
         "isDefaultForProducts": { "type": "boolean" },
         "isDefaultForServices": { "type": "boolean" }
       }
+    },
+    "TopNavCategory": {
+      "title": "Top Nav Category",
+      "description": "A link in the top horizontal navigation bar.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "link": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "order"]
     }
   },
   "auth": {
@@ -75,6 +87,7 @@
     "/leads/{id}": { "description": "Sales leads." },
     "/employee_profiles/{id}": { "description": "Staff metadata." },
     "/site_settings/{id}": { "description": "Global config." },
+    "/top_nav_categories/{id}": { "schema": "TopNavCategory", "description": "Managed horizontal navigation links." },
     "/staff_availability/{uid}": { "description": "Technician status." },
     "/product_categories/{id}": { "description": "Product hierarchy." },
     "/service_categories/{id}": { "description": "Service hierarchy." },
