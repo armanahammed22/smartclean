@@ -24,7 +24,12 @@ import {
   Trash2,
   Eye,
   Loader2,
-  Zap
+  Zap,
+  CheckSquare,
+  Square,
+  AlertCircle,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -42,6 +47,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function OrdersManagementPage() {
   const { user } = useUser();
@@ -50,6 +56,11 @@ export default function OrdersManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isShipping, setIsShipping] = useState<string | null>(null);
+  
+  // Selection & Bulk State
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<Record<string, 'pending' | 'success' | 'failed'>>({});
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -91,11 +102,9 @@ export default function OrdersManagementPage() {
 
   const shipWithCourier = async (order: any) => {
     if (!order.courierId) {
-      toast({ variant: "destructive", title: "No Courier", description: "Assign a courier provider first." });
-      return;
+      return { success: false, error: "No courier assigned." };
     }
 
-    setIsShipping(order.id);
     try {
       const response = await fetch('/api/courier/create-order', {
         method: 'POST',
@@ -112,17 +121,67 @@ export default function OrdersManagementPage() {
       if (response.ok) {
         await updateDoc(doc(db!, 'orders', order.id), { 
           status: 'Shipped',
-          courierTracking: result.courierResponse?.tracking_number || result.courierResponse?.id || 'N/A'
+          courierTracking: result.courierResponse?.tracking_number || result.courierResponse?.id || result.courierResponse?.consignment_id || 'N/A'
         });
-        toast({ title: "Shipment Created", description: result.message });
+        return { success: true, message: result.message };
       } else {
-        toast({ variant: "destructive", title: "API Failure", description: result.error });
+        return { success: false, error: result.error || "API Failure" };
       }
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Network Error", description: e.message });
-    } finally {
-      setIsShipping(null);
+      return { success: false, error: e.message };
     }
+  };
+
+  const handleSingleShip = async (order: any) => {
+    setIsShipping(order.id);
+    const result = await shipWithCourier(order);
+    if (result.success) {
+      toast({ title: "Shipment Created", description: result.message });
+    } else {
+      toast({ variant: "destructive", title: "Shipping Failed", description: result.error });
+    }
+    setIsShipping(null);
+  };
+
+  const handleBulkShip = async () => {
+    if (selectedOrderIds.length === 0) return;
+    setIsBulkProcessing(true);
+    
+    const newStatuses = { ...bulkStatus };
+    
+    for (const id of selectedOrderIds) {
+      const order = orders?.find(o => o.id === id);
+      if (!order || order.status === 'Shipped' || order.status === 'Delivered') continue;
+      
+      newStatuses[id] = 'pending';
+      setBulkStatus({ ...newStatuses });
+
+      const result = await shipWithCourier(order);
+      
+      if (result.success) {
+        newStatuses[id] = 'success';
+      } else {
+        newStatuses[id] = 'failed';
+      }
+      setBulkStatus({ ...newStatuses });
+    }
+    
+    setIsBulkProcessing(false);
+    toast({ title: "Bulk Processing Complete", description: "Checked all selected orders." });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.length === filteredOrders?.length) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(filteredOrders?.map(o => o.id) || []);
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrderIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
 
   const handleDeleteOrder = async (orderId: string) => {
@@ -148,13 +207,41 @@ export default function OrdersManagementPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Order Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
           <p className="text-muted-foreground text-sm">Full lifecycle product sales control</p>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" className="gap-2 font-bold h-11 shadow-sm"><ShoppingCart size={18} /> POS Order</Button>
         </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      {selectedOrderIds.length > 0 && (
+        <div className="bg-primary/5 border border-primary/20 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-4">
+            <Badge className="bg-primary text-white font-black">{selectedOrderIds.length} SELECTED</Badge>
+            <p className="text-xs font-bold text-gray-600">Ready for bulk logistics processing.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSelectedOrderIds([])} 
+              className="h-9 font-bold rounded-xl"
+            >
+              Clear
+            </Button>
+            <Button 
+              disabled={isBulkProcessing} 
+              onClick={handleBulkShip} 
+              className="h-9 gap-2 font-black uppercase text-xs rounded-xl shadow-lg shadow-primary/20"
+            >
+              {isBulkProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : <Zap size={14} fill="currentColor" />}
+              Bulk Create Shipments
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="relative flex-1">
@@ -174,22 +261,38 @@ export default function OrdersManagementPage() {
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-5 pl-8 text-[10px] uppercase tracking-widest text-gray-500">Order ID</TableHead>
+                <TableHead className="w-[50px] pl-8">
+                  <Checkbox 
+                    checked={selectedOrderIds.length === filteredOrders?.length && filteredOrders?.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-bold py-5 text-[10px] uppercase tracking-widest text-gray-500">Order ID</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500">Customer</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500">Amount</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500">Logistics Partner</TableHead>
-                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500">Action</TableHead>
+                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500 text-center">Action</TableHead>
                 <TableHead className="font-bold text-[10px] uppercase tracking-widest text-gray-500">Status</TableHead>
                 <TableHead className="text-right pr-8"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
               ) : filteredOrders?.length ? (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                    <TableCell className="py-5 pl-8">
+                  <TableRow key={order.id} className={cn(
+                    "hover:bg-gray-50/50 transition-colors group",
+                    selectedOrderIds.includes(order.id) && "bg-primary/5"
+                  )}>
+                    <TableCell className="pl-8">
+                      <Checkbox 
+                        checked={selectedOrderIds.includes(order.id)}
+                        onCheckedChange={() => toggleSelectOrder(order.id)}
+                        disabled={order.status === 'Shipped' || order.status === 'Delivered'}
+                      />
+                    </TableCell>
+                    <TableCell className="py-5">
                       <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
                       <div className="text-[9px] text-muted-foreground mt-1 uppercase font-bold">
                         {order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
@@ -206,7 +309,11 @@ export default function OrdersManagementPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Select defaultValue={order.courierId} onValueChange={(val) => handleAssignCourier(order.id, val)}>
+                      <Select 
+                        defaultValue={order.courierId} 
+                        onValueChange={(val) => handleAssignCourier(order.id, val)}
+                        disabled={order.status === 'Shipped' || order.status === 'Delivered'}
+                      >
                         <SelectTrigger className="h-8 text-[10px] font-bold w-[140px] bg-gray-50 border-none">
                           <SelectValue placeholder="Select Courier" />
                         </SelectTrigger>
@@ -217,17 +324,28 @@ export default function OrdersManagementPage() {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>
-                       <Button 
-                         variant={order.status === 'Shipped' ? "secondary" : "default"}
-                         size="sm" 
-                         disabled={isShipping === order.id || order.status === 'Shipped' || order.status === 'Delivered'}
-                         onClick={() => shipWithCourier(order)}
-                         className="h-8 gap-1.5 text-[9px] font-black uppercase tracking-tighter"
-                       >
-                         {isShipping === order.id ? <Loader2 className="animate-spin h-3 w-3" /> : <Zap size={12} fill="currentColor" />}
-                         {order.status === 'Shipped' ? 'In Transit' : 'Automate Ship'}
-                       </Button>
+                    <TableCell className="text-center">
+                       <div className="flex flex-col items-center gap-1">
+                         <Button 
+                           variant={order.status === 'Shipped' ? "secondary" : "default"}
+                           size="sm" 
+                           disabled={isShipping === order.id || order.status === 'Shipped' || order.status === 'Delivered'}
+                           onClick={() => handleSingleShip(order)}
+                           className="h-8 gap-1.5 text-[9px] font-black uppercase tracking-tighter"
+                         >
+                           {isShipping === order.id ? <Loader2 className="animate-spin h-3 w-3" /> : <Zap size={12} fill="currentColor" />}
+                           {order.status === 'Shipped' ? 'Shipped' : 'Create Shipment'}
+                         </Button>
+                         
+                         {/* Bulk/Result Feedback */}
+                         {bulkStatus[order.id] && (
+                           <div className="animate-in fade-in zoom-in-95">
+                             {bulkStatus[order.id] === 'pending' && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                             {bulkStatus[order.id] === 'success' && <CheckCircle2 className="h-3 w-3 text-green-500" />}
+                             {bulkStatus[order.id] === 'failed' && <XCircle className="h-3 w-3 text-destructive" />}
+                           </div>
+                         )}
+                       </div>
                     </TableCell>
                     <TableCell>
                       <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
@@ -259,7 +377,7 @@ export default function OrdersManagementPage() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow><TableCell colSpan={7} className="text-center py-20 italic text-muted-foreground">No matching orders found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-20 italic text-muted-foreground">No matching orders found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
