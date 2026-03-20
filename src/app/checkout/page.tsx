@@ -34,13 +34,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Loader2, CheckCircle2, CalendarIcon, Wallet, CreditCard, User, MapPin, Clock, Info, ShieldCheck, ShoppingCart, Zap, Phone } from 'lucide-react';
 import { useFirestore, useUser, useAuth, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, query, where, getDocs, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, setDoc, updateDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { PublicLayout } from '@/components/layout/public-layout';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { PublicLayout } from '@/components/layout/public-layout';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -83,6 +81,26 @@ export default function CheckoutPage() {
     form.setValue('paymentMethod', hasServices ? "cash_in_hand" : "cod");
   }, [hasServices, form]);
 
+  // Risk Detection Engine
+  const assessRisk = async (phone: string) => {
+    if (!db) return { level: 'Low', suspicious: false };
+    
+    // Check for recent orders from this phone
+    const recentQ = query(
+      collection(db, 'orders'), 
+      where('customerPhone', '==', phone),
+      orderBy('createdAt', 'desc'),
+      limit(3)
+    );
+    const snap = await getDocs(recentQ);
+    
+    if (snap.docs.length >= 2) {
+      return { level: 'High', suspicious: true }; // Multiple orders in short time
+    }
+    
+    return { level: 'Low', suspicious: false };
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db) return;
     setIsSubmitting(true);
@@ -117,45 +135,10 @@ export default function CheckoutPage() {
         }
       }
 
+      // 2. Risk Detection
+      const riskData = await assessRisk(values.phone);
+
       const collectionName = hasServices ? 'bookings' : 'orders';
-      let assignedTech = null;
-
-      // Smart Auto-Assignment for Services
-      if (hasServices && db) {
-        const serviceId = items.find(i => i.itemType === 'service')?.id;
-        if (serviceId) {
-          const techQuery = query(
-            collection(db, 'employee_profiles'),
-            where('skills', 'array-contains', serviceId),
-            where('status', '==', 'Active')
-          );
-          
-          const techSnap = await getDocs(techQuery);
-          // Sort by rating in-memory to avoid index complexity
-          const candidates = techSnap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
-
-          for (const tech of candidates) {
-            const availQuery = query(
-              collection(db, 'staff_availability'), 
-              where('uid', '==', tech.id), 
-              where('status', '==', 'Available')
-            );
-            const availSnap = await getDocs(availQuery);
-            if (!availSnap.empty) {
-              assignedTech = { id: tech.id, name: tech.name };
-              // Mark technician as busy immediately
-              updateDoc(doc(db, 'staff_availability', tech.id as string), { 
-                status: 'Busy', 
-                updatedAt: serverTimestamp() 
-              });
-              break;
-            }
-          }
-        }
-      }
-
       const orderData = {
         customerId: currentUserId || 'guest',
         customerName: values.name,
@@ -165,14 +148,12 @@ export default function CheckoutPage() {
         items,
         totalPrice: subtotal * 1.08,
         paymentMethod: values.paymentMethod,
-        status: assignedTech ? 'Assigned' : 'New',
-        notes: values.notes,
-        dateTime: values.date?.toISOString() || new Date().toISOString(),
-        timeSlot: values.time,
+        status: 'New',
+        riskLevel: riskData.level,
+        isSuspicious: riskData.suspicious,
+        ipAddress: 'Captured on Server', // Mocked for client-side only
+        deviceInfo: navigator.userAgent,
         createdAt: new Date().toISOString(),
-        employeeId: assignedTech?.id || null,
-        employeeName: assignedTech?.name || null,
-        serviceId: items.find(i => i.itemType === 'service')?.id || null,
         serviceTitle: items.find(i => i.itemType === 'service')?.name || null
       };
 
@@ -253,26 +234,6 @@ export default function CheckoutPage() {
                         )} />
                       </CardContent>
                     </Card>
-
-                    {hasServices && (
-                      <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
-                        <CardHeader className="bg-orange-500 text-white p-8">
-                          <div className="flex items-center gap-3"><div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Clock size={24} /></div><CardTitle className="text-xl font-black uppercase tracking-tight">Schedule Service</CardTitle></div>
-                        </CardHeader>
-                        <CardContent className="p-8"><div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center p-6 bg-orange-50/50 rounded-3xl border border-orange-100">
-                          <FormField control={form.control} name="date" render={({ field }) => (
-                            <FormItem className="flex flex-col"><FormLabel className="text-[10px] font-black uppercase text-orange-700 ml-1">{t('booking_date')}</FormLabel>
-                              <Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("h-14 w-full pl-4 text-left font-bold bg-white rounded-2xl border-orange-200 text-orange-950", !field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP") : <span>{t('pick_date')}</span>}<CalendarIcon className="ml-auto h-5 w-5 opacity-50" /></Button></FormControl></PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 border-none rounded-2xl shadow-2xl" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date()} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>
-                          )} />
-                          <FormField control={form.control} name="time" render={({ field }) => (
-                            <FormItem><FormLabel className="text-[10px] font-black uppercase text-orange-700 ml-1">{t('booking_time')}</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-14 bg-white rounded-2xl border-orange-200 font-bold text-orange-950"><SelectValue placeholder={t('select_time')} /></SelectTrigger></FormControl>
-                                <SelectContent className="rounded-xl"><SelectItem value="morning">{t('morning')}</SelectItem><SelectItem value="afternoon">{t('afternoon')}</SelectItem><SelectItem value="evening">{t('evening')}</SelectItem></SelectContent></Select><FormMessage /></FormItem>
-                          )} />
-                        </div></CardContent>
-                      </Card>
-                    )}
 
                     <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-gray-900 text-white p-8">

@@ -38,6 +38,27 @@
       },
       "required": ["name", "apiEndpoint", "status"]
     },
+    "Order": {
+      "title": "Order",
+      "description": "A product purchase record with risk analytics.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "address": { "type": "string" },
+        "items": { "type": "array" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string" },
+        "courierId": { "type": "string" },
+        "trackingId": { "type": "string" },
+        "riskLevel": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "isSuspicious": { "type": "boolean" },
+        "ipAddress": { "type": "string" },
+        "deviceInfo": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "Service": {
       "title": "Service",
       "description": "A professional cleaning or maintenance offering.",
@@ -52,44 +73,6 @@
         "imageUrl": { "type": "string" }
       },
       "required": ["title", "basePrice", "status"]
-    },
-    "Booking": {
-      "title": "Booking",
-      "description": "A scheduled service appointment.",
-      "type": "object",
-      "properties": {
-        "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "serviceId": { "type": "string" },
-        "dateTime": { "type": "string", "format": "date-time" },
-        "status": { "type": "string" },
-        "totalPrice": { "type": "number" }
-      }
-    },
-    "PaymentMethod": {
-      "title": "Payment Method",
-      "description": "Configuration for a payment gateway.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["cod", "cash", "mobile", "card"] },
-        "accountNumber": { "type": "string" },
-        "instructions": { "type": "string" },
-        "isEnabled": { "type": "boolean" },
-        "isDefaultForProducts": { "type": "boolean" },
-        "isDefaultForServices": { "type": "boolean" }
-      }
-    },
-    "TopNavCategory": {
-      "title": "Top Nav Category",
-      "description": "A link in the top horizontal navigation bar.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "link": { "type": "string" },
-        "order": { "type": "number" }
-      },
-      "required": ["name", "order"]
     }
   },
   "auth": {
@@ -98,30 +81,7 @@
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
     "/services/{id}": { "schema": "Service", "description": "Services catalog." },
-    "/bookings/{id}": { "schema": "Booking", "description": "Service appointments." },
-    "/orders/{id}": { "description": "Product purchase records." },
-    "/users/{uid}": { "description": "User profiles." },
-    "/leads/{id}": { "description": "Sales leads." },
-    "/employee_profiles/{id}": { "description": "Staff metadata." },
-    "/site_settings/{id}": { "description": "Global config." },
-    "/top_nav_categories/{id}": { "schema": "TopNavCategory", "description": "Managed horizontal navigation links." },
-    "/staff_availability/{uid}": { "description": "Technician status." },
-    "/product_categories/{id}": { "description": "Product hierarchy." },
-    "/service_categories/{id}": { "description": "Service hierarchy." },
-    "/brands/{id}": { "description": "Authorized brand list." },
-    "/sub_services/{id}": { "description": "Task add-ons." },
-    "/service_areas/{id}": { "description": "Service regions." },
-    "/marketing_offers/{id}": { "description": "Promotional banners." },
-    "/reusable_features/{id}": { "description": "Feature templates." },
-    "/reusable_specs/{id}": { "description": "Spec templates." },
-    "/variant_types/{id}": { "description": "Variant templates." },
-    "/coupons/{id}": { "description": "Discount codes." },
-    "/payment_methods/{id}": { "schema": "PaymentMethod", "description": "Payment gateways." },
-    "/support_tickets/{id}": { "description": "Help requests." },
-    "/referrals/{id}": { "description": "Affiliate logs." },
-    "/hero_banners/{id}": { "description": "Homepage slider content." },
-    "/homepage_sections/{id}": { "description": "Visibility toggles for main UI." },
-    "/pages_management/{id}": { "description": "CMS for dynamic pages." },
-    "/couriers/{id}": { "schema": "Courier", "description": "Dynamic logistics providers." }
+    "/orders/{id}": { "schema": "Order", "description": "Transactional records." },
+    "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." }
   }
 }
