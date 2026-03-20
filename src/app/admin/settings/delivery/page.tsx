@@ -49,16 +49,22 @@ export default function DeliverySettingsPage() {
     if (!db || !formData.label) return;
     setIsSubmitting(true);
 
+    // Final safety check for NaN before sending to Firestore
+    const submissionData = {
+      ...formData,
+      amount: isNaN(formData.amount) ? 0 : formData.amount
+    };
+
     try {
       if (editingId) {
         await updateDoc(doc(db, 'delivery_options', editingId), {
-          ...formData,
+          ...submissionData,
           updatedAt: new Date().toISOString()
         });
         toast({ title: "Option Updated" });
       } else {
         await addDoc(collection(db, 'delivery_options'), {
-          ...formData,
+          ...submissionData,
           createdAt: new Date().toISOString()
         });
         toast({ title: "Option Created" });
@@ -134,8 +140,11 @@ export default function DeliverySettingsPage() {
                   <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
                   <Input 
                     type="number"
-                    value={formData.amount} 
-                    onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})}
+                    value={isNaN(formData.amount) ? "" : formData.amount} 
+                    onChange={e => {
+                      const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                      setFormData({...formData, amount: val});
+                    }}
                     className="h-12 pl-10 bg-gray-50 border-none rounded-xl font-black text-lg"
                     required
                   />
