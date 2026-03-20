@@ -57,14 +57,6 @@ export default function SmartCleanHomePage() {
   const { data: allProducts, isLoading: productsLoading } = useCollection(productsRef);
   const { data: allServices, isLoading: servicesLoading } = useCollection(servicesRef);
 
-  // Debug Logging
-  React.useEffect(() => {
-    console.log('[Home] Banners loaded:', allBanners?.length || 0);
-    console.log('[Home] Top Nav loaded:', allTopNav?.length || 0);
-    console.log('[Home] Products loaded:', allProducts?.length || 0);
-    console.log('[Home] Services loaded:', allServices?.length || 0);
-  }, [allBanners, allTopNav, allProducts, allServices]);
-
   // In-Memory Processing: Banners
   const mainBanners = useMemo(() => {
     return allBanners
@@ -185,6 +177,7 @@ export default function SmartCleanHomePage() {
                                 fill 
                                 className="object-cover" 
                                 priority
+                                unoptimized
                               />
                             ) : (
                               <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Sparkles size={80} /></div>
@@ -246,6 +239,7 @@ export default function SmartCleanHomePage() {
                         alt={banner.title || 'Side Banner'} 
                         fill 
                         className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                        unoptimized
                       />
                     ) : (
                       <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
@@ -272,7 +266,7 @@ export default function SmartCleanHomePage() {
                   <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col">
                     <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
                       {service.imageUrl ? (
-                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover transition-transform group-hover:scale-105" />
+                        <Image src={service.imageUrl} alt={service.title} fill className="object-cover transition-transform group-hover:scale-105" unoptimized />
                       ) : (
                         <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
                       )}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -40,6 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.name || 'Product Image'}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
           />
         ) : (
           <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">

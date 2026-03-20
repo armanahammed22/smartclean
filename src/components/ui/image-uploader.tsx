@@ -153,6 +153,7 @@ export function ImageUploader({
                   alt="Preview" 
                   fill 
                   className="object-contain p-2 group-hover:scale-105 transition-transform duration-500" 
+                  unoptimized
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <Button variant="secondary" size="sm" className="h-8 text-[10px] font-black">CHANGE FILE</Button>
@@ -202,6 +203,7 @@ export function ImageUploader({
                   alt="URL Preview" 
                   fill 
                   className="object-contain p-2"
+                  unoptimized
                   onError={() => setError('Unable to load image. Ensure the link is direct or public.')}
                 />
                 <Button 
