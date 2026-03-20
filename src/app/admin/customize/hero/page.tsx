@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, deleteDoc, query, orderBy, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,9 @@ import {
   MousePointer2,
   Settings2,
   Columns,
-  Grid
+  Grid,
+  Save,
+  AlertCircle
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -73,7 +75,7 @@ export default function HeroBannersAdminPage() {
   const handleUpdateBanner = async (id: string, data: any) => {
     if (!db) return;
     const docRef = doc(db, 'hero_banners', id);
-    updateDoc(docRef, data).catch(async (err) => {
+    await updateDoc(docRef, data).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: docRef.path,
         operation: 'update',
@@ -112,7 +114,7 @@ export default function HeroBannersAdminPage() {
       </div>
 
       <Tabs defaultValue="main" className="space-y-6">
-        <TabsList className="bg-white border p-1 rounded-xl h-12 w-full max-w-md">
+        <TabsList className="bg-white border p-1 h-12 w-full max-w-md rounded-xl">
           <TabsTrigger value="main" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Layout size={16} /> Main Slider
           </TabsTrigger>
@@ -139,7 +141,7 @@ export default function HeroBannersAdminPage() {
         <TabsContent value="side" className="space-y-8">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold">Side Action Banners ({sideBanners?.length || 0}/2)</h2>
-            <Button onClick={() => handleAddBanner('side')} disabled={sideBanners?.length >= 2} className="gap-2 font-black shadow-lg uppercase text-xs">
+            <Button onClick={() => handleAddBanner('side')} disabled={(sideBanners?.length || 0) >= 2} className="gap-2 font-black shadow-lg uppercase text-xs">
               <Plus size={16} /> Add Side Banner
             </Button>
           </div>
@@ -161,16 +163,47 @@ export default function HeroBannersAdminPage() {
 }
 
 function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onUpdate: any, onDelete: any, isSide: boolean }) {
+  const [localData, setLocalData] = useState({ ...banner });
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalData({ ...banner });
+    setHasChanges(false);
+  }, [banner]);
+
+  const updateLocal = (field: string, val: any) => {
+    setLocalData(prev => ({ ...prev, [field]: val }));
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onUpdate(banner.id, localData);
+      setHasChanges(false);
+      toast({ title: "Banner Saved", description: "Changes are now live on the site." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Save Failed" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border border-gray-100">
+    <Card className={cn(
+      "border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden group border transition-all",
+      hasChanges ? "border-primary/30 ring-1 ring-primary/10 shadow-lg" : "border-gray-100"
+    )}>
       <div className="grid grid-cols-1 lg:grid-cols-12">
         <div className="lg:col-span-5 p-6 bg-gray-50/50 border-r border-gray-100 flex flex-col gap-6">
           <div className="max-w-[350px] mx-auto w-full">
             <ImageUploader 
-              initialUrl={banner.imageUrl}
+              initialUrl={localData.imageUrl}
               label={isSide ? "Banner Image" : "Slide Background (982x500)"}
               aspectRatio={isSide ? "aspect-[1/1]" : "aspect-[982/500]"}
-              onUpload={(url) => onUpdate(banner.id, { imageUrl: url })}
+              onUpload={(url) => updateLocal('imageUrl', url)}
             />
           </div>
           
@@ -178,51 +211,63 @@ function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onU
             <div className="p-4 bg-white rounded-2xl border border-gray-100 space-y-2">
               <Label className="text-[9px] font-black uppercase text-muted-foreground">Status</Label>
               <div className="flex items-center gap-2">
-                <Switch checked={banner.isActive} onCheckedChange={(val) => onUpdate(banner.id, { isActive: val })} />
-                <span className="text-[10px] font-bold">{banner.isActive ? 'LIVE' : 'HIDDEN'}</span>
+                <Switch checked={localData.isActive} onCheckedChange={(val) => updateLocal('isActive', val)} />
+                <span className="text-[10px] font-bold">{localData.isActive ? 'LIVE' : 'HIDDEN'}</span>
               </div>
             </div>
             <div className="p-4 bg-white rounded-2xl border border-gray-100 space-y-2">
               <Label className="text-[9px] font-black uppercase text-muted-foreground">Sort Order</Label>
-              <Input type="number" defaultValue={banner.order} onBlur={(e) => onUpdate(banner.id, { order: Number(e.target.value) })} className="h-8 bg-gray-50 border-none text-xs font-bold" />
+              <Input type="number" value={localData.order} onChange={(e) => updateLocal('order', Number(e.target.value))} className="h-8 bg-gray-50 border-none text-xs font-bold" />
             </div>
           </div>
 
           {!isSide && (
             <div className="space-y-4">
-              <Label className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><Palette size={12} /> Overlay Opacity ({banner.overlayOpacity || 40}%)</Label>
-              <Slider defaultValue={[banner.overlayOpacity || 40]} max={100} step={1} onValueCommit={(val) => onUpdate(banner.id, { overlayOpacity: val[0] })} />
+              <Label className="text-[9px] font-black uppercase text-muted-foreground flex items-center gap-2"><Palette size={12} /> Overlay Opacity ({localData.overlayOpacity || 40}%)</Label>
+              <Slider value={[localData.overlayOpacity || 40]} max={100} step={1} onValueChange={(val) => updateLocal('overlayOpacity', val[0])} />
             </div>
           )}
         </div>
 
         <div className="lg:col-span-7 p-8 space-y-8">
           <div className="flex justify-between items-center">
-            <h3 className="font-black uppercase tracking-widest text-primary text-xs flex items-center gap-2"><Type size={16} /> {isSide ? 'Side Action' : 'Content Settings'}</h3>
-            <Button variant="ghost" size="icon" className="text-destructive h-8 w-8 hover:bg-red-50" onClick={() => onDelete(banner.id)}><Trash2 size={16} /></Button>
+            <div className="flex items-center gap-3">
+              <h3 className="font-black uppercase tracking-widest text-primary text-xs flex items-center gap-2"><Type size={16} /> {isSide ? 'Side Action' : 'Content Settings'}</h3>
+              {hasChanges && <Badge className="bg-amber-500 text-[8px] font-black animate-pulse">UNSAVED CHANGES</Badge>}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-destructive h-8 w-8 hover:bg-red-50" 
+                onClick={() => onDelete(banner.id)}
+              >
+                <Trash2 size={16} />
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase">Main Title</Label>
-                <Input defaultValue={banner.title} onBlur={(e) => onUpdate(banner.id, { title: e.target.value })} className="h-11 bg-gray-50 border-none font-bold" />
+                <Input value={localData.title} onChange={(e) => updateLocal('title', e.target.value)} className="h-11 bg-gray-50 border-none font-bold" />
               </div>
               {!isSide && (
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">Subtitle</Label>
-                  <Textarea defaultValue={banner.subtitle} onBlur={(e) => onUpdate(banner.id, { subtitle: e.target.value })} className="bg-gray-50 border-none min-h-[80px]" />
+                  <Textarea value={localData.subtitle} onChange={(e) => updateLocal('subtitle', e.target.value)} className="bg-gray-50 border-none min-h-[80px]" />
                 </div>
               )}
               {!isSide && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase">Title Color</Label>
-                    <Input type="color" defaultValue={banner.titleColor || '#ffffff'} onBlur={(e) => onUpdate(banner.id, { titleColor: e.target.value })} className="h-10 p-1 bg-gray-50 border-none" />
+                    <Input type="color" value={localData.titleColor || '#ffffff'} onChange={(e) => updateLocal('titleColor', e.target.value)} className="h-10 p-1 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase">Title Size</Label>
-                    <Select defaultValue={banner.titleSize || 'text-4xl'} onValueChange={(val) => onUpdate(banner.id, { titleSize: val })}>
+                    <Select value={localData.titleSize || 'text-4xl'} onValueChange={(val) => updateLocal('titleSize', val)}>
                       <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="text-2xl">Small</SelectItem>
@@ -238,27 +283,27 @@ function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onU
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MousePointer2 size={12}/> Redirection</Label>
-                {!isSide && <Switch checked={banner.isButtonEnabled !== false} onCheckedChange={(val) => onUpdate(banner.id, { isButtonEnabled: val })} />}
+                {!isSide && <Switch checked={localData.isButtonEnabled !== false} onCheckedChange={(val) => updateLocal('isButtonEnabled', val)} />}
               </div>
               {!isSide && (
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">Button Label</Label>
-                  <Input defaultValue={banner.buttonText} onBlur={(e) => onUpdate(banner.id, { buttonText: e.target.value })} className="h-11 bg-gray-50 border-none" />
+                  <Input value={localData.buttonText} onChange={(e) => updateLocal('buttonText', e.target.value)} className="h-11 bg-gray-50 border-none" />
                 </div>
               )}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase">Target Link</Label>
-                <Input defaultValue={banner.buttonLink} onBlur={(e) => onUpdate(banner.id, { buttonLink: e.target.value })} className="h-11 bg-gray-50 border-none" placeholder="/services" />
+                <Input value={localData.buttonLink} onChange={(e) => updateLocal('buttonLink', e.target.value)} className="h-11 bg-gray-50 border-none" placeholder="/services" />
               </div>
               {!isSide && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase">Color</Label>
-                    <Input type="color" defaultValue={banner.buttonColor || '#22c55e'} onBlur={(e) => onUpdate(banner.id, { buttonColor: e.target.value })} className="h-10 p-1 bg-gray-50 border-none" />
+                    <Input type="color" value={localData.buttonColor || '#22c55e'} onChange={(e) => updateLocal('buttonColor', e.target.value)} className="h-10 p-1 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase">Shape</Label>
-                    <Select defaultValue={banner.buttonShape || 'rounded-xl'} onValueChange={(val) => onUpdate(banner.id, { buttonShape: val })}>
+                    <Select value={localData.buttonShape || 'rounded-xl'} onValueChange={(val) => updateLocal('buttonShape', val)}>
                       <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="rounded-none">Square</SelectItem>
@@ -270,6 +315,20 @@ function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onU
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="pt-6 border-t flex justify-end">
+            <Button 
+              disabled={!hasChanges || isSaving} 
+              onClick={handleSave}
+              className={cn(
+                "h-12 px-10 rounded-xl font-black uppercase text-xs tracking-widest transition-all",
+                hasChanges ? "bg-primary shadow-xl shadow-primary/20 scale-105" : "bg-gray-200 text-gray-400"
+              )}
+            >
+              {isSaving ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save size={16} className="mr-2" />}
+              Save Banner Changes
+            </Button>
           </div>
         </div>
       </div>

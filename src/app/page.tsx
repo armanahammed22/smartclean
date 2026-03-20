@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -168,9 +169,9 @@ export default function SmartCleanHomePage() {
                   <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>
                 ) : mainBanners.length > 0 ? (
                   <Carousel className="w-full h-full" opts={{ loop: true }}>
-                    <CarouselContent className="h-full">
+                    <CarouselContent className="h-full flex">
                       {mainBanners.map((banner) => (
-                        <CarouselItem key={banner.id} className="h-full relative">
+                        <CarouselItem key={banner.id} className="h-full min-w-0 shrink-0 grow-0 basis-full relative">
                           <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
                             {banner.imageUrl ? (
                               <Image 
