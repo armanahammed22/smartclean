@@ -15,13 +15,15 @@ import {
   HardHat,
   User,
   History,
-  LogIn
+  LogIn,
+  ShoppingCart
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
+import { useCart } from '@/components/providers/cart-provider';
 import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { 
@@ -38,6 +40,7 @@ import { cn } from '@/lib/utils';
 export function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const { user } = useUser();
+  const { itemCount } = useCart();
   const auth = useAuth();
   const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +77,7 @@ export function Navbar() {
                   fill
                   className="object-contain object-left transition-transform group-hover:scale-105" 
                   priority 
+                  unoptimized
                   data-ai-hint="company logo"
                 />
               ) : (
@@ -110,14 +114,26 @@ export function Navbar() {
               <Link href="/products" className="text-[11px] font-black uppercase tracking-widest text-white/70 hover:text-primary transition-colors">Store</Link>
             </nav>
 
-            <Button 
-              variant="ghost" 
-              className="text-white hover:text-primary hover:bg-transparent gap-2 px-0 h-auto rounded-xl"
-              onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-            >
-              <Globe size={18} className="text-primary" />
-              <span className="text-[11px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
-            </Button>
+            <div className="flex items-center gap-4">
+              {/* Cart Icon Desktop */}
+              <Link href="/cart" className="relative p-2 text-white hover:text-primary transition-colors group">
+                <ShoppingCart size={22} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black h-5 w-5 flex items-center justify-center rounded-full shadow-lg border-2 border-[#081621] animate-in zoom-in">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+
+              <Button 
+                variant="ghost" 
+                className="text-white hover:text-primary hover:bg-transparent gap-2 px-0 h-auto rounded-xl"
+                onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+              >
+                <Globe size={18} className="text-primary" />
+                <span className="text-[11px] font-black uppercase tracking-widest">{language === 'bn' ? "EN" : "বাং"}</span>
+              </Button>
+            </div>
             
             <div className="h-8 w-px bg-white/10" />
 
@@ -196,6 +212,16 @@ export function Navbar() {
           
           {/* Mobile & Tablet Icons */}
           <div className="flex lg:hidden items-center gap-4">
+            {/* Cart Icon Mobile */}
+            <Link href="/cart" className="relative p-2 text-white hover:text-primary transition-colors">
+              <ShoppingCart size={22} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full shadow-lg border border-[#081621]">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
             <Button variant="ghost" size="sm" className="text-white hover:text-primary p-0 h-auto rounded-xl" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}>
               <div className="flex flex-col items-center">
                 <Globe size={20} className="text-primary" />
