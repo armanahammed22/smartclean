@@ -240,7 +240,18 @@ export default function SmartCleanHomePage() {
               <div className="hidden lg:flex lg:col-span-3 flex-col gap-4">
                 {sideBanners.map((banner) => (
                   <Link key={banner.id} href={banner.buttonLink || '#'} className="flex-1 relative rounded-[1.5rem] overflow-hidden shadow-lg group border border-gray-100">
-                    <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                    {banner.imageUrl ? (
+                      <Image 
+                        src={banner.imageUrl} 
+                        alt={banner.title || 'Side Banner'} 
+                        fill 
+                        className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                        <Sparkles size={40} />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
                   </Link>
                 ))}
