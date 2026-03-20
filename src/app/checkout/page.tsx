@@ -249,7 +249,7 @@ export default function CheckoutPage() {
                     </Card>
                   </div>
 
-                  {/* Right Column: Order Summary & Payment */}
+                  {/* Right Column: Order Summary & Payment (Sticky) */}
                   <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
                     <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
                       <CardHeader className="p-8 border-b border-gray-50">
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Payment Section - Moved to Sidebar */}
+                    {/* Payment Section - Positioned below Order Summary */}
                     <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-gray-900 text-white p-6">
                         <div className="flex items-center gap-3">
@@ -338,6 +338,7 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
+                    {/* Place Order Button - Positioned at bottom right */}
                     <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</>
