@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -33,6 +34,7 @@ import {
   CarouselItem
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { CampaignSection } from '@/components/campaigns/campaign-section';
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
@@ -168,6 +170,9 @@ export default function SmartCleanHomePage() {
             </div>
           </div>
         </section>
+
+        {/* MEGA SALE CAMPAIGN SECTION */}
+        <CampaignSection />
 
         {/* CATEGORY GRID - Daraz Mobile Style */}
         <section className="container mx-auto px-3 md:px-4 py-4 md:py-6">

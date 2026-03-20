@@ -73,6 +73,23 @@
         "imageUrl": { "type": "string" }
       },
       "required": ["title", "basePrice", "status"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "A marketing mega sale event.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "bannerImage": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "isActive": { "type": "boolean" },
+        "priority": { "type": "number" },
+        "description": { "type": "string" },
+        "themeColor": { "type": "string" }
+      },
+      "required": ["title", "slug", "startDate", "endDate", "isActive"]
     }
   },
   "auth": {
@@ -82,6 +99,8 @@
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
     "/services/{id}": { "schema": "Service", "description": "Services catalog." },
     "/orders/{id}": { "schema": "Order", "description": "Transactional records." },
-    "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." }
+    "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." },
+    "/campaigns/{id}": { "schema": "Campaign", "description": "Mega sale events." },
+    "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." }
   }
 }

@@ -27,6 +27,29 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface Campaign {
+  id: string;
+  title: string;
+  slug: string;
+  bannerImage: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  priority: number;
+  description: string;
+  themeColor?: string;
+  createdAt: string;
+}
+
+export interface CampaignProduct {
+  id: string;
+  productId: string;
+  discountPercent: number;
+  campaignPrice: number;
+  stockLimit: number;
+  soldCount: number;
+}
+
 export interface CustomerProfile {
   uid: string;
   name: string;
