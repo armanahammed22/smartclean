@@ -56,7 +56,12 @@ export default function CheckoutPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const hasServices = items.some(i => i.itemType === 'service');
 
@@ -165,7 +170,7 @@ export default function CheckoutPage() {
         riskLevel: riskData.level,
         isSuspicious: riskData.suspicious,
         ipAddress: 'Captured on Server',
-        deviceInfo: navigator.userAgent,
+        deviceInfo: typeof window !== 'undefined' ? navigator.userAgent : 'Server',
         createdAt: new Date().toISOString(),
         serviceTitle: items.find(i => i.itemType === 'service')?.name || null
       };
@@ -179,6 +184,14 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (!mounted) return (
+    <PublicLayout>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={48} />
+      </div>
+    </PublicLayout>
+  );
 
   if (items.length === 0) {
     return (

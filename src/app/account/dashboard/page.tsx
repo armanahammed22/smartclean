@@ -1,12 +1,12 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, Calendar, CreditCard, Share2, ArrowRight, Clock, Star, MapPin } from 'lucide-react';
+import { ShoppingBag, Calendar, CreditCard, Share2, ArrowRight, Clock, Star, MapPin, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,11 @@ import { format } from 'date-fns';
 export default function CustomerDashboard() {
   const { user } = useUser();
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
@@ -31,6 +36,12 @@ export default function CustomerDashboard() {
     { label: "Wallet Balance", value: "৳0", icon: CreditCard, color: "text-amber-600", bg: "bg-amber-50" },
     { label: "Affiliate Earnings", value: `৳${profile?.totalEarnings || 0}`, icon: Share2, color: "text-purple-600", bg: "bg-purple-50" },
   ];
+
+  if (!mounted) return (
+    <div className="p-20 text-center">
+      <Loader2 className="animate-spin text-primary mx-auto" size={40} />
+    </div>
+  );
 
   return (
     <div className="space-y-8">

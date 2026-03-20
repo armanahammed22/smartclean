@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -36,6 +37,11 @@ export default function SmartCleanHomePage() {
   const { user } = useUser();
   const { addToCart, setCheckoutOpen } = useCart();
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Role Checks
   const adminRoleRef = useMemoFirebase(() => {
@@ -126,24 +132,32 @@ export default function SmartCleanHomePage() {
         {/* TOP NAV BAR: CATEGORIES */}
         <div className="bg-white border-b overflow-x-auto no-scrollbar py-2">
           <div className="container mx-auto px-4 flex items-center justify-start md:justify-center gap-6 whitespace-nowrap min-w-max">
-            {allTopNav?.length ? allTopNav.sort((a,b) => (a.order||0)-(b.order||0)).map((cat) => (
-              <Link 
-                key={cat.id} 
-                href={cat.link || `/services?category=${cat.name}`} 
-                className="text-[11px] font-bold text-gray-700 hover:text-primary transition-colors px-1"
-              >
-                {cat.name}
-              </Link>
-            )) : !topNavLoading && (
+            {!mounted ? (
               ["Home Cleaning", "Office", "Deep Clean", "Appliances", "Sanitize", "Pest Control"].map(cat => (
-                <Link key={cat} href={`/services?category=${cat}`} className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors px-1">{cat}</Link>
+                <span key={cat} className="text-[11px] font-bold text-gray-400 px-1">{cat}</span>
               ))
+            ) : (
+              <>
+                {allTopNav?.length ? allTopNav.sort((a,b) => (a.order||0)-(b.order||0)).map((cat) => (
+                  <Link 
+                    key={cat.id} 
+                    href={cat.link || `/services?category=${cat.name}`} 
+                    className="text-[11px] font-bold text-gray-700 hover:text-primary transition-colors px-1"
+                  >
+                    {cat.name}
+                  </Link>
+                )) : (
+                  ["Home Cleaning", "Office", "Deep Clean", "Appliances", "Sanitize", "Pest Control"].map(cat => (
+                    <Link key={cat} href={`/services?category=${cat}`} className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors px-1">{cat}</Link>
+                  ))
+                )}
+                {topNavLoading && <Loader2 className="animate-spin text-primary/20 h-4 w-4 ml-2" />}
+              </>
             )}
-            {topNavLoading && <Loader2 className="animate-spin text-primary/20 h-4 w-4" />}
           </div>
         </div>
 
-        {isAdmin && (
+        {mounted && isAdmin && (
           <section className="container mx-auto px-4 py-4">
             <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-xl border border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -162,9 +176,9 @@ export default function SmartCleanHomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
             {/* Main Slider */}
-            <div className={cn("col-span-1", sideBanners.length > 0 ? "lg:col-span-9" : "lg:col-span-12")}>
+            <div className={cn("col-span-1", (mounted && sideBanners.length > 0) ? "lg:col-span-9" : "lg:col-span-12")}>
               <div className="relative aspect-[16/9] md:aspect-[982/500] w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl border border-white/10 bg-white">
-                {bannersLoading ? (
+                {!mounted || bannersLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>
                 ) : mainBanners.length > 0 ? (
                   <Carousel className="w-full h-full" opts={{ loop: true }}>
@@ -231,7 +245,7 @@ export default function SmartCleanHomePage() {
             </div>
 
             {/* Side Banners (Desktop Only) */}
-            {sideBanners.length > 0 && (
+            {mounted && sideBanners.length > 0 && (
               <div className="hidden lg:flex lg:col-span-3 flex-col gap-4">
                 {sideBanners.map((banner) => (
                   <Link key={banner.id} href={banner.buttonLink || '#'} className="flex-1 relative rounded-[1.5rem] overflow-hidden shadow-lg group border border-gray-100 bg-white">
@@ -263,7 +277,7 @@ export default function SmartCleanHomePage() {
           <section>
             <SectionHeader icon={Wrench} title="Expert Services" subtitle="Professional Care" link="/services" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {servicesLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
+              {!mounted || servicesLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
                 activeServices.length > 0 ? activeServices.map((service) => (
                   <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 flex flex-col">
                     <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
@@ -297,7 +311,7 @@ export default function SmartCleanHomePage() {
           <section>
             <SectionHeader icon={TrendingUp} title="Best Sellers" subtitle="Popular Supplies" link="/products" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {productsLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
+              {!mounted || productsLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
                 featuredProducts.length > 0 ? featuredProducts.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 )) : (
@@ -314,7 +328,7 @@ export default function SmartCleanHomePage() {
           <section>
             <SectionHeader icon={Clock} title="New Arrivals" subtitle="Fresh Catalog" link="/products" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {productsLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
+              {!mounted || productsLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-100 animate-pulse" />) : 
                 latestProducts.length > 0 ? latestProducts.map((product) => (
                   <ProductCard key={product.id} product={product as any} />
                 )) : (

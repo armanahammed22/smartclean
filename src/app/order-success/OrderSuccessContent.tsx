@@ -1,18 +1,25 @@
+
 "use client";
 
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, ShieldCheck, Copy, ExternalLink, Mail, Lock } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Copy, ExternalLink, Mail, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge'; // ⚠️ এটা add করবি
+import { Badge } from '@/components/ui/badge';
 
 export default function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const orderId = searchParams.get('id') || 'UNKNOWN';
   const tempPw = searchParams.get('pw');
@@ -22,6 +29,12 @@ export default function OrderSuccessContent() {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied!", description: "Details copied to clipboard." });
   };
+
+  if (!mounted) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F2F4F8]">
+      <Loader2 className="animate-spin text-primary" size={48} />
+    </div>
+  );
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-16 md:py-24">
@@ -88,7 +101,7 @@ export default function OrderSuccessContent() {
                         Login Email
                       </label>
                       <div className="flex justify-between p-4 bg-blue-50 rounded-2xl border">
-                        <span>{userEmail}</span>
+                        <span className="truncate">{userEmail}</span>
                         <Button variant="ghost" size="icon" onClick={() => copyToClipboard(userEmail || '')}>
                           <Copy size={16} />
                         </Button>
