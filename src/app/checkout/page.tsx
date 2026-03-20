@@ -214,7 +214,7 @@ export default function CheckoutPage() {
                 <ShieldCheck size={16} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight leading-none">
                 {t('checkout_title')}
               </h1>
             </header>
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
                   
                   {/* Left Column: Customer Details */}
                   <div className="lg:col-span-7 space-y-8">
-                    <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+                    <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-blue-600 text-white p-8">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
@@ -271,7 +271,6 @@ export default function CheckoutPage() {
                           </FormItem>
                         )} />
                         
-                        {/* Delivery Method Selection */}
                         <div className="space-y-4 pt-4 border-t border-gray-50">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                             <Truck size={14} /> {hasServices ? 'Service Region' : 'Delivery Method'}
@@ -355,7 +354,6 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Payment Section */}
                     <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-gray-900 text-white p-6">
                         <div className="flex items-center gap-3">
@@ -378,7 +376,7 @@ export default function CheckoutPage() {
                                     field.value === m.id ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
                                   )}>
                                     <RadioGroupItem value={m.id} id={m.id} className="sr-only" />
-                                    <label htmlFor={m.id} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm">
+                                    <label htmlFor={m.id} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
                                       <div className={cn(
                                         "p-2 rounded-lg",
                                         field.value === m.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400"
@@ -400,7 +398,6 @@ export default function CheckoutPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Place Order Button */}
                     <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</>

@@ -370,7 +370,6 @@ export function CheckoutModal() {
                   )} />
                 </div>
 
-                {/* Delivery Options Selection */}
                 <div className="space-y-6 pt-6 border-t">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                     <Truck size={14} className="text-primary" /> Delivery / Zone Charges
@@ -444,7 +443,7 @@ export function CheckoutModal() {
               {items.map(item => (
                 <div key={item.id} className="flex justify-between items-start gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase text-[#081621] truncate">{item.name}</p>
+                    <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Qty: {item.quantity}</span>
                   </div>
                   <span className="text-xs font-black text-green-600">৳{(item.price * item.quantity).toLocaleString()}</span>
@@ -452,11 +451,11 @@ export function CheckoutModal() {
               ))}
               
               <div className="pt-4 border-t border-dashed space-y-2">
-                <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>{t('subtotal')}</span>
                   <span>৳{subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>{t('tax')} (8%)</span>
                   <span>৳{(subtotal * 0.08).toLocaleString()}</span>
                 </div>
