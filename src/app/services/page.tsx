@@ -3,12 +3,12 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, X, Wrench, Package } from 'lucide-react';
+import { Loader2, Search, Filter, X, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -21,15 +21,12 @@ export default function ServicesListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
-  // Fetch Services
-  const servicesQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
-  const { data: services, isLoading: sLoading } = useCollection(servicesQuery);
+  // Fetch collections without complex queries to avoid index errors
+  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
 
-  // Fetch Products
-  const productsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('name', 'asc')) : null, [db]);
-  const { data: products, isLoading: pLoading } = useCollection(productsQuery);
+  const { data: services, isLoading: sLoading } = useCollection(servicesRef);
+  const { data: products, isLoading: pLoading } = useCollection(productsRef);
 
   // Unified Categories
   const CATEGORIES = [
@@ -40,11 +37,21 @@ export default function ServicesListPage() {
     { id: 'Tools', label: t('cat_tools') }
   ];
 
-  // Filtered Results
+  // In-Memory Filtering Logic
   const filteredOfferings = useMemo(() => {
     let combined: any[] = [];
-    if (services) combined = [...combined, ...services.map(s => ({ ...s, itemType: 'service' }))];
-    if (products) combined = [...combined, ...products.map(p => ({ ...p, itemType: 'product' }))];
+    if (services) {
+      combined = [...combined, ...services
+        .filter(s => s.status === 'Active')
+        .map(s => ({ ...s, itemType: 'service' }))
+      ];
+    }
+    if (products) {
+      combined = [...combined, ...products
+        .filter(p => p.status === 'Active')
+        .map(p => ({ ...p, itemType: 'product' }))
+      ];
+    }
 
     return combined.filter(item => {
       const matchesSearch = (item.title || item.name)?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,7 +142,7 @@ export default function ServicesListPage() {
                           src={item.imageUrl} 
                           alt={item.title || 'Service Image'} 
                           fill 
-                          className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                          className="object-cover transition-transform duration-500 group-hover:scale-105" 
                         />
                       ) : (
                         <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">

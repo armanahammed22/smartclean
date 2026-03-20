@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, writeBatch, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, writeBatch } from 'firebase/firestore';
 import { 
   Users, 
   Database,
@@ -44,16 +45,15 @@ export default function AdminDashboard() {
   
   const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Strictly guard queries with (isAuthorized) to prevent permission errors
-  const leadsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'leads'), orderBy('createdAt', 'desc'), limit(5)) : null, [db, user, isAuthorized]);
+  // Restricted queries
   const ordersQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'orders'), limit(100)) : null, [db, user, isAuthorized]);
   const bookingsQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'bookings'), limit(100)) : null, [db, user, isAuthorized]);
   const employeesQuery = useMemoFirebase(() => (db && user && isAuthorized) ? query(collection(db, 'employee_profiles'), limit(100)) : null, [db, user, isAuthorized]);
   
+  // Public queries
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), limit(100)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), limit(100)) : null, [db]);
 
-  const { data: recentLeads } = useCollection(leadsQuery);
   const { data: orders } = useCollection(ordersQuery);
   const { data: bookings } = useCollection(bookingsQuery);
   const { data: products } = useCollection(productsQuery);
@@ -66,6 +66,7 @@ export default function AdminDashboard() {
     
     try {
       const batch = writeBatch(db);
+      const now = new Date().toISOString();
 
       // Global Settings
       batch.set(doc(db, 'site_settings', 'global'), {
@@ -78,8 +79,25 @@ export default function AdminDashboard() {
         defaultLanguage: 'bn',
         otpEnabled: false,
         seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
-        seoDescription: 'Expert cleaning services for home and office.'
+        seoDescription: 'Expert cleaning services for home and office.',
+        updatedAt: now
       }, { merge: true });
+
+      // Ensure some default categories exist
+      const catRef = doc(collection(db, 'service_categories'));
+      batch.set(catRef, { name: 'Cleaning', status: 'Active', createdAt: now });
+
+      // Ensure a sample service exists
+      const serviceRef = doc(collection(db, 'services'));
+      batch.set(serviceRef, {
+        title: 'Residential Deep Cleaning',
+        basePrice: 5000,
+        status: 'Active',
+        isPopular: true,
+        duration: '4-6 Hours',
+        description: 'Complete home sanitization and deep cleaning service.',
+        createdAt: now
+      });
 
       await batch.commit();
       toast({ title: "ERP Database Seeded" });

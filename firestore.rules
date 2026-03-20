@@ -38,7 +38,7 @@ service cloud.firestore {
     }
 
     // --- 1. Public Marketplace Access (Everyone can Read) ---
-    // Includes catalogs and site configurations required for guests
+    // Read includes both 'get' (single doc) and 'list' (collection queries)
     
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }

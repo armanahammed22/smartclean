@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -8,20 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, useUser } from '@/firebase';
-import { collection, query, doc, limit, where, orderBy } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { 
   ArrowRight, 
   Wrench, 
   ChevronRight, 
   Loader2, 
-  LayoutDashboard, 
   ShieldCheck,
   Sparkles,
   TrendingUp,
-  Clock,
-  Zap,
-  Package,
-  ShoppingCart
+  Clock
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -36,52 +33,71 @@ export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const { user } = useUser();
   const { addToCart, setCheckoutOpen } = useCart();
-  const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Role Checks
   const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
-  // Data Fetching: Hero Banners (Main)
-  const mainBannersQuery = useMemoFirebase(() => db ? query(
-    collection(db, 'hero_banners'), 
-    where('isActive', '==', true),
-    where('type', '==', 'main'),
-    orderBy('order', 'asc')
-  ) : null, [db]);
-  const { data: mainBanners, isLoading: mainLoading } = useCollection(mainBannersQuery);
+  /**
+   * DATA FETCHING STRATEGY:
+   * We fetch entire collections and handle filtering/sorting in-memory.
+   * This is 100% reliable as it avoids missing index errors and handles missing fields gracefully.
+   */
+  const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
+  const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
+  const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
+  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
 
-  // Data Fetching: Hero Banners (Side)
-  const sideBannersQuery = useMemoFirebase(() => db ? query(
-    collection(db, 'hero_banners'),
-    where('isActive', '==', true),
-    where('type', '==', 'side'),
-    orderBy('order', 'asc'),
-    limit(2)
-  ) : null, [db]);
-  const { data: sideBanners, isLoading: sideLoading } = useCollection(sideBannersQuery);
+  const { data: allBanners, isLoading: bannersLoading } = useCollection(bannersRef);
+  const { data: allTopNav, isLoading: topNavLoading } = useCollection(topNavRef);
+  const { data: allProducts, isLoading: productsLoading } = useCollection(productsRef);
+  const { data: allServices, isLoading: servicesLoading } = useCollection(servicesRef);
 
-  // Data Fetching: Top Navigation Categories
-  const topNavQuery = useMemoFirebase(() => db ? query(
-    collection(db, 'top_nav_categories'),
-    orderBy('order', 'asc')
-  ) : null, [db]);
-  const { data: topNavCategories } = useCollection(topNavQuery);
+  // In-Memory Filtering: Banners
+  const mainBanners = useMemo(() => {
+    return allBanners
+      ?.filter(b => b.isActive && (b.type === 'main' || !b.type))
+      .sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
+  }, [allBanners]);
 
-  // Categorized Products & Services
-  const popularProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), where('isPopular', '==', true), limit(5)) : null, [db]);
-  const recentProductsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('createdAt', 'desc'), limit(5)) : null, [db]);
-  const popularServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), where('isPopular', '==', true), limit(5)) : null, [db]);
+  const sideBanners = useMemo(() => {
+    return allBanners
+      ?.filter(b => b.isActive && b.type === 'side')
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .slice(0, 2) || [];
+  }, [allBanners]);
 
-  const { data: popularProducts, isLoading: pPLoading } = useCollection(popularProductsQuery);
-  const { data: recentProducts, isLoading: rPLoading } = useCollection(recentProductsQuery);
-  const { data: popularServices, isLoading: pSLoading } = useCollection(popularServicesQuery);
+  // In-Memory Filtering: Top Nav
+  const topNavCategories = useMemo(() => {
+    return allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
+  }, [allTopNav]);
+
+  // In-Memory Filtering: Products
+  const popularProducts = useMemo(() => {
+    return allProducts
+      ?.filter(p => p.status === 'Active' && p.isPopular)
+      .slice(0, 5) || [];
+  }, [allProducts]);
+
+  const recentProducts = useMemo(() => {
+    return allProducts
+      ?.filter(p => p.status === 'Active')
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, 5) || [];
+  }, [allProducts]);
+
+  // In-Memory Filtering: Services
+  const popularServices = useMemo(() => {
+    return allServices
+      ?.filter(s => s.status === 'Active') // Show all active services if isPopular is not yet set
+      .slice(0, 5) || [];
+  }, [allServices]);
 
   const handleDirectServiceCheckout = (service: any) => {
     addToCart(service);
@@ -118,12 +134,12 @@ export default function SmartCleanHomePage() {
               >
                 {cat.name}
               </Link>
-            )) : (
-              // Fallback static categories
+            )) : !topNavLoading && (
               ["Desktop", "Laptop", "Component", "Monitor", "Power", "Phone", "Tablet", "Appliance"].map(cat => (
                 <Link key={cat} href={`/services?category=${cat}`} className="text-[11px] font-bold text-gray-400 hover:text-primary transition-colors px-1">{cat}</Link>
               ))
             )}
+            {topNavLoading && <Loader2 className="animate-spin text-primary/20 h-4 w-4" />}
           </div>
         </div>
 
@@ -148,7 +164,7 @@ export default function SmartCleanHomePage() {
             {/* Main Large Slider (Left) */}
             <div className="lg:col-span-9">
               <div className="relative aspect-[982/500] w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl border border-white/10 group bg-gray-100">
-                {mainLoading ? (
+                {bannersLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                     <Loader2 className="animate-spin text-primary" size={40} />
                   </div>
@@ -206,7 +222,7 @@ export default function SmartCleanHomePage() {
                   </Carousel>
                 ) : (
                   <div className="w-full h-full bg-[#081621] flex items-center justify-center text-white">
-                    <p className="font-bold uppercase tracking-widest opacity-20">Main Hero Slider</p>
+                    <p className="font-bold uppercase tracking-widest opacity-20">Main Hero Slider (Add in Admin)</p>
                   </div>
                 )}
               </div>
@@ -218,7 +234,7 @@ export default function SmartCleanHomePage() {
                 const banner = sideBanners?.[idx];
                 return (
                   <div key={idx} className="flex-1 relative rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-lg group bg-white border border-gray-100 min-h-[150px]">
-                    {sideLoading ? (
+                    {bannersLoading ? (
                       <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="animate-spin text-primary/30" size={24} /></div>
                     ) : banner ? (
                       <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
@@ -248,10 +264,10 @@ export default function SmartCleanHomePage() {
           
           {/* POPULAR SERVICES */}
           <section>
-            <SectionHeader icon={TrendingUp} title="Popular Services" subtitle="Highest Rated" link="/services" />
+            <SectionHeader icon={TrendingUp} title="Professional Services" subtitle="Expert Solutions" link="/services" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {pSLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
-                popularServices?.map((service) => (
+              {servicesLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                popularServices?.length > 0 ? popularServices.map((service) => (
                   <div key={service.id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
                     <Link href={`/service/${service.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
                       {service.imageUrl ? (
@@ -270,17 +286,25 @@ export default function SmartCleanHomePage() {
                       </div>
                     </div>
                   </div>
-                ))
+                )) : !servicesLoading && (
+                  <div className="col-span-full py-12 text-center text-muted-foreground bg-white rounded-3xl border-2 border-dashed">
+                    No active services found. Publish services in the Admin Dashboard.
+                  </div>
+                )
               }
             </div>
           </section>
 
           {/* RECENT PRODUCTS */}
           <section>
-            <SectionHeader icon={Clock} title="New Arrivals" subtitle="Recently Added" link="/products" />
+            <SectionHeader icon={Clock} title="Essential Supplies" subtitle="Recently Added" link="/products" />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {rPLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
-                recentProducts?.map((product) => <ProductCard key={product.id} product={product as any} />)
+              {productsLoading ? Array(5).fill(0).map((_, i) => <div key={i} className="aspect-[4/3] rounded-3xl bg-gray-200 animate-pulse" />) : 
+                recentProducts?.length > 0 ? recentProducts.map((product) => <ProductCard key={product.id} product={product as any} />) : !productsLoading && (
+                  <div className="col-span-full py-12 text-center text-muted-foreground bg-white rounded-3xl border-2 border-dashed">
+                    No active products found. Manage inventory in the Admin Dashboard.
+                  </div>
+                )
               }
             </div>
           </section>
