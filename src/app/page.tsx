@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -237,16 +236,16 @@ export default function SmartCleanHomePage() {
         <section className="container mx-auto px-3 md:px-4 py-6 md:py-8">
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <h2 className="text-sm md:text-2xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-2">
-              <Sparkles className="text-primary" size={18} fill="currentColor" /> Just For You
+              <Sparkles className="text-[#22C55E]" size={18} fill="currentColor" /> Just For You
             </h2>
           </div>
           
           {productsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
-              {Array(8).fill(0).map((_, i) => <div key={i} className="aspect-[3/4] bg-white rounded-xl animate-pulse" />)}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-6">
+              {Array(10).fill(0).map((_, i) => <div key={i} className="aspect-[3/4] bg-white rounded-xl animate-pulse" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-6">
               {latestProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
