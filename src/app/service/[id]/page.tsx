@@ -87,8 +87,8 @@ export default function ServiceDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* COLUMN 1: Service Media & Detailed Info (lg:col-span-5) */}
-            <div className="lg:col-span-5 space-y-6">
+            {/* COLUMN 1: Service Media & Info (Reduced from span-5 to span-4) */}
+            <div className="lg:col-span-4 space-y-6">
               <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-200 border-4 border-white group">
                 {service.imageUrl ? (
                   <Image 
@@ -97,6 +97,7 @@ export default function ServiceDetailsPage() {
                     fill 
                     className="object-cover transition-transform duration-700 group-hover:scale-105" 
                     priority
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
@@ -114,7 +115,7 @@ export default function ServiceDetailsPage() {
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
+                      <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
                       <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
                         <div className="flex items-center gap-1 text-amber-500">
                           <Star size={16} fill="currentColor" /> 5.0
@@ -123,7 +124,7 @@ export default function ServiceDetailsPage() {
                         <div className="flex items-center gap-1.5"><Clock size={16} className="text-primary" /> {service.duration || '2-4 Hours'}</div>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600 font-medium leading-relaxed border-t pt-6 whitespace-pre-wrap">
+                    <div className="text-[13px] text-gray-600 font-medium leading-relaxed border-t pt-6 whitespace-pre-wrap">
                       {service.description}
                     </div>
                   </div>
@@ -131,8 +132,8 @@ export default function ServiceDetailsPage() {
               </Card>
             </div>
 
-            {/* COLUMN 2: Additional Services (lg:col-span-4) */}
-            <div className="lg:col-span-4 space-y-6">
+            {/* COLUMN 2: Additional Services (Increased from span-4 to span-5) */}
+            <div className="lg:col-span-5 space-y-6">
               <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white h-full min-h-[400px]">
                 <CardHeader className="p-8 border-b bg-gray-50/30">
                   <div className="flex items-center gap-3">

@@ -88,8 +88,8 @@ export default function ProductDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* Left Side: Product Gallery */}
-            <div className="lg:col-span-7 space-y-6">
+            {/* Left Side: Product Gallery (Reduced size from span-7 to span-5) */}
+            <div className="lg:col-span-5 space-y-6">
               <div className="relative aspect-square rounded-[2.5rem] overflow-hidden shadow-2xl bg-white border-4 border-white flex items-center justify-center group">
                 {allImages.length > 0 ? (
                   <>
@@ -97,8 +97,9 @@ export default function ProductDetailsPage() {
                       src={allImages[activeImageIdx]} 
                       alt={product.name || 'Product Image'} 
                       fill 
-                      className="object-contain p-12 transition-all duration-500" 
+                      className="object-contain p-8 md:p-12 transition-all duration-500" 
                       priority
+                      unoptimized
                     />
                     {allImages.length > 1 && (
                       <div className="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -150,19 +151,19 @@ export default function ProductDetailsPage() {
                       key={idx}
                       onClick={() => setActiveImageIdx(idx)}
                       className={cn(
-                        "relative w-24 h-24 rounded-2xl overflow-hidden border-4 transition-all shrink-0 bg-white",
+                        "relative w-20 h-20 rounded-2xl overflow-hidden border-4 transition-all shrink-0 bg-white",
                         activeImageIdx === idx ? "border-primary shadow-lg scale-105" : "border-transparent opacity-60 hover:opacity-100"
                       )}
                     >
-                      <Image src={img} alt={`Preview ${idx}`} fill className="object-cover" />
+                      <Image src={img} alt={`Preview ${idx}`} fill className="object-cover" unoptimized />
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Right Side: Product Actions */}
-            <div className="lg:col-span-5 space-y-8">
+            {/* Right Side: Product Actions (Increased size from span-5 to span-7) */}
+            <div className="lg:col-span-7 space-y-8">
               <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-8">
                 <div className="space-y-4">
                   <div className="space-y-1">
@@ -277,7 +278,7 @@ export default function ProductDetailsPage() {
                           ))}
                           
                           {/* Dynamic Extra Specs */}
-                          {product.specs?.map((spec: any, i: number) => (
+                          {product.specifications?.map((spec: any, i: number) => (
                             <div key={`dynamic-${i}`} className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex flex-col gap-1.5 transition-all hover:bg-white hover:shadow-md animate-in fade-in">
                               <span className="text-[9px] font-black uppercase text-primary tracking-widest">{spec.key}</span>
                               <span className="text-sm font-black text-gray-900">{spec.value || 'N/A'}</span>
@@ -285,7 +286,7 @@ export default function ProductDetailsPage() {
                           ))}
                         </div>
 
-                        {(!product.specs || product.specs.length === 0) && (
+                        {(!product.specifications || product.specifications.length === 0) && (
                           <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
                             <Box size={40} className="text-gray-300" />
                             <p className="text-sm font-medium text-gray-400 italic">No extra technical data provided for this item.</p>
