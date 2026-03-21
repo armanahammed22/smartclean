@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -14,7 +13,8 @@ import { ProductCard } from '@/components/products/product-card';
 
 export function CampaignSection() {
   const db = useFirestore();
-  const now = new Date().toISOString();
+  // Using useState to stabilize the 'now' timestamp across renders
+  const [now] = useState(() => new Date().toISOString());
 
   // 1. Fetch Active Campaigns
   const campaignsQuery = useMemoFirebase(() => {
@@ -33,8 +33,8 @@ export function CampaignSection() {
   // 2. Fetch all products to match with campaign products
   // Note: For large catalogs, we should fetch only needed products, 
   // but for MVP we use the cache or small set.
-  const productsQuery = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
-  const { data: allProducts } = useCollection(productsQuery);
+  const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
+  const { data: allProducts } = useCollection(productsRef);
 
   // 3. For each campaign, we'd ideally fetch its sub-collection.
   // Since useCollection is a top-level hook, we'll implement a simple one-at-a-time or 

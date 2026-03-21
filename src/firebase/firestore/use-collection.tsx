@@ -27,6 +27,7 @@ export interface UseCollectionResult<T> {
 const PUBLIC_COLLECTIONS = [
   'products', 
   'services', 
+  'campaigns',
   'hero_banners', 
   'site_settings', 
   'pages_management', 
