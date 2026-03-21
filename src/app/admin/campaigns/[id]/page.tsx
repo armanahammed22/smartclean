@@ -48,7 +48,16 @@ export default function CampaignEditorPage() {
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const { data: allProducts } = useCollection(productsRef);
 
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<any>({
+    title: '',
+    slug: '',
+    bannerImage: '',
+    themeColor: '#000000',
+    priority: 0,
+    startDate: '',
+    endDate: '',
+    isActive: false
+  });
 
   useEffect(() => {
     if (campaign) setFormData(campaign);
@@ -125,36 +134,36 @@ export default function CampaignEditorPage() {
             <CardContent className="p-8 space-y-6">
               <ImageUploader 
                 label="Mega Banner (Desktop 1200x400)"
-                initialUrl={formData.bannerImage}
+                initialUrl={formData.bannerImage || ''}
                 onUpload={(url) => setFormData({ ...formData, bannerImage: url })}
                 aspectRatio="aspect-[21/7]"
               />
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase">Campaign Title</Label>
-                <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 bg-gray-50 border-none font-bold" />
+                <Input value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="h-12 bg-gray-50 border-none font-bold" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase">URL Slug</Label>
-                <Input value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="h-12 bg-gray-50 border-none font-mono text-xs" />
+                <Input value={formData.slug || ''} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="h-12 bg-gray-50 border-none font-mono text-xs" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">Theme Color</Label>
-                  <Input type="color" value={formData.themeColor} onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })} className="h-12 p-1 bg-gray-50 border-none" />
+                  <Input type="color" value={formData.themeColor || '#000000'} onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })} className="h-12 p-1 bg-gray-50 border-none" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">Priority (High first)</Label>
-                  <Input type="number" value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })} className="h-12 bg-gray-50 border-none" />
+                  <Input type="number" value={formData.priority || 0} onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })} className="h-12 bg-gray-50 border-none" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">Start Date</Label>
-                  <Input type="datetime-local" value={formData.startDate?.slice(0, 16)} onChange={(e) => setFormData({ ...formData, startDate: new Date(e.target.value).toISOString() })} className="h-12 bg-gray-50 border-none text-xs" />
+                  <Input type="datetime-local" value={formData.startDate?.slice(0, 16) || ''} onChange={(e) => setFormData({ ...formData, startDate: e.target.value ? new Date(e.target.value).toISOString() : '' })} className="h-12 bg-gray-50 border-none text-xs" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase">End Date</Label>
-                  <Input type="datetime-local" value={formData.endDate?.slice(0, 16)} onChange={(e) => setFormData({ ...formData, endDate: new Date(e.target.value).toISOString() })} className="h-12 bg-gray-50 border-none text-xs" />
+                  <Input type="datetime-local" value={formData.endDate?.slice(0, 16) || ''} onChange={(e) => setFormData({ ...formData, endDate: e.target.value ? new Date(e.target.value).toISOString() : '' })} className="h-12 bg-gray-50 border-none text-xs" />
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100">
@@ -162,7 +171,7 @@ export default function CampaignEditorPage() {
                   <Label className="text-xs font-black uppercase text-red-900">Active Status</Label>
                   <p className="text-[9px] font-bold text-red-700">VISIBLE TO CUSTOMERS IF ON</p>
                 </div>
-                <Switch checked={formData.isActive} onCheckedChange={(val) => setFormData({ ...formData, isActive: val })} />
+                <Switch checked={!!formData.isActive} onCheckedChange={(val) => setFormData({ ...formData, isActive: val })} />
               </div>
               <Button onClick={handleSaveConfig} disabled={isSaving} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight bg-red-600 hover:bg-red-700 text-white shadow-xl shadow-red-600/20">
                 {isSaving ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
@@ -212,8 +221,8 @@ export default function CampaignEditorPage() {
                           <Label className="text-[8px] font-black uppercase text-red-500">Sale Price</Label>
                           <Input 
                             type="number" 
-                            defaultValue={item.campaignPrice} 
-                            onBlur={(e) => updateItem(item.id, 'campaignPrice', parseFloat(e.target.value))}
+                            defaultValue={item.campaignPrice || 0} 
+                            onBlur={(e) => updateItem(item.id, 'campaignPrice', parseFloat(e.target.value) || 0)}
                             className="h-9 bg-white font-black text-xs" 
                           />
                         </div>
@@ -221,8 +230,8 @@ export default function CampaignEditorPage() {
                           <Label className="text-[8px] font-black uppercase text-red-500">Discount %</Label>
                           <Input 
                             type="number" 
-                            defaultValue={item.discountPercent} 
-                            onBlur={(e) => updateItem(item.id, 'discountPercent', parseFloat(e.target.value))}
+                            defaultValue={item.discountPercent || 0} 
+                            onBlur={(e) => updateItem(item.id, 'discountPercent', parseFloat(e.target.value) || 0)}
                             className="h-9 bg-white font-black text-xs" 
                           />
                         </div>
