@@ -19,7 +19,6 @@ import { Product } from '@/types';
  */
 export default function CampaignLandingPage() {
   const params = useParams();
-  // Next.js uses the folder name as the key. We are using 'slug' as the primary key.
   const identifier = params.slug as string;
   
   const router = useRouter();
@@ -75,7 +74,7 @@ export default function CampaignLandingPage() {
       return {
         ...base,
         price: ci.campaignPrice || base.price,
-        regularPrice: base.price, // standard price becomes regular price during sale
+        regularPrice: base.price, 
         isCampaignItem: true,
         discountPercent: ci.discountPercent
       };
@@ -106,7 +105,6 @@ export default function CampaignLandingPage() {
   return (
     <PublicLayout>
       <div className="bg-[#F9FAFB] min-h-screen pb-20">
-        
         {/* MEGA BANNER */}
         <div className="relative aspect-[21/10] md:aspect-[21/6] w-full overflow-hidden">
           <Image src={campaign.bannerImage} alt={campaign.title} fill className="object-cover" priority unoptimized />
@@ -171,7 +169,6 @@ export default function CampaignLandingPage() {
             </div>
           )}
         </div>
-
       </div>
     </PublicLayout>
   );
