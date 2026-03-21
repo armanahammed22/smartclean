@@ -19,8 +19,8 @@ import { Product } from '@/types';
  */
 export default function CampaignLandingPage() {
   const params = useParams();
-  // Next.js uses the folder name as the key. If you renamed the folder to [slug], use slug.
-  const identifier = (params.slug || params.id) as string;
+  // Next.js uses the folder name as the key. We are using 'slug' as the primary key.
+  const identifier = params.slug as string;
   
   const router = useRouter();
   const db = useFirestore();
@@ -75,7 +75,7 @@ export default function CampaignLandingPage() {
       return {
         ...base,
         price: ci.campaignPrice || base.price,
-        regularPrice: base.price, // Standard price becomes regular price during sale
+        regularPrice: base.price, // standard price becomes regular price during sale
         isCampaignItem: true,
         discountPercent: ci.discountPercent
       };
@@ -86,7 +86,7 @@ export default function CampaignLandingPage() {
 
   if (isCampaignLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
+      <Loader2 className="animate-spin text-primary mb-4" size={48} />
       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Mega Sale...</p>
     </div>
   );
