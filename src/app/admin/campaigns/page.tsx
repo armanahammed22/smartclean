@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -22,6 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function CampaignsAdminPage() {
@@ -45,7 +45,7 @@ export default function CampaignsAdminPage() {
     endDate.setDate(now.getDate() + 7);
 
     try {
-      const docRef = await addDoc(collection(db, 'campaigns'), {
+      await addDoc(collection(db, 'campaigns'), {
         title: 'New Campaign Event',
         slug: 'sale-' + Date.now(),
         bannerImage: 'https://picsum.photos/seed/campaign/1200/400',
@@ -139,7 +139,7 @@ export default function CampaignsAdminPage() {
                   <TableCell className="py-5 pl-8">
                     <div className="flex items-center gap-4">
                       <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border shrink-0">
-                        <Image src={c.bannerImage} alt={c.title} fill className="object-cover" />
+                        <Image src={c.bannerImage} alt={c.title} fill className="object-cover" unoptimized />
                       </div>
                       <div>
                         <div className="font-black text-gray-900 uppercase text-xs leading-none mb-1">{c.title}</div>
