@@ -40,7 +40,8 @@ import {
   AlertCircle,
   Search,
   MessageCircle,
-  List
+  List,
+  Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -157,6 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "OFFER & PROMOTION",
       icon: Tag,
       items: [
+        { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
         { name: "Marketing Hub", href: '/admin/marketing', icon: Zap },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]
