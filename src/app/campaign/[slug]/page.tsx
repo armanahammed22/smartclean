@@ -1,21 +1,27 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 import { ProductCard } from '@/components/products/product-card';
-import { Loader2, ArrowLeft, Zap, ShoppingCart, ShoppingBag } from 'lucide-react';
+import { Loader2, ArrowLeft, Zap, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product } from '@/types';
 
+/**
+ * Unified Campaign Landing Page
+ * Handles both SEO slugs and fallback ID lookups.
+ */
 export default function CampaignLandingPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  // Next.js uses the folder name as the key. If you renamed the folder to [slug], use slug.
+  const identifier = (params.slug || params.id) as string;
+  
   const router = useRouter();
   const db = useFirestore();
   const [mounted, setMounted] = useState(false);
@@ -24,16 +30,32 @@ export default function CampaignLandingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Fetch Campaign Metadata
-  const campaignQuery = useMemoFirebase(() => {
-    if (!db || !slug) return null;
-    return query(collection(db, 'campaigns'), where('slug', '==', slug), limit(1));
-  }, [db, slug]);
+  // 1. Fetch Campaign: Try slug match first
+  const campaignBySlugQuery = useMemoFirebase(() => {
+    if (!db || !identifier) return null;
+    return query(collection(db, 'campaigns'), where('slug', '==', identifier), limit(1));
+  }, [db, identifier]);
 
-  const { data: campaigns, isLoading: cLoading } = useCollection(campaignQuery);
-  const campaign = campaigns?.[0];
+  const { data: slugCampaigns, isLoading: slugLoading } = useCollection(campaignBySlugQuery);
+  
+  // 2. Fetch Campaign: Fallback to direct ID match
+  const campaignByIdRef = useMemoFirebase(() => {
+    if (!db || !identifier) return null;
+    return doc(db, 'campaigns', identifier);
+  }, [db, identifier]);
+  
+  const { data: idCampaign, isLoading: idLoading } = useDoc(campaignByIdRef);
 
-  // 2. Fetch Campaign Products
+  // 3. Determine the final campaign object
+  const campaign = useMemo(() => {
+    if (slugCampaigns && slugCampaigns.length > 0) return slugCampaigns[0];
+    if (idCampaign) return idCampaign;
+    return null;
+  }, [slugCampaigns, idCampaign]);
+
+  const isCampaignLoading = slugLoading && idLoading;
+
+  // 4. Fetch Campaign Products (Sub-collection)
   const campaignProductsQuery = useMemoFirebase(() => {
     if (!db || !campaign) return null;
     return collection(db, 'campaigns', campaign.id, 'products');
@@ -41,7 +63,7 @@ export default function CampaignLandingPage() {
 
   const { data: campaignItems, isLoading: itemsLoading } = useCollection(campaignProductsQuery);
 
-  // 3. Fetch Master Products
+  // 5. Fetch All Products to merge details
   const allProductsQuery = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const { data: allProducts } = useCollection(allProductsQuery);
 
@@ -53,7 +75,7 @@ export default function CampaignLandingPage() {
       return {
         ...base,
         price: ci.campaignPrice || base.price,
-        regularPrice: base.price,
+        regularPrice: base.price, // Standard price becomes regular price during sale
         isCampaignItem: true,
         discountPercent: ci.discountPercent
       };
@@ -62,7 +84,7 @@ export default function CampaignLandingPage() {
 
   if (!mounted) return null;
 
-  if (cLoading) return (
+  if (isCampaignLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <Loader2 className="animate-spin text-red-600 mb-4" size={48} />
       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Mega Sale...</p>
