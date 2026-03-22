@@ -15,7 +15,7 @@ import Link from 'next/link';
 
 /**
  * Admin Login Page
- * Simplified to use standard Email and Password fields.
+ * Standardized to handle Firebase v11 Authentication.
  * Admin Credentials: smartclean422@gmail.com / admin123
  */
 export default function AdminLoginPage() {
@@ -30,27 +30,54 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
-  const { data: adminRole } = useDoc(adminRef);
+  const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
+  const { data: adminRole, isLoading: roleLoading } = useDoc(adminRef);
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
 
   useEffect(() => {
-    if (user && isAdmin) {
-      router.push('/admin/dashboard');
+    if (user && !roleLoading) {
+      if (isAdmin) {
+        router.push('/admin/dashboard');
+      } else {
+        toast({ 
+          variant: "destructive", 
+          title: "Access Denied", 
+          description: "This account does not have administrative privileges." 
+        });
+      }
     }
-  }, [user, isAdmin, router]);
+  }, [user, isAdmin, roleLoading, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) {
+      toast({ variant: "destructive", title: "Auth Error", description: "Firebase Auth service is unavailable." });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      // Post-login redirection is handled by the useEffect above
+      // Standardize email for consistency
+      const cleanEmail = email.trim().toLowerCase();
+      await signInWithEmailAndPassword(auth, cleanEmail, password);
+      // Redirection is handled by the useEffect watching the user state
     } catch (error: any) {
+      console.error("Admin Login Error:", error.code, error.message);
+      
+      let errorMessage = "Invalid credentials. Please check your email and password.";
+      
+      if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "Email/Password provider is not enabled in Firebase Console.";
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your connection and ensure your domain is whitelisted in Firebase.";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many failed attempts. Account temporarily locked.";
+      }
+
       toast({ 
         variant: "destructive", 
         title: "Authentication Failed", 
-        description: "Invalid credentials. Please check your email and password." 
+        description: errorMessage
       });
       setIsLoading(false);
     }

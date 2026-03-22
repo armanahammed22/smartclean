@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -48,13 +47,19 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth!, email.trim(), password);
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
       toast({ title: "Welcome Back!", description: "Signed in successfully." });
       router.push('/account/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Login Failed", description: error.message });
+      console.error("Login Error:", error.code, error.message);
+      toast({ 
+        variant: "destructive", 
+        title: "Login Failed", 
+        description: error.message || "Invalid credentials." 
+      });
     } finally {
       setIsLoading(false);
     }
