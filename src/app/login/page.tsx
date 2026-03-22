@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -32,13 +33,13 @@ export default function LoginPage() {
   const { t } = useLanguage();
 
   // Role Checks for Authenticated View
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
-  const adminRef = useMemoFirebase(() => user ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
+  const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
   
-  const staffRef = useMemoFirebase(() => user ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
+  const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRef);
 
   const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
@@ -49,7 +50,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await signInWithEmailAndPassword(auth!, email.trim(), password);
       toast({ title: "Welcome Back!", description: "Signed in successfully." });
       router.push('/account/dashboard');
     } catch (error: any) {
@@ -98,8 +99,10 @@ export default function LoginPage() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.refresh();
+    if (auth) {
+      await signOut(auth);
+      router.refresh();
+    }
   };
 
   return (

@@ -13,6 +13,10 @@ export async function POST(req: NextRequest) {
     const { eventName, eventId, payload } = await req.json();
     const { firestore } = initializeFirebase();
 
+    if (!firestore) {
+      return NextResponse.json({ status: 'Firestore Unavailable' }, { status: 500 });
+    }
+
     // 1. Fetch Marketing Settings
     const settingsSnap = await getDoc(doc(firestore, 'site_settings', 'marketing'));
     const config = settingsSnap.data();

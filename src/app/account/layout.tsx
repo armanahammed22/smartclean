@@ -32,7 +32,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile, isLoading: profileLoading, error: profileError } = useDoc(profileRef);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   // Active Purge: Logout banned or restricted users automatically
   const isRestricted = profile?.status && profile.status !== 'active';
   useEffect(() => {
-    if (!isUserLoading && !profileLoading && user && (isRestricted || profileError)) {
+    if (!isUserLoading && !profileLoading && user && (isRestricted || profileError) && auth) {
       const reason = isRestricted ? `Account ${profile.status}` : "Session Error";
       toast({ variant: "destructive", title: "Security Purge", description: `${reason}. Please contact support.` });
       signOut(auth).then(() => {
@@ -62,8 +62,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   ];
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
+    if (auth) {
+      await signOut(auth);
+      router.push('/login');
+    }
   };
 
   if (isUserLoading || (user && profileLoading)) {

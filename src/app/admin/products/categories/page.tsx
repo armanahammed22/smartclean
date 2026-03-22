@@ -2,26 +2,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, addDoc, doc, deleteDoc } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Trash2, 
-  Edit, 
-  Tags, 
-  ChevronRight, 
-  Loader2,
   FolderTree,
   LayoutGrid,
   Layers,
-  ArrowRight,
-  MoreVertical,
   ChevronDown,
-  FolderPlus
+  FolderPlus,
+  Loader2,
+  ChevronRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -32,12 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,12 +40,12 @@ export default function ProductCategoriesPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [activeLevel, setActiveLevel] = useState<Level>('main');
-  const [formData, setFormData] = useState({ name: '', parentId: 'none' });
+  const [formData, setFormData] = useState({ name: '', parentId: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedCats, setExpandedCats] = useState<string[]>([]);
   const [expandedSubs, setExpandedSubs] = useState<string[]>([]);
 
-  // Real-time Collections
+  // Queries
   const catsQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('order', 'asc')) : null, [db]);
   const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('order', 'asc')) : null, [db]);
   const childsQuery = useMemoFirebase(() => db ? query(collection(db, 'childcategories'), orderBy('order', 'asc')) : null, [db]);
@@ -84,38 +74,36 @@ export default function ProductCategoriesPage() {
 
     try {
       await addDoc(collection(db, colName), payload);
-      setFormData({ name: '', parentId: 'none' });
-      toast({ title: `${activeLevel.toUpperCase()} Category Created` });
+      setFormData({ name: '', parentId: '' });
+      toast({ title: "Hierarchy Updated", description: `${formData.name} added to Level ${activeLevel === 'main' ? '1' : activeLevel === 'sub' ? '2' : '3'}` });
     } catch (e) {
-      toast({ variant: "destructive", title: "Creation Failed" });
+      toast({ variant: "destructive", title: "Action Failed" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const deleteItem = async (level: Level, id: string) => {
-    if (!db || !confirm(`Delete this ${level} category? This may orphan child items.`)) return;
+    if (!db || !confirm(`Delete this ${level} category?`)) return;
     const colName = level === 'main' ? 'categories' : level === 'sub' ? 'subcategories' : 'childcategories';
     await deleteDoc(doc(db, colName, id));
-    toast({ title: "Deleted Successfully" });
+    toast({ title: "Item Removed" });
   };
 
   const toggleCat = (id: string) => setExpandedCats(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   const toggleSub = (id: string) => setExpandedSubs(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
 
-  const isLoading = catsLoading;
-
   return (
     <div className="space-y-8 pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Category Hierarchy</h1>
-          <p className="text-muted-foreground text-sm font-medium">Manage your 3-level marketplace structure</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Taxonomy Engine</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage the 3-level hierarchical structure of your marketplace</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* ADD FORM SECTION */}
+        {/* ADD FORM */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white sticky top-24">
             <CardHeader className="bg-[#081621] text-white p-6">
@@ -126,30 +114,30 @@ export default function ProductCategoriesPage() {
             <CardContent className="p-6 pt-8">
               <form onSubmit={handleAdd} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Hierarchy Level</label>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Select Tier</label>
                   <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-xl">
                     {(['main', 'sub', 'child'] as Level[]).map(l => (
                       <button 
                         key={l}
                         type="button"
-                        onClick={() => { setActiveLevel(l); setFormData({ ...formData, parentId: 'none' }); }}
+                        onClick={() => { setActiveLevel(l); setFormData({ ...formData, parentId: '' }); }}
                         className={cn(
                           "py-2 text-[9px] font-black uppercase rounded-lg transition-all",
                           activeLevel === l ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
                         )}
                       >
-                        {l === 'main' ? 'L1' : l === 'sub' ? 'L2' : 'L3'}
+                        {l === 'main' ? 'Level 1' : l === 'sub' ? 'Level 2' : 'Level 3'}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category Name</label>
+                  <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Label Name</label>
                   <Input 
                     value={formData.name} 
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={activeLevel === 'main' ? "e.g. Electronics" : activeLevel === 'sub' ? "e.g. Mobile" : "e.g. Smartphones"}
+                    placeholder="e.g. Smart Phones"
                     className="h-12 bg-gray-50 border-none rounded-xl font-bold"
                     required
                   />
@@ -158,11 +146,11 @@ export default function ProductCategoriesPage() {
                 {activeLevel !== 'main' && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                     <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
-                      {activeLevel === 'sub' ? 'Parent Category' : 'Parent Subcategory'}
+                      {activeLevel === 'sub' ? 'Assign to Level 1' : 'Assign to Level 2'}
                     </label>
                     <Select value={formData.parentId} onValueChange={v => setFormData({ ...formData, parentId: v })}>
                       <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
-                        <SelectValue placeholder="Select Parent" />
+                        <SelectValue placeholder="Select Parent..." />
                       </SelectTrigger>
                       <SelectContent>
                         {activeLevel === 'sub' ? (
@@ -175,29 +163,26 @@ export default function ProductCategoriesPage() {
                   </div>
                 )}
 
-                <Button type="submit" disabled={isSubmitting || (activeLevel !== 'main' && formData.parentId === 'none')} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
+                <Button type="submit" disabled={isSubmitting || (activeLevel !== 'main' && !formData.parentId)} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={20} className="mr-2" />}
-                  Create {activeLevel}
+                  Deploy {activeLevel === 'main' ? 'L1' : activeLevel === 'sub' ? 'L2' : 'L3'} Item
                 </Button>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {/* TREE VIEW SECTION */}
+        {/* TREE VIEW */}
         <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between px-2">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-              <FolderTree size={16} /> Structure Explorer
+              <FolderTree size={16} /> Hierarchy Explorer
             </h2>
-            <Badge variant="outline" className="bg-white text-primary border-primary/20 font-black text-[9px] uppercase">{categories?.length || 0} DEPARTMENTS</Badge>
+            <Badge variant="outline" className="bg-white text-primary border-primary/20 font-black text-[9px] uppercase">{categories?.length || 0} TOTAL L1</Badge>
           </div>
 
-          {isLoading ? (
-            <div className="p-20 text-center flex flex-col items-center gap-3">
-              <Loader2 className="animate-spin text-primary" size={32} />
-              <span className="text-muted-foreground font-bold text-[10px] uppercase">Syncing Taxonomy...</span>
-            </div>
+          {catsLoading ? (
+            <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>
           ) : (
             <div className="space-y-4">
               {categories?.map((cat) => (
@@ -242,9 +227,6 @@ export default function ProductCategoriesPage() {
                                   <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">{sub.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="text-[7px] font-black bg-blue-50/30 text-blue-400 border-none">
-                                    {childcategories?.filter(c => c.subcategoryId === sub.id).length || 0} CHILDS
-                                  </Badge>
                                   <button onClick={() => deleteItem('sub', sub.id)} className="text-destructive p-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
                                     <Trash2 size={12} />
                                   </button>
@@ -263,18 +245,10 @@ export default function ProductCategoriesPage() {
                                     </button>
                                   </div>
                                 ))}
-                                {childcategories?.filter(c => c.subcategoryId === sub.id).length === 0 && (
-                                  <p className="text-[10px] text-muted-foreground italic pl-4">No terminal categories defined.</p>
-                                )}
                               </CollapsibleContent>
                             </div>
                           </Collapsible>
                         ))}
-                        {subcategories?.filter(s => s.categoryId === cat.id).length === 0 && (
-                          <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-xl text-muted-foreground text-xs italic">
-                            Empty branch. Use L2 creation to expand.
-                          </div>
-                        )}
                       </CollapsibleContent>
                     </CardContent>
                   </Card>

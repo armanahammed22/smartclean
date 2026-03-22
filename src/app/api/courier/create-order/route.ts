@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
 
     const { firestore } = initializeFirebase();
     
+    if (!firestore) {
+      return NextResponse.json({ error: 'Firestore services unavailable' }, { status: 500 });
+    }
+
     // 1. Fetch Courier Config
     const courierDoc = await getDoc(doc(firestore, 'couriers', courierId));
     if (!courierDoc.exists()) {

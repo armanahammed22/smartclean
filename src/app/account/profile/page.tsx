@@ -18,8 +18,8 @@ export default function ProfileSettingsPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Updated to 'users' collection
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
+  // Updated to 'users' collection with safety check for db and user
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   const [formData, setFormData] = useState({

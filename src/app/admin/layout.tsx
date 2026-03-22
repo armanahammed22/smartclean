@@ -40,13 +40,18 @@ import {
   LayoutGrid,
   Target,
   TicketPercent,
-  Image as ImageIcon
+  ImageIcon,
+  ShieldAlert,
+  Wrench,
+  Layers,
+  HardHat,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, where } from 'firebase/firestore';
 import {
   Sheet,
   SheetContent,
@@ -83,6 +88,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+
+  // Real-time unresolved error count for badge
+  const pendingErrorsQuery = useMemoFirebase(() => {
+    if (!db || !isAuthorized) return null;
+    return query(collection(db, 'error_logs'), where('status', '==', 'pending'));
+  }, [db, isAuthorized]);
+  const { data: pendingErrors } = useCollection(pendingErrorsQuery);
 
   useEffect(() => {
     if (isLoginPage) return;
@@ -129,6 +141,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Products", href: '/admin/products', icon: Box },
         { name: "Categories", href: '/admin/products/categories', icon: Tags },
         { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+      ]
+    },
+    {
+      id: 'services',
+      title: "SERVICES",
+      icon: Wrench,
+      items: [
+        { name: "Service List", href: '/admin/services', icon: Wrench },
+        { name: "Sub Services", href: '/admin/services/sub-services', icon: Layers },
+        { name: "Service Areas", href: '/admin/areas', icon: Globe },
+      ]
+    },
+    {
+      id: 'crm',
+      title: "CRM & USERS",
+      icon: Users,
+      items: [
+        { name: "Customer Directory", href: '/admin/customers', icon: Users },
+        { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
+        { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
+        { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
       ]
     },
     {
@@ -185,6 +218,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Payments", href: '/admin/payments', icon: Wallet },
         { name: "Delivery Settings", href: '/admin/settings/delivery', icon: Truck },
         { name: "Settings", href: '/admin/settings', icon: Settings },
+        { 
+          name: t('item_error_logs'), 
+          href: '/admin/error-logs', 
+          icon: ShieldAlert,
+          badge: pendingErrors?.length || 0 
+        },
       ]
     },
     {
@@ -286,6 +325,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       >
                         <item.icon size={16} className={cn("shrink-0 mr-3 transition-colors", isActive ? "text-white" : "text-white/20 group-hover:text-green-400")} />
                         <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <span className="absolute right-8 bg-red-500 text-white text-[8px] font-black h-4 px-1.5 flex items-center justify-center rounded-full shadow-lg border border-white/20 animate-pulse">
+                            {item.badge}
+                          </span>
+                        )}
                         {isActive && (
                           <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                         )}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ export default function AffiliatePage() {
   const { toast } = useToast();
   const [referralLink, setReferralLink] = useState('');
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function AffiliatePage() {
   }, [profile?.referralCode]);
 
   const referralsQuery = useMemoFirebase(() => 
-    user ? query(collection(db, 'referrals'), where('referrerId', '==', user.uid)) : null, [db, user]);
+    (db && user) ? query(collection(db, 'referrals'), where('referrerId', '==', user.uid)) : null, [db, user]);
   const { data: referrals } = useCollection(referralsQuery);
 
   const copyToClipboard = () => {

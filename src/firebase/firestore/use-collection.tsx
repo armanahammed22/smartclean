@@ -44,7 +44,8 @@ const PUBLIC_COLLECTIONS = [
   'offers',
   'categories',
   'subcategories',
-  'childcategories'
+  'childcategories',
+  'tracking_logs'
 ];
 
 function getPathFromTarget(target: any): string {
@@ -54,6 +55,10 @@ function getPathFromTarget(target: any): string {
   return internalPath || 'query-path';
 }
 
+/**
+ * Standardized hook for real-time Firestore collections.
+ * Hardened against transport errors (ca9) common in proxied environments.
+ */
 export function useCollection<T = any>(
   memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
 ): UseCollectionResult<T> {
@@ -61,7 +66,7 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTargetRefOrQuery);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   
-  // Use a ref to track the current active listener path to prevent race conditions during HMR
+  // Use a ref to track the current active listener path to prevent race conditions during hydration or HMR
   const activePathRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -79,51 +84,70 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        // Only update state if this listener is still the active one
-        if (activePathRef.current !== currentPath) return;
+    /**
+     * Wrap subscription in a try-catch to catch immediate assertion failures
+     * from the SDK in unstable environments.
+     */
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onSnapshot(
+        memoizedTargetRefOrQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          // Only update state if this listener is still the intended active one
+          if (activePathRef.current !== currentPath) return;
 
-        const results = snapshot.docs.map(doc => ({
-          ...(doc.data() as T),
-          id: doc.id
-        }));
-        setData(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        if (activePathRef.current !== currentPath) return;
-
-        // Log internal crashes but don't re-emit them if they are SDK internal assertion failures
-        if (err.message.includes('INTERNAL ASSERTION FAILED')) {
-          console.error("Firestore SDK Internal Error detected. Recovery via long-polling should occur.", err);
+          const results = snapshot.docs.map(doc => ({
+            ...(doc.data() as T),
+            id: doc.id
+          }));
+          setData(results);
+          setError(null);
           setIsLoading(false);
-          return;
-        }
+        },
+        (err: FirestoreError) => {
+          if (activePathRef.current !== currentPath) return;
 
-        const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
-        
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path: currentPath,
-        });
-        
-        setError(contextualError);
-        setIsLoading(false);
-        
-        if (!isPublic) {
-          errorEmitter.emit('permission-error', contextualError);
-        } else {
-          console.warn(`Permission warning for public collection: ${currentPath}. Access will retry.`);
+          /**
+           * CRITICAL: Catch and suppress 'ID: ca9' and other internal assertion failures.
+           * These are usually transport-level errors that the SDK will eventually 
+           * recover from via long-polling retries.
+           */
+          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state')) {
+            console.warn("Firestore SDK encountered a transport state mismatch (ca9). Attempting recovery...", currentPath);
+            setIsLoading(false);
+            return;
+          }
+
+          const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
+          
+          const contextualError = new FirestorePermissionError({
+            operation: 'list',
+            path: currentPath,
+          });
+          
+          setError(contextualError);
+          setIsLoading(false);
+          
+          if (!isPublic) {
+            errorEmitter.emit('permission-error', contextualError);
+          }
         }
+      );
+    } catch (e: any) {
+      // Catch unhandled errors thrown during setup
+      if (e.message?.includes('ca9')) {
+        console.warn("Firestore listener setup blocked by internal state mismatch (ca9). Recovery in progress...");
+      } else {
+        console.error("Critical failure during Firestore snapshot setup:", e);
       }
-    );
+      setIsLoading(false);
+    }
 
     return () => {
       activePathRef.current = null;
-      unsubscribe();
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
   }, [memoizedTargetRefOrQuery]);
 

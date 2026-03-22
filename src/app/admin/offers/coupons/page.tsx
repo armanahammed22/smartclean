@@ -56,6 +56,11 @@ export default function CouponsManagementPage() {
     }
   };
 
+  const handleUpdateCouponField = async (id: string, data: any) => {
+    if (!db) return;
+    await updateDoc(doc(db, 'coupons', id), data);
+  };
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -97,7 +102,7 @@ export default function CouponsManagementPage() {
               <div className="grid grid-cols-2 gap-4 py-4 border-y border-gray-50">
                 <div className="space-y-1.5">
                   <Label className="text-[8px] uppercase font-black text-muted-foreground tracking-widest">Type</Label>
-                  <Select defaultValue={coupon.discountType} onValueChange={(val) => updateDoc(doc(db!, 'coupons', coupon.id), { discountType: val })}>
+                  <Select defaultValue={coupon.discountType} onValueChange={(val) => handleUpdateCouponField(coupon.id, { discountType: val })}>
                     <SelectTrigger className="h-9 text-xs bg-gray-50 border-none font-bold rounded-lg"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="percent">Percentage %</SelectItem>
@@ -111,7 +116,7 @@ export default function CouponsManagementPage() {
                     type="number" 
                     className="h-9 text-xs bg-gray-50 border-none font-black rounded-lg" 
                     defaultValue={coupon.value} 
-                    onBlur={(e) => updateDoc(doc(db!, 'coupons', coupon.id), { value: parseFloat(e.target.value) || 0 })}
+                    onBlur={(e) => handleUpdateCouponField(coupon.id, { value: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
               </div>
@@ -128,7 +133,7 @@ export default function CouponsManagementPage() {
         {!coupons?.length && !isLoading && (
           <div className="col-span-full p-24 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic flex flex-col items-center gap-4">
             <TicketPercent size={48} className="opacity-20" />
-            <p className="font-bold">No coupons found. Start by creating your first code.</p>
+            <p className="font-bold">No coupons found.</p>
           </div>
         )}
       </div>

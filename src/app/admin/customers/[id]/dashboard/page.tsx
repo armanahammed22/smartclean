@@ -17,13 +17,13 @@ export default function AdminCustomerDashboardView() {
   const router = useRouter();
   const db = useFirestore();
 
-  const profileRef = useMemoFirebase(() => id ? doc(db, 'users', id as string) : null, [db, id]);
+  const profileRef = useMemoFirebase(() => (db && id) ? doc(db, 'users', id as string) : null, [db, id]);
   const { data: profile, isLoading: profileLoading } = useDoc(profileRef);
 
-  const bookingsQuery = useMemoFirebase(() => id ? query(collection(db, 'bookings'), where('customerId', '==', id), orderBy('createdAt', 'desc'), limit(5)) : null, [db, id]);
+  const bookingsQuery = useMemoFirebase(() => (db && id) ? query(collection(db, 'bookings'), where('customerId', '==', id), orderBy('createdAt', 'desc'), limit(5)) : null, [db, id]);
   const { data: recentBookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
 
-  const ordersQuery = useMemoFirebase(() => id ? query(collection(db, 'orders'), where('customerId', '==', id), orderBy('createdAt', 'desc'), limit(5)) : null, [db, id]);
+  const ordersQuery = useMemoFirebase(() => (db && id) ? query(collection(db, 'orders'), where('customerId', '==', id), orderBy('createdAt', 'desc'), limit(5)) : null, [db, id]);
   const { data: recentOrders, isLoading: ordersLoading } = useCollection(ordersQuery);
 
   const STATS = [

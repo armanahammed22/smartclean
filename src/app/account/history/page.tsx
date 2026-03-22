@@ -15,8 +15,8 @@ export default function HistoryPage() {
   const { user } = useUser();
   const db = useFirestore();
 
-  const bookingsQuery = useMemoFirebase(() => user ? query(collection(db, 'bookings'), where('customerId', '==', user.uid), orderBy('dateTime', 'desc')) : null, [db, user]);
-  const ordersQuery = useMemoFirebase(() => user ? query(collection(db, 'orders'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc')) : null, [db, user]);
+  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings'), where('customerId', '==', user.uid), orderBy('dateTime', 'desc')) : null, [db, user]);
+  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc')) : null, [db, user]);
 
   const { data: bookings, isLoading: bLoading } = useCollection(bookingsQuery);
   const { data: orders, isLoading: oLoading } = useCollection(ordersQuery);

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
@@ -36,12 +34,12 @@ export default function CampaignEditorPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
-  const campaignRef = useMemoFirebase(() => db ? doc(db, 'campaigns', id as string) : null, [db, id]);
+  const campaignRef = useMemoFirebase(() => (db && id && typeof id === 'string') ? doc(db, 'campaigns', id) : null, [db, id]);
   const { data: campaign, isLoading: cLoading } = useDoc(campaignRef);
 
   const campaignProductsQuery = useMemoFirebase(() => {
-    if (!db || !id) return null;
-    return collection(db, 'campaigns', id as string, 'products');
+    if (!db || !id || typeof id !== 'string') return null;
+    return collection(db, 'campaigns', id, 'products');
   }, [db, id]);
   const { data: campaignItems, isLoading: itemsLoading } = useCollection(campaignProductsQuery);
 
@@ -77,12 +75,12 @@ export default function CampaignEditorPage() {
   };
 
   const handleAddProduct = async (productId: string) => {
-    if (!db || !id) return;
+    if (!db || !id || typeof id !== 'string') return;
     const baseProduct = allProducts?.find(p => p.id === productId);
     if (!baseProduct) return;
 
     try {
-      await addDoc(collection(db, 'campaigns', id as string, 'products'), {
+      await addDoc(collection(db, 'campaigns', id, 'products'), {
         productId,
         discountPercent: 10,
         campaignPrice: baseProduct.price * 0.9,
@@ -97,14 +95,14 @@ export default function CampaignEditorPage() {
   };
 
   const removeProduct = async (pId: string) => {
-    if (!db || !id) return;
-    await deleteDoc(doc(db, 'campaigns', id as string, 'products', pId));
+    if (!db || !id || typeof id !== 'string') return;
+    await deleteDoc(doc(db, 'campaigns', id, 'products', pId));
     toast({ title: "Product Removed from Sale" });
   };
 
   const updateItem = async (pId: string, field: string, val: any) => {
-    if (!db || !id) return;
-    await updateDoc(doc(db, 'campaigns', id as string, 'products', pId), { [field]: val });
+    if (!db || !id || typeof id !== 'string') return;
+    await updateDoc(doc(db, 'campaigns', id, 'products', pId), { [field]: val });
   };
 
   if (cLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
@@ -122,8 +120,6 @@ export default function CampaignEditorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* CONFIG COLUMN */}
         <div className="lg:col-span-5 space-y-8">
           <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white">
             <CardHeader className="bg-[#081621] text-white p-8">
@@ -181,7 +177,6 @@ export default function CampaignEditorPage() {
           </Card>
         </div>
 
-        {/* PRODUCTS COLUMN */}
         <div className="lg:col-span-7 space-y-8">
           <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white">
             <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
@@ -245,14 +240,13 @@ export default function CampaignEditorPage() {
                 })}
                 {campaignItems?.length === 0 && (
                   <div className="p-20 text-center text-muted-foreground italic text-sm">
-                    No products assigned to this campaign yet. Use the selector above to begin.
+                    No products assigned to this campaign yet.
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   );

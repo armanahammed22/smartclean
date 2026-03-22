@@ -21,13 +21,13 @@ export default function CustomerDashboard() {
     setMounted(true);
   }, []);
 
-  const profileRef = useMemoFirebase(() => user ? doc(db, 'users', user.uid) : null, [db, user]);
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile } = useDoc(profileRef);
 
-  const bookingsQuery = useMemoFirebase(() => user ? query(collection(db, 'bookings'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)) : null, [db, user]);
+  const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)) : null, [db, user]);
   const { data: recentBookings } = useCollection(bookingsQuery);
 
-  const ordersQuery = useMemoFirebase(() => user ? query(collection(db, 'orders'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)) : null, [db, user]);
+  const ordersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'orders'), where('customerId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)) : null, [db, user]);
   const { data: recentOrders } = useCollection(ordersQuery);
 
   const STATS = [

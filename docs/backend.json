@@ -11,6 +11,8 @@
         "regularPrice": { "type": "number" },
         "stockQuantity": { "type": "number" },
         "categoryId": { "type": "string" },
+        "subCategoryId": { "type": "string" },
+        "childCategoryId": { "type": "string" },
         "brand": { "type": "string" },
         "imageUrl": { "type": "string" },
         "status": { "type": "string", "enum": ["Active", "Inactive"] },
@@ -23,7 +25,7 @@
     },
     "Category": {
       "title": "Category",
-      "description": "Main level marketplace category.",
+      "description": "Main level marketplace category (Level 1).",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -34,7 +36,7 @@
     },
     "Subcategory": {
       "title": "Subcategory",
-      "description": "Second level category.",
+      "description": "Second level category (Level 2).",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -45,7 +47,7 @@
     },
     "ChildCategory": {
       "title": "ChildCategory",
-      "description": "Third level category.",
+      "description": "Third level terminal category (Level 3).",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -54,114 +56,17 @@
         "order": { "type": "number" }
       }
     },
-    "Courier": {
-      "title": "Courier",
-      "description": "A logistics provider with dynamic API configuration.",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "status": { "type": "string" },
-        "description": { "type": "string" },
-        "apiEndpoint": { "type": "string" },
-        "apiKey": { "type": "string" },
-        "apiSecret": { "type": "string" },
-        "trackingUrl": { "type": "string" },
-        "fieldMapping": { "type": "string", "description": "JSON string mapping internal fields to API fields." },
-        "color": { "type": "string" }
-      },
-      "required": ["name", "apiEndpoint", "status"]
-    },
     "Order": {
       "title": "Order",
-      "description": "A product purchase record with risk analytics.",
+      "description": "A product purchase record.",
       "type": "object",
       "properties": {
         "customerId": { "type": "string" },
         "customerName": { "type": "string" },
-        "customerPhone": { "type": "string" },
-        "address": { "type": "string" },
         "items": { "type": "array" },
         "totalPrice": { "type": "number" },
         "status": { "type": "string" },
-        "courierId": { "type": "string" },
-        "trackingId": { "type": "string" },
-        "riskLevel": { "type": "string", "enum": ["Low", "Medium", "High"] },
-        "isSuspicious": { "type": "boolean" },
-        "ipAddress": { "type": "string" },
-        "deviceInfo": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "Service": {
-      "title": "Service",
-      "description": "A professional cleaning or maintenance offering.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "basePrice": { "type": "number" },
-        "duration": { "type": "string" },
-        "description": { "type": "string" },
-        "categoryId": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "imageUrl": { "type": "string" }
-      },
-      "required": ["title", "basePrice", "status"]
-    },
-    "Campaign": {
-      "title": "Campaign",
-      "description": "A marketing mega sale event.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "slug": { "type": "string" },
-        "bannerImage": { "type": "string" },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "isActive": { "type": "boolean" },
-        "priority": { "type": "number" },
-        "description": { "type": "string" },
-        "themeColor": { "type": "string" }
-      },
-      "required": ["title", "slug", "startDate", "endDate", "isActive"]
-    },
-    "Booking": {
-      "title": "Booking",
-      "description": "A service appointment record.",
-      "type": "object",
-      "properties": {
-        "customerId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "serviceTitle": { "type": "string" },
-        "dateTime": { "type": "string", "format": "date-time" },
-        "status": { "type": "string" },
-        "totalPrice": { "type": "number" },
-        "employeeId": { "type": "string" }
-      }
-    },
-    "Offer": {
-      "title": "Offer",
-      "description": "A circular navbar banner offer.",
-      "type": "object",
-      "properties": {
-        "image": { "type": "string" },
-        "link": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "order": { "type": "number" }
-      },
-      "required": ["image", "link", "isActive"]
-    },
-    "TrackingLog": {
-      "title": "TrackingLog",
-      "description": "A log of marketing events sent to external platforms.",
-      "type": "object",
-      "properties": {
-        "eventName": { "type": "string" },
-        "eventId": { "type": "string" },
-        "platform": { "type": "string", "enum": ["Facebook", "Google"] },
-        "method": { "type": "string", "enum": ["Browser", "Server"] },
-        "status": { "type": "string" },
-        "payload": { "type": "object" },
-        "timestamp": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -170,17 +75,11 @@
   },
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
-    "/categories/{id}": { "schema": "Category", "description": "Main level categories." },
-    "/subcategories/{id}": { "schema": "Subcategory", "description": "Sub categories." },
-    "/childcategories/{id}": { "schema": "ChildCategory", "description": "Child categories." },
-    "/services/{id}": { "schema": "Service", "description": "Services catalog." },
-    "/orders/{id}": { "schema": "Order", "description": "Transactional records." },
-    "/bookings/{id}": { "schema": "Booking", "description": "Service appointments." },
-    "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." },
-    "/campaigns/{id}": { "schema": "Campaign", "description": "Mega sale events." },
-    "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." },
-    "/offers/{id}": { "schema": "Offer", "description": "Navbar offer banners." },
-    "/tracking_logs/{id}": { "schema": "TrackingLog", "description": "Logs for Facebook/Google events." },
-    "/site_settings/{id}": { "schema": "object", "description": "Global settings for marketing and SEO." }
+    "/categories/{id}": { "schema": "Category", "description": "L1 Categories." },
+    "/subcategories/{id}": { "schema": "Subcategory", "description": "L2 Categories." },
+    "/childcategories/{id}": { "schema": "ChildCategory", "description": "L3 Categories." },
+    "/orders/{id}": { "schema": "Order", "description": "Product orders." },
+    "/bookings/{id}": { "schema": "Order", "description": "Service bookings." },
+    "/users/{id}": { "schema": "object", "description": "User profiles." }
   }
 }

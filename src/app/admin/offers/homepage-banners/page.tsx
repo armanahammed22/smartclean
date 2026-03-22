@@ -34,6 +34,11 @@ export default function HomepageBannersPage() {
     toast({ title: "Banner Visibility Updated" });
   };
 
+  const handleUpdateField = async (id: string, data: any) => {
+    if (!db) return;
+    await updateDoc(doc(db, 'marketing_offers', id), data);
+  };
+
   const handleDelete = async (id: string) => {
     if (!db || !confirm("Delete this banner?")) return;
     await deleteDoc(doc(db, 'marketing_offers', id));
@@ -72,7 +77,7 @@ export default function HomepageBannersPage() {
             <ImageUploader 
               initialUrl={offer.imageUrl}
               aspectRatio="aspect-[21/7]"
-              onUpload={(url) => updateDoc(doc(db!, 'marketing_offers', offer.id), { imageUrl: url })}
+              onUpload={(url) => handleUpdateField(offer.id, { imageUrl: url })}
             />
             <CardContent className="p-8 space-y-6">
               <div className="flex justify-between items-center">
@@ -80,7 +85,7 @@ export default function HomepageBannersPage() {
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Asset Label</Label>
                   <Input 
                     defaultValue={offer.title} 
-                    onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { title: e.target.value })} 
+                    onBlur={(e) => handleUpdateField(offer.id, { title: e.target.value })} 
                     className="h-11 border-none bg-gray-50 focus:bg-white font-bold text-lg rounded-xl"
                   />
                 </div>
@@ -93,7 +98,7 @@ export default function HomepageBannersPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Layout Placement</Label>
-                  <Select defaultValue={offer.placement} onValueChange={(val) => updateDoc(doc(db!, 'marketing_offers', offer.id), { placement: val })}>
+                  <Select defaultValue={offer.placement} onValueChange={(val) => handleUpdateField(offer.id, { placement: val })}>
                     <SelectTrigger className="h-11 bg-gray-50 border-none font-bold rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-xl">
                       <SelectItem value="top">Global Header Extension</SelectItem>
@@ -109,7 +114,7 @@ export default function HomepageBannersPage() {
                     <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                     <Input 
                       defaultValue={offer.link} 
-                      onBlur={(e) => updateDoc(doc(db!, 'marketing_offers', offer.id), { link: e.target.value })} 
+                      onBlur={(e) => handleUpdateField(offer.id, { link: e.target.value })} 
                       className="h-11 pl-10 bg-gray-50 border-none font-mono text-xs rounded-xl"
                     />
                   </div>
