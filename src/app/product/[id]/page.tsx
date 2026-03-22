@@ -236,13 +236,13 @@ export default function ProductDetailsPage() {
                 <div className="hidden lg:grid grid-cols-2 gap-4 pt-4">
                   <Button 
                     onClick={() => addToCart(product as any, quantity)}
-                    className="h-12 bg-[#ffb900] hover:bg-[#e6a700] text-white font-black uppercase tracking-tight rounded-lg"
+                    className="h-14 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] hover:opacity-90 text-white font-black uppercase tracking-widest rounded-[30px] shadow-lg border-none"
                   >
                     Add to Cart
                   </Button>
                   <Button 
                     onClick={handleOrderNow}
-                    className="h-12 bg-[#f85606] hover:bg-[#d94a05] text-white font-black uppercase tracking-tight rounded-lg shadow-lg shadow-[#f85606]/20"
+                    className="h-14 bg-gradient-to-r from-[#16a34a] to-[#15803d] hover:opacity-90 text-white font-black uppercase tracking-widest rounded-[30px] shadow-xl shadow-green-600/20 border-none"
                   >
                     Buy Now
                   </Button>
@@ -371,8 +371,8 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* MOBILE STICKY BOTTOM BAR (Hidden on Desktop) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-stretch h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-          <div className="flex-1 flex items-center justify-around px-2 border-r">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
+          <div className="flex items-center gap-4 px-2 border-r pr-4 border-gray-100">
             <button className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
               <Store size={20} className="text-gray-500 group-hover:text-[#f85606]" />
               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Store</span>
@@ -382,16 +382,16 @@ export default function ProductDetailsPage() {
               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Chat</span>
             </button>
           </div>
-          <div className="flex-[2.5] flex">
+          <div className="flex-1 flex gap-2">
             <button 
               onClick={() => addToCart(product as any, quantity)}
-              className="flex-1 bg-[#ffb900] text-white font-black text-xs uppercase tracking-tight active:brightness-90 transition-all"
+              className="flex-1 h-12 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white font-black text-[10px] uppercase tracking-wider rounded-[30px] active:scale-95 transition-all shadow-md"
             >
               Add to Cart
             </button>
             <button 
               onClick={handleOrderNow}
-              className="flex-1 bg-[#f85606] text-white font-black text-xs uppercase tracking-tight active:brightness-90 transition-all"
+              className="flex-1 h-12 bg-gradient-to-r from-[#16a34a] to-[#15803d] text-white font-black text-[10px] uppercase tracking-wider rounded-[30px] active:scale-95 transition-all shadow-lg"
             >
               Buy Now
             </button>
