@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -6,6 +5,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Zap, 
   Target, 
@@ -25,10 +25,9 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  LineChart,
-  Line
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function MarketingOverviewPage() {
   const db = useFirestore();
@@ -41,8 +40,6 @@ export default function MarketingOverviewPage() {
 
   const stats = useMemo(() => {
     if (!logs || !orders) return { events: 0, orders: 0, conversion: '0%' };
-    const pixelEvents = logs.filter(l => l.method === 'Browser').length;
-    const capiEvents = logs.filter(l => l.method === 'Server').length;
     const purchases = logs.filter(l => l.eventName === 'Purchase').length;
     
     return {
@@ -152,7 +149,9 @@ export default function MarketingOverviewPage() {
               {!logs?.length && <p className="text-center text-white/20 italic text-sm py-10">Waiting for events...</p>}
             </div>
             <Button className="w-full mt-10 bg-white/10 hover:bg-white/20 border-none text-white font-black text-[10px] uppercase tracking-widest h-12 rounded-xl" asChild>
-              <Link href="/admin/marketing/logs">Full Event Logs <ChevronRight size={14} className="ml-2"/></Link>
+              <Link href="/admin/marketing/logs">
+                Full Event Logs <ChevronRight size={14} className="ml-2"/>
+              </Link>
             </Button>
           </CardContent>
         </Card>
