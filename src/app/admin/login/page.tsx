@@ -14,7 +14,7 @@ import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRi
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 /**

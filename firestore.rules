@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Deployment Sync: 2026-03-22T21:30:00Z
+    // Deployment Sync: 2026-03-22T22:15:00Z
     
     function isSignedIn() {
       return request.auth != null;
@@ -11,7 +11,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.uid == 'gcp03WmpjROVvRdpLNsghNU4zHa2' ||
+        request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
         exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
     }

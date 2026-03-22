@@ -70,7 +70,7 @@ import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useToast } from '@/hooks/use-toast';
 
-const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

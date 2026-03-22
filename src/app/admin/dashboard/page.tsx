@@ -34,6 +34,8 @@ const CHART_DATA = [
   { name: 'Sun', val: 70 },
 ];
 
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+
 export default function AdminDashboard() {
   const { user } = useUser();
   const db = useFirestore();
@@ -42,7 +44,7 @@ export default function AdminDashboard() {
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
   const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'bookings') : null, [db, isAuthorized]);

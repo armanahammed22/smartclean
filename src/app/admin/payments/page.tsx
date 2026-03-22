@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -27,6 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+
 export default function PaymentManagementPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -39,7 +42,7 @@ export default function PaymentManagementPage() {
     return doc(db, 'roles_admins', user.uid);
   }, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
   const methodsQuery = useMemoFirebase(() => 
     (db && user && isAuthorized) ? query(collection(db, 'payment_methods'), orderBy('name', 'asc')) : null, [db, user, isAuthorized]);

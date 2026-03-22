@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -14,6 +15,8 @@ import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, CheckCircle2, ArrowRight
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
+
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -41,7 +44,7 @@ export default function LoginPage() {
   const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRef);
 
-  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
   const isStaff = !!staffRole;
   const isBlocked = profile?.status === 'banned' || profile?.status === 'disabled';
 

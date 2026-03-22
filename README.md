@@ -21,7 +21,7 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 - **IMPORTANT**: If you get `auth/invalid-credential`, it means this step was skipped or the password/email doesn't match exactly.
 
 ### 3. Verification
-- Your UID is `gcp03WmpjROVvRdpLNsghNU4zHa2`. 
+- Your UID is `6YTKdslETkVXcftvhSY5x9sjOgT2`. 
 - The application is hardcoded to grant this specific UID full "Bootstrap Admin" privileges instantly once you log in.
 
 ### 4. Access the Dashboard
