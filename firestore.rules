@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Deployment Sync: 2026-03-22T20:45:00Z
+    // Deployment Sync: 2026-03-22T21:30:00Z
     
     function isSignedIn() {
       return request.auth != null;
@@ -27,6 +27,18 @@ service cloud.firestore {
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
     match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // Protected Collections
     match /users/{uid} {
@@ -49,38 +61,29 @@ service cloud.firestore {
 
     match /tracking_logs/{id} { 
       allow read: if isAdmin(); 
-      allow write: if true; // Tracking should be writable by site actions
+      allow write: if true;
     }
     
     match /error_logs/{id} { allow create: if true; allow read, write: if isAdmin(); }
-    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     
-    // Auxiliary Role Collections
+    match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_accounts/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_order_managers/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     
-    // Logic/Operational Collections
-    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn(); }
     match /leads/{id} { allow read, write: if isAdmin(); }
     match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
     match /campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
     match /campaigns/{cid}/products/{pid} { allow read: if true; allow write: if isAdmin(); }
+    
     match /support_tickets/{id} { 
       allow create: if isSignedIn(); 
       allow read, update: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
     }
+    
+    match /staff_earnings/{id} { allow read, write: if isAdmin(); }
+    match /referrals/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
   }
 }

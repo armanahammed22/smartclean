@@ -252,7 +252,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Security Purge Logic: Only trigger if we are CERTAIN they aren't authorized
   useEffect(() => {
     if (isLoginPage) return;
-    // CRITICAL: We only purge if DB is ready, user is found, role check finished, and isAuthorized is STILL false
+    // We only purge if DB is ready, user is found, role check finished, and isAuthorized is STILL false
     if (!isUserLoading && !roleLoading && db && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {

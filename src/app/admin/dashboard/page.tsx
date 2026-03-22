@@ -185,6 +185,17 @@ export default function AdminDashboard() {
         batch.set(dRef, { ...d, createdAt: now });
       });
 
+      // 7. SEED HOMEPAGE SECTIONS
+      const SECTION_DATA = [
+        { title: 'Flash Sale', type: 'FlashSale', order: 1, isActive: true },
+        { title: 'Just For You', type: 'Products', order: 2, isActive: true },
+        { title: 'Essential Services', type: 'Services', order: 3, isActive: true }
+      ];
+      SECTION_DATA.forEach(s => {
+        const sRef = doc(collection(db, 'homepage_sections'));
+        batch.set(sRef, { ...s, createdAt: now });
+      });
+
       await batch.commit();
       toast({ title: "ERP Ecosystem Seeded", description: "Sample products, services, banners, and settings are now live." });
     } catch (err) {

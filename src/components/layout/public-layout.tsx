@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -32,6 +33,8 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         document.title = settings.seoTitle;
       } else if (settings.websiteName) {
         document.title = `${settings.websiteName} | Professional Cleaning`;
+      } else {
+        document.title = "Smart Clean | Professional Cleaning in Bangladesh";
       }
 
       if (settings.faviconUrl) {
