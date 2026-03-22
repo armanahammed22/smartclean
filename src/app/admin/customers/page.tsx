@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -28,7 +27,8 @@ import {
   LayoutDashboard,
   ShieldAlert,
   MoreVertical,
-  XCircle
+  XCircle,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -70,11 +70,9 @@ export default function CustomersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   
-  // State for deletion/blocking
   const [removalTarget, setRemovalTarget] = useState<any>(null);
   const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
-  // Updated to 'users' collection
   const customersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -106,7 +104,7 @@ export default function CustomersPage() {
     try {
       if (editingCustomer) {
         await updateDoc(doc(db, 'users', editingCustomer.id), customerData);
-        toast({ title: "Profile Updated", description: "The customer record has been modified." });
+        toast({ title: "Profile Updated" });
       } else {
         await addDoc(collection(db, 'users'), { 
           ...customerData, 
@@ -121,7 +119,7 @@ export default function CustomersPage() {
       setIsDialogOpen(false);
       setEditingCustomer(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Operation failed." });
+      toast({ variant: "destructive", title: "Error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -133,37 +131,40 @@ export default function CustomersPage() {
 
     try {
       if (removalType === 'block') {
-        // Add to blocked_users blacklist
         await addDoc(collection(db, 'blocked_users'), {
           email: removalTarget.email,
           phone: removalTarget.phone,
           blockedAt: new Date().toISOString(),
           reason: 'Administrative Block'
         });
-        toast({ title: "Customer Blocked", description: "User credentials have been blacklisted." });
       }
-
-      // Delete the actual profile document in 'users' collection
       await deleteDoc(doc(db, 'users', removalTarget.id));
-      
-      // Cleanup UI
       setRemovalTarget(null);
       setRemovalType(null);
       toast({ title: removalType === 'block' ? "Account Blocked" : "Account Removed" });
     } catch (e) {
-      toast({ variant: "destructive", title: "Action Failed", description: "Could not complete operation." });
+      toast({ variant: "destructive", title: "Action Failed" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleSendReset = async (email: string) => {
-    if (!email) return;
+    if (!email || !auth) return;
     try {
       await sendPasswordResetEmail(auth, email);
-      toast({ title: "Reset Email Sent", description: `A recovery link was sent to ${email}` });
+      toast({ title: "Reset Email Sent", description: `Sent to ${email}` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Failed", description: e.message });
+    }
+  };
+
+  const getRoleBadge = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'admin': return <Badge className="bg-red-600 text-white border-none text-[8px] font-black uppercase px-2 py-0.5">Admin</Badge>;
+      case 'staff': return <Badge className="bg-orange-500 text-white border-none text-[8px] font-black uppercase px-2 py-0.5">Staff</Badge>;
+      case 'manager': return <Badge className="bg-blue-600 text-white border-none text-[8px] font-black uppercase px-2 py-0.5">Manager</Badge>;
+      default: return <Badge variant="secondary" className="text-[8px] font-black uppercase px-2 py-0.5">Customer</Badge>;
     }
   };
 
@@ -214,40 +215,6 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-primary text-white rounded-3xl">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-primary-foreground/80 text-xs font-bold uppercase tracking-wider">Total Registered</p>
-              <h3 className="text-3xl font-black mt-1">{customers?.length || 0}</h3>
-            </div>
-            <Users size={40} className="opacity-20" />
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white rounded-3xl">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Active Status</p>
-              <h3 className="text-3xl font-black mt-1 text-primary">
-                {customers?.filter(c => c.status === 'active').length || 0}
-              </h3>
-            </div>
-            <UserCheck size={40} className="text-primary opacity-20" />
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white rounded-3xl">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-wider">Blocked Accounts</p>
-              <h3 className="text-3xl font-black mt-1 text-destructive">
-                {customers?.filter(c => c.status === 'banned').length || 0}
-              </h3>
-            </div>
-            <ShieldAlert size={40} className="text-destructive opacity-20" />
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -266,11 +233,11 @@ export default function CustomersPage() {
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-5 pl-8">Customer Identity</TableHead>
-                <TableHead className="font-bold">Contact Details</TableHead>
-                <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="font-bold">Role Management</TableHead>
-                <TableHead className="text-right pr-8">Actions</TableHead>
+                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Customer Identity</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Platform Role</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Contact Details</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -291,6 +258,9 @@ export default function CustomersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {getRoleBadge(customer.role)}
+                    </TableCell>
+                    <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700"><Phone size={10} className="text-primary" /> {customer.phone || 'N/A'}</div>
                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><Mail size={10} /> {customer.email}</div>
@@ -304,13 +274,6 @@ export default function CustomersPage() {
                          {customer.status || 'Active'}
                        </Badge>
                     </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" asChild className="h-8 gap-1.5 text-[9px] font-black uppercase tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-white transition-all rounded-full px-4">
-                        <Link href={`/admin/roles?uid=${customer.id}`}>
-                          <UserCheck size={12} /> Promote
-                        </Link>
-                      </Button>
-                    </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" asChild title="View Dashboard">
@@ -321,8 +284,10 @@ export default function CustomersPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:bg-amber-50" onClick={() => handleSendReset(customer.email)} title="Send Password Reset">
                           <Lock size={14} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" onClick={() => { setEditingCustomer(customer); setIsDialogOpen(true); }} title="Edit Profile">
-                          <Edit size={14} />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" asChild title="Promote Role">
+                          <Link href={`/admin/roles?uid=${customer.id}`}>
+                            <Shield size={14} />
+                          </Link>
                         </Button>
                         
                         <DropdownMenu>
@@ -359,7 +324,6 @@ export default function CustomersPage() {
         </CardContent>
       </Card>
 
-      {/* Removal Confirmation Dialog */}
       <AlertDialog open={!!removalTarget} onOpenChange={(o) => { if(!o) setRemovalTarget(null); }}>
         <AlertDialogContent className="rounded-[2rem] max-w-md">
           <AlertDialogHeader>
@@ -369,8 +333,8 @@ export default function CustomersPage() {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">
               {removalType === 'block' 
-                ? `Are you sure you want to block ${removalTarget?.name}? Their email (${removalTarget?.email}) and phone will be blacklisted, preventing any future registration.` 
-                : `This will remove ${removalTarget?.name}'s profile from the system. They will be able to register again in the future.`}
+                ? `Are you sure you want to block ${removalTarget?.name}? Their email (${removalTarget?.email}) and phone will be blacklisted.` 
+                : `This will remove ${removalTarget?.name}'s profile from the system.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4">

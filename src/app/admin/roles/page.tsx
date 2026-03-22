@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const ROLES = [
-  { id: 'admins', label: 'Admin', color: 'bg-red-100 text-red-700' },
-  { id: 'managers', label: 'Manager', color: 'bg-blue-100 text-blue-700' },
-  { id: 'accounts', label: 'Accounts', color: 'bg-green-100 text-green-700' },
-  { id: 'order_managers', label: 'Order Manager', color: 'bg-purple-100 text-purple-700' },
-  { id: 'employees', label: 'Technician', color: 'bg-orange-100 text-orange-700' }
+  { id: 'admins', label: 'Admin', color: 'bg-red-100 text-red-700', value: 'admin' },
+  { id: 'managers', label: 'Manager', color: 'bg-blue-100 text-blue-700', value: 'manager' },
+  { id: 'accounts', label: 'Accounts', color: 'bg-green-100 text-green-700', value: 'accountant' },
+  { id: 'order_managers', label: 'Order Manager', color: 'bg-purple-100 text-purple-700', value: 'order_manager' },
+  { id: 'employees', label: 'Technician', color: 'bg-orange-100 text-orange-700', value: 'staff' }
 ];
 
 export default function RoleManagementPage() {
@@ -30,7 +30,7 @@ export default function RoleManagementPage() {
   const router = useRouter();
   
   const [targetUid, setTargetUid] = useState('');
-  const [selectedRole, setSelectedRole] = useState('employees');
+  const [selectedRoleId, setSelectedRole] = useState('employees');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -40,7 +40,6 @@ export default function RoleManagementPage() {
     }
   }, [searchParams]);
 
-  // We fetch a sample role collection to show existing assignments
   const adminsQuery = useMemoFirebase(() => db ? collection(db, 'roles_admins') : null, [db]);
   const managersQuery = useMemoFirebase(() => db ? collection(db, 'roles_managers') : null, [db]);
   const accountsQuery = useMemoFirebase(() => db ? collection(db, 'roles_accounts') : null, [db]);
@@ -59,18 +58,27 @@ export default function RoleManagementPage() {
     setIsSubmitting(true);
 
     try {
-      const colName = `roles_${selectedRole}`;
+      const colName = `roles_${selectedRoleId}`;
+      const roleConfig = ROLES.find(r => r.id === selectedRoleId);
+      
+      // 1. Create Security Document
       await setDoc(doc(db, colName, targetUid.trim()), {
         uid: targetUid.trim(),
         assignedAt: new Date().toISOString(),
-        role: selectedRole
+        role: selectedRoleId
       });
-      toast({ title: "Role Assigned", description: `UID granted ${selectedRole} privileges.` });
+
+      // 2. Sync to Unified Users Document
+      await updateDoc(doc(db, 'users', targetUid.trim()), {
+        role: roleConfig?.value || 'customer',
+        updatedAt: new Date().toISOString()
+      }).catch(() => {
+        console.warn("User profile not found in 'users' collection, only security role created.");
+      });
+
+      toast({ title: "Role Assigned", description: `UID granted ${roleConfig?.label} privileges.` });
       setTargetUid('');
-      // Clean up URL
-      if (searchParams.get('uid')) {
-        router.push('/admin/roles');
-      }
+      if (searchParams.get('uid')) router.push('/admin/roles');
     } catch (e: any) {
       toast({ variant: "destructive", title: "Assignment Failed", description: e.message });
     } finally {
@@ -78,18 +86,29 @@ export default function RoleManagementPage() {
     }
   };
 
-  const removeRole = async (col: string, uid: string) => {
+  const removeRole = async (colId: string, uid: string) => {
     if (!db || !confirm("Revoke this user's privileges?")) return;
-    await deleteDoc(doc(db, col, uid));
-    toast({ title: "Role Revoked" });
+    try {
+      await deleteDoc(doc(db, colId, uid));
+      
+      // Revert user to customer in profile
+      await updateDoc(doc(db, 'users', uid), {
+        role: 'customer',
+        updatedAt: new Date().toISOString()
+      }).catch(() => {});
+
+      toast({ title: "Role Revoked" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Revoke Failed", description: e.message });
+    }
   };
 
   const allAssignments = [
-    ...(admins?.map(a => ({ ...a, col: 'roles_admins' })) || []),
-    ...(managers?.map(a => ({ ...a, col: 'roles_managers' })) || []),
-    ...(accounts?.map(a => ({ ...a, col: 'roles_accounts' })) || []),
-    ...(orderManagers?.map(a => ({ ...a, col: 'roles_order_managers' })) || []),
-    ...(employees?.map(a => ({ ...a, col: 'roles_employees' })) || [])
+    ...(admins?.map(a => ({ ...a, colId: 'roles_admins' })) || []),
+    ...(managers?.map(a => ({ ...a, colId: 'roles_managers' })) || []),
+    ...(accounts?.map(a => ({ ...a, colId: 'roles_accounts' })) || []),
+    ...(orderManagers?.map(a => ({ ...a, colId: 'roles_order_managers' })) || []),
+    ...(employees?.map(a => ({ ...a, colId: 'roles_employees' })) || [])
   ];
 
   return (
@@ -125,7 +144,7 @@ export default function RoleManagementPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Role</Label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <Select value={selectedRoleId} onValueChange={setSelectedRole}>
                   <SelectTrigger className="h-11 bg-gray-50 border-gray-100 font-bold">
                     <SelectValue />
                   </SelectTrigger>
@@ -151,16 +170,16 @@ export default function RoleManagementPage() {
             <Table>
               <TableHeader className="bg-gray-50/30">
                 <TableRow>
-                  <TableHead className="font-bold">UID / Identity</TableHead>
-                  <TableHead className="font-bold">Privilege Level</TableHead>
+                  <TableHead className="font-bold py-4 pl-8 uppercase text-[10px]">UID / Identity</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px]">Privilege Level</TableHead>
                   <TableHead className="text-right pr-8"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {allAssignments.map((assign, i) => {
-                  const roleConfig = ROLES.find(r => r.id === assign.col.replace('roles_', ''));
+                  const roleConfig = ROLES.find(r => r.id === assign.colId);
                   return (
-                    <TableRow key={i} className="hover:bg-gray-50/50 transition-colors">
+                    <TableRow key={i} className="hover:bg-gray-50/50 transition-colors group">
                       <TableCell className="font-mono text-[10px] text-gray-500 py-4 pl-8">{assign.uid}</TableCell>
                       <TableCell>
                         <Badge className={cn("text-[9px] font-black uppercase border-none", roleConfig?.color)}>
@@ -168,7 +187,7 @@ export default function RoleManagementPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right pr-8">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeRole(assign.col, assign.uid)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-all" onClick={() => removeRole(assign.colId, assign.uid)}>
                           <Trash2 size={14} />
                         </Button>
                       </TableCell>
@@ -189,7 +208,7 @@ export default function RoleManagementPage() {
           <div className="p-3 bg-white rounded-xl text-amber-600 shadow-sm"><ShieldAlert size={24} /></div>
           <div>
             <h4 className="font-black text-amber-900 uppercase text-xs tracking-widest">Security Protocol</h4>
-            <p className="text-amber-800/70 text-sm font-medium">Role assignments are validated instantly by Firestore Security Rules. Ensure you do not remove your own Admin access accidentally.</p>
+            <p className="text-amber-800/70 text-sm font-medium">Role assignments are validated instantly by Firestore Security Rules. User profiles are updated automatically to reflect their new status in the Customer Directory.</p>
           </div>
         </CardContent>
       </Card>
