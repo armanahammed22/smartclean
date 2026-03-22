@@ -92,9 +92,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return doc(db, 'roles_admins', user.uid);
   }, [db, user]);
 
-  const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
+  const { data: adminRole, isLoading: roleLoading, error: roleError } = useDoc(adminRoleRef);
 
-  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+  // Authorization Logic: Bootstrap Admin or has the admin role
+  const isAuthorized = (user?.uid === BOOTSTRAP_ADMIN_UID) || !!adminRole;
 
   // Real-time unresolved error count for badge
   const pendingErrorsQuery = useMemoFirebase(() => {
@@ -240,6 +241,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   ];
 
+  // Redirect to login if not signed in
   useEffect(() => {
     if (isLoginPage) return;
     if (!isUserLoading && !user) {
@@ -247,16 +249,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isUserLoading, router, isLoginPage]);
 
+  // Security Purge Logic: Only trigger if we are CERTAIN they aren't authorized
   useEffect(() => {
     if (isLoginPage) return;
-    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
+    // CRITICAL: We only purge if DB is ready, user is found, role check finished, and isAuthorized is STILL false
+    if (!isUserLoading && !roleLoading && db && user && !isAuthorized) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {
         router.replace('/admin/login');
       });
     }
-  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
+  }, [isAuthorized, isUserLoading, roleLoading, db, user, auth, router, toast, isLoginPage]);
 
+  // Initialize expanded groups based on current path
   useEffect(() => {
     const activeGroup = NAV_GROUPS.find(group => 
       group.items.some(item => pathname === item.href)

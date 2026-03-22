@@ -42,6 +42,7 @@ export function Footer() {
                     fill
                     className="object-contain object-left" 
                     data-ai-hint="company logo"
+                    unoptimized
                   />
                 ) : (
                   <div className="bg-primary p-2 rounded-lg">
@@ -57,7 +58,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              {settings?.seoDescription || t('footer_desc')}
+              {settings?.seoDescription || "Expert cleaning services for your home and office in Bangladesh."}
             </p>
             
             <div className="flex gap-4 pt-2">
@@ -69,11 +70,6 @@ export function Footer() {
               {settings?.socialLinks?.instagram && (
                 <Link href={settings.socialLinks.instagram} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
                   <Instagram size={18} />
-                </Link>
-              )}
-              {settings?.socialLinks?.linkedin && (
-                <Link href={settings.socialLinks.linkedin} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                  <Linkedin size={18} />
                 </Link>
               )}
               {settings?.socialLinks?.whatsapp && (
@@ -111,7 +107,7 @@ export function Footer() {
             <div className="space-y-4">
               <div className="flex items-start gap-3 text-[13px] text-gray-400">
                 <MapPin size={18} className="text-primary shrink-0 mt-0.5" />
-                <span>{settings?.address || t('footer_address')}</span>
+                <span>{settings?.address || "Wireless Gate, Mohakhali, Dhaka-1212"}</span>
               </div>
               <div className="flex items-center gap-3 text-[13px] text-gray-400">
                 <Phone size={18} className="text-primary shrink-0" />
@@ -123,7 +119,7 @@ export function Footer() {
               </div>
               <div className="flex items-start gap-3 text-[13px] text-gray-400">
                 <Clock size={18} className="text-primary shrink-0 mt-0.5" />
-                <span>{t('footer_hours')}</span>
+                <span>Sat-Thu, 8AM - 8PM</span>
               </div>
             </div>
           </div>
@@ -131,7 +127,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-white/5">
           <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-medium text-center">
-            {settings?.footerContent || t('footer_rights')}
+            {settings?.footerContent || "© 2026 Smart Clean Bangladesh. All rights reserved."}
           </p>
         </div>
       </div>

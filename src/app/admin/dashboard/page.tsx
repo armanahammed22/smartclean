@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -57,101 +58,33 @@ export default function AdminDashboard() {
       const batch = writeBatch(db);
       const now = new Date().toISOString();
 
+      // 1. SEED SITE SETTINGS
+      const settingsRef = doc(db, 'site_settings', 'global');
+      batch.set(settingsRef, {
+        websiteName: 'Smart Clean',
+        contactEmail: 'support@smartclean.com',
+        contactPhone: '+8801919640422',
+        address: 'Wireless Gate, Mohakhali, Dhaka-1212',
+        footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
+        seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
+        seoDescription: 'Expert cleaning and maintenance services for your home and office.',
+        updatedAt: now
+      }, { merge: true });
+
+      // 2. SEED CATEGORIES (Daraz Style)
       const CATEGORY_MAP = [
-        {
-          name: "Women's Fashion",
-          subs: [
-            { name: "Clothing", children: ["Sarees", "Kurtas & Shalwar Kameez", "Western Wear", "Lingerie & Sleepwear"] },
-            { name: "Shoes", children: ["Heels", "Sneakers", "Flats", "Boots"] },
-            { name: "Accessories", children: ["Shoulder Bags", "Wallets", "Jewellery"] }
-          ]
-        },
-        {
-          name: "Men's Fashion",
-          subs: [
-            { name: "Clothing", children: ["T-Shirts", "Shirts", "Panjabis", "Jeans", "Suits"] },
-            { name: "Shoes", children: ["Formal Shoes", "Sneakers", "Sandals"] },
-            { name: "Accessories", children: ["Belts", "Wallets", "Eyewear"] }
-          ]
-        },
-        {
-          name: "Kids & Baby",
-          subs: [
-            { name: "Feeding", children: ["Milk Formula", "Baby Food", "Bottles", "Breastfeeding"] },
-            { name: "Diapering", children: ["Diapers", "Wipes", "Diaper Bags"] },
-            { name: "Baby Gear", children: ["Strollers", "Walkers", "Car Seats"] }
-          ]
-        },
-        {
-          name: "Electronics",
-          subs: [
-            { name: "Mobile Phones", children: ["Android Phones", "iPhones", "Feature Phones"] },
-            { name: "Laptops", children: ["Gaming Laptops", "Macbooks", "Ultrabooks", "Chromebooks"] },
-            { name: "Audio", children: ["Headphones", "TWS Earbuds", "Bluetooth Speakers"] }
-          ]
-        },
-        {
-          name: "TV & Home Appliances",
-          subs: [
-            { name: "Televisions", children: ["Smart TVs", "LED TVs", "OLED TVs"] },
-            { name: "Large Appliances", children: ["Refrigerators", "Washing Machines", "Air Conditioners"] },
-            { name: "Kitchen Appliances", children: ["Ovens", "Blenders", "Water Purifiers"] }
-          ]
-        },
-        {
-          name: "Health & Beauty",
-          subs: [
-            { name: "Skincare", children: ["Face Wash", "Moisturizer", "Sunscreen", "Serum"] },
-            { name: "Hair Care", children: ["Shampoo", "Conditioner", "Hair Oil"] },
-            { name: "Personal Care", children: ["Fragrances", "Deodorant", "Body Mist"] }
-          ]
-        },
-        {
-          name: "Groceries & Pets",
-          subs: [
-            { name: "Beverages", children: ["Tea", "Coffee", "Juices", "Soft Drinks"] },
-            { name: "Cooking Essentials", children: ["Oil", "Rice", "Flour", "Spices"] },
-            { name: "Pet Supplies", children: ["Cat Food", "Dog Food", "Pet Grooming"] }
-          ]
-        },
         {
           name: "Home & Living",
           subs: [
-            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops & Sweepers", "Laundry", "Cleaning Agents"] },
-            { name: "Kitchen", children: ["Cookware", "Appliances", "Bakeware"] },
+            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops & Sweepers", "Cleaning Agents"] },
             { name: "Furniture", children: ["Living Room", "Bedroom", "Office"] }
-          ]
-        },
-        {
-          name: "Sports & Outdoor",
-          subs: [
-            { name: "Exercise", children: ["Treadmills", "Dumbbells", "Yoga Mats"] },
-            { name: "Outdoor Recreation", children: ["Cycling", "Camping", "Fishing"] },
-            { name: "Team Sports", children: ["Cricket", "Football", "Badminton"] }
-          ]
-        },
-        {
-          name: "Automotive & Motorbike",
-          subs: [
-            { name: "Car Care", children: ["Car Wash", "Interior Care", "Exterior Care"] },
-            { name: "Moto Parts", children: ["Helmets", "Tires", "Engine Oil"] },
-            { name: "Electronics", children: ["Car Audio", "Dash Cams", "GPS"] }
-          ]
-        },
-        {
-          name: "Watches, Bags & Jewellery",
-          subs: [
-            { name: "Men's Watches", children: ["Chronograph", "Digital", "Automatic"] },
-            { name: "Women's Watches", children: ["Fashion", "Casual", "Business"] },
-            { name: "Jewellery", children: ["Necklaces", "Earrings", "Rings"] }
           ]
         },
         {
           name: "Services",
           subs: [
             { name: "Cleaning", children: ["Deep Cleaning", "Sofa Cleaning", "Carpet Cleaning"] },
-            { name: "Repair", children: ["AC Repair", "Fridge Repair", "Washing Machine Repair"] },
-            { name: "Maintenance", children: ["Electrical", "Plumbing", "Painting"] }
+            { name: "Repair", children: ["AC Repair", "Fridge Repair", "Plumbing"] }
           ]
         }
       ];
@@ -161,7 +94,7 @@ export default function AdminDashboard() {
         const catId = catRef.id;
         batch.set(catRef, {
           name: mainCat.name,
-          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-'),
           order: mainIdx,
           createdAt: now
         });
@@ -171,7 +104,7 @@ export default function AdminDashboard() {
           const subId = subRef.id;
           batch.set(subRef, {
             name: sub.name,
-            slug: sub.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+            slug: sub.name.toLowerCase().replace(/\s+/g, '-'),
             categoryId: catId,
             order: subIdx,
             createdAt: now
@@ -181,7 +114,7 @@ export default function AdminDashboard() {
             const childRef = doc(collection(db, 'childcategories'));
             batch.set(childRef, {
               name: child,
-              slug: child.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+              slug: child.toLowerCase().replace(/\s+/g, '-'),
               subcategoryId: subId,
               order: childIdx,
               createdAt: now
@@ -190,8 +123,70 @@ export default function AdminDashboard() {
         });
       });
 
+      // 3. SEED SAMPLE SERVICES
+      const SAMPLE_SERVICES = [
+        { title: "Home Deep Cleaning", basePrice: 5000, categoryId: "Cleaning", duration: "4-6 Hours", imageUrl: "https://picsum.photos/seed/hservice/800/600" },
+        { title: "AC Master Service", basePrice: 2500, categoryId: "Repair", duration: "1-2 Hours", imageUrl: "https://picsum.photos/seed/acserv/800/600" },
+        { title: "Sofa Shampooing", basePrice: 1500, categoryId: "Cleaning", duration: "2 Hours", imageUrl: "https://picsum.photos/seed/sofaserv/800/600" }
+      ];
+
+      SAMPLE_SERVICES.forEach(s => {
+        const sRef = doc(collection(db, 'services'));
+        batch.set(sRef, {
+          ...s,
+          status: 'Active',
+          description: `Professional ${s.title} provided by certified technicians. Includes all necessary materials and tools.`,
+          shortDescription: `Top-rated ${s.title} for your home.`,
+          createdAt: now
+        });
+      });
+
+      // 4. SEED SAMPLE PRODUCTS
+      const SAMPLE_PRODUCTS = [
+        { name: "Smart Vacuum Robot V2", price: 35000, regularPrice: 42000, stockQuantity: 15, categoryId: "Cleaning", brand: "Xiaomi", imageUrl: "https://picsum.photos/seed/robotv/600/600" },
+        { name: "Industrial Steam Mop", price: 8500, regularPrice: 9500, stockQuantity: 20, categoryId: "Tools", brand: "Karcher", imageUrl: "https://picsum.photos/seed/mopv/600/600" },
+        { name: "Organic Multi-Surface Cleaner", price: 450, regularPrice: 550, stockQuantity: 100, categoryId: "Cleaning", brand: "EcoClean", imageUrl: "https://picsum.photos/seed/sprayv/600/600" }
+      ];
+
+      SAMPLE_PRODUCTS.forEach(p => {
+        const pRef = doc(collection(db, 'products'));
+        batch.set(pRef, {
+          ...p,
+          status: 'Active',
+          isPopular: true,
+          description: `High-quality ${p.name} designed for professional efficiency. Safe for all home environments.`,
+          shortDescription: `Premium ${p.name} for expert results.`,
+          createdAt: now
+        });
+      });
+
+      // 5. SEED SAMPLE BANNERS
+      const BANNER_REF = doc(collection(db, 'hero_banners'));
+      batch.set(BANNER_REF, {
+        title: "Spring Cleaning Sale",
+        subtitle: "Get up to 40% off on all deep cleaning services this month!",
+        imageUrl: "https://picsum.photos/seed/hero1/1200/400",
+        isActive: true,
+        type: 'main',
+        order: 0,
+        buttonText: "Book Now",
+        buttonLink: "/services",
+        buttonColor: "#22c55e",
+        createdAt: now
+      });
+
+      // 6. SEED DELIVERY OPTIONS
+      const DELIVERY_DATA = [
+        { label: "Inside Dhaka", amount: 60, isEnabled: true },
+        { label: "Outside Dhaka", amount: 120, isEnabled: true }
+      ];
+      DELIVERY_DATA.forEach(d => {
+        const dRef = doc(collection(db, 'delivery_options'));
+        batch.set(dRef, { ...d, createdAt: now });
+      });
+
       await batch.commit();
-      toast({ title: "Marketplace Data Seeded", description: "Full Daraz-style 3-level categories are now live." });
+      toast({ title: "ERP Ecosystem Seeded", description: "Sample products, services, banners, and settings are now live." });
     } catch (err) {
       console.error("Seeding failed:", err);
       toast({ variant: "destructive", title: "Seeding failed" });
@@ -202,13 +197,6 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
-  const STATS = [
-    { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
-    { title: "Product Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { title: "Revenue (Est)", value: "৳0", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Active Staff", value: "8", icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
-  ];
-
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -218,12 +206,17 @@ export default function AdminDashboard() {
         </div>
         <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold rounded-xl shadow-sm border-primary/20 text-primary">
           {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed Daraz Hierarchy
+          Seed ERP Ecosystem
         </Button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {STATS.map((stat, i) => (
+        {[
+          { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
+          { title: "Product Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { title: "Revenue (Est)", value: "৳0", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
+          { title: "Active Staff", value: "8", icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+        ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl">
             <CardContent className="p-4 md:p-6">
               <div className="flex flex-col gap-4">
