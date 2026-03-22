@@ -42,7 +42,8 @@ import {
   MessageCircle,
   List,
   Megaphone,
-  LayoutGrid
+  LayoutGrid,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -134,17 +135,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      id: 'marketing',
-      title: "MARKETING",
+      id: 'promotions',
+      title: "OFFER & PROMOTION",
       icon: Zap,
       items: [
-        { name: "Overview", href: '/admin/marketing/overview', icon: LayoutDashboard },
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Pixel Setup", href: '/admin/marketing/pixel', icon: Tag },
-        { name: "CAPI Tracking", href: '/admin/marketing/capi', icon: ShieldCheck },
-        { name: "Event Logs", href: '/admin/marketing/logs', icon: FileText },
         { name: "Navbar Banners", href: '/admin/marketing/navbar-offers', icon: LayoutGrid },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
+      ]
+    },
+    {
+      id: 'marketing',
+      title: "MARKETING",
+      icon: Target,
+      items: [
+        { name: "Overview", href: '/admin/marketing/overview', icon: LayoutDashboard },
+        { name: "Pixel Setup", href: '/admin/marketing/pixel', icon: Tag },
+        { name: "Server Tracking (CAPI)", href: '/admin/marketing/capi', icon: ShieldCheck },
+        { name: "Event Logs", href: '/admin/marketing/logs', icon: FileText },
+        { name: "Campaign Analytics", href: '/admin/marketing/analytics', icon: BarChart3 },
+        { name: "Settings", href: '/admin/marketing', icon: Settings },
       ]
     },
     {
