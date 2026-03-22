@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { NavbarOfferSlider } from './navbar-offer-slider';
 
 export function Navbar() {
   const { language, setLanguage, t } = useLanguage();
@@ -81,7 +82,7 @@ export function Navbar() {
 
       {/* Main Daraz-style Header */}
       <div className="bg-white border-b py-2 md:py-4 px-3 md:px-4">
-        <div className="container mx-auto flex items-center gap-3 md:gap-8">
+        <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
           {/* Logo Section */}
           <Link href={logoLink} className="flex items-center shrink-0">
@@ -102,6 +103,9 @@ export function Navbar() {
               )}
             </div>
           </Link>
+
+          {/* Offer Slider - CIRCULAR Daraz Style */}
+          <NavbarOfferSlider />
 
           {/* Daraz-style Search Bar - Responsive */}
           <div className="flex-1 relative">

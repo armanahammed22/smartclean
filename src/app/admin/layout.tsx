@@ -41,7 +41,8 @@ import {
   Search,
   MessageCircle,
   List,
-  Megaphone
+  Megaphone,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -159,6 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Tag,
       items: [
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
+        { name: "Navbar Banners", href: '/admin/marketing/navbar-offers', icon: LayoutGrid },
         { name: "Marketing Hub", href: '/admin/marketing', icon: Zap },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]

@@ -104,6 +104,18 @@
         "totalPrice": { "type": "number" },
         "employeeId": { "type": "string" }
       }
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "A circular navbar banner offer.",
+      "type": "object",
+      "properties": {
+        "image": { "type": "string" },
+        "link": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["image", "link", "isActive"]
     }
   },
   "auth": {
@@ -116,6 +128,7 @@
     "/bookings/{id}": { "schema": "Booking", "description": "Service appointments." },
     "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." },
     "/campaigns/{id}": { "schema": "Campaign", "description": "Mega sale events." },
-    "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." }
+    "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." },
+    "/offers/{id}": { "schema": "Offer", "description": "Navbar offer banners." }
   }
 }
