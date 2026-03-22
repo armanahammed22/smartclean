@@ -36,6 +36,8 @@ import {
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
 
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const { user } = useUser();
@@ -53,7 +55,7 @@ export default function SmartCleanHomePage() {
     return doc(db, 'roles_admins', user.uid);
   }, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
   /**
    * DATA FETCHING
