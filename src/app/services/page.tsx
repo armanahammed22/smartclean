@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -20,6 +20,11 @@ export default function ServicesListPage() {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch collections without complex queries to avoid index errors
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
@@ -63,6 +68,8 @@ export default function ServicesListPage() {
   }, [services, products, searchQuery, activeCategory]);
 
   const isLoading = sLoading || pLoading;
+
+  if (!mounted) return null;
 
   return (
     <PublicLayout>
