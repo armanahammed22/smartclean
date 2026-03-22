@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,21 +6,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Users, 
-  UserSquare2, 
   Settings, 
   LogOut,
   ChevronRight,
   ChevronLeft,
   ShieldCheck,
   Loader2,
-  Lock,
-  MapPin,
   BarChart3,
   Menu,
   ShoppingCart,
   Truck,
   Box,
-  Wrench,
   Tags,
   Share2,
   Calendar,
@@ -43,7 +38,9 @@ import {
   List,
   Megaphone,
   LayoutGrid,
-  Target
+  Target,
+  TicketPercent,
+  Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -140,7 +137,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Zap,
       items: [
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Navbar Banners", href: '/admin/marketing/navbar-offers', icon: LayoutGrid },
+        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
+        { name: "Homepage Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+        { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]
     },
@@ -149,12 +148,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "MARKETING",
       icon: Target,
       items: [
-        { name: "Overview", href: '/admin/marketing/overview', icon: LayoutDashboard },
+        { name: "Intelligence Overview", href: '/admin/marketing/overview', icon: LayoutDashboard },
         { name: "Pixel Setup", href: '/admin/marketing/pixel', icon: Tag },
         { name: "Server Tracking (CAPI)", href: '/admin/marketing/capi', icon: ShieldCheck },
         { name: "Event Logs", href: '/admin/marketing/logs', icon: FileText },
         { name: "Campaign Analytics", href: '/admin/marketing/analytics', icon: BarChart3 },
-        { name: "Settings", href: '/admin/marketing', icon: Settings },
+        { name: "Tracking Settings", href: '/admin/marketing/settings', icon: Settings },
       ]
     },
     {
