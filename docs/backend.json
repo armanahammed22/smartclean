@@ -90,6 +90,20 @@
         "themeColor": { "type": "string" }
       },
       "required": ["title", "slug", "startDate", "endDate", "isActive"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A service appointment record.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "serviceTitle": { "type": "string" },
+        "dateTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "totalPrice": { "type": "number" },
+        "employeeId": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -99,6 +113,7 @@
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
     "/services/{id}": { "schema": "Service", "description": "Services catalog." },
     "/orders/{id}": { "schema": "Order", "description": "Transactional records." },
+    "/bookings/{id}": { "schema": "Booking", "description": "Service appointments." },
     "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." },
     "/campaigns/{id}": { "schema": "Campaign", "description": "Mega sale events." },
     "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." }

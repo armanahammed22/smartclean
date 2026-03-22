@@ -29,7 +29,10 @@ service cloud.firestore {
 
     function isStaff() {
       return isSignedIn() && (
-        isAdmin() || exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))
+        isBootstrapAdmin() ||
+        exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid)) ||
+        exists(/databases/$(database)/documents/roles_managers/$(request.auth.uid)) ||
+        exists(/databases/$(database)/documents/roles_employees/$(request.auth.uid))
       );
     }
 
