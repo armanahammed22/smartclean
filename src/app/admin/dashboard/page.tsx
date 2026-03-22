@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { 
   Users, 
   Database,
@@ -65,6 +65,14 @@ export default function AdminDashboard() {
       const batch = writeBatch(db);
       const now = new Date().toISOString();
 
+      // Check if already seeded to avoid duplicates
+      const catCheck = await getDocs(collection(db, 'categories'));
+      if (!catCheck.empty) {
+        toast({ title: "Database Already Seeded", description: "Category structure already exists." });
+        setIsSeeding(false);
+        return;
+      }
+
       // 1. Global Settings
       batch.set(doc(db, 'site_settings', 'global'), {
         websiteName: 'Smart Clean',
@@ -92,16 +100,69 @@ export default function AdminDashboard() {
         batch.set(ref, { ...s, createdAt: now, updatedAt: now });
       });
 
-      // 3. Sample Products
-      const productsToSeed = [
-        { name: 'Smart Vacuum Robot X1', price: 45000, regularPrice: 55000, stockQuantity: 12, status: 'Active', isPopular: true, categoryId: 'Equipment', brand: 'SmartPro', imageUrl: 'https://picsum.photos/seed/prod1/600/600' },
-        { name: 'Eco Cleaning Solution Kit', price: 3500, regularPrice: 4200, stockQuantity: 50, status: 'Active', isPopular: true, categoryId: 'Supplies', brand: 'NatureClean', imageUrl: 'https://picsum.photos/seed/prod2/600/600' },
-        { name: 'Professional Steam Mop', price: 12000, regularPrice: 15000, stockQuantity: 8, status: 'Active', isPopular: false, categoryId: 'Equipment', brand: 'SmartPro', imageUrl: 'https://picsum.photos/seed/prod3/600/600' }
+      // 3. Daraz Style Category Hierarchy
+      const CATEGORY_MAP = [
+        {
+          name: "Electronics",
+          subs: [
+            { name: "Mobile", children: ["Smart Phones", "Feature Phones", "Tablets"] },
+            { name: "Laptops", children: ["Gaming Laptops", "Macbooks", "Ultrabooks"] },
+            { name: "Cameras", children: ["DSLR", "Mirrorless", "Action Cameras"] }
+          ]
+        },
+        {
+          name: "Fashion",
+          subs: [
+            { name: "Women's Clothing", children: ["Saree", "Kurti", "Western Wear"] },
+            { name: "Men's Clothing", children: ["T-Shirts", "Shirts", "Panjabi"] }
+          ]
+        },
+        {
+          name: "Home & Living",
+          subs: [
+            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops", "Cleaning Solutions"] },
+            { name: "Kitchen", children: ["Blenders", "Ovens", "Cookware"] }
+          ]
+        },
+        {
+          name: "Health & Beauty",
+          subs: [
+            { name: "Skincare", children: ["Face Wash", "Serum", "Moisturizer"] },
+            { name: "Makeup", children: ["Lipstick", "Foundation", "Eye Shadow"] }
+          ]
+        }
       ];
 
-      productsToSeed.forEach(p => {
-        const ref = doc(collection(db, 'products'));
-        batch.set(ref, { ...p, createdAt: now, updatedAt: now });
+      CATEGORY_MAP.forEach((mainCat, mainIdx) => {
+        const catRef = doc(collection(db, 'categories'));
+        const catId = catRef.id;
+        batch.set(catRef, {
+          name: mainCat.name,
+          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-'),
+          order: mainIdx,
+          imageUrl: `https://picsum.photos/seed/cat${mainIdx}/200/200`
+        });
+
+        mainCat.subs.forEach((sub, subIdx) => {
+          const subRef = doc(collection(db, 'subcategories'));
+          const subId = subRef.id;
+          batch.set(subRef, {
+            name: sub.name,
+            slug: sub.name.toLowerCase().replace(/\s+/g, '-'),
+            categoryId: catId,
+            order: subIdx
+          });
+
+          sub.children.forEach((child, childIdx) => {
+            const childRef = doc(collection(db, 'childcategories'));
+            batch.set(childRef, {
+              name: child,
+              slug: child.toLowerCase().replace(/\s+/g, '-'),
+              subcategoryId: subId,
+              order: childIdx
+            });
+          });
+        });
       });
 
       // 4. Sample Banners
@@ -117,25 +178,8 @@ export default function AdminDashboard() {
         batch.set(ref, { ...b, createdAt: now, updatedAt: now });
       });
 
-      // 5. Sample Top Nav Categories (Circular Icons on Homepage)
-      const topNavToSeed = [
-        { name: 'Cleaning', order: 1, link: '/services?category=Cleaning' },
-        { name: 'Maintenance', order: 2, link: '/services?category=Maintenance' },
-        { name: 'Repair', order: 3, link: '/services?category=Repair' },
-        { name: 'Equipment', order: 4, link: '/services?category=Equipment' },
-        { name: 'Supplies', order: 5, link: '/services?category=Supplies' },
-        { name: 'Offers', order: 6, link: '/#offers' },
-        { name: 'Support', order: 7, link: '/support' },
-        { name: 'Account', order: 8, link: '/account/dashboard' }
-      ];
-
-      topNavToSeed.forEach(cat => {
-        const ref = doc(collection(db, 'top_nav_categories'));
-        batch.set(ref, { ...cat, createdAt: now });
-      });
-
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "All catalog sections and categories are now populated." });
+      toast({ title: "ERP & Marketplace Seeded", description: "All hierarchical categories and site settings are now live." });
     } catch (err) {
       console.error(err);
       toast({ variant: "destructive", title: "Seeding failed" });

@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Product": {
@@ -20,6 +19,39 @@
         "description": { "type": "string" }
       },
       "required": ["name", "price", "stockQuantity", "status"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Main level marketplace category.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
+    "Subcategory": {
+      "title": "Subcategory",
+      "description": "Second level category.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
+    "ChildCategory": {
+      "title": "ChildCategory",
+      "description": "Third level category.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "subcategoryId": { "type": "string" },
+        "order": { "type": "number" }
+      }
     },
     "Courier": {
       "title": "Courier",
@@ -123,6 +155,9 @@
   },
   "firestore": {
     "/products/{id}": { "schema": "Product", "description": "Product catalog." },
+    "/categories/{id}": { "schema": "Category", "description": "Main level categories." },
+    "/subcategories/{id}": { "schema": "Subcategory", "description": "Sub categories." },
+    "/childcategories/{id}": { "schema": "ChildCategory", "description": "Child categories." },
     "/services/{id}": { "schema": "Service", "description": "Services catalog." },
     "/orders/{id}": { "schema": "Order", "description": "Transactional records." },
     "/bookings/{id}": { "schema": "Booking", "description": "Service appointments." },

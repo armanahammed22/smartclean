@@ -44,7 +44,11 @@ const PUBLIC_COLLECTIONS = [
   'payment_methods',
   'coupons',
   'service_areas',
-  'delivery_options'
+  'delivery_options',
+  'offers',
+  'categories',
+  'subcategories',
+  'childcategories'
 ];
 
 /**
