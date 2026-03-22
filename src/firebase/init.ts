@@ -6,54 +6,52 @@ import { getFirestore, initializeFirestore, Firestore, memoryLocalCache } from '
 import { firebaseConfig } from './config';
 
 // Singleton instances to persist across re-renders/hot-reloads
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
+let firebaseApp: FirebaseApp | undefined;
+let firebaseAuth: Auth | undefined;
+let firestoreDb: Firestore | undefined;
 
 /**
  * Idempotent Firebase initialization.
  * Returns core service instances for the application.
- * Ensures initializeFirestore is only called once per app lifecycle with stability settings.
+ * Handles both Client and Server environments gracefully.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore } {
-  if (typeof window === 'undefined') {
-    return { firebaseApp: null as any, auth: null as any, firestore: null as any };
-  }
-
   // 1. Initialize App
-  if (!app) {
+  if (!firebaseApp) {
     if (getApps().length > 0) {
-      app = getApp();
+      firebaseApp = getApp();
     } else {
-      app = initializeApp(firebaseConfig);
+      firebaseApp = initializeApp(firebaseConfig);
     }
   }
 
   // 2. Initialize Firestore with stability settings
-  if (!db) {
-    try {
-      // In cloud workstation environments, we use forced long polling and memory cache.
-      // Persistence (IndexedDB) can often lead to "Unexpected state" assertion errors
-      // during hot reloads or proxied stream disruptions.
-      db = initializeFirestore(app, {
-        experimentalForceLongPolling: true,
-        localCache: memoryLocalCache(),
-      });
-    } catch (e) {
-      // If initializeFirestore fails (e.g. instance already exists), 
-      // fallback to retrieving the existing instance.
-      db = getFirestore(app);
+  if (!firestoreDb) {
+    if (typeof window !== 'undefined') {
+      // Client-side: use forced long polling and memory cache for environment stability
+      try {
+        firestoreDb = initializeFirestore(firebaseApp, {
+          experimentalForceLongPolling: true,
+          localCache: memoryLocalCache(),
+        });
+      } catch (e) {
+        // Fallback if already initialized by another process
+        firestoreDb = getFirestore(firebaseApp);
+      }
+    } else {
+      // Server-side: standard initialization for API routes
+      firestoreDb = getFirestore(firebaseApp);
     }
   }
   
   // 3. Initialize Auth
-  if (!auth) {
-    auth = getAuth(app);
+  if (!firebaseAuth) {
+    firebaseAuth = getAuth(firebaseApp);
   }
 
   return { 
-    firebaseApp: app, 
-    auth: auth, 
-    firestore: db 
+    firebaseApp: firebaseApp, 
+    auth: firebaseAuth, 
+    firestore: firestoreDb 
   };
 }
