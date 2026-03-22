@@ -28,7 +28,8 @@ import {
   MapPin,
   ChevronRight as ChevronRightIcon,
   HelpCircle,
-  TicketPercent
+  TicketPercent,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
@@ -41,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ProductCard } from '@/components/products/product-card';
+import { trackEvent } from '@/lib/tracking';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -80,6 +82,20 @@ export default function ProductDetailsPage() {
     return Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
   }, [product]);
 
+  // TRACK: ViewContent
+  useEffect(() => {
+    if (product) {
+      trackEvent('ViewContent', {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.price,
+        currency: 'BDT',
+        content_category: product.categoryId
+      });
+    }
+  }, [product]);
+
   const handleSpeak = async () => {
     if (!product || isSpeaking) return;
     setIsSpeaking(true);
@@ -113,7 +129,6 @@ export default function ProductDetailsPage() {
             {/* LEFT COLUMN: Gallery & Main Info */}
             <div className="lg:col-span-8 space-y-3">
               
-              {/* IMAGE SLIDER SECTION */}
               <div className="bg-white relative">
                 <div className="relative aspect-square w-full overflow-hidden flex items-center justify-center">
                   {allImages.length > 0 ? (
@@ -131,7 +146,6 @@ export default function ProductDetailsPage() {
                     </div>
                   )}
 
-                  {/* Overlays */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                     <Badge className="bg-[#f85606] text-white border-none rounded-sm px-2 py-0.5 text-[10px] font-black uppercase tracking-tight shadow-md">Mall</Badge>
                     <div className="bg-white/90 backdrop-blur-sm rounded-md px-2 py-1 flex items-center gap-1 shadow-sm border border-gray-100">
@@ -140,12 +154,10 @@ export default function ProductDetailsPage() {
                     </div>
                   </div>
 
-                  {/* Image Counter */}
                   <div className="absolute bottom-4 right-4 bg-black/40 text-white text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-md">
                     {activeImageIdx + 1} / {allImages.length}
                   </div>
 
-                  {/* AI Speak Trigger */}
                   <button 
                     onClick={handleSpeak}
                     className={cn(
@@ -157,7 +169,6 @@ export default function ProductDetailsPage() {
                   </button>
                 </div>
 
-                {/* Thumbnails */}
                 {allImages.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto p-4 bg-white no-scrollbar border-t border-gray-50">
                     {allImages.map((img, idx) => (
@@ -176,7 +187,6 @@ export default function ProductDetailsPage() {
                 )}
               </div>
 
-              {/* PRICE & TITLE SECTION */}
               <div className="bg-white p-4 space-y-4">
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-2">
@@ -215,7 +225,6 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
 
-              {/* VOUCHERS SECTION */}
               <div className="bg-white p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-[#212121]">Promotions</h3>
@@ -230,33 +239,9 @@ export default function ProductDetailsPage() {
                     <div className="h-8 w-px bg-[#f85606]/20" />
                     <button className="text-[10px] font-black text-[#f85606] uppercase tracking-widest">Collect</button>
                   </div>
-                  <div className="bg-[#fff1eb] border border-dashed border-[#f85606]/30 p-3 rounded-lg flex gap-4 items-center shrink-0 group active:scale-95 transition-transform cursor-pointer opacity-60">
-                    <div className="space-y-0.5">
-                      <p className="text-[#f85606] font-black text-sm">10% OFF</p>
-                      <p className="text-[9px] font-medium text-gray-500">New User Only</p>
-                    </div>
-                    <div className="h-8 w-px bg-[#f85606]/20" />
-                    <button className="text-[10px] font-black text-[#f85606] uppercase tracking-widest">Collect</button>
-                  </div>
                 </div>
               </div>
 
-              {/* REVIEWS SECTION PREVIEW */}
-              <div className="bg-white p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold text-[#212121]">Ratings & Reviews</h3>
-                  <button className="text-[11px] text-[#1a9cb7] font-bold uppercase tracking-tight">View All</button>
-                </div>
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <Star size={40} className="text-gray-200 mb-2" />
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No reviews yet</p>
-                    <p className="text-[10px] text-gray-400 mt-1">Be the first to rate this product</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* DESCRIPTION SECTION */}
               <div className="bg-white p-4 space-y-4">
                 <h3 className="text-sm font-bold text-[#212121] uppercase tracking-tight">Product Description</h3>
                 <div className="prose prose-sm max-w-none text-[#424242] leading-relaxed">
@@ -269,16 +254,12 @@ export default function ProductDetailsPage() {
 
             </div>
 
-            {/* RIGHT COLUMN (DESKTOP) / MIDDLE (MOBILE): Delivery & Seller */}
             <div className="lg:col-span-4 space-y-3">
-              
-              {/* DELIVERY CARD */}
               <div className="bg-white p-4 space-y-5">
                 <div className="flex items-start justify-between">
                   <h3 className="text-[11px] font-black uppercase text-gray-400 tracking-[0.1em]">Delivery</h3>
                   <Info size={14} className="text-gray-300" />
                 </div>
-                
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <MapPin size={18} className="text-gray-400 mt-0.5" />
@@ -288,7 +269,6 @@ export default function ProductDetailsPage() {
                     </div>
                     <ChevronRightIcon size={16} className="text-gray-300" />
                   </div>
-
                   <div className="flex items-start gap-3 pt-2 border-t border-gray-50">
                     <Truck size={18} className="text-gray-400 mt-0.5" />
                     <div className="flex-1 space-y-1">
@@ -297,22 +277,11 @@ export default function ProductDetailsPage() {
                         <p className="text-xs font-black text-[#212121]">৳55</p>
                       </div>
                       <p className="text-[10px] text-gray-500">Guaranteed within 2-4 days</p>
-                      <div className="flex items-center gap-1.5 bg-[#effaf1] text-[#22c55e] w-fit px-1.5 py-0.5 rounded text-[9px] font-bold">
-                        <CheckCircle2 size={10} /> Free shipping over ৳2,000
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 pt-2 border-t border-gray-50">
-                    <Box size={18} className="text-gray-400 mt-0.5" />
-                    <div className="flex-1 space-y-0.5">
-                      <p className="text-xs font-bold text-[#212121]">Cash on Delivery Available</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* SELLER CARD */}
               <div className="bg-white p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -321,31 +290,13 @@ export default function ProductDetailsPage() {
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-xs font-bold text-[#212121]">{product.brand || 'Official Store'}</p>
-                      <div className="flex items-center gap-1">
-                        <div className="bg-[#f85606] text-white text-[8px] font-black px-1 rounded-sm uppercase tracking-tighter italic">Verified</div>
-                      </div>
+                      <div className="bg-[#f85606] text-white text-[8px] font-black px-1 rounded-sm uppercase tracking-tighter italic w-fit">Verified</div>
                     </div>
                   </div>
                   <button className="text-[11px] text-[#1a9cb7] font-bold uppercase tracking-tight">Visit Store</button>
                 </div>
-
-                <div className="grid grid-cols-3 gap-2 py-3 border-y border-gray-50">
-                  <div className="text-center space-y-0.5">
-                    <p className="text-[10px] text-gray-400 font-medium">Positive Rating</p>
-                    <p className="text-sm font-black text-[#212121]">92%</p>
-                  </div>
-                  <div className="text-center space-y-0.5 border-x border-gray-50">
-                    <p className="text-[10px] text-gray-400 font-medium">Ship on Time</p>
-                    <p className="text-sm font-black text-[#212121]">98%</p>
-                  </div>
-                  <div className="text-center space-y-0.5">
-                    <p className="text-[10px] text-gray-400 font-medium">Chat Response</p>
-                    <p className="text-sm font-black text-[#212121]">100%</p>
-                  </div>
-                </div>
               </div>
 
-              {/* RELATED PRODUCTS */}
               <div className="bg-white p-4 space-y-4">
                 <h3 className="text-sm font-bold text-[#212121] uppercase tracking-tight">More from Store</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -354,14 +305,11 @@ export default function ProductDetailsPage() {
                   ))}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* DARAZ STYLE MOBILE STICKY FOOTER */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-stretch h-16 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-          {/* Icons Group */}
           <div className="flex-1 flex items-center justify-around px-2 border-r">
             <button className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
               <Store size={20} className="text-gray-500 group-hover:text-[#f85606]" />
@@ -372,8 +320,6 @@ export default function ProductDetailsPage() {
               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Chat</span>
             </button>
           </div>
-
-          {/* Action Buttons */}
           <div className="flex-[2.5] flex">
             <button 
               onClick={() => addToCart(product as any, quantity)}
@@ -391,24 +337,5 @@ export default function ProductDetailsPage() {
         </div>
       </div>
     </PublicLayout>
-  );
-}
-
-function ChevronDown({ className, size }: { className?: string, size?: number }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size || 24} 
-      height={size || 24} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="m6 9 6 6 6-6"/>
-    </svg>
   );
 }

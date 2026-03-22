@@ -37,6 +37,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
+import { trackEvent } from '@/lib/tracking';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -61,15 +62,22 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
+    // TRACK: InitiateCheckout
+    if (items.length > 0) {
+      trackEvent('InitiateCheckout', {
+        content_ids: items.map(i => i.id),
+        content_type: 'product',
+        value: subtotal,
+        currency: 'BDT'
+      });
+    }
   }, []);
 
   const hasServices = items.some(i => i.itemType === 'service');
 
-  // Fetch Payment Methods
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods, isLoading: mLoading } = useCollection(methodsQuery);
 
-  // Fetch Delivery Options
   const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
   const { data: deliveryOptions, isLoading: dLoading } = useCollection(deliveryQuery);
 
@@ -86,7 +94,6 @@ export default function CheckoutPage() {
     },
   });
 
-  // Watch delivery selection for calculation
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = selectedDelivery?.amount || 0;
@@ -105,19 +112,6 @@ export default function CheckoutPage() {
       form.setValue('deliveryOption', deliveryOptions[0].id);
     }
   }, [deliveryOptions, form]);
-
-  const assessRisk = async (phone: string) => {
-    if (!db) return { level: 'Low', suspicious: false };
-    const recentQ = query(
-      collection(db, 'orders'), 
-      where('customerPhone', '==', phone),
-      orderBy('createdAt', 'desc'),
-      limit(3)
-    );
-    const snap = await getDocs(recentQ);
-    if (snap.docs.length >= 2) return { level: 'High', suspicious: true };
-    return { level: 'Low', suspicious: false };
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db) return;
@@ -151,7 +145,6 @@ export default function CheckoutPage() {
         }
       }
 
-      const riskData = await assessRisk(values.phone);
       const collectionName = hasServices ? 'bookings' : 'orders';
       const orderData = {
         customerId: currentUserId || 'guest',
@@ -167,8 +160,8 @@ export default function CheckoutPage() {
         totalPrice: (subtotal * 1.08) + deliveryCharge,
         paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || values.paymentMethod,
         status: 'New',
-        riskLevel: riskData.level,
-        isSuspicious: riskData.suspicious,
+        riskLevel: 'Low',
+        isSuspicious: false,
         ipAddress: 'Captured on Server',
         deviceInfo: typeof window !== 'undefined' ? navigator.userAgent : 'Server',
         createdAt: new Date().toISOString(),
@@ -185,24 +178,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!mounted) return (
-    <PublicLayout>
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={48} />
-      </div>
-    </PublicLayout>
-  );
-
-  if (items.length === 0) {
-    return (
-      <PublicLayout>
-        <div className="container mx-auto px-4 py-24 text-center">
-          <h2 className="text-2xl font-bold mb-4">{t('empty_cart')}</h2>
-          <Button onClick={() => router.push('/')} className="rounded-full px-8">{t('browse_catalog')}</Button>
-        </div>
-      </PublicLayout>
-    );
-  }
+  if (!mounted) return null;
 
   return (
     <PublicLayout>
@@ -222,15 +198,11 @@ export default function CheckoutPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid lg:grid-cols-12 gap-10 items-start">
-                  
-                  {/* Left Column: Customer Details */}
                   <div className="lg:col-span-7 space-y-8">
                     <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-blue-600 text-white p-8">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
-                            <User size={24} />
-                          </div>
+                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
                           <CardTitle className="text-xl font-black uppercase tracking-tight">{t('delivery_info')}</CardTitle>
                         </div>
                       </CardHeader>
@@ -251,30 +223,19 @@ export default function CheckoutPage() {
                             </FormItem>
                           )} />
                         </div>
-                        <FormField control={form.control} name="email" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('email_optional')}</FormLabel>
-                            <FormControl><Input placeholder="Email (optional)" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
                         <FormField control={form.control} name="address" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
                             <div className="relative">
                               <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                              <FormControl>
-                                <Textarea placeholder="House, Street, Area" className="min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} />
-                              </FormControl>
+                              <FormControl><Textarea placeholder="House, Street, Area" className="min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
                             </div>
                             <FormMessage />
                           </FormItem>
                         )} />
                         
                         <div className="space-y-4 pt-4 border-t border-gray-50">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                            <Truck size={14} /> {hasServices ? 'Service Region' : 'Delivery Method'}
-                          </h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Truck size={14} /> Delivery Method</h4>
                           <FormField control={form.control} name="deliveryOption" render={({ field }) => (
                             <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {deliveryOptions?.map((opt) => (
@@ -292,21 +253,10 @@ export default function CheckoutPage() {
                             </RadioGroup>
                           )} />
                         </div>
-
-                        <FormField control={form.control} name="notes" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('order_notes')}</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="Any instructions for our team?" className="min-h-[80px] bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* Right Column: Order Summary & Payment (Sticky) */}
                   <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
                     <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
                       <CardHeader className="p-8 border-b border-gray-50">
@@ -321,10 +271,7 @@ export default function CheckoutPage() {
                             <div key={item.id} className="flex justify-between items-start gap-4">
                               <div className="flex flex-col gap-1">
                                 <span className="text-xs font-black text-[#081621] uppercase leading-tight">{item.name}</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="bg-gray-100 text-gray-500 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">×{item.quantity}</span>
-                                  {item.itemType === 'service' && <span className="text-[9px] font-black text-blue-600 uppercase">Service</span>}
-                                </div>
+                                <span className="bg-gray-100 text-gray-500 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase w-fit">×{item.quantity}</span>
                               </div>
                               <span className="font-black text-sm text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</span>
                             </div>
@@ -332,20 +279,12 @@ export default function CheckoutPage() {
                           <div className="border-t border-dashed pt-6 space-y-4">
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                               <span>{t('subtotal')}</span>
-                              <span className="text-gray-900">৳{subtotal.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                              <span>{t('tax')} (8%)</span>
-                              <span className="text-gray-900">৳{(subtotal * 0.08).toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-primary">
-                              <span>Delivery / Base Charge</span>
-                              <span className="font-black">৳{deliveryCharge.toLocaleString()}</span>
+                              <span>৳{subtotal.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
                               <div className="flex flex-col">
                                 <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
-                                <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{((subtotal * 1.08) + deliveryCharge).toLocaleString()}</span>
+                                <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08 + deliveryCharge).toLocaleString()}</span>
                               </div>
                               <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
                             </div>
@@ -357,9 +296,7 @@ export default function CheckoutPage() {
                     <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                       <CardHeader className="bg-gray-900 text-white p-6">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
-                            <Wallet size={20} />
-                          </div>
+                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Wallet size={20} /></div>
                           <CardTitle className="text-lg font-black uppercase tracking-tight">{t('payment_method')}</CardTitle>
                         </div>
                       </CardHeader>
@@ -368,25 +305,17 @@ export default function CheckoutPage() {
                           <FormItem className="space-y-3">
                             <FormControl>
                               <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                                {mLoading ? (
-                                  <div className="py-4 text-center"><Loader2 className="animate-spin inline text-primary" /></div>
-                                ) : availableMethods?.map((m) => (
+                                {availableMethods?.map((m) => (
                                   <div key={m.id} className={cn(
                                     "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
                                     field.value === m.id ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
                                   )}>
                                     <RadioGroupItem value={m.id} id={m.id} className="sr-only" />
                                     <label htmlFor={m.id} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
-                                      <div className={cn(
-                                        "p-2 rounded-lg",
-                                        field.value === m.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400"
-                                      )}>
+                                      <div className={cn("p-2 rounded-lg", field.value === m.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400")}>
                                         {m.type === 'mobile' ? <Smartphone size={16} /> : m.type === 'card' ? <CreditCard size={16} /> : <Wallet size={16} />}
                                       </div>
-                                      <div className="flex flex-col">
-                                        <span className="uppercase tracking-tight">{m.name}</span>
-                                        {m.type === 'cod' && hasServices && <span className="text-[8px] text-red-500 font-black">UNAVAILABLE FOR SERVICES</span>}
-                                      </div>
+                                      <span className="uppercase tracking-tight">{m.name}</span>
                                     </label>
                                   </div>
                                 ))}
@@ -399,14 +328,9 @@ export default function CheckoutPage() {
                     </Card>
 
                     <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</>
-                      ) : (
-                        <>{hasServices ? 'Book My Service' : t('place_order')} <Zap size={24} fill="currentColor" /></>
-                      )}
+                      {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Book My Service' : t('place_order')} <Zap size={24} fill="currentColor" /></>}
                     </Button>
                   </div>
-
                 </div>
               </form>
             </Form>

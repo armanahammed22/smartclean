@@ -1,9 +1,11 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { CartItem, Product, Service } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
+import { trackEvent } from '@/lib/tracking';
 
 interface CartContextType {
   items: CartItem[];
@@ -31,6 +33,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const name = isService ? (item as Service).title : (item as Product).name;
     const category = isService ? t('services_title') : (item as Product).category;
     const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
+
+    // TRACK: AddToCart
+    trackEvent('AddToCart', {
+      content_name: name,
+      content_ids: [item.id],
+      content_type: 'product',
+      value: price * quantity,
+      currency: 'BDT',
+      content_category: category
+    });
 
     setItems((prevItems) => {
       const existingItem = prevItems.find((prev) => prev.id === item.id);

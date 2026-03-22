@@ -5,6 +5,7 @@ import {CartProvider} from '@/components/providers/cart-provider';
 import {LanguageProvider} from '@/components/providers/language-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
+import {TrackingProvider} from '@/components/providers/tracking-provider';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -33,10 +34,12 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <LanguageProvider>
             <CartProvider>
-              <main className="flex-1 flex flex-col">
-                {children}
-              </main>
-              <Toaster />
+              <TrackingProvider>
+                <main className="flex-1 flex flex-col">
+                  {children}
+                </main>
+                <Toaster />
+              </TrackingProvider>
             </CartProvider>
           </LanguageProvider>
         </FirebaseClientProvider>

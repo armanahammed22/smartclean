@@ -10,20 +10,44 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { trackEvent } from '@/lib/tracking';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const { toast } = useToast();
+  const db = useFirestore();
   const [mounted, setMounted] = useState(false);
+
+  const orderId = searchParams.get('id') || 'UNKNOWN';
+  const tempPw = searchParams.get('pw');
+  const userEmail = searchParams.get('email');
+
+  // Fetch order data to get value for tracking
+  const orderRef = useMemoFirebase(() => db && orderId !== 'UNKNOWN' ? doc(db, 'orders', orderId) : null, [db, orderId]);
+  const { data: order } = useDoc(orderRef);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const orderId = searchParams.get('id') || 'UNKNOWN';
-  const tempPw = searchParams.get('pw');
-  const userEmail = searchParams.get('email');
+  // TRACK: Purchase
+  useEffect(() => {
+    if (order && mounted) {
+      trackEvent('Purchase', {
+        content_ids: order.items?.map((i: any) => i.id) || [],
+        content_type: 'product',
+        value: order.totalPrice,
+        currency: 'BDT',
+        user_data: {
+          email: order.customerEmail,
+          phone: order.customerPhone
+        }
+      });
+    }
+  }, [order, mounted]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -41,7 +65,6 @@ export default function OrderSuccessContent() {
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="flex flex-col items-center text-center space-y-8">
           
-          {/* ICON */}
           <div className="relative">
             <div className="bg-green-100 p-6 rounded-full animate-bounce">
               <CheckCircle2 size={64} className="text-green-600" />
@@ -51,7 +74,6 @@ export default function OrderSuccessContent() {
             </div>
           </div>
 
-          {/* TEXT */}
           <div className="space-y-3">
             <h1 className="text-4xl font-black font-headline text-[#081621] uppercase tracking-tight">
               {t('order_confirmed')}
@@ -61,11 +83,8 @@ export default function OrderSuccessContent() {
             </p>
           </div>
 
-          {/* CARD */}
           <Card className="w-full rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
             <CardContent className="p-10 space-y-8">
-
-              {/* ORDER ID */}
               <div className="space-y-2">
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                   {t('order_id')}
@@ -80,10 +99,8 @@ export default function OrderSuccessContent() {
                 </div>
               </div>
 
-              {/* ACCOUNT INFO */}
               {tempPw && (
                 <div className="space-y-6 pt-6 border-t border-gray-100">
-                  
                   <div className="space-y-2 text-left">
                     <Badge className="bg-primary/10 text-primary border-none uppercase font-black text-[9px] px-3 py-1 rounded-full">
                       {t('account_created')}
@@ -92,40 +109,25 @@ export default function OrderSuccessContent() {
                       {t('login_info')}
                     </p>
                   </div>
-
                   <div className="grid gap-4">
-
-                    {/* EMAIL */}
                     <div>
-                      <label className="text-[10px] font-black uppercase text-muted-foreground">
-                        Login Email
-                      </label>
+                      <label className="text-[10px] font-black uppercase text-muted-foreground">Login Email</label>
                       <div className="flex justify-between p-4 bg-blue-50 rounded-2xl border">
                         <span className="truncate">{userEmail}</span>
-                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(userEmail || '')}>
-                          <Copy size={16} />
-                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(userEmail || '')}><Copy size={16} /></Button>
                       </div>
                     </div>
-
-                    {/* PASSWORD */}
                     <div>
-                      <label className="text-[10px] font-black uppercase text-muted-foreground">
-                        {t('temp_password')}
-                      </label>
+                      <label className="text-[10px] font-black uppercase text-muted-foreground">{t('temp_password')}</label>
                       <div className="flex justify-between p-4 bg-amber-50 rounded-2xl border">
                         <span>{tempPw}</span>
-                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(tempPw)}>
-                          <Copy size={16} />
-                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(tempPw)}><Copy size={16} /></Button>
                       </div>
                     </div>
-
                   </div>
                 </div>
               )}
 
-              {/* BUTTONS */}
               <div className="space-y-4 pt-4">
                 <Button asChild size="lg" className="w-full h-16">
                   <Link href="/account/dashboard">
@@ -133,19 +135,12 @@ export default function OrderSuccessContent() {
                     <ExternalLink size={20} />
                   </Link>
                 </Button>
-
                 <Button asChild variant="ghost">
                   <Link href="/">{t('back_to_shop')}</Link>
                 </Button>
               </div>
-
             </CardContent>
           </Card>
-
-          <p className="text-[10px] font-black uppercase text-gray-400">
-            {t('confirmation_email')}
-          </p>
-
         </div>
       </div>
     </div>

@@ -86,7 +86,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  // Protect Admin Route: Dedicated login page
   useEffect(() => {
     if (isLoginPage) return;
     if (!isUserLoading && !user) {
@@ -135,33 +134,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      id: 'services',
-      title: "SERVICES",
-      icon: Wrench,
-      items: [
-        { name: "Service List", href: '/admin/services', icon: Wrench },
-        { name: "Sub Services", href: '/admin/services/sub-services', icon: Grid },
-        { name: "Service Areas", href: '/admin/areas', icon: MapPin },
-      ]
-    },
-    {
-      id: 'crm',
-      title: "CRM & USERS",
-      icon: Users,
-      items: [
-        { name: "Customers", href: '/admin/customers', icon: UserSquare2 },
-        { name: "Staff", href: '/admin/employees', icon: Users },
-        { name: "Access Control", href: '/admin/roles', icon: Lock },
-      ]
-    },
-    {
       id: 'marketing',
-      title: "OFFER & PROMOTION",
-      icon: Tag,
+      title: "MARKETING",
+      icon: Zap,
       items: [
+        { name: "Overview", href: '/admin/marketing/overview', icon: LayoutDashboard },
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
+        { name: "Pixel Setup", href: '/admin/marketing/pixel', icon: Tag },
+        { name: "CAPI Tracking", href: '/admin/marketing/capi', icon: ShieldCheck },
+        { name: "Event Logs", href: '/admin/marketing/logs', icon: FileText },
         { name: "Navbar Banners", href: '/admin/marketing/navbar-offers', icon: LayoutGrid },
-        { name: "Marketing Hub", href: '/admin/marketing', icon: Zap },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]
     },
@@ -333,7 +315,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Allow the login page to render without protection or sidebar
   if (isLoginPage) return <>{children}</>;
 
   if (!user || !isAuthorized) return null;

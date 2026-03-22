@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Product": {
@@ -148,6 +149,20 @@
         "order": { "type": "number" }
       },
       "required": ["image", "link", "isActive"]
+    },
+    "TrackingLog": {
+      "title": "TrackingLog",
+      "description": "A log of marketing events sent to external platforms.",
+      "type": "object",
+      "properties": {
+        "eventName": { "type": "string" },
+        "eventId": { "type": "string" },
+        "platform": { "type": "string", "enum": ["Facebook", "Google"] },
+        "method": { "type": "string", "enum": ["Browser", "Server"] },
+        "status": { "type": "string" },
+        "payload": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -164,6 +179,8 @@
     "/couriers/{id}": { "schema": "Courier", "description": "Logistics providers." },
     "/campaigns/{id}": { "schema": "Campaign", "description": "Mega sale events." },
     "/campaigns/{id}/products/{pId}": { "schema": "object", "description": "Products participating in a campaign." },
-    "/offers/{id}": { "schema": "Offer", "description": "Navbar offer banners." }
+    "/offers/{id}": { "schema": "Offer", "description": "Navbar offer banners." },
+    "/tracking_logs/{id}": { "schema": "TrackingLog", "description": "Logs for Facebook/Google events." },
+    "/site_settings/{id}": { "schema": "object", "description": "Global settings for marketing and SEO." }
   }
 }
