@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -45,7 +46,13 @@ import {
   Wrench,
   Layers,
   HardHat,
-  Briefcase
+  Briefcase,
+  Sparkles,
+  Award,
+  Shapes,
+  ListChecks,
+  Settings2,
+  CalendarCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -96,23 +103,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [db, isAuthorized]);
   const { data: pendingErrors } = useCollection(pendingErrorsQuery);
 
-  useEffect(() => {
-    if (isLoginPage) return;
-    if (!isUserLoading && !user) {
-      router.replace('/admin/login');
-    }
-  }, [user, isUserLoading, router, isLoginPage]);
-
-  useEffect(() => {
-    if (isLoginPage) return;
-    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
-      signOut(auth).then(() => {
-        router.replace('/admin/login');
-      });
-    }
-  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
-
   const NAV_GROUPS = [
     {
       id: 'dashboard',
@@ -141,6 +131,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Products", href: '/admin/products', icon: Box },
         { name: "Categories", href: '/admin/products/categories', icon: Tags },
         { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+        { name: "Brands", href: '/admin/attributes/brands', icon: Award },
+        { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
+        { name: "Key Features", href: '/admin/attributes/features', icon: ListChecks },
+        { name: "Technical Specs", href: '/admin/attributes/specifications', icon: Settings2 },
       ]
     },
     {
@@ -190,6 +184,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      id: 'ai_agents',
+      title: "AI AGENTS",
+      icon: Sparkles,
+      items: [
+        { name: "AI Sales Desk", href: '/admin/ai/sales', icon: MessageCircle },
+        { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: CalendarCheck },
+      ]
+    },
+    {
       id: 'pages',
       title: "PAGE MANAGEMENT",
       icon: FileText,
@@ -236,6 +239,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     }
   ];
+
+  useEffect(() => {
+    if (isLoginPage) return;
+    if (!isUserLoading && !user) {
+      router.replace('/admin/login');
+    }
+  }, [user, isUserLoading, router, isLoginPage]);
+
+  useEffect(() => {
+    if (isLoginPage) return;
+    if (!isUserLoading && !roleLoading && user && !isAuthorized) {
+      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
+      signOut(auth).then(() => {
+        router.replace('/admin/login');
+      });
+    }
+  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
 
   useEffect(() => {
     const activeGroup = NAV_GROUPS.find(group => 
