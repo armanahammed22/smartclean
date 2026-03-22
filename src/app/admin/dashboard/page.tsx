@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -65,14 +66,6 @@ export default function AdminDashboard() {
       const batch = writeBatch(db);
       const now = new Date().toISOString();
 
-      // Check if already seeded to avoid duplicates
-      const catCheck = await getDocs(collection(db, 'categories'));
-      if (!catCheck.empty) {
-        toast({ title: "Database Already Seeded", description: "Category structure already exists." });
-        setIsSeeding(false);
-        return;
-      }
-
       // 1. Global Settings
       batch.set(doc(db, 'site_settings', 'global'), {
         websiteName: 'Smart Clean',
@@ -88,47 +81,38 @@ export default function AdminDashboard() {
         updatedAt: now
       }, { merge: true });
 
-      // 2. Sample Services
-      const servicesToSeed = [
-        { title: 'Residential Deep Cleaning', basePrice: 5000, status: 'Active', isPopular: true, duration: '4-6 Hours', categoryId: 'Cleaning', imageUrl: 'https://picsum.photos/seed/service1/800/600' },
-        { title: 'Sofa & Upholstery Care', basePrice: 1500, status: 'Active', isPopular: true, duration: '1-2 Hours', categoryId: 'Cleaning', imageUrl: 'https://picsum.photos/seed/service2/800/600' },
-        { title: 'AC Master Service', basePrice: 3500, status: 'Active', isPopular: false, duration: '2-3 Hours', categoryId: 'Maintenance', imageUrl: 'https://picsum.photos/seed/service3/800/600' }
-      ];
-
-      servicesToSeed.forEach(s => {
-        const ref = doc(collection(db, 'services'));
-        batch.set(ref, { ...s, createdAt: now, updatedAt: now });
-      });
-
-      // 3. Daraz Style Category Hierarchy
+      // 2. Comprehensive 3-Level Category Structure
       const CATEGORY_MAP = [
+        {
+          name: "Women's Fashion",
+          subs: [
+            { name: "Clothing", children: ["Sarees", "Kurtas & Shalwar Kameez", "Western Wear", "Lingerie & Sleepwear"] },
+            { name: "Shoes", children: ["Heels", "Sneakers", "Flats", "Boots"] },
+            { name: "Bags", children: ["Shoulder Bags", "Backpacks", "Wallets"] }
+          ]
+        },
         {
           name: "Electronics",
           subs: [
-            { name: "Mobile", children: ["Smart Phones", "Feature Phones", "Tablets"] },
-            { name: "Laptops", children: ["Gaming Laptops", "Macbooks", "Ultrabooks"] },
-            { name: "Cameras", children: ["DSLR", "Mirrorless", "Action Cameras"] }
-          ]
-        },
-        {
-          name: "Fashion",
-          subs: [
-            { name: "Women's Clothing", children: ["Saree", "Kurti", "Western Wear"] },
-            { name: "Men's Clothing", children: ["T-Shirts", "Shirts", "Panjabi"] }
-          ]
-        },
-        {
-          name: "Home & Living",
-          subs: [
-            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops", "Cleaning Solutions"] },
-            { name: "Kitchen", children: ["Blenders", "Ovens", "Cookware"] }
+            { name: "Mobile", children: ["Smart Phones", "Feature Phones", "Refurbished Phones"] },
+            { name: "Laptops", children: ["Gaming Laptops", "Macbooks", "Ultrabooks", "Chromebooks"] },
+            { name: "Audio", children: ["Headphones", "TWS Earbuds", "Bluetooth Speakers"] }
           ]
         },
         {
           name: "Health & Beauty",
           subs: [
-            { name: "Skincare", children: ["Face Wash", "Serum", "Moisturizer"] },
-            { name: "Makeup", children: ["Lipstick", "Foundation", "Eye Shadow"] }
+            { name: "Skincare", children: ["Face Wash", "Moisturizer", "Sunscreen", "Serum"] },
+            { name: "Hair Care", children: ["Shampoo", "Conditioner", "Hair Oil"] },
+            { name: "Fragrances", children: ["Perfume", "Deodorant", "Body Mist"] }
+          ]
+        },
+        {
+          name: "Home & Living",
+          subs: [
+            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops & Sweepers", "Laundry", "Cleaning Agents"] },
+            { name: "Kitchen", children: ["Cookware", "Kitchen Appliances", "Bakeware"] },
+            { name: "Furniture", children: ["Living Room", "Bedroom", "Office Furniture"] }
           ]
         }
       ];
@@ -138,9 +122,10 @@ export default function AdminDashboard() {
         const catId = catRef.id;
         batch.set(catRef, {
           name: mainCat.name,
-          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-'),
+          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
           order: mainIdx,
-          imageUrl: `https://picsum.photos/seed/cat${mainIdx}/200/200`
+          imageUrl: `https://picsum.photos/seed/cat${mainIdx}/200/200`,
+          createdAt: now
         });
 
         mainCat.subs.forEach((sub, subIdx) => {
@@ -148,38 +133,44 @@ export default function AdminDashboard() {
           const subId = subRef.id;
           batch.set(subRef, {
             name: sub.name,
-            slug: sub.name.toLowerCase().replace(/\s+/g, '-'),
+            slug: sub.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
             categoryId: catId,
-            order: subIdx
+            order: subIdx,
+            createdAt: now
           });
 
           sub.children.forEach((child, childIdx) => {
             const childRef = doc(collection(db, 'childcategories'));
             batch.set(childRef, {
               name: child,
-              slug: child.toLowerCase().replace(/\s+/g, '-'),
+              slug: child.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
               subcategoryId: subId,
-              order: childIdx
+              order: childIdx,
+              createdAt: now
             });
           });
         });
       });
 
-      // 4. Sample Banners
-      const bannersToSeed = [
-        { title: 'Premium Home Cleaning', subtitle: 'Experience the next level of hygiene with AI mapping.', imageUrl: 'https://picsum.photos/seed/hero1/1200/600', isActive: true, type: 'main', order: 0, buttonText: 'Book Now', buttonLink: '/services', overlayOpacity: 40 },
-        { title: 'Special Monsoon Offer', subtitle: 'Get 20% off on all deep cleaning services.', imageUrl: 'https://picsum.photos/seed/hero2/1200/600', isActive: true, type: 'main', order: 1, buttonText: 'Explore Offers', buttonLink: '/marketing', overlayOpacity: 40 },
-        { title: 'SmartClean App', imageUrl: 'https://picsum.photos/seed/side1/600/800', isActive: true, type: 'side', order: 0, buttonLink: '/#download' },
-        { title: 'Profit Calculator', imageUrl: 'https://picsum.photos/seed/side2/600/800', isActive: true, type: 'side', order: 1, buttonLink: '/#calc' }
+      // 3. Homepage Nav Categories (Circular Grid)
+      const NAV_MAP = [
+        { name: 'Cleaning', icon: 'Wrench', link: '/services?category=Cleaning', order: 1 },
+        { name: 'Fashion', icon: 'LayoutGrid', link: '/products?category=Fashion', order: 2 },
+        { name: 'Electronics', icon: 'Zap', link: '/products?category=Electronics', order: 3 },
+        { name: 'Beauty', icon: 'Sparkles', link: '/products?category=Beauty', order: 4 },
+        { name: 'Grocery', icon: 'ShoppingCart', link: '/products?category=Grocery', order: 5 },
+        { name: 'Tools', icon: 'Package', link: '/products?category=Tools', order: 6 },
+        { name: 'Offers', icon: 'Flashlight', link: '/campaigns', order: 7 },
+        { name: 'Help', icon: 'Timer', link: '/support', order: 8 }
       ];
 
-      bannersToSeed.forEach(b => {
-        const ref = doc(collection(db, 'hero_banners'));
-        batch.set(ref, { ...b, createdAt: now, updatedAt: now });
+      NAV_MAP.forEach(nav => {
+        const ref = doc(collection(db, 'top_nav_categories'));
+        batch.set(ref, { ...nav, createdAt: now });
       });
 
       await batch.commit();
-      toast({ title: "ERP & Marketplace Seeded", description: "All hierarchical categories and site settings are now live." });
+      toast({ title: "Full Taxonomy Seeded", description: "3-level categories and nav shortcuts are now live." });
     } catch (err) {
       console.error(err);
       toast({ variant: "destructive", title: "Seeding failed" });
@@ -188,7 +179,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
+  if (roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
