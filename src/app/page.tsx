@@ -31,7 +31,8 @@ import { useCart } from '@/components/providers/cart-provider';
 import { 
   Carousel, 
   CarouselContent, 
-  CarouselItem
+  CarouselItem,
+  type CarouselApi
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
@@ -44,10 +45,22 @@ export default function SmartCleanHomePage() {
   const { addToCart, setCheckoutOpen } = useCart();
   const db = useFirestore();
   const [mounted, setMounted] = useState(false);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!api) return;
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
 
   // Role Checks
   const adminRoleRef = useMemoFirebase(() => {
@@ -108,6 +121,17 @@ export default function SmartCleanHomePage() {
       ?.filter(s => s.status === 'Active')
       .slice(0, 8) || [];
   }, [allServices]);
+
+  // Chunking for Category Slider (4 cols x 2 rows = 8 items)
+  const categoryChunks = useMemo(() => {
+    if (!allTopNav) return [];
+    const sorted = [...allTopNav].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const chunks = [];
+    for (let i = 0; i < sorted.length; i += 8) {
+      chunks.push(sorted.slice(i, i + 8));
+    }
+    return chunks;
+  }, [allTopNav]);
 
   if (!mounted) return null;
 
@@ -176,30 +200,70 @@ export default function SmartCleanHomePage() {
         {/* MEGA SALE CAMPAIGN SECTION */}
         <CampaignSection />
 
-        {/* CATEGORY GRID - Daraz Mobile Style */}
+        {/* CATEGORY GRID SLIDER - 4 Cols x 2 Rows */}
         <section className="container mx-auto px-3 md:px-4 py-4 md:py-6">
-          <div className="bg-white rounded-xl shadow-sm p-3 md:p-6">
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-y-4 gap-x-2 md:gap-8">
-              {allTopNav?.length ? allTopNav.sort((a,b) => (a.order||0)-(b.order||0)).map((cat) => (
-                <Link 
-                  key={cat.id} 
-                  href={cat.link || `/services?category=${cat.name}`} 
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-50 flex items-center justify-center p-2.5 transition-all group-hover:bg-primary/10 group-hover:scale-110 border border-gray-100">
-                    <LayoutGrid size={20} className="text-gray-400 group-hover:text-primary" />
+          <div className="bg-white rounded-xl shadow-sm p-3 md:p-6 overflow-hidden">
+            {topNavLoading ? (
+              <div className="grid grid-cols-4 gap-4">
+                {Array(8).fill(0).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-50 animate-pulse" />
+                    <div className="w-10 h-2 bg-gray-50 rounded animate-pulse" />
                   </div>
-                  <span className="text-[9px] md:text-xs font-bold text-center text-gray-600 group-hover:text-primary transition-colors line-clamp-1 truncate w-full px-0.5">
-                    {cat.name}
-                  </span>
-                </Link>
-              )) : Array(8).fill(0).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-50 animate-pulse" />
-                  <div className="w-10 h-2 bg-gray-50 rounded animate-pulse" />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : categoryChunks.length > 0 ? (
+              <Carousel setApi={setApi} className="w-full">
+                <CarouselContent className="-ml-0">
+                  {categoryChunks.map((chunk, chunkIdx) => (
+                    <CarouselItem key={chunkIdx} className="pl-0 basis-full">
+                      <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-2 md:gap-x-8 md:gap-y-10">
+                        {chunk.map((cat) => (
+                          <Link 
+                            key={cat.id} 
+                            href={cat.link || `/services?category=${cat.name}`} 
+                            className="flex flex-col items-center gap-2 group"
+                          >
+                            <div className="w-12 h-12 md:w-20 md:h-20 rounded-full bg-gray-50 flex items-center justify-center p-2.5 transition-all group-hover:bg-primary/10 group-hover:scale-110 border border-gray-100 shadow-sm">
+                              {cat.imageUrl ? (
+                                <div className="relative w-full h-full">
+                                  <Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized />
+                                </div>
+                              ) : (
+                                <LayoutGrid size={24} className="text-gray-400 group-hover:text-primary" />
+                              )}
+                            </div>
+                            <span className="text-[9px] md:text-xs font-bold text-center text-gray-600 group-hover:text-primary transition-colors line-clamp-1 truncate w-full px-0.5 uppercase tracking-tighter">
+                              {cat.name}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                
+                {/* Pagination Dots */}
+                {count > 1 && (
+                  <div className="flex justify-center gap-1.5 mt-6">
+                    {Array.from({ length: count }).map((_, i) => (
+                      <button
+                        key={i}
+                        className={cn(
+                          "h-1.5 rounded-full transition-all",
+                          current === i + 1 ? "w-6 bg-primary" : "w-1.5 bg-gray-200"
+                        )}
+                        onClick={() => api?.scrollTo(i)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Carousel>
+            ) : (
+              <div className="py-10 text-center text-muted-foreground text-xs uppercase font-bold tracking-widest opacity-40">
+                No categories defined.
+              </div>
+            )}
           </div>
         </section>
 
