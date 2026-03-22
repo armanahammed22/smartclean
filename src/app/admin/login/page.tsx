@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+
+const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 /**
  * Admin Login Page
@@ -32,7 +36,9 @@ export default function AdminLoginPage() {
 
   const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRef);
-  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  
+  // Admin logic: UID match OR specific email match OR existing role document
+  const isAdmin = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   useEffect(() => {
     if (user && !roleLoading) {
@@ -64,7 +70,7 @@ export default function AdminLoginPage() {
     } catch (error: any) {
       console.error("Admin Login Error:", error.code, error.message);
       
-      let errorMessage = "Invalid credentials. Please check your email and password.";
+      let errorMessage = error.message || "Invalid credentials. Please check your email and password.";
       
       if (error.code === 'auth/operation-not-allowed') {
         errorMessage = "Email/Password provider is not enabled in Firebase Console.";

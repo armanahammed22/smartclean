@@ -71,6 +71,7 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { useToast } from '@/hooks/use-toast';
 
 const BOOTSTRAP_ADMIN_UID = 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -94,8 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading, error: roleError } = useDoc(adminRoleRef);
 
-  // Authorization Logic: Bootstrap Admin or has the admin role
-  const isAuthorized = (user?.uid === BOOTSTRAP_ADMIN_UID) || !!adminRole;
+  // Authorization Logic: Bootstrap Admin (UID or Email) or has the admin role document
+  const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   // Real-time unresolved error count for badge
   const pendingErrorsQuery = useMemoFirebase(() => {
@@ -251,15 +252,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Security Purge Logic: Only trigger if we are CERTAIN they aren't authorized
   useEffect(() => {
-    if (isLoginPage) return;
-    // We only purge if DB is ready, user is found, role check finished, and isAuthorized is STILL false
-    if (!isUserLoading && !roleLoading && db && user && !isAuthorized) {
+    if (isLoginPage || isUserLoading || roleLoading) return;
+    
+    // We only purge if user is found, role check finished, and isAuthorized is STILL false
+    if (user && !isAuthorized) {
+      console.warn("Unauthorized admin attempt:", user.email, user.uid);
       toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
       signOut(auth).then(() => {
         router.replace('/admin/login');
       });
     }
-  }, [isAuthorized, isUserLoading, roleLoading, db, user, auth, router, toast, isLoginPage]);
+  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
 
   // Initialize expanded groups based on current path
   useEffect(() => {
