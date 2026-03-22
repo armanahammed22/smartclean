@@ -90,8 +90,8 @@ export default function ServiceDetailsPage() {
 
   return (
     <PublicLayout minimalMobile={true}>
-      <div className="bg-[#F8FAFC] min-h-screen pb-24 lg:pb-12">
-        <div className="container mx-auto px-4 py-4 md:py-8">
+      <div className="bg-[#F8FAFC] min-h-screen pb-32 lg:pb-12">
+        <div className="container mx-auto px-0 md:px-4 lg:py-8 max-w-7xl">
           
           <Button variant="ghost" onClick={() => router.back()} className="hidden lg:flex mb-6 gap-2 rounded-full hover:bg-white shadow-sm transition-all text-gray-500 font-bold">
             <ArrowLeft size={18} /> {t('back_to_list')}
@@ -100,8 +100,10 @@ export default function ServiceDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
             
             {/* COLUMN 1: Service Media & Description */}
-            <div className="lg:col-span-7 space-y-6 md:space-y-8">
-              <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-xl bg-gray-200 border-4 border-white group">
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* HERO SECTION - Immersive Mobile Design */}
+              <div className="relative aspect-[4/3] md:aspect-[21/9] lg:rounded-[2.5rem] overflow-hidden shadow-2xl bg-gray-900 group">
                 {service.imageUrl ? (
                   <Image 
                     src={service.imageUrl} 
@@ -112,98 +114,128 @@ export default function ServiceDetailsPage() {
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40">
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/40">
                     <Wrench size={80} />
                   </div>
                 )}
-                <div className="absolute top-4 left-4 md:top-8 md:left-8">
-                  <Badge className="bg-primary text-white border-none px-5 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-2xl">
-                    {service.categoryId || 'Premium Service'}
+                
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                
+                {/* Top Badge */}
+                <div className="absolute top-6 left-6">
+                  <Badge className="bg-primary/90 backdrop-blur-md text-white border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-[0.2em] shadow-lg">
+                    {service.categoryId || 'Premium'}
                   </Badge>
+                </div>
+
+                {/* Content Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-4">
+                  <h1 className="text-2xl md:text-5xl font-black text-white tracking-tighter uppercase leading-tight drop-shadow-md">
+                    {service.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-1 text-amber-400 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase">
+                      <Star size={12} fill="currentColor" /> 5.0
+                    </div>
+                    <div className="flex items-center gap-1 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase">
+                      <Clock size={12} /> {service.duration || '2-4h'}
+                    </div>
+                    <div className="flex items-center gap-1 text-green-400 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase">
+                      <ShieldCheck size={12} /> Certified
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase leading-tight">{service.title}</h1>
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-muted-foreground">
-                    <div className="flex items-center gap-1.5 text-amber-500 bg-amber-50 px-3 py-1 rounded-full"><Star size={14} fill="currentColor" /> 5.0 Rating</div>
-                    <div className="flex items-center gap-1.5 bg-primary/5 text-primary px-3 py-1 rounded-full"><Clock size={14} /> {service.duration || '2-4 Hours'}</div>
-                    <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full"><ShieldCheck size={14} /> Certified Staff</div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                  <h2 className="text-xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg"><Info size={20} className="text-primary" /></div> Service Details
+              <div className="px-4 lg:px-0 space-y-6">
+                {/* Description Card */}
+                <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+                  <h2 className="text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Info size={18} /></div> Service Scope
                   </h2>
-                  <div className="text-sm md:text-base text-gray-600 font-medium leading-relaxed whitespace-pre-wrap border-t pt-6">
+                  <div className="text-sm md:text-base text-gray-600 font-medium leading-relaxed whitespace-pre-wrap border-t border-gray-50 pt-6">
                     {service.description}
                   </div>
                 </div>
 
-                {/* Additional Tasks Selection */}
-                <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                {/* Sub-Services Grid */}
+                <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100 space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-black uppercase tracking-tight text-gray-900 flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg"><Zap size={20} fill="currentColor" className="text-primary" /></div> Add-on Services
+                    <h2 className="text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-3">
+                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl"><Zap size={18} fill="currentColor" /></div> Add-on Tasks
                     </h2>
-                    <Badge variant="outline" className="uppercase font-black text-[9px] tracking-widest">{subServices?.length || 0} Options</Badge>
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-500 font-black text-[9px] px-2.5 py-1 rounded-lg">
+                      {subServices?.length || 0} OPTIONS
+                    </Badge>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-50 pt-6">
                     {subLoading ? (
                       <div className="col-span-full py-10 text-center"><Loader2 className="animate-spin inline text-primary" /></div>
                     ) : subServices?.map((sub) => (
                       <div 
                         key={sub.id} 
                         className={cn(
-                          "flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer bg-white group",
-                          selectedSubIds.includes(sub.id) ? "border-primary bg-primary/5" : "border-gray-50 hover:border-gray-200"
+                          "flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-95",
+                          selectedSubIds.includes(sub.id) ? "border-primary bg-primary/5 shadow-inner" : "border-gray-50 hover:border-gray-200"
                         )}
                         onClick={() => setSelectedSubIds(prev => prev.includes(sub.id) ? prev.filter(i => i !== sub.id) : [...prev, sub.id])}
                       >
-                        <div className="flex items-center gap-3">
-                          <Checkbox checked={selectedSubIds.includes(sub.id)} className="h-5 w-5 rounded-md border-gray-300" />
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
+                            selectedSubIds.includes(sub.id) ? "bg-primary border-primary" : "border-gray-200"
+                          )}>
+                            {selectedSubIds.includes(sub.id) && <CheckCircle2 size={14} className="text-white" />}
+                          </div>
                           <div className="space-y-0.5">
-                            <p className="font-bold text-gray-900 text-xs uppercase leading-tight group-hover:text-primary transition-colors">{sub.name}</p>
-                            <p className="text-[9px] text-muted-foreground font-bold uppercase flex items-center gap-1"><Clock size={10} /> {sub.duration}</p>
+                            <p className="font-bold text-gray-900 text-[13px] uppercase leading-tight">{sub.name}</p>
+                            <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1">
+                              <Clock size={10} /> {sub.duration}
+                            </p>
                           </div>
                         </div>
-                        <span className="font-black text-xs text-primary">৳{sub.price}</span>
+                        <div className="text-right">
+                          <span className="font-black text-sm text-primary">৳{sub.price}</span>
+                        </div>
                       </div>
                     ))}
-                    {!subServices?.length && !subLoading && <p className="col-span-full text-center text-muted-foreground italic text-sm py-4">No additional tasks available for this service.</p>}
+                    {!subServices?.length && !subLoading && (
+                      <div className="col-span-full py-10 text-center text-muted-foreground bg-gray-50/50 rounded-2xl border border-dashed italic text-sm">
+                        No additional tasks currently available.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* COLUMN 2: Booking Summary (Desktop Sticky) */}
-            <div className="lg:col-span-5 xl:col-span-5 space-y-6 lg:sticky lg:top-24">
-              <Card className="rounded-2xl md:rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
-                <CardHeader className="bg-[#081621] text-white p-8">
+            {/* COLUMN 2: Booking Summary (Desktop) */}
+            <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
+              <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
+                <CardHeader className="p-10 pb-4">
                   <div className="space-y-1">
-                    <CardTitle className="text-2xl font-black uppercase tracking-widest text-primary">Booking Summary</CardTitle>
-                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Transparent Pricing breakdown</p>
+                    <CardTitle className="text-2xl font-black uppercase tracking-tighter text-[#081621]">Order Summary</CardTitle>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Transparent Pricing breakdown</p>
                   </div>
                 </CardHeader>
-                <CardContent className="p-8 space-y-8">
+                <CardContent className="p-10 pt-6 space-y-8">
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-tight">
+                    <div className="flex justify-between items-center text-sm font-bold text-gray-500 uppercase tracking-tight">
                       <span>Base Service Fee</span>
                       <span className="text-gray-900">৳{service.basePrice.toLocaleString()}</span>
                     </div>
                     
                     {selectedSubIds.length > 0 && (
-                      <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                        <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-tight">
-                          <span>Add-ons Total</span>
-                          <span className="text-gray-900">+৳{addonsTotal.toLocaleString()}</span>
+                      <div className="space-y-3 pt-4 border-t border-gray-50">
+                        <div className="flex justify-between items-center text-sm font-bold text-gray-500 uppercase tracking-tight">
+                          <span>Add-ons Selection</span>
+                          <span className="text-primary font-black">+৳{addonsTotal.toLocaleString()}</span>
                         </div>
-                        <div className="pl-4 border-l-2 border-primary/20 space-y-2">
+                        <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
                           {subServices?.filter(s => selectedSubIds.includes(s.id)).map(s => (
-                            <div key={s.id} className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase">
+                            <div key={s.id} className="flex justify-between text-[11px] font-bold text-gray-600 uppercase">
                               <span>• {s.name}</span>
                               <span>৳{s.price}</span>
                             </div>
@@ -212,62 +244,50 @@ export default function ServiceDetailsPage() {
                       </div>
                     )}
 
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-2">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-600">
-                        <Truck size={14} /> Area Base Surcharge
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {deliveryOptions?.map(opt => (
-                          <div key={opt.id} className="bg-white px-2 py-1 rounded-lg border border-blue-50 text-[9px] font-bold text-gray-600">
-                            {opt.label}: ৳{opt.amount}
-                          </div>
-                        ))}
+                    <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
+                      <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Truck size={18} /></div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase text-blue-900 tracking-widest">Logistic Surcharge</p>
+                        <p className="text-[11px] font-medium text-blue-700/70">Applicable based on your verified service area at checkout.</p>
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-between items-end">
+                    <div className="pt-8 border-t-2 border-dashed border-gray-100 flex justify-between items-end">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Final Estimated Total</span>
-                        <span className="text-4xl font-black text-gray-900 tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Payble</span>
+                        <span className="text-5xl font-black text-[#081621] tracking-tighter italic">৳{totalPrice.toLocaleString()}</span>
                       </div>
-                      <Badge className="bg-green-600 text-white border-none font-black text-[9px] px-3 py-1 rounded-full shadow-lg">VAT INCLUDED</Badge>
+                      <Badge className="bg-green-600 text-white border-none font-black text-[10px] px-4 py-1.5 rounded-full shadow-lg">VAT INC.</Badge>
                     </div>
                   </div>
 
-                  <div className="hidden lg:block space-y-4">
-                    <Button 
-                      onClick={handleContinueBooking} 
-                      className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-primary/30 uppercase tracking-tight gap-3 transition-all hover:scale-[1.02] active:scale-95"
-                    >
-                      Book Service Now <CalendarCheck size={24} />
-                    </Button>
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                        <CheckCircle2 size={16} className="text-primary" /> Verified Pro Technicians
-                      </div>
-                      <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-400 tracking-widest">
-                        <CheckCircle2 size={16} className="text-primary" /> Satisfaction Guaranteed
-                      </div>
-                    </div>
-                  </div>
+                  <Button 
+                    onClick={handleContinueBooking} 
+                    className="w-full h-20 rounded-2xl font-black text-xl shadow-2xl shadow-primary/20 uppercase tracking-tight gap-3 transition-transform active:scale-95 bg-primary hover:bg-primary/90"
+                  >
+                    Proceed to Schedule <CalendarCheck size={24} />
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
 
-        {/* MOBILE STICKY BOOKING BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-100 z-50 px-6 py-4 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[2.5rem]">
-          <div className="container mx-auto flex items-center justify-between gap-6">
+        {/* MOBILE FLOATING BOOKING BAR - Premium UX */}
+        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 pl-8 flex items-center justify-between h-[72px]">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Estimated</span>
-              <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Price</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                <span className="text-[8px] font-black text-green-600 uppercase">VAT+</span>
+              </div>
             </div>
             <Button 
               onClick={handleContinueBooking} 
-              className="h-14 px-10 rounded-2xl font-black text-xs uppercase shadow-xl shadow-primary/30 gap-2 flex-1 transition-all active:scale-95 bg-primary hover:bg-primary/90"
+              className="h-14 px-8 rounded-full font-black text-xs uppercase shadow-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white gap-2 transition-all active:scale-90 border-none"
             >
-              Book Now <ChevronRight size={18} />
+              Book Now <ChevronRight size={18} className="animate-pulse" />
             </Button>
           </div>
         </div>
