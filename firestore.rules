@@ -140,5 +140,9 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
+
+    match /tracking_logs/{id} {
+      allow read, write: if isAdmin();
+    }
   }
 }
