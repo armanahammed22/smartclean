@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, ShieldCheck, Copy, ExternalLink, Mail, Lock, Loader2 } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Copy, ExternalLink, Mail, Lock, Loader2, Package, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,18 +22,18 @@ export default function OrderSuccessContent() {
   const [mounted, setMounted] = useState(false);
 
   const orderId = searchParams.get('id') || 'UNKNOWN';
+  const type = searchParams.get('type') || 'order'; // 'order' or 'booking'
   const tempPw = searchParams.get('pw');
   const userEmail = searchParams.get('email');
 
-  // Fetch order data to get value for tracking
-  const orderRef = useMemoFirebase(() => db && orderId !== 'UNKNOWN' ? doc(db, 'orders', orderId) : null, [db, orderId]);
-  const { data: order } = useDoc(orderRef);
+  const collectionName = type === 'booking' ? 'bookings' : 'orders';
+  const orderRef = useMemoFirebase(() => db && orderId !== 'UNKNOWN' ? doc(db, collectionName, orderId) : null, [db, orderId, collectionName]);
+  const { data: order, isLoading } = useDoc(orderRef);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // TRACK: Purchase
   useEffect(() => {
     if (order && mounted) {
       trackEvent('Purchase', {
@@ -76,10 +76,10 @@ export default function OrderSuccessContent() {
 
           <div className="space-y-3">
             <h1 className="text-4xl font-black font-headline text-[#081621] uppercase tracking-tight">
-              {t('order_confirmed')}
+              {type === 'booking' ? 'Booking Confirmed!' : t('order_confirmed')}
             </h1>
             <p className="text-muted-foreground font-medium text-lg px-4">
-              {t('thank_you_order')}
+              {type === 'booking' ? 'Your professional service has been scheduled.' : t('thank_you_order')}
             </p>
           </div>
 
@@ -87,17 +87,38 @@ export default function OrderSuccessContent() {
             <CardContent className="p-10 space-y-8">
               <div className="space-y-2">
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                  {t('order_id')}
+                  {type === 'booking' ? 'BOOKING ID' : t('order_id')}
                 </p>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <span className="text-xl font-mono font-black text-gray-900">
-                    #SC-{orderId.slice(0, 8).toUpperCase()}
+                    #{type === 'booking' ? 'BK' : 'SC'}-{orderId.slice(0, 8).toUpperCase()}
                   </span>
                   <Button variant="ghost" size="icon" onClick={() => copyToClipboard(orderId)}>
                     <Copy size={16} />
                   </Button>
                 </div>
               </div>
+
+              {isLoading ? (
+                <div className="flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+              ) : order && (
+                <div className="p-6 bg-gray-50 rounded-3xl text-left space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl text-primary shadow-sm">
+                      {type === 'booking' ? <Wrench size={20} /> : <Package size={20} />}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-muted-foreground">Transaction Total</p>
+                      <p className="text-lg font-black text-[#081621]">৳{order.totalPrice?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Customer</p>
+                    <p className="text-sm font-bold">{order.customerName}</p>
+                    <p className="text-xs text-muted-foreground">{order.address}</p>
+                  </div>
+                </div>
+              )}
 
               {tempPw && (
                 <div className="space-y-6 pt-6 border-t border-gray-100">
@@ -129,13 +150,13 @@ export default function OrderSuccessContent() {
               )}
 
               <div className="space-y-4 pt-4">
-                <Button asChild size="lg" className="w-full h-16">
+                <Button asChild size="lg" className="w-full h-16 rounded-2xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
                   <Link href="/account/dashboard">
                     Go to My Dashboard
-                    <ExternalLink size={20} />
+                    <ExternalLink size={20} className="ml-2" />
                   </Link>
                 </Button>
-                <Button asChild variant="ghost">
+                <Button asChild variant="ghost" className="w-full font-bold text-muted-foreground">
                   <Link href="/">{t('back_to_shop')}</Link>
                 </Button>
               </div>

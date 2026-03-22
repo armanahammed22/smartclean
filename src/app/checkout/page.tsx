@@ -62,7 +62,6 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
-    // TRACK: InitiateCheckout
     if (items.length > 0) {
       trackEvent('InitiateCheckout', {
         content_ids: items.map(i => i.id),
@@ -76,10 +75,10 @@ export default function CheckoutPage() {
   const hasServices = items.some(i => i.itemType === 'service');
 
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
-  const { data: availableMethods, isLoading: mLoading } = useCollection(methodsQuery);
+  const { data: availableMethods } = useCollection(methodsQuery);
 
   const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
-  const { data: deliveryOptions, isLoading: dLoading } = useCollection(deliveryQuery);
+  const { data: deliveryOptions } = useCollection(deliveryQuery);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,7 +95,7 @@ export default function CheckoutPage() {
 
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
-  const deliveryCharge = selectedDelivery?.amount || 0;
+  const deliveryCharge = Number(selectedDelivery?.amount) || 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
@@ -114,13 +113,14 @@ export default function CheckoutPage() {
   }, [deliveryOptions, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!db) return;
+    if (!db || !auth) return;
     setIsSubmitting(true);
     
     let currentUserId = user?.uid;
     let tempPass = '';
 
     try {
+      // 1. Handle Guest User Creation
       if (!user) {
         const phoneCheckQ = query(collection(db, 'users'), where('phone', '==', values.phone));
         const phoneSnap = await getDocs(phoneCheckQ);
@@ -128,23 +128,37 @@ export default function CheckoutPage() {
         if (!phoneSnap.empty) {
           currentUserId = phoneSnap.docs[0].id;
         } else {
-          tempPass = Math.random().toString(36).slice(-8);
           const emailToCreate = values.email || `${values.phone}@smartclean.local`;
-          const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
-          currentUserId = userCred.user.uid;
-          await updateProfile(userCred.user, { displayName: values.name });
-          await setDoc(doc(db, 'users', currentUserId), {
-            uid: currentUserId,
-            name: values.name,
-            email: values.email?.toLowerCase() || null,
-            phone: values.phone,
-            role: 'customer',
-            status: 'active',
-            createdAt: new Date().toISOString()
-          });
+          tempPass = Math.random().toString(36).slice(-8);
+          
+          try {
+            const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
+            currentUserId = userCred.user.uid;
+            await updateProfile(userCred.user, { displayName: values.name });
+            
+            // Create the user profile document
+            await setDoc(doc(db, 'users', currentUserId), {
+              uid: currentUserId,
+              name: values.name,
+              email: values.email?.toLowerCase() || null,
+              phone: values.phone,
+              role: 'customer',
+              status: 'active',
+              createdAt: new Date().toISOString(),
+              totalEarnings: 0
+            });
+          } catch (authError: any) {
+            if (authError.code === 'auth/email-already-in-use') {
+              // If account exists but user document is missing, proceed with ID if we can find it
+              console.log("Account already exists in Auth system.");
+            } else {
+              throw authError;
+            }
+          }
         }
       }
 
+      // 2. Prepare Order Data
       const collectionName = hasServices ? 'bookings' : 'orders';
       const orderData = {
         customerId: currentUserId || 'guest',
@@ -152,12 +166,18 @@ export default function CheckoutPage() {
         customerPhone: values.phone,
         customerEmail: values.email || null,
         address: values.address,
-        items,
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          itemType: item.itemType
+        })),
         subtotal: subtotal,
-        tax: subtotal * 0.08,
+        tax: Number((subtotal * 0.08).toFixed(2)),
         deliveryCharge: deliveryCharge,
         deliveryMethod: selectedDelivery?.label || 'Standard',
-        totalPrice: (subtotal * 1.08) + deliveryCharge,
+        totalPrice: Number((subtotal * 1.08 + deliveryCharge).toFixed(2)),
         paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || values.paymentMethod,
         status: 'New',
         riskLevel: 'Low',
@@ -168,11 +188,21 @@ export default function CheckoutPage() {
         serviceTitle: items.find(i => i.itemType === 'service')?.name || null
       };
 
+      // 3. Save Order to Firestore
       const docRef = await addDoc(collection(db, collectionName), orderData);
+      
+      // 4. Success Handling
       clearCart();
-      router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
+      const transactionType = hasServices ? 'booking' : 'order';
+      router.push(`/order-success?id=${docRef.id}&type=${transactionType}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
+      
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Checkout Error", description: error.message });
+      console.error("Checkout submission failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Checkout Error", 
+        description: error.message || "Failed to process order. Please try again." 
+      });
     } finally {
       setIsSubmitting(false);
     }

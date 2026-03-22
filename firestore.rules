@@ -1,3 +1,4 @@
+
 /**
  * Firestore Security Rules
  * Optimized for Smart Clean SaaS - Reliable public access and hardened admin controls.
@@ -74,7 +75,9 @@ service cloud.firestore {
     match /users/{uid} {
       allow get: if isOwner(uid) || isAdmin();
       allow list: if isAdmin();
-      allow write: if isOwner(uid) || isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }

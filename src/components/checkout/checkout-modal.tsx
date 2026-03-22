@@ -98,7 +98,6 @@ export function CheckoutModal() {
     },
   });
 
-  // Hydration fix: Initialize date only after mount
   useEffect(() => {
     if (isCheckoutOpen && mounted) {
       const tomorrow = new Date();
@@ -109,7 +108,7 @@ export function CheckoutModal() {
 
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
-  const deliveryCharge = selectedDelivery?.amount || 0;
+  const deliveryCharge = Number(selectedDelivery?.amount) || 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
@@ -126,7 +125,8 @@ export function CheckoutModal() {
     }
   }, [deliveryOptions, form]);
 
-  const finalTotal = (subtotal * 1.08 + deliveryCharge) - (couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0);
+  const couponDiscount = couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0;
+  const finalTotal = Number(((subtotal * 1.08 + deliveryCharge) - couponDiscount).toFixed(2));
 
   const handleSendOtp = () => {
     const phoneVal = form.getValues('phone');
@@ -174,6 +174,7 @@ export function CheckoutModal() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!db || !auth) return;
     if (isOtpSystemEnabled && !user && !isVerified) {
       toast({ variant: "destructive", title: "Phone Verification Required" });
       return;
@@ -184,15 +185,15 @@ export function CheckoutModal() {
     let tempPass = '';
 
     try {
-      if (!user && db) {
+      if (!user) {
         const phoneCheckQ = query(collection(db, 'users'), where('phone', '==', values.phone));
         const phoneSnap = await getDocs(phoneCheckQ);
         
         if (!phoneSnap.empty) {
           currentUserId = phoneSnap.docs[0].id;
         } else {
-          tempPass = Math.random().toString(36).slice(-8);
           const emailToCreate = values.email || `${values.phone}@smartclean.local`;
+          tempPass = Math.random().toString(36).slice(-8);
           
           try {
             const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
@@ -205,15 +206,15 @@ export function CheckoutModal() {
               phone: values.phone,
               role: 'customer',
               status: 'active',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              totalEarnings: 0
             });
           } catch (authError: any) {
             if (authError.code === 'auth/email-already-in-use') {
-              toast({ variant: "destructive", title: "Account Exists", description: "This email is already taken. Please login." });
-              setIsSubmitting(false);
-              return;
+              console.log("Account already exists in Auth system.");
+            } else {
+              throw authError;
             }
-            throw authError;
           }
         }
       }
@@ -221,7 +222,7 @@ export function CheckoutModal() {
       const collName = hasServices ? 'bookings' : 'orders';
       let assignedTech = null;
 
-      if (hasServices && db) {
+      if (hasServices) {
         const serviceId = items.find(i => i.itemType === 'service')?.id;
         if (serviceId) {
           const techQuery = query(
@@ -254,34 +255,41 @@ export function CheckoutModal() {
         }
       }
 
-      if (db) {
-        const docRef = await addDoc(collection(db, collName), {
-          customerId: currentUserId,
-          customerName: values.name,
-          customerPhone: values.phone,
-          customerEmail: values.email || null,
-          items,
-          subtotal: subtotal,
-          deliveryCharge: deliveryCharge,
-          totalPrice: finalTotal,
-          paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || 'Unknown',
-          address: values.address,
-          dateTime: values.date?.toISOString(),
-          timeSlot: values.time,
-          notes: values.notes,
-          createdAt: new Date().toISOString(),
-          status: assignedTech ? 'Assigned' : 'New',
-          employeeId: assignedTech?.id || null,
-          employeeName: assignedTech?.name || null,
-          serviceId: items.find(i => i.itemType === 'service')?.id || null,
-          serviceTitle: items.find(i => i.itemType === 'service')?.name || null
-        });
+      const docRef = await addDoc(collection(db, collName), {
+        customerId: currentUserId || 'guest',
+        customerName: values.name,
+        customerPhone: values.phone,
+        customerEmail: values.email || null,
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          itemType: item.itemType
+        })),
+        subtotal: subtotal,
+        deliveryCharge: deliveryCharge,
+        totalPrice: finalTotal,
+        paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || 'Unknown',
+        address: values.address,
+        dateTime: values.date?.toISOString() || null,
+        timeSlot: values.time,
+        notes: values.notes,
+        createdAt: new Date().toISOString(),
+        status: assignedTech ? 'Assigned' : 'New',
+        employeeId: assignedTech?.id || null,
+        employeeName: assignedTech?.name || null,
+        serviceId: items.find(i => i.itemType === 'service')?.id || null,
+        serviceTitle: items.find(i => i.itemType === 'service')?.name || null
+      });
 
-        clearCart();
-        setCheckoutOpen(false);
-        router.push(`/order-success?id=${docRef.id}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
-      }
+      clearCart();
+      setCheckoutOpen(false);
+      const transactionType = hasServices ? 'booking' : 'order';
+      router.push(`/order-success?id=${docRef.id}&type=${transactionType}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
+      
     } catch (e: any) {
+      console.error("Checkout failed:", e);
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
       setIsSubmitting(false);
