@@ -96,6 +96,13 @@ export function useCollection<T = any>(
       (err: FirestoreError) => {
         if (activePathRef.current !== currentPath) return;
 
+        // Log internal crashes but don't re-emit them if they are SDK internal assertion failures
+        if (err.message.includes('INTERNAL ASSERTION FAILED')) {
+          console.error("Firestore SDK Internal Error detected. Recovery via long-polling should occur.", err);
+          setIsLoading(false);
+          return;
+        }
+
         const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
         
         const contextualError = new FirestorePermissionError({

@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, initializeFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
 // Singleton instances to persist across re-renders/hot-reloads
@@ -32,7 +32,20 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp; auth: Auth; fi
 
   // 3. Initialize Firestore
   if (!firestoreDb) {
-    firestoreDb = getFirestore(firebaseApp);
+    try {
+      /**
+       * CRITICAL FIX: "Unexpected state (ID: ca9)" Error.
+       * In proxy-heavy environments (like Cloud Workstations/Firebase Studio), 
+       * Firestore WebSockets can be unstable. Forcing Long Polling prevents 
+       * the internal assertion failures during stream recovery.
+       */
+      firestoreDb = initializeFirestore(firebaseApp, {
+        experimentalForceLongPolling: true,
+      });
+    } catch (e) {
+      // Fallback if initializeFirestore was already called elsewhere
+      firestoreDb = getFirestore(firebaseApp);
+    }
   }
 
   return { 
