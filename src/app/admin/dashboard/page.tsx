@@ -117,8 +117,25 @@ export default function AdminDashboard() {
         batch.set(ref, { ...b, createdAt: now, updatedAt: now });
       });
 
+      // 5. Sample Top Nav Categories (Circular Icons on Homepage)
+      const topNavToSeed = [
+        { name: 'Cleaning', order: 1, link: '/services?category=Cleaning' },
+        { name: 'Maintenance', order: 2, link: '/services?category=Maintenance' },
+        { name: 'Repair', order: 3, link: '/services?category=Repair' },
+        { name: 'Equipment', order: 4, link: '/services?category=Equipment' },
+        { name: 'Supplies', order: 5, link: '/services?category=Supplies' },
+        { name: 'Offers', order: 6, link: '/#offers' },
+        { name: 'Support', order: 7, link: '/support' },
+        { name: 'Account', order: 8, link: '/account/dashboard' }
+      ];
+
+      topNavToSeed.forEach(cat => {
+        const ref = doc(collection(db, 'top_nav_categories'));
+        batch.set(ref, { ...cat, createdAt: now });
+      });
+
       await batch.commit();
-      toast({ title: "ERP Database Seeded", description: "All catalog sections are now populated." });
+      toast({ title: "ERP Database Seeded", description: "All catalog sections and categories are now populated." });
     } catch (err) {
       console.error(err);
       toast({ variant: "destructive", title: "Seeding failed" });
@@ -127,7 +144,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
+  if (isUserLoading || roleLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary" size={40} /></div>;
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
