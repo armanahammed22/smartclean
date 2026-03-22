@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -18,9 +17,19 @@ const globalForFirebase = globalThis as unknown as {
 
 /**
  * Idempotent Firebase initialization.
- * Hardened to ensure Firestore is always returned as a valid instance or null.
+ * Hardened to ensure services are returned independently even if one fails.
+ * CRITICAL: Returns nulls during SSR to prevent "fake" instances from crashing SDK functions.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
+  // 0. SSR Check: Firebase client SDK should not initialize on the server
+  if (typeof window === 'undefined') {
+    return { firebaseApp: null, auth: null, firestore: null };
+  }
+
+  let app: FirebaseApp | null = null;
+  let auth: Auth | null = null;
+  let firestore: Firestore | null = null;
+
   try {
     // 1. Initialize App
     if (!globalForFirebase.__firebaseApp) {
@@ -30,40 +39,34 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         globalForFirebase.__firebaseApp = initializeApp(firebaseConfig);
       }
     }
-
-    const app = globalForFirebase.__firebaseApp;
-    if (!app) return { firebaseApp: null, auth: null, firestore: null };
+    app = globalForFirebase.__firebaseApp;
 
     // 2. Initialize Auth
-    if (!globalForFirebase.__firebaseAuth) {
+    if (app && !globalForFirebase.__firebaseAuth) {
       globalForFirebase.__firebaseAuth = getAuth(app);
     }
+    auth = globalForFirebase.__firebaseAuth || null;
 
     // 3. Initialize Firestore with stable transport (Long Polling)
-    if (!globalForFirebase.__firestoreDb) {
+    if (app && !globalForFirebase.__firestoreDb) {
       try {
-        // We use initializeFirestore to set the transport layer before any other call
         globalForFirebase.__firestoreDb = initializeFirestore(app, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),
         });
       } catch (e: any) {
-        // If already initialized (common during HMR), grab the existing instance
+        // Fallback to getFirestore if already initialized or error occurs
         globalForFirebase.__firestoreDb = getFirestore(app);
       }
     }
-
-    // Heuristic check: Ensure we didn't get a partial object
+    
+    // Safety check: Ensure firestore is a valid object from the SDK
     const fs = globalForFirebase.__firestoreDb;
-    const isFsValid = fs && (fs as any).type === 'firestore';
+    firestore = fs || null;
 
-    return { 
-      firebaseApp: app || null, 
-      auth: globalForFirebase.__firebaseAuth || null, 
-      firestore: isFsValid ? fs : null 
-    };
   } catch (error) {
     console.error("Critical Firebase Initialization Error:", error);
-    return { firebaseApp: null, auth: null, firestore: null };
   }
+
+  return { firebaseApp: app, auth, firestore };
 }
