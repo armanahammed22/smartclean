@@ -134,8 +134,39 @@ export interface Service {
   status: 'Active' | 'Inactive';
   isPopular?: boolean;
   duration?: string;
+  teamSize?: string;
+  rating?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ServicePackage {
+  id: string;
+  name: string;
+  areaSize: string;
+  price: number;
+  isRecommended: boolean;
+}
+
+export interface ServiceAddOn {
+  id: string;
+  name: string;
+  price: number;
+  icon?: string;
+}
+
+export interface IncludedItem {
+  id: string;
+  title: string;
+  icon?: string;
+}
+
+export interface ServiceReview {
+  id: string;
+  name: string;
+  rating: number;
+  text: string;
+  createdAt: string;
 }
 
 export interface SubService {
