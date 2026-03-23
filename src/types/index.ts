@@ -18,6 +18,7 @@ export interface Product {
   status: 'Active' | 'Inactive';
   onSale?: boolean;
   isPopular?: boolean;
+  isBestSelling?: boolean;
   salesCount?: number;
   features?: string[];
   specifications?: { key: string; value: string }[];
@@ -30,15 +31,19 @@ export interface Product {
 export interface LandingPage {
   id: string;
   slug: string;
+  type: 'product' | 'service';
   title: string;
   subtitle?: string;
-  offer: string;
+  offer?: string;
   description: string;
   price: number;
   discountPrice?: number;
   imageUrl: string;
+  bannerImage?: string;
+  useCustomBanner?: boolean;
   videoUrl?: string;
   active: boolean;
+  productId?: string; // Linked product ID
   benefits?: string[];
   ingredients?: { name: string; imageUrl: string }[];
   whyChoose?: string[];
@@ -48,29 +53,6 @@ export interface LandingPage {
   phone?: string;
   createdAt: string;
   updatedAt?: string;
-}
-
-export interface Campaign {
-  id: string;
-  title: string;
-  slug: string;
-  bannerImage: string;
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  priority: number;
-  description: string;
-  themeColor?: string;
-  createdAt: string;
-}
-
-export interface CampaignProduct {
-  id: string;
-  productId: string;
-  discountPercent: number;
-  campaignPrice: number;
-  stockLimit: number;
-  soldCount: number;
 }
 
 export interface CustomerProfile {
