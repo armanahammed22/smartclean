@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,11 +20,13 @@ import {
   Users, 
   Settings2, 
   X, 
-  Image as ImageIcon, 
+  ImageIcon, 
   Sparkles, 
   ListChecks, 
   Shapes,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
+  XCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -70,6 +73,17 @@ export default function ProductsManagementPage() {
   const { data: variantTypes } = useCollection(variantTypesQuery);
   const { data: reusableFeatures } = useCollection(reusableFeaturesQuery);
   const { data: reusableSpecs } = useCollection(reusableSpecsQuery);
+
+  // KPI Calculations
+  const stats = useMemo(() => {
+    if (!products) return { total: 0, outOfStock: 0, active: 0, inactive: 0 };
+    return {
+      total: products.length,
+      outOfStock: products.filter(p => (p.stockQuantity || 0) === 0).length,
+      active: products.filter(p => p.status === 'Active').length,
+      inactive: products.filter(p => p.status === 'Inactive').length
+    };
+  }, [products]);
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -372,6 +386,46 @@ export default function ProductsManagementPage() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Products</p>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">{stats.total}</h3>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform"><Package size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Out of Stock</p>
+              <h3 className="text-xl font-black text-red-600 tracking-tight">{stats.outOfStock}</h3>
+            </div>
+            <div className="p-3 bg-red-50 text-red-600 rounded-2xl group-hover:scale-110 transition-transform"><AlertCircle size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Published</p>
+              <h3 className="text-xl font-black text-green-600 tracking-tight">{stats.active}</h3>
+            </div>
+            <div className="p-3 bg-green-50 text-green-600 rounded-2xl group-hover:scale-110 transition-transform"><CheckCircle2 size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Unpublished</p>
+              <h3 className="text-xl font-black text-amber-600 tracking-tight">{stats.inactive}</h3>
+            </div>
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform"><XCircle size={20} /></div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
