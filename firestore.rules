@@ -35,6 +35,7 @@ service cloud.firestore {
     match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
     match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
     match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
     match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -47,7 +48,6 @@ service cloud.firestore {
     match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
     match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // Protected Collections
     match /users/{uid} {

@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc, writeBatch, getDocs, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +81,7 @@ export default function ErrorLogsPage() {
   };
 
   /**
-   * SMART RESOLVE: Marks common fixed errors as resolved in bulk
+   * SMART RESOLVE: Marks fixed common errors as resolved in bulk
    */
   const handleBulkResolveFixed = async () => {
     if (!db || !logs) return;
@@ -93,14 +93,15 @@ export default function ErrorLogsPage() {
         'Package is not defined',
         'ReferenceError',
         'Hydration',
-        'Unexpected state'
+        'insufficient permissions',
+        'offers'
       ];
 
       const batch = writeBatch(db);
       let count = 0;
 
       logs.forEach(log => {
-        if (log.status === 'pending' && fixedPatterns.some(p => log.message?.includes(p))) {
+        if (log.status === 'pending' && fixedPatterns.some(p => log.message?.toLowerCase().includes(p.toLowerCase()))) {
           batch.update(doc(db, 'error_logs', log.id), { status: 'resolved' });
           count++;
         }
