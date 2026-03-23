@@ -237,7 +237,7 @@ export default function ServiceDetailedEditor() {
         {/* TAB: WHAT'S INCLUDED */}
         <TabsContent value="scope" className="space-y-6">
           <div className="flex justify-between items-center px-4">
-            <h2 className="text-lg font-black uppercase tracking-tighter">Service Scope Checklist</h2>
+            <h2 className="text-lg font-black uppercase tracking-widest">Service Scope Checklist</h2>
             <Button onClick={() => handleAddSub('includedItems', { title: 'Deep dusting of all rooms' })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
               <Plus size={14} /> Add Item
             </Button>
