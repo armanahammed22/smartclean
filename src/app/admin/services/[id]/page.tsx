@@ -134,7 +134,7 @@ export default function ServiceDetailedEditor() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase ml-1">Display Rating</Label>
-                    <Input type="number" step="0.1" value={mainData.rating || 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value)})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" step="0.1" value={mainData.rating || 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value) || 5.0})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase ml-1">Team Size</Label>
@@ -196,7 +196,7 @@ export default function ServiceDetailedEditor() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase opacity-40">Package Price (৳)</Label>
-                    <Input type="number" defaultValue={pkg.price} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { price: parseFloat(e.target.value) })} className="h-11 bg-primary/5 border-none font-black text-primary text-lg" />
+                    <Input type="number" defaultValue={pkg.price ?? 0} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { price: parseFloat(e.target.value) || 0 })} className="h-11 bg-primary/5 border-none font-black text-primary text-lg" />
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-[9px] font-black uppercase">Active Promotion</span>
@@ -227,7 +227,7 @@ export default function ServiceDetailedEditor() {
                   <Input defaultValue={item.name} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'addOns', item.id), { name: e.target.value })} className="h-8 border-none font-bold text-xs p-0" />
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
                     <span className="text-[10px] font-black text-emerald-600">+৳</span>
-                    <Input type="number" defaultValue={item.price} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'addOns', item.id), { price: parseFloat(e.target.value) })} className="h-6 border-none font-black text-sm bg-transparent p-0" />
+                    <Input type="number" defaultValue={item.price ?? 0} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'addOns', item.id), { price: parseFloat(e.target.value) || 0 })} className="h-6 border-none font-black text-sm bg-transparent p-0" />
                   </div>
                 </CardContent>
               </Card>
