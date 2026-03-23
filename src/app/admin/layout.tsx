@@ -52,7 +52,10 @@ import {
   Shapes,
   ListChecks,
   Settings2,
-  CalendarCheck
+  CalendarCheck,
+  Activity,
+  Code,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -161,6 +164,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      id: 'marketing',
+      title: "MARKETING INTELLIGENCE",
+      icon: Target,
+      color: "text-rose-400",
+      items: [
+        { name: "Analytics Overview", href: '/admin/marketing/overview', icon: TrendingUp },
+        { name: "Pixel Config", href: '/admin/marketing/pixel', icon: Code },
+        { name: "CAPI Sync", href: '/admin/marketing/capi', icon: Shield },
+        { name: "Attribution Logs", href: '/admin/marketing/logs', icon: FileText },
+      ]
+    },
+    {
       id: 'crm',
       title: "CRM & USERS",
       icon: Users,
@@ -176,7 +191,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       id: 'promotions',
       title: "OFFER & PROMOTION",
       icon: Zap,
-      color: "text-rose-400",
+      color: "text-violet-400",
       items: [
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
         { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
@@ -206,6 +221,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon },
         { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2 },
         { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },
+        { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
     },
     {
@@ -350,6 +366,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             group.id === 'orders' ? "bg-emerald-500" : 
                             group.id === 'system' ? "bg-orange-500" : 
                             group.id === 'crm' ? "bg-purple-500" : 
+                            group.id === 'marketing' ? "bg-rose-500" :
                             "bg-primary"
                           )}>
                             {item.badge}
@@ -413,7 +430,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+      <div className="flex-1 flex flex-col h-full min-0 relative">
         <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
