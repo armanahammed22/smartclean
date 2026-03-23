@@ -102,34 +102,52 @@ export default function ServiceDetailsPage() {
             {/* COLUMN 1: Visuals & Info */}
             <div className="lg:col-span-7 space-y-6">
               
-              {/* HERO SECTION */}
+              {/* HERO SECTION - Visual Only */}
               <div className="relative aspect-[4/3] md:aspect-[21/9] lg:rounded-[2.5rem] overflow-hidden shadow-2xl bg-gray-900">
                 {service.imageUrl ? (
                   <Image src={service.imageUrl} alt={service.title} fill className="object-cover" priority unoptimized />
                 ) : (
                   <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/40"><Wrench size={80} /></div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                <div className="absolute top-6 left-6 flex gap-2">
-                  <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-lg">
-                    {service.categoryId || 'Premium'}
-                  </Badge>
-                  {service.isPopular && (
-                    <Badge className="bg-amber-500 text-white border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-lg">Most Popular</Badge>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                {service.isPopular && (
+                  <Badge className="absolute top-6 left-6 bg-amber-500 text-white border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-lg">Most Popular</Badge>
+                )}
+              </div>
+
+              {/* INFORMATION BLOCK - Title, Category, Stats Row */}
+              <div className="px-4 lg:px-0 space-y-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl md:text-5xl font-black text-[#081621] tracking-tighter uppercase leading-tight">{service.title}</h1>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-md">
+                      {service.categoryId || 'Premium Service'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* STATS ROW - Horizontal below Category */}
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
+                    <Star size={14} fill="#f59e0b" className="text-amber-400" /> {service.rating || '5.0'}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
+                    <Clock size={14} className="text-primary" /> {service.duration || '2-4 Hours'}
+                  </div>
+                  {service.teamSize && (
+                    <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
+                      <Users size={14} className="text-blue-500" /> {service.teamSize}
+                    </div>
                   )}
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 space-y-4">
-                  <h1 className="text-2xl md:text-5xl font-black text-white tracking-tighter uppercase leading-tight drop-shadow-md">{service.title}</h1>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-1 text-amber-400 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase"><Star size={12} fill="currentColor" /> {service.rating || '5.0'}</div>
-                    <div className="flex items-center gap-1 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase"><Clock size={12} /> {service.duration || 'Variable'}</div>
-                    {service.teamSize && <div className="flex items-center gap-1 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black border border-white/10 uppercase"><Users size={12} /> {service.teamSize}</div>}
-                  </div>
+
+                <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed pt-4">
+                  <p className="whitespace-pre-line font-medium">{service.description}</p>
                 </div>
               </div>
 
               {/* PACKAGE SELECTOR */}
-              <div className="px-4 lg:px-0 space-y-4">
+              <div className="px-4 lg:px-0 space-y-4 pt-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-black uppercase tracking-tight text-[#081621] flex items-center gap-3">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Package size={18} /></div> Select Package
@@ -232,7 +250,7 @@ export default function ServiceDetailsPage() {
               )}
             </div>
 
-            {/* COLUMN 2: Booking Intelligence (Desktop) */}
+            {/* COLUMN 2: Booking Summary (Desktop) */}
             <div className="hidden lg:block lg:col-span-5 space-y-6 sticky top-24">
               <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
                 <div className="p-10 space-y-8">
