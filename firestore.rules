@@ -21,6 +21,7 @@ service cloud.firestore {
     match /categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /subcategories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /childcategories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /landing_pages/{id} { allow read: if true; allow write: if isAdmin(); }
     
     match /services/{id} { 
       allow read: if true; 

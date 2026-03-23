@@ -27,6 +27,20 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface LandingPage {
+  id: string;
+  slug: string;
+  title: string;
+  offer: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  active: boolean;
+  benefits?: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Campaign {
   id: string;
   title: string;
@@ -98,6 +112,7 @@ export interface Booking {
   notes?: string;
   updatedAt?: any;
   createdAt: string;
+  source?: string;
 }
 
 export interface StaffAvailability {

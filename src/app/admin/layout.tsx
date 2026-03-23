@@ -56,7 +56,8 @@ import {
   Activity,
   Code,
   Shield,
-  TrendingUp
+  TrendingUp,
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -171,6 +172,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-rose-400",
       items: [
         { name: "Analytics Overview", href: '/admin/marketing/overview', icon: TrendingUp },
+        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
         { name: "Pixel Config", href: '/admin/marketing/pixel', icon: Code },
         { name: "CAPI Sync", href: '/admin/marketing/capi', icon: Shield },
         { name: "Attribution Logs", href: '/admin/marketing/logs', icon: FileText },
