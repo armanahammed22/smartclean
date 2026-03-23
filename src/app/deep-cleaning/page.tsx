@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -22,6 +21,7 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { useCart } from '@/components/providers/cart-provider';
 import { trackEvent } from '@/lib/tracking';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { cn } from '@/lib/utils';
 
 export default function DeepCleaningLandingPage() {
   const router = useRouter();
