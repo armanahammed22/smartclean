@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc, writeBatch, getDocs, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -16,12 +17,12 @@ import {
   Trash2, 
   CheckCircle2, 
   Info, 
-  ExternalLink,
-  ChevronRight,
-  Clock,
-  Layout,
-  User,
-  AlertTriangle
+  Clock, 
+  Layout, 
+  User, 
+  AlertTriangle,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -50,6 +51,7 @@ export default function ErrorLogsPage() {
   const [selectedLog, setSelectedLog] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Real-time error logs query
   const logsQuery = useMemoFirebase(() => {
@@ -75,6 +77,45 @@ export default function ErrorLogsPage() {
       setSelectedLog(null);
     } catch (e) {
       toast({ variant: "destructive", title: "Update failed" });
+    }
+  };
+
+  /**
+   * SMART RESOLVE: Marks common fixed errors as resolved in bulk
+   */
+  const handleBulkResolveFixed = async () => {
+    if (!db || !logs) return;
+    setIsProcessing(true);
+    try {
+      const fixedPatterns = [
+        'Badge is not defined',
+        'CheckCircle2 is not defined',
+        'Package is not defined',
+        'ReferenceError',
+        'Hydration',
+        'Unexpected state'
+      ];
+
+      const batch = writeBatch(db);
+      let count = 0;
+
+      logs.forEach(log => {
+        if (log.status === 'pending' && fixedPatterns.some(p => log.message?.includes(p))) {
+          batch.update(doc(db, 'error_logs', log.id), { status: 'resolved' });
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        await batch.commit();
+        toast({ title: "Clean-up Complete", description: `${count} fixed issues moved to Resolved.` });
+      } else {
+        toast({ title: "System Clean", description: "No known fixed patterns found in pending logs." });
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Clean-up Failed" });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -110,6 +151,15 @@ export default function ErrorLogsPage() {
           <p className="text-muted-foreground text-sm font-medium">Global system health monitoring and crash reports</p>
         </div>
         <div className="flex gap-2">
+           <Button 
+             variant="outline" 
+             onClick={handleBulkResolveFixed} 
+             disabled={isProcessing || isLoading}
+             className="gap-2 bg-white font-bold rounded-xl border-primary/20 text-primary hover:bg-primary/5 h-11"
+           >
+             {isProcessing ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
+             Auto-Resolve Fixed
+           </Button>
            <Badge variant="outline" className="bg-white px-4 py-2 rounded-xl shadow-sm border text-primary font-black uppercase text-[10px] tracking-widest gap-2">
              <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" /> Live Sync Active
            </Badge>
