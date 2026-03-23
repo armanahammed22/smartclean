@@ -115,19 +115,19 @@ export default function ServiceDetailsPage() {
     return images.filter(img => !!img);
   }, [service]);
 
-  if (!mounted || sLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>;
-  if (!service) return <div className="p-20 text-center font-black uppercase text-gray-300">Service Not Found</div>;
+  if (!mounted || sLoading) return <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  if (!service) return <div className="p-20 text-center font-black uppercase text-gray-300 bg-[#F8FAFC]">Service Not Found</div>;
 
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#F8FAFC] min-h-screen pb-32 lg:pb-12">
         <div className="container mx-auto px-0 md:px-4 lg:py-10 max-w-7xl">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             
             {/* COLUMN 1: Visuals & Included (Left) */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white relative rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
+              <div className="bg-white relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative aspect-square w-full">
                   {allImages.length > 0 ? (
                     <Image src={allImages[activeImageIdx]} alt={service.title} fill className="object-cover transition-opacity duration-500" priority unoptimized />
@@ -167,7 +167,7 @@ export default function ServiceDetailsPage() {
                         key={idx}
                         onClick={() => setActiveImageIdx(idx)}
                         className={cn(
-                          "relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0",
+                          "relative w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0",
                           activeImageIdx === idx ? "border-primary" : "border-transparent"
                         )}
                       >
@@ -178,19 +178,19 @@ export default function ServiceDetailsPage() {
                 )}
               </div>
 
-              {/* COMPACT What's Included */}
+              {/* 2-COLUMN What's Included */}
               {includedItems && includedItems.length > 0 && (
                 <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
                   <CardContent className="p-6 space-y-4">
                     <div className="flex items-center gap-2 border-b pb-3 border-gray-50">
                       <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><ListChecks size={14} /></div>
-                      <h3 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">What's Included</h3>
+                      <h3 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">Service Scope</h3>
                     </div>
-                    <div className="grid grid-cols-1 gap-2.5">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {includedItems.map((item) => (
-                        <div key={item.id} className="flex items-start gap-2.5 group">
+                        <div key={item.id} className="flex items-start gap-2 group">
                           <CheckCircle2 size={12} className="text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
-                          <span className="text-[11px] font-bold text-gray-600 leading-tight uppercase tracking-tight">{item.title}</span>
+                          <span className="text-[10px] font-bold text-gray-600 leading-tight uppercase tracking-tight">{item.title}</span>
                         </div>
                       ))}
                     </div>
@@ -200,88 +200,83 @@ export default function ServiceDetailsPage() {
             </div>
 
             {/* COLUMN 2: Details, Selection & Add-ons (Middle) */}
-            <div className="lg:col-span-5 space-y-10 px-4 lg:px-0">
-              {/* Service Info */}
-              <div className="space-y-4">
+            <div className="lg:col-span-5 space-y-8 px-4 lg:px-0">
+              {/* Service Info Block */}
+              <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl lg:text-4xl font-black text-[#081621] tracking-tighter uppercase leading-tight">{service.title}</h1>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-md w-fit">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-md w-fit">
                     {service.categoryId || 'Premium Service'}
                   </Badge>
+                  <h1 className="text-2xl md:text-3xl font-black text-[#081621] tracking-tighter uppercase leading-tight">{service.title}</h1>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 py-2">
-                  <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
-                    <Star size={14} fill="#f59e0b" className="text-amber-400" /> {service.rating || '5.0'}
+                <div className="flex flex-wrap items-center gap-4 py-1">
+                  <div className="flex items-center gap-1.5 text-gray-700 text-[10px] font-black uppercase">
+                    <Star size={14} fill="#f59e0b" className="text-amber-400" /> {service.rating || '5.0'} Rating
                   </div>
-                  <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
+                  <div className="flex items-center gap-1.5 text-gray-700 text-[10px] font-black uppercase">
                     <Clock size={14} className="text-primary" /> {service.duration || '2-4 Hours'}
                   </div>
-                  <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
-                    <Users size={14} className="text-blue-500" /> {service.teamSize || '2-3 Members'}
+                  <div className="flex items-center gap-1.5 text-gray-700 text-[10px] font-black uppercase">
+                    <Users size={14} className="text-blue-500" /> {service.teamSize || '2-3 Staff'}
                   </div>
                 </div>
               </div>
 
-              {/* Step 1: Package Selector */}
+              {/* Step 1: Package Selector (Smaller cards) */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 text-primary rounded-xl"><Package size={18} /></div>
-                    <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Step 1: Choose Package</h2>
-                  </div>
+                <div className="flex items-center gap-3 px-2">
+                  <div className="p-1.5 bg-primary/10 text-primary rounded-lg"><Package size={16} /></div>
+                  <h2 className="text-sm font-black uppercase tracking-tight text-[#081621]">Step 1: Choose Package</h2>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   {pkgLoading ? <Loader2 className="animate-spin text-primary" /> : packages?.map((pkg) => (
                     <div 
                       key={pkg.id} 
                       onClick={() => setSelectedPkgId(pkg.id)}
                       className={cn(
-                        "relative p-6 rounded-3xl border-2 transition-all cursor-pointer group active:scale-[0.98] flex items-center justify-between",
-                        selectedPkgId === pkg.id ? "border-primary bg-primary/5 shadow-inner" : "border-gray-100 bg-white hover:border-gray-200"
+                        "p-4 rounded-2xl border-2 transition-all cursor-pointer group active:scale-[0.98] flex items-center justify-between",
+                        selectedPkgId === pkg.id ? "border-primary bg-primary/5 shadow-sm" : "border-gray-100 bg-white hover:border-gray-200"
                       )}
                     >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                          <p className="font-black text-gray-900 uppercase text-sm tracking-tight">{pkg.name}</p>
-                          {pkg.isRecommended && <Badge className="bg-amber-500 border-none font-black text-[8px] uppercase px-2">Best Value</Badge>}
-                        </div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">{pkg.areaSize}</p>
+                      <div className="space-y-0.5">
+                        <p className="font-black text-gray-900 uppercase text-xs tracking-tight">{pkg.name}</p>
+                        <p className="text-[9px] text-muted-foreground font-bold uppercase">{pkg.areaSize}</p>
                       </div>
-                      <p className="text-xl font-black text-primary">৳{pkg.price?.toLocaleString()}</p>
+                      <p className="text-lg font-black text-primary">৳{pkg.price?.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Step 2: Add-on Services (Stacked in same column) */}
+              {/* Step 2: Add-on Services (2-Column Grid) */}
               {addOns && addOns.length > 0 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-accent/10 text-accent rounded-xl"><Zap size={18} fill="currentColor" /></div>
-                    <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Step 2: Add Extra Tasks</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 px-2">
+                    <div className="p-1.5 bg-accent/10 text-accent rounded-lg"><Zap size={16} fill="currentColor" /></div>
+                    <h2 className="text-sm font-black uppercase tracking-tight text-[#081621]">Step 2: Add Extras</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {addOns.map((add) => (
                       <div 
                         key={add.id} 
                         onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])}
                         className={cn(
-                          "p-5 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-95 flex items-center justify-between",
-                          selectedAddOnIds.includes(add.id) ? "border-accent bg-accent/5 shadow-inner" : "border-gray-100 hover:border-gray-200"
+                          "p-4 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-95 flex flex-col gap-3",
+                          selectedAddOnIds.includes(add.id) ? "border-accent bg-accent/5" : "border-gray-100 hover:border-gray-200"
                         )}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", selectedAddOnIds.includes(add.id) ? "bg-accent text-white" : "bg-gray-50 text-gray-400")}>
-                            <Zap size={18} fill="currentColor" />
+                        <div className="flex justify-between items-start">
+                          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", selectedAddOnIds.includes(add.id) ? "bg-accent text-white" : "bg-gray-50 text-gray-400")}>
+                            <Zap size={14} fill="currentColor" />
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-bold text-gray-900 text-[11px] uppercase truncate">{add.name}</p>
-                            <p className="font-black text-xs text-accent">+৳{add.price}</p>
+                          <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200")}>
+                            <Plus size={12} strokeWidth={3} />
                           </div>
                         </div>
-                        <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0", selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200")}>
-                          <Plus size={14} strokeWidth={3} />
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-[10px] uppercase truncate">{add.name}</p>
+                          <p className="font-black text-xs text-accent">+৳{add.price}</p>
                         </div>
                       </div>
                     ))}
@@ -292,7 +287,7 @@ export default function ServiceDetailsPage() {
 
             {/* COLUMN 3: Summary (Right) */}
             <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-24">
-              <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
+              <Card className="rounded-[2rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
                 <div className="p-8 space-y-8">
                   <div className="space-y-1">
                     <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Booking Summary</h3>
@@ -342,13 +337,12 @@ export default function ServiceDetailsPage() {
           </div>
 
           {/* BOTTOM SECTIONS (Full Width) */}
-          <div className="mt-16 space-y-16">
-            
+          <div className="mt-16 space-y-12">
             {/* Description Section */}
             <section className="px-4 lg:px-0">
-              <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-gray-100 space-y-8">
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621]">Service Overview</h2>
-                <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed font-medium">
+              <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Service Details</h2>
+                <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed font-medium">
                   <p className="whitespace-pre-line">{service.description}</p>
                 </div>
               </div>
@@ -357,15 +351,10 @@ export default function ServiceDetailsPage() {
             {/* Customer Reviews */}
             {reviews && reviews.length > 0 && (
               <section className="px-4 lg:px-0 space-y-8">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621] flex items-center gap-4">
-                    <div className="p-3 bg-amber-50 text-amber-500 rounded-2xl"><Star size={24} fill="currentColor" /></div> Customer Feedback
-                  </h2>
-                  <Button variant="outline" className="rounded-full font-black text-[10px] uppercase">All Reviews</Button>
-                </div>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621] px-2">Customer Feedback</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {reviews.map((rev) => (
-                    <div key={rev.id} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                    <div key={rev.id} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-sm">{rev.name?.[0]}</div>
