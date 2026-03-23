@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, addDoc } from 'firebase/firestore';
-import { PublicLayout } from '@/components/layout/public-layout';
 import { 
   CheckCircle2, 
   Star, 
@@ -23,7 +22,8 @@ import {
   Info,
   MapPin,
   User,
-  X
+  X,
+  Volume2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -149,7 +149,7 @@ export default function DynamicLandingPage() {
       <section className="relative bg-gradient-to-b from-[#D91E1E] to-[#B21818] text-white pt-10 pb-20 overflow-hidden">
         <div className="container mx-auto px-4 max-w-5xl text-center relative z-10 space-y-8">
           <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
-            <h1 className="text-3xl md:text-6xl font-black leading-tight tracking-tight uppercase">
+            <h1 className="text-3xl md:text-6xl font-black leading-tight tracking-tight uppercase px-4">
               {page.title}
             </h1>
             <p className="text-lg md:text-2xl font-bold text-yellow-400">
@@ -176,14 +176,14 @@ export default function DynamicLandingPage() {
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
               <Button 
                 onClick={handleScrollToForm}
-                className="h-16 px-12 rounded-full bg-[#FFD700] hover:bg-[#FFC400] text-black font-black text-xl uppercase tracking-tight shadow-2xl animate-pulse active:scale-95 transition-all"
+                className="h-16 px-12 rounded-full bg-[#FFD700] hover:bg-[#FFC400] text-black font-black text-xl uppercase tracking-tight shadow-2xl animate-pulse active:scale-95 transition-all w-full md:w-auto"
               >
                 অর্ডার করতে চাই <ArrowRight size={24} className="ml-2" />
               </Button>
               {page.phone && (
                 <Button 
                   variant="outline"
-                  className="h-16 px-8 rounded-full border-2 border-white bg-transparent text-white hover:bg-white hover:text-red-600 font-black text-lg uppercase gap-2"
+                  className="h-16 px-8 rounded-full border-2 border-white bg-transparent text-white hover:bg-white hover:text-red-600 font-black text-lg uppercase gap-2 w-full md:w-auto"
                   asChild
                 >
                   <a href={`tel:${page.phone}`}><Phone size={24} /> কল করুন</a>
@@ -219,7 +219,7 @@ export default function DynamicLandingPage() {
                 <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-red-50 p-1 group-hover:border-red-500 transition-colors">
                   <Image src={ing.imageUrl || 'https://picsum.photos/seed/ing/200/200'} alt={ing.name} fill className="object-cover rounded-full" unoptimized />
                 </div>
-                <span className="text-lg font-black text-gray-800 uppercase tracking-tight">{ing.name}</span>
+                <span className="text-lg font-black text-gray-800 uppercase tracking-tight text-center">{ing.name}</span>
               </div>
             ))}
           </div>
