@@ -25,7 +25,8 @@ import {
   Package,
   X,
   Layers,
-  Wrench
+  Wrench,
+  ChevronDown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -39,7 +40,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LandingPagesAdminPage() {
@@ -51,9 +52,9 @@ export default function LandingPagesAdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     slug: '',
-    type: 'product' as 'product' | 'service',
+    type: 'product',
     title: '',
     subtitle: '',
     offer: '',
@@ -68,9 +69,9 @@ export default function LandingPagesAdminPage() {
     whyChoose: ['', '', ''],
     stockText: 'মাত্র ১২ টি বাকি',
     offerText: 'ফ্রি ডেলিভারি!',
-    ingredients: [] as { name: string; imageUrl: string }[],
-    packages: [] as { name: string; price: number; discountPrice: number }[],
-    serviceTypes: [] as string[],
+    ingredients: [],
+    packages: [], // For Product
+    serviceTypes: [], // For Complex Services
   });
 
   const pagesQuery = useMemoFirebase(() => 
@@ -81,22 +82,11 @@ export default function LandingPagesAdminPage() {
     if (page) {
       setEditingPage(page);
       setFormData({
-        slug: page.slug || '',
-        type: page.type || 'product',
-        title: page.title || '',
-        subtitle: page.subtitle || '',
-        offer: page.offer || '',
-        description: page.description || '',
-        price: page.price || 0,
-        discountPrice: page.discountPrice || 0,
-        imageUrl: page.imageUrl || '',
-        videoUrl: page.videoUrl || '',
+        ...formData,
+        ...page,
         active: page.active ?? true,
-        phone: page.phone || '01919640422',
         benefits: page.benefits || ['', '', ''],
         whyChoose: page.whyChoose || ['', '', ''],
-        stockText: page.stockText || 'মাত্র ১২ টি বাকি',
-        offerText: page.offerText || 'ফ্রি ডেলিভারি!',
         ingredients: page.ingredients || [],
         packages: page.packages || [],
         serviceTypes: page.serviceTypes || [],
@@ -137,8 +127,6 @@ export default function LandingPagesAdminPage() {
     const data = {
       ...formData,
       slug,
-      price: Number(formData.price),
-      discountPrice: Number(formData.discountPrice),
       updatedAt: new Date().toISOString()
     };
 
@@ -161,14 +149,21 @@ export default function LandingPagesAdminPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!db || !confirm("Permanently delete this landing page?")) return;
-    try {
-      await deleteDoc(doc(db, 'landing_pages', id));
-      toast({ title: "Page Removed" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Delete Failed" });
-    }
+  const addServiceType = () => {
+    const newType = { name: '', packages: [{ name: 'Standard', price: 0 }], addons: [] };
+    setFormData({ ...formData, serviceTypes: [...formData.serviceTypes, newType] });
+  };
+
+  const addPackageToService = (typeIdx: number) => {
+    const newTypes = [...formData.serviceTypes];
+    newTypes[typeIdx].packages.push({ name: '', price: 0 });
+    setFormData({ ...formData, serviceTypes: newTypes });
+  };
+
+  const addAddonToService = (typeIdx: number) => {
+    const newTypes = [...formData.serviceTypes];
+    newTypes[typeIdx].addons.push({ name: '', price: 0 });
+    setFormData({ ...formData, serviceTypes: newTypes });
   };
 
   return (
@@ -201,31 +196,18 @@ export default function LandingPagesAdminPage() {
                 <Badge className={cn(page.type === 'product' ? "bg-red-600" : "bg-blue-600", "text-white border-none uppercase font-black text-[8px]")}>
                   {page.type?.toUpperCase() || 'PRODUCT'}
                 </Badge>
-                <Badge className={cn(page.active ? "bg-green-500" : "bg-gray-400", "text-white border-none uppercase font-black text-[8px]")}>
-                  {page.active ? 'ACTIVE' : 'INACTIVE'}
-                </Badge>
               </div>
             </div>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-1">
-                <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm line-clamp-1">{page.title}</h3>
+              <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm line-clamp-1">{page.title}</h3>
+              <div className="flex items-center justify-between pt-2 border-t">
                 <p className="text-[10px] font-mono text-primary font-bold">/{page.slug}</p>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase text-muted-foreground">{page.type === 'service' ? 'Service Charge' : 'Promo Price'}</span>
-                  <span className="text-lg font-black text-primary">৳{page.discountPrice?.toLocaleString()}</span>
-                </div>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild>
-                    <Link href={`/${page.slug}`} target="_blank"><ExternalLink size={16} /></Link>
+                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" asChild>
+                    <Link href={`/${page.slug}`} target="_blank"><ExternalLink size={14} /></Link>
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" onClick={() => handleOpenDialog(page)}>
-                    <Edit size={16} />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(page.id)}>
-                    <Trash2 size={16} />
-                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenDialog(page)}><Edit size={14} /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'landing_pages', page.id))}><Trash2 size={14} /></Button>
                 </div>
               </div>
             </CardContent>
@@ -234,209 +216,177 @@ export default function LandingPagesAdminPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl rounded-[2rem] overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-5xl rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
             <DialogHeader className={cn("p-8 text-white shrink-0", formData.type === 'product' ? "bg-red-600" : "bg-blue-600")}>
               <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                <Sparkles className="text-yellow-400" /> {editingPage ? 'Update Campaign Page' : 'Create Sales Asset'}
+                <Sparkles className="text-yellow-400" /> {editingPage ? 'Update Campaign Page' : 'New Sales Engine'}
               </DialogTitle>
             </DialogHeader>
             
             <Tabs defaultValue="basic" className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b overflow-x-auto no-scrollbar">
-                <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Basic Info</TabsTrigger>
-                <TabsTrigger value="content" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Benefits & Features</TabsTrigger>
-                <TabsTrigger value="dynamic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">{formData.type === 'product' ? 'Ingredients' : 'Service Types'}</TabsTrigger>
-                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Pricing Tiers</TabsTrigger>
+              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b">
+                <TabsTrigger value="basic" className="text-xs font-black uppercase">Identity</TabsTrigger>
+                <TabsTrigger value="config" className="text-xs font-black uppercase">Selection Logic</TabsTrigger>
+                <TabsTrigger value="extra" className="text-xs font-black uppercase">Benefits</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-white">
                 <TabsContent value="basic" className="space-y-6 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Page Type</Label>
                         <Select value={formData.type} onValueChange={(v: any) => setFormData({...formData, type: v})}>
-                          <SelectTrigger className="h-12 bg-gray-100 border-none rounded-xl font-bold">
-                            <SelectValue />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="product">Product (Selling Physical Items)</SelectItem>
-                            <SelectItem value="service">Service (Booking Professional Jobs)</SelectItem>
+                            <SelectItem value="product">Selling Physical Product</SelectItem>
+                            <SelectItem value="service">Booking Complex Service</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Page Title</Label>
-                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Title in Bangla" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Title</Label>
+                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Subtitle</Label>
-                        <Input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} placeholder="Subtitle in Bangla" className="h-12 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Slug (URL)</Label>
-                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="url-identifier" className="h-12 bg-gray-50 border-none rounded-xl font-mono" required />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Original Price</Label>
-                          <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 bg-gray-50 border-none rounded-xl" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Price</Label>
-                          <Input type="number" value={formData.discountPrice} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} className="h-12 bg-primary/5 text-primary border-none rounded-xl font-black" />
-                        </div>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Slug</Label>
+                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono" required />
                       </div>
                     </div>
-
-                    <div className="space-y-6">
-                      <ImageUploader label="Page Banner Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-video" />
+                    <div className="space-y-4">
+                      <ImageUploader label="Banner" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} />
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><Video size={14} /> YouTube Video URL</Label>
-                        <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/watch?v=..." className="h-12 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Tagline</Label>
-                          <Input value={formData.offerText} onChange={e => setFormData({...formData, offerText: e.target.value})} className="h-10 bg-gray-50 border-none" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status Text</Label>
-                          <Input value={formData.stockText} onChange={e => setFormData({...formData, stockText: e.target.value})} className="h-10 bg-gray-50 border-none" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                        <Label className="text-xs font-black uppercase">Active Status</Label>
-                        <Switch checked={formData.active} onCheckedChange={val => setFormData({...formData, active: val})} />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Call Phone</Label>
+                        <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="content" className="space-y-8 mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase flex items-center gap-2 text-primary"><ListChecks size={16} /> Key Benefits</Label>
-                      {formData.benefits?.map((benefit, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Input value={benefit} onChange={e => {
-                            const newB = [...formData.benefits!];
-                            newB[idx] = e.target.value;
-                            setFormData({...formData, benefits: newB});
-                          }} placeholder={`উপকারিতা ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase flex items-center gap-2 text-primary"><Zap size={16} /> Trust Factors</Label>
-                      {formData.whyChoose?.map((point, idx) => (
-                        <div key={idx} className="flex gap-2">
-                          <Input value={point} onChange={e => {
-                            const newW = [...formData.whyChoose!];
-                            newW[idx] = e.target.value;
-                            setFormData({...formData, whyChoose: newW});
-                          }} placeholder={`কেন নিবেন ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase">Detailed Description (Sells Content)</Label>
-                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[150px] bg-gray-50 border-none rounded-2xl" />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="dynamic" className="space-y-6 mt-0">
+                <TabsContent value="config" className="space-y-8 mt-0">
                   {formData.type === 'product' ? (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-black uppercase tracking-widest">Product Ingredients / Features</Label>
-                        <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, ingredients: [...formData.ingredients, { name: '', imageUrl: '' }]})} className="rounded-lg">
-                          <Plus size={14} className="mr-1" /> Add Ingredient
-                        </Button>
+                    /* PRODUCT PACKAGES */
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-black uppercase">Product Package Sizes</Label>
+                        <Button type="button" size="sm" onClick={() => setFormData({...formData, packages: [...formData.packages, {name: '', price: 0, discountPrice: 0}]})}><Plus size={14} /></Button>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {formData.ingredients.map((ing, idx) => (
-                          <Card key={idx} className="p-4 bg-gray-50 border-none shadow-none rounded-2xl relative group">
-                            <button type="button" onClick={() => setFormData({...formData, ingredients: formData.ingredients.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
-                            <ImageUploader initialUrl={ing.imageUrl} aspectRatio="aspect-square" onUpload={url => {
-                              const newIng = [...formData.ingredients];
-                              newIng[idx].imageUrl = url;
-                              setFormData({...formData, ingredients: newIng});
-                            }} label="" />
-                            <Input value={ing.name} onChange={e => {
-                              const newIng = [...formData.ingredients];
-                              newIng[idx].name = e.target.value;
-                              setFormData({...formData, ingredients: newIng});
-                            }} placeholder="Name" className="h-9 mt-2 bg-white border-none rounded-lg text-xs font-bold" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {formData.packages.map((pkg: any, idx: number) => (
+                          <Card key={idx} className="p-4 bg-gray-50 border-none shadow-none rounded-2xl relative">
+                            <button type="button" onClick={() => setFormData({...formData, packages: formData.packages.filter((_:any, i:any) => i !== idx)})} className="absolute top-2 right-2 text-red-500"><X size={14}/></button>
+                            <div className="grid grid-cols-1 gap-3 pt-4">
+                              <Input placeholder="Package Name (e.g. 1kg)" value={pkg.name} onChange={e => {
+                                const newP = [...formData.packages]; newP[idx].name = e.target.value; setFormData({...formData, packages: newP});
+                              }} className="h-9 bg-white border-none text-xs font-bold" />
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input type="number" placeholder="Old Price" value={pkg.price} onChange={e => {
+                                  const newP = [...formData.packages]; newP[idx].price = Number(e.target.value); setFormData({...formData, packages: newP});
+                                }} className="h-9 bg-white border-none text-xs" />
+                                <Input type="number" placeholder="Offer Price" value={pkg.discountPrice} onChange={e => {
+                                  const newP = [...formData.packages]; newP[idx].discountPrice = Number(e.target.value); setFormData({...formData, packages: newP});
+                                }} className="h-9 bg-primary/10 border-none text-xs font-black" />
+                              </div>
+                            </div>
                           </Card>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-black uppercase tracking-widest">Service Options (Dropdown Items)</Label>
-                        <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, serviceTypes: [...formData.serviceTypes, '']})} className="rounded-lg">
-                          <Plus size={14} className="mr-1" /> Add Option
-                        </Button>
+                    /* COMPLEX SERVICE LOGIC */
+                    <div className="space-y-8">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-black uppercase">Service Hierarchy (Type > Packages > Addons)</Label>
+                        <Button type="button" size="sm" onClick={addServiceType} className="gap-2"><Wrench size={14} /> Add Service Category</Button>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {formData.serviceTypes.map((type, idx) => (
-                          <div key={idx} className="flex gap-2 items-center bg-gray-50 p-3 rounded-xl">
-                            <Wrench size={16} className="text-gray-400" />
-                            <Input value={type} onChange={e => {
-                              const newTypes = [...formData.serviceTypes];
-                              newTypes[idx] = e.target.value;
-                              setFormData({...formData, serviceTypes: newTypes});
-                            }} placeholder="e.g. Master Service" className="h-10 bg-white border-none rounded-lg font-bold" />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => setFormData({...formData, serviceTypes: formData.serviceTypes.filter((_, i) => i !== idx)})} className="text-red-500"><X size={16} /></Button>
-                          </div>
+                      
+                      <div className="space-y-10">
+                        {formData.serviceTypes.map((type: any, typeIdx: number) => (
+                          <Card key={typeIdx} className="p-6 md:p-8 bg-blue-50/30 border-2 border-blue-100 rounded-[2.5rem] relative">
+                            <button type="button" onClick={() => setFormData({...formData, serviceTypes: formData.serviceTypes.filter((_:any, i:any) => i !== typeIdx)})} className="absolute top-6 right-6 text-red-500"><X size={20}/></button>
+                            
+                            <div className="space-y-6">
+                              <div className="space-y-2 max-w-md">
+                                <Label className="text-[10px] font-black uppercase text-blue-600">Service Category Name</Label>
+                                <Input value={type.name} onChange={e => {
+                                  const newT = [...formData.serviceTypes]; newT[typeIdx].name = e.target.value; setFormData({...formData, serviceTypes: newT});
+                                }} placeholder="e.g. AC Service" className="h-12 bg-white border-none rounded-xl font-bold" />
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Packages */}
+                                <div className="space-y-4">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-black uppercase">Base Packages</Label>
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => addPackageToService(typeIdx)} className="h-7 text-blue-600 font-black text-[9px] uppercase"><Plus size={12} /> Add Tier</Button>
+                                  </div>
+                                  <div className="space-y-3">
+                                    {type.packages.map((pkg: any, pkgIdx: number) => (
+                                      <div key={pkgIdx} className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-blue-50">
+                                        <Input placeholder="Tier" value={pkg.name} onChange={e => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].packages[pkgIdx].name = e.target.value; setFormData({...formData, serviceTypes: newT});
+                                        }} className="h-8 border-none text-[10px] font-bold" />
+                                        <Input type="number" placeholder="Price" value={pkg.price} onChange={e => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].packages[pkgIdx].price = Number(e.target.value); setFormData({...formData, serviceTypes: newT});
+                                        }} className="h-8 border-none text-[10px] font-black w-20" />
+                                        <button type="button" onClick={() => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].packages = newT[typeIdx].packages.filter((_:any, i:any) => i !== pkgIdx); setFormData({...formData, serviceTypes: newT});
+                                        }} className="text-red-400 hover:text-red-600 p-1"><X size={14}/></button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Addons */}
+                                <div className="space-y-4">
+                                  <div className="flex justify-between items-center">
+                                    <Label className="text-[10px] font-black uppercase">Extra Add-ons</Label>
+                                    <Button type="button" variant="ghost" size="sm" onClick={() => addAddonToService(typeIdx)} className="h-7 text-emerald-600 font-black text-[9px] uppercase"><Plus size={12} /> Add Task</Button>
+                                  </div>
+                                  <div className="space-y-3">
+                                    {type.addons?.map((addon: any, addIdx: number) => (
+                                      <div key={addIdx} className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-emerald-50">
+                                        <Input placeholder="Addon" value={addon.name} onChange={e => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].addons[addIdx].name = e.target.value; setFormData({...formData, serviceTypes: newT});
+                                        }} className="h-8 border-none text-[10px] font-bold" />
+                                        <Input type="number" placeholder="+৳" value={addon.price} onChange={e => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].addons[addIdx].price = Number(e.target.value); setFormData({...formData, serviceTypes: newT});
+                                        }} className="h-8 border-none text-[10px] font-black w-20 text-emerald-600" />
+                                        <button type="button" onClick={() => {
+                                          const newT = [...formData.serviceTypes]; newT[typeIdx].addons = newT[typeIdx].addons.filter((_:any, i:any) => i !== addIdx); setFormData({...formData, serviceTypes: newT});
+                                        }} className="text-red-400 p-1"><X size={14}/></button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
                         ))}
                       </div>
                     </div>
                   )}
                 </TabsContent>
 
-                <TabsContent value="pricing" className="space-y-6 mt-0">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-black uppercase tracking-widest">Pricing & Packages</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, packages: [...formData.packages, { name: '', price: 0, discountPrice: 0 }]})} className="rounded-lg">
-                      <Plus size={14} className="mr-1" /> Add Tier
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {formData.packages.map((pkg, idx) => (
-                      <Card key={idx} className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] relative group">
-                        <button type="button" onClick={() => setFormData({...formData, packages: formData.packages.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
-                        <div className="space-y-4">
-                          <Input value={pkg.name} onChange={e => {
-                            const newP = [...formData.packages];
-                            newP[idx].name = e.target.value;
-                            setFormData({...formData, packages: newP});
-                          }} placeholder="Tier Name (e.g. Standard)" className="h-10 bg-white border-none rounded-xl font-bold" />
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <Label className="text-[9px] uppercase font-black opacity-40">Normal</Label>
-                              <Input type="number" value={pkg.price} onChange={e => {
-                                const newP = [...formData.packages];
-                                newP[idx].price = Number(e.target.value);
-                                setFormData({...formData, packages: newP});
-                              }} className="h-9 bg-white border-none rounded-lg" />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-[9px] uppercase font-black text-primary">Promo</Label>
-                              <Input type="number" value={pkg.discountPrice} onChange={e => {
-                                const newP = [...formData.packages];
-                                newP[idx].discountPrice = Number(e.target.value);
-                                setFormData({...formData, packages: newP});
-                              }} className="h-9 bg-white border-none rounded-lg font-black" />
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                <TabsContent value="extra" className="space-y-6 mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Label className="text-xs font-black uppercase">Core Benefits (3 Items)</Label>
+                      {formData.benefits.map((b: string, i: number) => (
+                        <Input key={i} value={b} onChange={e => {
+                          const newB = [...formData.benefits]; newB[i] = e.target.value; setFormData({...formData, benefits: newB});
+                        }} className="h-11 bg-gray-50 border-none rounded-xl" />
+                      ))}
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-xs font-black uppercase">Trust Points (3 Items)</Label>
+                      {formData.whyChoose.map((w: string, i: number) => (
+                        <Input key={i} value={w} onChange={e => {
+                          const newW = [...formData.whyChoose]; newW[i] = e.target.value; setFormData({...formData, whyChoose: newW});
+                        }} className="h-11 bg-gray-50 border-none rounded-xl" />
+                      ))}
+                    </div>
                   </div>
                 </TabsContent>
               </div>
@@ -444,9 +394,9 @@ export default function LandingPagesAdminPage() {
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary text-white shadow-xl uppercase tracking-tighter">
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl uppercase tracking-tighter">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
-                {editingPage ? 'Sync Changes' : 'Deploy Campaign'}
+                {editingPage ? 'Sync Updates' : 'Deploy Page'}
               </Button>
             </DialogFooter>
           </form>
