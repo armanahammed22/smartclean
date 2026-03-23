@@ -16,7 +16,8 @@ import {
   Users,
   Package,
   ListChecks,
-  Volume2
+  Volume2,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -241,7 +242,7 @@ export default function ServiceDetailsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {addOns.map((add) => (
                       <div 
-                        key={add.id}
+                        key={add.id} 
                         onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])}
                         className={cn(
                           "p-5 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-95 flex items-center justify-between",
