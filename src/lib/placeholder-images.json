@@ -113,6 +113,12 @@
       "description": "New Arrival Banner",
       "imageUrl": "https://picsum.photos/seed/promo2/600/400",
       "imageHint": "new gadget"
+    },
+    {
+      "id": "landing-deep-clean",
+      "description": "Deep Cleaning Hero",
+      "imageUrl": "https://picsum.photos/seed/deepclean/1200/800",
+      "imageHint": "deep cleaning"
     }
   ]
 }
