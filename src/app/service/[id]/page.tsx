@@ -125,9 +125,9 @@ export default function ServiceDetailsPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             
-            {/* COLUMN 1: Visuals & Included (Left) */}
+            {/* COLUMN 1: Sidebar (Left) - Images & Included */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white relative rounded-[1.5rem] lg:rounded-[2rem] overflow-hidden shadow-sm border border-gray-100">
+              <div className="bg-white relative rounded-[2rem] overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative aspect-square w-full">
                   {allImages.length > 0 ? (
                     <Image src={allImages[activeImageIdx]} alt={service.title} fill className="object-cover transition-opacity duration-500" priority unoptimized />
@@ -135,7 +135,7 @@ export default function ServiceDetailsPage() {
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/40"><Wrench size={80} /></div>
                   )}
                   
-                  {/* Badges TOP-LEFT */}
+                  {/* Badges TOP-LEFT Overlay */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                     {service.isPopular && (
                       <Badge className="bg-amber-500 text-white border-none px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-md flex items-center gap-1">
@@ -178,18 +178,18 @@ export default function ServiceDetailsPage() {
                 )}
               </div>
 
-              {/* 2-COLUMN What's Included */}
+              {/* What is Included (Sidebar Card) */}
               {includedItems && includedItems.length > 0 && (
                 <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
                   <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center gap-2 border-b pb-3 border-gray-50">
+                    <div className="flex items-center gap-2 border-b pb-3 border-gray-100">
                       <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><ListChecks size={14} /></div>
-                      <h3 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">Service Scope</h3>
+                      <h3 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">What is Included</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {includedItems.map((item) => (
                         <div key={item.id} className="flex items-start gap-2 group">
-                          <CheckCircle2 size={12} className="text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                          <CheckCircle2 size={12} className="text-accent mt-0.5 shrink-0" />
                           <span className="text-[10px] font-bold text-gray-600 leading-tight uppercase tracking-tight">{item.title}</span>
                         </div>
                       ))}
@@ -199,18 +199,16 @@ export default function ServiceDetailsPage() {
               )}
             </div>
 
-            {/* COLUMN 2: Details, Selection & Add-ons (Middle) */}
-            <div className="lg:col-span-5 space-y-8 px-4 lg:px-0">
-              {/* Service Info Block */}
-              <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
+            {/* COLUMN 2: Identity & Sequential Selection (Middle) */}
+            <div className="lg:col-span-5 space-y-8">
+              {/* Identity Row */}
+              <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                 <div className="space-y-2">
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-md w-fit">
-                    {service.categoryId || 'Premium Service'}
-                  </Badge>
-                  <h1 className="text-2xl md:text-3xl font-black text-[#081621] tracking-tighter uppercase leading-tight">{service.title}</h1>
+                  <h1 className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter uppercase leading-none">{service.title}</h1>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{service.categoryId || 'General Service'}</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 py-1">
+                <div className="flex flex-wrap items-center gap-6 pt-2">
                   <div className="flex items-center gap-1.5 text-gray-700 text-[10px] font-black uppercase">
                     <Star size={14} fill="#f59e0b" className="text-amber-400" /> {service.rating || '5.0'} Rating
                   </div>
@@ -223,72 +221,74 @@ export default function ServiceDetailsPage() {
                 </div>
               </div>
 
-              {/* Step 1: Package Selector (Smaller cards) */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 px-2">
-                  <div className="p-1.5 bg-primary/10 text-primary rounded-lg"><Package size={16} /></div>
-                  <h2 className="text-sm font-black uppercase tracking-tight text-[#081621]">Step 1: Choose Package</h2>
-                </div>
-                <div className="grid grid-cols-1 gap-3">
-                  {pkgLoading ? <Loader2 className="animate-spin text-primary" /> : packages?.map((pkg) => (
-                    <div 
-                      key={pkg.id} 
-                      onClick={() => setSelectedPkgId(pkg.id)}
-                      className={cn(
-                        "p-4 rounded-2xl border-2 transition-all cursor-pointer group active:scale-[0.98] flex items-center justify-between",
-                        selectedPkgId === pkg.id ? "border-primary bg-primary/5 shadow-sm" : "border-gray-100 bg-white hover:border-gray-200"
-                      )}
-                    >
-                      <div className="space-y-0.5">
-                        <p className="font-black text-gray-900 uppercase text-xs tracking-tight">{pkg.name}</p>
-                        <p className="text-[9px] text-muted-foreground font-bold uppercase">{pkg.areaSize}</p>
-                      </div>
-                      <p className="text-lg font-black text-primary">৳{pkg.price?.toLocaleString()}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step 2: Add-on Services (2-Column Grid) */}
-              {addOns && addOns.length > 0 && (
+              {/* Steps Layout (Packages and Addons side by side) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Step 1: Package List */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 px-2">
-                    <div className="p-1.5 bg-accent/10 text-accent rounded-lg"><Zap size={16} fill="currentColor" /></div>
-                    <h2 className="text-sm font-black uppercase tracking-tight text-[#081621]">Step 2: Add Extras</h2>
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="p-1.5 bg-primary/10 text-primary rounded-lg font-black text-[9px]">STEP 1</div>
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">Choose Package</h2>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {addOns.map((add) => (
+                  <div className="space-y-3">
+                    {pkgLoading ? <Loader2 className="animate-spin text-primary mx-auto" /> : packages?.map((pkg) => (
                       <div 
-                        key={add.id} 
-                        onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])}
+                        key={pkg.id} 
+                        onClick={() => setSelectedPkgId(pkg.id)}
                         className={cn(
-                          "p-4 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-95 flex flex-col gap-3",
-                          selectedAddOnIds.includes(add.id) ? "border-accent bg-accent/5" : "border-gray-100 hover:border-gray-200"
+                          "p-4 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-[0.98]",
+                          selectedPkgId === pkg.id ? "border-primary bg-primary/5 shadow-sm" : "border-gray-100 hover:border-gray-200"
                         )}
                       >
-                        <div className="flex justify-between items-start">
-                          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", selectedAddOnIds.includes(add.id) ? "bg-accent text-white" : "bg-gray-50 text-gray-400")}>
-                            <Zap size={14} fill="currentColor" />
-                          </div>
-                          <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200")}>
-                            <Plus size={12} strokeWidth={3} />
-                          </div>
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="font-black text-gray-900 uppercase text-[10px] tracking-tight">{pkg.name}</p>
+                          {pkg.isRecommended && <Badge className="text-[7px] bg-primary h-4 px-1.5">POPULAR</Badge>}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-gray-900 text-[10px] uppercase truncate">{add.name}</p>
-                          <p className="font-black text-xs text-accent">+৳{add.price}</p>
+                        <div className="flex justify-between items-end">
+                          <p className="text-[8px] text-muted-foreground font-bold uppercase">{pkg.areaSize}</p>
+                          <p className="text-sm font-black text-primary">৳{pkg.price?.toLocaleString()}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
+
+                {/* Step 2: Add-on List */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="p-1.5 bg-accent/10 text-accent rounded-lg font-black text-[9px]">STEP 2</div>
+                    <h2 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">Add On Service</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {addOnLoading ? <Loader2 className="animate-spin text-primary mx-auto" /> : addOns?.map((add) => (
+                      <div 
+                        key={add.id} 
+                        onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])}
+                        className={cn(
+                          "p-4 rounded-2xl border-2 transition-all cursor-pointer bg-white group active:scale-[0.98] flex items-center justify-between",
+                          selectedAddOnIds.includes(add.id) ? "border-accent bg-accent/5 shadow-sm" : "border-gray-100 hover:border-gray-200"
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 text-[10px] uppercase truncate">{add.name}</p>
+                          <p className="font-black text-[10px] text-accent mt-0.5">+৳{add.price}</p>
+                        </div>
+                        <div className={cn(
+                          "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                          selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200"
+                        )}>
+                          <Plus size={14} strokeWidth={3} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* COLUMN 3: Summary (Right) */}
-            <div className="lg:col-span-3 space-y-6 lg:sticky lg:top-24">
-              <Card className="rounded-[2rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
-                <div className="p-8 space-y-8">
+            {/* COLUMN 3: Booking Summary (Right Sticky) */}
+            <div className="lg:col-span-3 lg:sticky lg:top-24">
+              <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
+                <CardContent className="p-8 space-y-8">
                   <div className="space-y-1">
                     <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Booking Summary</h3>
                     <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Instant Quotation</p>
@@ -296,12 +296,12 @@ export default function ServiceDetailsPage() {
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-tight">
-                      <span>{selectedPkg?.name || 'Base Service'}</span>
+                      <span>{selectedPkg?.name || 'Base Package'}</span>
                       <span className="text-gray-900">৳{selectedPkg?.price?.toLocaleString() || '0'}</span>
                     </div>
                     
                     {selectedAddOnIds.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-gray-50">
+                      <div className="space-y-2 pt-2 border-t border-gray-100">
                         {addOns?.filter(a => selectedAddOnIds.includes(a.id)).map(a => (
                           <div key={a.id} className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase">
                             <span>+ {a.name}</span>
@@ -314,12 +314,12 @@ export default function ServiceDetailsPage() {
                     <div className="pt-6 border-t-2 border-dashed border-gray-100">
                       <div className="flex flex-col">
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Payable</span>
-                        <span className="text-4xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                        <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-4">
                         <Badge className="bg-accent text-white border-none font-black text-[8px] px-3 py-1 rounded-full uppercase">VAT Included</Badge>
                         <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600">
-                          <ShieldCheck size={12} /> Secure
+                          <ShieldCheck size={12} /> Secure Checkout
                         </div>
                       </div>
                     </div>
@@ -331,27 +331,27 @@ export default function ServiceDetailsPage() {
                   >
                     Confirm Booking <ChevronRight size={20} />
                   </Button>
-                </div>
+                </CardContent>
               </Card>
             </div>
           </div>
 
-          {/* BOTTOM SECTIONS (Full Width) */}
+          {/* FULL WIDTH BOTTOM SECTIONS */}
           <div className="mt-16 space-y-12">
-            {/* Description Section */}
+            {/* Service Details Section */}
             <section className="px-4 lg:px-0">
-              <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-gray-100 space-y-6">
-                <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Service Details</h2>
+              <div className="bg-white p-8 md:p-16 rounded-[3rem] shadow-sm border border-gray-100 space-y-8">
+                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621] text-center">Service Details</h2>
                 <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed font-medium">
                   <p className="whitespace-pre-line">{service.description}</p>
                 </div>
               </div>
             </section>
 
-            {/* Customer Reviews */}
+            {/* Customer Reviews Section */}
             {reviews && reviews.length > 0 && (
               <section className="px-4 lg:px-0 space-y-8">
-                <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621] px-2">Customer Feedback</h2>
+                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621] text-center">Client Feedback</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {reviews.map((rev) => (
                     <div key={rev.id} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
@@ -381,7 +381,7 @@ export default function ServiceDetailsPage() {
           <div className="bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 pl-8 flex items-center justify-between h-[76px]">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payable</span>
-              <span className="text-2xl font-black text-primary tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+              <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
             </div>
             <Button 
               onClick={handleContinueBooking} 
