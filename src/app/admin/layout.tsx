@@ -131,7 +131,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 },
         { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, badge: newBookings?.length || 0 },
-        { name: "Order Tracking", href: '/admin/couriers', icon: Truck },
+        { name: "Logistics Hub", href: '/admin/couriers', icon: Truck },
       ]
     },
     {
