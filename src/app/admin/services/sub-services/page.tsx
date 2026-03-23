@@ -1,12 +1,12 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, Wrench, Clock, Users, Package, CheckCircle2 } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, Wrench, Clock, Users, Package, CheckCircle2, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -27,17 +27,26 @@ export default function SubServicesManagementPage() {
   // Data Queries
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), orderBy('name', 'asc')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
-  const employeesQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles')) : null, [db]);
 
   const { data: subServices, isLoading } = useCollection(subServicesQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: employees } = useCollection(employeesQuery);
+
+  // Calculate KPI Stats
+  const stats = useMemo(() => {
+    if (!subServices) return { total: 0, active: 0, inactive: 0, parents: 0 };
+    return {
+      total: subServices.length,
+      active: subServices.filter(s => s.status === 'Active').length,
+      inactive: subServices.filter(s => s.status === 'Inactive').length,
+      parents: services?.length || 0
+    };
+  }, [subServices, services]);
 
   const KPI_STATS = [
-    { label: "Sub-Services", value: subServices?.length || 0, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Main Services", value: services?.length || 0, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Active Operations", value: services?.filter(s => s.status === 'Active').length || 0, icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Total Staff", value: employees?.length || 0, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Total Sub-Services", value: stats.total, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Parent Services", value: stats.parents, icon: Wrench, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Active Tasks", value: stats.active, icon: CheckCircle2, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Inactive Tasks", value: stats.inactive, icon: XCircle, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -186,7 +195,7 @@ export default function SubServicesManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-xs font-semibold text-indigo-600">
-                      {services?.find(s => s.id === sub.mainServiceId)?.title || 'Independent'}
+                      {services?.find(s => s.id === s.mainServiceId)?.title || services?.find(s => s.id === sub.mainServiceId)?.title || 'Independent'}
                     </TableCell>
                     <TableCell className="font-black text-primary text-sm">৳{sub.price?.toLocaleString()}</TableCell>
                     <TableCell>
@@ -210,7 +219,7 @@ export default function SubServicesManagementPage() {
                   </TableRow>
                 ))
               ) : (
-                <TableRow><TableCell colSpan={5} className="text-center py-20 italic text-muted-foreground">No tasks added yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-32 italic text-muted-foreground font-medium">No tasks added yet. Start by adding a sub-service linked to a main category.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

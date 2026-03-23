@@ -1,12 +1,12 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wrench, Plus, Trash2, Edit, Loader2, Save, Layers, Users, Clock, CheckCircle2, Image as ImageIcon, X, Settings2 } from 'lucide-react';
+import { Wrench, Plus, Trash2, Edit, Loader2, Save, Layers, Users, Clock, CheckCircle2, Image as ImageIcon, X, Settings2, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -30,7 +30,21 @@ export default function ServicesManagementPage() {
   const [mainImageUrl, setMainImageUrl] = useState('');
 
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
+  const subServicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'sub_services')) : null, [db, user]);
+  
   const { data: services, isLoading } = useCollection(servicesQuery);
+  const { data: subServices } = useCollection(subServicesQuery);
+
+  // Calculate KPI Stats
+  const stats = useMemo(() => {
+    if (!services) return { total: 0, subTotal: 0, active: 0, inactive: 0 };
+    return {
+      total: services.length,
+      subTotal: subServices?.length || 0,
+      active: services.filter(s => s.status === 'Active').length,
+      inactive: services.filter(s => s.status === 'Inactive').length
+    };
+  }, [services, subServices]);
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -132,6 +146,46 @@ export default function ServicesManagementPage() {
         </Dialog>
       </div>
 
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Services</p>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">{stats.total}</h3>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform"><Wrench size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Sub-Services</p>
+              <h3 className="text-xl font-black text-indigo-600 tracking-tight">{stats.subTotal}</h3>
+            </div>
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform"><Layers size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Published</p>
+              <h3 className="text-xl font-black text-green-600 tracking-tight">{stats.active}</h3>
+            </div>
+            <div className="p-3 bg-green-50 text-green-600 rounded-2xl group-hover:scale-110 transition-transform"><CheckCircle2 size={20} /></div>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <CardContent className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Unpublished</p>
+              <h3 className="text-xl font-black text-amber-600 tracking-tight">{stats.inactive}</h3>
+            </div>
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl group-hover:scale-110 transition-transform"><XCircle size={20} /></div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0">
           <Table>
@@ -146,37 +200,41 @@ export default function ServicesManagementPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-              ) : services?.map((service) => (
-                <TableRow key={service.id} className="hover:bg-gray-50/50 transition-colors">
-                  <TableCell className="py-5 pl-8">
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
-                        {service.imageUrl && <Image src={service.imageUrl} alt={service.title} fill className="object-cover" unoptimized />}
+              ) : services?.length ? (
+                services.map((service) => (
+                  <TableRow key={service.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell className="py-5 pl-8">
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
+                          {service.imageUrl && <Image src={service.imageUrl} alt={service.title} fill className="object-cover" unoptimized />}
+                        </div>
+                        <div>
+                          <div className="font-black text-gray-900 uppercase text-xs">{service.title}</div>
+                          <div className="text-[10px] text-muted-foreground font-bold">{service.categoryId}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-black text-gray-900 uppercase text-xs">{service.title}</div>
-                        <div className="text-[10px] text-muted-foreground font-bold">{service.categoryId}</div>
+                    </TableCell>
+                    <TableCell className="font-black text-primary">৳{service.basePrice?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge className={cn("text-[9px] font-black uppercase border-none px-2", service.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
+                        {service.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-black text-[10px] uppercase border-primary/20 text-primary hover:bg-primary/5" asChild>
+                          <Link href={`/admin/services/${service.id}`}><Settings2 size={14} /> Edit Details</Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(service.id)}>
+                          <Trash2 size={16} />
+                        </Button>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-black text-primary">৳{service.basePrice?.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge className={cn("text-[9px] font-black uppercase border-none px-2", service.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
-                      {service.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-black text-[10px] uppercase border-primary/20 text-primary hover:bg-primary/5" asChild>
-                        <Link href={`/admin/services/${service.id}`}><Settings2 size={14} /> Edit Details</Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(service.id)}>
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={4} className="text-center py-24 italic text-muted-foreground font-medium">No main services registered. Create your first offering above.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
