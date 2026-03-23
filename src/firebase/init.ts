@@ -7,17 +7,14 @@ import { firebaseConfig } from './config';
 
 /**
  * Robust singleton pattern for Next.js.
- * Storing instances on globalThis ensures they persist across HMR reloads.
+ * Ensures initialization happens exactly once and only in the browser.
  */
-const globalForFirebase = globalThis as unknown as {
-  __firebaseApp: FirebaseApp | undefined;
-  __firebaseAuth: Auth | undefined;
-  __firestoreDb: Firestore | undefined;
-};
+let firebaseApp: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let firestore: Firestore | null = null;
 
 /**
  * Idempotent Firebase initialization.
- * Hardened to ensure services are returned independently even if one fails.
  * CRITICAL: Returns nulls during SSR to prevent "fake" instances from crashing SDK functions.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
@@ -26,47 +23,33 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     return { firebaseApp: null, auth: null, firestore: null };
   }
 
-  let app: FirebaseApp | null = null;
-  let auth: Auth | null = null;
-  let firestore: Firestore | null = null;
-
   try {
     // 1. Initialize App
-    if (!globalForFirebase.__firebaseApp) {
-      if (getApps().length > 0) {
-        globalForFirebase.__firebaseApp = getApp();
-      } else {
-        globalForFirebase.__firebaseApp = initializeApp(firebaseConfig);
-      }
+    if (!firebaseApp) {
+      firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     }
-    app = globalForFirebase.__firebaseApp;
 
     // 2. Initialize Auth
-    if (app && !globalForFirebase.__firebaseAuth) {
-      globalForFirebase.__firebaseAuth = getAuth(app);
+    if (firebaseApp && !auth) {
+      auth = getAuth(firebaseApp);
     }
-    auth = globalForFirebase.__firebaseAuth || null;
 
     // 3. Initialize Firestore with stable transport (Long Polling)
-    if (app && !globalForFirebase.__firestoreDb) {
+    if (firebaseApp && !firestore) {
       try {
-        globalForFirebase.__firestoreDb = initializeFirestore(app, {
+        // Attempt specialized initialization for transport stability
+        firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),
         });
       } catch (e: any) {
-        // Fallback to getFirestore if already initialized or error occurs
-        globalForFirebase.__firestoreDb = getFirestore(app);
+        // Fallback to getFirestore if already initialized (common during HMR)
+        firestore = getFirestore(firebaseApp);
       }
     }
-    
-    // Safety check: Ensure firestore is a valid object from the SDK
-    const fs = globalForFirebase.__firestoreDb;
-    firestore = fs || null;
-
   } catch (error) {
     console.error("Critical Firebase Initialization Error:", error);
   }
 
-  return { firebaseApp: app, auth, firestore };
+  return { firebaseApp, auth, firestore };
 }

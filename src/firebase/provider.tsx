@@ -4,7 +4,7 @@ import React, { DependencyList, createContext, useContext, ReactNode, useMemo, u
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -83,15 +83,15 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [auth]);
 
   const contextValue = useMemo((): FirebaseContextState => {
-    // Basic service validation - ensure we only pass ready instances
-    const isFirestoreValid = !!firestore && typeof (firestore as any).type === 'string' && (firestore as any).type === 'firestore';
-    const isAuthValid = !!(auth && typeof (auth as any).onAuthStateChanged === 'function');
+    // Rigid validation to ensure we only pass high-fidelity instances
+    const isFirestoreReady = !!firestore && typeof (firestore as any).type === 'string';
+    const isAuthReady = !!auth && typeof (auth as any).onAuthStateChanged === 'function';
 
     return {
-      areServicesAvailable: !!firebaseApp,
+      areServicesAvailable: !!firebaseApp && isFirestoreReady && isAuthReady,
       firebaseApp: firebaseApp,
-      firestore: firestore, // Pass as is, relying on initialization check
-      auth: auth,
+      firestore: isFirestoreReady ? firestore : null,
+      auth: isAuthReady ? auth : null,
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
       userError: userAuthState.userError,
