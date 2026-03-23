@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -124,7 +125,7 @@ export default function ServiceDetailsPage() {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
             
-            {/* COLUMN 1: Visuals (Left) */}
+            {/* COLUMN 1: Visuals & Included (Left) */}
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-white relative rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative aspect-square w-full">
@@ -177,7 +178,7 @@ export default function ServiceDetailsPage() {
                 )}
               </div>
 
-              {/* COMPACT What's Included (MOVED HERE) */}
+              {/* COMPACT What's Included */}
               {includedItems && includedItems.length > 0 && (
                 <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
                   <CardContent className="p-6 space-y-4">
@@ -198,8 +199,8 @@ export default function ServiceDetailsPage() {
               )}
             </div>
 
-            {/* COLUMN 2: Details & Selection (Middle) */}
-            <div className="lg:col-span-5 space-y-8 px-4 lg:px-0">
+            {/* COLUMN 2: Details, Selection & Add-ons (Middle) */}
+            <div className="lg:col-span-5 space-y-10 px-4 lg:px-0">
               {/* Service Info */}
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -209,7 +210,6 @@ export default function ServiceDetailsPage() {
                   </Badge>
                 </div>
 
-                {/* Info Row (Single Line) */}
                 <div className="flex flex-wrap items-center gap-3 py-2">
                   <div className="flex items-center gap-1.5 text-gray-700 bg-white shadow-sm px-4 py-2 rounded-xl text-[11px] font-black border border-gray-100 uppercase">
                     <Star size={14} fill="#f59e0b" className="text-amber-400" /> {service.rating || '5.0'}
@@ -223,11 +223,13 @@ export default function ServiceDetailsPage() {
                 </div>
               </div>
 
-              {/* Package Selector */}
+              {/* Step 1: Package Selector */}
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 text-primary rounded-xl"><Package size={18} /></div>
-                  <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Select Package</h2>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 text-primary rounded-xl"><Package size={18} /></div>
+                    <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Step 1: Choose Package</h2>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {pkgLoading ? <Loader2 className="animate-spin text-primary" /> : packages?.map((pkg) => (
@@ -242,7 +244,7 @@ export default function ServiceDetailsPage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
                           <p className="font-black text-gray-900 uppercase text-sm tracking-tight">{pkg.name}</p>
-                          {pkg.isRecommended && <Badge className="bg-amber-500 border-none font-black text-[8px] uppercase px-2">Most Popular</Badge>}
+                          {pkg.isRecommended && <Badge className="bg-amber-500 border-none font-black text-[8px] uppercase px-2">Best Value</Badge>}
                         </div>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase">{pkg.areaSize}</p>
                       </div>
@@ -252,12 +254,12 @@ export default function ServiceDetailsPage() {
                 </div>
               </div>
 
-              {/* Add-on Services */}
+              {/* Step 2: Add-on Services (Stacked in same column) */}
               {addOns && addOns.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-accent/10 text-accent rounded-xl"><Zap size={18} fill="currentColor" /></div>
-                    <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Add-on Services</h2>
+                    <h2 className="text-lg font-black uppercase tracking-tight text-[#081621]">Step 2: Add Extra Tasks</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {addOns.map((add) => (
@@ -273,12 +275,12 @@ export default function ServiceDetailsPage() {
                           <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-colors", selectedAddOnIds.includes(add.id) ? "bg-accent text-white" : "bg-gray-50 text-gray-400")}>
                             <Zap size={18} fill="currentColor" />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <p className="font-bold text-gray-900 text-[11px] uppercase truncate">{add.name}</p>
                             <p className="font-black text-xs text-accent">+৳{add.price}</p>
                           </div>
                         </div>
-                        <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200")}>
+                        <div className={cn("w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0", selectedAddOnIds.includes(add.id) ? "bg-accent border-accent text-white" : "border-gray-200 text-gray-200")}>
                           <Plus size={14} strokeWidth={3} />
                         </div>
                       </div>
@@ -294,7 +296,7 @@ export default function ServiceDetailsPage() {
                 <div className="p-8 space-y-8">
                   <div className="space-y-1">
                     <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Booking Summary</h3>
-                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Pricing Overview</p>
+                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Instant Quotation</p>
                   </div>
 
                   <div className="space-y-4">
@@ -316,7 +318,7 @@ export default function ServiceDetailsPage() {
 
                     <div className="pt-6 border-t-2 border-dashed border-gray-100">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Price</span>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Payable</span>
                         <span className="text-4xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-4">
@@ -332,7 +334,7 @@ export default function ServiceDetailsPage() {
                     onClick={handleContinueBooking} 
                     className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-accent/20 uppercase tracking-tight gap-3 transition-transform active:scale-95 bg-accent hover:bg-accent/90 text-white"
                   >
-                    Book Now <ChevronRight size={20} />
+                    Confirm Booking <ChevronRight size={20} />
                   </Button>
                 </div>
               </Card>
@@ -389,7 +391,7 @@ export default function ServiceDetailsPage() {
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100] animate-in slide-in-from-bottom-10">
           <div className="bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 pl-8 flex items-center justify-between h-[76px]">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payble</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payable</span>
               <span className="text-2xl font-black text-primary tracking-tighter">৳{totalPrice.toLocaleString()}</span>
             </div>
             <Button 
