@@ -12,6 +12,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
+        request.auth.token.email == 'smartclean422@gmail.com' ||
         exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
     }
@@ -22,6 +23,8 @@ service cloud.firestore {
     match /subcategories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /childcategories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /landing_pages/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /campaigns/{cid}/products/{pid} { allow read: if true; allow write: if isAdmin(); }
     
     match /services/{id} { 
       allow read: if true; 
@@ -85,8 +88,6 @@ service cloud.firestore {
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn(); }
     match /leads/{id} { allow read, write: if isAdmin(); }
     match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /campaigns/{cid}/products/{pid} { allow read: if true; allow write: if isAdmin(); }
     
     match /support_tickets/{id} { 
       allow create: if isSignedIn(); 

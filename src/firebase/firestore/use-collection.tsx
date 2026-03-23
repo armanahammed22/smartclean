@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -45,7 +46,9 @@ const PUBLIC_COLLECTIONS = [
   'offers',
   'categories',
   'subcategories',
-  'childcategories'
+  'childcategories',
+  'top_nav_categories',
+  'landing_pages'
 ];
 
 function getPathFromTarget(target: any): string {
