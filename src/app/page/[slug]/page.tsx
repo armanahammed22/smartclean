@@ -1,7 +1,6 @@
-
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
@@ -14,6 +13,11 @@ export default function DynamicContentPage() {
   const { slug } = useParams();
   const router = useRouter();
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const pageQuery = useMemoFirebase(() => {
     if (!db || !slug) return null;
@@ -23,7 +27,7 @@ export default function DynamicContentPage() {
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  if (isLoading) return (
+  if (!mounted || isLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
       <Loader2 className="animate-spin text-primary" size={48} />
       <p className="text-xs font-black uppercase tracking-widest text-gray-400">Syncing Page Content...</p>
@@ -61,7 +65,7 @@ export default function DynamicContentPage() {
             </h1>
             <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-black uppercase tracking-widest">
               <Calendar size={14} className="text-primary" />
-              Published: {new Date(page.updatedAt).toLocaleDateString()}
+              Published: {mounted && page.updatedAt ? new Date(page.updatedAt).toLocaleDateString() : '...'}
             </div>
           </div>
         </header>
