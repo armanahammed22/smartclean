@@ -40,7 +40,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LandingPagesAdminPage() {
@@ -297,7 +297,7 @@ export default function LandingPagesAdminPage() {
                     /* COMPLEX SERVICE LOGIC */
                     <div className="space-y-8">
                       <div className="flex justify-between items-center">
-                        <Label className="text-sm font-black uppercase">Service Hierarchy (Type > Packages > Addons)</Label>
+                        <Label className="text-sm font-black uppercase">Service Hierarchy (Type &gt; Packages &gt; Addons)</Label>
                         <Button type="button" size="sm" onClick={addServiceType} className="gap-2"><Wrench size={14} /> Add Service Category</Button>
                       </div>
                       
