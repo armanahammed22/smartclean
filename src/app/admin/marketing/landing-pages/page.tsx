@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -24,7 +23,9 @@ import {
   ListChecks,
   ShoppingBag,
   Package,
-  X
+  X,
+  Layers,
+  Wrench
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -39,6 +40,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LandingPagesAdminPage() {
   const { user } = useUser();
@@ -51,6 +53,7 @@ export default function LandingPagesAdminPage() {
 
   const [formData, setFormData] = useState({
     slug: '',
+    type: 'product' as 'product' | 'service',
     title: '',
     subtitle: '',
     offer: '',
@@ -67,6 +70,7 @@ export default function LandingPagesAdminPage() {
     offerText: 'ফ্রি ডেলিভারি!',
     ingredients: [] as { name: string; imageUrl: string }[],
     packages: [] as { name: string; price: number; discountPrice: number }[],
+    serviceTypes: [] as string[],
   });
 
   const pagesQuery = useMemoFirebase(() => 
@@ -78,6 +82,7 @@ export default function LandingPagesAdminPage() {
       setEditingPage(page);
       setFormData({
         slug: page.slug || '',
+        type: page.type || 'product',
         title: page.title || '',
         subtitle: page.subtitle || '',
         offer: page.offer || '',
@@ -94,11 +99,13 @@ export default function LandingPagesAdminPage() {
         offerText: page.offerText || 'ফ্রি ডেলিভারি!',
         ingredients: page.ingredients || [],
         packages: page.packages || [],
+        serviceTypes: page.serviceTypes || [],
       });
     } else {
       setEditingPage(null);
       setFormData({
         slug: '',
+        type: 'product',
         title: '',
         subtitle: '',
         offer: '',
@@ -115,6 +122,7 @@ export default function LandingPagesAdminPage() {
         offerText: 'ফ্রি ডেলিভারি!',
         ingredients: [],
         packages: [],
+        serviceTypes: [],
       });
     }
     setIsDialogOpen(true);
@@ -167,11 +175,11 @@ export default function LandingPagesAdminPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Product Landing Pages</h1>
-          <p className="text-muted-foreground text-sm font-medium">Manage high-converting product pages with order forms</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Landing Page Manager</h1>
+          <p className="text-muted-foreground text-sm font-medium">Create high-converting landing pages for products or services</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
-          <Plus size={18} /> New Landing Page
+          <Plus size={18} /> New Campaign Page
         </Button>
       </div>
 
@@ -190,6 +198,9 @@ export default function LandingPagesAdminPage() {
                 <div className="w-full h-full flex items-center justify-center text-gray-300"><Zap size={40} /></div>
               )}
               <div className="absolute top-3 left-3 flex gap-2">
+                <Badge className={cn(page.type === 'product' ? "bg-red-600" : "bg-blue-600", "text-white border-none uppercase font-black text-[8px]")}>
+                  {page.type?.toUpperCase() || 'PRODUCT'}
+                </Badge>
                 <Badge className={cn(page.active ? "bg-green-500" : "bg-gray-400", "text-white border-none uppercase font-black text-[8px]")}>
                   {page.active ? 'ACTIVE' : 'INACTIVE'}
                 </Badge>
@@ -202,8 +213,8 @@ export default function LandingPagesAdminPage() {
               </div>
               <div className="flex items-center justify-between pt-2">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase text-muted-foreground">Promo Price</span>
-                  <span className="text-lg font-black text-red-600">৳{page.discountPrice?.toLocaleString()}</span>
+                  <span className="text-[9px] font-black uppercase text-muted-foreground">{page.type === 'service' ? 'Service Charge' : 'Promo Price'}</span>
+                  <span className="text-lg font-black text-primary">৳{page.discountPrice?.toLocaleString()}</span>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild>
@@ -225,18 +236,18 @@ export default function LandingPagesAdminPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl rounded-[2rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-8 bg-red-600 text-white shrink-0">
+            <DialogHeader className={cn("p-8 text-white shrink-0", formData.type === 'product' ? "bg-red-600" : "bg-blue-600")}>
               <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                <Sparkles className="text-yellow-400" /> {editingPage ? 'Update High-Converting Page' : 'Create Sales Asset'}
+                <Sparkles className="text-yellow-400" /> {editingPage ? 'Update Campaign Page' : 'Create Sales Asset'}
               </DialogTitle>
             </DialogHeader>
             
             <Tabs defaultValue="basic" className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b">
-                <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Basic Info</TabsTrigger>
-                <TabsTrigger value="content" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Benefits & Why</TabsTrigger>
-                <TabsTrigger value="ingredients" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Ingredients</TabsTrigger>
-                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Packages</TabsTrigger>
+              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b overflow-x-auto no-scrollbar">
+                <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Basic Info</TabsTrigger>
+                <TabsTrigger value="content" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Benefits & Features</TabsTrigger>
+                <TabsTrigger value="dynamic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">{formData.type === 'product' ? 'Ingredients' : 'Service Types'}</TabsTrigger>
+                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs font-black uppercase">Pricing Tiers</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-white">
@@ -244,51 +255,59 @@ export default function LandingPagesAdminPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Page Title (Bangla Recommended)</Label>
-                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="যেমন: প্রিমিয়াম কালোজিরা মধু" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Page Type</Label>
+                        <Select value={formData.type} onValueChange={(v: any) => setFormData({...formData, type: v})}>
+                          <SelectTrigger className="h-12 bg-gray-100 border-none rounded-xl font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="product">Product (Selling Physical Items)</SelectItem>
+                            <SelectItem value="service">Service (Booking Professional Jobs)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Subtitle</Label>
-                        <Input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} placeholder="যেমন: সুস্থ থাকুন প্রাকৃতিক মধু দিয়ে" className="h-12 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Page Title</Label>
+                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Title in Bangla" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Slug (URL)</Label>
-                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="kalo-jira-modhu" className="h-12 bg-gray-50 border-none rounded-xl font-mono" required />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Subtitle</Label>
+                        <Input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} placeholder="Subtitle in Bangla" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Slug (URL)</Label>
+                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="url-identifier" className="h-12 bg-gray-50 border-none rounded-xl font-mono" required />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Original Price (৳)</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Original Price</Label>
                           <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 bg-gray-50 border-none rounded-xl" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Discount Price (৳)</Label>
-                          <Input type="number" value={formData.discountPrice} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} className="h-12 bg-red-50 text-red-600 border-none rounded-xl font-black text-lg" />
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Price</Label>
+                          <Input type="number" value={formData.discountPrice} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} className="h-12 bg-primary/5 text-primary border-none rounded-xl font-black" />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Support Phone</Label>
-                        <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <ImageUploader label="Main Product Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-square" />
+                      <ImageUploader label="Page Banner Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-video" />
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1 flex items-center gap-2"><Video size={14} /> YouTube Video URL (Optional)</Label>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><Video size={14} /> YouTube Video URL</Label>
                         <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/watch?v=..." className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Text</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Tagline</Label>
                           <Input value={formData.offerText} onChange={e => setFormData({...formData, offerText: e.target.value})} className="h-10 bg-gray-50 border-none" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Stock Text</Label>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status Text</Label>
                           <Input value={formData.stockText} onChange={e => setFormData({...formData, stockText: e.target.value})} className="h-10 bg-gray-50 border-none" />
                         </div>
                       </div>
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                        <Label className="text-xs font-black uppercase">Live Status</Label>
+                        <Label className="text-xs font-black uppercase">Active Status</Label>
                         <Switch checked={formData.active} onCheckedChange={val => setFormData({...formData, active: val})} />
                       </div>
                     </div>
@@ -298,7 +317,7 @@ export default function LandingPagesAdminPage() {
                 <TabsContent value="content" className="space-y-8 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase flex items-center gap-2"><ListChecks size={16} className="text-red-600" /> Benefits List</Label>
+                      <Label className="text-xs font-black uppercase flex items-center gap-2 text-primary"><ListChecks size={16} /> Key Benefits</Label>
                       {formData.benefits?.map((benefit, idx) => (
                         <div key={idx} className="flex gap-2">
                           <Input value={benefit} onChange={e => {
@@ -310,70 +329,96 @@ export default function LandingPagesAdminPage() {
                       ))}
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase flex items-center gap-2"><Zap size={16} className="text-red-600" /> Why Choose Us</Label>
+                      <Label className="text-xs font-black uppercase flex items-center gap-2 text-primary"><Zap size={16} /> Trust Factors</Label>
                       {formData.whyChoose?.map((point, idx) => (
                         <div key={idx} className="flex gap-2">
                           <Input value={point} onChange={e => {
                             const newW = [...formData.whyChoose!];
                             newW[idx] = e.target.value;
                             setFormData({...formData, whyChoose: newW});
-                          }} placeholder={`কেন আমাদের থেকে নিবেন ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
+                          }} placeholder={`কেন নিবেন ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-black uppercase">Detailed Description</Label>
+                    <Label className="text-xs font-black uppercase">Detailed Description (Sells Content)</Label>
                     <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[150px] bg-gray-50 border-none rounded-2xl" />
                   </div>
                 </TabsContent>
 
-                <TabsContent value="ingredients" className="space-y-6 mt-0">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-black uppercase tracking-widest">Product Ingredients / Components</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, ingredients: [...formData.ingredients, { name: '', imageUrl: '' }]})} className="rounded-lg">
-                      <Plus size={14} className="mr-1" /> Add Item
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {formData.ingredients.map((ing, idx) => (
-                      <Card key={idx} className="p-4 bg-gray-50 border-none shadow-none rounded-2xl relative group">
-                        <button type="button" onClick={() => setFormData({...formData, ingredients: formData.ingredients.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
-                        <ImageUploader initialUrl={ing.imageUrl} aspectRatio="aspect-square" onUpload={url => {
-                          const newIng = [...formData.ingredients];
-                          newIng[idx].imageUrl = url;
-                          setFormData({...formData, ingredients: newIng});
-                        }} label="" />
-                        <Input value={ing.name} onChange={e => {
-                          const newIng = [...formData.ingredients];
-                          newIng[idx].name = e.target.value;
-                          setFormData({...formData, ingredients: newIng});
-                        }} placeholder="Ingredient Name" className="h-9 mt-2 bg-white border-none rounded-lg text-xs font-bold" />
-                      </Card>
-                    ))}
-                  </div>
+                <TabsContent value="dynamic" className="space-y-6 mt-0">
+                  {formData.type === 'product' ? (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-black uppercase tracking-widest">Product Ingredients / Features</Label>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, ingredients: [...formData.ingredients, { name: '', imageUrl: '' }]})} className="rounded-lg">
+                          <Plus size={14} className="mr-1" /> Add Ingredient
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {formData.ingredients.map((ing, idx) => (
+                          <Card key={idx} className="p-4 bg-gray-50 border-none shadow-none rounded-2xl relative group">
+                            <button type="button" onClick={() => setFormData({...formData, ingredients: formData.ingredients.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
+                            <ImageUploader initialUrl={ing.imageUrl} aspectRatio="aspect-square" onUpload={url => {
+                              const newIng = [...formData.ingredients];
+                              newIng[idx].imageUrl = url;
+                              setFormData({...formData, ingredients: newIng});
+                            }} label="" />
+                            <Input value={ing.name} onChange={e => {
+                              const newIng = [...formData.ingredients];
+                              newIng[idx].name = e.target.value;
+                              setFormData({...formData, ingredients: newIng});
+                            }} placeholder="Name" className="h-9 mt-2 bg-white border-none rounded-lg text-xs font-bold" />
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-black uppercase tracking-widest">Service Options (Dropdown Items)</Label>
+                        <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, serviceTypes: [...formData.serviceTypes, '']})} className="rounded-lg">
+                          <Plus size={14} className="mr-1" /> Add Option
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {formData.serviceTypes.map((type, idx) => (
+                          <div key={idx} className="flex gap-2 items-center bg-gray-50 p-3 rounded-xl">
+                            <Wrench size={16} className="text-gray-400" />
+                            <Input value={type} onChange={e => {
+                              const newTypes = [...formData.serviceTypes];
+                              newTypes[idx] = e.target.value;
+                              setFormData({...formData, serviceTypes: newTypes});
+                            }} placeholder="e.g. Master Service" className="h-10 bg-white border-none rounded-lg font-bold" />
+                            <Button type="button" variant="ghost" size="icon" onClick={() => setFormData({...formData, serviceTypes: formData.serviceTypes.filter((_, i) => i !== idx)})} className="text-red-500"><X size={16} /></Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="pricing" className="space-y-6 mt-0">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-black uppercase tracking-widest">Pricing Packages</Label>
+                    <Label className="text-sm font-black uppercase tracking-widest">Pricing & Packages</Label>
                     <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, packages: [...formData.packages, { name: '', price: 0, discountPrice: 0 }]})} className="rounded-lg">
-                      <Plus size={14} className="mr-1" /> Add Package
+                      <Plus size={14} className="mr-1" /> Add Tier
                     </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {formData.packages.map((pkg, idx) => (
-                      <Card key={idx} className="p-6 bg-red-50 border border-red-100 rounded-[2rem] relative group">
+                      <Card key={idx} className="p-6 bg-primary/5 border border-primary/10 rounded-[2rem] relative group">
                         <button type="button" onClick={() => setFormData({...formData, packages: formData.packages.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
                         <div className="space-y-4">
                           <Input value={pkg.name} onChange={e => {
                             const newP = [...formData.packages];
                             newP[idx].name = e.target.value;
                             setFormData({...formData, packages: newP});
-                          }} placeholder="Package Size (e.g. 500g)" className="h-10 bg-white border-none rounded-xl font-bold" />
+                          }} placeholder="Tier Name (e.g. Standard)" className="h-10 bg-white border-none rounded-xl font-bold" />
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-[9px] uppercase font-black opacity-40">Regular</Label>
+                              <Label className="text-[9px] uppercase font-black opacity-40">Normal</Label>
                               <Input type="number" value={pkg.price} onChange={e => {
                                 const newP = [...formData.packages];
                                 newP[idx].price = Number(e.target.value);
@@ -381,7 +426,7 @@ export default function LandingPagesAdminPage() {
                               }} className="h-9 bg-white border-none rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-[9px] uppercase font-black text-red-600">Sale</Label>
+                              <Label className="text-[9px] uppercase font-black text-primary">Promo</Label>
                               <Input type="number" value={pkg.discountPrice} onChange={e => {
                                 const newP = [...formData.packages];
                                 newP[idx].discountPrice = Number(e.target.value);
@@ -399,9 +444,9 @@ export default function LandingPagesAdminPage() {
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-red-600 hover:bg-red-700 text-white shadow-xl uppercase tracking-tighter">
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary text-white shadow-xl uppercase tracking-tighter">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
-                {editingPage ? 'Sync Changes' : 'Publish Landing Page'}
+                {editingPage ? 'Sync Changes' : 'Deploy Campaign'}
               </Button>
             </DialogFooter>
           </form>
