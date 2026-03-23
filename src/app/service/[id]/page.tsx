@@ -125,7 +125,7 @@ export default function ServiceDetailsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
             
             {/* COLUMN 1: Visuals (Left) */}
-            <div className="lg:col-span-4 space-y-4">
+            <div className="lg:col-span-4 space-y-6">
               <div className="bg-white relative rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
                 <div className="relative aspect-square w-full">
                   {allImages.length > 0 ? (
@@ -176,6 +176,26 @@ export default function ServiceDetailsPage() {
                   </div>
                 )}
               </div>
+
+              {/* COMPACT What's Included (MOVED HERE) */}
+              {includedItems && includedItems.length > 0 && (
+                <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center gap-2 border-b pb-3 border-gray-50">
+                      <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><ListChecks size={14} /></div>
+                      <h3 className="text-[11px] font-black uppercase tracking-widest text-[#081621]">What's Included</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {includedItems.map((item) => (
+                        <div key={item.id} className="flex items-start gap-2.5 group">
+                          <CheckCircle2 size={12} className="text-accent mt-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                          <span className="text-[11px] font-bold text-gray-600 leading-tight uppercase tracking-tight">{item.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* COLUMN 2: Details & Selection (Middle) */}
@@ -322,28 +342,6 @@ export default function ServiceDetailsPage() {
           {/* BOTTOM SECTIONS (Full Width) */}
           <div className="mt-16 space-y-16">
             
-            {/* What's Included */}
-            {includedItems && includedItems.length > 0 && (
-              <section className="px-4 lg:px-0">
-                <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-gray-100 space-y-10">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h2 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-[#081621] flex items-center gap-4">
-                      <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><ListChecks size={24} /></div> What's Included
-                    </h2>
-                    <Badge variant="outline" className="w-fit font-black uppercase text-[10px] px-4 py-1.5 rounded-full border-blue-100 text-blue-600">Standard Service Protocol</Badge>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-gray-50">
-                    {includedItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors group">
-                        <div className="p-2 bg-green-50 text-accent rounded-full shrink-0 group-hover:scale-110 transition-transform"><CheckCircle2 size={20} /></div>
-                        <span className="text-sm font-bold text-gray-700 uppercase tracking-tight">{item.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            )}
-
             {/* Description Section */}
             <section className="px-4 lg:px-0">
               <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-gray-100 space-y-8">
