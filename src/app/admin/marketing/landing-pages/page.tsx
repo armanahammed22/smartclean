@@ -18,11 +18,13 @@ import {
   Loader2, 
   Globe, 
   ExternalLink,
-  ChevronRight,
-  Sparkles,
   Zap,
-  MousePointer2,
-  Package
+  Sparkles,
+  Video,
+  ListChecks,
+  ShoppingBag,
+  Package,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -36,6 +38,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LandingPagesAdminPage() {
   const { user } = useUser();
@@ -49,12 +52,21 @@ export default function LandingPagesAdminPage() {
   const [formData, setFormData] = useState({
     slug: '',
     title: '',
+    subtitle: '',
     offer: '',
     description: '',
     price: 0,
+    discountPrice: 0,
     imageUrl: '',
+    videoUrl: '',
     active: true,
+    phone: '01919640422',
     benefits: ['', '', ''],
+    whyChoose: ['', '', ''],
+    stockText: 'মাত্র ১২ টি বাকি',
+    offerText: 'ফ্রি ডেলিভারি!',
+    ingredients: [] as { name: string; imageUrl: string }[],
+    packages: [] as { name: string; price: number; discountPrice: number }[],
   });
 
   const pagesQuery = useMemoFirebase(() => 
@@ -65,26 +77,44 @@ export default function LandingPagesAdminPage() {
     if (page) {
       setEditingPage(page);
       setFormData({
-        slug: page.slug,
-        title: page.title,
-        offer: page.offer,
-        description: page.description,
-        price: page.price,
-        imageUrl: page.imageUrl,
-        active: page.active,
+        slug: page.slug || '',
+        title: page.title || '',
+        subtitle: page.subtitle || '',
+        offer: page.offer || '',
+        description: page.description || '',
+        price: page.price || 0,
+        discountPrice: page.discountPrice || 0,
+        imageUrl: page.imageUrl || '',
+        videoUrl: page.videoUrl || '',
+        active: page.active ?? true,
+        phone: page.phone || '01919640422',
         benefits: page.benefits || ['', '', ''],
+        whyChoose: page.whyChoose || ['', '', ''],
+        stockText: page.stockText || 'মাত্র ১২ টি বাকি',
+        offerText: page.offerText || 'ফ্রি ডেলিভারি!',
+        ingredients: page.ingredients || [],
+        packages: page.packages || [],
       });
     } else {
       setEditingPage(null);
       setFormData({
         slug: '',
         title: '',
+        subtitle: '',
         offer: '',
         description: '',
         price: 0,
+        discountPrice: 0,
         imageUrl: '',
+        videoUrl: '',
         active: true,
+        phone: '01919640422',
         benefits: ['', '', ''],
+        whyChoose: ['', '', ''],
+        stockText: 'মাত্র ১২ টি বাকি',
+        offerText: 'ফ্রি ডেলিভারি!',
+        ingredients: [],
+        packages: [],
       });
     }
     setIsDialogOpen(true);
@@ -100,6 +130,7 @@ export default function LandingPagesAdminPage() {
       ...formData,
       slug,
       price: Number(formData.price),
+      discountPrice: Number(formData.discountPrice),
       updatedAt: new Date().toISOString()
     };
 
@@ -136,8 +167,8 @@ export default function LandingPagesAdminPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Landing Page Manager</h1>
-          <p className="text-muted-foreground text-sm font-medium">Create high-converting dynamic landing pages for marketing</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Product Landing Pages</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage high-converting product pages with order forms</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
           <Plus size={18} /> New Landing Page
@@ -172,7 +203,7 @@ export default function LandingPagesAdminPage() {
               <div className="flex items-center justify-between pt-2">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase text-muted-foreground">Promo Price</span>
-                  <span className="text-lg font-black text-primary">৳{page.price?.toLocaleString()}</span>
+                  <span className="text-lg font-black text-red-600">৳{page.discountPrice?.toLocaleString()}</span>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" asChild>
@@ -189,86 +220,188 @@ export default function LandingPagesAdminPage() {
             </CardContent>
           </Card>
         ))}
-        {!pages?.length && !isLoading && (
-          <div className="col-span-full p-24 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic flex flex-col items-center gap-4">
-            <Sparkles size={48} className="opacity-20" />
-            <p className="font-medium">No landing pages found. Start by creating your first marketing asset.</p>
-          </div>
-        )}
       </div>
 
-      {/* Editor Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl rounded-[2rem] overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-5xl rounded-[2rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-8 bg-[#081621] text-white shrink-0">
+            <DialogHeader className="p-8 bg-red-600 text-white shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                <Zap className="text-primary" /> {editingPage ? 'Update Landing Page' : 'Create High-Conversion Page'}
+                <Sparkles className="text-yellow-400" /> {editingPage ? 'Update High-Converting Page' : 'Create Sales Asset'}
               </DialogTitle>
             </DialogHeader>
             
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Page Title</Label>
-                    <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Eid Home Deep Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Dynamic Slug (URL)</Label>
-                    <div className="relative">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
-                      <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="eid-offer" className="h-12 pl-12 bg-gray-50 border-none rounded-xl font-mono text-sm" required />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Flash Offer Text</Label>
-                      <Input value={formData.offer} onChange={e => setFormData({...formData, offer: e.target.value})} placeholder="20% OFF TODAY" className="h-12 bg-primary/5 text-primary border-none rounded-xl font-black" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Promo Price (৳)</Label>
-                      <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-lg" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Main Description</Label>
-                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[120px] bg-gray-50 border-none rounded-xl" />
-                  </div>
-                </div>
+            <Tabs defaultValue="basic" className="flex-1 overflow-hidden flex flex-col">
+              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b">
+                <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Basic Info</TabsTrigger>
+                <TabsTrigger value="content" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Benefits & Why</TabsTrigger>
+                <TabsTrigger value="ingredients" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Ingredients</TabsTrigger>
+                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 data-[state=active]:bg-transparent text-xs font-black uppercase">Packages</TabsTrigger>
+              </TabsList>
 
-                <div className="space-y-6">
-                  <ImageUploader label="Page Hero Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-video" />
-                  
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Core Benefits (Checklist)</Label>
-                    {formData.benefits?.map((benefit, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <Input value={benefit} onChange={e => {
-                          const newB = [...formData.benefits!];
-                          newB[idx] = e.target.value;
-                          setFormData({...formData, benefits: newB});
-                        }} placeholder={`Benefit ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg text-xs" />
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-white">
+                <TabsContent value="basic" className="space-y-6 mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Page Title (Bangla Recommended)</Label>
+                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="যেমন: প্রিমিয়াম কালোজিরা মধু" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                       </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Subtitle</Label>
+                        <Input value={formData.subtitle} onChange={e => setFormData({...formData, subtitle: e.target.value})} placeholder="যেমন: সুস্থ থাকুন প্রাকৃতিক মধু দিয়ে" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Slug (URL)</Label>
+                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="kalo-jira-modhu" className="h-12 bg-gray-50 border-none rounded-xl font-mono" required />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Original Price (৳)</Label>
+                          <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Discount Price (৳)</Label>
+                          <Input type="number" value={formData.discountPrice} onChange={e => setFormData({...formData, discountPrice: Number(e.target.value)})} className="h-12 bg-red-50 text-red-600 border-none rounded-xl font-black text-lg" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Support Phone</Label>
+                        <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <ImageUploader label="Main Product Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-square" />
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1 flex items-center gap-2"><Video size={14} /> YouTube Video URL (Optional)</Label>
+                        <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/watch?v=..." className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Text</Label>
+                          <Input value={formData.offerText} onChange={e => setFormData({...formData, offerText: e.target.value})} className="h-10 bg-gray-50 border-none" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Stock Text</Label>
+                          <Input value={formData.stockText} onChange={e => setFormData({...formData, stockText: e.target.value})} className="h-10 bg-gray-50 border-none" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                        <Label className="text-xs font-black uppercase">Live Status</Label>
+                        <Switch checked={formData.active} onCheckedChange={val => setFormData({...formData, active: val})} />
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="content" className="space-y-8 mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <Label className="text-xs font-black uppercase flex items-center gap-2"><ListChecks size={16} className="text-red-600" /> Benefits List</Label>
+                      {formData.benefits?.map((benefit, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input value={benefit} onChange={e => {
+                            const newB = [...formData.benefits!];
+                            newB[idx] = e.target.value;
+                            setFormData({...formData, benefits: newB});
+                          }} placeholder={`উপকারিতা ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-xs font-black uppercase flex items-center gap-2"><Zap size={16} className="text-red-600" /> Why Choose Us</Label>
+                      {formData.whyChoose?.map((point, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input value={point} onChange={e => {
+                            const newW = [...formData.whyChoose!];
+                            newW[idx] = e.target.value;
+                            setFormData({...formData, whyChoose: newW});
+                          }} placeholder={`কেন আমাদের থেকে নিবেন ${idx+1}`} className="h-10 bg-gray-50 border-none rounded-lg" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase">Detailed Description</Label>
+                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[150px] bg-gray-50 border-none rounded-2xl" />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="ingredients" className="space-y-6 mt-0">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-black uppercase tracking-widest">Product Ingredients / Components</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, ingredients: [...formData.ingredients, { name: '', imageUrl: '' }]})} className="rounded-lg">
+                      <Plus size={14} className="mr-1" /> Add Item
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {formData.ingredients.map((ing, idx) => (
+                      <Card key={idx} className="p-4 bg-gray-50 border-none shadow-none rounded-2xl relative group">
+                        <button type="button" onClick={() => setFormData({...formData, ingredients: formData.ingredients.filter((_, i) => i !== idx)})} className="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14} /></button>
+                        <ImageUploader initialUrl={ing.imageUrl} aspectRatio="aspect-square" onUpload={url => {
+                          const newIng = [...formData.ingredients];
+                          newIng[idx].imageUrl = url;
+                          setFormData({...formData, ingredients: newIng});
+                        }} label="" />
+                        <Input value={ing.name} onChange={e => {
+                          const newIng = [...formData.ingredients];
+                          newIng[idx].name = e.target.value;
+                          setFormData({...formData, ingredients: newIng});
+                        }} placeholder="Ingredient Name" className="h-9 mt-2 bg-white border-none rounded-lg text-xs font-bold" />
+                      </Card>
                     ))}
                   </div>
+                </TabsContent>
 
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-black uppercase">Live Status</Label>
-                      <p className="text-[9px] text-muted-foreground font-bold">VISIBLE AT /{formData.slug || 'slug'}</p>
-                    </div>
-                    <Switch checked={formData.active} onCheckedChange={val => setFormData({...formData, active: val})} />
+                <TabsContent value="pricing" className="space-y-6 mt-0">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-black uppercase tracking-widest">Pricing Packages</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setFormData({...formData, packages: [...formData.packages, { name: '', price: 0, discountPrice: 0 }]})} className="rounded-lg">
+                      <Plus size={14} className="mr-1" /> Add Package
+                    </Button>
                   </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formData.packages.map((pkg, idx) => (
+                      <Card key={idx} className="p-6 bg-red-50 border border-red-100 rounded-[2rem] relative group">
+                        <button type="button" onClick={() => setFormData({...formData, packages: formData.packages.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
+                        <div className="space-y-4">
+                          <Input value={pkg.name} onChange={e => {
+                            const newP = [...formData.packages];
+                            newP[idx].name = e.target.value;
+                            setFormData({...formData, packages: newP});
+                          }} placeholder="Package Size (e.g. 500g)" className="h-10 bg-white border-none rounded-xl font-bold" />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <Label className="text-[9px] uppercase font-black opacity-40">Regular</Label>
+                              <Input type="number" value={pkg.price} onChange={e => {
+                                const newP = [...formData.packages];
+                                newP[idx].price = Number(e.target.value);
+                                setFormData({...formData, packages: newP});
+                              }} className="h-9 bg-white border-none rounded-lg" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[9px] uppercase font-black text-red-600">Sale</Label>
+                              <Input type="number" value={pkg.discountPrice} onChange={e => {
+                                const newP = [...formData.packages];
+                                newP[idx].discountPrice = Number(e.target.value);
+                                setFormData({...formData, packages: newP});
+                              }} className="h-9 bg-white border-none rounded-lg font-black" />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
               </div>
-            </div>
+            </Tabs>
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl uppercase tracking-tighter">
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-red-600 hover:bg-red-700 text-white shadow-xl uppercase tracking-tighter">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
-                {editingPage ? 'Sync Changes' : 'Launch Landing Page'}
+                {editingPage ? 'Sync Changes' : 'Publish Landing Page'}
               </Button>
             </DialogFooter>
           </form>

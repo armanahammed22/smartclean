@@ -31,12 +31,21 @@ export interface LandingPage {
   id: string;
   slug: string;
   title: string;
+  subtitle?: string;
   offer: string;
   description: string;
   price: number;
+  discountPrice?: number;
   imageUrl: string;
+  videoUrl?: string;
   active: boolean;
   benefits?: string[];
+  ingredients?: { name: string; imageUrl: string }[];
+  whyChoose?: string[];
+  packages?: { name: string; price: number; discountPrice: number }[];
+  offerText?: string;
+  stockText?: string;
+  phone?: string;
   createdAt: string;
   updatedAt?: string;
 }
