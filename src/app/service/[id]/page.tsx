@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -17,7 +16,9 @@ import {
   Truck,
   Info,
   CalendarCheck,
-  Users
+  Users,
+  Package,
+  ListChecks
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
