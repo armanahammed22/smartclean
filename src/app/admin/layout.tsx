@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -281,8 +282,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/admin/login');
+    if (auth) {
+      await signOut(auth);
+      router.push('/admin/login');
+    }
   };
 
   const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
@@ -386,7 +389,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 
-  if (isUserLoading || (user && roleLoading)) {
+  if (isUserLoading || (user && (roleLoading))) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
