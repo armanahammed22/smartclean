@@ -27,7 +27,8 @@ import {
   Layout,
   CheckCircle2,
   Clock,
-  Users
+  Users,
+  Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';

@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
   MessageCircle, 
@@ -16,10 +15,12 @@ import {
   Zap, 
   Sparkles,
   TrendingUp,
-  BrainCircuit
+  BrainCircuit,
+  CheckCircle2
 } from 'lucide-react';
 import { runCRMAgent } from '@/ai/flows/crm-agent-flow';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function AISalesDeskPage() {
   const [query, setQuery] = useState('');

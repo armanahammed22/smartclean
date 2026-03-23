@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { trackEvent } from '@/lib/tracking';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 export default function OrderSuccessContent() {
   const searchParams = useSearchParams();
