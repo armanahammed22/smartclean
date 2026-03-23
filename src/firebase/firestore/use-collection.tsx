@@ -48,7 +48,13 @@ const PUBLIC_COLLECTIONS = [
   'subcategories',
   'childcategories',
   'top_nav_categories',
-  'landing_pages'
+  'landing_pages',
+  'bookings',
+  'orders',
+  'leads',
+  'support_tickets',
+  'users',
+  'error_logs'
 ];
 
 function getPathFromTarget(target: any): string {

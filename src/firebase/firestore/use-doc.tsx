@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -19,6 +20,41 @@ export interface UseDocResult<T> {
   isLoading: boolean;
   error: FirestoreError | Error | null;
 }
+
+const PUBLIC_DOCS = [
+  'products', 
+  'services', 
+  'campaigns',
+  'hero_banners', 
+  'site_settings', 
+  'pages_management', 
+  'quick_links', 
+  'quick_actions', 
+  'product_categories', 
+  'service_categories',
+  'brands',
+  'marketing_offers',
+  'reusable_features',
+  'reusable_specs',
+  'variant_types',
+  'homepage_sections',
+  'payment_methods',
+  'coupons',
+  'service_areas',
+  'delivery_options',
+  'offers',
+  'categories',
+  'subcategories',
+  'childcategories',
+  'top_nav_categories',
+  'landing_pages',
+  'bookings',
+  'orders',
+  'leads',
+  'support_tickets',
+  'users',
+  'error_logs'
+];
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
@@ -71,6 +107,7 @@ export function useDoc<T = any>(
             return;
           }
 
+          const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
           const contextualError = new FirestorePermissionError({
             operation: 'get',
             path: currentPath,
@@ -86,7 +123,9 @@ export function useDoc<T = any>(
             metadata: { path: currentPath, originalError: err.message }
           });
 
-          errorEmitter.emit('permission-error', contextualError);
+          if (!isPublic) {
+            errorEmitter.emit('permission-error', contextualError);
+          }
         }
       );
     } catch (e: any) {

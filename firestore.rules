@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Deployment Sync: 2026-03-23T00:45:00Z
+    // Deployment Sync: 2026-03-23T01:30:00Z
     
     function isSignedIn() {
       return request.auth != null;
@@ -97,7 +97,6 @@ service cloud.firestore {
     match /staff_earnings/{id} { allow read, write: if isAdmin(); }
     match /referrals/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     
-    // Logistics Hub Rules
     match /couriers/{id} {
       allow read, write: if isAdmin();
     }
