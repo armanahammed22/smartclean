@@ -29,7 +29,9 @@ import {
   ChevronRight,
   Plus,
   Minus,
-  Check
+  Check,
+  CreditCard,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '@/lib/tracking';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function DynamicLandingPage() {
   const { slug } = useParams();
@@ -64,7 +66,8 @@ export default function DynamicLandingPage() {
     name: '',
     phone: '',
     address: '',
-    note: ''
+    note: '',
+    paymentMethod: 'cod'
   });
 
   useEffect(() => {
@@ -158,6 +161,7 @@ export default function DynamicLandingPage() {
         source: page.slug,
         createdAt: new Date().toISOString(),
         totalPrice: totalPrice,
+        paymentMethod: formData.paymentMethod,
         riskLevel: 'Low',
         isSuspicious: false
       };
@@ -267,7 +271,7 @@ export default function DynamicLandingPage() {
                 onClick={handleScrollToForm}
                 className={cn("h-16 px-12 rounded-full text-black font-black text-xl uppercase tracking-tight shadow-2xl animate-pulse active:scale-95 transition-all w-full md:w-auto border-none", accentColor, isProduct ? "hover:bg-yellow-500" : "hover:bg-emerald-600 text-white")}
               >
-                {isProduct ? 'অর্ডার করতে চাই' : 'বুকিং করতে চাই'} <ArrowRight size={24} className="ml-2" />
+                {isProduct ? '🛒 অর্ডার করতে চাই' : '🛒 সার্ভিস বুক করতে চাই'} <ArrowRight size={24} className="ml-2" />
               </Button>
               {page.phone && (
                 <Button 
@@ -294,12 +298,30 @@ export default function DynamicLandingPage() {
         </div>
       </section>
 
-      {/* 2. INGREDIENTS SECTION */}
+      {/* 2. TRUST / HIGHLIGHT SECTION */}
+      <section className="py-12 container mx-auto px-4 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { icon: ShieldCheck, text: "Experienced Professionals", color: "text-blue-600", bg: "bg-blue-50" },
+            { icon: Zap, text: "Fast & Reliable Service", color: "text-amber-600", bg: "bg-amber-50" },
+            { icon: Award, text: "Trusted by 1000+ Customers", color: "text-green-600", bg: "bg-green-50" }
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-4 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm group hover:shadow-md transition-all">
+              <div className={cn("p-3 rounded-xl transition-transform group-hover:scale-110", item.bg, item.color)}>
+                <item.icon size={24} />
+              </div>
+              <span className="font-bold text-sm text-gray-700 uppercase tracking-tight">{item.text}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. INGREDIENTS / TECHNOLOGY SECTION */}
       {page.ingredients && page.ingredients.length > 0 && (
         <section className="py-20 container mx-auto px-4 max-w-5xl">
           <div className="text-center mb-16 space-y-4">
             <h2 className={cn("text-3xl md:text-5xl font-black uppercase tracking-tighter", primaryText)}>
-              {isProduct ? 'মূল উপাদান সমূহ' : 'ব্যবহৃত প্রযুক্তি'}
+              {isProduct ? 'মূল উপাদান সমূহ' : 'ব্যবহৃত প্রযুক্তি ও কেমিক্যাল'}
             </h2>
             <div className={cn("w-20 h-1.5 mx-auto rounded-full", accentColor)} />
           </div>
@@ -317,7 +339,7 @@ export default function DynamicLandingPage() {
         </section>
       )}
 
-      {/* 3. BENEFITS SECTION */}
+      {/* 4. BENEFITS SECTION */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -328,7 +350,7 @@ export default function DynamicLandingPage() {
               <div className="space-y-4">
                 {page.benefits?.map((benefit: string, i: number) => (
                   <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-white shadow-sm border border-gray-100 group hover:border-primary transition-all">
-                    <div className="p-1 bg-primary/10 text-primary rounded-full shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                    <div className={cn("p-1 rounded-full shrink-0 group-hover:text-white transition-colors", isProduct ? "text-red-600 bg-red-50 group-hover:bg-red-600" : "text-blue-600 bg-blue-50 group-hover:bg-blue-600")}>
                       <CheckCircle2 size={24} />
                     </div>
                     <p className="text-lg font-bold text-gray-700 leading-relaxed">{benefit}</p>
@@ -343,11 +365,28 @@ export default function DynamicLandingPage() {
         </div>
       </section>
 
-      {/* 4. SELECTION & ORDER FORM SECTION */}
+      {/* 5. WHY CHOOSE US (BOX UI) */}
+      <section className="py-20 container mx-auto px-4 max-w-4xl">
+        <Card className="rounded-[3rem] border-4 border-dashed border-primary/20 bg-white p-10 md:p-16 text-center space-y-8 overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-10 opacity-5 -rotate-12"><Award size={200} /></div>
+          <Badge className="bg-primary text-white border-none uppercase font-black tracking-widest px-6 py-2 rounded-full text-xs">Why Choose Us</Badge>
+          <h2 className="text-3xl md:text-5xl font-black uppercase text-[#081621] tracking-tighter">আমাদের বিশেষত্ব</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+            {page.whyChoose?.map((item: string, i: number) => (
+              <div key={i} className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <Check size={20} className="text-green-600 shrink-0" strokeWidth={4} />
+                <span className="font-bold text-gray-700">{item}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* 6. SELECTION & ORDER FORM SECTION */}
       <section id="order-form" className="py-24 container mx-auto px-4 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          {/* Main Content Area (Form & Selection) */}
+          {/* Left Area: Form & Deep Selection */}
           <div className="lg:col-span-7 space-y-12">
             
             {/* Step 1: Selection (Type/Package/Addons) */}
@@ -414,7 +453,7 @@ export default function DynamicLandingPage() {
                             key={pkg.name}
                             onClick={() => setSelectedServicePkg(pkg)}
                             className={cn(
-                              "p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                              "p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between min-h-[100px]",
                               selectedServicePkg?.name === pkg.name ? "border-blue-600 bg-blue-50" : "border-gray-100 bg-white"
                             )}
                           >
@@ -476,7 +515,7 @@ export default function DynamicLandingPage() {
                     <Input 
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
-                      placeholder="নাম লিখুন" 
+                      placeholder="আপনার নাম লিখুন" 
                       className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold text-lg" 
                       required
                     />
@@ -511,9 +550,35 @@ export default function DynamicLandingPage() {
                   </div>
                 </div>
 
+                <div className="space-y-4 pt-4 border-t">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">পেমেন্ট পদ্ধতি</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div 
+                      onClick={() => setFormData({...formData, paymentMethod: 'cod'})}
+                      className={cn(
+                        "p-4 rounded-2xl border-2 flex items-center gap-3 cursor-pointer transition-all",
+                        formData.paymentMethod === 'cod' ? "border-green-600 bg-green-50" : "border-gray-100 bg-gray-50"
+                      )}
+                    >
+                      <div className={cn("p-2 rounded-lg", formData.paymentMethod === 'cod' ? "bg-green-600 text-white" : "bg-white text-gray-400")}>
+                        <Wallet size={18} />
+                      </div>
+                      <span className="font-bold text-sm uppercase">{isProduct ? 'ক্যাশ অন ডেলিভারি' : 'কাজ শেষে পেমেন্ট'}</span>
+                    </div>
+                    <div 
+                      className="p-4 rounded-2xl border-2 flex items-center gap-3 cursor-not-allowed opacity-50 bg-gray-50 border-gray-100"
+                    >
+                      <div className="p-2 rounded-lg bg-white text-gray-400">
+                        <CreditCard size={18} />
+                      </div>
+                      <span className="font-bold text-sm uppercase">অনলাইন পেমেন্ট</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="p-6 rounded-2xl bg-green-50 border border-green-100 flex items-center gap-4 text-green-700 font-black uppercase tracking-widest text-[10px]">
                   <div className="p-3 bg-white rounded-xl shadow-sm text-green-600"><ShieldCheck size={24} /></div>
-                  {isProduct ? 'পেমেন্ট: ক্যাশ অন ডেলিভারি' : 'পেমেন্ট: কাজ শেষে পরিশোধ'}
+                  সুরক্ষিত পেমেন্ট ও ফাস্ট ডেলিভারি নিশ্চিত।
                 </div>
 
                 {isSuccess ? (
@@ -537,7 +602,7 @@ export default function DynamicLandingPage() {
             </div>
           </div>
 
-          {/* Checkout/Summary Sidebar (Right) */}
+          {/* Right Area: Checkout/Summary Sidebar (Sticky) */}
           <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
             <Card className="rounded-[3rem] border-none shadow-2xl overflow-hidden bg-white">
               <CardHeader className="bg-[#081621] text-white p-8">
