@@ -94,5 +94,10 @@ service cloud.firestore {
     
     match /staff_earnings/{id} { allow read, write: if isAdmin(); }
     match /referrals/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    
+    // Logistics Hub Rules
+    match /couriers/{id} {
+      allow read, write: if isAdmin();
+    }
   }
 }

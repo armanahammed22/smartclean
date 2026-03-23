@@ -94,7 +94,8 @@ export default function ErrorLogsPage() {
         'ReferenceError',
         'Hydration',
         'insufficient permissions',
-        'offers'
+        'offers',
+        'couriers'
       ];
 
       const batch = writeBatch(db);
