@@ -95,8 +95,8 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       </main>
       
-      {/* 📱 BOTTOM NAVIGATION */}
-      <BottomNav />
+      {/* 📱 BOTTOM NAVIGATION (Hidden on minimal pages like details/checkout) */}
+      {!minimalMobile && <BottomNav />}
 
       <WhatsAppContact />
       <CheckoutModal />

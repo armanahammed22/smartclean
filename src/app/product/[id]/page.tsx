@@ -24,7 +24,8 @@ import {
   ShieldCheck,
   Headphones,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  BadgeCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
@@ -301,7 +302,7 @@ export default function ProductDetailsPage() {
                   </div>
 
                   <div className="flex items-start gap-3 pt-4 border-t border-gray-50">
-                    <BadgeCheck className="text-green-600 mt-0.5 shrink-0" size={18} />
+                    <ShieldCheck className="text-green-600 mt-0.5 shrink-0" size={18} />
                     <div className="flex-1 space-y-1">
                       <p className="text-xs font-bold text-[#212121]">Cash on Delivery Available</p>
                       <p className="text-[10px] text-muted-foreground font-medium">Pay when you receive the product.</p>
@@ -357,14 +358,12 @@ export default function ProductDetailsPage() {
                   </TabsList>
                   
                   <div className="p-6 md:p-8">
-                    {/* Optimized Description */}
                     <TabsContent value="description" className="mt-0 focus-visible:ring-0">
                       <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:uppercase prose-p:leading-relaxed prose-p:text-gray-600 break-words overflow-hidden">
                         <div className="text-sm md:text-base font-medium leading-loose" dangerouslySetInnerHTML={{ __html: product.description }} />
                       </article>
                     </TabsContent>
 
-                    {/* Optimized Specifications */}
                     <TabsContent value="specs" className="mt-0 focus-visible:ring-0">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2 md:gap-y-4">
                         {product.specifications?.map((spec: any, idx: number) => (
@@ -379,9 +378,7 @@ export default function ProductDetailsPage() {
                       </div>
                     </TabsContent>
 
-                    {/* Optimized Reviews & QNA */}
                     <TabsContent value="reviews" className="mt-0 space-y-10 focus-visible:ring-0">
-                      {/* Reviews Summary */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 md:p-8 bg-gray-50 rounded-3xl">
                         <div className="text-center space-y-2 flex flex-col items-center justify-center">
                           <p className="text-5xl font-black text-gray-900 leading-none">4.8</p>
@@ -399,7 +396,6 @@ export default function ProductDetailsPage() {
                         </div>
                       </div>
 
-                      {/* Q&A Section */}
                       <div className="space-y-8 pt-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
                           <h4 className="text-lg font-black uppercase tracking-tight text-[#081621] flex items-center gap-2">
@@ -452,7 +448,7 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* MOBILE STICKY BOTTOM BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
           <div className="flex flex-col min-w-[80px]">
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Sale Price</span>
             <span className="text-xl font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
@@ -483,14 +479,5 @@ export default function ProductDetailsPage() {
         </div>
       </div>
     </PublicLayout>
-  );
-}
-
-function BadgeCheck({ className, size }: { className?: string, size?: number }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-      <path d="m9 12 2 2 4-4"/>
-    </svg>
   );
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -316,8 +315,8 @@ export default function ServiceDetailsPage() {
           </div>
         </div>
 
-        {/* MOBILE STICKY BOTTOM BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-3 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
+        {/* MOBILE STICKY BOTTOM BAR (Global nav buttons hidden) */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-3 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
           <div className="flex flex-col min-w-[70px]">
             <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Payable</span>
             <span className="text-xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
