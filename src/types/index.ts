@@ -28,6 +28,27 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface LandingPagePackage {
+  id: string;
+  category: 'Routine Maintenance' | 'Deep Cleaning' | 'Specialized' | 'Commercial/Office';
+  name: string;
+  price: number;
+  originalPrice?: number;
+  description?: string;
+  features?: string[];
+  status: boolean;
+  order: number;
+}
+
+export interface LandingPageAddOn {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  status: boolean;
+  packageId?: string; // Optional linking to specific package
+}
+
 export interface LandingPage {
   id: string;
   slug: string;
@@ -75,7 +96,8 @@ export interface LandingPage {
   storageText?: string;
   
   // Multi-tier pricing
-  packages?: { name: string; price: number; originalPrice?: number }[];
+  packages?: LandingPagePackage[];
+  addOns?: LandingPageAddOn[];
 
   createdAt: string;
   updatedAt?: string;

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -24,7 +25,8 @@ import {
   Layers,
   Sparkles,
   ArrowUpRight,
-  ShieldCheck
+  ShieldCheck,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,16 +93,28 @@ export default function UnifiedLandingPage() {
     }
   }, [page, isLoading, mounted, router]);
 
+  const packages = useMemo(() => page?.packages?.filter((p: any) => p.status !== false) || [], [page?.packages]);
+  const activeAddOns = useMemo(() => page?.addOns?.filter((a: any) => a.status !== false) || [], [page?.addOns]);
+
+  // Group packages by category
+  const groupedPackages = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    packages.forEach((pkg: any) => {
+      const cat = pkg.category || 'Standard';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(pkg);
+    });
+    return groups;
+  }, [packages]);
+
   if (!mounted || isLoading || (page?.type === 'product' && productLoading)) return <div className="h-screen flex items-center justify-center bg-[#F8FAFC]"><Loader2 className="animate-spin text-primary" size={40} /></div>;
   if (!page) return null;
 
   const isService = page.type === 'service';
-  const packages = page.packages || [];
   const selectedPackage = packages[selectedPkgIndex];
-  const addOns = page.addOns || [];
 
   const basePrice = selectedPackage?.price || page.price || linkedProduct?.price || 0;
-  const addOnsTotal = selectedAddOnIndices.reduce((sum, idx) => sum + (addOns[idx]?.price || 0), 0);
+  const addOnsTotal = selectedAddOnIndices.reduce((sum, idx) => sum + (activeAddOns[idx]?.price || 0), 0);
   
   const unitPrice = basePrice + addOnsTotal;
   const regularPrice = selectedPackage?.originalPrice || basePrice;
@@ -136,8 +150,8 @@ export default function UnifiedLandingPage() {
         },
         ...selectedAddOnIndices.map(idx => ({
           id: `addon-${idx}`,
-          name: `Add-on: ${addOns[idx].name}`,
-          price: addOns[idx].price,
+          name: `Add-on: ${activeAddOns[idx].name}`,
+          price: activeAddOns[idx].price,
           quantity: quantity
         }))
       ];
@@ -169,7 +183,7 @@ export default function UnifiedLandingPage() {
       setIsSuccess(true);
       
       const intent = isService ? 'সার্ভিস বুক' : 'অর্ডার';
-      const selectedAddonNames = selectedAddOnIndices.map(idx => addOns[idx].name).join(', ');
+      const selectedAddonNames = selectedAddOnIndices.map(idx => activeAddOns[idx].name).join(', ');
       
       let waMsg = `আসসালামু আলাইকুম, আমি ${orderData.items[0].name} ${intent} করতে চাই।\n`;
       if (selectedAddonNames) waMsg += `অ্যাড-অন: ${selectedAddonNames}\n`;
@@ -193,6 +207,16 @@ export default function UnifiedLandingPage() {
     ctaText: isService ? "text-white" : "text-black",
     secondary: isService ? "text-[#1E5F7A]" : "text-[#8B0000]",
     border: isService ? "border-[#1E5F7A]/10" : "border-red-100"
+  };
+
+  const getCategoryIcon = (cat: string) => {
+    switch (cat) {
+      case 'Routine Maintenance': return <Clock size={18} />;
+      case 'Deep Cleaning': return <Zap size={18} />;
+      case 'Specialized': return <Sparkles size={18} />;
+      case 'Commercial/Office': return <Building2 size={18} />;
+      default: return <Layers size={18} />;
+    }
   };
 
   const scrollToForm = () => document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth' });
@@ -312,7 +336,7 @@ export default function UnifiedLandingPage() {
         </section>
       )}
 
-      {/* 3. INGREDIENTS / SERVICES GRID (Static Fallback or Additional Info) */}
+      {/* 3. INGREDIENTS / SERVICES GRID */}
       {page.ingredients && page.ingredients.length > 0 && (
         <section className="py-16 bg-gray-50/50 px-4 border-b">
           <div className="container mx-auto max-w-5xl">
@@ -380,46 +404,63 @@ export default function UnifiedLandingPage() {
         </section>
       )}
 
-      {/* 6. STORAGE INFO (Only for Products) */}
-      {!isService && page.storageText && (
-        <section className="py-16 px-4">
-          <div className="container mx-auto max-w-2xl border-4 border-dashed border-green-600 p-10 rounded-[3.5rem] bg-green-50/30 text-center relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 opacity-10 text-green-600"><Sparkles size={150}/></div>
-            <h2 className="font-black text-red-700 text-2xl uppercase mb-6 underline decoration-green-600 decoration-4 underline-offset-8">যেভাবে সংরক্ষণ করবেনঃ</h2>
-            <p className="text-base md:text-lg font-bold text-gray-700 leading-loose italic">
-              {page.storageText}
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* 7. PRICING & ADD-ONS SECTION */}
+      {/* 6. PRICING & ADD-ONS SECTION */}
       <section className="py-20 px-4">
-        <div className="container mx-auto max-w-5xl space-y-12">
-          {/* Packages */}
-          {packages.length > 0 && (
-            <div className={cn("p-12 rounded-[4rem] text-white text-center shadow-[0_40px_100px_rgba(0,0,0,0.2)] space-y-10", isService ? "bg-gradient-to-r from-[#1E5F7A] to-[#2563EB]" : "bg-gradient-to-r from-[#8B0000] to-[#B22222]")}>
-              <div className="space-y-2">
-                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">সেরা অফার প্যাকেজ</h2>
-                <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Select your preferred option</p>
+        <div className="container mx-auto max-w-5xl space-y-16">
+          {/* Grouped Packages */}
+          {Object.keys(groupedPackages).length > 0 && (
+            <div className="space-y-12">
+              <div className="text-center space-y-3">
+                <h2 className={cn("text-3xl md:text-5xl font-black uppercase tracking-tighter", theme.secondary)}>সেরা অফার প্যাকেজ</h2>
+                <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Select the perfect plan for your needs</p>
               </div>
-              <div className="grid grid-cols-1 gap-5">
-                {packages.map((pkg: any, i: number) => (
-                  <div 
-                    key={i} 
-                    onClick={() => setSelectedPkgIndex(i)}
-                    className={cn(
-                      "p-8 rounded-3xl border-4 transition-all duration-500 cursor-pointer flex justify-between items-center group",
-                      selectedPkgIndex === i ? "bg-white/20 border-white scale-[1.03] shadow-2xl" : "bg-black/10 border-white/10 hover:border-white/30"
-                    )}
-                  >
-                    <div className="text-left space-y-1">
-                      <p className="text-lg md:text-3xl font-black uppercase tracking-tight">{pkg.name}</p>
-                      {pkg.originalPrice > pkg.price && <Badge className="bg-yellow-400 text-black font-black text-[8px] px-2 py-0">BEST VALUE</Badge>}
+
+              <div className="space-y-16">
+                {Object.entries(groupedPackages).map(([category, items]) => (
+                  <div key={category} className="space-y-8">
+                    <div className="flex items-center gap-3 border-b pb-4">
+                      <div className={cn("p-2 rounded-xl text-white", theme.accent)}>{getCategoryIcon(category)}</div>
+                      <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-gray-900">{category}</h3>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl md:text-4xl font-black">৳{pkg.price}</p>
-                      {pkg.originalPrice > pkg.price && <p className="text-[10px] md:text-xs font-bold line-through opacity-50">৳{pkg.originalPrice}</p>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {items.map((pkg: any) => {
+                        const originalIdx = packages.findIndex(p => p.id === pkg.id);
+                        return (
+                          <Card 
+                            key={pkg.id} 
+                            onClick={() => setSelectedPkgIndex(originalIdx)}
+                            className={cn(
+                              "rounded-[2.5rem] border-4 transition-all duration-500 cursor-pointer overflow-hidden relative group",
+                              selectedPkgIndex === originalIdx ? "border-primary bg-primary/5 scale-[1.03] shadow-2xl" : "border-gray-100 bg-white hover:border-primary/20"
+                            )}
+                          >
+                            <CardContent className="p-8 flex flex-col h-full space-y-6">
+                              <div className="space-y-2">
+                                <h4 className="text-xl font-black uppercase text-gray-900 leading-tight">{pkg.name}</h4>
+                                {pkg.description && <p className="text-[10px] font-medium text-gray-500 line-clamp-2">{pkg.description}</p>}
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <p className="text-3xl font-black text-primary">৳{pkg.price}</p>
+                                {pkg.originalPrice > pkg.price && <p className="text-xs font-bold line-through text-muted-foreground opacity-60">৳{pkg.originalPrice}</p>}
+                              </div>
+
+                              <div className="space-y-3 pt-4 border-t border-dashed flex-1">
+                                {pkg.features?.map((feat: string, i: number) => (
+                                  <div key={i} className="flex items-center gap-2">
+                                    <div className="p-0.5 bg-green-100 text-green-600 rounded-full"><Check size={10} strokeWidth={4}/></div>
+                                    <span className="text-[10px] font-bold text-gray-600 uppercase">{feat}</span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <Button className={cn("w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest", selectedPkgIndex === originalIdx ? theme.accent : "bg-gray-100 text-gray-400")}>
+                                {selectedPkgIndex === originalIdx ? 'SELECTED' : 'CHOOSE PLAN'}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -427,33 +468,43 @@ export default function UnifiedLandingPage() {
             </div>
           )}
 
-          {/* Add-ons (Service Specific) */}
-          {isService && addOns.length > 0 && (
-            <div className="space-y-6">
+          {/* Add-ons (Upgraded) */}
+          {activeAddOns.length > 0 && (
+            <div className="space-y-8 bg-gray-50 p-10 md:p-16 rounded-[4rem] border border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Plus size={20} strokeWidth={3} /></div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-[#081621]">অ্যাড-অন সার্ভিস যোগ করুন (ঐচ্ছিক)</h3>
+                <div>
+                  <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight text-[#081621]">অ্যাড-অন সার্ভিস যোগ করুন (ঐচ্ছিক)</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Enhance your cleaning experience</p>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {addOns.map((add: any, i: number) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeAddOns.map((add: any, i: number) => (
                   <div 
-                    key={i}
+                    key={add.id || i}
                     onClick={() => toggleAddOn(i)}
                     className={cn(
-                      "p-6 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between group",
-                      selectedAddOnIndices.includes(i) ? "border-blue-600 bg-blue-50 shadow-md" : "border-gray-100 bg-white hover:border-blue-200"
+                      "p-6 rounded-3xl border-2 transition-all cursor-pointer flex flex-col gap-4 bg-white relative group overflow-hidden",
+                      selectedAddOnIndices.includes(i) ? "border-blue-600 shadow-xl scale-[1.02]" : "border-gray-100 hover:border-blue-200"
                     )}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                        selectedAddOnIndices.includes(i) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200"
-                      )}>
-                        {selectedAddOnIndices.includes(i) && <Check size={14} strokeWidth={4} />}
-                      </div>
-                      <span className="font-bold text-gray-700 uppercase tracking-tight">{add.name}</span>
+                    <div className="relative aspect-square w-16 h-16 rounded-2xl overflow-hidden bg-gray-50">
+                      {add.imageUrl ? (
+                        <Image src={add.imageUrl} alt={add.name} fill className="object-cover" unoptimized />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-blue-200"><Wrench size={24} /></div>
+                      )}
                     </div>
-                    <span className="font-black text-blue-600">+৳{add.price}</span>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-700 uppercase tracking-tight text-sm leading-tight">{add.name}</h4>
+                      <p className="font-black text-blue-600 mt-1">৳{add.price}</p>
+                    </div>
+                    <div className={cn(
+                      "absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                      selectedAddOnIndices.includes(i) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200"
+                    )}>
+                      {selectedAddOnIndices.includes(i) && <Check size={14} strokeWidth={4} />}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -462,7 +513,7 @@ export default function UnifiedLandingPage() {
         </div>
       </section>
 
-      {/* 8. ORDER FORM SECTION */}
+      {/* 7. ORDER FORM SECTION */}
       <section id="order-form" className="py-32 px-4 container mx-auto max-w-7xl">
         <div className={cn("text-white p-6 rounded-t-[3.5rem] text-center max-w-2xl mx-auto shadow-2xl relative z-10", theme.accent)}>
           <h2 className="font-black text-lg md:text-2xl uppercase tracking-widest">{isService ? 'বুকিং করতে নিচের ফর্মটি পূরণ করুন' : 'অর্ডার করতে নিচের ফর্মটি পূরণ করুন'}</h2>
@@ -549,11 +600,13 @@ export default function UnifiedLandingPage() {
                     <h4 className="font-black text-gray-900 uppercase text-sm md:text-lg leading-tight tracking-tight">
                       {page.title} {selectedPackage && <span className={cn("block text-xs mt-1", theme.secondary)}>({selectedPackage.name})</span>}
                     </h4>
-                    <div className="flex items-center gap-5">
-                      <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors shadow-sm"><Minus size={18} strokeWidth={3}/></button>
-                      <span className="font-black text-3xl text-primary">{quantity}</span>
-                      <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors shadow-sm"><Plus size={18} strokeWidth={3}/></button>
-                    </div>
+                    {!isService && (
+                      <div className="flex items-center gap-5">
+                        <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors shadow-sm"><Minus size={18} strokeWidth={3}/></button>
+                        <span className="font-black text-3xl text-primary">{quantity}</span>
+                        <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors shadow-sm"><Plus size={18} strokeWidth={3}/></button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -568,8 +621,8 @@ export default function UnifiedLandingPage() {
                       <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">সিলেক্টেড অ্যাড-অনস</p>
                       {selectedAddOnIndices.map(idx => (
                         <div key={idx} className="flex justify-between text-[12px] font-bold text-gray-600 uppercase">
-                          <span>+ {addOns[idx].name}</span>
-                          <span>৳{addOns[idx].price}</span>
+                          <span>+ {activeAddOns[idx].name}</span>
+                          <span>৳{activeAddOns[idx].price}</span>
                         </div>
                       ))}
                     </div>
