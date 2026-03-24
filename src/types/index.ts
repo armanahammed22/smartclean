@@ -28,25 +28,27 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface LandingPageFeature {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
 export interface LandingPagePackage {
   id: string;
-  category: 'Routine Maintenance' | 'Deep Cleaning' | 'Specialized' | 'Commercial/Office';
   name: string;
   price: number;
-  originalPrice?: number;
-  description?: string;
-  features?: string[];
-  status: boolean;
-  order: number;
+  features: string[];
+  isDefault: boolean;
 }
 
 export interface LandingPageAddOn {
   id: string;
   name: string;
   price: number;
-  imageUrl?: string;
+  imageUrl: string;
   status: boolean;
-  packageId?: string; // Optional linking to specific package
 }
 
 export interface LandingPage {
@@ -54,122 +56,79 @@ export interface LandingPage {
   slug: string;
   type: 'product' | 'service';
   title: string;
-  subtitle?: string;
-  offer?: string;
-  description: string;
-  price: number;
-  discountPrice?: number;
-  imageUrl: string;
-  bannerImage?: string;
-  useCustomBanner?: boolean;
-  videoUrl?: string;
   active: boolean;
-  productId?: string; // Linked product ID
-  phone?: string;
   
-  // DYNAMIC HERO
+  // SHARED UI
+  bannerImage: string;
   heroTitle?: string;
   heroSubtitle?: string;
-  heroBadge?: string;
-  heroCTA?: string;
-  heroBanner?: string;
+  phone?: string;
   
-  // DYNAMIC GRID CONFIG
-  showCatalogGrid?: boolean;
-  catalogSource?: 'products' | 'services';
-  catalogTitle?: string;
-  catalogLimit?: number;
-
-  // Grid of ingredients/features (The 5-item grid)
-  ingredients?: { name: string; image: string }[];
+  // FEATURES GRID
+  featuresTitle?: string;
+  features: LandingPageFeature[];
   
-  // Usage/How to eat section
-  usageTitle?: string;
-  usageImage?: string;
-  usagePoints?: string[];
+  // DETAILS SECTION
+  detailsTitle?: string;
+  detailsText?: string;
+  detailsImage?: string;
   
-  // Why trust us section
-  trustTitle?: string;
-  trustPoints?: string[];
+  // WHY CHOOSE US
+  whyTitle?: string;
+  whyItems: string[];
   
-  // Storage info box
-  storageText?: string;
+  // PRICING CONFIG
+  discountValue: number;
+  discountType: 'percent' | 'fixed';
   
-  // Multi-tier pricing
-  packages?: LandingPagePackage[];
-  addOns?: LandingPageAddOn[];
+  // PRODUCT MODE SPECIFIC
+  productIds: string[]; // For the 8-item grid
+  deliveryCharge: number;
+  
+  // SERVICE MODE SPECIFIC
+  serviceId?: string;
+  serviceImage?: string;
+  packages: LandingPagePackage[];
+  addOns: LandingPageAddOn[];
+  additionalCharge: number;
 
   createdAt: string;
   updatedAt?: string;
 }
 
-export interface CustomerProfile {
-  uid: string;
-  name: string;
-  email: string;
-  phone: string;
-  address?: string;
-  referralCode?: string;
-  referredBy?: string | null;
-  totalEarnings?: number;
-  role: 'customer' | 'staff' | 'admin';
-  status: 'active' | 'restricted' | 'disabled' | 'banned';
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface EmployeeProfile {
+export interface OrderLandingProduct {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  skills: string[]; // Array of Service IDs
-  rating: number;
-  jobsCompleted: number;
-  status: 'Active' | 'On Leave' | 'Terminated' | 'Banned';
-  updatedAt?: any;
-  createdAt: string;
-}
-
-export interface Booking {
-  id: string;
-  customerId: string;
+  pageId: string;
   customerName: string;
-  customerPhone?: string;
-  customerEmail?: string;
+  customerPhone: string;
   address: string;
   items: any[];
+  quantity: number;
+  subtotal: number;
+  discount: number;
+  deliveryCharge: number;
   totalPrice: number;
-  status: 'New' | 'Assigned' | 'On The Way' | 'Service Started' | 'Completed' | 'Cancelled';
-  employeeId?: string;
-  employeeName?: string;
-  serviceId?: string; // Reference to main service for skill matching
-  serviceTitle?: string;
-  dateTime: string;
-  timeSlot?: string;
-  notes?: string;
-  updatedAt?: any;
+  paymentMethod: string;
+  transactionId?: string;
+  status: 'New' | 'Paid' | 'Processing' | 'Shipped' | 'Cancelled';
   createdAt: string;
-  source?: string;
 }
 
-export interface StaffAvailability {
-  uid: string;
-  isOnline: boolean;
-  status: 'Available' | 'Busy' | 'Offline';
-  activeCity?: string;
-  preferredShift?: string;
-  lastLocation?: { lat: number; lng: number };
-  updatedAt: any;
-}
-
-export interface StaffEarnings {
+export interface OrderLandingService {
   id: string;
-  staffId: string;
-  bookingId: string;
-  amount: number;
-  type: 'commission' | 'bonus' | 'base';
+  pageId: string;
+  customerName: string;
+  customerPhone: string;
+  address: string;
+  package: any;
+  selectedAddOns: any[];
+  subtotal: number;
+  discount: number;
+  additionalCharge: number;
+  totalPrice: number;
+  paymentMethod: string;
+  transactionId?: string;
+  status: 'New' | 'Paid' | 'Confirmed' | 'Completed' | 'Cancelled';
   createdAt: string;
 }
 

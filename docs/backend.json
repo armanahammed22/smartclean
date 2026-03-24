@@ -1,85 +1,50 @@
 
 {
   "entities": {
-    "Product": {
-      "title": "Product",
-      "description": "An inventory item or equipment for sale.",
+    "LandingPage": {
+      "title": "LandingPage",
+      "description": "Configuration for a dynamic product or service landing page.",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "price": { "type": "number" },
-        "regularPrice": { "type": "number" },
-        "stockQuantity": { "type": "number" },
-        "categoryId": { "type": "string" },
-        "subCategoryId": { "type": "string" },
-        "childCategoryId": { "type": "string" },
-        "brand": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "isPopular": { "type": "boolean" },
-        "salesCount": { "type": "number" },
-        "shortDescription": { "type": "string" },
-        "description": { "type": "string" }
-      },
-      "required": ["name", "price", "stockQuantity", "status"]
-    },
-    "Category": {
-      "title": "Category",
-      "description": "Main level marketplace category (Level 1).",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
         "slug": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "order": { "type": "number" }
+        "type": { "type": "string", "enum": ["product", "service"] },
+        "title": { "type": "string" },
+        "active": { "type": "boolean" },
+        "bannerImage": { "type": "string" },
+        "productIds": { "type": "array" },
+        "packages": { "type": "array" },
+        "addOns": { "type": "array" }
       }
     },
-    "Subcategory": {
-      "title": "Subcategory",
-      "description": "Second level category (Level 2).",
+    "OrderLandingProduct": {
+      "title": "OrderLandingProduct",
+      "description": "Order record from a product landing page.",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "categoryId": { "type": "string" },
-        "order": { "type": "number" }
-      }
-    },
-    "ChildCategory": {
-      "title": "ChildCategory",
-      "description": "Third level terminal category (Level 3).",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "subcategoryId": { "type": "string" },
-        "order": { "type": "number" }
-      }
-    },
-    "Order": {
-      "title": "Order",
-      "description": "A product purchase record.",
-      "type": "object",
-      "properties": {
-        "customerId": { "type": "string" },
+        "pageId": { "type": "string" },
         "customerName": { "type": "string" },
-        "items": { "type": "array" },
         "totalPrice": { "type": "number" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "status": { "type": "string" }
+      }
+    },
+    "OrderLandingService": {
+      "title": "OrderLandingService",
+      "description": "Order record from a service landing page.",
+      "type": "object",
+      "properties": {
+        "pageId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string" }
       }
     }
   },
   "auth": {
-    "providers": ["password", "phone"]
+    "providers": ["password"]
   },
   "firestore": {
-    "/products/{id}": { "schema": "Product", "description": "Product catalog." },
-    "/categories/{id}": { "schema": "Category", "description": "L1 Categories." },
-    "/subcategories/{id}": { "schema": "Subcategory", "description": "L2 Categories." },
-    "/childcategories/{id}": { "schema": "ChildCategory", "description": "L3 Categories." },
-    "/orders/{id}": { "schema": "Order", "description": "Product orders." },
-    "/bookings/{id}": { "schema": "Order", "description": "Service bookings." },
-    "/users/{id}": { "schema": "object", "description": "User profiles." }
+    "/landing_pages/{id}": { "schema": "LandingPage", "description": "Dynamic landing pages." },
+    "/orders_products/{id}": { "schema": "OrderLandingProduct", "description": "Product sales orders." },
+    "/orders_services/{id}": { "schema": "OrderLandingService", "description": "Service booking orders." }
   }
 }
