@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -96,7 +97,7 @@ function CheckoutContent() {
 
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
-  const deliveryCharge = Number(selectedDelivery?.amount) || 0;
+  const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
@@ -225,7 +226,9 @@ function CheckoutContent() {
                     <CardHeader className="bg-blue-600 text-white p-6 md:p-8">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
-                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('delivery_info')}</CardTitle>
+                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">
+                          {hasServices ? 'Booking Details' : t('delivery_info')}
+                        </CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent className="p-6 md:p-8 space-y-6">
@@ -247,7 +250,9 @@ function CheckoutContent() {
                       </div>
                       <FormField control={form.control} name="address" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                            {hasServices ? 'Service Address' : t('delivery_address')}
+                          </FormLabel>
                           <div className="relative">
                             <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
                             <FormControl><Textarea placeholder="House, Street, Area" className="min-h-[100px] md:min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
@@ -256,25 +261,27 @@ function CheckoutContent() {
                         </FormItem>
                       )} />
                       
-                      <div className="space-y-4 pt-4 border-t border-gray-50">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Truck size={14} /> Delivery Method</h4>
-                        <FormField control={form.control} name="deliveryOption" render={({ field }) => (
-                          <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                            {deliveryOptions?.map((opt) => (
-                              <div key={opt.id} className={cn(
-                                "flex items-center space-x-2 rounded-xl md:rounded-2xl border-2 p-4 cursor-pointer transition-all",
-                                field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
-                              )}>
-                                <RadioGroupItem value={opt.id} id={opt.id} className="sr-only" />
-                                <label htmlFor={opt.id} className="flex flex-col gap-1 cursor-pointer w-full">
-                                  <span className="text-[10px] font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
-                                  <span className="text-sm md:text-base font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
-                                </label>
-                              </div>
-                            ))}
-                          </RadioGroup>
-                        )} />
-                      </div>
+                      {!hasServices && (
+                        <div className="space-y-4 pt-4 border-t border-gray-50">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Truck size={14} /> Delivery Method</h4>
+                          <FormField control={form.control} name="deliveryOption" render={({ field }) => (
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                              {deliveryOptions?.map((opt) => (
+                                <div key={opt.id} className={cn(
+                                  "flex items-center space-x-2 rounded-xl md:rounded-2xl border-2 p-4 cursor-pointer transition-all",
+                                  field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                                )}>
+                                  <RadioGroupItem value={opt.id} id={opt.id} className="sr-only" />
+                                  <label htmlFor={opt.id} className="flex flex-col gap-1 cursor-pointer w-full">
+                                    <span className="text-[10px] font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
+                                    <span className="text-sm md:text-base font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
+                                  </label>
+                                </div>
+                              ))}
+                            </RadioGroup>
+                          )} />
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -282,7 +289,7 @@ function CheckoutContent() {
                     <CardHeader className="bg-gray-900 text-white p-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Wallet size={20} /></div>
-                        <CardTitle className="text-lg font-black uppercase tracking-tight">{t('payment_method')}</CardTitle>
+                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('payment_method')}</CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent className="p-6">
@@ -313,7 +320,7 @@ function CheckoutContent() {
                   </Card>
 
                   <Button type="submit" className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
-                    {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Book My Service' : t('place_order')} <Zap size={24} fill="currentColor" /></>}
+                    {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
                   </Button>
                 </div>
 
@@ -333,7 +340,7 @@ function CheckoutContent() {
                               <span className="text-[11px] md:text-xs font-black text-[#081621] uppercase leading-tight truncate">{item.name}</span>
                               <span className="bg-gray-100 text-gray-500 text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase w-fit">×{item.quantity}</span>
                             </div>
-                            <span className="font-black text-xs md:text-sm text-[#081621] shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
+                            <span className="font-black text-xs md:sm text-[#081621] shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
                         <div className="border-t border-dashed pt-6 space-y-4">

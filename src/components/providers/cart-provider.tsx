@@ -29,11 +29,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback((item: Product | Service, quantity = 1, showToast = true) => {
     const isService = 'basePrice' in item;
+    const itemType = isService ? 'service' : 'product';
     const price = isService ? (item as Service).basePrice : (item as Product).price;
     const regularPrice = isService ? undefined : (item as Product).regularPrice;
     const name = isService ? (item as Service).title : (item as Product).name;
     const category = isService ? t('services_title') : (item as Product).category;
     const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
+
+    // RULE: Cannot mix products and services
+    if (items.length > 0) {
+      const existingType = items[0].itemType;
+      if (existingType !== itemType) {
+        toast({
+          variant: "destructive",
+          title: "অ্যাকশন অনুমোদিত নয়",
+          description: existingType === 'product' 
+            ? "আপনার তালিকায় প্রোডাক্ট রয়েছে। সার্ভিস বুক করতে হলে কার্ট খালি করুন।" 
+            : "আপনার তালিকায় সার্ভিস রয়েছে। প্রোডাক্ট অর্ডার করতে হলে কার্ট খালি করুন।",
+        });
+        return;
+      }
+    }
 
     // TRACK: AddToCart
     trackEvent('AddToCart', {
@@ -60,17 +76,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         quantity, 
         imageUrl, 
         category,
-        itemType: isService ? 'service' : 'product'
+        itemType: itemType
       }];
     });
     
     if (showToast) {
       toast({
-        title: "অর্ডার তালিকায় যুক্ত হয়েছে",
-        description: `${name} সফলভাবে যুক্ত করা হয়েছে।`,
+        title: t('cart_added'),
+        description: `${name} ${t('cart_desc')}`,
       });
     }
-  }, [toast, t]);
+  }, [toast, t, items]);
 
   const removeFromCart = useCallback((itemId: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));

@@ -594,7 +594,7 @@ export function CheckoutModal() {
               disabled={isSubmitting || items.length === 0}
             >
               {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                <>{hasServices ? 'Book Now' : 'Confirm'} <ArrowRight size={18} /></>
+                <>{hasServices ? 'Place Booking' : 'Place Order'} <ArrowRight size={18} /></>
               )}
             </Button>
           </div>
