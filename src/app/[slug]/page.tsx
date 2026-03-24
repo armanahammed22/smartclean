@@ -227,7 +227,7 @@ export default function DynamicLandingPage() {
               {gridItems.map((item) => (
                 <div key={item.id} className="min-w-[140px] md:min-w-[160px] bg-white rounded-2xl p-3 border shadow-sm hover:shadow-md transition-all group flex flex-col gap-2">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-50">
-                    <NextImage src={item.imageUrl} alt={item.name || item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                    <NextImage src={item.imageUrl || 'https://picsum.photos/seed/item/200/200'} data-ai-hint="item image" alt={item.name || item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
                   </div>
                   <div className="space-y-1 mt-1">
                     <h4 className="font-bold text-[10px] uppercase truncate text-gray-800 leading-tight">{item.name || item.title}</h4>
@@ -254,7 +254,7 @@ export default function DynamicLandingPage() {
               {page.features.map((f: any, i: number) => (
                 <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-4 hover:shadow-xl transition-all">
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gray-50 p-2">
-                    <NextImage src={f.imageUrl || 'https://picsum.photos/seed/feat/100/100'} alt={f.title} fill className="object-contain" unoptimized />
+                    <NextImage src={f.imageUrl || 'https://picsum.photos/seed/feat/100/100'} data-ai-hint="feature icon" alt={f.title} fill className="object-contain" unoptimized />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-black uppercase text-xs text-gray-900">{f.title}</h4>
@@ -387,7 +387,7 @@ export default function DynamicLandingPage() {
                   {isProduct ? (
                     <div className="flex gap-4 items-center">
                       <div className="relative w-20 h-20 rounded-2xl overflow-hidden border bg-gray-50">
-                        <NextImage src={mainProduct?.imageUrl || ''} alt="Summary" fill className="object-cover" unoptimized />
+                        <NextImage src={mainProduct?.imageUrl || 'https://picsum.photos/seed/product/200/200'} data-ai-hint="product image" alt="Summary" fill className="object-cover" unoptimized />
                       </div>
                       <div className="flex-1 space-y-2">
                         <h4 className="font-black text-gray-900 uppercase text-xs leading-tight line-clamp-2">{mainProduct?.name}</h4>
@@ -432,7 +432,7 @@ export default function DynamicLandingPage() {
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-50">
-                                    <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
+                                    <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} data-ai-hint="addon icon" alt={add.name} fill className="object-cover" unoptimized />
                                   </div>
                                   <span className="text-[10px] font-bold uppercase text-gray-700">{add.name}</span>
                                 </div>
