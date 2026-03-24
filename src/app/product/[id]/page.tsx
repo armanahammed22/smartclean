@@ -348,44 +348,47 @@ export default function ProductDetailsPage() {
           {/* BOTTOM TABS: Description, Specs, Reviews */}
           <div className="mt-8 lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-9 space-y-6">
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white min-h-[400px]">
                 <Tabs defaultValue="description" className="w-full">
-                  <TabsList className="bg-gray-50/50 border-b p-0 h-14 w-full justify-start rounded-none px-8">
-                    <TabsTrigger value="description" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-6">Description</TabsTrigger>
-                    <TabsTrigger value="specs" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-6">Specifications</TabsTrigger>
-                    <TabsTrigger value="reviews" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-6">Reviews & QNA</TabsTrigger>
+                  <TabsList className="bg-gray-50/50 border-b p-0 h-14 w-full justify-start rounded-none px-4 md:px-8">
+                    <TabsTrigger value="description" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-4 md:px-6">Description</TabsTrigger>
+                    <TabsTrigger value="specs" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-4 md:px-6">Specifications</TabsTrigger>
+                    <TabsTrigger value="reviews" className="h-14 rounded-none border-b-2 border-transparent data-[state=active]:border-[#f85606] data-[state=active]:bg-transparent font-black uppercase text-[10px] tracking-widest px-4 md:px-6">Reviews & QNA</TabsTrigger>
                   </TabsList>
                   
-                  <div className="p-8">
-                    <TabsContent value="description" className="mt-0">
-                      <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:uppercase prose-p:leading-relaxed prose-p:text-gray-600">
-                        <div className="whitespace-pre-line text-sm md:text-base font-medium" dangerouslySetInnerHTML={{ __html: product.description }} />
+                  <div className="p-6 md:p-8">
+                    {/* Optimized Description */}
+                    <TabsContent value="description" className="mt-0 focus-visible:ring-0">
+                      <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:uppercase prose-p:leading-relaxed prose-p:text-gray-600 break-words overflow-hidden">
+                        <div className="text-sm md:text-base font-medium leading-loose" dangerouslySetInnerHTML={{ __html: product.description }} />
                       </article>
                     </TabsContent>
 
-                    <TabsContent value="specs" className="mt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                    {/* Optimized Specifications */}
+                    <TabsContent value="specs" className="mt-0 focus-visible:ring-0">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-2 md:gap-y-4">
                         {product.specifications?.map((spec: any, idx: number) => (
-                          <div key={idx} className="flex justify-between border-b border-gray-50 py-3 group hover:bg-gray-50/50 px-2 transition-colors rounded-lg">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{spec.key}</span>
-                            <span className="text-sm font-bold text-gray-800">{spec.value}</span>
+                          <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-50 py-3 md:py-4 group hover:bg-gray-50/50 px-2 transition-colors rounded-lg gap-1 sm:gap-4">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] shrink-0">{spec.key}</span>
+                            <span className="text-sm font-bold text-gray-800 break-words">{spec.value}</span>
                           </div>
                         ))}
                         {(!product.specifications || product.specifications.length === 0) && (
-                          <div className="col-span-full py-10 text-center italic text-muted-foreground uppercase font-bold text-[10px] tracking-widest">No technical details listed.</div>
+                          <div className="col-span-full py-16 text-center italic text-muted-foreground uppercase font-bold text-[10px] tracking-widest">No technical details listed.</div>
                         )}
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="reviews" className="mt-0 space-y-10">
+                    {/* Optimized Reviews & QNA */}
+                    <TabsContent value="reviews" className="mt-0 space-y-10 focus-visible:ring-0">
                       {/* Reviews Summary */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-gray-50 rounded-3xl">
-                        <div className="text-center space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 md:p-8 bg-gray-50 rounded-3xl">
+                        <div className="text-center space-y-2 flex flex-col items-center justify-center">
                           <p className="text-5xl font-black text-gray-900 leading-none">4.8</p>
-                          <div className="flex justify-center text-[#faca51]"><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /></div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Out of 5 Stars</p>
+                          <div className="flex justify-center text-[#faca51] mt-2"><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /></div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Out of 5 Stars</p>
                         </div>
-                        <div className="md:col-span-2 space-y-2">
+                        <div className="md:col-span-2 space-y-3">
                           {[5,4,3,2,1].map(star => (
                             <div key={star} className="flex items-center gap-4">
                               <span className="text-[10px] font-black text-gray-500 w-12">{star} Stars</span>
@@ -397,30 +400,32 @@ export default function ProductDetailsPage() {
                       </div>
 
                       {/* Q&A Section */}
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b pb-4">
-                          <h4 className="text-lg font-black uppercase tracking-tight text-[#081621]">Customer Questions</h4>
-                          <Button variant="outline" className="rounded-full font-black text-[10px] uppercase tracking-widest h-9 px-6 border-blue-200 text-blue-600">Ask a Question</Button>
+                      <div className="space-y-8 pt-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-4">
+                          <h4 className="text-lg font-black uppercase tracking-tight text-[#081621] flex items-center gap-2">
+                            <MessageCircle size={20} className="text-primary" /> Customer Questions
+                          </h4>
+                          <Button variant="outline" className="rounded-full font-black text-[10px] uppercase tracking-widest h-10 px-6 border-blue-200 text-blue-600 w-full sm:w-auto">Ask a Question</Button>
                         </div>
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                           {qnaList?.length ? qnaList.map((q) => (
-                            <div key={q.id} className="space-y-3">
+                            <div key={q.id} className="space-y-4 bg-white/50 p-4 rounded-2xl border border-gray-50">
                               <div className="flex gap-3">
                                 <Badge className="bg-blue-100 text-blue-700 h-5 px-1.5 text-[9px] font-black shrink-0">Q</Badge>
-                                <p className="text-sm font-bold text-gray-800">{q.question}</p>
+                                <p className="text-sm font-bold text-gray-800 leading-relaxed">{q.question}</p>
                               </div>
                               {q.answer && (
-                                <div className="flex gap-3 pl-4">
+                                <div className="flex gap-3 pl-4 border-l-2 border-green-100 ml-2">
                                   <Badge className="bg-green-100 text-green-700 h-5 px-1.5 text-[9px] font-black shrink-0">A</Badge>
                                   <div className="space-y-1">
                                     <p className="text-sm text-gray-600 leading-relaxed font-medium">{q.answer}</p>
-                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter">Answered by {product.brand || 'Official Store'}</p>
+                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter mt-2">Answered by {product.brand || 'Official Store'}</p>
                                   </div>
                                 </div>
                               )}
                             </div>
                           )) : (
-                            <div className="py-10 text-center space-y-4">
+                            <div className="py-16 text-center space-y-4">
                               <Headphones size={40} className="mx-auto text-gray-200" />
                               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No questions yet. Be the first to ask!</p>
                             </div>
@@ -433,7 +438,7 @@ export default function ProductDetailsPage() {
               </Card>
             </div>
 
-            <div className="lg:col-span-3 mt-6 lg:mt-0 space-y-6">
+            <div className="lg:col-span-3 mt-8 lg:mt-0 space-y-6">
               <h3 className="text-lg font-black uppercase tracking-tight text-[#212121] px-2 flex items-center gap-2">
                 <Sparkles size={18} className="text-primary" /> Recommended
               </h3>
