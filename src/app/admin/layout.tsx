@@ -125,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-blue-400",
       items: [
         { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: "Reports", href: '/admin/reports', icon: BarChart3 },
+        { name: "Business Reports", href: '/admin/reports', icon: BarChart3 },
       ]
     },
     {
@@ -167,15 +167,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     },
     {
       id: 'marketing',
-      title: "MARKETING INTELLIGENCE",
+      title: "MARKETING",
       icon: Target,
       color: "text-rose-400",
       items: [
         { name: "Analytics Overview", href: '/admin/marketing/overview', icon: TrendingUp },
         { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
-        { name: "Pixel Config", href: '/admin/marketing/pixel', icon: Code },
+        { name: "Conversion Pixel", href: '/admin/marketing/pixel', icon: Code },
         { name: "CAPI Sync", href: '/admin/marketing/capi', icon: Shield },
-        { name: "Attribution Logs", href: '/admin/marketing/logs', icon: FileText },
       ]
     },
     {
@@ -192,25 +191,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     },
     {
       id: 'promotions',
-      title: "OFFER & PROMOTION",
+      title: "OFFER & COUPONS",
       icon: Zap,
       color: "text-violet-400",
       items: [
         { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
-        { name: "Homepage Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
+        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
         { name: "Referrals", href: '/admin/referrals', icon: Share2 },
-      ]
-    },
-    {
-      id: 'ai_agents',
-      title: "AI AGENTS",
-      icon: Sparkles,
-      color: "text-violet-400",
-      items: [
-        { name: "AI Sales Desk", href: '/admin/ai/sales', icon: MessageCircle },
-        { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: CalendarCheck },
       ]
     },
     {
@@ -221,8 +209,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
         { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
-        { name: "Quick Link", href: '/admin/customize/quick-links', icon: LinkIcon },
-        { name: "Quick Action", href: '/admin/customize/quick-actions', icon: MousePointer2 },
+        { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },
         { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
@@ -233,11 +220,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Settings,
       color: "text-orange-400",
       items: [
-        { name: "Payments", href: '/admin/payments', icon: Wallet },
-        { name: "Delivery Settings", href: '/admin/settings/delivery', icon: Truck },
-        { name: "Settings", href: '/admin/settings', icon: Settings },
+        { name: "Global Settings", href: '/admin/settings', icon: Settings },
+        { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
+        { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
         { 
-          name: "Error Logs", 
+          name: "System Logs", 
           href: '/admin/error-logs', 
           icon: ShieldAlert,
           badge: pendingErrors?.length || 0 
@@ -308,8 +295,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           {!collapsed && (
             <div className="truncate">
-              <h1 className="font-black tracking-tighter text-sm text-white uppercase leading-none">Admin Pro</h1>
-              <p className="text-[9px] text-primary font-black uppercase tracking-widest leading-none mt-1">Management Center</p>
+              <h1 className="font-black tracking-tighter text-sm text-white uppercase leading-none">Admin ERP</h1>
+              <p className="text-[9px] text-primary font-black uppercase tracking-widest leading-none mt-1">Smart Operations</p>
             </div>
           )}
         </div>

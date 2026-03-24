@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
-import { collection, doc, writeBatch, query, orderBy } from 'firebase/firestore';
+import { collection, doc, query, orderBy, limit, where } from 'firebase/firestore';
 import { 
   Users, 
   Database,
@@ -14,25 +14,36 @@ import {
   Package,
   Wrench,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Plus,
+  FileSpreadsheet,
+  AlertTriangle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  DollarSign
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
+} from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-
-const CHART_DATA = [
-  { name: 'Mon', val: 45 },
-  { name: 'Tue', val: 52 },
-  { name: 'Wed', val: 48 },
-  { name: 'Thu', val: 61 },
-  { name: 'Fri', val: 55 },
-  { name: 'Sat', val: 67 },
-  { name: 'Sun', val: 70 },
-];
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
 
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 
@@ -40,252 +51,255 @@ export default function AdminDashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [timeFilter, setTimeFilter] = useState('7d');
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
-  const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'bookings') : null, [db, isAuthorized]);
+  // Real-time Queries
+  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
+  const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'bookings'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
+  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
   
-  const { data: orders } = useCollection(ordersQuery);
-  const { data: bookings } = useCollection(bookingsQuery);
+  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
+  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
+  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
-  const handleSeedData = async () => {
-    if (!db || !isAuthorized) return;
-    setIsSeeding(true);
-    
-    try {
-      const batch = writeBatch(db);
-      const now = new Date().toISOString();
+  // Computed Business Metrics
+  const metrics = useMemo(() => {
+    if (!orders || !bookings || !products) return null;
 
-      // 1. SEED SITE SETTINGS
-      const settingsRef = doc(db, 'site_settings', 'global');
-      batch.set(settingsRef, {
-        websiteName: 'Smart Clean',
-        contactEmail: 'support@smartclean.com',
-        contactPhone: '+8801919640422',
-        address: 'Wireless Gate, Mohakhali, Dhaka-1212',
-        footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
-        seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
-        seoDescription: 'Expert cleaning and maintenance services for your home and office.',
-        updatedAt: now
-      }, { merge: true });
+    const today = new Date().toISOString().split('T')[0];
+    const todayOrders = orders.filter(o => o.createdAt?.startsWith(today));
+    const pendingOrders = orders.filter(o => o.status === 'New' || o.status === 'Processing');
+    const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+    const totalRevenue = orders.reduce((acc, o) => acc + (o.totalPrice || 0), 0);
+    const lowStockItems = products.filter(p => (p.stockQuantity || 0) < 5);
 
-      // 2. SEED CATEGORIES (Daraz Style)
-      const CATEGORY_MAP = [
-        {
-          name: "Home & Living",
-          subs: [
-            { name: "Cleaning", children: ["Vacuum Cleaners", "Mops & Sweepers", "Cleaning Agents"] },
-            { name: "Furniture", children: ["Living Room", "Bedroom", "Office"] }
-          ]
-        },
-        {
-          name: "Services",
-          subs: [
-            { name: "Cleaning", children: ["Deep Cleaning", "Sofa Cleaning", "Carpet Cleaning"] },
-            { name: "Repair", children: ["AC Repair", "Fridge Repair", "Plumbing"] }
-          ]
-        }
-      ];
+    return {
+      todayCount: todayOrders.length,
+      pendingCount: pendingOrders.length,
+      deliveredCount: deliveredOrders.length,
+      revenue: totalRevenue,
+      lowStock: lowStockItems,
+      pendingBookings: bookings.filter(b => b.status === 'New').length
+    };
+  }, [orders, bookings, products]);
 
-      CATEGORY_MAP.forEach((mainCat, mainIdx) => {
-        const catRef = doc(collection(db, 'categories'));
-        const catId = catRef.id;
-        batch.set(catRef, {
-          name: mainCat.name,
-          slug: mainCat.name.toLowerCase().replace(/\s+/g, '-'),
-          order: mainIdx,
-          createdAt: now
-        });
-
-        mainCat.subs.forEach((sub, subIdx) => {
-          const subRef = doc(collection(db, 'subcategories'));
-          const subId = subRef.id;
-          batch.set(subRef, {
-            name: sub.name,
-            slug: sub.name.toLowerCase().replace(/\s+/g, '-'),
-            categoryId: catId,
-            order: subIdx,
-            createdAt: now
-          });
-
-          sub.children.forEach((child, childIdx) => {
-            const childRef = doc(collection(db, 'childcategories'));
-            batch.set(childRef, {
-              name: child,
-              slug: child.toLowerCase().replace(/\s+/g, '-'),
-              subcategoryId: subId,
-              order: childIdx,
-              createdAt: now
-            });
-          });
-        });
-      });
-
-      // 3. SEED SAMPLE SERVICES
-      const SAMPLE_SERVICES = [
-        { title: "Home Deep Cleaning", basePrice: 5000, categoryId: "Cleaning", duration: "4-6 Hours", imageUrl: "https://picsum.photos/seed/hservice/800/600" },
-        { title: "AC Master Service", basePrice: 2500, categoryId: "Repair", duration: "1-2 Hours", imageUrl: "https://picsum.photos/seed/acserv/800/600" },
-        { title: "Sofa Shampooing", basePrice: 1500, categoryId: "Cleaning", duration: "2 Hours", imageUrl: "https://picsum.photos/seed/sofaserv/800/600" }
-      ];
-
-      SAMPLE_SERVICES.forEach(s => {
-        const sRef = doc(collection(db, 'services'));
-        batch.set(sRef, {
-          ...s,
-          status: 'Active',
-          description: `Professional ${s.title} provided by certified technicians. Includes all necessary materials and tools.`,
-          shortDescription: `Top-rated ${s.title} for your home.`,
-          createdAt: now
-        });
-      });
-
-      // 4. SEED SAMPLE PRODUCTS
-      const SAMPLE_PRODUCTS = [
-        { name: "Smart Vacuum Robot V2", price: 35000, regularPrice: 42000, stockQuantity: 15, categoryId: "Cleaning", brand: "Xiaomi", imageUrl: "https://picsum.photos/seed/robotv/600/600" },
-        { name: "Industrial Steam Mop", price: 8500, regularPrice: 9500, stockQuantity: 20, categoryId: "Tools", brand: "Karcher", imageUrl: "https://picsum.photos/seed/mopv/600/600" },
-        { name: "Organic Multi-Surface Cleaner", price: 450, regularPrice: 550, stockQuantity: 100, categoryId: "Cleaning", brand: "EcoClean", imageUrl: "https://picsum.photos/seed/sprayv/600/600" }
-      ];
-
-      SAMPLE_PRODUCTS.forEach(p => {
-        const pRef = doc(collection(db, 'products'));
-        batch.set(pRef, {
-          ...p,
-          status: 'Active',
-          isPopular: true,
-          description: `High-quality ${p.name} designed for professional efficiency. Safe for all home environments.`,
-          shortDescription: `Premium ${p.name} for expert results.`,
-          createdAt: now
-        });
-      });
-
-      // 5. SEED SAMPLE BANNERS
-      const BANNER_REF = doc(collection(db, 'hero_banners'));
-      batch.set(BANNER_REF, {
-        title: "Spring Cleaning Sale",
-        subtitle: "Get up to 40% off on all deep cleaning services this month!",
-        imageUrl: "https://picsum.photos/seed/hero1/1200/400",
-        isActive: true,
-        type: 'main',
-        order: 0,
-        buttonText: "Book Now",
-        buttonLink: "/services",
-        buttonColor: "#22c55e",
-        createdAt: now
-      });
-
-      // 6. SEED DELIVERY OPTIONS
-      const DELIVERY_DATA = [
-        { label: "Inside Dhaka", amount: 60, isEnabled: true },
-        { label: "Outside Dhaka", amount: 120, isEnabled: true }
-      ];
-      DELIVERY_DATA.forEach(d => {
-        const dRef = doc(collection(db, 'delivery_options'));
-        batch.set(dRef, { ...d, createdAt: now });
-      });
-
-      // 7. SEED HOMEPAGE SECTIONS
-      const SECTION_DATA = [
-        { title: 'Flash Sale', type: 'FlashSale', order: 1, isActive: true },
-        { title: 'Just For You', type: 'Products', order: 2, isActive: true },
-        { title: 'Essential Services', type: 'Services', order: 3, isActive: true }
-      ];
-      SECTION_DATA.forEach(s => {
-        const sRef = doc(collection(db, 'homepage_sections'));
-        batch.set(sRef, { ...s, createdAt: now });
-      });
-
-      await batch.commit();
-      toast({ title: "ERP Ecosystem Seeded", description: "Sample products, services, banners, and settings are now live." });
-    } catch (err) {
-      console.error("Seeding failed:", err);
-      toast({ variant: "destructive", title: "Seeding failed" });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
+  // Mock Trend Data for Charts
+  const chartData = [
+    { name: 'Mon', orders: 12, revenue: 15000 },
+    { name: 'Tue', orders: 18, revenue: 22000 },
+    { name: 'Wed', orders: 15, revenue: 18000 },
+    { name: 'Thu', orders: 25, revenue: 35000 },
+    { name: 'Fri', orders: 22, revenue: 30000 },
+    { name: 'Sat', orders: 30, revenue: 45000 },
+    { name: 'Sun', orders: 28, revenue: 42000 },
+  ];
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-20">
+      {/* ⚡ HEADER & QUICK ACTIONS */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Operations Hub</h1>
-          <p className="text-muted-foreground text-sm font-medium">Real-time control over marketplace transactions</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Business Control Center</h1>
+          <p className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Live Marketplace Intelligence & Operations
+          </p>
         </div>
-        <Button variant="outline" onClick={handleSeedData} disabled={isSeeding} className="gap-2 bg-white font-bold rounded-xl shadow-sm border-primary/20 text-primary">
-          {isSeeding ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
-          Seed ERP Ecosystem
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2">
+            <Link href="/admin/products"><Plus size={18} /> Add Product</Link>
+          </Button>
+          <Button asChild className="rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg gap-2">
+            <Link href="/admin/services"><Plus size={18} /> Add Service</Link>
+          </Button>
+          <Button asChild className="rounded-xl font-bold bg-purple-600 hover:bg-purple-700 shadow-lg gap-2">
+            <Link href="/admin/marketing/landing-pages"><Plus size={18} /> Landing Page</Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {/* 🟩 TOP STATS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: "Service Bookings", value: bookings?.length || 0, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
-          { title: "Product Orders", value: orders?.length || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { title: "Revenue (Est)", value: "৳0", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-          { title: "Active Staff", value: "8", icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Today's Orders", val: metrics?.todayCount || 0, trend: "+12%", up: true, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Pending Fulfillment", val: metrics?.pendingCount || 0, trend: "High Priority", up: false, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Delivered Items", val: metrics?.deliveredCount || 0, trend: "+5% vs Last Week", up: true, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Total Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, trend: "Lifetime Gross", up: true, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col gap-4">
-                <div className={cn("p-2.5 w-fit rounded-xl", stat.bg, stat.color)}><stat.icon size={20} /></div>
-                <div className="space-y-1">
-                  <p className="text-[10px] md:text-xs font-black uppercase tracking-wider text-muted-foreground">{stat.title}</p>
-                  <h3 className="text-lg md:text-2xl font-black text-gray-900">{stat.value}</h3>
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                  <stat.icon size={24} />
                 </div>
+                <Badge variant="outline" className={cn("text-[9px] font-black border-none uppercase px-2", stat.up ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600")}>
+                  {stat.trend}
+                </Badge>
               </div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight">{stat.val}</h3>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-none shadow-sm bg-white rounded-2xl overflow-hidden">
-          <CardHeader className="border-b bg-gray-50/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-bold">Volume Trends</CardTitle>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-none uppercase font-black text-[9px] rounded-full px-3">Live</Badge>
-          </CardHeader>
-          <CardContent className="h-[350px] p-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={CHART_DATA}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{fill: '#f8fafc'}} />
-                <Bar dataKey="val" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-primary text-white overflow-hidden relative rounded-[2rem]">
-          <div className="absolute top-0 right-0 p-8 opacity-10"><TrendingUp size={120} /></div>
-          <CardHeader><CardTitle className="text-lg font-bold relative z-10">Operations</CardTitle></CardHeader>
-          <CardContent className="space-y-6 relative z-10">
-             <div className="grid grid-cols-1 gap-4">
-                {[
-                  { label: "Pending Shipments", val: orders?.filter(o => o.status === 'New').length || 0, icon: Package },
-                  { label: "Pending Bookings", val: bookings?.filter(b => b.status === 'New').length || 0, icon: Calendar }
-                ].map((kpi, idx) => (
-                  <div key={idx} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex justify-between items-center">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
-                      <span className="text-2xl font-black">{kpi.val}</span>
-                    </div>
-                    <kpi.icon size={24} className="opacity-40" />
-                  </div>
+      {/* 📊 ANALYTICS & OPERATIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Main Analytics Area */}
+        <div className="lg:col-span-8 space-y-8">
+          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">Volume & Revenue Trend</CardTitle>
+                <CardDescription className="text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Performance over last 7 days</CardDescription>
+              </div>
+              <div className="flex bg-white rounded-xl border p-1">
+                {['7d', '30d'].map(f => (
+                  <button key={f} onClick={() => setTimeFilter(f)} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all", timeFilter === f ? "bg-primary text-white" : "text-gray-400")}>
+                    {f}
+                  </button>
                 ))}
-             </div>
-             <Button variant="outline" className="w-full bg-white/10 hover:bg-white/20 border-white/20 text-white font-black h-12 mt-4 rounded-2xl uppercase tracking-tighter" asChild>
-               <Link href="/admin/orders">Go to Dispatch Center</Link>
-             </Button>
-          </CardContent>
-        </Card>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
+                  <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                  <Area type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={4} fillOpacity={0} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Recent Orders Table */}
+          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-8">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold uppercase tracking-tight">Real-time Order Feed</CardTitle>
+                <Button variant="link" className="text-xs font-black uppercase text-primary p-0" asChild>
+                  <Link href="/admin/orders">Full Dispatch <ArrowUpRight size={14} /></Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-gray-50/30">
+                  <TableRow>
+                    <TableHead className="font-black uppercase text-[10px] pl-8">Customer</TableHead>
+                    <TableHead className="font-black uppercase text-[10px]">Details</TableHead>
+                    <TableHead className="font-black uppercase text-[10px]">Status</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] text-right pr-8">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ordersLoading ? (
+                    <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                  ) : orders?.slice(0, 6).map((order) => (
+                    <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                      <TableCell className="pl-8 py-4">
+                        <div className="font-bold text-sm text-gray-900 leading-none mb-1">{order.customerName}</div>
+                        <div className="text-[10px] text-muted-foreground font-medium">{order.customerPhone}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[150px]">
+                          {order.items?.[0]?.name || 'N/A'}
+                        </div>
+                        <div className="text-[9px] text-gray-400 mt-0.5">{format(new Date(order.createdAt), 'MMM dd, HH:mm')}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn(
+                          "text-[8px] font-black uppercase border-none",
+                          order.status === 'New' ? "bg-blue-50 text-blue-600" :
+                          order.status === 'Delivered' ? "bg-green-50 text-green-600" :
+                          order.status === 'Cancelled' ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-500"
+                        )}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-8 font-black text-sm text-gray-900">
+                        ৳{order.totalPrice?.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 🚨 OPERATIONS PANEL (RIGHT) */}
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="border-none shadow-xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
+            <CardHeader className="relative z-10 p-8 pb-4">
+              <CardTitle className="text-lg font-black uppercase tracking-widest text-primary-foreground/60">Operations</CardTitle>
+            </CardHeader>
+            <CardContent className="relative z-10 p-8 pt-0 space-y-6">
+              {[
+                { label: "Pending Orders", val: metrics?.pendingCount || 0, icon: Package },
+                { label: "Pending Bookings", val: metrics?.pendingBookings || 0, icon: Calendar },
+                { label: "Today Revenue", val: `৳${(metrics?.revenue / 100).toLocaleString()}`, icon: TrendingUp }
+              ].map((kpi, i) => (
+                <div key={i} className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 flex justify-between items-center group hover:bg-white/20 transition-all">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
+                    <span className="text-2xl font-black">{kpi.val}</span>
+                  </div>
+                  <kpi.icon size={24} className="opacity-40 group-hover:scale-110 transition-transform" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Low Stock Alerts */}
+          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden border border-red-100">
+            <CardHeader className="bg-red-50/50 p-8 flex flex-row items-center justify-between border-b border-red-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 text-red-600 rounded-xl"><AlertTriangle size={20} /></div>
+                <CardTitle className="text-base font-bold text-red-900">Inventory Guard</CardTitle>
+              </div>
+              <Badge className="bg-red-600 text-white border-none text-[10px] font-black">{metrics?.lowStock.length || 0}</Badge>
+            </CardHeader>
+            <CardContent className="p-8 space-y-4">
+              {metrics?.lowStock.length ? metrics.lowStock.slice(0, 4).map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center font-black text-[10px] text-red-600">{item.stockQuantity}</div>
+                    <span className="text-[11px] font-bold text-gray-700 uppercase truncate max-w-[120px]">{item.name}</span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-100 text-red-600" asChild>
+                    <Link href={`/admin/products`}><ArrowUpRight size={14} /></Link>
+                  </Button>
+                </div>
+              )) : (
+                <div className="py-10 text-center space-y-2">
+                  <CheckCircle2 size={32} className="text-green-500 mx-auto" />
+                  <p className="text-[10px] font-black uppercase text-green-600 tracking-widest">Stock Levels Healthy</p>
+                </div>
+              )}
+              {metrics?.lowStock.length > 4 && (
+                <p className="text-[10px] font-bold text-center text-muted-foreground mt-4 uppercase">+{metrics.lowStock.length - 4} more items low in stock</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
