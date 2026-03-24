@@ -1,0 +1,21 @@
+{
+  "name": "Smart Clean Bangladesh",
+  "short_name": "Smart Clean",
+  "description": "Professional Cleaning & Service Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1E5F7A",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/smartclean-logo/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/smartclean-logo/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
