@@ -99,6 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
+  // RIGID ADMIN CHECK
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   /**
@@ -252,10 +253,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isLoginPage || isUserLoading || roleLoading) return;
     if (user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Admin session required." });
-      signOut(auth).then(() => {
-        router.replace('/admin/login');
-      });
+      toast({ variant: "destructive", title: "Access Denied", description: "This area is restricted to administrators." });
+      router.replace('/login');
     }
   }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
 
@@ -387,7 +386,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 
-  if (isUserLoading || (user && (roleLoading))) {
+  if (isUserLoading || (user && roleLoading)) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />

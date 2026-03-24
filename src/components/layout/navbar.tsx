@@ -17,7 +17,8 @@ import {
   History,
   LogIn,
   ShoppingCart,
-  Menu
+  Menu,
+  Shield
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { NavbarOfferSlider } from './navbar-offer-slider';
 
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+
 export function Navbar() {
   const { language, setLanguage, t } = useLanguage();
   const { user } = useUser();
@@ -50,10 +53,12 @@ export function Navbar() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  // Admin Check
   const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRef);
-  const isAdmin = !!adminRole || user?.uid === 'gcp03WmpjROVvRdpLNsghNU4zHa2';
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
+  // Staff Check
   const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRef);
   const isStaff = !!staffRole;
@@ -69,11 +74,10 @@ export function Navbar() {
 
   return (
     <header className="w-full z-50 sticky top-0 bg-white">
-      {/* Top Utility Bar - Hidden on Mobile */}
+      {/* Top Utility Bar */}
       <div className="hidden lg:block bg-gray-50 border-b py-1">
         <div className="container mx-auto px-4 flex justify-end gap-6">
           <Link href="/page/about-us" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">About Us</Link>
-          <Link href="/page/careers" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">Careers</Link>
           <Link href="/support" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">Support</Link>
           <button onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black text-primary uppercase tracking-widest">
             {language === 'bn' ? "English" : "বাংলা"}
@@ -81,11 +85,10 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Daraz-style Header */}
+      {/* Main Header */}
       <div className="bg-white border-b py-2 md:py-4 px-3 md:px-4">
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
-          {/* Logo Section */}
           <Link href={logoLink} className="flex items-center shrink-0">
             <div className="relative h-7 md:h-10 w-auto min-w-[80px] md:min-w-[140px] flex items-center justify-start overflow-hidden">
               {displayLogo ? (
@@ -105,12 +108,10 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* Offer Slider - CIRCULAR Daraz Style */}
           <div className="hidden sm:block">
             <NavbarOfferSlider />
           </div>
 
-          {/* Daraz-style Search Bar - Responsive */}
           <div className="flex-1 relative">
             <div className="relative group">
               <Input 
@@ -125,9 +126,8 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Actions Section */}
           <div className="flex items-center gap-1 md:gap-6 shrink-0">
-            {/* Desktop Account */}
+            {/* Account Dropdown with Role-based Portal Links */}
             <div className="hidden md:block">
               {user ? (
                 <DropdownMenu>
@@ -144,10 +144,32 @@ export function Navbar() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-2 border-none shadow-2xl">
-                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/dashboard" className="flex items-center gap-3 font-bold"><LayoutDashboard size={18} /> Dashboard</Link></DropdownMenuItem>
-                    {isAdmin && <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-primary/5 text-primary mt-1"><Link href="/admin/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]"><ShieldCheck size={18} /> Admin Portal</Link></DropdownMenuItem>}
+                    <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-3 py-2">Personal</DropdownMenuLabel>
+                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/dashboard" className="flex items-center gap-3 font-bold"><UserCircle size={18} /> Profile</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/history" className="flex items-center gap-3 font-bold"><History size={18} /> History</Link></DropdownMenuItem>
+                    
+                    {(isAdmin || isStaff) && <DropdownMenuSeparator />}
+                    
+                    {isAdmin && (
+                      <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-red-50 text-red-700 mt-1">
+                        <Link href="/admin/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
+                          <ShieldCheck size={18} /> Admin Portal
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {isStaff && (
+                      <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-amber-50 text-amber-700 mt-1">
+                        <Link href="/staff/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
+                          <HardHat size={18} /> Technician Portal
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black p-3 rounded-lg cursor-pointer"><LogOut size={18} className="mr-2" /> {t('sign_out')}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black p-3 rounded-lg cursor-pointer">
+                      <LogOut size={18} className="mr-2" /> {t('sign_out')}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
@@ -158,12 +180,6 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile User Icon */}
-            <Link href={user ? "/account/dashboard" : "/login"} className="md:hidden p-1.5 text-gray-600 hover:text-primary transition-colors">
-              <User size={22} />
-            </Link>
-
-            {/* Cart Icon */}
             <Link href="/cart" className="relative p-1.5 text-gray-600 hover:text-primary transition-colors group">
               <ShoppingCart size={22} />
               {itemCount > 0 && (

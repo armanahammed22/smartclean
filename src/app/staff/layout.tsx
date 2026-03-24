@@ -48,24 +48,25 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isUserLoading, router, isLoginPage]);
 
-  // Active Purge: Logout restricted staff automatically
-  const isUnauthorized = !staffRole && !roleLoading && user;
+  // STAFF ROLE CHECK
+  const isAuthorized = !!staffRole;
   const isBanned = (profile?.status === 'Banned' || profile?.status === 'Terminated') && !profileLoading;
 
   useEffect(() => {
-    if (isLoginPage) return;
-    if (!isUserLoading && (isUnauthorized || isBanned || roleError)) {
-      const reason = isBanned ? "Account Restricted" : "Unauthorized Access";
-      toast({ variant: "destructive", title: "Staff Security Purge", description: `${reason}. Please contact supervisor.` });
-      signOut(auth).then(() => {
-        router.push('/staff/login');
-      });
+    if (isLoginPage || isUserLoading || roleLoading) return;
+    
+    if (user && (!isAuthorized || isBanned)) {
+      const reason = isBanned ? "Account restricted" : "Unauthorized access level";
+      toast({ variant: "destructive", title: "Access Denied", description: reason });
+      router.replace('/login');
     }
-  }, [isUnauthorized, isBanned, roleError, isUserLoading, auth, router, toast, isLoginPage]);
+  }, [isAuthorized, isBanned, isUserLoading, roleLoading, user, router, toast, isLoginPage]);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/staff/login');
+    if (auth) {
+      await signOut(auth);
+      router.push('/staff/login');
+    }
   };
 
   if (isUserLoading || (user && (roleLoading || profileLoading))) {
@@ -77,10 +78,9 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Allow the login page to render without protection or sidebar
   if (isLoginPage) return <>{children}</>;
 
-  if (!user || isUnauthorized || isBanned || roleError) return null;
+  if (!user || !isAuthorized || isBanned) return null;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
