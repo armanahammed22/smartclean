@@ -205,6 +205,16 @@ export default function LandingPagesAdminPage() {
                 <TabsContent value="hero" className="space-y-6 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase">Page Content Strategy</Label>
+                        <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="service">Service Booking (Teal/Blue)</SelectItem>
+                            <SelectItem value="product">Product Sale (Red/Yellow)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <ImageUploader label="Dynamic Banner Image" initialUrl={formData.bannerImage} onUpload={url => setFormData({...formData, bannerImage: url, useCustomBanner: true})} />
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase">Hero Main Title (Bangla)</Label>
@@ -223,6 +233,13 @@ export default function LandingPagesAdminPage() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase">URL Slug (Unique)</Label>
                         <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase">Link to Product</Label>
+                        <Select value={formData.productId} onValueChange={v => setFormData({...formData, productId: v})}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Link Stock Item" /></SelectTrigger>
+                          <SelectContent>{products?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
