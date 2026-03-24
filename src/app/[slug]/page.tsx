@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, where, limit, addDoc, doc, increment, updateDoc } from 'firebase/firestore';
 import { 
@@ -187,7 +187,7 @@ export default function DynamicLandingPage() {
         <div className="container mx-auto max-w-5xl text-center space-y-8">
           <div className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10">
             {page.bannerImage ? (
-              <Image src={page.bannerImage} alt="Banner" fill className="object-cover" unoptimized />
+              <NextImage src={page.bannerImage} alt="Banner" fill className="object-cover" unoptimized />
             ) : (
               <div className="w-full h-full bg-black/20 flex items-center justify-center"><Zap size={80} className="opacity-20" /></div>
             )}
@@ -199,9 +199,12 @@ export default function DynamicLandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button size="lg" className="h-16 px-10 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black text-xl uppercase shadow-xl gap-2" onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}>
+            <button 
+              className="h-16 px-10 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black text-xl uppercase shadow-xl gap-2 flex items-center justify-center" 
+              onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               <ShoppingCart size={24} /> {isProduct ? 'অর্ডার করতে চাই' : 'বুকিং দিতে চাই'}
-            </Button>
+            </button>
             <Button variant="outline" size="lg" className="h-16 px-10 rounded-2xl bg-black text-white border-none font-black text-xl hover:bg-gray-900 gap-2 shadow-xl" asChild>
               <a href={`tel:${page.phone || '01919640422'}`}>
                 <Phone size={24} /> {page.phone || '01919640422'}
@@ -224,7 +227,7 @@ export default function DynamicLandingPage() {
               {gridItems.map((item) => (
                 <div key={item.id} className="min-w-[140px] md:min-w-[160px] bg-white rounded-2xl p-3 border shadow-sm hover:shadow-md transition-all group flex flex-col gap-2">
                   <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-50">
-                    <Image src={item.imageUrl} alt={item.name || item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                    <NextImage src={item.imageUrl} alt={item.name || item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
                   </div>
                   <div className="space-y-1 mt-1">
                     <h4 className="font-bold text-[10px] uppercase truncate text-gray-800 leading-tight">{item.name || item.title}</h4>
@@ -251,7 +254,7 @@ export default function DynamicLandingPage() {
               {page.features.map((f: any, i: number) => (
                 <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-4 hover:shadow-xl transition-all">
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gray-50 p-2">
-                    <Image src={f.imageUrl || 'https://picsum.photos/seed/feat/100/100'} alt={f.title} fill className="object-contain" unoptimized />
+                    <NextImage src={f.imageUrl || 'https://picsum.photos/seed/feat/100/100'} alt={f.title} fill className="object-contain" unoptimized />
                   </div>
                   <div className="space-y-1">
                     <h4 className="font-black uppercase text-xs text-gray-900">{f.title}</h4>
@@ -279,7 +282,7 @@ export default function DynamicLandingPage() {
               </div>
               {page.detailsImage && (
                 <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white">
-                  <Image src={page.detailsImage} alt="Details" fill className="object-cover" unoptimized />
+                  <NextImage src={page.detailsImage} alt="Details" fill className="object-cover" unoptimized />
                 </div>
               )}
             </div>
@@ -384,7 +387,7 @@ export default function DynamicLandingPage() {
                   {isProduct ? (
                     <div className="flex gap-4 items-center">
                       <div className="relative w-20 h-20 rounded-2xl overflow-hidden border bg-gray-50">
-                        <Image src={mainProduct?.imageUrl || ''} alt="Summary" fill className="object-cover" unoptimized />
+                        <NextImage src={mainProduct?.imageUrl || ''} alt="Summary" fill className="object-cover" unoptimized />
                       </div>
                       <div className="flex-1 space-y-2">
                         <h4 className="font-black text-gray-900 uppercase text-xs leading-tight line-clamp-2">{mainProduct?.name}</h4>
@@ -429,7 +432,7 @@ export default function DynamicLandingPage() {
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-50">
-                                    <Image src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
+                                    <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
                                   </div>
                                   <span className="text-[10px] font-bold uppercase text-gray-700">{add.name}</span>
                                 </div>

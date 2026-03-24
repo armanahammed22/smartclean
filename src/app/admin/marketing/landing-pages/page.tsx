@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import NextImage from 'next/image';
 
 export default function RebuiltLandingPageAdmin() {
   const db = useFirestore();
@@ -279,7 +280,7 @@ export default function RebuiltLandingPageAdmin() {
                           formData.productIds?.includes(item.id) ? "border-primary ring-2 ring-primary/20" : "border-gray-100 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
                         )}
                       >
-                        <Image src={item.imageUrl} alt="Select" fill className="object-cover" unoptimized />
+                        <NextImage src={item.imageUrl} alt="Select" fill className="object-cover" unoptimized />
                         {formData.productIds?.includes(item.id) && (
                           <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                             <Badge className="bg-primary text-white text-[8px]">{formData.productIds.indexOf(item.id) + 1}</Badge>
