@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -106,10 +105,10 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Business Control Center</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
+          <div className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Live Marketplace Intelligence & Operations
-          </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3">
           <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2">
