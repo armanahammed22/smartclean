@@ -51,6 +51,21 @@ export interface LandingPage {
   offerText?: string;
   stockText?: string;
   phone?: string;
+  
+  // NEW FIELDS
+  heroTitle?: string;
+  heroSubtitle?: string;
+  floatingServices?: { name: string; image: string; link: string }[];
+  includingItems?: { title: string; image: string; description: string }[];
+  detailsContent?: { 
+    text: string; 
+    features?: { title: string; description: string }[];
+  };
+  pricingCategories?: { 
+    name: string; 
+    packages: { name: string; price: number; originalPrice?: number }[];
+  }[];
+
   createdAt: string;
   updatedAt?: string;
 }

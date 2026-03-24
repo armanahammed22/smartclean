@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,10 @@ import {
   X,
   Wrench,
   Package,
-  ImageIcon
+  ImageIcon,
+  Layout,
+  Layers,
+  Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -51,9 +54,10 @@ export default function LandingPagesAdminPage() {
 
   const [formData, setFormData] = useState<any>({
     slug: '',
-    type: 'product',
+    type: 'service',
     title: '',
-    subtitle: '',
+    heroTitle: '',
+    heroSubtitle: '',
     description: '',
     price: 0,
     discountPrice: 0,
@@ -64,12 +68,11 @@ export default function LandingPagesAdminPage() {
     active: true,
     phone: '01919640422',
     productId: '',
-    benefits: ['', '', ''],
-    whyChoose: ['', '', ''],
-    stockText: 'মাত্র ১২ টি বাকি',
-    ingredients: [],
-    packages: [],
-    serviceTypes: [],
+    stockText: 'অফারটি সীমিত সময়ের জন্য',
+    floatingServices: [],
+    includingItems: [],
+    detailsContent: { text: '', features: [] },
+    pricingCategories: []
   });
 
   const pagesQuery = useMemoFirebase(() => db ? query(collection(db, 'landing_pages'), orderBy('createdAt', 'desc')) : null, [db]);
@@ -86,9 +89,10 @@ export default function LandingPagesAdminPage() {
       setEditingPage(null);
       setFormData({
         slug: '',
-        type: 'product',
-        title: '',
-        subtitle: '',
+        type: 'service',
+        title: 'New Cleaning Service Page',
+        heroTitle: '',
+        heroSubtitle: '',
         description: '',
         price: 0,
         discountPrice: 0,
@@ -99,12 +103,11 @@ export default function LandingPagesAdminPage() {
         active: true,
         phone: '01919640422',
         productId: '',
-        benefits: ['', '', ''],
-        whyChoose: ['', '', ''],
-        stockText: 'মাত্র ১২ টি বাকি',
-        ingredients: [],
-        packages: [],
-        serviceTypes: [],
+        stockText: 'অফারটি সীমিত সময়ের জন্য',
+        floatingServices: [],
+        includingItems: [],
+        detailsContent: { text: '', features: [] },
+        pricingCategories: []
       });
     }
     setIsDialogOpen(true);
@@ -134,15 +137,23 @@ export default function LandingPagesAdminPage() {
     }
   };
 
+  // Helper functions to manage arrays in form
+  const addItem = (field: string, item: any) => setFormData({ ...formData, [field]: [...(formData[field] || []), item] });
+  const removeItem = (field: string, index: number) => {
+    const list = [...formData[field]];
+    list.splice(index, 1);
+    setFormData({ ...formData, [field]: list });
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Landing Page Manager</h1>
-          <p className="text-muted-foreground text-sm font-medium">Create high-converting campaign pages</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Advanced Page Manager</h1>
+          <p className="text-muted-foreground text-sm font-medium">Create high-converting landing pages for your services</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
-          <Plus size={18} /> New Campaign Page
+          <Plus size={18} /> New Sales Page
         </Button>
       </div>
 
@@ -152,7 +163,7 @@ export default function LandingPagesAdminPage() {
         ) : pages?.map((page) => (
           <Card key={page.id} className={cn("border-none shadow-sm bg-white rounded-3xl overflow-hidden group hover:shadow-md transition-all border border-gray-100", !page.active && "opacity-60 grayscale")}>
             <div className="aspect-[21/9] relative bg-gray-50 border-b">
-              <img src={page.bannerImage || page.imageUrl} alt={page.title} className="w-full h-full object-cover" />
+              <img src={page.bannerImage || page.imageUrl || 'https://picsum.photos/seed/lp/800/400'} alt={page.title} className="w-full h-full object-cover" />
               <div className="absolute top-3 left-3 flex gap-2">
                 <Badge className={cn(page.type === 'product' ? "bg-red-600" : "bg-blue-600", "text-white border-none uppercase font-black text-[8px]")}>{page.type?.toUpperCase()}</Badge>
               </div>
@@ -173,98 +184,215 @@ export default function LandingPagesAdminPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-5xl w-[95vw] rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className={cn("p-8 text-white shrink-0", formData.type === 'product' ? "bg-red-600" : "bg-blue-600")}>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3"><Sparkles className="text-yellow-400" /> {editingPage ? 'Update Campaign Page' : 'New Sales Engine'}</DialogTitle>
+            <DialogHeader className={cn("p-8 text-white shrink-0", formData.type === 'product' ? "bg-[#8B0000]" : "bg-[#081621]")}>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3"><Sparkles className="text-[#FFD700]" /> {editingPage ? 'Update Landing Page' : 'New Page Design'}</DialogTitle>
             </DialogHeader>
             
-            <Tabs defaultValue="basic" className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b">
-                <TabsTrigger value="basic" className="text-xs font-black uppercase">Identity & Link</TabsTrigger>
-                <TabsTrigger value="media" className="text-xs font-black uppercase">Visuals</TabsTrigger>
-                <TabsTrigger value="logic" className="text-xs font-black uppercase">Offers & Details</TabsTrigger>
+            <Tabs defaultValue="hero" className="flex-1 overflow-hidden flex flex-col">
+              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b overflow-x-auto no-scrollbar">
+                <TabsTrigger value="hero" className="text-[9px] font-black uppercase">Hero Section</TabsTrigger>
+                <TabsTrigger value="hub" className="text-[9px] font-black uppercase">Service Hub</TabsTrigger>
+                <TabsTrigger value="including" className="text-[9px] font-black uppercase">Including Section</TabsTrigger>
+                <TabsTrigger value="details" className="text-[9px] font-black uppercase">Detailed Info</TabsTrigger>
+                <TabsTrigger value="pricing" className="text-[9px] font-black uppercase">Pricing Matrix</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-white">
-                <TabsContent value="basic" className="space-y-6 mt-0">
+                
+                {/* TAB: HERO */}
+                <TabsContent value="hero" className="space-y-6 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
+                      <ImageUploader label="Dynamic Banner Image" initialUrl={formData.bannerImage} onUpload={url => setFormData({...formData, bannerImage: url, useCustomBanner: true})} />
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Linked Inventory Product</Label>
-                        <Select value={formData.productId} onValueChange={(v) => setFormData({...formData, productId: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Product" /></SelectTrigger>
-                          <SelectContent>
-                            {products?.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (Stock: {p.stockQuantity})</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <Label className="text-[10px] font-black uppercase">Hero Main Title (Bangla)</Label>
+                        <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase">Hero Subtitle</Label>
+                        <Input value={formData.heroSubtitle} onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Page Title</Label>
-                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Label className="text-[10px] font-black uppercase">Support Phone</Label>
+                        <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">URL Slug</Label>
+                        <Label className="text-[10px] font-black uppercase">URL Slug (Unique)</Label>
                         <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono" />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Page Type</Label>
-                        <Select value={formData.type} onValueChange={(v: any) => setFormData({...formData, type: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectItem value="product">Product Landing</SelectItem><SelectItem value="service">Service Booking</SelectItem></SelectContent>
-                        </Select>
+                  </div>
+                </TabsContent>
+
+                {/* TAB: SERVICE HUB (Floating) */}
+                <TabsContent value="hub" className="space-y-6 mt-0">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-black uppercase">Floating Service Items</Label>
+                    <Button type="button" size="sm" onClick={() => addItem('floatingServices', { name: '', image: '', link: '' })} variant="outline"><Plus size={14} /> Add Item</Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formData.floatingServices?.map((s: any, i: number) => (
+                      <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-4 relative">
+                        <div className="flex-1 space-y-2">
+                          <Input placeholder="Service Name" value={s.name} onChange={e => {
+                            const list = [...formData.floatingServices];
+                            list[i].name = e.target.value;
+                            setFormData({...formData, floatingServices: list});
+                          }} className="h-9" />
+                          <Input placeholder="Link (e.g. /service-slug)" value={s.link} onChange={e => {
+                            const list = [...formData.floatingServices];
+                            list[i].link = e.target.value;
+                            setFormData({...formData, floatingServices: list});
+                          }} className="h-9" />
+                        </div>
+                        <ImageUploader initialUrl={s.image} onUpload={url => {
+                          const list = [...formData.floatingServices];
+                          list[i].image = url;
+                          setFormData({...formData, floatingServices: list});
+                        }} aspectRatio="aspect-square w-16" />
+                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive" onClick={() => removeItem('floatingServices', i)}><X size={14} /></Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Support WhatsApp/Call</Label>
-                        <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* TAB: INCLUDING */}
+                <TabsContent value="including" className="space-y-6 mt-0">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-black uppercase">Grid Services (Minimum 5 for best look)</Label>
+                    <Button type="button" size="sm" onClick={() => addItem('includingItems', { title: '', description: '', image: '' })} variant="outline"><Plus size={14} /> Add Service</Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {formData.includingItems?.map((item: any, i: number) => (
+                      <div key={i} className="p-4 bg-white border rounded-2xl space-y-3 relative">
+                        <ImageUploader initialUrl={item.image} onUpload={url => {
+                          const list = [...formData.includingItems];
+                          list[i].image = url;
+                          setFormData({...formData, includingItems: list});
+                        }} label="Service Icon" />
+                        <Input placeholder="Title" value={item.title} onChange={e => {
+                          const list = [...formData.includingItems];
+                          list[i].title = e.target.value;
+                          setFormData({...formData, includingItems: list});
+                        }} className="h-9 font-bold" />
+                        <Input placeholder="Short Desc" value={item.description} onChange={e => {
+                          const list = [...formData.includingItems];
+                          list[i].description = e.target.value;
+                          setFormData({...formData, includingItems: list});
+                        }} className="h-9 text-[10px]" />
+                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive" onClick={() => removeItem('includingItems', i)}><X size={14} /></Button>
                       </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* TAB: DETAILS */}
+                <TabsContent value="details" className="space-y-6 mt-0">
+                  <div className="space-y-4">
+                    <Label className="text-xs font-black uppercase tracking-widest">General Content</Label>
+                    <Textarea 
+                      value={formData.detailsContent?.text} 
+                      onChange={e => setFormData({...formData, detailsContent: {...formData.detailsContent, text: e.target.value}})}
+                      placeholder="বিস্তারিত তথ্য লিখুন..."
+                      className="min-h-[120px]"
+                    />
+                    <div className="flex justify-between items-center pt-4">
+                      <Label className="text-xs font-black uppercase">Feature Cards</Label>
+                      <Button type="button" size="sm" onClick={() => {
+                        const features = [...(formData.detailsContent?.features || []), { title: '', description: '' }];
+                        setFormData({...formData, detailsContent: {...formData.detailsContent, features}});
+                      }} variant="outline"><Plus size={14} /> Add Feature</Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {formData.detailsContent?.features?.map((f: any, i: number) => (
+                        <div key={i} className="p-4 bg-gray-50 rounded-xl space-y-2 relative">
+                          <Input placeholder="Title" value={f.title} onChange={e => {
+                            const list = [...formData.detailsContent.features];
+                            list[i].title = e.target.value;
+                            setFormData({...formData, detailsContent: {...formData.detailsContent, features: list}});
+                          }} className="h-9 font-bold" />
+                          <Input placeholder="Description" value={f.description} onChange={e => {
+                            const list = [...formData.detailsContent.features];
+                            list[i].description = e.target.value;
+                            setFormData({...formData, detailsContent: {...formData.detailsContent, features: list}});
+                          }} className="h-9" />
+                          <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive" onClick={() => {
+                            const list = [...formData.detailsContent.features];
+                            list.splice(i, 1);
+                            setFormData({...formData, detailsContent: {...formData.detailsContent, features: list}});
+                          }}><X size={14} /></Button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="media" className="space-y-8 mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <ImageUploader label="Product Image" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} />
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                        <Label className="text-xs font-bold">Use Custom Hero Banner</Label>
-                        <Switch checked={formData.useCustomBanner} onCheckedChange={val => setFormData({...formData, useCustomBanner: val})} />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <ImageUploader label="Custom Hero Banner (21:9)" initialUrl={formData.bannerImage} onUpload={url => setFormData({...formData, bannerImage: url})} />
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">YouTube Video URL</Label>
-                        <div className="relative"><Video size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" /><Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl pl-12" /></div>
-                      </div>
-                    </div>
+                {/* TAB: PRICING */}
+                <TabsContent value="pricing" className="space-y-6 mt-0">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-black uppercase">Pricing Categories (e.g. Home, Office)</Label>
+                    <Button type="button" size="sm" onClick={() => addItem('pricingCategories', { name: '', packages: [] })} variant="outline"><Plus size={14} /> Add Category</Button>
                   </div>
+                  {formData.pricingCategories?.map((cat: any, i: number) => (
+                    <Card key={i} className="border-none bg-gray-50/50 p-6 rounded-[2rem] space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Input placeholder="Category Name (e.g. Home Cleaning)" value={cat.name} onChange={e => {
+                          const list = [...formData.pricingCategories];
+                          list[i].name = e.target.value;
+                          setFormData({...formData, pricingCategories: list});
+                        }} className="h-11 font-black uppercase text-xs" />
+                        <Button type="button" size="sm" onClick={() => {
+                          const list = [...formData.pricingCategories];
+                          list[i].packages = [...(list[i].packages || []), { name: '', price: 0, originalPrice: 0 }];
+                          setFormData({...formData, pricingCategories: list});
+                        }} className="gap-2"><Plus size={14} /> Package</Button>
+                        <Button variant="ghost" size="icon" onClick={() => removeItem('pricingCategories', i)} className="text-destructive"><Trash2 size={18}/></Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {cat.packages?.map((pkg: any, j: number) => (
+                          <div key={j} className="p-4 bg-white border rounded-2xl space-y-2 relative">
+                            <Input placeholder="Pkg Name" value={pkg.name} onChange={e => {
+                              const list = [...formData.pricingCategories];
+                              list[i].packages[j].name = e.target.value;
+                              setFormData({...formData, pricingCategories: list});
+                            }} className="h-8 font-bold" />
+                            <div className="flex gap-2">
+                              <Input type="number" placeholder="Price" value={pkg.price} onChange={e => {
+                                const list = [...formData.pricingCategories];
+                                list[i].packages[j].price = parseInt(e.target.value) || 0;
+                                setFormData({...formData, pricingCategories: list});
+                              }} className="h-8" />
+                              <Input type="number" placeholder="Old" value={pkg.originalPrice} onChange={e => {
+                                const list = [...formData.pricingCategories];
+                                list[i].packages[j].originalPrice = parseInt(e.target.value) || 0;
+                                setFormData({...formData, pricingCategories: list});
+                              }} className="h-8 text-[10px]" />
+                            </div>
+                            <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-5 w-5 text-destructive" onClick={() => {
+                              const list = [...formData.pricingCategories];
+                              list[i].packages.splice(j, 1);
+                              setFormData({...formData, pricingCategories: list});
+                            }}><X size={12} /></Button>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  ))}
                 </TabsContent>
 
-                <TabsContent value="logic" className="space-y-8 mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase">Core Benefits</Label>
-                      {formData.benefits.map((b: string, i: number) => (
-                        <Input key={i} value={b} onChange={e => { const nb = [...formData.benefits]; nb[i] = e.target.value; setFormData({...formData, benefits: nb}); }} className="h-11 bg-gray-50 border-none rounded-xl" />
-                      ))}
-                    </div>
-                    <div className="space-y-4">
-                      <Label className="text-xs font-black uppercase">Trust Factors</Label>
-                      {formData.whyChoose.map((w: string, i: number) => (
-                        <Input key={i} value={w} onChange={e => { const nw = [...formData.whyChoose]; nw[i] = e.target.value; setFormData({...formData, whyChoose: nw}); }} className="h-11 bg-gray-50 border-none rounded-xl" />
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
               </div>
             </Tabs>
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl uppercase tracking-tighter">{isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}{editingPage ? 'Sync Updates' : 'Deploy Page'}</Button>
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl uppercase tracking-tighter">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />}
+                {editingPage ? 'Sync Updates' : 'Launch Design'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
