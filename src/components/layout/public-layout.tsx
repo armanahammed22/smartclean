@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar } from './navbar';
 import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
@@ -25,6 +26,12 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const pathname = usePathname();
   const router = useRouter();
   const { itemCount } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
@@ -96,7 +103,11 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       </main>
       
       {/* 📱 BOTTOM NAVIGATION (Hidden on minimal pages like details/checkout) */}
-      {!minimalMobile && <BottomNav />}
+      {mounted && !minimalMobile && (
+        <div className="lg:hidden">
+          <BottomNav />
+        </div>
+      )}
 
       <WhatsAppContact />
       <CheckoutModal />

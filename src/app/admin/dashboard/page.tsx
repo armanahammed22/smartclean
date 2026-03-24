@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
 import { collection, doc, query, orderBy, limit, where } from 'firebase/firestore';
 import { 
@@ -51,6 +52,11 @@ export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
   const [timeFilter, setTimeFilter] = useState('7d');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
@@ -168,22 +174,24 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-4 md:p-8 h-[300px] md:h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                  <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
-                  <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
-                  <Area type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={4} fillOpacity={0} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                    <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
+                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                    <Area type="monotone" dataKey="orders" stroke="#10b981" strokeWidth={4} fillOpacity={0} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -221,7 +229,7 @@ export default function AdminDashboard() {
                           <div className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[150px]">
                             {order.items?.[0]?.name || 'N/A'}
                           </div>
-                          <div className="text-[9px] text-gray-400 mt-0.5">{format(new Date(order.createdAt), 'MMM dd, HH:mm')}</div>
+                          <div className="text-[9px] text-gray-400 mt-0.5">{order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : '...'}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={cn(
@@ -256,7 +264,7 @@ export default function AdminDashboard() {
               {[
                 { label: "Pending Orders", val: metrics?.pendingCount || 0, icon: Package },
                 { label: "Pending Bookings", val: metrics?.pendingBookings || 0, icon: Calendar },
-                { label: "Today Revenue", val: `৳${(metrics?.revenue / 100).toLocaleString()}`, icon: TrendingUp }
+                { label: "Lifetime Orders", val: (orders?.length || 0).toLocaleString(), icon: TrendingUp }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center group hover:bg-white/20 transition-all">
                   <div className="space-y-1">
