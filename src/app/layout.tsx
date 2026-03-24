@@ -11,11 +11,22 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#1E5F7A',
 };
 
 export const metadata: Metadata = {
-  title: 'Smart Clean | Professional Cleaning Services in Bangladesh',
-  description: 'Fast, efficient, and intelligent cleaning solutions for home and office in Bangladesh. Trusted by 1000+ customers.',
+  title: 'Smart Clean | App',
+  description: 'Professional cleaning app for Bangladesh.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Smart Clean',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -24,19 +35,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased min-h-screen flex flex-col">
+      <body className="font-body antialiased h-full">
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
             <LanguageProvider>
               <CartProvider>
                 <TrackingProvider>
-                  <main className="flex-1 flex flex-col">
+                  <main className="flex-1 flex flex-col h-full overflow-hidden">
                     {children}
                   </main>
                   <Toaster />

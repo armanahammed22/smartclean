@@ -25,35 +25,43 @@
     --ring: 197 60% 29%;
     --radius: 1rem;
   }
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 197 60% 29%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 84.2% 60.2%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 197 60% 29%;
-  }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-none;
+    -webkit-tap-highlight-color: transparent;
   }
+  
+  html, body {
+    @apply h-full overflow-x-hidden select-none touch-none;
+    overscroll-behavior-y: none;
+  }
+
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-[#F8FAFC] text-foreground font-body antialiased;
+    width: 100vw;
+    position: fixed;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer components {
+  .app-card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden;
+  }
+  
+  .app-button {
+    @apply active:scale-95 transition-transform duration-200;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
@@ -66,8 +74,4 @@
   display: inline-block;
   white-space: nowrap;
   animation: marquee 30s linear infinite;
-}
-
-.animate-marquee:hover {
-  animation-play-state: paused;
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -17,8 +16,8 @@ export function ProductCard({ product }: ProductCardProps) {
     : null;
 
   return (
-    <Link href={`/product/${product.id}`} className="block h-full group">
-      <Card className="h-full border-none shadow-sm hover:shadow-md transition-all duration-300 rounded-lg overflow-hidden flex flex-col bg-[#FFFFFF]">
+    <Link href={`/product/${product.id}`} className="block h-full app-button">
+      <Card className="h-full border-none shadow-sm rounded-2xl overflow-hidden flex flex-col bg-white">
         {/* Image Section */}
         <div className="relative aspect-square w-full bg-white overflow-hidden">
           {product.imageUrl ? (
@@ -26,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+              className="object-contain p-2"
               unoptimized
             />
           ) : (
@@ -37,34 +36,33 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Discount Badge */}
           {discountPercent && (
-            <div className="absolute top-0 left-0 bg-[#f85606] text-white text-[9px] font-black px-1.5 py-0.5 rounded-br-md z-10 uppercase tracking-tighter">
+            <div className="absolute top-0 left-0 bg-[#f85606] text-white text-[8px] font-black px-2 py-1 rounded-br-xl z-10 uppercase tracking-tighter">
               -{discountPercent}%
             </div>
           )}
         </div>
 
         {/* Content Section */}
-        <div className="p-2 flex flex-col flex-1 gap-1">
-          <h3 className="text-[11px] font-medium text-[#212121] line-clamp-2 leading-tight min-h-[2.2rem]">
+        <div className="p-3 flex flex-col flex-1 gap-1">
+          <h3 className="text-[10px] font-bold text-gray-800 line-clamp-2 leading-tight min-h-[2.4rem] uppercase">
             {product.name}
           </h3>
           
           <div className="mt-auto space-y-0.5">
-            <p className="text-[#f85606] font-bold text-sm">
+            <p className="text-primary font-black text-sm tracking-tighter">
               ৳{product.price.toLocaleString()}
             </p>
             
-            {product.regularPrice && product.regularPrice > product.price && (
-              <p className="text-[9px] text-gray-400 line-through">
-                ৳{product.regularPrice.toLocaleString()}
-              </p>
-            )}
-
-            <div className="flex items-center gap-1 pt-0.5">
-              <div className="flex text-[#faca51]">
-                {[1,2,3,4,5].map(i => <Star key={i} size={8} fill="currentColor" strokeWidth={0} />)}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <Star size={10} fill="#faca51" className="text-[#faca51]" />
+                <span className="text-[9px] text-gray-400 font-black">4.8</span>
               </div>
-              <span className="text-[8px] text-gray-400 font-bold">(12)</span>
+              {product.regularPrice && product.regularPrice > product.price && (
+                <span className="text-[8px] text-gray-300 line-through font-bold">
+                  ৳{product.regularPrice.toLocaleString()}
+                </span>
+              )}
             </div>
           </div>
         </div>
