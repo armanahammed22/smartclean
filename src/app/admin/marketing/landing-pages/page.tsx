@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -184,18 +183,18 @@ export default function RebuiltLandingPageAdmin() {
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-tight">Landing Page Builder</h1>
           <p className="text-muted-foreground text-sm font-medium">Build high-conversion funnels for Products or Services</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
+        <Button onClick={() => handleOpenDialog()} className="w-full md:w-auto gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
           <Plus size={18} /> New Page Engine
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
         ) : pages?.map((page) => (
@@ -224,29 +223,29 @@ export default function RebuiltLandingPageAdmin() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-6xl w-[95vw] rounded-t-[2rem] md:rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
             
-            <header className={cn("p-8 text-white shrink-0 transition-colors", formData.type === 'service' ? "bg-blue-600" : "bg-[#D60000]")}>
+            <header className={cn("p-6 md:p-8 text-white shrink-0 transition-colors", formData.type === 'service' ? "bg-blue-600" : "bg-[#D60000]")}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                     {editingPage ? 'Update Landing Page' : 'Initialize New Engine'}
                   </DialogTitle>
-                  <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Configure independent behavioral logic</p>
+                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">Configure independent behavioral logic</p>
                 </div>
                 <div className="flex bg-black/20 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
-                  <button type="button" onClick={() => setFormData({...formData, type: 'product'})} className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2", formData.type === 'product' ? "bg-white text-[#D60000] shadow-xl" : "text-white/60 hover:text-white")}>
-                    <ShoppingBag size={14} /> Product Mode
+                  <button type="button" onClick={() => setFormData({...formData, type: 'product'})} className={cn("px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2", formData.type === 'product' ? "bg-white text-[#D60000] shadow-xl" : "text-white/60 hover:text-white")}>
+                    <ShoppingBag size={14} /> Product
                   </button>
-                  <button type="button" onClick={() => setFormData({...formData, type: 'service'})} className={cn("px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2", formData.type === 'service' ? "bg-white text-blue-600 shadow-xl" : "text-white/60 hover:text-white")}>
-                    <ClipboardList size={14} /> Service Mode
+                  <button type="button" onClick={() => setFormData({...formData, type: 'service'})} className={cn("px-4 md:px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2", formData.type === 'service' ? "bg-white text-blue-600 shadow-xl" : "text-white/60 hover:text-white")}>
+                    <ClipboardList size={14} /> Service
                   </button>
                 </div>
               </div>
             </header>
             
-            <div className="flex-1 overflow-y-auto p-8 bg-white">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-white custom-scrollbar">
               <div className="max-w-5xl mx-auto space-y-12">
                 
                 {/* 1. IDENTITY & HERO */}
@@ -254,11 +253,11 @@ export default function RebuiltLandingPageAdmin() {
                   <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b pb-2 flex items-center gap-2"><Layout size={14} /> Basic Identity & Hero</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Page Title</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Page Title</Label>
                       <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">URL Slug</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">URL Slug</Label>
                       <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono text-primary font-bold" required />
                     </div>
                     <div className="md:col-span-2">
@@ -296,7 +295,7 @@ export default function RebuiltLandingPageAdmin() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-muted-foreground italic">Click to select items for the 8-item hero grid. Selection sequence determines order.</p>
+                  <p className="text-[9px] text-muted-foreground italic">Click items to add to the 8-item hero grid.</p>
                 </section>
 
                 {/* 3. MODE SPECIFIC CONFIG */}
@@ -304,9 +303,9 @@ export default function RebuiltLandingPageAdmin() {
                   <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b pb-2 flex items-center gap-2"><Target size={14} /> {formData.type === 'product' ? 'Inventory & Pricing' : 'Packages & Add-ons'}</h3>
                   
                   {formData.type === 'product' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-red-50/50 p-8 rounded-[2rem] border border-red-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-red-50/50 p-6 md:p-8 rounded-[2rem] border border-red-100">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Sync Inventory (Main Item)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sync Inventory (Main Item)</Label>
                         <Select value={formData.serviceId} onValueChange={v => setFormData({...formData, serviceId: v})}>
                           <SelectTrigger className="h-12 bg-white"><SelectValue placeholder="Search product..." /></SelectTrigger>
                           <SelectContent>
@@ -315,36 +314,38 @@ export default function RebuiltLandingPageAdmin() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Delivery Charge (BDT)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Delivery Charge (BDT)</Label>
                         <Input type="number" value={formData.deliveryCharge} onChange={e => setFormData({...formData, deliveryCharge: parseFloat(e.target.value) || 0})} className="h-12 bg-white" />
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-10 bg-blue-50/50 p-8 rounded-[2rem] border border-blue-100">
+                    <div className="space-y-10 bg-blue-50/50 p-6 md:p-8 rounded-[2rem] border border-blue-100">
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <Label className="font-black text-xs uppercase">Booking Packages</Label>
-                          <Button type="button" size="sm" onClick={() => addArrayItem('packages', { id: Math.random().toString(36).substr(2, 9), name: '', price: 0, features: [], isDefault: false })}><Plus size={14} /> Add Package</Button>
+                          <Button type="button" size="sm" onClick={() => addArrayItem('packages', { id: Math.random().toString(36).substr(2, 9), name: '', price: 0, features: [], isDefault: false })}><Plus size={14} /> Add</Button>
                         </div>
                         <div className="grid grid-cols-1 gap-4">
                           {formData.packages?.map((pkg: any, idx: number) => (
-                            <div key={pkg.id} className="p-6 bg-white rounded-2xl border flex gap-6 items-start relative">
+                            <div key={pkg.id} className="p-4 md:p-6 bg-white rounded-2xl border flex flex-col sm:flex-row gap-4 md:gap-6 items-start relative">
                               <Input placeholder="Package Name" value={pkg.name} onChange={e => {
                                 const list = [...formData.packages];
                                 list[idx].name = e.target.value;
                                 setFormData({...formData, packages: list});
                               }} className="flex-1 h-10" />
-                              <Input type="number" placeholder="Price" value={pkg.price} onChange={e => {
-                                const list = [...formData.packages];
-                                list[idx].price = parseFloat(e.target.value) || 0;
-                                setFormData({...formData, packages: list});
-                              }} className="w-24 h-10" />
-                              <div className="flex items-center gap-2 pt-2">
-                                <Label className="text-[10px] font-black">Default</Label>
-                                <Switch checked={pkg.isDefault} onCheckedChange={val => {
-                                  const list = formData.packages.map((p: any, i: number) => ({ ...p, isDefault: i === idx ? val : false }));
+                              <div className="flex gap-2 w-full sm:w-auto">
+                                <Input type="number" placeholder="Price" value={pkg.price} onChange={e => {
+                                  const list = [...formData.packages];
+                                  list[idx].price = parseFloat(e.target.value) || 0;
                                   setFormData({...formData, packages: list});
-                                }} />
+                                }} className="w-24 h-10" />
+                                <div className="flex items-center gap-2 pt-2 sm:pt-0">
+                                  <Label className="text-[10px] font-black">Default</Label>
+                                  <Switch checked={pkg.isDefault} onCheckedChange={val => {
+                                    const list = formData.packages.map((p: any, i: number) => ({ ...p, isDefault: i === idx ? val : false }));
+                                    setFormData({...formData, packages: list});
+                                  }} />
+                                </div>
                               </div>
                               <button type="button" onClick={() => removeArrayItem('packages', idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full"><X size={14} /></button>
                             </div>
@@ -354,13 +355,13 @@ export default function RebuiltLandingPageAdmin() {
 
                       <div className="space-y-4 border-t border-blue-100 pt-8">
                         <div className="flex justify-between items-center">
-                          <Label className="font-black text-xs uppercase">Add-on Services (Image Required)</Label>
-                          <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('addOns', { id: Math.random().toString(36).substr(2, 9), name: '', price: 0, imageUrl: '', enabled: true })}><Plus size={14} /> Add New Add-on</Button>
+                          <Label className="font-black text-xs uppercase">Add-on Services</Label>
+                          <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('addOns', { id: Math.random().toString(36).substr(2, 9), name: '', price: 0, imageUrl: '', enabled: true })}><Plus size={14} /> New</Button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {formData.addOns?.map((add: any, idx: number) => (
                             <div key={add.id} className="p-4 bg-white rounded-2xl border border-gray-100 space-y-4 relative group">
-                              <div className="flex gap-4">
+                              <div className="flex flex-col sm:flex-row gap-4">
                                 <ImageUploader initialUrl={add.imageUrl} onUpload={(url) => {
                                   const list = [...formData.addOns];
                                   list[idx].imageUrl = url;
@@ -389,7 +390,7 @@ export default function RebuiltLandingPageAdmin() {
                                   </div>
                                 </div>
                               </div>
-                              <button type="button" onClick={() => removeArrayItem('addOns', idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
+                              <button type="button" onClick={() => removeArrayItem('addOns', idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full"><X size={12} /></button>
                             </div>
                           ))}
                         </div>
@@ -401,7 +402,7 @@ export default function RebuiltLandingPageAdmin() {
                 {/* 4. SHARED UI: DETAILS & WHY */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
-                    <h3 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Why Choose Us (List)</h3>
+                    <h3 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Why Choose Us</h3>
                     <div className="space-y-2">
                       {formData.whyItems?.map((item: string, idx: number) => (
                         <div key={idx} className="flex gap-2">
@@ -429,19 +430,17 @@ export default function RebuiltLandingPageAdmin() {
               </div>
             </div>
 
-            <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
-              <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border">
-                  <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
-                  <Label className="text-[10px] font-black uppercase">Live Active</Label>
-                </div>
-                <div className="flex-1" />
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold px-8">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className={cn("rounded-xl font-black px-12 h-14 shadow-xl text-white", formData.type === 'service' ? "bg-blue-600" : "bg-[#D60000]")}>
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
-                  Deploy Landing Page
-                </Button>
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex-col sm:flex-row gap-4">
+              <div className="flex items-center gap-4 w-full sm:w-auto bg-white px-4 py-2 rounded-xl border">
+                <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
+                <Label className="text-[10px] font-black uppercase">Live Active</Label>
               </div>
+              <div className="flex-1 hidden sm:block" />
+              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold px-8 w-full sm:w-auto">Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className={cn("rounded-xl font-black px-12 h-14 shadow-xl text-white w-full sm:w-auto", formData.type === 'service' ? "bg-blue-600" : "bg-[#D60000]")}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
+                Deploy Page
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

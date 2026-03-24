@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -33,7 +32,7 @@ export function AdminBottomNav() {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[100] border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)] safe-area-pb">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] text-white z-[200] border-t border-white/10 h-16 shadow-[0_-4px_10px_rgba(0,0,0,0.3)] safe-area-pb">
       <div className="flex items-center justify-between h-full px-2">
         {NAV_ITEMS.map((item) => (
           <Link

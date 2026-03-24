@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -454,7 +453,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <main className="flex-1 overflow-y-auto p-6 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
-          {children}
+          <div className="max-w-[1400px] mx-auto w-full">
+            {children}
+          </div>
         </main>
 
         <AdminBottomNav />

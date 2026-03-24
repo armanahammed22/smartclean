@@ -100,7 +100,7 @@ export default function AdminDashboard() {
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-20">
+    <div className="space-y-6 md:space-y-8">
       {/* ⚡ HEADER & QUICK ACTIONS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -111,13 +111,13 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3">
-          <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+          <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-10">
             <Link href="/admin/products"><Plus size={16} /> Add Product</Link>
           </Button>
-          <Button asChild className="rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+          <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10">
             <Link href="/admin/services"><Plus size={16} /> Add Service</Link>
           </Button>
-          <Button asChild className="rounded-xl font-bold bg-purple-600 hover:bg-purple-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+          <Button asChild className="w-full sm:w-auto rounded-xl font-bold bg-purple-600 hover:bg-purple-700 shadow-lg gap-2 text-xs h-10">
             <Link href="/admin/marketing/landing-pages"><Plus size={16} /> Landing Page</Link>
           </Button>
         </div>
@@ -198,47 +198,49 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
-              <Table className="min-w-[600px]">
-                <TableHeader className="bg-gray-50/30">
-                  <TableRow>
-                    <TableHead className="font-black uppercase text-[10px] pl-8">Customer</TableHead>
-                    <TableHead className="font-black uppercase text-[10px]">Details</TableHead>
-                    <TableHead className="font-black uppercase text-[10px]">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] text-right pr-8">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ordersLoading ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                  ) : orders?.slice(0, 6).map((order) => (
-                    <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                      <TableCell className="pl-8 py-4">
-                        <div className="font-bold text-sm text-gray-900 leading-none mb-1">{order.customerName}</div>
-                        <div className="text-[10px] text-muted-foreground font-medium">{order.customerPhone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[150px]">
-                          {order.items?.[0]?.name || 'N/A'}
-                        </div>
-                        <div className="text-[9px] text-gray-400 mt-0.5">{format(new Date(order.createdAt), 'MMM dd, HH:mm')}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={cn(
-                          "text-[8px] font-black uppercase border-none",
-                          order.status === 'New' ? "bg-blue-50 text-blue-600" :
-                          order.status === 'Delivered' ? "bg-green-50 text-green-600" :
-                          order.status === 'Cancelled' ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-500"
-                        )}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right pr-8 font-black text-sm text-gray-900">
-                        ৳{order.totalPrice?.toLocaleString()}
-                      </TableCell>
+              <div className="min-w-full">
+                <Table className="min-w-[600px]">
+                  <TableHeader className="bg-gray-50/30">
+                    <TableRow>
+                      <TableHead className="font-black uppercase text-[10px] pl-8">Customer</TableHead>
+                      <TableHead className="font-black uppercase text-[10px]">Details</TableHead>
+                      <TableHead className="font-black uppercase text-[10px]">Status</TableHead>
+                      <TableHead className="font-black uppercase text-[10px] text-right pr-8">Total</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {ordersLoading ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                    ) : orders?.slice(0, 6).map((order) => (
+                      <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                        <TableCell className="pl-8 py-4">
+                          <div className="font-bold text-sm text-gray-900 leading-none mb-1">{order.customerName}</div>
+                          <div className="text-[10px] text-muted-foreground font-medium">{order.customerPhone}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[150px]">
+                            {order.items?.[0]?.name || 'N/A'}
+                          </div>
+                          <div className="text-[9px] text-gray-400 mt-0.5">{format(new Date(order.createdAt), 'MMM dd, HH:mm')}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={cn(
+                            "text-[8px] font-black uppercase border-none",
+                            order.status === 'New' ? "bg-blue-50 text-blue-600" :
+                            order.status === 'Delivered' ? "bg-green-50 text-green-600" :
+                            order.status === 'Cancelled' ? "bg-red-50 text-red-600" : "bg-gray-100 text-gray-500"
+                          )}>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right pr-8 font-black text-sm text-gray-900">
+                          ৳{order.totalPrice?.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

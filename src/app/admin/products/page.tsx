@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -150,13 +149,13 @@ export default function ProductsManagementPage() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
           <p className="text-muted-foreground text-sm">Control products and best-selling status</p>
         </div>
-        <Button className="gap-2 font-bold shadow-lg h-11" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+        <Button className="w-full md:w-auto gap-2 font-bold shadow-lg h-11" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus size={18} /> Add New Product
         </Button>
       </div>
@@ -171,109 +170,111 @@ export default function ProductsManagementPage() {
           <Card key={i} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{s.label}</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl shrink-0", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-gray-50/50">
-              <TableRow>
-                <TableHead className="font-bold py-5 pl-8">Product Name</TableHead>
-                <TableHead className="font-bold">Price</TableHead>
-                <TableHead className="font-bold">Stock</TableHead>
-                <TableHead className="font-bold">Best Selling</TableHead>
-                <TableHead className="text-right pr-8">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-20">Syncing inventory...</TableCell></TableRow>
-              ) : products?.map((product) => (
-                <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <TableCell className="py-5 pl-8">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-lg overflow-hidden border bg-gray-50 shrink-0">
-                        {product.imageUrl ? <Image src={product.imageUrl} alt={product.name} fill className="object-cover" /> : <Package size={16} />}
-                      </div>
-                      <span className="font-bold text-gray-900 uppercase text-[11px] leading-tight truncate">{product.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn("text-[9px] font-black border-none", product.stockQuantity <= 0 ? "bg-red-50 text-red-600" : "bg-gray-100")}>
-                      {product.stockQuantity || 0} Units
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Switch checked={!!product.isBestSelling} onCheckedChange={async (val) => await updateDoc(doc(db!, 'products', product.id), { isBestSelling: val })} />
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenEdit(product)}><Edit size={16} /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'products', product.id))}><Trash2 size={14} /></Button>
-                    </div>
-                  </TableCell>
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="min-w-full">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-gray-50/50">
+                <TableRow>
+                  <TableHead className="font-bold py-5 pl-8">Product Name</TableHead>
+                  <TableHead className="font-bold">Price</TableHead>
+                  <TableHead className="font-bold">Stock</TableHead>
+                  <TableHead className="font-bold">Best Selling</TableHead>
+                  <TableHead className="text-right pr-8">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20">Syncing inventory...</TableCell></TableRow>
+                ) : products?.map((product) => (
+                  <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <TableCell className="py-5 pl-8">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden border bg-gray-50 shrink-0">
+                          {product.imageUrl ? <Image src={product.imageUrl} alt={product.name} fill className="object-cover" /> : <Package size={16} />}
+                        </div>
+                        <span className="font-bold text-gray-900 uppercase text-[11px] leading-tight truncate">{product.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn("text-[9px] font-black border-none", product.stockQuantity <= 0 ? "bg-red-50 text-red-600" : "bg-gray-100")}>
+                        {product.stockQuantity || 0} Units
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch checked={!!product.isBestSelling} onCheckedChange={async (val) => await updateDoc(doc(db!, 'products', product.id), { isBestSelling: val })} />
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenEdit(product)}><Edit size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'products', product.id))}><Trash2 size={14} /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-4xl w-[95vw] rounded-t-[2rem] md:rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-8 bg-[#081621] text-white shrink-0">
+            <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2"><Package className="text-primary" /> {editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-white custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <ImageUploader label="Primary Image" initialUrl={uploadedImageUrl} onUpload={setUploadedImageUrl} />
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Product Name</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Product Name</Label>
                     <Input name="name" defaultValue={editingProduct?.name} required className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Price</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Price</Label>
                       <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Stock</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Stock</Label>
                       <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Category</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue placeholder="Select Category" /></SelectTrigger>
                       <SelectContent>{categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                    <Label className="text-xs font-bold">Best Selling Highlight</Label>
+                    <Label className="text-xs font-bold text-amber-900">Best Selling Highlight</Label>
                     <Checkbox name="isBestSelling" defaultChecked={editingProduct?.isBestSelling} />
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase">Description</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
                 <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none rounded-2xl min-h-[120px]" />
               </div>
             </div>
-            <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
-              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl uppercase tracking-tighter">
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex-col sm:flex-row gap-2">
+              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl w-full sm:w-auto">Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 bg-primary hover:bg-primary/90 shadow-xl uppercase tracking-tighter w-full sm:w-auto">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />} Save Product
               </Button>
             </DialogFooter>

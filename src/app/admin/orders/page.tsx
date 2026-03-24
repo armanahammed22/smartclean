@@ -167,7 +167,7 @@ export default function OrdersManagementPage() {
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
@@ -190,121 +190,123 @@ export default function OrdersManagementPage() {
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto">
-          <Table className="min-w-[800px]">
-            <TableHeader className="bg-gray-50/50">
-              <TableRow>
-                <TableHead className="font-bold py-5 pl-8">Order ID</TableHead>
-                <TableHead className="font-bold">Customer</TableHead>
-                <TableHead className="font-bold">Risk Assessment</TableHead>
-                <TableHead className="font-bold">Logistics</TableHead>
-                <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="text-right pr-8">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-              ) : filteredOrders?.map((order) => (
-                <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <TableCell className="py-5 pl-8">
-                    <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
-                    <div className="text-[9px] text-muted-foreground font-bold mt-1">
-                      {mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs font-bold text-gray-700">{order.customerName}</div>
-                    <div className="text-[10px] text-muted-foreground">{order.customerPhone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge variant="outline" className={cn(
-                        "text-[8px] font-black w-fit uppercase",
-                        order.riskLevel === 'High' ? "bg-red-50 text-red-600 border-red-100" : 
-                        order.riskLevel === 'Medium' ? "bg-orange-50 text-orange-600 border-orange-100" : 
-                        "bg-green-50 text-green-600 border-green-100"
-                      )}>
-                        {order.riskLevel || 'Low'} Risk
-                      </Badge>
-                      {order.isSuspicious && (
-                        <div className="flex items-center gap-1 text-red-600 text-[9px] font-bold">
-                          <AlertTriangle size={10} /> SUSPICIOUS
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select 
-                      defaultValue={order.courierId} 
-                      onValueChange={(val) => handleAssignCourier(order.id, val)}
-                      disabled={order.status === 'Shipped'}
-                    >
-                      <SelectTrigger className="h-8 text-[10px] font-bold w-[130px] bg-gray-50 border-none">
-                        <SelectValue placeholder="Select Courier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {couriers?.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
-                      <SelectTrigger className={cn(
-                        "h-8 text-[9px] font-black uppercase w-[110px]",
-                        STATUS_COLORS[order.status]
-                      )}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="New">New</SelectItem>
-                        <SelectItem value="Processing">Processing</SelectItem>
-                        <SelectItem value="Shipped">Shipped</SelectItem>
-                        <SelectItem value="Delivered">Delivered</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1">
-                      {order.isSuspicious ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 gap-1 text-[9px] font-black text-green-600 border-green-200 bg-green-50 hover:bg-green-100"
-                          onClick={() => handleApproveOrder(order.id)}
-                        >
-                          <ShieldCheck size={12} /> Approve
-                        </Button>
-                      ) : (
-                        <Button 
-                          disabled={isShipping === order.id || order.status === 'Shipped'}
-                          onClick={() => handleSingleShip(order)}
-                          className="h-8 gap-1.5 text-[9px] font-black uppercase"
-                        >
-                          {isShipping === order.id ? <Loader2 className="animate-spin h-3 w-3" /> : <Zap size={12} fill="currentColor" />}
-                          Ship
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setSelectedOrder(order)}>
-                        <Eye size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="min-w-full">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-gray-50/50">
+                <TableRow>
+                  <TableHead className="font-bold py-5 pl-8">Order ID</TableHead>
+                  <TableHead className="font-bold">Customer</TableHead>
+                  <TableHead className="font-bold">Risk Assessment</TableHead>
+                  <TableHead className="font-bold">Logistics</TableHead>
+                  <TableHead className="font-bold">Status</TableHead>
+                  <TableHead className="text-right pr-8">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                ) : filteredOrders?.map((order) => (
+                  <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <TableCell className="py-5 pl-8">
+                      <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
+                      <div className="text-[9px] text-muted-foreground font-bold mt-1">
+                        {mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs font-bold text-gray-700">{order.customerName}</div>
+                      <div className="text-[10px] text-muted-foreground">{order.customerPhone}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className={cn(
+                          "text-[8px] font-black w-fit uppercase",
+                          order.riskLevel === 'High' ? "bg-red-50 text-red-600 border-red-100" : 
+                          order.riskLevel === 'Medium' ? "bg-orange-50 text-orange-600 border-orange-100" : 
+                          "bg-green-50 text-green-600 border-green-100"
+                        )}>
+                          {order.riskLevel || 'Low'} Risk
+                        </Badge>
+                        {order.isSuspicious && (
+                          <div className="flex items-center gap-1 text-red-600 text-[9px] font-bold">
+                            <AlertTriangle size={10} /> SUSPICIOUS
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select 
+                        defaultValue={order.courierId} 
+                        onValueChange={(val) => handleAssignCourier(order.id, val)}
+                        disabled={order.status === 'Shipped'}
+                      >
+                        <SelectTrigger className="h-8 text-[10px] font-bold w-[130px] bg-gray-50 border-none">
+                          <SelectValue placeholder="Select Courier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {couriers?.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
+                        <SelectTrigger className={cn(
+                          "h-8 text-[9px] font-black uppercase w-[110px]",
+                          STATUS_COLORS[order.status]
+                        )}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="New">New</SelectItem>
+                          <SelectItem value="Processing">Processing</SelectItem>
+                          <SelectItem value="Shipped">Shipped</SelectItem>
+                          <SelectItem value="Delivered">Delivered</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-1">
+                        {order.isSuspicious ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 gap-1 text-[9px] font-black text-green-600 border-green-200 bg-green-50 hover:bg-green-100"
+                            onClick={() => handleApproveOrder(order.id)}
+                          >
+                            <ShieldCheck size={12} /> Approve
+                          </Button>
+                        ) : (
+                          <Button 
+                            disabled={isShipping === order.id || order.status === 'Shipped'}
+                            onClick={() => handleSingleShip(order)}
+                            className="h-8 gap-1.5 text-[9px] font-black uppercase"
+                          >
+                            {isShipping === order.id ? <Loader2 className="animate-spin h-3 w-3" /> : <Zap size={12} fill="currentColor" />}
+                            Ship
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => setSelectedOrder(order)}>
+                          <Eye size={16} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl md:rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] rounded-t-[2rem] md:rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white">
             <DialogTitle className="text-lg md:text-xl font-black uppercase tracking-tight">Security & Order Intelligence</DialogTitle>
           </DialogHeader>
-          <div className="p-6 md:p-8 space-y-6">
+          <div className="p-6 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Client Meta</h4>

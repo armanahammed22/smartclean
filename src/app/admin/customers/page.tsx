@@ -169,7 +169,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customer Directory</h1>
@@ -178,14 +178,18 @@ export default function CustomersPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={(o) => { setIsDialogOpen(o); if(!o) setEditingCustomer(null); }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-bold h-11 shadow-lg" onClick={() => { setEditingCustomer(null); setIsDialogOpen(true); }}>
+            <Button className="w-full md:w-auto gap-2 font-bold h-11 shadow-lg" onClick={() => { setEditingCustomer(null); setIsDialogOpen(true); }}>
               <UserPlus size={18} /> Register Profile
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md rounded-3xl">
-            <form onSubmit={handleSaveCustomer} className="space-y-4">
-              <DialogHeader><DialogTitle className="text-xl font-black uppercase tracking-tight">{editingCustomer ? 'Edit Client Profile' : 'New Client Registration'}</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-1 gap-4 pt-4">
+          <DialogContent className="max-w-md w-[95vw] rounded-t-[2rem] md:rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+            <form onSubmit={handleSaveCustomer} className="flex flex-col">
+              <DialogHeader className="p-6 bg-[#081621] text-white">
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                  {editingCustomer ? 'Edit Client Profile' : 'New Client Registration'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Name</Label>
                   <Input name="name" defaultValue={editingCustomer?.name} required placeholder="Client Name" className="h-11 bg-gray-50 border-none" />
@@ -203,9 +207,9 @@ export default function CustomersPage() {
                   <Input name="address" defaultValue={editingCustomer?.address} placeholder="Location / Area" className="h-11 bg-gray-50 border-none" />
                 </div>
               </div>
-              <DialogFooter className="pt-6">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-8">
+              <DialogFooter className="p-6 bg-gray-50 border-t flex-col sm:flex-row gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl w-full sm:w-auto">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-8 w-full sm:w-auto">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
                   Save Information
                 </Button>
@@ -215,8 +219,8 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
             placeholder="Search by name, phone, email or UID..." 
@@ -225,107 +229,109 @@ export default function CustomersPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
+        <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200 w-full md:w-auto"><Filter size={18} /> Filters</Button>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-gray-50/50">
-              <TableRow>
-                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Customer Identity</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Platform Role</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Contact Details</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-24"><Loader2 className="animate-spin text-primary inline" size={32} /></TableCell></TableRow>
-              ) : filtered?.length ? (
-                filtered.map((customer) => (
-                  <TableRow key={customer.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <TableCell className="py-5 pl-8">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                          <AvatarFallback className="bg-primary/10 text-primary font-black uppercase text-xs">{customer.name?.[0] || 'U'}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-bold text-sm text-gray-900 leading-tight">{customer.name || 'Anonymous'}</div>
-                          <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mt-0.5">UID: {customer.id.slice(0, 12)}...</div>
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="min-w-full">
+            <Table className="min-w-[800px]">
+              <TableHeader className="bg-gray-50/50">
+                <TableRow>
+                  <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Customer Identity</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Platform Role</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Contact Details</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-24"><Loader2 className="animate-spin text-primary inline" size={32} /></TableCell></TableRow>
+                ) : filtered?.length ? (
+                  filtered.map((customer) => (
+                    <TableRow key={customer.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <TableCell className="py-5 pl-8">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                            <AvatarFallback className="bg-primary/10 text-primary font-black uppercase text-xs">{customer.name?.[0] || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-bold text-sm text-gray-900 leading-tight">{customer.name || 'Anonymous'}</div>
+                            <div className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest mt-0.5">UID: {customer.id.slice(0, 12)}...</div>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getRoleBadge(customer.role)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700"><Phone size={10} className="text-primary" /> {customer.phone || 'N/A'}</div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><Mail size={10} /> {customer.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                       <Badge variant="secondary" className={cn(
-                         "text-[9px] font-black uppercase border-none",
-                         customer.status === 'active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                       )}>
-                         {customer.status || 'Active'}
-                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" asChild title="View Dashboard">
-                          <Link href={`/admin/customers/${customer.id}/dashboard`}>
-                            <LayoutDashboard size={14} />
-                          </Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:bg-amber-50" onClick={() => handleSendReset(customer.email)} title="Send Password Reset">
-                          <Lock size={14} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" asChild title="Promote Role">
-                          <Link href={`/admin/roles?uid=${customer.id}`}>
-                            <Shield size={14} />
-                          </Link>
-                        </Button>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                              <MoreVertical size={14} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl">
-                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest opacity-40">Removal Options</DropdownMenuLabel>
-                            <DropdownMenuItem 
-                              className="text-amber-600 font-bold gap-2 cursor-pointer rounded-lg"
-                              onClick={() => { setRemovalTarget(customer); setRemovalType('delete'); }}
-                            >
-                              <Trash2 size={14} /> Normal Delete
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="text-destructive font-black gap-2 cursor-pointer rounded-lg"
-                              onClick={() => { setRemovalTarget(customer); setRemovalType('block'); }}
-                            >
-                              <XCircle size={14} /> Permanent Block
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow><TableCell colSpan={5} className="text-center py-24 italic text-muted-foreground font-medium">No matching profiles found in the registry.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                      <TableCell>
+                        {getRoleBadge(customer.role)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700"><Phone size={10} className="text-primary" /> {customer.phone || 'N/A'}</div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground"><Mail size={10} /> {customer.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant="secondary" className={cn(
+                           "text-[9px] font-black uppercase border-none",
+                           customer.status === 'active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                         )}>
+                           {customer.status || 'Active'}
+                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-8">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" asChild title="View Dashboard">
+                            <Link href={`/admin/customers/${customer.id}/dashboard`}>
+                              <LayoutDashboard size={14} />
+                            </Link>
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600 hover:bg-amber-50" onClick={() => handleSendReset(customer.email)} title="Send Password Reset">
+                            <Lock size={14} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5" asChild title="Promote Role">
+                            <Link href={`/admin/roles?uid=${customer.id}`}>
+                              <Shield size={14} />
+                            </Link>
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                                <MoreVertical size={14} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-xl p-2 border-none shadow-xl">
+                              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest opacity-40">Removal Options</DropdownMenuLabel>
+                              <DropdownMenuItem 
+                                className="text-amber-600 font-bold gap-2 cursor-pointer rounded-lg"
+                                onClick={() => { setRemovalTarget(customer); setRemovalType('delete'); }}
+                              >
+                                <Trash2 size={14} /> Normal Delete
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive font-black gap-2 cursor-pointer rounded-lg"
+                                onClick={() => { setRemovalTarget(customer); setRemovalType('block'); }}
+                              >
+                                <XCircle size={14} /> Permanent Block
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow><TableCell colSpan={5} className="text-center py-24 italic text-muted-foreground font-medium">No matching profiles found in the registry.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       <AlertDialog open={!!removalTarget} onOpenChange={(o) => { if(!o) setRemovalTarget(null); }}>
-        <AlertDialogContent className="rounded-[2rem] max-w-md">
+        <AlertDialogContent className="rounded-[2rem] max-w-md w-[95vw]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
               {removalType === 'block' ? <XCircle className="text-destructive" /> : <Trash2 className="text-amber-600" />}
@@ -337,11 +343,11 @@ export default function CustomersPage() {
                 : `This will remove ${removalTarget?.name}'s profile from the system.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="pt-4">
-            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="pt-4 gap-2">
+            <AlertDialogCancel className="rounded-xl w-full sm:w-auto">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleRemoval} 
-              className={cn("rounded-xl font-black px-8", removalType === 'block' ? "bg-destructive hover:bg-destructive/90" : "bg-amber-600 hover:bg-amber-700")}
+              className={cn("rounded-xl font-black px-8 w-full sm:w-auto", removalType === 'block' ? "bg-destructive hover:bg-destructive/90" : "bg-amber-600 hover:bg-amber-700")}
             >
               {removalType === 'block' ? 'Confirm Block' : 'Delete Now'}
             </AlertDialogAction>
