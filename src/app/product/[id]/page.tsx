@@ -123,7 +123,7 @@ export default function ProductDetailsPage() {
                       src={allImages[activeImageIdx]} 
                       alt={product.name} 
                       fill 
-                      className="object-contain lg:object-cover p-2 lg:p-0 transition-opacity duration-300" 
+                      className="object-contain p-2 lg:p-0 transition-opacity duration-300" 
                       priority
                       unoptimized
                     />
@@ -359,28 +359,28 @@ export default function ProductDetailsPage() {
         </div>
 
         {/* MOBILE STICKY BOTTOM BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
-          <div className="flex flex-col min-w-[80px]">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Price</span>
-            <span className="text-lg font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-3 gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
+          <div className="flex flex-col min-w-[70px]">
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Price</span>
+            <span className="text-base font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
           </div>
           
-          <div className="flex items-center border border-gray-200 rounded-xl h-11 bg-gray-50">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 h-full"><Minus size={14} /></button>
-            <span className="w-8 text-center text-xs font-black">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="px-3 h-full"><Plus size={14} /></button>
+          <div className="flex items-center border border-gray-200 rounded-lg h-10 bg-gray-50 shrink-0">
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-2 h-full"><Minus size={12} /></button>
+            <span className="w-6 text-center text-[10px] font-black">{quantity}</span>
+            <button onClick={() => setQuantity(quantity + 1)} className="px-2 h-full"><Plus size={12} /></button>
           </div>
 
-          <div className="flex-1 flex gap-2">
+          <div className="flex-1 flex gap-1.5 min-w-0">
             <button 
               onClick={() => addToCart(product as any, quantity)}
-              className="flex-1 h-11 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white font-black text-[10px] uppercase tracking-wider rounded-xl active:scale-95 transition-all"
+              className="flex-1 h-10 bg-[#3b82f6] text-white font-black text-[9px] uppercase tracking-tighter rounded-lg active:scale-95 transition-all whitespace-nowrap px-1"
             >
               Add to Cart
             </button>
             <button 
               onClick={handleOrderNow}
-              className="flex-1 h-11 bg-gradient-to-r from-[#16a34a] to-[#15803d] text-white font-black text-[10px] uppercase tracking-wider rounded-xl active:scale-95 transition-all shadow-lg"
+              className="flex-1 h-10 bg-[#16a34a] text-white font-black text-[9px] uppercase tracking-tighter rounded-lg active:scale-95 transition-all shadow-lg whitespace-nowrap px-1"
             >
               Buy Now
             </button>

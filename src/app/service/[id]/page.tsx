@@ -317,16 +317,16 @@ export default function ServiceDetailsPage() {
         </div>
 
         {/* MOBILE STICKY BOTTOM BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payable</span>
-            <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-3 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
+          <div className="flex flex-col min-w-[70px]">
+            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Payable</span>
+            <span className="text-xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
           </div>
           <Button 
             onClick={handleContinueBooking} 
-            className="flex-1 h-12 rounded-xl font-black text-xs uppercase shadow-xl bg-accent text-white gap-2 border-none"
+            className="flex-1 h-11 rounded-lg font-black text-[10px] uppercase shadow-xl bg-accent text-white gap-2 border-none whitespace-nowrap tracking-tighter"
           >
-            Book Now <ChevronRight size={18} />
+            Book Now <ChevronRight size={16} />
           </Button>
         </div>
       </div>
