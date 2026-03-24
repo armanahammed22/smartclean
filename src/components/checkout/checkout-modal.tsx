@@ -26,10 +26,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight, TicketPercent, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
-import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -57,6 +57,11 @@ export function CheckoutModal() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Coupon States
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -108,8 +113,62 @@ export function CheckoutModal() {
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
+  // 1. Calculate Product Level Savings (Sale vs Regular Price)
+  const productSavings = useMemo(() => {
+    return items.reduce((acc, item) => {
+      if (item.regularPrice && item.regularPrice > item.price) {
+        return acc + (item.regularPrice - item.price) * item.quantity;
+      }
+      return acc;
+    }, 0);
+  }, [items]);
+
+  // 2. Calculate Coupon Discount
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.discountType === 'percent') {
+      return (subtotal * appliedCoupon.value) / 100;
+    }
+    return appliedCoupon.value;
+  }, [appliedCoupon, subtotal]);
+
   const tax = Number((subtotal * 0.08).toFixed(2));
-  const finalTotal = Number((subtotal + tax + deliveryCharge).toFixed(2));
+  const finalTotal = Number((subtotal + tax + deliveryCharge - couponDiscount).toFixed(2));
+
+  const handleApplyCoupon = async () => {
+    if (!db || !couponInput.trim()) return;
+    setIsVerifyingCoupon(true);
+    
+    try {
+      const q = query(
+        collection(db, 'coupons'), 
+        where('code', '==', couponInput.trim().toUpperCase()),
+        where('status', '==', 'Active')
+      );
+      
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        toast({ variant: "destructive", title: "Invalid Coupon", description: "This code does not exist or is inactive." });
+        setAppliedCoupon(null);
+      } else {
+        const couponData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        
+        // Check Expiry
+        if (couponData.expiryDate && new Date(couponData.expiryDate) < new Date()) {
+          toast({ variant: "destructive", title: "Expired Coupon", description: "This coupon code has expired." });
+          return;
+        }
+
+        setAppliedCoupon(couponData);
+        toast({ title: "Coupon Applied!", description: `Discount of ${couponData.discountType === 'percent' ? couponData.value + '%' : '৳' + couponData.value} added.` });
+      }
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to verify coupon." });
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
 
   const handleSendOtp = () => {
     const phoneVal = form.getValues('phone');
@@ -207,6 +266,8 @@ export function CheckoutModal() {
         subtotal: subtotal,
         tax: tax,
         deliveryCharge: deliveryCharge,
+        couponDiscount: couponDiscount,
+        couponCode: appliedCoupon?.code || null,
         totalPrice: finalTotal,
         paymentMethod: finalPaymentName,
         address: values.address,
@@ -236,10 +297,9 @@ export function CheckoutModal() {
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
         <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
           
-          {/* Scrollable Container */}
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5">
             
-            {/* 📦 Summary Section (Now 1st on Mobile via order prop) */}
+            {/* 📦 Summary Section */}
             <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col order-first lg:order-last">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621] flex items-center gap-2">
@@ -250,11 +310,14 @@ export function CheckoutModal() {
               
               <div className="space-y-3 mb-8">
                 {items.map(item => (
-                  <div key={item.id} className="flex justify-between items-center gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
+                  <div key={item.id} className="flex justify-between items-start gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase bg-gray-50 px-1.5 py-0.5 rounded">Qty: {item.quantity}</span>
+                        {item.regularPrice && item.regularPrice > item.price && (
+                          <span className="text-[9px] font-bold text-gray-400 line-through">৳{item.regularPrice.toLocaleString()}</span>
+                        )}
                         <span className="text-[9px] font-bold text-primary uppercase">৳{item.price.toLocaleString()}</span>
                       </div>
                     </div>
@@ -263,17 +326,69 @@ export function CheckoutModal() {
                 ))}
               </div>
 
+              {/* 🏷️ Coupon Section */}
+              <div className="mb-8 p-4 bg-white rounded-2xl border border-dashed border-primary/30 space-y-3">
+                <div className="flex items-center gap-2 text-[#081621]">
+                  <TicketPercent size={16} className="text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Apply Promo Code</span>
+                </div>
+                
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/20">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-primary uppercase">{appliedCoupon.code}</span>
+                      <span className="text-[8px] font-bold text-gray-500">PROMO APPLIED</span>
+                    </div>
+                    <button onClick={() => setAppliedCoupon(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="ENTER CODE" 
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      className="h-10 bg-gray-50 border-none rounded-xl text-xs font-black placeholder:font-normal"
+                    />
+                    <Button 
+                      onClick={handleApplyCoupon} 
+                      disabled={isVerifyingCoupon || !couponInput}
+                      className="h-10 px-4 rounded-xl font-black text-[10px] uppercase shadow-sm"
+                    >
+                      {isVerifyingCoupon ? <Loader2 className="animate-spin" size={14} /> : 'APPLY'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>Subtotal</span>
                   <span>৳{subtotal.toLocaleString()}</span>
                 </div>
+                
+                {productSavings > 0 && (
+                  <div className="flex justify-between text-[10px] font-black uppercase text-green-600">
+                    <span>Product Savings</span>
+                    <span>-৳{productSavings.toLocaleString()}</span>
+                  </div>
+                )}
+
+                {appliedCoupon && (
+                  <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95">
+                    <span>Coupon Discount ({appliedCoupon.code})</span>
+                    <span>-৳{couponDiscount.toLocaleString()}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>Tax (8%)</span>
                   <span>৳{tax.toLocaleString()}</span>
                 </div>
+                
                 {!hasServices && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-primary">
+                  <div className="flex justify-between text-[10px] font-black uppercase text-blue-600">
                     <span>Delivery Charge</span>
                     <span>৳{deliveryCharge.toLocaleString()}</span>
                   </div>
@@ -288,7 +403,6 @@ export function CheckoutModal() {
                 </div>
               </div>
 
-              {/* Desktop Only Action Button */}
               <div className="hidden lg:block mt-8">
                 <Button 
                   onClick={form.handleSubmit(onSubmit)} 
@@ -302,7 +416,7 @@ export function CheckoutModal() {
               </div>
             </div>
 
-            {/* 📋 Form Section (Left on Desktop, Below Summary on Mobile) */}
+            {/* 📋 Form Section */}
             <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white">
               <DialogHeader className="mb-8 text-left hidden lg:block">
                 <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
@@ -468,7 +582,7 @@ export function CheckoutModal() {
             </div>
           </div>
 
-          {/* 📱 Mobile Sticky Bottom Bar (Total + Button) */}
+          {/* 📱 Mobile Sticky Bottom Bar */}
           <div className="lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-20">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Due</span>

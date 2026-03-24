@@ -157,6 +157,7 @@ export interface CartItem {
   id: string;
   name: string;
   price: number;
+  regularPrice?: number;
   imageUrl: string;
   category: string;
   quantity: number;

@@ -30,6 +30,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = useCallback((item: Product | Service, quantity = 1, showToast = true) => {
     const isService = 'basePrice' in item;
     const price = isService ? (item as Service).basePrice : (item as Product).price;
+    const regularPrice = isService ? undefined : (item as Product).regularPrice;
     const name = isService ? (item as Service).title : (item as Product).name;
     const category = isService ? t('services_title') : (item as Product).category;
     const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
@@ -55,6 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         id: item.id, 
         name, 
         price, 
+        regularPrice,
         quantity, 
         imageUrl, 
         category,
