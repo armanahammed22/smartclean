@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, LayoutDashboard, HardHat, User, ShieldAlert, HelpCircle, Phone } from 'lucide-react';
+import { Loader2, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -110,15 +110,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     toast({ title: "Verification Successful", description: "Determining access level..." });
-    // In a real OTP system, you'd verify with Firebase. This is currently simulated.
     router.push('/account/dashboard');
-  };
-
-  const handleLogout = async () => {
-    if (auth) {
-      await signOut(auth);
-      router.refresh();
-    }
   };
 
   if (isUserLoading || (user && (roleLoading || staffRoleLoading))) {
@@ -201,11 +193,9 @@ export default function LoginPage() {
           </Tabs>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-6">
-          <p className="text-xs font-bold text-muted-foreground">Don't have an account? <Link href="/signup" className="text-primary hover:underline font-black">Register Now</Link></p>
-          <div className="flex gap-4 pt-2">
-            <Link href="/admin/login" className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-primary">Admin Access</Link>
-            <Link href="/staff/login" className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-amber-600">Staff Portal</Link>
-          </div>
+          <p className="text-xs font-bold text-muted-foreground text-center">
+            Don't have an account? <Link href="/signup" className="text-primary hover:underline font-black">Register Now</Link>
+          </p>
         </CardFooter>
       </Card>
     </div>
