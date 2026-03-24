@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -75,7 +74,8 @@ export default function LandingPagesAdminPage() {
     usagePoints: [],
     trustTitle: '',
     trustPoints: [],
-    packages: []
+    packages: [],
+    addOns: []
   });
 
   const pagesQuery = useMemoFirebase(() => db ? query(collection(db, 'landing_pages'), orderBy('createdAt', 'desc')) : null, [db]);
@@ -113,7 +113,8 @@ export default function LandingPagesAdminPage() {
         usagePoints: [],
         trustTitle: '',
         trustPoints: [],
-        packages: []
+        packages: [],
+        addOns: []
       });
     }
     setIsDialogOpen(true);
@@ -209,46 +210,40 @@ export default function LandingPagesAdminPage() {
                 <TabsTrigger value="catalog" className="text-[9px] font-black uppercase">Live Catalog Sync</TabsTrigger>
                 <TabsTrigger value="ingredients" className="text-[9px] font-black uppercase">Additional Info</TabsTrigger>
                 <TabsTrigger value="usage" className="text-[9px] font-black uppercase">Usage & Trust</TabsTrigger>
-                <TabsTrigger value="pricing" className="text-[9px] font-black uppercase">Pricing Packages</TabsTrigger>
+                <TabsTrigger value="pricing" className="text-[9px] font-black uppercase">Packages & Add-ons</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-white">
                 
-                {/* TAB: HERO & DYNAMIC BANNER */}
                 <TabsContent value="hero" className="space-y-8 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-6">
-                      <ImageUploader 
-                        label="Hero Banner Image (Poster Style)" 
-                        initialUrl={formData.heroBanner} 
-                        onUpload={url => setFormData({...formData, heroBanner: url})} 
-                        aspectRatio="aspect-video"
-                      />
+                      <ImageUploader label="Hero Banner Image" initialUrl={formData.heroBanner} onUpload={url => setFormData({...formData, heroBanner: url})} aspectRatio="aspect-video" />
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase">Internal Identification</Label>
                         <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">URL Slug (Instant Launch)</Label>
+                        <Label className="text-[10px] font-black uppercase">URL Slug</Label>
                         <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono" />
                       </div>
                     </div>
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary">Hero Headline (Large)</Label>
-                        <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" placeholder="অল্প সময়ে গভীর পরিষ্কার" />
+                        <Label className="text-[10px] font-black uppercase text-primary">Hero Headline</Label>
+                        <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase">Hero Subtitle</Label>
-                        <Textarea value={formData.heroSubtitle} onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} className="bg-gray-50 border-none rounded-xl" placeholder="পেশাদার ক্লিনার দিয়ে আপনার ঘর হবে নতুন মতো..." />
+                        <Textarea value={formData.heroSubtitle} onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} className="bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">CTA Button Text</Label>
-                          <Input value={formData.heroCTA} onChange={e => setFormData({...formData, heroCTA: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black" placeholder="অর্ডার করতে চাই" />
+                          <Label className="text-[10px] font-black uppercase">CTA Button</Label>
+                          <Input value={formData.heroCTA} onChange={e => setFormData({...formData, heroCTA: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Support Hotline</Label>
+                          <Label className="text-[10px] font-black uppercase">Hotline</Label>
                           <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                         </div>
                       </div>
@@ -256,51 +251,95 @@ export default function LandingPagesAdminPage() {
                   </div>
                 </TabsContent>
 
-                {/* TAB: CATALOG SYNC */}
                 <TabsContent value="catalog" className="space-y-8 mt-0">
                   <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-3 bg-primary text-white rounded-2xl shadow-lg"><Grid size={24} /></div>
                         <div>
-                          <h3 className="font-black uppercase tracking-tight text-[#081621]">Live Inventory Sync</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase">Fetch products/services directly from main site</p>
+                          <h3 className="font-black uppercase tracking-tight">Live Inventory Sync</h3>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">Fetch items directly from main site</p>
                         </div>
                       </div>
                       <Switch checked={formData.showCatalogGrid} onCheckedChange={v => setFormData({...formData, showCatalogGrid: v})} />
                     </div>
-
                     {formData.showCatalogGrid && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t animate-in fade-in slide-in-from-top-2">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Source Collection</Label>
-                          <Select value={formData.catalogSource} onValueChange={v => setFormData({...formData, catalogSource: v})}>
-                            <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="products">Products Inventory</SelectItem>
-                              <SelectItem value="services">Service Offerings</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Grid Section Title</Label>
-                          <Input value={formData.catalogTitle} onChange={e => setFormData({...formData, catalogTitle: e.target.value})} className="h-12 bg-white border-none rounded-xl font-bold" placeholder="আমাদের বিশেষ অফার" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Max Items to Show</Label>
-                          <Input type="number" value={formData.catalogLimit} onChange={e => setFormData({...formData, catalogLimit: parseInt(e.target.value) || 8})} className="h-12 bg-white border-none rounded-xl font-black" />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t animate-in fade-in">
+                        <Select value={formData.catalogSource} onValueChange={v => setFormData({...formData, catalogSource: v})}>
+                          <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="products">Products</SelectItem>
+                            <SelectItem value="services">Services</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input value={formData.catalogTitle} onChange={e => setFormData({...formData, catalogTitle: e.target.value})} className="h-12 bg-white border-none rounded-xl" placeholder="Section Title" />
+                        <Input type="number" value={formData.catalogLimit} onChange={e => setFormData({...formData, catalogLimit: parseInt(e.target.value) || 8})} className="h-12 bg-white border-none rounded-xl" />
                       </div>
                     )}
                   </div>
                 </TabsContent>
 
-                {/* TAB: ADDITIONAL INFO */}
-                <TabsContent value="ingredients" className="space-y-6 mt-0">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-black uppercase">Legacy Grid Icons (Manual Entry)</Label>
-                    <Button type="button" size="sm" onClick={() => addArrayItem('ingredients', { name: '', image: '' })} variant="outline"><Plus size={14} /> Add Manual Item</Button>
+                <TabsContent value="pricing" className="space-y-10 mt-0">
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-black uppercase text-primary">Price Package Bundles</Label>
+                      <Button type="button" size="sm" onClick={() => addArrayItem('packages', { name: '', price: 0, originalPrice: 0 })} variant="outline"><Plus size={14} /> Add Bundle</Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {formData.packages?.map((pkg: any, i: number) => (
+                        <div key={i} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-4 relative">
+                          <Input value={pkg.name} onChange={e => {
+                            const list = [...formData.packages];
+                            list[i].name = e.target.value;
+                            setFormData({...formData, packages: list});
+                          }} className="h-10 bg-white" placeholder="Label (e.g. 500gm)" />
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input type="number" value={pkg.price} onChange={e => {
+                              const list = [...formData.packages];
+                              list[i].price = parseInt(e.target.value) || 0;
+                              setFormData({...formData, packages: list});
+                            }} className="h-10 bg-white" placeholder="Sale Price" />
+                            <Input type="number" value={pkg.originalPrice} onChange={e => {
+                              const list = [...formData.packages];
+                              list[i].originalPrice = parseInt(e.target.value) || 0;
+                              setFormData({...formData, packages: list});
+                            }} className="h-10 bg-white" placeholder="Regular Price" />
+                          </div>
+                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removeArrayItem('packages', i)}><Trash2 size={14} /></Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  {formData.type === 'service' && (
+                    <div className="space-y-6 border-t pt-10">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-black uppercase text-blue-600">Add-on Services (Optional)</Label>
+                        <Button type="button" size="sm" onClick={() => addArrayItem('addOns', { name: '', price: 0 })} variant="outline" className="text-blue-600 border-blue-200"><Plus size={14} /> Add Option</Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {formData.addOns?.map((add: any, i: number) => (
+                          <div key={i} className="p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100 space-y-4 relative">
+                            <Input value={add.name} onChange={e => {
+                              const list = [...formData.addOns];
+                              list[i].name = e.target.value;
+                              setFormData({...formData, addOns: list});
+                            }} className="h-10 bg-white" placeholder="Task Name" />
+                            <Input type="number" value={add.price} onChange={e => {
+                              const list = [...formData.addOns];
+                              list[i].price = parseInt(e.target.value) || 0;
+                              setFormData({...formData, addOns: list});
+                            }} className="h-10 bg-white" placeholder="+ Extra Charge" />
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removeArrayItem('addOns', i)}><Trash2 size={14} /></Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="ingredients" className="space-y-6 mt-0">
+                  <Button type="button" size="sm" onClick={() => addArrayItem('ingredients', { name: '', image: '' })} variant="outline">Add Item</Button>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {formData.ingredients?.map((s: any, i: number) => (
                       <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-4 relative">
@@ -309,105 +348,55 @@ export default function LandingPagesAdminPage() {
                           list[i].image = url;
                           setFormData({...formData, ingredients: list});
                         }} aspectRatio="aspect-square w-16" />
-                        <Input placeholder="Label Name" value={s.name} onChange={e => {
+                        <Input placeholder="Name" value={s.name} onChange={e => {
                           const list = [...formData.ingredients];
                           list[i].name = e.target.value;
                           setFormData({...formData, ingredients: list});
                         }} className="h-11 bg-white" />
-                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive" onClick={() => removeArrayItem('ingredients', i)}><X size={14} /></Button>
+                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 text-destructive" onClick={() => removeArrayItem('ingredients', i)}><X size={14} /></Button>
                       </div>
                     ))}
                   </div>
                 </TabsContent>
 
-                {/* TAB: USAGE & TRUST */}
                 <TabsContent value="usage" className="space-y-8 mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-6">
-                      <Label className="text-xs font-black uppercase text-primary border-b pb-2 block">Usage / How-To Section</Label>
-                      <Input placeholder="Section Title" value={formData.usageTitle} onChange={e => setFormData({...formData, usageTitle: e.target.value})} className="h-12 font-bold bg-gray-50 border-none rounded-xl" />
-                      <ImageUploader label="Section Featured Image" initialUrl={formData.usageImage} onUpload={url => setFormData({...formData, usageImage: url})} />
+                      <Label className="text-xs font-black uppercase text-primary">Usage Section</Label>
+                      <Input placeholder="Section Title" value={formData.usageTitle} onChange={e => setFormData({...formData, usageTitle: e.target.value})} className="h-12 bg-gray-50 border-none" />
+                      <ImageUploader label="Usage Image" initialUrl={formData.usageImage} onUpload={url => setFormData({...formData, usageImage: url})} />
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-40">Detail Points</Label>
                         {formData.usagePoints?.map((p: string, i: number) => (
                           <div key={i} className="flex gap-2">
                             <Input value={p} onChange={e => {
                               const list = [...formData.usagePoints];
                               list[i] = e.target.value;
                               setFormData({...formData, usagePoints: list});
-                            }} className="h-10 bg-gray-50 border-none rounded-xl" />
+                            }} className="h-10 bg-gray-50 border-none" />
                             <Button type="button" variant="ghost" size="icon" onClick={() => removeArrayItem('usagePoints', i)}><X size={14} /></Button>
                           </div>
                         ))}
-                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('usagePoints', '')} className="text-[10px] uppercase font-black">+ Add Point</Button>
+                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('usagePoints', '')}>+ Add Point</Button>
                       </div>
                     </div>
-
                     <div className="space-y-6">
-                      <Label className="text-xs font-black uppercase text-primary border-b pb-2 block">Why Trust Us / Authority</Label>
-                      <Input placeholder="Authority Section Title" value={formData.trustTitle} onChange={e => setFormData({...formData, trustTitle: e.target.value})} className="h-12 font-bold bg-gray-50 border-none rounded-xl" />
+                      <Label className="text-xs font-black uppercase text-primary">Trust Section</Label>
+                      <Input placeholder="Trust Title" value={formData.trustTitle} onChange={e => setFormData({...formData, trustTitle: e.target.value})} className="h-12 bg-gray-50 border-none" />
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-40">Proof Points</Label>
                         {formData.trustPoints?.map((p: string, i: number) => (
                           <div key={i} className="flex gap-2">
                             <Input value={p} onChange={e => {
                               const list = [...formData.trustPoints];
                               list[i] = e.target.value;
                               setFormData({...formData, trustPoints: list});
-                            }} className="h-10 bg-gray-50 border-none rounded-xl" />
+                            }} className="h-10 bg-gray-50 border-none" />
                             <Button type="button" variant="ghost" size="icon" onClick={() => removeArrayItem('trustPoints', i)}><X size={14} /></Button>
                           </div>
                         ))}
-                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('trustPoints', '')} className="text-[10px] uppercase font-black">+ Add Point</Button>
+                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('trustPoints', '')}>+ Add Point</Button>
                       </div>
-                      {formData.type === 'product' && (
-                        <div className="space-y-2 pt-4">
-                          <Label className="text-xs font-black uppercase text-green-600">Storage Info (Product Only)</Label>
-                          <Textarea value={formData.storageText} onChange={e => setFormData({...formData, storageText: e.target.value})} className="min-h-[100px] bg-green-50/30 border-green-100 rounded-xl" />
-                        </div>
-                      )}
+                      <Textarea placeholder="Storage Info" value={formData.storageText} onChange={e => setFormData({...formData, storageText: e.target.value})} className="min-h-[100px]" />
                     </div>
-                  </div>
-                </TabsContent>
-
-                {/* TAB: PRICING */}
-                <TabsContent value="pricing" className="space-y-6 mt-0">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-black uppercase">Price Package Bundles</Label>
-                    <Button type="button" size="sm" onClick={() => addArrayItem('packages', { name: '', price: 0, originalPrice: 0 })} variant="outline"><Plus size={14} /> Add Bundle</Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {formData.packages?.map((pkg: any, i: number) => (
-                      <div key={i} className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 space-y-5 relative">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase opacity-40">Package Label</Label>
-                          <Input value={pkg.name} onChange={e => {
-                            const list = [...formData.packages];
-                            list[i].name = e.target.value;
-                            setFormData({...formData, packages: list});
-                          }} className="h-11 bg-white border-none rounded-xl font-bold" placeholder="e.g. Family Pack" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase opacity-40 text-primary">Sales Price</Label>
-                            <Input type="number" value={pkg.price} onChange={e => {
-                              const list = [...formData.packages];
-                              list[i].price = parseInt(e.target.value) || 0;
-                              setFormData({...formData, packages: list});
-                            }} className="h-11 bg-white border-none rounded-xl font-black text-primary" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase opacity-40">Original Price</Label>
-                            <Input type="number" value={pkg.originalPrice} onChange={e => {
-                              const list = [...formData.packages];
-                              list[i].originalPrice = parseInt(e.target.value) || 0;
-                              setFormData({...formData, packages: list});
-                            }} className="h-11 bg-white border-none rounded-xl text-gray-400 line-through" />
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="absolute top-2 right-4 h-8 w-8 text-destructive" onClick={() => removeArrayItem('packages', i)}><Trash2 size={16} /></Button>
-                      </div>
-                    ))}
                   </div>
                 </TabsContent>
 
@@ -416,15 +405,13 @@ export default function LandingPagesAdminPage() {
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <div className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200">
-                  <Label className="text-[10px] font-black uppercase">Publish Status</Label>
-                  <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
-                </div>
+                <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
+                <Label>Active</Label>
                 <div className="flex-1" />
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl h-12 px-6">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className={cn("rounded-xl font-black px-12 h-14 text-lg text-white shadow-2xl uppercase tracking-tighter", formData.type === 'service' ? "bg-blue-600 hover:bg-blue-700" : "bg-red-600 hover:bg-red-700")}>
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className={cn("px-12 h-14", formData.type === 'service' ? "bg-blue-600" : "bg-red-600")}>
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
-                  {editingPage ? 'Update Launcher' : 'Deploy Page'}
+                  Deploy Page
                 </Button>
               </div>
             </DialogFooter>

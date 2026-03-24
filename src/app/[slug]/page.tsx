@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -24,7 +23,8 @@ import {
   Clock,
   Layers,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '@/lib/tracking';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function UnifiedLandingPage() {
   const { slug } = useParams();
@@ -49,6 +50,7 @@ export default function UnifiedLandingPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   
   const [selectedPkgIndex, setSelectedPkgIndex] = useState(0);
+  const [selectedAddOnIndices, setSelectedAddOnIndices] = useState<number[]>([]);
   const [quantity, setQuantity] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -95,12 +97,22 @@ export default function UnifiedLandingPage() {
   const isService = page.type === 'service';
   const packages = page.packages || [];
   const selectedPackage = packages[selectedPkgIndex];
+  const addOns = page.addOns || [];
 
-  const price = selectedPackage?.price || page.price || linkedProduct?.price || 0;
-  const regularPrice = selectedPackage?.originalPrice || page.price || linkedProduct?.regularPrice || linkedProduct?.price || 0;
+  const basePrice = selectedPackage?.price || page.price || linkedProduct?.price || 0;
+  const addOnsTotal = selectedAddOnIndices.reduce((sum, idx) => sum + (addOns[idx]?.price || 0), 0);
+  
+  const unitPrice = basePrice + addOnsTotal;
+  const regularPrice = selectedPackage?.originalPrice || basePrice;
   const deliveryCharge = isService ? 0 : 60;
-  const subTotal = price * quantity;
+  const subTotal = unitPrice * quantity;
   const totalPrice = subTotal + deliveryCharge;
+
+  const toggleAddOn = (idx: number) => {
+    setSelectedAddOnIndices(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
 
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +126,22 @@ export default function UnifiedLandingPage() {
     setIsSubmitting(true);
     try {
       const collectionName = isService ? 'bookings' : 'orders';
+      
+      const orderItems = [
+        {
+          id: page.productId || page.id,
+          name: page.title + (selectedPackage ? ` (${selectedPackage.name})` : ''),
+          price: basePrice,
+          quantity: quantity
+        },
+        ...selectedAddOnIndices.map(idx => ({
+          id: `addon-${idx}`,
+          name: `Add-on: ${addOns[idx].name}`,
+          price: addOns[idx].price,
+          quantity: quantity
+        }))
+      ];
+
       const orderData = {
         customerId: user?.uid || 'guest',
         customerName: formData.name,
@@ -124,12 +152,7 @@ export default function UnifiedLandingPage() {
         source: page.slug,
         type: page.type,
         productId: page.productId || null,
-        items: [{
-          id: page.productId || page.id,
-          name: page.title + (selectedPackage ? ` (${selectedPackage.name})` : ''),
-          price: price,
-          quantity: quantity
-        }],
+        items: orderItems,
         totalPrice: totalPrice,
         createdAt: new Date().toISOString()
       };
@@ -146,7 +169,12 @@ export default function UnifiedLandingPage() {
       setIsSuccess(true);
       
       const intent = isService ? 'সার্ভিস বুক' : 'অর্ডার';
-      const waMsg = `আসসালামু আলাইকুম, আমি ${orderData.items[0].name} ${intent} করতে চাই।\n\nনাম: ${formData.name}\nফোন: ${formData.phone}\nঠিকানা: ${formData.address}\nপরিমাণ: ${quantity}\nটোটাল: ৳${totalPrice}`;
+      const selectedAddonNames = selectedAddOnIndices.map(idx => addOns[idx].name).join(', ');
+      
+      let waMsg = `আসসালামু আলাইকুম, আমি ${orderData.items[0].name} ${intent} করতে চাই।\n`;
+      if (selectedAddonNames) waMsg += `অ্যাড-অন: ${selectedAddonNames}\n`;
+      waMsg += `\nনাম: ${formData.name}\nফোন: ${formData.phone}\nঠিকানা: ${formData.address}\nপরিমাণ: ${quantity}\nটোটাল: ৳${totalPrice}`;
+      
       window.open(`https://wa.me/${page.phone || '8801919640422'}?text=${encodeURIComponent(waMsg)}`, '_blank');
       
       setTimeout(() => router.push('/order-success?id=success'), 2000);
@@ -365,41 +393,74 @@ export default function UnifiedLandingPage() {
         </section>
       )}
 
-      {/* 7. PRICING SECTION */}
-      {packages.length > 0 && (
-        <section className="py-20 px-4">
-          <div className={cn("container mx-auto max-w-3xl p-12 rounded-[4rem] text-white text-center shadow-[0_40px_100px_rgba(0,0,0,0.2)] space-y-10", isService ? "bg-gradient-to-r from-[#1E5F7A] to-[#2563EB]" : "bg-gradient-to-r from-[#8B0000] to-[#B22222]")}>
-            <div className="space-y-2">
-              <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">সেরা অফার প্যাকেজ</h2>
-              <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Select your preferred option</p>
-            </div>
-            <div className="grid grid-cols-1 gap-5">
-              {packages.map((pkg: any, i: number) => (
-                <div 
-                  key={i} 
-                  onClick={() => setSelectedPkgIndex(i)}
-                  className={cn(
-                    "p-8 rounded-3xl border-4 transition-all duration-500 cursor-pointer flex justify-between items-center group",
-                    selectedPkgIndex === i ? "bg-white/20 border-white scale-[1.03] shadow-2xl" : "bg-black/10 border-white/10 hover:border-white/30"
-                  )}
-                >
-                  <div className="text-left space-y-1">
-                    <p className="text-lg md:text-3xl font-black uppercase tracking-tight">{pkg.name}</p>
-                    {pkg.originalPrice > pkg.price && <Badge className="bg-yellow-400 text-black font-black text-[8px] px-2 py-0">BEST VALUE</Badge>}
+      {/* 7. PRICING & ADD-ONS SECTION */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-5xl space-y-12">
+          {/* Packages */}
+          {packages.length > 0 && (
+            <div className={cn("p-12 rounded-[4rem] text-white text-center shadow-[0_40px_100px_rgba(0,0,0,0.2)] space-y-10", isService ? "bg-gradient-to-r from-[#1E5F7A] to-[#2563EB]" : "bg-gradient-to-r from-[#8B0000] to-[#B22222]")}>
+              <div className="space-y-2">
+                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">সেরা অফার প্যাকেজ</h2>
+                <p className="text-white/60 text-xs font-bold uppercase tracking-widest">Select your preferred option</p>
+              </div>
+              <div className="grid grid-cols-1 gap-5">
+                {packages.map((pkg: any, i: number) => (
+                  <div 
+                    key={i} 
+                    onClick={() => setSelectedPkgIndex(i)}
+                    className={cn(
+                      "p-8 rounded-3xl border-4 transition-all duration-500 cursor-pointer flex justify-between items-center group",
+                      selectedPkgIndex === i ? "bg-white/20 border-white scale-[1.03] shadow-2xl" : "bg-black/10 border-white/10 hover:border-white/30"
+                    )}
+                  >
+                    <div className="text-left space-y-1">
+                      <p className="text-lg md:text-3xl font-black uppercase tracking-tight">{pkg.name}</p>
+                      {pkg.originalPrice > pkg.price && <Badge className="bg-yellow-400 text-black font-black text-[8px] px-2 py-0">BEST VALUE</Badge>}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl md:text-4xl font-black">৳{pkg.price}</p>
+                      {pkg.originalPrice > pkg.price && <p className="text-[10px] md:text-xs font-bold line-through opacity-50">৳{pkg.originalPrice}</p>}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl md:text-4xl font-black">৳{pkg.price}</p>
-                    {pkg.originalPrice > pkg.price && <p className="text-[10px] md:text-xs font-bold line-through opacity-50">৳{pkg.originalPrice}</p>}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 bg-black/20 py-4 rounded-2xl border border-white/5">
-              <Zap size={18} fill="currentColor" /> {isService ? 'আজ বুক করলে বিশেষ ডিসকাউন্ট প্রযোজ্য' : 'ফ্রী হোম ডেলিভারি সারা দেশেই পাওয়া যাচ্ছে'}
-            </p>
-          </div>
-        </section>
-      )}
+          )}
+
+          {/* Add-ons (Service Specific) */}
+          {isService && addOns.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Plus size={20} strokeWidth={3} /></div>
+                <h3 className="text-xl font-black uppercase tracking-tight text-[#081621]">অ্যাড-অন সার্ভিস যোগ করুন (ঐচ্ছিক)</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {addOns.map((add: any, i: number) => (
+                  <div 
+                    key={i}
+                    onClick={() => toggleAddOn(i)}
+                    className={cn(
+                      "p-6 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                      selectedAddOnIndices.includes(i) ? "border-blue-600 bg-blue-50 shadow-md" : "border-gray-100 bg-white hover:border-blue-200"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                        selectedAddOnIndices.includes(i) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200"
+                      )}>
+                        {selectedAddOnIndices.includes(i) && <Check size={14} strokeWidth={4} />}
+                      </div>
+                      <span className="font-bold text-gray-700 uppercase tracking-tight">{add.name}</span>
+                    </div>
+                    <span className="font-black text-blue-600">+৳{add.price}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* 8. ORDER FORM SECTION */}
       <section id="order-form" className="py-32 px-4 container mx-auto max-w-7xl">
@@ -498,19 +559,32 @@ export default function UnifiedLandingPage() {
 
                 <div className="space-y-6">
                   <div className="flex justify-between text-[13px] font-black uppercase text-gray-400 tracking-[0.2em]">
-                    <span>{isService ? 'সার্ভিস চার্জ' : 'প্রোডাক্ট প্রাইজ'}</span>
-                    <span className="text-gray-900 font-black">৳{price}</span>
+                    <span>{isService ? 'সার্ভিস প্রাইজ' : 'প্রোডাক্ট প্রাইজ'}</span>
+                    <span className="text-gray-900 font-black">৳{basePrice}</span>
                   </div>
+                  
+                  {isService && selectedAddOnIndices.length > 0 && (
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">সিলেক্টেড অ্যাড-অনস</p>
+                      {selectedAddOnIndices.map(idx => (
+                        <div key={idx} className="flex justify-between text-[12px] font-bold text-gray-600 uppercase">
+                          <span>+ {addOns[idx].name}</span>
+                          <span>৳{addOns[idx].price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {!isService && (
                     <div className="flex justify-between text-[13px] font-black uppercase text-gray-400 tracking-[0.2em]">
                       <span>ডেলিভারি চার্জ</span>
                       <span className="text-blue-600 font-black">৳{deliveryCharge}</span>
                     </div>
                   )}
-                  {regularPrice > price && (
+                  {regularPrice > basePrice && (
                     <div className="flex justify-between text-[13px] font-black uppercase text-green-600 tracking-[0.2em]">
                       <span>আপনার সাশ্রয় (Save)</span>
-                      <span className="font-black">-৳{(regularPrice - price) * quantity}</span>
+                      <span className="font-black">-৳{(regularPrice - basePrice) * quantity}</span>
                     </div>
                   )}
                   <div className="pt-10 border-t-4 border-dashed border-gray-50 flex justify-between items-end">
