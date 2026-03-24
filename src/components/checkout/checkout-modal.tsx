@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,10 +26,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, TicketPercent, CheckCircle2, Info, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp, setDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,8 +40,8 @@ const formSchema = z.object({
   address: z.string().min(10, "Address required"),
   date: z.date({ required_error: "Please select a date" }).optional(),
   time: z.string().optional(),
-  paymentMethod: z.string(),
-  deliveryOption: z.string().optional(),
+  paymentCategory: z.enum(['cod', 'online']).default('cod'),
+  onlineMethod: z.string().optional(),
   notes: z.string().optional(),
   otp: z.string().optional(),
 });
@@ -88,14 +88,13 @@ export function CheckoutModal() {
       address: "", 
       date: undefined,
       time: "8AM - 12PM", 
-      paymentMethod: "", 
-      deliveryOption: "",
+      paymentCategory: 'cod',
+      onlineMethod: "",
       notes: "",
       otp: ""
     },
   });
 
-  // Pre-fill user data when modal opens
   useEffect(() => {
     if (isCheckoutOpen && user) {
       form.setValue('name', user.displayName || "");
@@ -103,22 +102,12 @@ export function CheckoutModal() {
     }
   }, [isCheckoutOpen, user, form]);
 
-  const selectedDeliveryId = form.watch('deliveryOption');
+  const onlineMethods = useMemo(() => availableMethods?.filter(m => m.type !== 'cod') || [], [availableMethods]);
+  const codMethod = useMemo(() => availableMethods?.find(m => m.type === 'cod'), [availableMethods]);
+
+  const selectedDeliveryId = form.watch('deliveryOption' as any);
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
-
-  useEffect(() => {
-    if (availableMethods?.length) {
-      const cod = availableMethods.find(m => m.type === 'cod') || availableMethods[0];
-      form.setValue('paymentMethod', cod.id);
-    }
-  }, [availableMethods, form]);
-
-  useEffect(() => {
-    if (!hasServices && deliveryOptions?.length) {
-      form.setValue('deliveryOption', deliveryOptions[0].id);
-    }
-  }, [deliveryOptions, hasServices, form]);
 
   const tax = Number((subtotal * 0.08).toFixed(2));
   const finalTotal = Number((subtotal + tax + deliveryCharge).toFixed(2));
@@ -153,6 +142,11 @@ export function CheckoutModal() {
     if (!db || !auth) return;
     if (isOtpSystemEnabled && !user && !isVerified) {
       toast({ variant: "destructive", title: "Phone Verification Required" });
+      return;
+    }
+
+    if (values.paymentCategory === 'online' && !values.onlineMethod) {
+      toast({ variant: "destructive", title: "Payment Method Required", description: "Please select an online payment provider." });
       return;
     }
 
@@ -192,6 +186,13 @@ export function CheckoutModal() {
       }
 
       const collName = hasServices ? 'bookings' : 'orders';
+      
+      let finalPaymentName = "Cash on Delivery";
+      if (values.paymentCategory === 'online') {
+        const method = onlineMethods.find(m => m.id === values.onlineMethod);
+        finalPaymentName = method?.name || "Online Payment";
+      }
+
       const docRef = await addDoc(collection(db, collName), {
         customerId: currentUserId || 'guest',
         customerName: values.name,
@@ -208,7 +209,7 @@ export function CheckoutModal() {
         tax: tax,
         deliveryCharge: deliveryCharge,
         totalPrice: finalTotal,
-        paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || 'Unknown',
+        paymentMethod: finalPaymentName,
         address: values.address,
         dateTime: values.date?.toISOString() || null,
         timeSlot: values.time || null,
@@ -231,21 +232,20 @@ export function CheckoutModal() {
 
   if (!mounted) return null;
 
-  const currentPaymentId = form.watch('paymentMethod');
-  const isCOD = availableMethods?.find(m => m.id === currentPaymentId)?.type === 'cod';
+  const paymentCategory = form.watch('paymentCategory');
 
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
-        <div className="grid lg:grid-cols-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col lg:grid lg:grid-cols-5 h-[90vh] lg:h-auto max-h-[90vh]">
           {/* Form Section (Left) */}
-          <div className="lg:col-span-3 p-6 md:p-12 bg-white">
+          <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white overflow-y-auto custom-scrollbar">
             <DialogHeader className="mb-8 text-left">
               <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
                 <ShieldCheck size={14} />
                 <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
               </div>
-              <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">
+              <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621]">
                 {hasServices ? 'Booking Details' : 'Order Details'}
               </DialogTitle>
             </DialogHeader>
@@ -290,7 +290,7 @@ export function CheckoutModal() {
 
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address (Optional)</FormLabel>
                       <FormControl><Input placeholder="name@example.com" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -344,25 +344,74 @@ export function CheckoutModal() {
 
                 <div className="space-y-6 pt-6 border-t">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-primary" /> Payment Method</h4>
-                  <FormField control={form.control} name="paymentMethod" render={({ field }) => (
-                    <FormItem className="space-y-3">
+                  <FormField control={form.control} name="paymentCategory" render={({ field }) => (
+                    <FormItem className="space-y-4">
                       <FormControl>
                         <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                          {availableMethods?.map((m) => (
-                            <div key={m.id} className={cn(
-                              "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
-                              field.value === m.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
-                            )}>
-                              <RadioGroupItem value={m.id} id={`pay-${m.id}`} className="sr-only" />
-                              <label htmlFor={`pay-${m.id}`} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
-                                <div className={cn("p-2 rounded-lg", field.value === m.id ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
-                                  {m.type === 'cod' ? <Truck size={16} /> : m.type === 'mobile' ? <Smartphone size={16} /> : <CreditCard size={16} />}
+                          {/* COD Option */}
+                          <div className={cn(
+                            "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
+                            field.value === 'cod' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                          )}>
+                            <RadioGroupItem value="cod" id="cat-cod" className="sr-only" />
+                            <label htmlFor="cat-cod" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
+                              <div className={cn("p-2 rounded-lg", field.value === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
+                                <Truck size={16} />
+                              </div>
+                              <div className="flex-1">
+                                <span className="uppercase tracking-tight block">Cash on Delivery</span>
+                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">DEFAULT</Badge>
+                              </div>
+                            </label>
+                          </div>
+
+                          {/* Online Option */}
+                          <div className={cn(
+                            "flex flex-col rounded-xl border-2 transition-all cursor-pointer",
+                            field.value === 'online' ? "border-blue-600 bg-blue-50/30" : "border-gray-100 hover:border-gray-200 bg-white"
+                          )}>
+                            <div className="flex items-center gap-4 p-4">
+                              <RadioGroupItem value="online" id="cat-online" className="sr-only" />
+                              <label htmlFor="cat-online" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
+                                <div className={cn("p-2 rounded-lg", field.value === 'online' ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400")}>
+                                  <Smartphone size={16} />
                                 </div>
-                                <span className="flex-1 uppercase tracking-tight">{m.name}</span>
-                                {m.type === 'cod' && <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">DEFAULT</Badge>}
+                                <span className="uppercase tracking-tight">Online Payment (bKash, Nagad...)</span>
                               </label>
                             </div>
-                          ))}
+
+                            {/* Dropdown for Online Methods */}
+                            {field.value === 'online' && (
+                              <div className="p-4 pt-0 animate-in slide-in-from-top-2">
+                                <FormField control={form.control} name="onlineMethod" render={({ field: subField }) => (
+                                  <FormItem>
+                                    <Select onValueChange={subField.onChange} value={subField.value}>
+                                      <FormControl>
+                                        <SelectTrigger className="h-12 bg-white border-blue-200 font-bold rounded-xl">
+                                          <SelectValue placeholder="Choose Payment Method" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent className="rounded-xl">
+                                        {onlineMethods.map(m => (
+                                          <SelectItem key={m.id} value={m.id} className="font-bold">
+                                            <div className="flex items-center gap-2 uppercase text-[10px]">
+                                              {m.name}
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                        {onlineMethods.length === 0 && (
+                                          <div className="p-4 text-center text-[10px] font-bold text-muted-foreground uppercase">
+                                            No methods enabled
+                                          </div>
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                              </div>
+                            )}
+                          </div>
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
@@ -374,62 +423,66 @@ export function CheckoutModal() {
           </div>
 
           {/* Summary Section (Right) */}
-          <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-l border-gray-100 flex flex-col">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-              <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Bill Summary</h3>
-              <ShoppingCart size={20} className="text-primary" />
-            </div>
-            
-            <div className="flex-1 space-y-4 mb-8">
-              {items.map(item => (
-                <div key={item.id} className="flex justify-between items-start gap-4">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Qty: {item.quantity}</span>
-                  </div>
-                  <span className="text-xs font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4 pt-6 border-t-2 border-dashed border-gray-200">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                <span>Subtotal</span>
-                <span>৳{subtotal.toLocaleString()}</span>
+          <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-l border-gray-100 flex flex-col justify-between overflow-y-auto">
+            <div>
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Bill Summary</h3>
+                <ShoppingCart size={20} className="text-primary" />
               </div>
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                <span>Tax (8%)</span>
-                <span>৳{tax.toLocaleString()}</span>
-              </div>
-              {!hasServices && (
-                <div className="flex justify-between text-[10px] font-black uppercase text-primary">
-                  <span>Delivery Charge</span>
-                  <span>৳{deliveryCharge.toLocaleString()}</span>
-                </div>
-              )}
               
-              <div className="pt-6 flex justify-between items-end">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
-                  <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
-                </div>
-                <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
+              <div className="space-y-4 mb-8">
+                {items.map(item => (
+                  <div key={item.id} className="flex justify-between items-start gap-4">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Qty: {item.quantity}</span>
+                    </div>
+                    <span className="text-xs font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="mt-10">
-              <Button 
-                onClick={form.handleSubmit(onSubmit)} 
-                className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white gap-3 transition-transform active:scale-95" 
-                disabled={isSubmitting || items.length === 0}
-              >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : (
-                  <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>
+            <div>
+              <div className="space-y-4 pt-6 border-t-2 border-dashed border-gray-200">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span>৳{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  <span>Tax (8%)</span>
+                  <span>৳{tax.toLocaleString()}</span>
+                </div>
+                {!hasServices && (
+                  <div className="flex justify-between text-[10px] font-black uppercase text-primary">
+                    <span>Delivery Charge</span>
+                    <span>৳{deliveryCharge.toLocaleString()}</span>
+                  </div>
                 )}
-              </Button>
-              <p className="text-[9px] text-center mt-4 font-bold text-gray-400 uppercase tracking-widest">
-                By placing this {hasServices ? 'booking' : 'order'}, you agree to our Terms.
-              </p>
+                
+                <div className="pt-6 flex justify-between items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
+                    <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <Button 
+                  onClick={form.handleSubmit(onSubmit)} 
+                  className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white gap-3 transition-transform active:scale-95" 
+                  disabled={isSubmitting || items.length === 0}
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : (
+                    <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>
+                  )}
+                </Button>
+                <p className="text-[9px] text-center mt-4 font-bold text-gray-400 uppercase tracking-widest">
+                  By placing this {hasServices ? 'booking' : 'order'}, you agree to our Terms.
+                </p>
+              </div>
             </div>
           </div>
         </div>
