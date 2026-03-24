@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, where, limit, addDoc, doc, increment, updateDoc } from 'firebase/firestore';
 import { 
@@ -20,10 +19,9 @@ import {
   Plus,
   Minus,
   MessageCircle,
-  LayoutGrid,
   ArrowRight,
   XCircle,
-  AlertCircle
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,12 +32,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '@/lib/tracking';
 import { cn } from '@/lib/utils';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export default function DynamicLandingPage() {
   const { slug } = useParams();
@@ -51,9 +43,7 @@ export default function DynamicLandingPage() {
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isHubOpen, setIsHubOpen] = useState(false);
   
-  const [activeCategory, setActiveCategory] = useState(0);
   const [selectedPkgIndex, setSelectedPkgIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
@@ -74,7 +64,7 @@ export default function DynamicLandingPage() {
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  // 2. Fetch REAL-TIME Linked Product Data
+  // 2. Fetch Linked Product Data
   const productRef = useMemoFirebase(() => (db && page?.productId) ? doc(db, 'products', page.productId) : null, [db, page?.productId]);
   const { data: linkedProduct, isLoading: productLoading } = useDoc(productRef);
 
@@ -84,20 +74,18 @@ export default function DynamicLandingPage() {
     }
   }, [page, isLoading, mounted, router]);
 
-  // Stock Logic
-  const currentStock = linkedProduct?.stockQuantity || 0;
-  const isOutOfStock = currentStock <= 0;
-  
-  const currentCategory = page?.pricingCategories?.[activeCategory];
-  const currentPackage = currentCategory?.packages?.[selectedPkgIndex];
+  // Pricing Logic
+  const currentPackages = page?.pricingCategories?.[0]?.packages || page?.packages || [];
+  const selectedPackage = currentPackages[selectedPkgIndex];
 
-  // Price Calculation: Prefer Landing Page Overrides, fallback to linked product data
-  const price = currentPackage?.price || page?.discountPrice || page?.price || linkedProduct?.price || 0;
-  const regularPrice = currentPackage?.originalPrice || page?.price || linkedProduct?.regularPrice || linkedProduct?.price || 0;
-  const discountAmount = regularPrice > price ? regularPrice - price : 0;
+  const price = selectedPackage?.price || page?.discountPrice || page?.price || linkedProduct?.price || 0;
+  const regularPrice = selectedPackage?.originalPrice || page?.price || linkedProduct?.regularPrice || linkedProduct?.price || 0;
   const deliveryCharge = 60;
   const subTotal = price * quantity;
   const totalPrice = subTotal + deliveryCharge;
+
+  const currentStock = linkedProduct?.stockQuantity || 0;
+  const isOutOfStock = currentStock <= 0;
 
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,11 +93,6 @@ export default function DynamicLandingPage() {
 
     if (!formData.name || !formData.phone || !formData.address) {
       toast({ variant: "destructive", title: "তথ্য পূরণ করুন", description: "আপনার নাম, ফোন এবং ঠিকানা দিন।" });
-      return;
-    }
-
-    if (isOutOfStock) {
-      toast({ variant: "destructive", title: "Stock Out", description: "দুঃখিত, এই পণ্যটি এখন স্টকে নেই।" });
       return;
     }
 
@@ -126,20 +109,16 @@ export default function DynamicLandingPage() {
         productId: page.productId || null,
         items: [{
           id: page.productId || page.id,
-          name: page.type === 'service' ? (currentPackage ? `${currentCategory?.name} - ${currentPackage.name}` : page.title) : (linkedProduct?.name || page.title),
+          name: page.title + (selectedPackage ? ` (${selectedPackage.name})` : ''),
           price: price,
           quantity: quantity
         }],
         totalPrice: totalPrice,
-        createdAt: new Date().toISOString(),
-        riskLevel: 'Low',
-        isSuspicious: false
+        createdAt: new Date().toISOString()
       };
 
-      const coll = page.type === 'service' ? 'bookings' : 'orders';
-      await addDoc(collection(db, coll), orderData);
+      await addDoc(collection(db, 'orders'), orderData);
       
-      // 3. AUTO STOCK MANAGEMENT: Reduce stock from database
       if (page.productId) {
         await updateDoc(doc(db, 'products', page.productId), {
           stockQuantity: increment(-quantity)
@@ -160,112 +139,256 @@ export default function DynamicLandingPage() {
     }
   };
 
-  const scrollToForm = () => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToForm = () => document.getElementById('order-form')?.scrollIntoView({ behavior: 'smooth' });
 
-  if (!mounted || isLoading || productLoading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-red-600" size={40} /></div>;
-  if (!page || !page.active) return null;
+  if (!mounted || isLoading || productLoading) return <div className="h-screen flex items-center justify-center bg-[#8B0000]"><Loader2 className="animate-spin text-white" size={40} /></div>;
+  if (!page) return null;
 
   return (
-    <div className="bg-[#F9FAFB] min-h-screen font-body text-[#333] pb-24">
+    <div className="bg-white min-h-screen font-body text-[#333]">
       
-      {/* 1. HERO SECTION */}
-      <section className="bg-gradient-to-b from-[#8B0000] to-[#B22222] pt-10 pb-20 px-4 relative overflow-hidden">
-        <div className="container mx-auto max-w-5xl space-y-8 text-center relative z-10">
-          <div className="space-y-4">
-            <h1 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none italic drop-shadow-xl">
-              {page.heroTitle || linkedProduct?.name || page.title}
-            </h1>
-            <p className="text-white/80 text-sm md:text-xl font-medium max-w-2xl mx-auto">
-              {page.heroSubtitle || page.subtitle || page.offer || linkedProduct?.shortDescription}
-            </p>
+      {/* 1. HERO SECTION (Dark Red Gradient) */}
+      <section className="bg-gradient-to-b from-[#8B0000] to-[#5D0000] pt-8 pb-12 px-4 text-center">
+        <div className="container mx-auto max-w-4xl space-y-6">
+          <h1 className="text-xl md:text-3xl font-black text-[#FFD700] uppercase tracking-tight leading-tight">
+            {page.heroTitle || page.title}
+          </h1>
+          <p className="text-white text-xs md:text-base font-bold opacity-90">
+            {page.heroSubtitle || page.subtitle || page.offer}
+          </p>
+
+          <div className="relative mx-auto max-w-md aspect-square bg-white/5 border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl flex items-center justify-center">
+            <div className="relative w-full h-full rounded-xl overflow-hidden bg-white">
+              <Image 
+                src={linkedProduct?.imageUrl || page.imageUrl || 'https://picsum.photos/seed/product/600/600'} 
+                alt={page.title} 
+                fill 
+                className="object-contain p-4" 
+                priority 
+                unoptimized 
+              />
+            </div>
           </div>
 
-          <div className="relative mx-auto max-w-3xl rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/20 aspect-video bg-black/10 group">
-            {page.useCustomBanner && page.bannerImage ? (
-              <Image src={page.bannerImage} alt={page.title} fill className="object-cover" priority unoptimized />
-            ) : page.videoUrl ? (
-              <iframe src={`https://www.youtube.com/embed/${page.videoUrl.split('v=')[1] || page.videoUrl.split('/').pop()}`} className="w-full h-full" allowFullScreen />
-            ) : (
-              <Image src={linkedProduct?.imageUrl || page.imageUrl} alt={page.title} fill className="object-cover" priority unoptimized />
-            )}
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <Button onClick={scrollToForm} disabled={isOutOfStock} className={cn("h-16 px-12 rounded-2xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-xl uppercase shadow-xl w-full md:w-auto border-b-4 border-black/20", isOutOfStock && "grayscale opacity-50")}>
-              {isOutOfStock ? "স্টক শেষ" : "🛒 অর্ডার করতে চাই"}
+          <div className="flex flex-col items-center gap-3 pt-4">
+            <Button 
+              onClick={scrollToForm} 
+              className="h-14 px-10 rounded-lg bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-lg uppercase shadow-xl w-full max-w-xs gap-2"
+            >
+              <ShoppingCart size={20} /> অর্ডার করতে চাই
             </Button>
             {page.phone && (
-              <Button variant="outline" className="h-16 px-8 rounded-2xl border-none bg-black text-white hover:bg-gray-900 font-black text-lg uppercase gap-3 w-full md:w-auto" asChild>
-                <a href={`tel:${page.phone}`}><Phone size={20} className="text-[#FFD700]" /> {page.phone}</a>
+              <Button variant="outline" className="h-12 px-8 rounded-lg bg-black text-white hover:bg-gray-900 border-none font-bold gap-3 w-full max-w-xs" asChild>
+                <a href={`tel:${page.phone}`}><Phone size={18} className="text-[#FFD700]" /> {page.phone}</a>
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 2. INGREDIENTS SECTION (Dynamic Grid) */}
+      {page.floatingServices && page.floatingServices.length > 0 && (
+        <section className="py-12 bg-gray-50 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-xl font-black text-[#8B0000] text-center mb-10 uppercase">যে সকল উপাদানে তৈরি?</h2>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+              {page.floatingServices.map((item: any, i: number) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <div className="relative w-16 h-16 md:w-20 md:h-20 bg-white border-2 border-gray-200 rounded-lg p-1 shadow-sm overflow-hidden">
+                    <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
+                  </div>
+                  <span className="text-[10px] md:text-xs font-black text-gray-600 text-center uppercase tracking-tighter">{item.name}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-center mt-10">
+              <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg shadow-lg">অর্ডার করতে চাই</Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. USAGE SECTION (Red Title Bar + Split Layout) */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="bg-[#8B0000] text-white p-3 rounded-lg text-center mb-10">
+            <h2 className="font-black text-sm md:text-lg uppercase tracking-tight">যেভাবে আপনি মজাদার বালাচাও খেতে পারেনঃ</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              {page.includingItems?.map((item: any, i: number) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="p-1 bg-red-100 text-red-600 rounded-full mt-0.5"><Check size={14} strokeWidth={4} /></div>
+                  <p className="text-xs md:text-sm font-bold text-gray-700 leading-relaxed">{item.title}</p>
+                </div>
+              ))}
+            </div>
+            <div className="relative aspect-square rounded-2xl overflow-hidden border-4 border-gray-100 shadow-xl">
+              <Image src={page.bannerImage || page.imageUrl} alt="Usage" fill className="object-cover" unoptimized />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 mt-12">
+            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg">অর্ডার করতে চাই</Button>
+            {page.phone && (
+              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
+                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. TRUST SECTION (Benefit List) */}
+      <section className="py-12 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-2xl bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
+          <div className="bg-[#8B0000] text-white p-3 rounded-lg text-center mb-8">
+            <h2 className="font-black text-sm md:text-lg uppercase tracking-tight">আমাদের উপর কেন আস্থা রাখবেন?</h2>
+          </div>
+          <div className="space-y-4">
+            {page.detailsContent?.features?.map((f: any, i: number) => (
+              <div key={i} className="flex items-start gap-3 border-b border-gray-50 pb-3 last:border-0">
+                <CheckCircle2 size={18} className="text-[#8B0000] shrink-0" />
+                <p className="text-xs md:text-sm font-bold text-gray-700 leading-snug">{f.title}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col items-center gap-3 mt-10">
+            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg">অর্ডার করতে চাই</Button>
+            {page.phone && (
+              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
+                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
+              </Button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. STORAGE INFO (Green Box) */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-xl border-2 border-green-600 p-6 rounded-2xl bg-green-50/30 text-center">
+          <h2 className="font-black text-red-700 text-lg uppercase mb-4 underline">যেভাবে সংরক্ষণ করবেনঃ</h2>
+          <p className="text-xs md:text-sm font-bold text-gray-700 leading-loose">
+            {page.stockText || "কাঁচের বয়ামে রাখলে বালাচাও ক্রিস্পি থাকে প্রায় অনেক দিন। তবে প্লাস্টিকের বয়ামে রাখলে এর ফ্লেভার এবং টেক্সচার নষ্ট হতে পারে। সব সময় এয়ার টাইট বক্সে রাখার চেষ্টা করবেন।"}
+          </p>
+        </div>
+      </section>
+
+      {/* 6. PRICING SECTION (Red Gradient Box) */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-2xl bg-gradient-to-r from-[#8B0000] to-[#B22222] p-8 rounded-3xl text-white text-center shadow-2xl space-y-6">
+          <div className="space-y-4">
+            {currentPackages.map((pkg: any, i: number) => (
+              <div 
+                key={i} 
+                onClick={() => setSelectedPkgIndex(i)}
+                className={cn(
+                  "p-4 rounded-xl border-2 transition-all cursor-pointer",
+                  selectedPkgIndex === i ? "bg-white/20 border-[#FFD700]" : "bg-black/10 border-white/10"
+                )}
+              >
+                <p className="text-sm md:text-xl font-black uppercase">
+                  {pkg.name} = <span className="text-[#FFD700]">৳{pkg.price} টাকা</span>
+                </p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex flex-col items-center gap-3">
+            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-sm px-10 h-12 rounded-lg">অর্ডার করতে চাই</Button>
+            {page.phone && (
+              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
+                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
               </Button>
             )}
           </div>
           
-          <div className="flex items-center justify-center gap-2 text-white/80 text-[10px] font-black uppercase tracking-[0.3em]">
-            <ShieldCheck size={14} className="text-[#FFD700]" /> 
-            {isOutOfStock ? "বর্তমানে পণ্যটি স্টকে নেই" : (page.stockText || `মাত্র ${currentStock} টি পিস স্টকে আছে`)}
-          </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#FFD700] flex items-center justify-center gap-2">
+            <Zap size={12} fill="currentColor" /> ফ্রী হোম ডেলিভারি সারা দেশেই পাওয়া যাচ্ছে
+          </p>
         </div>
       </section>
 
-      {/* 2. LIVE DATA DISPLAY */}
-      <section className="py-12 container mx-auto px-4 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h2 className="text-3xl font-black uppercase tracking-tight text-[#081621]">লাইভ প্রোডাক্ট আপডেট</h2>
-            <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 space-y-4">
-              <div className="flex justify-between items-center pb-4 border-b">
-                <span className="text-[10px] font-black uppercase text-gray-400">স্টক অবস্থা</span>
-                <Badge className={cn("border-none uppercase font-black text-[10px]", isOutOfStock ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600")}>
-                  {isOutOfStock ? "OUT OF STOCK" : "IN STOCK"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b">
-                <span className="text-[10px] font-black uppercase text-gray-400">বর্তমান মূল্য</span>
-                <span className="text-2xl font-black text-red-600">৳{price}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase text-gray-400">ডেলিভারি সময়</span>
-                <span className="text-xs font-bold text-gray-700">২-৩ কার্যদিবস</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-6 rounded-3xl text-center shadow-sm border border-gray-100">
-              <Package size={32} className="mx-auto text-red-600 mb-2" />
-              <p className="text-[10px] font-black uppercase text-gray-400">পণ্য ক্যাটাগরি</p>
-              <p className="text-sm font-bold uppercase">{linkedProduct?.categoryId || 'সাধারন'}</p>
-            </div>
-            <div className="bg-white p-6 rounded-3xl text-center shadow-sm border border-gray-100">
-              <Star size={32} className="mx-auto text-amber-400 mb-2" fill="currentColor" />
-              <p className="text-[10px] font-black uppercase text-gray-400">রেটিং</p>
-              <p className="text-sm font-bold uppercase">৪.৯/৫</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. ORDER / BOOKING SECTION */}
-      <section id="order-section" className="py-20 container mx-auto px-4 max-w-6xl">
-        <div className="text-center mb-12 space-y-4">
-          <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-[#081621]">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h2>
-          <div className="w-24 h-1.5 bg-[#8B0000] mx-auto rounded-full" />
+      {/* 7. ORDER FORM SECTION */}
+      <section id="order-form" className="py-20 px-4 container mx-auto max-w-6xl">
+        <div className="bg-[#8B0000] text-white p-4 rounded-t-[2rem] text-center max-w-2xl mx-auto">
+          <h2 className="font-black text-sm md:text-lg uppercase">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          
-          {/* Order Summary */}
-          <div className="lg:col-span-5 space-y-6 lg:order-2 lg:sticky lg:top-24">
-            <Card className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden bg-white border-t-[12px] border-[#8B0000]">
-              <CardContent className="p-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-0">
+          <div className="lg:col-span-7 bg-white p-8 md:p-12 rounded-b-[2.5rem] rounded-tl-[2.5rem] shadow-2xl border-t-4 border-[#8B0000]">
+            <form onSubmit={handleOrderSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">আপনার নাম</Label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
+                    <Input 
+                      value={formData.name} 
+                      onChange={e => setFormData({...formData, name: e.target.value})} 
+                      placeholder="নাম লিখুন" 
+                      className="h-14 pl-12 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">ফোন নম্বর</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
+                    <Input 
+                      value={formData.phone} 
+                      onChange={e => setFormData({...formData, phone: e.target.value})} 
+                      placeholder="০১XXXXXXXXX" 
+                      className="h-14 pl-12 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                      required 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">পূর্ণ ঠিকানা</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-4 text-[#8B0000]" size={20} />
+                  <Textarea 
+                    value={formData.address} 
+                    onChange={e => setFormData({...formData, address: e.target.value})} 
+                    placeholder="আপনার বিস্তারিত ঠিকানা দিন" 
+                    className="min-h-[120px] pl-12 pt-4 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                    required 
+                  />
+                </div>
+              </div>
+
+              {isSuccess ? (
+                <div className="p-8 bg-green-50 rounded-2xl text-center border-2 border-green-100">
+                  <CheckCircle2 className="text-green-600 mx-auto mb-4" size={48} />
+                  <h3 className="font-black text-green-800 text-xl uppercase">অর্ডার সফল হয়েছে!</h3>
+                </div>
+              ) : (
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || isOutOfStock} 
+                  className="w-full h-16 rounded-xl bg-[#8B0000] hover:bg-[#B22222] text-white font-black text-xl uppercase shadow-2xl"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : "অর্ডার সম্পন্ন করুন →"}
+                </Button>
+              )}
+            </form>
+          </div>
+
+          <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-[12px] border-[#8B0000]">
+              <CardContent className="p-8 space-y-6">
                 <div className="flex items-center gap-4 border-b pb-6">
-                  <div className="relative w-20 h-20 rounded-3xl overflow-hidden border bg-gray-50 shrink-0">
+                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden border bg-gray-50 shrink-0">
                     <Image src={linkedProduct?.imageUrl || page.imageUrl} alt={page.title} fill className="object-cover" unoptimized />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <h4 className="font-black text-[#081621] uppercase text-xs leading-tight line-clamp-2">
-                      {linkedProduct?.name || page.title}
+                    <h4 className="font-black text-gray-900 uppercase text-xs leading-tight line-clamp-2">
+                      {page.title}
                     </h4>
                     <div className="flex items-center gap-3 mt-2">
                       <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 bg-gray-100 rounded-lg"><Minus size={14}/></button>
@@ -276,116 +399,32 @@ export default function DynamicLandingPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                    <span>ইউনিট প্রাইজ</span>
-                    <span className="text-[#081621]">৳{price}</span>
+                  <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                    <span>প্রোডাক্ট প্রাইজ</span>
+                    <span className="text-gray-900 font-black">৳{price}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                  <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
                     <span>ডেলিভারি চার্জ</span>
-                    <span className="text-blue-600">৳{deliveryCharge}</span>
+                    <span className="text-blue-600 font-black">৳{deliveryCharge}</span>
                   </div>
-
-                  <div className="pt-8 border-t-2 border-dashed border-gray-100 flex justify-between items-end">
+                  <div className="pt-6 border-t-2 border-dashed border-gray-100 flex justify-between items-end">
                     <div>
-                      <p className="text-[10px] font-black text-[#B22222] uppercase tracking-[0.3em] mb-2">সর্বমোট পেবল</p>
-                      <p className="text-5xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice}</p>
+                      <p className="text-[10px] font-black text-[#8B0000] uppercase tracking-widest mb-1">মোট টাকা</p>
+                      <p className="text-4xl font-black text-gray-900 tracking-tighter">৳{totalPrice}</p>
                     </div>
-                    <div className="bg-[#B22222]/10 text-[#B22222] text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest">BDT</div>
+                    <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-3">CASH ON DELIVERY</Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <div className="p-6 rounded-[2rem] bg-[#59C1BD]/10 border border-[#59C1BD]/20 flex items-center gap-4 text-[#59C1BD] font-black uppercase tracking-widest text-[10px]">
-              <div className="p-3 bg-white rounded-2xl shadow-sm"><ShieldCheck size={24} /></div>
-              Cash on Delivery Available
-            </div>
-          </div>
-
-          {/* Form Card */}
-          <div className="lg:col-span-7 lg:order-1">
-            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
-              <CardContent className="p-8 md:p-12 space-y-10">
-                <form onSubmit={handleOrderSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">আপনার নাম</Label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
-                        <Input 
-                          value={formData.name} 
-                          onChange={e => setFormData({...formData, name: e.target.value})} 
-                          placeholder="আপনার নাম লিখুন" 
-                          className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold text-lg focus:bg-white transition-all shadow-inner" 
-                          required 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">ফোন নম্বর</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
-                        <Input 
-                          value={formData.phone} 
-                          onChange={e => setFormData({...formData, phone: e.target.value})} 
-                          placeholder="০১XXXXXXXXX" 
-                          className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold text-lg focus:bg-white transition-all shadow-inner" 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পূর্ণ ঠিকানা</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-4 top-4 text-[#8B0000]" size={20} />
-                      <Textarea 
-                        value={formData.address} 
-                        onChange={e => setFormData({...formData, address: e.target.value})} 
-                        placeholder="গ্রাম/রোড, পোস্ট অফিস, থানা, জেলা" 
-                        className="min-h-[120px] pl-12 pt-4 bg-gray-50 border-none rounded-2xl font-bold text-lg focus:bg-white transition-all shadow-inner" 
-                        required 
-                      />
-                    </div>
-                  </div>
-
-                  {isOutOfStock ? (
-                    <div className="p-8 bg-red-50 border border-red-100 rounded-3xl text-center space-y-2">
-                      <XCircle className="mx-auto text-red-600" size={32} />
-                      <h3 className="font-black text-red-800 uppercase">Stock Out</h3>
-                      <p className="text-xs font-bold text-red-700">দুঃখিত, এই মুহূর্তে পণ্যটি স্টকে নেই।</p>
-                    </div>
-                  ) : isSuccess ? (
-                    <div className="p-10 bg-green-50 border border-green-100 rounded-[2rem] text-center space-y-2 animate-in zoom-in-95">
-                      <div className="p-4 bg-white rounded-full w-fit mx-auto shadow-sm"><CheckCircle2 className="text-green-600" size={48} /></div>
-                      <h3 className="font-black text-green-800 uppercase text-xl mt-4">অর্ডার সফল হয়েছে!</h3>
-                      <p className="text-xs font-bold text-green-700">আমরা শীঘ্রই আপনার সাথে যোগাযোগ করবো।</p>
-                    </div>
-                  ) : (
-                    <Button type="submit" disabled={isSubmitting} className="w-full h-20 rounded-[2rem] bg-[#8B0000] hover:bg-[#B22222] text-white font-black text-2xl uppercase shadow-2xl active:scale-95 transition-all border-b-8 border-black/20">
-                      {isSubmitting ? <Loader2 className="animate-spin" size={32} /> : "অর্ডার সম্পন্ন করুন →"}
-                    </Button>
-                  )}
-                </form>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="py-12 bg-[#081621] text-white/40 text-center">
-        <div className="container mx-auto px-4 space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em]">Copyright © 2026 Smart Clean Pro. All rights reserved.</p>
-        </div>
-      </footer>
-
       {/* MOBILE STICKY CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-4 md:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)] safe-area-pb">
-        <Button onClick={scrollToForm} disabled={isOutOfStock} className="h-14 w-full rounded-2xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-sm uppercase tracking-widest shadow-xl border-none">
-          {isOutOfStock ? "স্টক শেষ" : <>অর্ডার করতে চাই <ArrowRight size={18} className="ml-2" /></>}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-4 md:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <Button onClick={scrollToForm} className="h-14 w-full rounded-xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-sm uppercase tracking-widest shadow-xl">
+          অর্ডার করতে চাই <ArrowRight size={18} className="ml-2" />
         </Button>
       </div>
 
