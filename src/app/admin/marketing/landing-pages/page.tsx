@@ -280,7 +280,14 @@ export default function RebuiltLandingPageAdmin() {
                           formData.productIds?.includes(item.id) ? "border-primary ring-2 ring-primary/20" : "border-gray-100 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
                         )}
                       >
-                        <NextImage src={item.imageUrl || 'https://picsum.photos/seed/placeholder/200/200'} data-ai-hint="product image" alt="Select" fill className="object-cover" unoptimized />
+                        <NextImage 
+                          src={(typeof item.imageUrl === 'string' && item.imageUrl) ? item.imageUrl : 'https://picsum.photos/seed/placeholder/200/200'} 
+                          data-ai-hint="product image" 
+                          alt="Select" 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                        />
                         {formData.productIds?.includes(item.id) && (
                           <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                             <Badge className="bg-primary text-white text-[8px]">{formData.productIds.indexOf(item.id) + 1}</Badge>
