@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2, Truck } from 'lucide-react';
+import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2, Truck, ArrowRight } from 'lucide-react';
 import { useFirestore, useUser, useAuth, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, addDoc, query, where, getDocs, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -72,7 +72,7 @@ function CheckoutContent() {
         currency: 'BDT'
       });
     }
-  }, []);
+  }, [items, subtotal]);
 
   const hasServices = items.some(i => i.itemType === 'service');
 
@@ -204,8 +204,10 @@ function CheckoutContent() {
 
   if (!mounted) return null;
 
+  const totalPayable = (subtotal * 1.08 + deliveryCharge).toLocaleString();
+
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12">
+    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12 pb-24 md:pb-12">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <header className="mb-8 md:mb-12 text-center md:text-left">
@@ -214,7 +216,7 @@ function CheckoutContent() {
               <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight leading-none">
-              {t('checkout_title')}
+              {hasServices ? 'Booking Details' : 'Order Details'}
             </h1>
           </header>
 
@@ -227,7 +229,7 @@ function CheckoutContent() {
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
                         <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">
-                          {hasServices ? 'Booking Details' : t('delivery_info')}
+                          {t('delivery_info')}
                         </CardTitle>
                       </div>
                     </CardHeader>
@@ -319,7 +321,7 @@ function CheckoutContent() {
                     </CardContent>
                   </Card>
 
-                  <Button type="submit" className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full hidden md:flex h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                     {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
                   </Button>
                 </div>
@@ -351,7 +353,7 @@ function CheckoutContent() {
                           <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
                             <div className="flex flex-col">
                               <span className="text-[9px] md:text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
-                              <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08 + deliveryCharge).toLocaleString()}</span>
+                              <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPayable}</span>
                             </div>
                             <div className="bg-green-100 text-green-700 text-[8px] md:text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
                           </div>
@@ -360,6 +362,23 @@ function CheckoutContent() {
                     </CardContent>
                   </Card>
                 </div>
+              </div>
+
+              {/* Mobile Sticky CTA */}
+              <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 z-[110] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Due</span>
+                  <span className="text-xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPayable}</span>
+                </div>
+                <Button 
+                  onClick={form.handleSubmit(onSubmit)} 
+                  className="flex-1 h-14 rounded-xl bg-green-600 hover:bg-green-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-green-600/20"
+                  disabled={isSubmitting || items.length === 0}
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
+                    <>{hasServices ? 'Place Booking' : 'Place Order'} <ArrowRight size={18} className="ml-2" /></>
+                  )}
+                </Button>
               </div>
             </form>
           </Form>
@@ -371,7 +390,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <PublicLayout>
+    <PublicLayout minimalMobile={true}>
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin" /></div>}>
         <CheckoutContent />
       </Suspense>
