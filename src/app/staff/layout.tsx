@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
 import { useUser, useDoc, useMemoFirebase, useFirestore, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
-import { Loader2, ShieldAlert, ChevronLeft, LogOut, HardHat, Bell, AlertCircle } from 'lucide-react';
+import { Loader2, LogOut, HardHat, Bell, ChevronLeft, Calendar, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
@@ -17,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from '@/lib/utils';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -26,113 +28,92 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const isLoginPage = pathname === '/staff/login';
+  const staffRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
+  const { data: staffRole, isLoading: roleLoading } = useDoc(staffRoleRef);
 
-  const staffRoleRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'roles_employees', user.uid);
-  }, [db, user]);
-
-  const profileRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, 'employee_profiles', user.uid);
-  }, [db, user]);
-
-  const { data: staffRole, isLoading: roleLoading, error: roleError } = useDoc(staffRoleRef);
+  const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'employee_profiles', user.uid) : null, [db, user]);
   const { data: profile, isLoading: profileLoading } = useDoc(profileRef);
 
+  // 🛡️ Staff Authentication & Role Guard
   useEffect(() => {
-    if (isLoginPage) return;
     if (!isUserLoading && !user) {
-      router.push('/staff/login');
-    }
-  }, [user, isUserLoading, router, isLoginPage]);
-
-  // STAFF ROLE CHECK
-  const isAuthorized = !!staffRole;
-  const isBanned = (profile?.status === 'Banned' || profile?.status === 'Terminated') && !profileLoading;
-
-  useEffect(() => {
-    if (isLoginPage || isUserLoading || roleLoading) return;
-    
-    if (user && (!isAuthorized || isBanned)) {
-      const reason = isBanned ? "Account restricted" : "Unauthorized access level";
-      toast({ variant: "destructive", title: "Access Denied", description: reason });
       router.replace('/login');
     }
-  }, [isAuthorized, isBanned, isUserLoading, roleLoading, user, router, toast, isLoginPage]);
+  }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (isUserLoading || roleLoading) return;
+    if (user && !staffRole) {
+      toast({ variant: "destructive", title: "Access Denied", description: "You are not registered as a technician." });
+      router.replace('/login');
+    }
+  }, [staffRole, isUserLoading, roleLoading, user, router, toast]);
 
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
-      router.push('/staff/login');
+      router.replace('/login');
     }
   };
 
-  if (isUserLoading || (user && (roleLoading || profileLoading))) {
+  if (isUserLoading || roleLoading || profileLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
         <Loader2 className="animate-spin text-amber-600" size={48} />
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Verifying Technician Access...</p>
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Staff App...</p>
       </div>
     );
   }
 
-  if (isLoginPage) return <>{children}</>;
-
-  if (!user || !isAuthorized || isBanned) return null;
+  if (!user || !staffRole) return null;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
-      <header className="bg-[#081621] text-white border-b border-white/5 sticky top-0 z-50">
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col h-full overflow-hidden">
+      {/* 📱 TOP APP BAR */}
+      <header className="bg-[#081621] text-white border-b border-white/5 sticky top-0 z-50 shrink-0">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500 rounded-lg shadow-lg shadow-amber-500/20"><HardHat size={20} className="text-white" /></div>
-            <div className="hidden sm:block">
-              <h1 className="text-xs font-black uppercase tracking-widest text-amber-500">Technician Portal</h1>
-              <p className="text-[10px] font-bold text-white/40 uppercase">Smart Clean Operations</p>
+            <div className="p-2 bg-amber-500 rounded-xl shadow-lg"><HardHat size={20} className="text-white" /></div>
+            <div>
+              <h1 className="text-xs font-black uppercase tracking-widest text-amber-500">Staff App</h1>
+              <p className="text-[9px] font-bold text-white/40 uppercase">Field Operations</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-white/60 hover:text-white relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#081621]" />
-            </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="text-white/60 hover:text-white relative"><Bell size={20} /><span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#081621]" /></Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center font-black text-sm border border-white/10 cursor-pointer hover:bg-white/20 transition-all">
-                  {user.email?.[0].toUpperCase()}
-                </div>
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-black text-sm border border-white/10 cursor-pointer">{user.email?.[0].toUpperCase()}</div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-2 p-2 rounded-2xl">
-                <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-4 py-2">My Profile</DropdownMenuLabel>
-                <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold rounded-xl">Customer View</Link></DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56 mt-2 p-2 rounded-[1.5rem] border-none shadow-2xl">
+                <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-4 py-2">Profile: {profile?.name || 'Staff'}</DropdownMenuLabel>
+                <DropdownMenuItem asChild><Link href="/account/dashboard" className="font-bold rounded-xl cursor-pointer">Customer Profile</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black rounded-xl"><LogOut size={14} className="mr-2" /> Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black rounded-xl cursor-pointer"><LogOut size={14} className="mr-2" /> End Shift</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto">
-        {children}
+      {/* 📱 MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#F9FAFB] pb-24">
+        <div className="container mx-auto p-4 md:p-8 max-w-4xl">{children}</div>
       </main>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#081621] border-t border-white/5 h-16 z-50 flex items-center justify-around px-4">
-        <Link href="/staff/dashboard" className="flex flex-col items-center gap-1 text-amber-500">
-          <HardHat size={20} />
-          <span className="text-[9px] font-black uppercase">Jobs</span>
-        </Link>
-        <Link href="/staff/availability" className="flex flex-col items-center gap-1 text-white/40">
-          <Bell size={20} />
-          <span className="text-[9px] font-black uppercase">Schedule</span>
-        </Link>
-        <Link href="/" className="flex flex-col items-center gap-1 text-white/40">
-          <ChevronLeft size={20} />
-          <span className="text-[9px] font-black uppercase">Site</span>
-        </Link>
+      {/* 📱 NATIVE-LIKE BOTTOM NAV */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#081621] border-t border-white/5 h-16 z-50 flex items-center justify-around px-2 pb-safe-offset-0">
+        {[
+          { label: 'Jobs', icon: HardHat, href: '/staff/dashboard' },
+          { label: 'Schedule', icon: Calendar, href: '/staff/availability' },
+          { label: 'Site', icon: ChevronLeft, href: '/' },
+        ].map((item) => (
+          <Link key={item.label} href={item.href} className={cn("flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all", pathname === item.href ? "text-amber-500" : "text-white/40")}>
+            <item.icon size={20} className={cn(pathname === item.href && "scale-110 transition-transform")} />
+            <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+          </Link>
+        ))}
       </nav>
     </div>
   );

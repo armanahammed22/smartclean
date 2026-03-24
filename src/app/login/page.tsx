@@ -1,29 +1,26 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, collection, query, where, getDocs } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react';
+import { Loader2, User, Mail, Lock, Eye, EyeOff, ShieldCheck, HardHat, LayoutDashboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
 
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -34,25 +31,26 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  // Role Checks
+  // 🛡️ Admin Role Check
   const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRef);
   
+  // 🛡️ Staff Role Check
   const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole, isLoading: staffRoleLoading } = useDoc(staffRef);
 
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
   const isStaff = !!staffRole;
 
-  // Auto-Redirection after login
+  // 🚦 Smart Redirection Logic (Traffic Controller)
   useEffect(() => {
     if (user && !roleLoading && !staffRoleLoading) {
       if (isAdmin) {
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
       } else if (isStaff) {
-        router.push('/staff/dashboard');
+        router.replace('/staff/dashboard');
       } else {
-        router.push('/account/dashboard');
+        router.replace('/account/dashboard');
       }
     }
   }, [user, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
@@ -63,9 +61,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
-      toast({ title: "Welcome Back!", description: "Determining access level..." });
+      toast({ title: "Verifying Access...", description: "Redirecting to your portal." });
     } catch (error: any) {
-      console.error("Login Error:", error.code, error.message);
       toast({ 
         variant: "destructive", 
         title: "Login Failed", 
@@ -75,126 +72,72 @@ export default function LoginPage() {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!phone || phone.length < 10) {
-      toast({ variant: "destructive", title: "Invalid Phone" });
-      return;
-    }
-    setIsLoading(true);
-    
-    if (db) {
-      const q = query(collection(db, 'users'), where('phone', '==', phone));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        toast({ variant: "destructive", title: "User Not Found", description: "This phone number is not registered." });
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    setTimeout(() => {
-      const mock = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(mock);
-      setIsOtpSent(true);
-      setIsLoading(false);
-      toast({ title: t('otp_sent'), description: `Code: ${mock}` });
-    }, 1000);
-  };
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp !== generatedOtp) {
-      toast({ variant: "destructive", title: t('invalid_otp') });
-      return;
-    }
-
-    setIsLoading(true);
-    toast({ title: "Verification Successful", description: "Determining access level..." });
-    router.push('/account/dashboard');
-  };
-
   if (isUserLoading || (user && (roleLoading || staffRoleLoading))) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Syncing Identity...</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#F2F4F8] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white">
+      <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
         <div className="h-2 bg-primary w-full" />
-        <CardHeader className="space-y-2 text-center pt-10">
-          <div className="flex justify-center mb-4"><div className="p-4 bg-primary/10 rounded-2xl text-primary"><User size={40} /></div></div>
-          <CardTitle className="text-3xl font-black tracking-tight uppercase">Customer Portal</CardTitle>
-          <CardDescription className="text-sm font-medium text-muted-foreground">Sign in to manage your bookings</CardDescription>
+        <CardHeader className="space-y-2 text-center pt-10 px-8">
+          <div className="flex justify-center mb-4">
+            <div className="p-4 bg-primary/10 rounded-2xl text-primary shadow-inner">
+              <User size={40} />
+            </div>
+          </div>
+          <CardTitle className="text-3xl font-black tracking-tight uppercase font-headline">Smart Clean</CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Global Portal Access</CardDescription>
         </CardHeader>
+        
         <CardContent className="px-8 pb-8 pt-4">
-          <Tabs defaultValue="phone" className="w-full">
-            <TabsList className="grid grid-cols-2 mb-8 bg-gray-100 p-1 rounded-xl h-12">
-              <TabsTrigger value="phone" className="rounded-lg font-black uppercase text-[10px] tracking-widest">{t('phone_login')}</TabsTrigger>
-              <TabsTrigger value="email" className="rounded-lg font-black uppercase text-[10px] tracking-widest">{t('email_login')}</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="phone" className="space-y-5">
-              <form onSubmit={handlePhoneLogin} className="space-y-5">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="01XXXXXXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} required disabled={isOtpSent} />
-                  </div>
-                </div>
-
-                {!isOtpSent ? (
-                  <Button type="button" onClick={handleSendOtp} className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2" /> : null} {t('send_otp')}
-                  </Button>
-                ) : (
-                  <div className="space-y-5">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('enter_otp')}</Label>
-                      <Input className="h-12 rounded-xl bg-gray-50 border-gray-100 text-center text-xl font-black tracking-[0.5em]" placeholder="000000" value={otp} onChange={(e) => setOtp(e.target.value)} required />
-                    </div>
-                    <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="animate-spin mr-2" /> : null} Sign In
-                    </Button>
-                    <Button variant="link" type="button" onClick={() => setIsOtpSent(false)} className="w-full text-xs font-bold text-muted-foreground">Change Phone Number</Button>
-                  </div>
-                )}
-              </form>
-            </TabsContent>
-
-            <TabsContent value="email" className="space-y-5">
-              <form onSubmit={handleEmailLogin} className="space-y-5">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="email" placeholder="name@example.com" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-1">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin mr-2" /> : "Sign In"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <form onSubmit={handleEmailLogin} className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Account Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight bg-primary hover:bg-primary/90" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin mr-2" /> : <LayoutDashboard className="mr-2" size={20} />}
+              Authenticate
+            </Button>
+          </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-6">
+
+        <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-6 border-t">
           <p className="text-xs font-bold text-muted-foreground text-center">
-            Don't have an account? <Link href="/signup" className="text-primary hover:underline font-black">Register Now</Link>
+            New to Smart Clean? <Link href="/signup" className="text-primary hover:underline font-black">Register Profile</Link>
           </p>
         </CardFooter>
       </Card>

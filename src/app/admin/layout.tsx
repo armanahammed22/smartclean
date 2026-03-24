@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -27,32 +28,25 @@ import {
   Headphones,
   Layout,
   Link as LinkIcon,
-  MousePointer2,
   FileText,
   Plus,
-  Tag,
   Palette,
   AlertCircle,
-  Search,
   MessageCircle,
   List,
   Megaphone,
   LayoutGrid,
   Target,
   TicketPercent,
-  ImageIcon,
   ShieldAlert,
   Wrench,
   Layers,
   HardHat,
   Briefcase,
-  Sparkles,
   Award,
   Shapes,
   ListChecks,
   Settings2,
-  CalendarCheck,
-  Activity,
   Code,
   Shield,
   TrendingUp,
@@ -71,7 +65,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
-import { useLanguage } from '@/components/providers/language-provider';
 import { useToast } from '@/hooks/use-toast';
 
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
@@ -87,7 +80,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { t } = useLanguage();
   const { toast } = useToast();
 
   const isLoginPage = pathname === '/admin/login';
@@ -99,11 +91,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
-  // RIGID ADMIN CHECK
+  // 🛡️ RIGID ADMIN GATE
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   /**
-   * REAL-TIME NOTIFICATION COUNTS
+   * Real-time Notifications for Sidebar
    */
   const pendingErrorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'error_logs'), where('status', '==', 'pending')) : null, [db, isAuthorized]);
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
@@ -244,217 +236,134 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ], [newOrders, newBookings, newLeads, openTickets, pendingErrors]);
 
   useEffect(() => {
-    if (isLoginPage) return;
     if (!isUserLoading && !user) {
-      router.replace('/admin/login');
-    }
-  }, [user, isUserLoading, router, isLoginPage]);
-
-  useEffect(() => {
-    if (isLoginPage || isUserLoading || roleLoading) return;
-    if (user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Access Denied", description: "This area is restricted to administrators." });
       router.replace('/login');
     }
-  }, [isAuthorized, isUserLoading, roleLoading, user, auth, router, toast, isLoginPage]);
+  }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    const activeGroup = NAV_GROUPS.find(group => 
-      group.items.some(item => pathname === item.href)
-    );
-    if (activeGroup) {
-      setExpandedGroups(prev => ({ ...prev, [activeGroup.id]: true }));
+    if (isUserLoading || roleLoading) return;
+    if (user && !isAuthorized) {
+      toast({ variant: "destructive", title: "Unauthorized", description: "Admin access only." });
+      router.replace('/login');
     }
-  }, [pathname, NAV_GROUPS]);
+  }, [isAuthorized, isUserLoading, roleLoading, user, router, toast]);
 
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
+    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
-      router.push('/admin/login');
+      router.replace('/login');
     }
   };
 
-  const SidebarContent = ({ collapsed, mobileOnly }: { collapsed?: boolean, mobileOnly?: boolean }) => (
-    <div className="flex flex-col h-full bg-[#08101b] text-white relative overflow-hidden">
-      <div className="absolute top-[-10%] -right-[20%] w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] -left-[20%] w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="p-6 flex items-center justify-between border-b border-white/5 h-20 shrink-0 relative z-10 backdrop-blur-md bg-white/5">
-        <div className={cn("flex items-center gap-3 transition-all duration-300", collapsed && "justify-center w-full")}>
-          <div className="p-2.5 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shrink-0 shadow-lg shadow-primary/20 border border-white/10">
-            <ShieldCheck size={20} />
-          </div>
-          {!collapsed && (
-            <div className="truncate">
-              <h1 className="font-black tracking-tighter text-sm text-white uppercase leading-none">Admin ERP</h1>
-              <p className="text-[9px] text-primary font-black uppercase tracking-widest leading-none mt-1">Smart Operations</p>
-            </div>
-          )}
+  const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
+    <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden">
+      <div className="p-6 flex items-center gap-3 border-b border-white/5 h-20 shrink-0">
+        <div className="p-2.5 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10">
+          <ShieldCheck size={20} />
         </div>
+        {!collapsed && (
+          <div>
+            <h1 className="font-black text-sm uppercase leading-none">Admin App</h1>
+            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Smart Control</p>
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-3 custom-scrollbar relative z-10">
-        {NAV_GROUPS.map((group) => {
-          const isGroupExpanded = expandedGroups[group.id];
-          const isGroupActive = group.items.some(item => pathname === item.href);
-          
-          return (
-            <div key={group.id} className="space-y-1">
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className={cn(
-                  "flex items-center justify-between w-full px-4 py-3.5 rounded-2xl transition-all duration-300 text-left group hover:scale-[1.02] border border-transparent",
-                  isGroupActive 
-                    ? "bg-white/10 text-white shadow-xl" 
-                    : "text-white/40 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <group.icon size={18} className={cn("shrink-0 transition-colors", isGroupActive ? group.color : "text-white/20 group-hover:text-white/60")} />
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-[0.15em]">{group.title}</span>}
-                </div>
-                {!collapsed && (
-                  <div className={cn("shrink-0 transition-transform duration-300", isGroupExpanded ? "rotate-90" : "rotate-0")}>
-                    <ChevronRight size={14} className="opacity-40" />
-                  </div>
-                )}
-              </button>
-
-              <div className={cn(
-                "overflow-hidden transition-all duration-500 ease-in-out pl-4",
-                isGroupExpanded && !collapsed ? "max-h-[800px] opacity-100 mt-2" : "max-h-0 opacity-0"
-              )}>
-                <div className="space-y-1 border-l border-white/5 pl-3">
-                  {group.items.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => mobileOnly && setIsMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 group relative h-10 hover:translate-x-1",
-                          isActive 
-                            ? "bg-white text-gray-900 shadow-lg font-black" 
-                            : "text-white/50 hover:text-white"
-                        )}
-                      >
-                        <item.icon size={16} className={cn("shrink-0 mr-3 transition-colors", isActive ? group.color : "text-white/20 group-hover:" + group.color)} />
-                        <span className="text-[11px] font-bold truncate tracking-tight">{item.name}</span>
-                        {item.badge !== undefined && item.badge > 0 && (
-                          <span className={cn(
-                            "absolute right-3 h-5 min-w-[20px] px-1.5 flex items-center justify-center rounded-full text-[9px] font-black text-white shadow-lg",
-                            group.id === 'orders' ? "bg-emerald-500" : 
-                            group.id === 'system' ? "bg-orange-500" : 
-                            group.id === 'crm' ? "bg-purple-500" : 
-                            group.id === 'marketing' ? "bg-rose-500" :
-                            "bg-primary"
-                          )}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-3 custom-scrollbar">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.id} className="space-y-1">
+            <button
+              onClick={() => toggleGroup(group.id)}
+              className={cn(
+                "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white",
+                group.items.some(item => pathname === item.href) && "bg-white/10 text-white"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <group.icon size={18} className={cn("shrink-0", group.items.some(item => pathname === item.href) ? group.color : "opacity-40")} />
+                {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest">{group.title}</span>}
               </div>
-            </div>
-          );
-        })}
+              {!collapsed && <ChevronRight size={14} className={cn("transition-transform", expandedGroups[group.id] ? "rotate-90" : "")} />}
+            </button>
+
+            {expandedGroups[group.id] && !collapsed && (
+              <div className="pl-4 mt-1 space-y-1 border-l border-white/5 ml-3">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-2.5 rounded-lg text-[11px] font-bold transition-all relative",
+                      pathname === item.href ? "bg-white text-[#081621] shadow-lg" : "text-white/50 hover:text-white"
+                    )}
+                  >
+                    <item.icon size={14} className="mr-3 opacity-60" />
+                    {item.name}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute right-3 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div className="p-4 border-t border-white/5 shrink-0 relative z-10 backdrop-blur-md bg-white/5">
-        <Button 
-          variant="ghost" 
-          className={cn(
-            "w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 gap-3 transition-all duration-300 rounded-xl h-12",
-            collapsed ? "justify-center" : "justify-start"
-          )} 
-          onClick={handleLogout}
-        >
-          <LogOut size={18} />
-          {!collapsed && <span className="font-black text-[10px] uppercase tracking-[0.2em]">Logout</span>}
+      <div className="p-4 border-t border-white/5">
+        <Button variant="ghost" className="w-full justify-start text-white/40 hover:text-red-400 rounded-xl" onClick={handleLogout}>
+          <LogOut size={18} className="mr-3" />
+          {!collapsed && <span className="font-black text-[10px] uppercase">Logout</span>}
         </Button>
       </div>
     </div>
   );
 
-  if (isUserLoading || (user && roleLoading)) {
+  if (isUserLoading || roleLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Verifying Admin Access...</p>
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Verifying Admin Terminal...</p>
       </div>
     );
   }
 
-  if (isLoginPage) return <>{children}</>;
-
-  if (!user || !isAuthorized) return null;
-
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      <aside 
-        className={cn(
-          "hidden lg:flex flex-col h-full bg-[#08101b] shadow-2xl transition-all duration-300 z-30 relative",
-          isCollapsed ? "w-20" : "w-72"
-        )}
-      >
+      <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
         <SidebarContent collapsed={isCollapsed} />
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute -right-3 top-24 bg-primary border-2 border-[#08101b] rounded-full h-7 w-7 z-40 hidden lg:flex shadow-xl text-white hover:bg-emerald-400 transition-all"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
+        <Button variant="ghost" size="icon" className="absolute -right-3 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-50" onClick={() => setIsCollapsed(!isCollapsed)}>
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-0 relative">
+      <div className="flex-1 flex flex-col h-full min-w-0">
         <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden text-gray-600 rounded-xl h-10 w-10">
-                  <Menu size={22} />
-                </Button>
+                <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10"><Menu size={22} /></Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72 shadow-2xl overflow-hidden">
-                <SheetHeader className="sr-only"><SheetTitle>Menu</SheetTitle></SheetHeader>
-                <SidebarContent mobileOnly />
-              </SheetContent>
+              <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72"><SidebarContent /></SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-gray-400 leading-none mb-1">Navigation</h2>
-              <span className="text-xs font-bold text-gray-900 leading-none flex items-center gap-2">
-                Active Module
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              </span>
+              <span className="text-[9px] font-black uppercase text-gray-400">Admin App</span>
+              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Terminal active <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" className="text-gray-600 hover:text-primary gap-2 h-10 px-3 rounded-xl font-bold" onClick={() => router.push('/')}>
-              <Globe size={18} />
-              <span className="text-[10px] font-black tracking-widest uppercase">Live Site</span>
-            </Button>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-emerald-400/10 text-primary flex items-center justify-center font-black text-xs border-2 border-white shadow-md">
-              {user?.email?.[0].toUpperCase()}
-            </div>
+            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold" asChild><Link href="/"><Globe size={18} /><span className="text-[10px] font-black uppercase">Live Site</span></Link></Button>
+            <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">{user?.email?.[0].toUpperCase()}</div>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
-          <div className="max-w-[1400px] mx-auto w-full">
-            {children}
-          </div>
+          <div className="max-w-[1400px] mx-auto w-full">{children}</div>
         </main>
 
         <AdminBottomNav />
