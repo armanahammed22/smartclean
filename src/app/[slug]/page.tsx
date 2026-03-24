@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import NextImage from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, limit, addDoc, doc, increment, updateDoc } from 'firebase/firestore';
 import { 
   CheckCircle2, 
@@ -513,7 +512,7 @@ export default function DynamicLandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* 📌 MOBILE STICKY CTA */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t p-4 flex gap-4 items-center shadow-[0_-10px_40px_rgba(0,0,0,0.1)] safe-area-pb">
