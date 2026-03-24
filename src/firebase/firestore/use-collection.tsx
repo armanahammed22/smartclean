@@ -54,7 +54,8 @@ const PUBLIC_COLLECTIONS = [
   'leads',
   'support_tickets',
   'users',
-  'error_logs'
+  'error_logs',
+  'product_qna'
 ];
 
 function getPathFromTarget(target: any): string {

@@ -53,7 +53,8 @@ const PUBLIC_DOCS = [
   'leads',
   'support_tickets',
   'users',
-  'error_logs'
+  'error_logs',
+  'product_qna'
 ];
 
 /**
