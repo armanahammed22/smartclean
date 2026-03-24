@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { ProductCard } from '@/components/products/product-card';
 import { trackEvent } from '@/lib/tracking';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
