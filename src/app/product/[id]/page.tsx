@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -24,7 +23,8 @@ import {
   TicketPercent,
   ShieldCheck,
   Headphones,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
