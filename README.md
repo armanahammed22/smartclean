@@ -35,3 +35,4 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 - **Service CRM**: Leads, real-time booking, and staff scheduling.
 - **AI Agents**: Genkit-powered agents for Sales, Booking, and Support.
 - **Analytics**: Revenue, profit/loss charts, and customer segmentation.
+test update from firebase
