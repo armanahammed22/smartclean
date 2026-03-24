@@ -312,7 +312,7 @@ export default function DynamicLandingPage() {
               {page.whyItems.map((item: string, i: number) => (
                 <div key={i} className="flex items-center gap-3 md:gap-4 bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 hover:bg-white/20 transition-all">
                   <div className="p-2 bg-yellow-400 rounded-lg text-black shrink-0"><CheckCircle2 size={18} /></div>
-                  <span className="font-bold text-xs md:text-sm uppercase tracking-tight">{item}</span>
+                  <span className="font-bold text-xs md:sm uppercase tracking-tight">{item}</span>
                 </div>
               ))}
             </div>
@@ -412,9 +412,9 @@ export default function DynamicLandingPage() {
                       <div className="flex-1 space-y-2">
                         <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs leading-tight line-clamp-2">{mainProduct?.name}</h4>
                         <div className="flex items-center gap-4">
-                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1.5 bg-gray-100 rounded-lg"><Minus size={14} /></button>
+                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="h-11 w-11 flex items-center justify-center bg-gray-100 rounded-lg active:scale-90 transition-transform"><Minus size={16} /></button>
                           <span className="font-black text-sm">{quantity}</span>
-                          <button onClick={() => setQuantity(quantity + 1)} className="p-1.5 bg-gray-100 rounded-lg"><Plus size={14} /></button>
+                          <button onClick={() => setQuantity(quantity + 1)} className="h-11 w-11 flex items-center justify-center bg-gray-100 rounded-lg active:scale-90 transition-transform"><Plus size={16} /></button>
                         </div>
                       </div>
                     </div>
@@ -424,7 +424,7 @@ export default function DynamicLandingPage() {
                       <div className="space-y-3">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground">প্যাকেজ নির্বাচন করুন</Label>
                         {page.packages?.map((pkg: any) => (
-                          <div key={pkg.id} onClick={() => setSelectedPkgId(pkg.id)} className={cn("p-3 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center", selectedPkgId === pkg.id ? "border-blue-600 bg-blue-50" : "border-gray-50 bg-white")}>
+                          <div key={pkg.id} onClick={() => setSelectedPkgId(pkg.id)} className={cn("p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center", selectedPkgId === pkg.id ? "border-blue-600 bg-blue-50" : "border-gray-50 bg-white")}>
                             <div className="space-y-0.5">
                               <p className="font-black text-[10px] md:text-[11px] uppercase">{pkg.name}</p>
                               <div className="flex gap-1">
@@ -446,12 +446,12 @@ export default function DynamicLandingPage() {
                                 key={add.id} 
                                 onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} 
                                 className={cn(
-                                  "p-2 md:p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", 
+                                  "p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", 
                                   selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100"
                                 )}
                               >
                                 <div className="flex items-center gap-2 md:gap-3">
-                                  <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-lg overflow-hidden bg-gray-50">
+                                  <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-50">
                                     <NextImage 
                                       src={(typeof add.imageUrl === 'string' && add.imageUrl) ? add.imageUrl : 'https://picsum.photos/seed/addon/100/100'} 
                                       data-ai-hint="addon icon" 
@@ -465,8 +465,8 @@ export default function DynamicLandingPage() {
                                 </div>
                                 <div className="flex items-center gap-2 md:gap-3">
                                   <span className="font-black text-[9px] md:text-[10px] text-blue-600">+৳{add.price}</span>
-                                  <div className={cn("w-4 h-4 rounded border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200")}>
-                                    {selectedAddOnIds.includes(add.id) && <Plus size={10} strokeWidth={4} />}
+                                  <div className={cn("w-6 h-6 rounded border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200")}>
+                                    {selectedAddOnIds.includes(add.id) && <Plus size={14} strokeWidth={4} />}
                                   </div>
                                 </div>
                               </div>
@@ -518,7 +518,7 @@ export default function DynamicLandingPage() {
           <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>
           <span className={cn("text-xl md:text-2xl font-black tracking-tighter leading-none", isProduct ? "text-[#D60000]" : "text-blue-600")}>৳{calculations.total}</span>
         </div>
-        <Button className={cn("flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-xs shadow-xl", themeColor, "text-white")} onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}>
+        <Button className={cn("flex-1 h-14 md:h-16 rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-xs shadow-xl", themeColor, "text-white")} onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}>
           বুকিং সম্পন্ন করুন →
         </Button>
       </div>
