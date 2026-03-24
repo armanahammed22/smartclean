@@ -22,17 +22,14 @@ import {
   X,
   Layout,
   Layers,
-  Settings2,
   Wrench,
   ShoppingBag,
-  Type,
-  ImageIcon,
   Grid,
-  ChevronDown,
-  ChevronUp,
   CheckCircle2,
-  MoreVertical,
-  GripVertical
+  Package,
+  Settings2,
+  Box,
+  ClipboardList
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -64,31 +61,31 @@ export default function LandingPagesAdminPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<any>(null);
 
+  // Default state for a NEW page
   const [formData, setFormData] = useState<any>({
     slug: '',
-    type: 'product',
+    type: 'product', // 'product' | 'service'
     title: '',
-    heroTitle: '',
-    heroSubtitle: '',
-    heroBadge: 'LIMITED OFFER',
-    heroCTA: 'অর্ডার করতে চাই',
-    heroBanner: '',
-    phone: '01919640422',
     active: true,
+    
+    // PRODUCT MODE FIELDS
     productId: '',
     showCatalogGrid: false,
     catalogSource: 'products',
-    catalogTitle: '',
+    catalogTitle: 'More Items',
     catalogLimit: 8,
-    storageText: '',
-    ingredients: [],
-    usageTitle: '',
-    usageImage: '',
-    usagePoints: [],
-    trustTitle: '',
-    trustPoints: [],
+
+    // SERVICE MODE FIELDS
+    heroTitle: '',
+    heroSubtitle: '',
+    heroBanner: '',
+    phone: '01919640422',
     packages: [],
-    addOns: []
+    addOns: [],
+    usageTitle: 'How we work',
+    usagePoints: [],
+    trustTitle: 'Why trust us',
+    trustPoints: []
   });
 
   const pagesQuery = useMemoFirebase(() => db ? query(collection(db, 'landing_pages'), orderBy('createdAt', 'desc')) : null, [db]);
@@ -106,28 +103,23 @@ export default function LandingPagesAdminPage() {
       setFormData({
         slug: '',
         type: 'product',
-        title: 'New Landing Page',
-        heroTitle: '',
-        heroSubtitle: '',
-        heroBadge: 'LIMITED OFFER',
-        heroCTA: 'অর্ডার করতে চাই',
-        heroBanner: '',
-        phone: '01919640422',
+        title: 'New Page',
         active: true,
         productId: '',
         showCatalogGrid: false,
         catalogSource: 'products',
-        catalogTitle: '',
+        catalogTitle: 'More Items',
         catalogLimit: 8,
-        storageText: '',
-        ingredients: [],
-        usageTitle: '',
-        usageImage: '',
-        usagePoints: [],
-        trustTitle: '',
-        trustPoints: [],
+        heroTitle: '',
+        heroSubtitle: '',
+        heroBanner: '',
+        phone: '01919640422',
         packages: [],
-        addOns: []
+        addOns: [],
+        usageTitle: 'How we work',
+        usagePoints: [],
+        trustTitle: 'Why trust us',
+        trustPoints: []
       });
     }
     setIsDialogOpen(true);
@@ -139,14 +131,47 @@ export default function LandingPagesAdminPage() {
     setIsSubmitting(true);
 
     const slug = formData.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const data = { ...formData, slug, updatedAt: new Date().toISOString() };
+    
+    // Strict separation: Filter data based on type before saving
+    let finalData: any = {
+      slug,
+      type: formData.type,
+      title: formData.title,
+      active: formData.active,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (formData.type === 'product') {
+      finalData = {
+        ...finalData,
+        productId: formData.productId,
+        showCatalogGrid: formData.showCatalogGrid,
+        catalogSource: formData.catalogSource,
+        catalogTitle: formData.catalogTitle,
+        catalogLimit: formData.catalogLimit
+      };
+    } else {
+      finalData = {
+        ...finalData,
+        heroTitle: formData.heroTitle,
+        heroSubtitle: formData.heroSubtitle,
+        heroBanner: formData.heroBanner,
+        phone: formData.phone,
+        packages: formData.packages,
+        addOns: formData.addOns,
+        usageTitle: formData.usageTitle,
+        usagePoints: formData.usagePoints,
+        trustTitle: formData.trustTitle,
+        trustPoints: formData.trustPoints
+      };
+    }
 
     try {
       if (editingPage) {
-        await updateDoc(doc(db, 'landing_pages', editingPage.id), data);
+        await updateDoc(doc(db, 'landing_pages', editingPage.id), finalData);
         toast({ title: "Landing Page Updated" });
       } else {
-        await addDoc(collection(db, 'landing_pages'), { ...data, createdAt: new Date().toISOString() });
+        await addDoc(collection(db, 'landing_pages'), { ...finalData, createdAt: new Date().toISOString() });
         toast({ title: "Landing Page Created" });
       }
       setIsDialogOpen(false);
@@ -170,21 +195,15 @@ export default function LandingPagesAdminPage() {
     setFormData({ ...formData, packages: list });
   };
 
-  const updateAddOn = (index: number, field: string, value: any) => {
-    const list = [...formData.addOns];
-    list[index] = { ...list[index], [field]: value };
-    setFormData({ ...formData, addOns: list });
-  };
-
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Universal Page Builder</h1>
-          <p className="text-muted-foreground text-sm font-medium">Create high-converting landing pages with dynamic catalog sync</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Landing Page Manager</h1>
+          <p className="text-muted-foreground text-sm font-medium">Create independent Product Sales or Service Booking pages</p>
         </div>
         <Button onClick={() => handleOpenDialog()} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
-          <Plus size={18} /> Create New Page
+          <Plus size={18} /> Add New Landing Page
         </Button>
       </div>
 
@@ -196,9 +215,11 @@ export default function LandingPagesAdminPage() {
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className={cn("p-2 rounded-xl", page.type === 'service' ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-600")}>
-                  {page.type === 'service' ? <Wrench size={20} /> : <ShoppingBag size={20} />}
+                  {page.type === 'service' ? <Wrench size={20} /> : <Box size={20} />}
                 </div>
-                <Badge variant="secondary" className="text-[8px] font-black uppercase">{page.type}</Badge>
+                <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5">
+                  {page.type === 'service' ? 'Service Booking' : 'Product Sales'}
+                </Badge>
               </div>
               <h3 className="font-black text-gray-900 uppercase tracking-tight text-sm line-clamp-1">{page.title}</h3>
               <div className="flex items-center justify-between pt-2 border-t">
@@ -217,315 +238,159 @@ export default function LandingPagesAdminPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-6xl w-[95vw] rounded-[2.5rem] overflow-hidden p-0 border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className={cn("p-8 text-white shrink-0", formData.type === 'service' ? "bg-[#1E5F7A]" : "bg-[#8B0000]")}>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                  <Sparkles className="text-yellow-400" /> {editingPage ? 'Update Landing Page' : 'New Page Design'}
-                </DialogTitle>
-                <div className="flex items-center gap-3 bg-white/10 p-1 rounded-xl">
-                  <button type="button" onClick={() => setFormData({...formData, type: 'product'})} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all", formData.type === 'product' ? "bg-white text-red-600 shadow-sm" : "text-white/60 hover:text-white")}>Product Sales</button>
-                  <button type="button" onClick={() => setFormData({...formData, type: 'service'})} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all", formData.type === 'service' ? "bg-white text-blue-600 shadow-sm" : "text-white/60 hover:text-white")}>Service Booking</button>
+            
+            {/* MODE SELECTION HEADER */}
+            <header className={cn("p-8 text-white shrink-0 transition-colors", formData.type === 'service' ? "bg-blue-600" : "bg-red-600")}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                    {editingPage ? 'Edit Dynamic Page' : 'New Page Engine'}
+                  </DialogTitle>
+                  <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-1">Configure independent behavioral logic</p>
+                </div>
+                <div className="flex bg-black/20 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, type: 'product'})} 
+                    className={cn(
+                      "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2",
+                      formData.type === 'product' ? "bg-white text-red-600 shadow-xl" : "text-white/60 hover:text-white"
+                    )}
+                  >
+                    <Box size={14} /> Product Sales
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setFormData({...formData, type: 'service'})} 
+                    className={cn(
+                      "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all flex items-center gap-2",
+                      formData.type === 'service' ? "bg-white text-blue-600 shadow-xl" : "text-white/60 hover:text-white"
+                    )}
+                  >
+                    <ClipboardList size={14} /> Service Booking
+                  </button>
                 </div>
               </div>
-            </DialogHeader>
+            </header>
             
-            <Tabs defaultValue="hero" className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="bg-gray-100 rounded-none h-12 p-0 flex justify-start px-8 gap-8 border-b overflow-x-auto no-scrollbar">
-                <TabsTrigger value="hero" className="text-[9px] font-black uppercase">Hero & Logic</TabsTrigger>
-                <TabsTrigger value="catalog" className="text-[9px] font-black uppercase">Live Catalog Sync</TabsTrigger>
-                <TabsTrigger value="ingredients" className="text-[9px] font-black uppercase">Additional Info</TabsTrigger>
-                <TabsTrigger value="usage" className="text-[9px] font-black uppercase">Usage & Trust</TabsTrigger>
-                <TabsTrigger value="pricing" className="text-[9px] font-black uppercase">Packages & Add-ons</TabsTrigger>
-              </TabsList>
-
-              <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-white">
+            <div className="flex-1 overflow-y-auto p-8 bg-white">
+              <div className="max-w-5xl mx-auto space-y-10">
                 
-                <TabsContent value="hero" className="space-y-8 mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-6">
-                      <ImageUploader label="Hero Banner Image" initialUrl={formData.heroBanner} onUpload={url => setFormData({...formData, heroBanner: url})} aspectRatio="aspect-video" />
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Internal Identification</Label>
-                        <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">URL Slug</Label>
-                        <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono" />
-                      </div>
+                {/* 1. SHARED CONFIG */}
+                <section className="space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b pb-2">Global Identity</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase">Internal Page Title</Label>
+                      <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                     </div>
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-primary">Hero Headline</Label>
-                        <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Hero Subtitle</Label>
-                        <Textarea value={formData.heroSubtitle} onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} className="bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase">URL Slug (Instant Activation)</Label>
+                      <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono text-primary font-bold" required />
+                    </div>
+                  </div>
+                </section>
+
+                {/* 2. MODE SPECIFIC LOGIC */}
+                {formData.type === 'product' ? (
+                  <div className="space-y-10 animate-in fade-in zoom-in-95">
+                    {/* PRODUCT MODE UI */}
+                    <Card className="border-none shadow-sm bg-red-50/50 rounded-3xl overflow-hidden border-2 border-red-100">
+                      <CardHeader className="bg-red-600 text-white p-6">
+                        <CardTitle className="text-sm font-black uppercase flex items-center gap-2"><Package size={16}/> Inventory Integration</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-8 space-y-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">CTA Button</Label>
-                          <Input value={formData.heroCTA} onChange={e => setFormData({...formData, heroCTA: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                          <Label className="text-[10px] font-black uppercase">Select Primary Product (Live Sync)</Label>
+                          <Select value={formData.productId} onValueChange={v => setFormData({...formData, productId: v})}>
+                            <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold">
+                              <SelectValue placeholder="Search inventory..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {products?.map(p => <SelectItem key={p.id} value={p.id}>{p.name} (Stock: {p.stockQuantity})</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase">Hotline</Label>
-                          <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                        <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border">
+                          <div className="space-y-1">
+                            <Label className="text-xs font-black uppercase text-red-900">Dynamic Catalog Grid</Label>
+                            <p className="text-[9px] font-bold text-red-700/60 uppercase">Show related items from database</p>
+                          </div>
+                          <Switch checked={formData.showCatalogGrid} onCheckedChange={v => setFormData({...formData, showCatalogGrid: v})} />
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="catalog" className="space-y-8 mt-0">
-                  <div className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-primary text-white rounded-2xl shadow-lg"><Grid size={24} /></div>
-                        <div>
-                          <h3 className="font-black uppercase tracking-tight">Live Inventory Sync</h3>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase">Fetch items directly from main site</p>
-                        </div>
-                      </div>
-                      <Switch checked={formData.showCatalogGrid} onCheckedChange={v => setFormData({...formData, showCatalogGrid: v})} />
-                    </div>
-                    {formData.showCatalogGrid && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t animate-in fade-in">
-                        <Select value={formData.catalogSource} onValueChange={v => setFormData({...formData, catalogSource: v})}>
-                          <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold"><SelectValue placeholder="Select Source" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="products">Products</SelectItem>
-                            <SelectItem value="services">Services</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input value={formData.catalogTitle} onChange={e => setFormData({...formData, catalogTitle: e.target.value})} className="h-12 bg-white border-none rounded-xl" placeholder="Section Title" />
-                        <Input type="number" value={formData.catalogLimit} onChange={e => setFormData({...formData, catalogLimit: parseInt(e.target.value) || 8})} className="h-12 bg-white border-none rounded-xl" />
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="pricing" className="space-y-12 mt-0">
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
-                      <div>
-                        <h3 className="text-sm font-black uppercase text-[#081621]">Price Package Bundles</h3>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">Configure tiered pricing options</p>
-                      </div>
-                      <Button type="button" onClick={() => addArrayItem('packages', { 
-                        id: Math.random().toString(36).substr(2, 9),
-                        category: 'Routine Maintenance',
-                        name: '', 
-                        price: 0, 
-                        originalPrice: 0,
-                        description: '',
-                        features: [],
-                        status: true,
-                        order: formData.packages?.length || 0
-                      })} className="rounded-xl gap-2 font-black uppercase text-[10px]">
-                        <Plus size={14} /> Add Bundle
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6">
-                      {formData.packages?.map((pkg: any, i: number) => (
-                        <Card key={pkg.id || i} className="border-none shadow-sm bg-white rounded-[2rem] border border-gray-100 group overflow-hidden">
-                          <CardHeader className="bg-gray-50/50 p-6 flex flex-row items-center justify-between border-b">
-                            <div className="flex items-center gap-4">
-                              <Badge className="bg-[#081621] text-white px-3 py-1 rounded-full text-[9px] font-black uppercase">{pkg.category}</Badge>
-                              <div className="flex items-center gap-2">
-                                <Switch checked={pkg.status} onCheckedChange={val => updatePackage(i, 'status', val)} />
-                                <span className="text-[10px] font-bold text-muted-foreground">{pkg.status ? 'ACTIVE' : 'HIDDEN'}</span>
-                              </div>
-                            </div>
-                            <Button variant="ghost" size="icon" onClick={() => removeArrayItem('packages', i)} className="text-destructive h-8 w-8 rounded-xl hover:bg-red-50"><Trash2 size={14} /></Button>
-                          </CardHeader>
-                          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-12 gap-10">
-                            <div className="md:col-span-4 space-y-6">
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Category Type</Label>
-                                <Select value={pkg.category} onValueChange={v => {
-                                  updatePackage(i, 'category', v);
-                                  updatePackage(i, 'name', PACKAGE_NAME_SUGGESTIONS[v][0]);
-                                }}>
-                                  <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    {Object.keys(PACKAGE_NAME_SUGGESTIONS).map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Package Name</Label>
-                                <div className="space-y-2">
-                                  <Input value={pkg.name} onChange={e => updatePackage(i, 'name', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold" placeholder="Select or type name" />
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {PACKAGE_NAME_SUGGESTIONS[pkg.category]?.map(name => (
-                                      <button key={name} type="button" onClick={() => updatePackage(i, 'name', name)} className={cn("text-[8px] font-black uppercase px-2 py-1 rounded-md border transition-all", pkg.name === name ? "bg-primary text-white border-primary" : "bg-white text-muted-foreground border-gray-200 hover:border-primary")}>
-                                        {name}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-4 space-y-6">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Sale Price</Label>
-                                  <Input type="number" value={pkg.price} onChange={e => updatePackage(i, 'price', parseInt(e.target.value) || 0)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-lg text-primary" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Original Price</Label>
-                                  <Input type="number" value={pkg.originalPrice} onChange={e => updatePackage(i, 'originalPrice', parseInt(e.target.value) || 0)} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-muted-foreground" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Description</Label>
-                                <Textarea value={pkg.description} onChange={e => updatePackage(i, 'description', e.target.value)} className="bg-gray-50 border-none rounded-xl min-h-[80px] text-xs" placeholder="Short summary of this tier" />
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-4 space-y-4">
-                              <div className="flex items-center justify-between border-b pb-2">
-                                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Feature Checklist</Label>
-                                <Button type="button" variant="ghost" size="sm" onClick={() => updatePackage(i, 'features', [...(pkg.features || []), ''])} className="h-6 text-[8px] font-black uppercase text-primary">+ Add Bullet</Button>
-                              </div>
-                              <div className="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
-                                {pkg.features?.map((feat: string, fIdx: number) => (
-                                  <div key={fIdx} className="flex gap-2 group/feat">
-                                    <Input value={feat} onChange={e => {
-                                      const flist = [...pkg.features];
-                                      flist[fIdx] = e.target.value;
-                                      updatePackage(i, 'features', flist);
-                                    }} className="h-8 bg-gray-50 border-none rounded-lg text-xs" placeholder="e.g. 2 Professional Staff" />
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => {
-                                      const flist = [...pkg.features];
-                                      flist.splice(fIdx, 1);
-                                      updatePackage(i, 'features', flist);
-                                    }} className="h-8 w-8 rounded-lg text-destructive opacity-0 group-hover/feat:opacity-100"><X size={12} /></Button>
-                                  </div>
-                                ))}
-                                {(!pkg.features || pkg.features.length === 0) && <p className="text-[10px] text-center text-muted-foreground italic py-4">No features listed.</p>}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-6 border-t pt-12">
-                    <div className="flex justify-between items-center bg-blue-50 p-4 rounded-2xl">
-                      <div>
-                        <h3 className="text-sm font-black uppercase text-blue-900">Add-on Services</h3>
-                        <p className="text-[10px] text-blue-700 font-bold uppercase">Optional extras for customers</p>
-                      </div>
-                      <Button type="button" variant="outline" onClick={() => addArrayItem('addOns', { 
-                        id: Math.random().toString(36).substr(2, 9),
-                        name: '', 
-                        price: 0, 
-                        status: true,
-                        imageUrl: ''
-                      })} className="rounded-xl gap-2 font-black uppercase text-[10px] border-blue-200 text-blue-700 hover:bg-blue-100">
-                        <Plus size={14} /> Add Option
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {formData.addOns?.map((add: any, i: number) => (
-                        <div key={add.id || i} className="p-6 bg-white rounded-[2rem] border-2 border-gray-100 space-y-4 relative group hover:border-blue-200 transition-all">
-                          <ImageUploader label="Icon/Image" initialUrl={add.imageUrl} onUpload={url => updateAddOn(i, 'imageUrl', url)} aspectRatio="aspect-square w-16" />
-                          <div className="space-y-3">
-                            <Input value={add.name} onChange={e => updateAddOn(i, 'name', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl font-bold" placeholder="Task Name" />
-                            <div className="flex items-center gap-3">
-                              <Input type="number" value={add.price} onChange={e => updateAddOn(i, 'price', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl font-black text-blue-600" placeholder="+ ৳" />
-                              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl">
-                                <Switch checked={add.status} onCheckedChange={val => updateAddOn(i, 'status', val)} />
-                                <span className="text-[8px] font-black">{add.status ? 'ON' : 'OFF'}</span>
-                              </div>
+                ) : (
+                  <div className="space-y-10 animate-in fade-in zoom-in-95">
+                    {/* SERVICE MODE UI */}
+                    <Card className="border-none shadow-sm bg-blue-50/50 rounded-3xl overflow-hidden border-2 border-blue-100">
+                      <CardHeader className="bg-blue-600 text-white p-6">
+                        <CardTitle className="text-sm font-black uppercase flex items-center gap-2"><Wrench size={16}/> Service Configuration</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-8 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="space-y-6">
+                            <ImageUploader label="Custom Hero Banner" initialUrl={formData.heroBanner} onUpload={url => setFormData({...formData, heroBanner: url})} aspectRatio="aspect-video" />
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Hero Headline</Label>
+                              <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-white" />
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive opacity-0 group-hover:opacity-100" onClick={() => removeArrayItem('addOns', i)}><Trash2 size={14} /></Button>
+                          <div className="space-y-6">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Booking Subtitle</Label>
+                              <Textarea value={formData.heroSubtitle} onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} className="min-h-[100px] bg-white" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase">Official Hotline</Label>
+                              <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-white" />
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
 
-                <TabsContent value="ingredients" className="space-y-6 mt-0">
-                  <Button type="button" size="sm" onClick={() => addArrayItem('ingredients', { name: '', image: '' })} variant="outline">Add Item</Button>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {formData.ingredients?.map((s: any, i: number) => (
-                      <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-4 relative">
-                        <ImageUploader initialUrl={s.image} onUpload={url => {
-                          const list = [...formData.ingredients];
-                          list[i].image = url;
-                          setFormData({...formData, ingredients: list});
-                        }} aspectRatio="aspect-square w-16" />
-                        <Input placeholder="Name" value={s.name} onChange={e => {
-                          const list = [...formData.ingredients];
-                          list[i].name = e.target.value;
-                          setFormData({...formData, ingredients: list});
-                        }} className="h-11 bg-white" />
-                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 text-destructive" onClick={() => removeArrayItem('ingredients', i)}><X size={14} /></Button>
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="usage" className="space-y-8 mt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-6">
-                      <Label className="text-xs font-black uppercase text-primary">Usage Section</Label>
-                      <Input placeholder="Section Title" value={formData.usageTitle} onChange={e => setFormData({...formData, usageTitle: e.target.value})} className="h-12 bg-gray-50 border-none" />
-                      <ImageUploader label="Usage Image" initialUrl={formData.usageImage} onUpload={url => setFormData({...formData, usageImage: url})} />
-                      <div className="space-y-2">
-                        {formData.usagePoints?.map((p: string, i: number) => (
-                          <div key={i} className="flex gap-2">
-                            <Input value={p} onChange={e => {
-                              const list = [...formData.usagePoints];
-                              list[i] = e.target.value;
-                              setFormData({...formData, usagePoints: list});
-                            }} className="h-10 bg-gray-50 border-none" />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeArrayItem('usagePoints', i)}><X size={14} /></Button>
+                        {/* PACKAGES SYSTEM */}
+                        <div className="space-y-6 pt-8 border-t">
+                          <div className="flex justify-between items-center">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-blue-900">Package Bundles</h4>
+                            <Button type="button" onClick={() => addArrayItem('packages', { id: Math.random().toString(36).substr(2, 9), category: 'Routine Maintenance', name: '', price: 0, description: '', features: [], status: true })} className="h-8 text-[9px] bg-blue-600 rounded-lg">Add Package</Button>
                           </div>
-                        ))}
-                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('usagePoints', '')}>+ Add Point</Button>
-                      </div>
-                    </div>
-                    <div className="space-y-6">
-                      <Label className="text-xs font-black uppercase text-primary">Trust Section</Label>
-                      <Input placeholder="Trust Title" value={formData.trustTitle} onChange={e => setFormData({...formData, trustTitle: e.target.value})} className="h-12 bg-gray-50 border-none" />
-                      <div className="space-y-2">
-                        {formData.trustPoints?.map((p: string, i: number) => (
-                          <div key={i} className="flex gap-2">
-                            <Input value={p} onChange={e => {
-                              const list = [...formData.trustPoints];
-                              list[i] = e.target.value;
-                              setFormData({...formData, trustPoints: list});
-                            }} className="h-10 bg-gray-50 border-none" />
-                            <Button type="button" variant="ghost" size="icon" onClick={() => removeArrayItem('trustPoints', i)}><X size={14} /></Button>
+                          <div className="grid grid-cols-1 gap-4">
+                            {formData.packages?.map((pkg: any, idx: number) => (
+                              <div key={pkg.id} className="p-6 bg-white rounded-2xl border border-blue-100 relative group">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <Select value={pkg.category} onValueChange={v => updatePackage(idx, 'category', v)}>
+                                    <SelectTrigger className="h-10 bg-gray-50"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {Object.keys(PACKAGE_NAME_SUGGESTIONS).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                    </SelectContent>
+                                  </Select>
+                                  <Input value={pkg.name} onChange={e => updatePackage(idx, 'name', e.target.value)} placeholder="Package Name" className="h-10" />
+                                  <Input type="number" value={pkg.price} onChange={e => updatePackage(idx, 'price', parseInt(e.target.value))} placeholder="Price" className="h-10 font-black text-blue-600" />
+                                </div>
+                                <button type="button" onClick={() => removeArrayItem('packages', idx)} className="absolute top-2 right-2 p-1.5 text-red-400 hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                        <Button type="button" variant="link" size="sm" onClick={() => addArrayItem('trustPoints', '')}>+ Add Point</Button>
-                      </div>
-                      <Textarea placeholder="Storage Info" value={formData.storageText} onChange={e => setFormData({...formData, storageText: e.target.value})} className="min-h-[100px]" />
-                    </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                </TabsContent>
-
+                )}
               </div>
-            </Tabs>
+            </div>
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0">
               <div className="flex items-center gap-4 w-full">
-                <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
-                <Label>Active</Label>
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border shadow-sm">
+                  <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
+                  <Label className="text-[10px] font-black uppercase">Live Active</Label>
+                </div>
                 <div className="flex-1" />
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className={cn("px-12 h-14", formData.type === 'service' ? "bg-blue-600" : "bg-red-600")}>
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold px-8">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className={cn("rounded-xl font-black px-12 h-14 shadow-xl transition-all", formData.type === 'service' ? "bg-blue-600" : "bg-red-600")}>
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
-                  Deploy Page
+                  Deploy {formData.type === 'service' ? 'Booking' : 'Sales'} Page
                 </Button>
               </div>
             </DialogFooter>
