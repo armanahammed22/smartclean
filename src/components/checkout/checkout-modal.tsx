@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy } from 'firebase/firestore';
@@ -103,8 +103,7 @@ export function CheckoutModal() {
   }, [isCheckoutOpen, user, form]);
 
   const onlineMethods = useMemo(() => availableMethods?.filter(m => m.type !== 'cod') || [], [availableMethods]);
-  const codMethod = useMemo(() => availableMethods?.find(m => m.type === 'cod'), [availableMethods]);
-
+  
   const selectedDeliveryId = form.watch('deliveryOption' as any);
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
@@ -232,219 +231,39 @@ export function CheckoutModal() {
 
   if (!mounted) return null;
 
-  const paymentCategory = form.watch('paymentCategory');
-
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
-        <div className="flex flex-col lg:grid lg:grid-cols-5 h-[90vh] lg:h-auto max-h-[90vh]">
-          {/* Form Section (Left) */}
-          <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white overflow-y-auto custom-scrollbar">
-            <DialogHeader className="mb-8 text-left">
-              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
-                <ShieldCheck size={14} />
-                <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
-              </div>
-              <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621]">
-                {hasServices ? 'Booking Details' : 'Order Details'}
-              </DialogTitle>
-            </DialogHeader>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="name" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</FormLabel>
-                        <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="phone" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
-                          {isOtpSystemEnabled && !user && !isVerified && (
-                            <Button type="button" variant="secondary" onClick={handleSendOtp} disabled={isVerifying} className="h-12 px-4 font-black uppercase text-[10px] rounded-xl">
-                              {isVerifying ? <Loader2 className="animate-spin" /> : t('send_otp')}
-                            </Button>
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-
-                  {isOtpSent && !isVerified && (
-                    <div className="flex gap-2 animate-in slide-in-from-top-2">
-                      <FormField control={form.control} name="otp" render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl><Input placeholder="OTP Code" {...field} className="h-12 bg-white border-primary rounded-xl text-center font-black tracking-widest" /></FormControl>
-                        </FormItem>
-                      )} />
-                      <Button type="button" onClick={handleVerifyOtp} className="h-12 px-6 font-black uppercase text-[10px] rounded-xl bg-primary text-white">VERIFY</Button>
-                    </div>
-                  )}
-
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address (Optional)</FormLabel>
-                      <FormControl><Input placeholder="name@example.com" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="address" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Address</FormLabel>
-                      <FormControl><Textarea placeholder="House, Road, Area" {...field} className="bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all min-h-[80px]" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-
-                {hasServices && (
-                  <div className="space-y-6 pt-6 border-t">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-primary" /> Booking Schedule</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField control={form.control} name="date" render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" className={cn("h-12 bg-gray-50 justify-start gap-2 font-bold rounded-xl border-gray-100", !field.value && "text-muted-foreground")}>
-                                <CalendarIcon size={16} className="text-primary" />
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="time" render={({ field }) => (
-                        <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="h-12 bg-gray-50 font-bold rounded-xl border-gray-100"><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent className="rounded-xl">
-                              <SelectItem value="8AM - 12PM">8AM - 12PM (Morning)</SelectItem>
-                              <SelectItem value="12PM - 4PM">12PM - 4PM (Afternoon)</SelectItem>
-                              <SelectItem value="4PM - 8PM">4PM - 8PM (Evening)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-6 pt-6 border-t">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-primary" /> Payment Method</h4>
-                  <FormField control={form.control} name="paymentCategory" render={({ field }) => (
-                    <FormItem className="space-y-4">
-                      <FormControl>
-                        <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                          {/* COD Option */}
-                          <div className={cn(
-                            "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
-                            field.value === 'cod' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
-                          )}>
-                            <RadioGroupItem value="cod" id="cat-cod" className="sr-only" />
-                            <label htmlFor="cat-cod" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
-                              <div className={cn("p-2 rounded-lg", field.value === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
-                                <Truck size={16} />
-                              </div>
-                              <div className="flex-1">
-                                <span className="uppercase tracking-tight block">Cash on Delivery</span>
-                                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">DEFAULT</Badge>
-                              </div>
-                            </label>
-                          </div>
-
-                          {/* Online Option */}
-                          <div className={cn(
-                            "flex flex-col rounded-xl border-2 transition-all cursor-pointer",
-                            field.value === 'online' ? "border-blue-600 bg-blue-50/30" : "border-gray-100 hover:border-gray-200 bg-white"
-                          )}>
-                            <div className="flex items-center gap-4 p-4">
-                              <RadioGroupItem value="online" id="cat-online" className="sr-only" />
-                              <label htmlFor="cat-online" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
-                                <div className={cn("p-2 rounded-lg", field.value === 'online' ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400")}>
-                                  <Smartphone size={16} />
-                                </div>
-                                <span className="uppercase tracking-tight">Online Payment (bKash, Nagad...)</span>
-                              </label>
-                            </div>
-
-                            {/* Dropdown for Online Methods */}
-                            {field.value === 'online' && (
-                              <div className="p-4 pt-0 animate-in slide-in-from-top-2">
-                                <FormField control={form.control} name="onlineMethod" render={({ field: subField }) => (
-                                  <FormItem>
-                                    <Select onValueChange={subField.onChange} value={subField.value}>
-                                      <FormControl>
-                                        <SelectTrigger className="h-12 bg-white border-blue-200 font-bold rounded-xl">
-                                          <SelectValue placeholder="Choose Payment Method" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent className="rounded-xl">
-                                        {onlineMethods.map(m => (
-                                          <SelectItem key={m.id} value={m.id} className="font-bold">
-                                            <div className="flex items-center gap-2 uppercase text-[10px]">
-                                              {m.name}
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                        {onlineMethods.length === 0 && (
-                                          <div className="p-4 text-center text-[10px] font-bold text-muted-foreground uppercase">
-                                            No methods enabled
-                                          </div>
-                                        )}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )} />
-                              </div>
-                            )}
-                          </div>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-              </form>
-            </Form>
-          </div>
-
-          {/* Summary Section (Right) */}
-          <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-l border-gray-100 flex flex-col justify-between overflow-y-auto">
-            <div>
-              <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-                <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Bill Summary</h3>
-                <ShoppingCart size={20} className="text-primary" />
+        <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
+          
+          {/* Scrollable Container */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5">
+            
+            {/* 📦 Summary Section (Now 1st on Mobile via order prop) */}
+            <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col order-first lg:order-last">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621] flex items-center gap-2">
+                  <ShoppingCart size={20} className="text-primary" /> {t('order_summary')}
+                </h3>
+                <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black">{items.length} {items.length > 1 ? 'Items' : 'Item'}</Badge>
               </div>
               
-              <div className="space-y-4 mb-8">
+              <div className="space-y-3 mb-8">
                 {items.map(item => (
-                  <div key={item.id} className="flex justify-between items-start gap-4">
-                    <div className="min-w-0">
+                  <div key={item.id} className="flex justify-between items-center gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Qty: {item.quantity}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase bg-gray-50 px-1.5 py-0.5 rounded">Qty: {item.quantity}</span>
+                        <span className="text-[9px] font-bold text-primary uppercase">৳{item.price.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <span className="text-xs font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
+                    <span className="text-xs font-black text-gray-900 shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div>
-              <div className="space-y-4 pt-6 border-t-2 border-dashed border-gray-200">
+              <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>Subtotal</span>
                   <span>৳{subtotal.toLocaleString()}</span>
@@ -460,31 +279,212 @@ export function CheckoutModal() {
                   </div>
                 )}
                 
-                <div className="pt-6 flex justify-between items-end">
+                <div className="pt-4 flex justify-between items-end">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
-                    <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
+                    <span className="text-3xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
                   </div>
                   <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
                 </div>
               </div>
 
-              <div className="mt-8">
+              {/* Desktop Only Action Button */}
+              <div className="hidden lg:block mt-8">
                 <Button 
                   onClick={form.handleSubmit(onSubmit)} 
-                  className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white gap-3 transition-transform active:scale-95" 
+                  className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" 
                   disabled={isSubmitting || items.length === 0}
                 >
                   {isSubmitting ? <Loader2 className="animate-spin" /> : (
                     <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>
                   )}
                 </Button>
-                <p className="text-[9px] text-center mt-4 font-bold text-gray-400 uppercase tracking-widest">
-                  By placing this {hasServices ? 'booking' : 'order'}, you agree to our Terms.
-                </p>
               </div>
             </div>
+
+            {/* 📋 Form Section (Left on Desktop, Below Summary on Mobile) */}
+            <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white">
+              <DialogHeader className="mb-8 text-left hidden lg:block">
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
+                  <ShieldCheck size={14} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
+                </div>
+                <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">
+                  {hasServices ? 'Booking Details' : 'Order Details'}
+                </DialogTitle>
+              </DialogHeader>
+
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><User size={14} className="text-primary" /> Customer Info</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="name" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</FormLabel>
+                          <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="phone" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</FormLabel>
+                          <div className="flex gap-2">
+                            <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
+                            {isOtpSystemEnabled && !user && !isVerified && (
+                              <Button type="button" variant="secondary" onClick={handleSendOtp} disabled={isVerifying} className="h-12 px-4 font-black uppercase text-[10px] rounded-xl">
+                                {isVerifying ? <Loader2 className="animate-spin" /> : t('send_otp')}
+                              </Button>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+
+                    {isOtpSent && !isVerified && (
+                      <div className="flex gap-2 animate-in slide-in-from-top-2">
+                        <FormField control={form.control} name="otp" render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl><Input placeholder="OTP Code" {...field} className="h-12 bg-white border-primary rounded-xl text-center font-black tracking-widest" /></FormControl>
+                          </FormItem>
+                        )} />
+                        <Button type="button" onClick={handleVerifyOtp} className="h-12 px-6 font-black uppercase text-[10px] rounded-xl bg-primary text-white">VERIFY</Button>
+                      </div>
+                    )}
+
+                    <FormField control={form.control} name="address" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Address</FormLabel>
+                        <FormControl><Textarea placeholder="House, Road, Area" {...field} className="bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all min-h-[80px]" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+
+                  {hasServices && (
+                    <div className="space-y-6 pt-6 border-t">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-primary" /> Booking Schedule</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="date" render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className={cn("h-12 bg-gray-50 justify-start gap-2 font-bold rounded-xl border-gray-100", !field.value && "text-muted-foreground")}>
+                                  <CalendarIcon size={16} className="text-primary" />
+                                  {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
+                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="time" render={({ field }) => (
+                          <FormItem>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger className="h-12 bg-gray-50 font-bold rounded-xl border-gray-100"><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent className="rounded-xl">
+                                <SelectItem value="8AM - 12PM">8AM - 12PM (Morning)</SelectItem>
+                                <SelectItem value="12PM - 4PM">12PM - 4PM (Afternoon)</SelectItem>
+                                <SelectItem value="4PM - 8PM">4PM - 8PM (Evening)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-6 pt-6 border-t">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-primary" /> Payment Method</h4>
+                    <FormField control={form.control} name="paymentCategory" render={({ field }) => (
+                      <FormItem className="space-y-4">
+                        <FormControl>
+                          <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
+                            <div className={cn(
+                              "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
+                              field.value === 'cod' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                            )}>
+                              <RadioGroupItem value="cod" id="cat-cod" className="sr-only" />
+                              <label htmlFor="cat-cod" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
+                                <div className={cn("p-2 rounded-lg", field.value === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
+                                  <Truck size={16} />
+                                </div>
+                                <div className="flex-1">
+                                  <span className="uppercase tracking-tight block">Cash on Delivery</span>
+                                  <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">DEFAULT</Badge>
+                                </div>
+                              </label>
+                            </div>
+
+                            <div className={cn(
+                              "flex flex-col rounded-xl border-2 transition-all cursor-pointer",
+                              field.value === 'online' ? "border-blue-600 bg-blue-50/30" : "border-gray-100 hover:border-gray-200 bg-white"
+                            )}>
+                              <div className="flex items-center gap-4 p-4">
+                                <RadioGroupItem value="online" id="cat-online" className="sr-only" />
+                                <label htmlFor="cat-online" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
+                                  <div className={cn("p-2 rounded-lg", field.value === 'online' ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400")}>
+                                    <Smartphone size={16} />
+                                  </div>
+                                  <span className="uppercase tracking-tight">Online Payment</span>
+                                </label>
+                              </div>
+
+                              {field.value === 'online' && (
+                                <div className="p-4 pt-0 animate-in slide-in-from-top-2">
+                                  <FormField control={form.control} name="onlineMethod" render={({ field: subField }) => (
+                                    <FormItem>
+                                      <Select onValueChange={subField.onChange} value={subField.value}>
+                                        <FormControl>
+                                          <SelectTrigger className="h-12 bg-white border-blue-200 font-bold rounded-xl">
+                                            <SelectValue placeholder="Choose Provider" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent className="rounded-xl">
+                                          {onlineMethods.map(m => (
+                                            <SelectItem key={m.id} value={m.id} className="font-bold uppercase text-[10px]">{m.name}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )} />
+                                </div>
+                              )}
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                </form>
+              </Form>
+            </div>
           </div>
+
+          {/* 📱 Mobile Sticky Bottom Bar (Total + Button) */}
+          <div className="lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-20">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Due</span>
+              <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
+            </div>
+            <Button 
+              onClick={form.handleSubmit(onSubmit)} 
+              className="flex-1 h-14 rounded-xl shadow-xl uppercase tracking-tighter bg-primary hover:bg-primary/90 text-white font-black text-sm gap-2"
+              disabled={isSubmitting || items.length === 0}
+            >
+              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
+                <>{hasServices ? 'Book Now' : 'Confirm'} <ArrowRight size={18} /></>
+              )}
+            </Button>
+          </div>
+
         </div>
       </DialogContent>
     </Dialog>
