@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -107,7 +106,9 @@ export function Navbar() {
           </Link>
 
           {/* Offer Slider - CIRCULAR Daraz Style */}
-          <NavbarOfferSlider />
+          <div className="hidden sm:block">
+            <NavbarOfferSlider />
+          </div>
 
           {/* Daraz-style Search Bar - Responsive */}
           <div className="flex-1 relative">

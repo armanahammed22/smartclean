@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -176,8 +175,8 @@ export default function OrdersManagementPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
             placeholder="Search Order ID or Customer..." 
@@ -186,12 +185,12 @@ export default function OrdersManagementPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 gap-2"><Filter size={18} /> Filters</Button>
+        <Button variant="outline" className="h-11 gap-2 w-full sm:w-auto"><Filter size={18} /> Filters</Button>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0">
-          <Table>
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[800px]">
             <TableHeader className="bg-gray-50/50">
               <TableRow>
                 <TableHead className="font-bold py-5 pl-8">Order ID</TableHead>
@@ -301,22 +300,22 @@ export default function OrdersManagementPage() {
       </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-8 bg-[#081621] text-white">
-            <DialogTitle className="text-xl font-black uppercase tracking-tight">Security & Order Intelligence</DialogTitle>
+        <DialogContent className="max-w-2xl w-[95vw] rounded-2xl md:rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white">
+            <DialogTitle className="text-lg md:text-xl font-black uppercase tracking-tight">Security & Order Intelligence</DialogTitle>
           </DialogHeader>
-          <div className="p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-6">
+          <div className="p-6 md:p-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Client Meta</h4>
                 <div className="space-y-2">
                   <p className="text-xs font-bold">IP: <span className="font-mono text-blue-600">{selectedOrder?.ipAddress || 'Not Captured'}</span></p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed italic">{selectedOrder?.deviceInfo}</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed italic break-all">{selectedOrder?.deviceInfo}</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Security Score</h4>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
+                <div className="p-4 rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                   <p className="text-xs font-bold uppercase tracking-tight">Risk: <span className={cn(selectedOrder?.riskLevel === 'High' ? 'text-red-600' : 'text-green-600')}>{selectedOrder?.riskLevel || 'Low'}</span></p>
                   <p className="text-[10px] text-muted-foreground font-medium">No previous fraud detected for this phone cluster.</p>
                 </div>

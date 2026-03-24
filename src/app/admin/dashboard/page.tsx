@@ -100,31 +100,31 @@ export default function AdminDashboard() {
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-6 md:space-y-8 pb-20">
       {/* ⚡ HEADER & QUICK ACTIONS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Business Control Center</h1>
-          <div className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Business Control Center</h1>
+          <div className="text-muted-foreground text-xs md:text-sm font-medium mt-2 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Live Marketplace Intelligence & Operations
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2">
-            <Link href="/admin/products"><Plus size={18} /> Add Product</Link>
+        <div className="flex flex-wrap gap-2 md:gap-3">
+          <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+            <Link href="/admin/products"><Plus size={16} /> Add Product</Link>
           </Button>
-          <Button asChild className="rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg gap-2">
-            <Link href="/admin/services"><Plus size={18} /> Add Service</Link>
+          <Button asChild className="rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+            <Link href="/admin/services"><Plus size={16} /> Add Service</Link>
           </Button>
-          <Button asChild className="rounded-xl font-bold bg-purple-600 hover:bg-purple-700 shadow-lg gap-2">
-            <Link href="/admin/marketing/landing-pages"><Plus size={18} /> Landing Page</Link>
+          <Button asChild className="rounded-xl font-bold bg-purple-600 hover:bg-purple-700 shadow-lg gap-2 text-xs h-9 md:h-10">
+            <Link href="/admin/marketing/landing-pages"><Plus size={16} /> Landing Page</Link>
           </Button>
         </div>
       </div>
 
       {/* 🟩 TOP STATS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
           { label: "Today's Orders", val: metrics?.todayCount || 0, trend: "+12%", up: true, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Pending Fulfillment", val: metrics?.pendingCount || 0, trend: "High Priority", up: false, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
@@ -132,42 +132,42 @@ export default function AdminDashboard() {
           { label: "Total Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, trend: "Lifetime Gross", up: true, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
-            <CardContent className="p-6">
+            <CardContent className="p-5 md:p-6">
               <div className="flex justify-between items-start mb-4">
-                <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                  <stat.icon size={24} />
+                <div className={cn("p-2 md:p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                  <stat.icon size={20} className="md:w-6 md:h-6" />
                 </div>
-                <Badge variant="outline" className={cn("text-[9px] font-black border-none uppercase px-2", stat.up ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600")}>
+                <Badge variant="outline" className={cn("text-[8px] md:text-[9px] font-black border-none uppercase px-2", stat.up ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600")}>
                   {stat.trend}
                 </Badge>
               </div>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight">{stat.val}</h3>
+              <p className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
+              <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{stat.val}</h3>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* 📊 ANALYTICS & OPERATIONS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         
         {/* Main Analytics Area */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
+        <div className="lg:col-span-8 space-y-6 md:space-y-8">
+          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-bold">Volume & Revenue Trend</CardTitle>
                 <CardDescription className="text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Performance over last 7 days</CardDescription>
               </div>
-              <div className="flex bg-white rounded-xl border p-1">
+              <div className="flex bg-white rounded-xl border p-1 w-full sm:w-auto">
                 {['7d', '30d'].map(f => (
-                  <button key={f} onClick={() => setTimeFilter(f)} className={cn("px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all", timeFilter === f ? "bg-primary text-white" : "text-gray-400")}>
+                  <button key={f} onClick={() => setTimeFilter(f)} className={cn("flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all", timeFilter === f ? "bg-primary text-white" : "text-gray-400")}>
                     {f}
                   </button>
                 ))}
               </div>
             </CardHeader>
-            <CardContent className="p-8 h-[400px]">
+            <CardContent className="p-4 md:p-8 h-[300px] md:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -188,17 +188,17 @@ export default function AdminDashboard() {
           </Card>
 
           {/* Recent Orders Table */}
-          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8">
+          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-bold uppercase tracking-tight">Real-time Order Feed</CardTitle>
-                <Button variant="link" className="text-xs font-black uppercase text-primary p-0" asChild>
+                <CardTitle className="text-base md:text-lg font-bold uppercase tracking-tight">Real-time Order Feed</CardTitle>
+                <Button variant="link" className="text-[10px] md:text-xs font-black uppercase text-primary p-0" asChild>
                   <Link href="/admin/orders">Full Dispatch <ArrowUpRight size={14} /></Link>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
+            <CardContent className="p-0 overflow-x-auto">
+              <Table className="min-w-[600px]">
                 <TableHeader className="bg-gray-50/30">
                   <TableRow>
                     <TableHead className="font-black uppercase text-[10px] pl-8">Customer</TableHead>
@@ -244,44 +244,44 @@ export default function AdminDashboard() {
         </div>
 
         {/* 🚨 OPERATIONS PANEL (RIGHT) */}
-        <div className="lg:col-span-4 space-y-8">
-          <Card className="border-none shadow-xl bg-primary text-white rounded-[2.5rem] overflow-hidden relative">
+        <div className="lg:col-span-4 space-y-6 md:space-y-8">
+          <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
-            <CardHeader className="relative z-10 p-8 pb-4">
-              <CardTitle className="text-lg font-black uppercase tracking-widest text-primary-foreground/60">Operations</CardTitle>
+            <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
+              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Operations</CardTitle>
             </CardHeader>
-            <CardContent className="relative z-10 p-8 pt-0 space-y-6">
+            <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-4 md:space-y-6">
               {[
                 { label: "Pending Orders", val: metrics?.pendingCount || 0, icon: Package },
                 { label: "Pending Bookings", val: metrics?.pendingBookings || 0, icon: Calendar },
                 { label: "Today Revenue", val: `৳${(metrics?.revenue / 100).toLocaleString()}`, icon: TrendingUp }
               ].map((kpi, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 flex justify-between items-center group hover:bg-white/20 transition-all">
+                <div key={i} className="bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center group hover:bg-white/20 transition-all">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
-                    <span className="text-2xl font-black">{kpi.val}</span>
+                    <p className="text-[9px] md:text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
+                    <span className="text-xl md:text-2xl font-black">{kpi.val}</span>
                   </div>
-                  <kpi.icon size={24} className="opacity-40 group-hover:scale-110 transition-transform" />
+                  <kpi.icon size={20} className="md:w-6 md:h-6 opacity-40 group-hover:scale-110 transition-transform" />
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {/* Low Stock Alerts */}
-          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden border border-red-100">
-            <CardHeader className="bg-red-50/50 p-8 flex flex-row items-center justify-between border-b border-red-50">
+          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2.5rem] overflow-hidden border border-red-100">
+            <CardHeader className="bg-red-50/50 p-6 md:p-8 flex flex-row items-center justify-between border-b border-red-50">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-100 text-red-600 rounded-xl"><AlertTriangle size={20} /></div>
-                <CardTitle className="text-base font-bold text-red-900">Inventory Guard</CardTitle>
+                <CardTitle className="text-sm md:text-base font-bold text-red-900">Inventory Guard</CardTitle>
               </div>
               <Badge className="bg-red-600 text-white border-none text-[10px] font-black">{metrics?.lowStock.length || 0}</Badge>
             </CardHeader>
-            <CardContent className="p-8 space-y-4">
+            <CardContent className="p-6 md:p-8 space-y-4">
               {metrics?.lowStock.length ? metrics.lowStock.slice(0, 4).map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center font-black text-[10px] text-red-600">{item.stockQuantity}</div>
-                    <span className="text-[11px] font-bold text-gray-700 uppercase truncate max-w-[120px]">{item.name}</span>
+                    <span className="text-[10px] md:text-[11px] font-bold text-gray-700 uppercase truncate max-w-[120px]">{item.name}</span>
                   </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-100 text-red-600" asChild>
                     <Link href={`/admin/products`}><ArrowUpRight size={14} /></Link>

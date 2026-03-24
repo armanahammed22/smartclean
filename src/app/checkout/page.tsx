@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -162,7 +161,7 @@ function CheckoutContent() {
         customerPhone: values.phone,
         customerEmail: values.email || null,
         address: values.address,
-        source: source || null, // Capture marketing source
+        source: source || null,
         items: items.map(item => ({
           id: item.id,
           name: item.name,
@@ -205,43 +204,43 @@ function CheckoutContent() {
   if (!mounted) return null;
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-12">
+    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <header className="mb-12 text-center md:text-left">
+          <header className="mb-8 md:mb-12 text-center md:text-left">
             <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full mb-4">
               <ShieldCheck size={16} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight leading-none">
+            <h1 className="text-3xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight leading-none">
               {t('checkout_title')}
             </h1>
           </header>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid lg:grid-cols-12 gap-10 items-start">
-                <div className="lg:col-span-7 space-y-8">
-                  <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-                    <CardHeader className="bg-blue-600 text-white p-8">
+              <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 md:gap-10 items-start">
+                <div className="lg:col-span-7 w-full space-y-6 md:space-y-8">
+                  <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                    <CardHeader className="bg-blue-600 text-white p-6 md:p-8">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
-                        <CardTitle className="text-xl font-black uppercase tracking-tight">{t('delivery_info')}</CardTitle>
+                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('delivery_info')}</CardTitle>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CardContent className="p-6 md:p-8 space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <FormField control={form.control} name="name" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('full_name')}</FormLabel>
-                            <FormControl><Input placeholder="Full Name" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                            <FormControl><Input placeholder="Full Name" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="phone" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
-                            <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                            <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -251,7 +250,7 @@ function CheckoutContent() {
                           <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
                           <div className="relative">
                             <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                            <FormControl><Textarea placeholder="House, Street, Area" className="min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
+                            <FormControl><Textarea placeholder="House, Street, Area" className="min-h-[100px] md:min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -260,16 +259,16 @@ function CheckoutContent() {
                       <div className="space-y-4 pt-4 border-t border-gray-50">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Truck size={14} /> Delivery Method</h4>
                         <FormField control={form.control} name="deliveryOption" render={({ field }) => (
-                          <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                             {deliveryOptions?.map((opt) => (
                               <div key={opt.id} className={cn(
-                                "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all",
+                                "flex items-center space-x-2 rounded-xl md:rounded-2xl border-2 p-4 cursor-pointer transition-all",
                                 field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
                               )}>
                                 <RadioGroupItem value={opt.id} id={opt.id} className="sr-only" />
                                 <label htmlFor={opt.id} className="flex flex-col gap-1 cursor-pointer w-full">
-                                  <span className="text-xs font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
-                                  <span className="text-sm font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
+                                  <span className="text-[10px] font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
+                                  <span className="text-sm md:text-base font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
                                 </label>
                               </div>
                             ))}
@@ -278,45 +277,8 @@ function CheckoutContent() {
                       </div>
                     </CardContent>
                   </Card>
-                </div>
 
-                <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
-                  <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
-                    <CardHeader className="p-8 border-b border-gray-50">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl font-black uppercase tracking-widest text-[#081621]">{t('order_summary')}</CardTitle>
-                        <ShoppingCart size={20} className="text-green-600" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                      <div className="space-y-6">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start gap-4">
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs font-black text-[#081621] uppercase leading-tight">{item.name}</span>
-                              <span className="bg-gray-100 text-gray-500 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase w-fit">×{item.quantity}</span>
-                            </div>
-                            <span className="font-black text-sm text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</span>
-                          </div>
-                        ))}
-                        <div className="border-t border-dashed pt-6 space-y-4">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            <span>{t('subtotal')}</span>
-                            <span>৳{subtotal.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
-                              <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08 + deliveryCharge).toLocaleString()}</span>
-                            </div>
-                            <div className="bg-green-100 text-green-700 text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
+                  <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                     <CardHeader className="bg-gray-900 text-white p-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Wallet size={20} /></div>
@@ -350,9 +312,46 @@ function CheckoutContent() {
                     </CardContent>
                   </Card>
 
-                  <Button type="submit" className="w-full h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                     {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Book My Service' : t('place_order')} <Zap size={24} fill="currentColor" /></>}
                   </Button>
+                </div>
+
+                <div className="lg:col-span-5 w-full space-y-6 md:space-y-8 lg:sticky lg:top-24">
+                  <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
+                    <CardHeader className="p-6 md:p-8 border-b border-gray-50">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-widest text-[#081621]">{t('order_summary')}</CardTitle>
+                        <ShoppingCart size={20} className="text-green-600" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6 md:p-8">
+                      <div className="space-y-6">
+                        {items.map((item) => (
+                          <div key={item.id} className="flex justify-between items-start gap-4">
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <span className="text-[11px] md:text-xs font-black text-[#081621] uppercase leading-tight truncate">{item.name}</span>
+                              <span className="bg-gray-100 text-gray-500 text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase w-fit">×{item.quantity}</span>
+                            </div>
+                            <span className="font-black text-xs md:text-sm text-[#081621] shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-dashed pt-6 space-y-4">
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            <span>{t('subtotal')}</span>
+                            <span>৳{subtotal.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] md:text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
+                              <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{(subtotal * 1.08 + deliveryCharge).toLocaleString()}</span>
+                            </div>
+                            <div className="bg-green-100 text-green-700 text-[8px] md:text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </form>

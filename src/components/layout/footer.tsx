@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -29,12 +28,12 @@ export function Footer() {
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   return (
-    <footer className="bg-[#050505] text-white border-t border-white/10 pt-16 pb-8 mt-auto">
+    <footer className="bg-[#050505] text-white border-t border-white/10 pt-12 md:pt-16 pb-8 mt-auto">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-auto min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
+              <div className="relative h-10 md:h-12 w-auto min-w-[100px] md:min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 
@@ -51,7 +50,7 @@ export function Footer() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black tracking-tighter font-headline uppercase leading-none">
+                <span className="text-lg md:text-xl font-black tracking-tighter font-headline uppercase leading-none">
                   {settings?.websiteName || 'SMART CLEAN'}
                 </span>
                 <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em] mt-1">Reliable Cleaning</span>
@@ -81,8 +80,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_services')}</h4>
-            <ul className="space-y-4 text-[13px] text-gray-400">
+            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_services')}</h4>
+            <ul className="space-y-3 md:space-y-4 text-[13px] text-gray-400">
               <li><Link href="/services" className="hover:text-primary transition-colors">Residential Cleaning</Link></li>
               <li><Link href="/services" className="hover:text-primary transition-colors">Office Cleaning</Link></li>
               <li><Link href="/services" className="hover:text-primary transition-colors">Deep Cleaning</Link></li>
@@ -92,8 +91,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_company')}</h4>
-            <ul className="space-y-4 text-[13px] text-gray-400">
+            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_company')}</h4>
+            <ul className="space-y-3 md:space-y-4 text-[13px] text-gray-400">
               <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
               <li><Link href="/page/careers" className="hover:text-primary transition-colors">{t('footer_careers')}</Link></li>
               <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
@@ -103,7 +102,7 @@ export function Footer() {
           </div>
 
           <div className="space-y-6">
-            <h4 className="text-xs font-black mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_contact')}</h4>
+            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_contact')}</h4>
             <div className="space-y-4">
               <div className="flex items-start gap-3 text-[13px] text-gray-400">
                 <MapPin size={18} className="text-primary shrink-0 mt-0.5" />
@@ -126,7 +125,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-white/5">
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-medium text-center">
+          <p className="text-gray-500 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-medium text-center">
             {settings?.footerContent || "© 2026 Smart Clean Bangladesh. All rights reserved."}
           </p>
         </div>
