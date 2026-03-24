@@ -28,6 +28,29 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  images?: string[];
+  status: 'Pending' | 'Approved';
+  createdAt: string;
+}
+
+export interface QNA {
+  id: string;
+  productId: string;
+  question: string;
+  answer?: string;
+  userId: string;
+  userName: string;
+  status: 'Pending' | 'Approved';
+  createdAt: string;
+}
+
 export interface LandingPageFeature {
   id: string;
   title: string;
