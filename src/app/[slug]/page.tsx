@@ -4,24 +4,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import NextImage from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, addDoc, doc, increment, updateDoc } from 'firebase/firestore';
 import { 
   CheckCircle2, 
   Phone, 
   ShoppingCart, 
-  Package, 
-  MapPin, 
   User, 
   Loader2,
   Zap,
-  Star,
   Plus,
   Minus,
   ArrowRight,
-  Wrench,
-  ShieldCheck,
-  CreditCard,
   Smartphone,
   Info,
   ChevronRight
@@ -34,10 +28,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
-import { trackEvent } from '@/lib/tracking';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { PublicLayout } from '@/components/layout/public-layout';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function DynamicLandingPage() {
   const { slug } = useParams();
@@ -48,7 +42,6 @@ export default function DynamicLandingPage() {
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Selection States
   const [quantity, setQuantity] = useState(1);
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(null);
   const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
@@ -59,13 +52,11 @@ export default function DynamicLandingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Fetch Landing Page Config
   const pageQuery = useMemoFirebase(() => 
     (db && slug) ? query(collection(db, 'landing_pages'), where('slug', '==', slug), limit(1)) : null, [db, slug]);
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  // 2. Fetch Grid Items (Products or Services)
   const gridItemsQuery = useMemoFirebase(() => {
     if (!db || !page?.productIds?.length) return null;
     const colName = page.type === 'service' ? 'services' : 'products';
@@ -75,7 +66,6 @@ export default function DynamicLandingPage() {
 
   const mainProduct = gridItems?.[0];
 
-  // 3. Auto-select default package
   useEffect(() => {
     if (page?.type === 'service' && page.packages?.length) {
       const def = page.packages.find((p: any) => p.isDefault) || page.packages[0];
@@ -83,7 +73,6 @@ export default function DynamicLandingPage() {
     }
   }, [page]);
 
-  // 4. Pricing Calculations
   const calculations = useMemo(() => {
     if (!page) return { subtotal: 0, discount: 0, total: 0 };
 
@@ -115,7 +104,7 @@ export default function DynamicLandingPage() {
     return { subtotal, discount, delivery, additional, total };
   }, [page, mainProduct, quantity, selectedPkgId, selectedAddOnIds]);
 
-  const handleOrder = async (e: React.FormEvent) => {
+  const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
 
@@ -130,48 +119,48 @@ export default function DynamicLandingPage() {
     }
 
     setIsSubmitting(true);
-    try {
-      const orderData = {
-        pageId: page.id,
-        customerName: formData.name,
-        customerPhone: formData.phone,
-        address: formData.address,
-        paymentMethod,
-        transactionId: formData.tranId || null,
-        subtotal: calculations.subtotal,
-        discount: calculations.discount,
-        totalPrice: calculations.total,
-        status: 'New',
-        createdAt: new Date().toISOString()
-      };
+    const orderData = {
+      pageId: page.id,
+      customerName: formData.name,
+      customerPhone: formData.phone,
+      address: formData.address,
+      paymentMethod,
+      transactionId: formData.tranId || null,
+      subtotal: calculations.subtotal,
+      discount: calculations.discount,
+      totalPrice: calculations.total,
+      status: 'New',
+      createdAt: new Date().toISOString()
+    };
 
-      if (page.type === 'product') {
-        const finalOrder = {
-          ...orderData,
-          items: [{ id: mainProduct?.id, name: mainProduct?.name, price: mainProduct?.price, quantity }],
-          deliveryCharge: calculations.delivery
-        };
-        await addDoc(collection(db, 'orders_products'), finalOrder);
-        if (mainProduct) {
-          await updateDoc(doc(db, 'products', mainProduct.id), { stockQuantity: increment(-quantity) });
+    const targetCol = page.type === 'product' ? 'orders_products' : 'orders_services';
+    const finalData = page.type === 'product' ? {
+      ...orderData,
+      items: [{ id: mainProduct?.id, name: mainProduct?.name, price: mainProduct?.price, quantity }],
+      deliveryCharge: calculations.delivery
+    } : {
+      ...orderData,
+      package: page.packages?.find((p: any) => p.id === selectedPkgId),
+      selectedAddOns: page.addOns?.filter((a: any) => selectedAddOnIds.includes(a.id)),
+      additionalCharge: calculations.additional
+    };
+
+    addDoc(collection(db, targetCol), finalData)
+      .then(() => {
+        if (page.type === 'product' && mainProduct) {
+          updateDoc(doc(db, 'products', mainProduct.id), { stockQuantity: increment(-quantity) });
         }
-      } else {
-        const finalOrder = {
-          ...orderData,
-          package: page.packages?.find((p: any) => p.id === selectedPkgId),
-          selectedAddOns: page.addOns?.filter((a: any) => selectedAddOnIds.includes(a.id)),
-          additionalCharge: calculations.additional
-        };
-        await addDoc(collection(db, 'orders_services'), finalOrder);
-      }
-
-      toast({ title: "Success", description: "Order confirmed successfully!" });
-      router.push(`/order-success?id=${slug}&type=${page.type}`);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Failed", description: "Something went wrong." });
-    } finally {
-      setIsSubmitting(false);
-    }
+        toast({ title: "Success", description: "Order confirmed successfully!" });
+        router.push(`/order-success?id=${page.id}&type=${page.type}`);
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: targetCol,
+          operation: 'create',
+          requestResourceData: finalData
+        }));
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   if (!mounted || isLoading) return <div className="h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={40} /></div>;
@@ -184,11 +173,10 @@ export default function DynamicLandingPage() {
     <PublicLayout minimalMobile={true}>
       <div className="min-h-screen bg-white pb-20">
         
-        {/* 🔴 HERO SECTION */}
         <section className={cn("text-white pt-6 md:pt-10 pb-12 md:pb-20 px-4", themeColor)}>
           <div className="container mx-auto max-w-5xl text-center space-y-6 md:space-y-8">
             <div className="relative aspect-[21/10] md:aspect-[21/9] w-full rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10">
-              {typeof page.bannerImage === 'string' && page.bannerImage ? (
+              {page.bannerImage ? (
                 <NextImage src={page.bannerImage} alt="Banner" fill className="object-cover" unoptimized />
               ) : (
                 <div className="w-full h-full bg-black/20 flex items-center justify-center"><Zap size={60} className="opacity-20" /></div>
@@ -216,7 +204,6 @@ export default function DynamicLandingPage() {
           </div>
         </section>
 
-        {/* 📦 DYNAMIC GRID SECTION */}
         {gridItems && gridItems.length > 0 && (
           <section className="py-8 md:py-12 bg-gray-50/50 border-b border-gray-100 overflow-hidden">
             <div className="container mx-auto px-4 max-w-7xl">
@@ -230,8 +217,7 @@ export default function DynamicLandingPage() {
                   <div key={item.id} className="min-w-[140px] md:min-w-[160px] bg-white rounded-2xl p-3 border shadow-sm hover:shadow-md transition-all group flex flex-col gap-2">
                     <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-50">
                       <NextImage 
-                        src={(typeof item.imageUrl === 'string' && item.imageUrl) ? item.imageUrl : 'https://picsum.photos/seed/item/200/200'} 
-                        data-ai-hint="item image" 
+                        src={item.imageUrl || 'https://picsum.photos/seed/item/200/200'} 
                         alt={item.name || item.title} 
                         fill 
                         className="object-cover transition-transform group-hover:scale-110" 
@@ -252,7 +238,6 @@ export default function DynamicLandingPage() {
           </section>
         )}
 
-        {/* ✨ FEATURES SECTION */}
         {page.features?.length > 0 && (
           <section className="py-12 md:py-20">
             <div className="container mx-auto px-4 max-w-6xl">
@@ -263,14 +248,7 @@ export default function DynamicLandingPage() {
                 {page.features.map((f: any, i: number) => (
                   <div key={i} className="bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-3 md:gap-4 hover:shadow-xl transition-all">
                     <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 p-2">
-                      <NextImage 
-                        src={(typeof f.imageUrl === 'string' && f.imageUrl) ? f.imageUrl : 'https://picsum.photos/seed/feat/100/100'} 
-                        data-ai-hint="feature icon" 
-                        alt={f.title} 
-                        fill 
-                        className="object-contain" 
-                        unoptimized 
-                      />
+                      <NextImage src={f.imageUrl || 'https://picsum.photos/seed/feat/100/100'} alt={f.title} fill className="object-contain" unoptimized />
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-black uppercase text-[10px] md:text-xs text-gray-900">{f.title}</h4>
@@ -283,20 +261,19 @@ export default function DynamicLandingPage() {
           </section>
         )}
 
-        {/* 📋 DETAILS SECTION */}
         {page.detailsText && (
           <section className="py-16 md:py-24 bg-gray-50/50 border-y border-gray-100">
             <div className="container mx-auto px-4 max-w-6xl">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
                 <div className="space-y-6 md:space-y-8">
-                  <Badge className="bg-primary/10 text-primary border-none uppercase font-black tracking-widest px-4 py-1.5 rounded-full text-[10px]">Product Details</Badge>
+                  <Badge className="bg-primary/10 text-primary border-none uppercase font-black tracking-widest px-4 py-1.5 rounded-full text-[10px]">Details</Badge>
                   <h2 className="text-3xl md:text-6xl font-black uppercase tracking-tighter leading-tight text-gray-900">{page.detailsTitle || 'বিস্তারিত তথ্য'}</h2>
                   <div className="prose prose-slate max-w-none text-gray-600 font-medium leading-loose text-sm md:text-lg">
                     {page.detailsText}
                   </div>
                   <Button onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-xl font-black uppercase shadow-lg">অর্ডার করুন <ArrowRight size={20} className="ml-2" /></Button>
                 </div>
-                {typeof page.detailsImage === 'string' && page.detailsImage && (
+                {page.detailsImage && (
                   <div className="relative aspect-square rounded-2xl md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white">
                     <NextImage src={page.detailsImage} alt="Details" fill className="object-cover" unoptimized />
                   </div>
@@ -306,24 +283,6 @@ export default function DynamicLandingPage() {
           </section>
         )}
 
-        {/* ✅ WHY CHOOSE SECTION */}
-        {page.whyItems?.length > 0 && (
-          <section className={cn("py-12 md:py-20 text-white", themeColor)}>
-            <div className="container mx-auto px-4 max-w-4xl text-center">
-              <h2 className="text-2xl md:text-5xl font-black uppercase tracking-tighter mb-8 md:mb-12">{page.whyTitle || 'আমাদের ওপর কেন আস্থা রাখবেন?'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-left">
-                {page.whyItems.map((item: string, i: number) => (
-                  <div key={i} className="flex items-center gap-3 md:gap-4 bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 hover:bg-white/20 transition-all">
-                    <div className="p-2 bg-yellow-400 rounded-lg text-black shrink-0"><CheckCircle2 size={18} /></div>
-                    <span className="font-bold text-xs md:sm uppercase tracking-tight">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* 🛒 ORDER / BOOKING SECTION */}
         <section id="order-section" className="py-16 md:py-24 bg-gray-50">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-10 md:mb-16 space-y-2">
@@ -332,7 +291,6 @@ export default function DynamicLandingPage() {
             </div>
 
             <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-10 items-start">
-              {/* Form */}
               <div className="lg:col-span-7 w-full">
                 <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-2xl overflow-hidden bg-white">
                   <CardHeader className={cn("p-6 md:p-8 text-white", themeColor)}>
@@ -357,7 +315,6 @@ export default function DynamicLandingPage() {
                       <Textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="বাসা, রোড, এলাকা" className="min-h-[100px] md:min-h-[120px] bg-gray-50 border-none rounded-xl md:rounded-2xl font-bold p-4 md:p-6" />
                     </div>
 
-                    {/* Payment Methods */}
                     <div className="space-y-4 pt-4">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পেমেন্ট পদ্ধতি</Label>
                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -380,8 +337,8 @@ export default function DynamicLandingPage() {
 
                     {paymentMethod !== 'cod' && (
                       <div className="space-y-2 animate-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-pink-600 ml-1">Transaction ID (বিকাশ সেন্ড মানি করার পর লিখুন)</Label>
-                        <Input value={formData.tranId} onChange={e => setFormData({...formData, tranId: e.target.value})} placeholder="TRX12345678" className="h-12 md:h-14 bg-pink-50 border-pink-200 rounded-xl md:rounded-2xl font-mono text-base md:text-lg font-black" />
+                        <Label className="text-[10px] font-black uppercase text-pink-600 ml-1">Transaction ID</Label>
+                        <Input value={formData.tranId} onChange={e => setFormData({...formData, tranId: e.target.value})} placeholder="TRX12345678" className="h-12 md:h-14 bg-pink-50 border-pink-200 rounded-xl md:rounded-2xl font-mono text-base font-black" />
                       </div>
                     )}
 
@@ -392,7 +349,6 @@ export default function DynamicLandingPage() {
                 </Card>
               </div>
 
-              {/* Summary */}
               <div className="lg:col-span-5 w-full lg:sticky lg:top-24">
                 <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-yellow-400">
                   <CardHeader className="p-6 md:p-8 border-b bg-gray-50/50 flex flex-row items-center justify-between">
@@ -403,14 +359,7 @@ export default function DynamicLandingPage() {
                     {isProduct ? (
                       <div className="flex gap-4 items-center">
                         <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border bg-gray-50">
-                          <NextImage 
-                            src={(typeof mainProduct?.imageUrl === 'string' && mainProduct.imageUrl) ? mainProduct.imageUrl : 'https://picsum.photos/seed/product/200/200'} 
-                            data-ai-hint="product image" 
-                            alt="Summary" 
-                            fill 
-                            className="object-cover" 
-                            unoptimized 
-                          />
+                          <NextImage src={mainProduct?.imageUrl || 'https://picsum.photos/seed/product/200/200'} alt="Summary" fill className="object-cover" unoptimized />
                         </div>
                         <div className="flex-1 space-y-2">
                           <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs leading-tight line-clamp-2">{mainProduct?.name}</h4>
@@ -423,7 +372,6 @@ export default function DynamicLandingPage() {
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        {/* Service Packages */}
                         <div className="space-y-3">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground">প্যাকেজ নির্বাচন করুন</Label>
                           {page.packages?.map((pkg: any) => (
@@ -438,31 +386,15 @@ export default function DynamicLandingPage() {
                             </div>
                           ))}
                         </div>
-                        
-                        {/* Add-ons System */}
                         {page.addOns?.length > 0 && (
                           <div className="space-y-3 pt-2">
                             <Label className="text-[10px] font-black uppercase text-muted-foreground">অ্যাড-অন সার্ভিস (ঐচ্ছিক)</Label>
                             <div className="grid grid-cols-1 gap-2">
                               {page.addOns.filter((a: any) => a.enabled !== false).map((add: any) => (
-                                <div 
-                                  key={add.id} 
-                                  onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} 
-                                  className={cn(
-                                    "p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", 
-                                    selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100"
-                                  )}
-                                >
+                                <div key={add.id} onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} className={cn("p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100")}>
                                   <div className="flex items-center gap-2 md:gap-3">
                                     <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-50">
-                                      <NextImage 
-                                        src={(typeof add.imageUrl === 'string' && add.imageUrl) ? add.imageUrl : 'https://picsum.photos/seed/addon/100/100'} 
-                                        data-ai-hint="addon icon" 
-                                        alt={add.name} 
-                                        fill 
-                                        className="object-cover" 
-                                        unoptimized 
-                                      />
+                                      <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
                                     </div>
                                     <span className="text-[9px] md:text-[10px] font-bold uppercase text-gray-700">{add.name}</span>
                                   </div>
@@ -506,7 +438,7 @@ export default function DynamicLandingPage() {
 
                     <div className="p-4 bg-yellow-50 rounded-xl md:rounded-2xl border border-yellow-100 flex items-start gap-3">
                       <Info size={16} className="text-yellow-600 shrink-0 mt-0.5" />
-                      <p className="text-[10px] font-bold text-yellow-800 leading-relaxed uppercase">সারা বাংলাদেশে ক্যাশ অন ডেলিভারি সুবিধা রয়েছে। অর্ডার কনফার্ম করতে কোনো অগ্রিম পেমেন্টের প্রয়োজন নেই (যদি না অনলাইন পেমেন্ট বেছে নেন)।</p>
+                      <p className="text-[10px] font-bold text-yellow-800 leading-relaxed uppercase">সারা বাংলাদেশে ক্যাশ অন ডেলিভারি সুবিধা রয়েছে।</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -515,7 +447,6 @@ export default function DynamicLandingPage() {
           </div>
         </section>
 
-        {/* 📌 MOBILE STICKY CTA */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t p-4 flex gap-4 items-center shadow-[0_-10px_40px_rgba(0,0,0,0.1)] safe-area-pb">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>

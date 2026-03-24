@@ -12,24 +12,14 @@ import {
   Trash2, 
   Edit, 
   Tag, 
-  ShoppingCart, 
   Loader2, 
   Save, 
-  Layers, 
-  Wrench, 
-  Users, 
-  Settings2, 
   X, 
-  ImageIcon, 
-  Sparkles, 
-  ListChecks, 
-  Shapes,
-  CheckCircle2,
-  AlertCircle,
+  AlertCircle, 
   XCircle,
   Star,
   Eye,
-  Settings
+  Settings2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -45,6 +35,8 @@ import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProductsManagementPage() {
   const { user } = useUser();
@@ -56,7 +48,6 @@ export default function ProductsManagementPage() {
   const [viewingProduct, setViewingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Multi-Step Form State
   const [activeTab, setActiveTab] = useState('identity');
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
@@ -66,16 +57,12 @@ export default function ProductsManagementPage() {
   
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Data Queries
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
   const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories')) : null, [db, user]);
-  const brandsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db, user]);
-
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);
-  const { data: brands } = useCollection(brandsQuery);
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!db) return;
     setIsSubmitting(true);
@@ -98,21 +85,24 @@ export default function ProductsManagementPage() {
       updatedAt: new Date().toISOString()
     };
 
-    try {
-      if (editingProduct) {
-        await updateDoc(doc(db, 'products', editingProduct.id), productData);
-        toast({ title: "Inventory Updated" });
-      } else {
-        await addDoc(collection(db, 'products'), { ...productData, createdAt: new Date().toISOString() });
-        toast({ title: "Product Catalogued" });
-      }
-      setIsDialogOpen(false);
-      resetForm();
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
-    } finally {
-      setIsSubmitting(false);
-    }
+    const promise = editingProduct 
+      ? updateDoc(doc(db, 'products', editingProduct.id), productData)
+      : addDoc(collection(db, 'products'), { ...productData, createdAt: new Date().toISOString() });
+
+    promise
+      .then(() => {
+        toast({ title: editingProduct ? "Inventory Updated" : "Product Catalogued" });
+        setIsDialogOpen(false);
+        resetForm();
+      })
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: editingProduct ? `products/${editingProduct.id}` : 'products',
+          operation: editingProduct ? 'update' : 'create',
+          requestResourceData: productData
+        }));
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   const resetForm = () => {
@@ -135,40 +125,28 @@ export default function ProductsManagementPage() {
     setIsDialogOpen(true);
   };
 
-  const addSpec = () => setSpecifications([...specifications, { key: '', value: '' }]);
-  const removeSpec = (idx: number) => setSpecifications(specifications.filter((_, i) => i !== idx));
-  const updateSpec = (idx: number, field: 'key' | 'value', val: string) => {
-    const next = [...specifications];
-    next[idx][field] = val;
-    setSpecifications(next);
-  };
-
-  const addVariant = () => setVariants([...variants, { name: '', options: [] }]);
-  const updateVariant = (idx: number, name: string, optionsStr: string) => {
-    const next = [...variants];
-    next[idx].name = name;
-    next[idx].options = optionsStr.split(',').map(o => o.trim()).filter(o => !!o);
-    setVariants(next);
-  };
-
-  const addGalleryImage = (url: string) => {
-    if (url && !galleryImages.includes(url)) {
-      setGalleryImages([...galleryImages, url]);
-    }
+  const deleteProduct = (id: string) => {
+    if (!db || !confirm("Delete this SKU?")) return;
+    deleteDoc(doc(db, 'products', id))
+      .then(() => toast({ title: "Product Removed" }))
+      .catch(async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: `products/${id}`,
+          operation: 'delete'
+        }));
+      });
   };
 
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Catalog Management</h1>
-          <p className="text-muted-foreground text-sm font-medium">Full Daraz-style SKU and inventory control</p>
+          <h1 className="text-2xl font-bold text-gray-900">Catalog Management</h1>
+          <p className="text-muted-foreground text-sm">Full Daraz-style SKU and inventory control</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-8 rounded-xl bg-primary" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
-            <Plus size={18} /> Add New SKU
-          </Button>
-        </div>
+        <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-8 rounded-xl bg-primary" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+          <Plus size={18} /> Add New SKU
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -176,7 +154,7 @@ export default function ProductsManagementPage() {
           { label: "Active SKUs", val: products?.length || 0, icon: Package, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Low Stock (<5)", val: products?.filter(p => p.stockQuantity < 5).length || 0, icon: AlertCircle, bg: "bg-orange-50", color: "text-orange-600" },
           { label: "Out of Stock", val: products?.filter(p => p.stockQuantity === 0).length || 0, icon: XCircle, bg: "bg-red-50", color: "text-red-600" },
-          { label: "Total Category", val: categories?.length || 0, icon: Tag, bg: "bg-green-50", color: "text-green-600" }
+          { label: "Categories", val: categories?.length || 0, icon: Tag, bg: "bg-green-50", color: "text-green-600" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
             <CardContent className="p-5 flex items-center justify-between">
@@ -196,8 +174,8 @@ export default function ProductsManagementPage() {
             <TableHeader className="bg-gray-50/50">
               <TableRow>
                 <TableHead className="font-bold py-5 pl-8">Product</TableHead>
-                <TableHead className="font-bold">Category & Brand</TableHead>
-                <TableHead className="font-bold">Price Details</TableHead>
+                <TableHead className="font-bold">Category</TableHead>
+                <TableHead className="font-bold">Price</TableHead>
                 <TableHead className="font-bold">Stock</TableHead>
                 <TableHead className="text-right pr-8">Action</TableHead>
               </TableRow>
@@ -219,30 +197,22 @@ export default function ProductsManagementPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px] w-fit">{product.categoryId}</Badge>
-                      <span className="text-[10px] font-bold text-gray-500 uppercase">{product.brand || 'No Brand'}</span>
-                    </div>
+                    <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px]">{product.categoryId}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-black text-primary text-sm">৳{product.price?.toLocaleString()}</span>
-                      {product.regularPrice > product.price && <span className="text-[10px] text-gray-400 line-through">৳{product.regularPrice?.toLocaleString()}</span>}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn(
-                      "text-[9px] font-black border-none",
-                      product.stockQuantity === 0 ? "bg-red-50 text-red-600" :
-                      product.stockQuantity < 5 ? "bg-orange-50 text-orange-600" : "bg-green-50 text-green-600"
-                    )}>
+                    <Badge variant="outline" className={cn("text-[9px] font-black border-none", product.stockQuantity === 0 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")}>
                       {product.stockQuantity} UNITS
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right pr-8">
                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => handleOpenEdit(product)}><Edit size={16} /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'products', product.id))}><Trash2 size={16} /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteProduct(product.id)}><Trash2 size={16} /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -252,7 +222,6 @@ export default function ProductsManagementPage() {
         </CardContent>
       </Card>
 
-      {/* MULTI-TAB PRODUCT DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
           <form onSubmit={handleSave} className="flex flex-col h-[85vh]">
@@ -262,16 +231,8 @@ export default function ProductsManagementPage() {
                   <Package className="text-primary" /> {editingProduct ? 'Update SKU' : 'Catalog New Item'}
                 </DialogTitle>
                 <div className="flex bg-white/10 p-1 rounded-xl">
-                  {['identity', 'media', 'specs', 'variants'].map(tab => (
-                    <button 
-                      key={tab} 
-                      type="button" 
-                      onClick={() => setActiveTab(tab)}
-                      className={cn(
-                        "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all",
-                        activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white"
-                      )}
-                    >
+                  {['identity', 'media', 'specs'].map(tab => (
+                    <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all", activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white")}>
                       {tab}
                     </button>
                   ))}
@@ -280,8 +241,6 @@ export default function ProductsManagementPage() {
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-white custom-scrollbar">
-              
-              {/* TAB: IDENTITY */}
               {activeTab === 'identity' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -297,101 +256,64 @@ export default function ProductsManagementPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Regular Price</Label>
-                          <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} placeholder="0" className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                         </div>
                       </div>
                     </div>
                     <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Brand</Label>
-                          <Input name="brand" defaultValue={editingProduct?.brand} placeholder="No Brand" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                        </div>
-                      </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Stock Quantity</Label>
                         <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                       </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Rich Description (HTML Supported)</Label>
-                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none rounded-2xl min-h-[250px] p-6 leading-relaxed" placeholder="<h1>Heading</h1><p>Product details...</p>" />
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: MEDIA */}
-              {activeTab === 'media' && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <ImageUploader label="Main Feature Image" initialUrl={uploadedImageUrl} onUpload={setUploadedImageUrl} />
-                    <div className="space-y-4">
-                      <ImageUploader label="Add to Gallery" onUpload={addGalleryImage} />
-                      <div className="grid grid-cols-4 gap-2">
-                        {galleryImages.map((img, i) => (
-                          <div key={i} className="relative aspect-square rounded-lg overflow-hidden border">
-                            <Image src={img} alt="Gallery" fill className="object-cover" unoptimized />
-                            <button type="button" onClick={() => setGalleryImages(galleryImages.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full"><X size={10} /></button>
-                          </div>
-                        ))}
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
+                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none rounded-2xl min-h-[250px] p-6 leading-relaxed" />
+                  </div>
                 </div>
               )}
 
-              {/* TAB: SPECS */}
+              {activeTab === 'media' && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                  <ImageUploader label="Main Feature Image" initialUrl={uploadedImageUrl} onUpload={setUploadedImageUrl} />
+                </div>
+              )}
+
               {activeTab === 'specs' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="flex justify-between items-center px-2">
-                    <Label className="text-sm font-black uppercase text-gray-900">Technical Data Points</Label>
-                    <Button type="button" onClick={addSpec} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px] h-8"><Plus size={14} /> Add Row</Button>
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-black uppercase text-gray-900">Specifications</Label>
+                    <Button type="button" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} size="sm" className="rounded-xl font-black text-[10px] h-8">+ Add Row</Button>
                   </div>
                   <div className="space-y-3">
                     {specifications.map((spec, i) => (
                       <div key={i} className="flex gap-3 items-center bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                        <Input placeholder="Label (e.g. Model)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="bg-white border-none h-10 font-bold uppercase text-[10px]" />
-                        <Input placeholder="Value (e.g. Galaxy S24)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="bg-white border-none h-10 font-medium text-xs" />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeSpec(i)} className="text-destructive"><Trash2 size={16} /></Button>
+                        <Input placeholder="Label" value={spec.key} onChange={e => {
+                          const next = [...specifications];
+                          next[i].key = e.target.value;
+                          setSpecifications(next);
+                        }} className="bg-white border-none h-10 font-bold uppercase text-[10px]" />
+                        <Input placeholder="Value" value={spec.value} onChange={e => {
+                          const next = [...specifications];
+                          next[i].value = e.target.value;
+                          setSpecifications(next);
+                        }} className="bg-white border-none h-10 font-medium text-xs" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="text-destructive"><Trash2 size={16} /></Button>
                       </div>
                     ))}
-                    {specifications.length === 0 && <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground uppercase font-black text-[10px]">No specifications added</div>}
                   </div>
                 </div>
               )}
-
-              {/* TAB: VARIANTS */}
-              {activeTab === 'variants' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="flex justify-between items-center px-2">
-                    <Label className="text-sm font-black uppercase text-gray-900">SKU Variations</Label>
-                    <Button type="button" onClick={addVariant} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px] h-8"><Plus size={14} /> Add Type</Button>
-                  </div>
-                  <div className="space-y-4">
-                    {variants.map((v, i) => (
-                      <div key={i} className="space-y-3 bg-[#F8FAFC] p-6 rounded-[2rem] border border-blue-100">
-                        <div className="flex justify-between items-center">
-                          <Input placeholder="Variant Name (e.g. Color)" value={v.name} onChange={e => updateVariant(i, e.target.value, v.options.join(','))} className="bg-white border-none h-10 font-black uppercase text-[10px] w-[200px]" />
-                          <Button type="button" variant="ghost" size="icon" onClick={() => setVariants(variants.filter((_, idx) => idx !== i))} className="text-destructive"><X size={16} /></Button>
-                        </div>
-                        <Input placeholder="Options separated by comma (e.g. Red, Blue, Green)" defaultValue={v.options.join(',')} onBlur={e => updateVariant(i, v.name, e.target.value)} className="bg-white border-none h-10 text-xs font-bold" />
-                      </div>
-                    ))}
-                    {variants.length === 0 && <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground uppercase font-black text-[10px]">No product variants defined</div>}
-                  </div>
-                </div>
-              )}
-
             </div>
 
             <DialogFooter className="p-8 bg-gray-50 border-t shrink-0 flex items-center justify-between">
@@ -400,15 +322,11 @@ export default function ProductsManagementPage() {
                   <Label className="text-[10px] font-black uppercase">Active</Label>
                   <Switch name="status" defaultChecked={editingProduct?.status === 'Active'} />
                 </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border">
-                  <Label className="text-[10px] font-black uppercase">Popular</Label>
-                  <Switch name="isPopular" defaultChecked={editingProduct?.isPopular} />
-                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest px-8">Discard</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-12 h-12 bg-primary shadow-xl uppercase tracking-tighter">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Sync SKU</>}
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} className="mr-2" />} Sync SKU
                 </Button>
               </div>
             </DialogFooter>

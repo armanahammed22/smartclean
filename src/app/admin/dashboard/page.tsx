@@ -62,7 +62,6 @@ export default function AdminDashboard() {
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
 
-  // Real-time Queries
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'bookings'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
@@ -71,7 +70,6 @@ export default function AdminDashboard() {
   const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
   const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
 
-  // Computed Business Metrics
   const metrics = useMemo(() => {
     if (!orders || !bookings || !products) return null;
 
@@ -92,7 +90,6 @@ export default function AdminDashboard() {
     };
   }, [orders, bookings, products]);
 
-  // Mock Trend Data for Charts
   const chartData = [
     { name: 'Mon', orders: 12, revenue: 15000 },
     { name: 'Tue', orders: 18, revenue: 22000 },
@@ -107,7 +104,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      {/* ⚡ HEADER & QUICK ACTIONS */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Business Control Center</h1>
@@ -129,7 +125,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 🟩 TOP STATS GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
           { label: "Today's Orders", val: metrics?.todayCount || 0, trend: "+12%", up: true, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50" },
@@ -154,10 +149,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* 📊 ANALYTICS & OPERATIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        
-        {/* Main Analytics Area */}
         <div className="lg:col-span-8 space-y-6 md:space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -195,7 +187,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Orders Table */}
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8">
               <div className="flex items-center justify-between">
@@ -229,7 +220,7 @@ export default function AdminDashboard() {
                           <div className="text-[10px] font-bold text-gray-600 uppercase truncate max-w-[150px]">
                             {order.items?.[0]?.name || 'N/A'}
                           </div>
-                          <div className="text-[9px] text-gray-400 mt-0.5">{order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : '...'}</div>
+                          <div className="text-[9px] text-gray-400 mt-0.5">{mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : '...'}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={cn(
@@ -253,7 +244,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* 🚨 OPERATIONS PANEL (RIGHT) */}
         <div className="lg:col-span-4 space-y-6 md:space-y-8">
           <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
@@ -277,7 +267,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Low Stock Alerts */}
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2.5rem] overflow-hidden border border-red-100">
             <CardHeader className="bg-red-50/50 p-6 md:p-8 flex flex-row items-center justify-between border-b border-red-50">
               <div className="flex items-center gap-3">
@@ -302,9 +291,6 @@ export default function AdminDashboard() {
                   <CheckCircle2 size={32} className="text-green-500 mx-auto" />
                   <p className="text-[10px] font-black uppercase text-green-600 tracking-widest">Stock Levels Healthy</p>
                 </div>
-              )}
-              {metrics?.lowStock.length > 4 && (
-                <p className="text-[10px] font-bold text-center text-muted-foreground mt-4 uppercase">+{metrics.lowStock.length - 4} more items low in stock</p>
               )}
             </CardContent>
           </Card>

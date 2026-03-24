@@ -56,7 +56,7 @@ export default function ProductDetailsPage() {
     setMounted(true);
   }, []);
 
-  const productRef = useMemoFirebase(() => db ? doc(db, 'products', id as string) : null, [db, id]);
+  const productRef = useMemoFirebase(() => (db && id) ? doc(db, 'products', id as string) : null, [db, id]);
   const { data: product, isLoading } = useDoc(productRef);
 
   const relatedQuery = useMemoFirebase(() => {
@@ -347,7 +347,6 @@ export default function ProductDetailsPage() {
             </div>
           </div>
 
-          {/* BOTTOM TABS: Description, Specs, Reviews */}
           <div className="mt-8 lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-9 space-y-6">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white min-h-[400px]">
@@ -448,7 +447,6 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        {/* MOBILE STICKY BOTTOM BAR */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
           <div className="flex flex-col min-w-[80px]">
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Sale Price</span>
