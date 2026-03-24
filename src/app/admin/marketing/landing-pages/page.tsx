@@ -30,7 +30,8 @@ import {
   Settings2,
   Box,
   ClipboardList,
-  Target
+  Target,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -80,7 +81,7 @@ export default function RebuiltLandingPageAdmin() {
     discountType: 'fixed',
     
     // Product Mode
-    productIds: [],
+    productIds: [], // Used for both modes' 8-item grid
     deliveryCharge: 60,
     
     // Service Mode
@@ -170,6 +171,17 @@ export default function RebuiltLandingPageAdmin() {
     setFormData({ ...formData, [field]: list });
   };
 
+  const toggleGridProduct = (id: string) => {
+    const current = [...(formData.productIds || [])];
+    if (current.includes(id)) {
+      setFormData({...formData, productIds: current.filter(i => i !== id)});
+    } else if (current.length < 8) {
+      setFormData({...formData, productIds: [...current, id]});
+    } else {
+      toast({ title: "Limit Reached", description: "You can select max 8 items." });
+    }
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -251,26 +263,43 @@ export default function RebuiltLandingPageAdmin() {
                     <div className="md:col-span-2">
                       <ImageUploader label="Hero Banner (1200x400)" initialUrl={formData.bannerImage} onUpload={url => setFormData({...formData, bannerImage: url})} aspectRatio="aspect-[21/7]" />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Hero Headline</Label>
-                      <Input value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})} className="h-12 bg-gray-50" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Contact Phone</Label>
-                      <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 bg-gray-50" />
-                    </div>
                   </div>
                 </section>
 
-                {/* 2. MODE SPECIFIC CONFIG */}
+                {/* 2. DYNAMIC HERO GRID (8 Items) */}
+                <section className="space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b pb-2 flex items-center gap-2"><Grid size={14} /> Hero Below Grid (Max 8 Items)</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
+                    {(formData.type === 'service' ? services : products)?.slice(0, 32).map(item => (
+                      <div 
+                        key={item.id} 
+                        onClick={() => toggleGridProduct(item.id)}
+                        className={cn(
+                          "relative aspect-square rounded-xl border-2 cursor-pointer overflow-hidden transition-all group",
+                          formData.productIds?.includes(item.id) ? "border-primary ring-2 ring-primary/20" : "border-gray-100 opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
+                        )}
+                      >
+                        <Image src={item.imageUrl} alt="Select" fill className="object-cover" unoptimized />
+                        {formData.productIds?.includes(item.id) && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <Badge className="bg-primary text-white text-[8px]">{formData.productIds.indexOf(item.id) + 1}</Badge>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">Click to select items for the 8-item hero grid. Selection sequence determines order.</p>
+                </section>
+
+                {/* 3. MODE SPECIFIC CONFIG */}
                 <section className="space-y-6">
                   <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b pb-2 flex items-center gap-2"><Target size={14} /> {formData.type === 'product' ? 'Inventory & Pricing' : 'Packages & Add-ons'}</h3>
                   
                   {formData.type === 'product' ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-red-50/50 p-8 rounded-[2rem] border border-red-100">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">Sync Inventory (Select Primary Product)</Label>
-                        <Select value={formData.productIds[0]} onValueChange={v => setFormData({...formData, productIds: [v]})}>
+                        <Label className="text-[10px] font-black uppercase">Sync Inventory (Main Item)</Label>
+                        <Select value={formData.serviceId} onValueChange={v => setFormData({...formData, serviceId: v})}>
                           <SelectTrigger className="h-12 bg-white"><SelectValue placeholder="Search product..." /></SelectTrigger>
                           <SelectContent>
                             {products?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
@@ -283,7 +312,7 @@ export default function RebuiltLandingPageAdmin() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-8 bg-blue-50/50 p-8 rounded-[2rem] border border-blue-100">
+                    <div className="space-y-10 bg-blue-50/50 p-8 rounded-[2rem] border border-blue-100">
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <Label className="font-black text-xs uppercase">Booking Packages</Label>
@@ -314,11 +343,54 @@ export default function RebuiltLandingPageAdmin() {
                           ))}
                         </div>
                       </div>
+
+                      <div className="space-y-4 border-t border-blue-100 pt-8">
+                        <div className="flex justify-between items-center">
+                          <Label className="font-black text-xs uppercase">Add-on Services (Image Required)</Label>
+                          <Button type="button" variant="outline" size="sm" onClick={() => addArrayItem('addOns', { id: Math.random().toString(36).substr(2, 9), name: '', price: 0, imageUrl: '', enabled: true })}><Plus size={14} /> Add New Add-on</Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {formData.addOns?.map((add: any, idx: number) => (
+                            <div key={add.id} className="p-4 bg-white rounded-2xl border border-gray-100 space-y-4 relative group">
+                              <div className="flex gap-4">
+                                <ImageUploader initialUrl={add.imageUrl} onUpload={(url) => {
+                                  const list = [...formData.addOns];
+                                  list[idx].imageUrl = url;
+                                  setFormData({...formData, addOns: list});
+                                }} aspectRatio="aspect-square w-16" label="Icon" />
+                                <div className="flex-1 space-y-3">
+                                  <Input placeholder="Service Name" value={add.name} onChange={e => {
+                                    const list = [...formData.addOns];
+                                    list[idx].name = e.target.value;
+                                    setFormData({...formData, addOns: list});
+                                  }} className="h-9 font-bold" />
+                                  <div className="flex gap-2">
+                                    <Input type="number" placeholder="Price" value={add.price} onChange={e => {
+                                      const list = [...formData.addOns];
+                                      list[idx].price = parseFloat(e.target.value) || 0;
+                                      setFormData({...formData, addOns: list});
+                                    }} className="h-9 flex-1" />
+                                    <div className="flex items-center gap-2 bg-gray-50 px-2 rounded-lg">
+                                      <Label className="text-[8px] font-black uppercase">Active</Label>
+                                      <Switch checked={add.enabled} onCheckedChange={val => {
+                                        const list = [...formData.addOns];
+                                        list[idx].enabled = val;
+                                        setFormData({...formData, addOns: list});
+                                      }} className="scale-75" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <button type="button" onClick={() => removeArrayItem('addOns', idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </section>
 
-                {/* 3. SHARED UI: FEATURES & WHY CHOOSE */}
+                {/* 4. SHARED UI: DETAILS & WHY */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <h3 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-2">Why Choose Us (List)</h3>

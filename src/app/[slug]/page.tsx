@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   CreditCard,
   Smartphone,
-  Info
+  Info,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +38,7 @@ import { trackEvent } from '@/lib/tracking';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-export default function RebuiltLandingPage() {
+export default function DynamicLandingPage() {
   const { slug } = useParams();
   const router = useRouter();
   const db = useFirestore();
@@ -63,14 +64,15 @@ export default function RebuiltLandingPage() {
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  // 2. Fetch Linked Products for the Grid
-  const productsQuery = useMemoFirebase(() => {
+  // 2. Fetch Grid Items (Products or Services)
+  const gridItemsQuery = useMemoFirebase(() => {
     if (!db || !page?.productIds?.length) return null;
-    return query(collection(db, 'products'), where('status', '==', 'Active'), limit(8));
+    const colName = page.type === 'service' ? 'services' : 'products';
+    return query(collection(db, colName), where('status', '==', 'Active'), limit(8));
   }, [db, page]);
-  const { data: gridProducts } = useCollection(productsQuery);
+  const { data: gridItems } = useCollection(gridItemsQuery);
 
-  const mainProduct = gridProducts?.[0];
+  const mainProduct = gridItems?.[0];
 
   // 3. Auto-select default package
   useEffect(() => {
@@ -162,10 +164,10 @@ export default function RebuiltLandingPage() {
         await addDoc(collection(db, 'orders_services'), finalOrder);
       }
 
-      toast({ title: "Order Confirmed", description: "Redirecting to success page..." });
+      toast({ title: "Success", description: "Order confirmed successfully!" });
       router.push(`/order-success?id=${slug}&type=${page.type}`);
     } catch (e) {
-      toast({ variant: "destructive", title: "Order Failed" });
+      toast({ variant: "destructive", title: "Failed", description: "Something went wrong." });
     } finally {
       setIsSubmitting(false);
     }
@@ -206,42 +208,41 @@ export default function RebuiltLandingPage() {
               </a>
             </Button>
           </div>
-
-          <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/60 pt-4">
-            <ShieldCheck size={14} className="text-yellow-400" /> Trusted by 10,000+ Customers in Bangladesh
-          </div>
         </div>
       </section>
 
-      {/* ⚪ CURVED DIVIDER */}
-      <div className="relative h-16 -mt-10 z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-white rounded-t-[100%] scale-x-125" />
-      </div>
-
-      {/* 📦 PRODUCT GRID (IF PRODUCT MODE) */}
-      {isProduct && gridProducts && gridProducts.length > 0 && (
-        <section className="py-16 container mx-auto px-4">
-          <div className="flex items-center justify-between mb-10 border-b pb-4">
-            <h2 className="text-2xl font-black uppercase tracking-tighter text-gray-900">Best Selling Items</h2>
-            <Badge className="bg-[#D60000] text-white">Top Rated</Badge>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-6 no-scrollbar">
-            {gridProducts.map((p) => (
-              <div key={p.id} className="min-w-[160px] md:min-w-[200px] bg-white rounded-2xl p-3 border shadow-sm hover:shadow-lg transition-all group cursor-pointer" onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                <div className="relative aspect-square rounded-xl overflow-hidden mb-3">
-                  <Image src={p.imageUrl} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform" unoptimized />
+      {/* 📦 DYNAMIC GRID SECTION (Directly below Hero) */}
+      {gridItems && gridItems.length > 0 && (
+        <section className="py-12 bg-gray-50/50 border-b border-gray-100 overflow-hidden">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex items-center justify-between mb-8 px-2">
+              <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{isProduct ? 'পণ্যসমূহ' : 'সেবাসমূহ'}</h2>
+              <Badge variant="outline" className="font-bold border-gray-300">Top Choices</Badge>
+            </div>
+            
+            <div className="flex gap-4 overflow-x-auto pb-6 px-2 no-scrollbar scroll-smooth">
+              {gridItems.map((item) => (
+                <div key={item.id} className="min-w-[140px] md:min-w-[160px] bg-white rounded-2xl p-3 border shadow-sm hover:shadow-md transition-all group flex flex-col gap-2">
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-50">
+                    <Image src={item.imageUrl} alt={item.name || item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                  </div>
+                  <div className="space-y-1 mt-1">
+                    <h4 className="font-bold text-[10px] uppercase truncate text-gray-800 leading-tight">{item.name || item.title}</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-primary font-black text-xs">৳{item.price || item.basePrice}</span>
+                      <ChevronRight size={12} className="text-gray-300" />
+                    </div>
+                  </div>
                 </div>
-                <h4 className="font-bold text-xs uppercase truncate text-gray-800">{p.name}</h4>
-                <p className="text-primary font-black mt-1">৳{p.price}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       )}
 
-      {/* ✨ FEATURES / INGREDIENTS GRID */}
+      {/* ✨ FEATURES SECTION */}
       {page.features?.length > 0 && (
-        <section className="py-20 bg-gray-50/50">
+        <section className="py-20">
           <div className="container mx-auto px-4 max-w-6xl">
             <h2 className="text-3xl md:text-5xl font-black text-center uppercase tracking-tighter text-gray-900 mb-16">
               {page.featuresTitle || 'কেন এটি আপনার জন্য সেরা?'}
@@ -265,21 +266,23 @@ export default function RebuiltLandingPage() {
 
       {/* 📋 DETAILS SECTION */}
       {page.detailsText && (
-        <section className="py-24 container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <Badge className="bg-primary/10 text-primary border-none uppercase font-black tracking-widest px-4 py-1.5 rounded-full text-[10px]">Product Details</Badge>
-              <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-gray-900">{page.detailsTitle || 'বিস্তারিত তথ্য'}</h2>
-              <div className="prose prose-slate max-w-none text-gray-600 font-medium leading-loose text-lg">
-                {page.detailsText}
+        <section className="py-24 bg-gray-50/50 border-y border-gray-100">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                <Badge className="bg-primary/10 text-primary border-none uppercase font-black tracking-widest px-4 py-1.5 rounded-full text-[10px]">Product Details</Badge>
+                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none text-gray-900">{page.detailsTitle || 'বিস্তারিত তথ্য'}</h2>
+                <div className="prose prose-slate max-w-none text-gray-600 font-medium leading-loose text-lg">
+                  {page.detailsText}
+                </div>
+                <Button onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })} className="h-14 px-8 rounded-xl font-black uppercase shadow-lg">অর্ডার করুন <ArrowRight size={20} className="ml-2" /></Button>
               </div>
-              <Button onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })} className="h-14 px-8 rounded-xl font-black uppercase shadow-lg">অর্ডার করুন <ArrowRight size={20} className="ml-2" /></Button>
+              {page.detailsImage && (
+                <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white">
+                  <Image src={page.detailsImage} alt="Details" fill className="object-cover" unoptimized />
+                </div>
+              )}
             </div>
-            {page.detailsImage && (
-              <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-8 border-gray-50">
-                <Image src={page.detailsImage} alt="Details" fill className="object-cover" unoptimized />
-              </div>
-            )}
           </div>
         </section>
       )}
@@ -409,18 +412,33 @@ export default function RebuiltLandingPage() {
                           </div>
                         ))}
                       </div>
-                      {/* Add-ons */}
+                      
+                      {/* NEW: Add-ons System */}
                       {page.addOns?.length > 0 && (
-                        <div className="space-y-3">
+                        <div className="space-y-3 pt-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground">অ্যাড-অন সার্ভিস (ঐচ্ছিক)</Label>
                           <div className="grid grid-cols-1 gap-2">
-                            {page.addOns.map((add: any) => (
-                              <div key={add.id} onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} className={cn("p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between", selectedAddOnIds.includes(add.id) ? "bg-accent/10 border-accent" : "bg-white")}>
+                            {page.addOns.filter((a: any) => a.enabled !== false).map((add: any) => (
+                              <div 
+                                key={add.id} 
+                                onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} 
+                                className={cn(
+                                  "p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", 
+                                  selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100"
+                                )}
+                              >
                                 <div className="flex items-center gap-3">
-                                  <div className="relative w-8 h-8 rounded-lg overflow-hidden"><Image src={add.imageUrl} alt={add.name} fill className="object-cover" unoptimized /></div>
-                                  <span className="text-[10px] font-bold uppercase">{add.name}</span>
+                                  <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-50">
+                                    <Image src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
+                                  </div>
+                                  <span className="text-[10px] font-bold uppercase text-gray-700">{add.name}</span>
                                 </div>
-                                <span className="font-black text-[10px] text-accent">+৳{add.price}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="font-black text-[10px] text-blue-600">+৳{add.price}</span>
+                                  <div className={cn("w-4 h-4 rounded border-2 flex items-center justify-center transition-all", selectedAddOnIds.includes(add.id) ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200")}>
+                                    {selectedAddOnIds.includes(add.id) && <Plus size={10} strokeWidth={4} />}
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>

@@ -48,7 +48,7 @@ export interface LandingPageAddOn {
   name: string;
   price: number;
   imageUrl: string;
-  status: boolean;
+  enabled: boolean;
 }
 
 export interface LandingPage {
