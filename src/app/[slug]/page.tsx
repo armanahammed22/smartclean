@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -69,16 +70,16 @@ export default function DynamicLandingPage() {
   const { data: linkedProduct, isLoading: productLoading } = useDoc(productRef);
 
   useEffect(() => {
-    if (!isLoading && (!page || !page.active) && mounted) {
+    if (!isLoading && mounted && (!page || !page.active)) {
       router.replace('/');
     }
   }, [page, isLoading, mounted, router]);
 
   // Pricing Logic
-  const currentPackages = page?.pricingCategories?.[0]?.packages || page?.packages || [];
-  const selectedPackage = currentPackages[selectedPkgIndex];
+  const packages = page?.packages || [];
+  const selectedPackage = packages[selectedPkgIndex];
 
-  const price = selectedPackage?.price || page?.discountPrice || page?.price || linkedProduct?.price || 0;
+  const price = selectedPackage?.price || page?.price || linkedProduct?.price || 0;
   const regularPrice = selectedPackage?.originalPrice || page?.price || linkedProduct?.regularPrice || linkedProduct?.price || 0;
   const deliveryCharge = 60;
   const subTotal = price * quantity;
@@ -147,18 +148,19 @@ export default function DynamicLandingPage() {
   return (
     <div className="bg-white min-h-screen font-body text-[#333]">
       
-      {/* 1. HERO SECTION (Dark Red Gradient) */}
-      <section className="bg-gradient-to-b from-[#8B0000] to-[#5D0000] pt-8 pb-12 px-4 text-center">
-        <div className="container mx-auto max-w-4xl space-y-6">
-          <h1 className="text-xl md:text-3xl font-black text-[#FFD700] uppercase tracking-tight leading-tight">
+      {/* 1. HERO SECTION */}
+      <section className="bg-gradient-to-b from-[#8B0000] to-[#5D0000] pt-8 pb-12 px-4 text-center relative overflow-hidden">
+        <div className="container mx-auto max-w-4xl space-y-6 relative z-10">
+          {page.heroBadge && <Badge className="bg-[#FFD700] text-black border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-[0.2em] mb-4">{page.heroBadge}</Badge>}
+          <h1 className="text-2xl md:text-5xl font-black text-[#FFD700] uppercase tracking-tight leading-tight">
             {page.heroTitle || page.title}
           </h1>
-          <p className="text-white text-xs md:text-base font-bold opacity-90">
+          <p className="text-white text-xs md:text-lg font-bold opacity-90">
             {page.heroSubtitle || page.subtitle || page.offer}
           </p>
 
-          <div className="relative mx-auto max-w-md aspect-square bg-white/5 border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl flex items-center justify-center">
-            <div className="relative w-full h-full rounded-xl overflow-hidden bg-white">
+          <div className="relative mx-auto max-w-md aspect-square bg-white border-4 border-white/10 rounded-[2.5rem] p-4 overflow-hidden shadow-2xl flex items-center justify-center">
+            <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-white">
               <Image 
                 src={linkedProduct?.imageUrl || page.imageUrl || 'https://picsum.photos/seed/product/600/600'} 
                 alt={page.title} 
@@ -173,12 +175,12 @@ export default function DynamicLandingPage() {
           <div className="flex flex-col items-center gap-3 pt-4">
             <Button 
               onClick={scrollToForm} 
-              className="h-14 px-10 rounded-lg bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-lg uppercase shadow-xl w-full max-w-xs gap-2"
+              className="h-14 px-10 rounded-xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-lg uppercase shadow-xl w-full max-w-xs gap-2 animate-pulse"
             >
               <ShoppingCart size={20} /> অর্ডার করতে চাই
             </Button>
             {page.phone && (
-              <Button variant="outline" className="h-12 px-8 rounded-lg bg-black text-white hover:bg-gray-900 border-none font-bold gap-3 w-full max-w-xs" asChild>
+              <Button variant="outline" className="h-12 px-8 rounded-xl bg-black text-white hover:bg-gray-900 border-none font-bold gap-3 w-full max-w-xs" asChild>
                 <a href={`tel:${page.phone}`}><Phone size={18} className="text-[#FFD700]" /> {page.phone}</a>
               </Button>
             )}
@@ -186,149 +188,126 @@ export default function DynamicLandingPage() {
         </div>
       </section>
 
-      {/* 2. INGREDIENTS SECTION (Dynamic Grid) */}
-      {page.floatingServices && page.floatingServices.length > 0 && (
+      {/* 2. INGREDIENTS SECTION */}
+      {page.ingredients && page.ingredients.length > 0 && (
         <section className="py-12 bg-gray-50 px-4">
           <div className="container mx-auto max-w-4xl">
             <h2 className="text-xl font-black text-[#8B0000] text-center mb-10 uppercase">যে সকল উপাদানে তৈরি?</h2>
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-              {page.floatingServices.map((item: any, i: number) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <div className="relative w-16 h-16 md:w-20 md:h-20 bg-white border-2 border-gray-200 rounded-lg p-1 shadow-sm overflow-hidden">
+              {page.ingredients.map((item: any, i: number) => (
+                <div key={i} className="flex flex-col items-center gap-2 group">
+                  <div className="relative w-16 h-16 md:w-24 md:h-24 bg-white border-2 border-gray-200 rounded-2xl p-1 shadow-sm overflow-hidden group-hover:border-primary transition-all">
                     <Image src={item.image} alt={item.name} fill className="object-cover" unoptimized />
                   </div>
                   <span className="text-[10px] md:text-xs font-black text-gray-600 text-center uppercase tracking-tighter">{item.name}</span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-center mt-10">
-              <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg shadow-lg">অর্ডার করতে চাই</Button>
+          </div>
+        </section>
+      )}
+
+      {/* 3. USAGE SECTION */}
+      {page.usagePoints && page.usagePoints.length > 0 && (
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <div className="bg-[#8B0000] text-white p-4 rounded-xl text-center mb-12 shadow-lg">
+              <h2 className="font-black text-sm md:text-xl uppercase tracking-tight">{page.usageTitle}</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-5">
+                {page.usagePoints.map((item: string, i: number) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="p-1.5 bg-red-100 text-red-600 rounded-full mt-0.5"><Check size={16} strokeWidth={4} /></div>
+                    <p className="text-sm md:text-base font-bold text-gray-700 leading-relaxed">{item}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="relative aspect-square rounded-[2.5rem] overflow-hidden border-8 border-gray-50 shadow-2xl">
+                <Image src={page.usageImage || page.imageUrl} alt="Usage" fill className="object-cover" unoptimized />
+              </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* 3. USAGE SECTION (Red Title Bar + Split Layout) */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="bg-[#8B0000] text-white p-3 rounded-lg text-center mb-10">
-            <h2 className="font-black text-sm md:text-lg uppercase tracking-tight">যেভাবে আপনি মজাদার বালাচাও খেতে পারেনঃ</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-              {page.includingItems?.map((item: any, i: number) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="p-1 bg-red-100 text-red-600 rounded-full mt-0.5"><Check size={14} strokeWidth={4} /></div>
-                  <p className="text-xs md:text-sm font-bold text-gray-700 leading-relaxed">{item.title}</p>
+      {/* 4. TRUST SECTION */}
+      {page.trustPoints && page.trustPoints.length > 0 && (
+        <section className="py-16 px-4 bg-gray-50">
+          <div className="container mx-auto max-w-2xl bg-white p-10 rounded-[3rem] border border-red-100 shadow-xl">
+            <div className="bg-[#8B0000] text-white p-4 rounded-xl text-center mb-10">
+              <h2 className="font-black text-sm md:text-xl uppercase tracking-tight">{page.trustTitle}</h2>
+            </div>
+            <div className="space-y-5">
+              {page.trustPoints.map((p: string, i: number) => (
+                <div key={i} className="flex items-start gap-4 border-b border-gray-50 pb-4 last:border-0">
+                  <CheckCircle2 size={24} className="text-[#8B0000] shrink-0" />
+                  <p className="text-sm md:text-base font-bold text-gray-700 leading-snug">{p}</p>
                 </div>
               ))}
             </div>
-            <div className="relative aspect-square rounded-2xl overflow-hidden border-4 border-gray-100 shadow-xl">
-              <Image src={page.bannerImage || page.imageUrl} alt="Usage" fill className="object-cover" unoptimized />
+          </div>
+        </section>
+      )}
+
+      {/* 5. STORAGE INFO */}
+      {page.storageText && (
+        <section className="py-12 px-4">
+          <div className="container mx-auto max-w-xl border-4 border-dashed border-green-600 p-8 rounded-[2.5rem] bg-green-50/30 text-center">
+            <h2 className="font-black text-red-700 text-xl uppercase mb-4 underline decoration-green-600">যেভাবে সংরক্ষণ করবেনঃ</h2>
+            <p className="text-sm md:text-base font-bold text-gray-700 leading-loose italic">
+              {page.storageText}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* 6. PRICING SECTION */}
+      {packages.length > 0 && (
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-2xl bg-gradient-to-r from-[#8B0000] to-[#B22222] p-10 rounded-[3rem] text-white text-center shadow-2xl space-y-8">
+            <div className="grid grid-cols-1 gap-4">
+              {packages.map((pkg: any, i: number) => (
+                <div 
+                  key={i} 
+                  onClick={() => setSelectedPkgIndex(i)}
+                  className={cn(
+                    "p-6 rounded-2xl border-4 transition-all cursor-pointer flex justify-between items-center",
+                    selectedPkgIndex === i ? "bg-white/20 border-[#FFD700] scale-105" : "bg-black/10 border-white/10"
+                  )}
+                >
+                  <p className="text-base md:text-2xl font-black uppercase tracking-tight">{pkg.name}</p>
+                  <p className="text-xl md:text-3xl font-black text-[#FFD700]">৳{pkg.price}</p>
+                </div>
+              ))}
             </div>
+            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-[#FFD700] flex items-center justify-center gap-3 bg-black/20 py-3 rounded-xl">
+              <Zap size={16} fill="currentColor" /> ফ্রী হোম ডেলিভারি সারা দেশেই পাওয়া যাচ্ছে
+            </p>
           </div>
-
-          <div className="flex flex-col items-center gap-3 mt-12">
-            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg">অর্ডার করতে চাই</Button>
-            {page.phone && (
-              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
-                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
-              </Button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. TRUST SECTION (Benefit List) */}
-      <section className="py-12 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-2xl bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-          <div className="bg-[#8B0000] text-white p-3 rounded-lg text-center mb-8">
-            <h2 className="font-black text-sm md:text-lg uppercase tracking-tight">আমাদের উপর কেন আস্থা রাখবেন?</h2>
-          </div>
-          <div className="space-y-4">
-            {page.detailsContent?.features?.map((f: any, i: number) => (
-              <div key={i} className="flex items-start gap-3 border-b border-gray-50 pb-3 last:border-0">
-                <CheckCircle2 size={18} className="text-[#8B0000] shrink-0" />
-                <p className="text-xs md:text-sm font-bold text-gray-700 leading-snug">{f.title}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center gap-3 mt-10">
-            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-xs px-8 h-10 rounded-lg">অর্ডার করতে চাই</Button>
-            {page.phone && (
-              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
-                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
-              </Button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. STORAGE INFO (Green Box) */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto max-w-xl border-2 border-green-600 p-6 rounded-2xl bg-green-50/30 text-center">
-          <h2 className="font-black text-red-700 text-lg uppercase mb-4 underline">যেভাবে সংরক্ষণ করবেনঃ</h2>
-          <p className="text-xs md:text-sm font-bold text-gray-700 leading-loose">
-            {page.stockText || "কাঁচের বয়ামে রাখলে বালাচাও ক্রিস্পি থাকে প্রায় অনেক দিন। তবে প্লাস্টিকের বয়ামে রাখলে এর ফ্লেভার এবং টেক্সচার নষ্ট হতে পারে। সব সময় এয়ার টাইট বক্সে রাখার চেষ্টা করবেন।"}
-          </p>
-        </div>
-      </section>
-
-      {/* 6. PRICING SECTION (Red Gradient Box) */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto max-w-2xl bg-gradient-to-r from-[#8B0000] to-[#B22222] p-8 rounded-3xl text-white text-center shadow-2xl space-y-6">
-          <div className="space-y-4">
-            {currentPackages.map((pkg: any, i: number) => (
-              <div 
-                key={i} 
-                onClick={() => setSelectedPkgIndex(i)}
-                className={cn(
-                  "p-4 rounded-xl border-2 transition-all cursor-pointer",
-                  selectedPkgIndex === i ? "bg-white/20 border-[#FFD700]" : "bg-black/10 border-white/10"
-                )}
-              >
-                <p className="text-sm md:text-xl font-black uppercase">
-                  {pkg.name} = <span className="text-[#FFD700]">৳{pkg.price} টাকা</span>
-                </p>
-              </div>
-            ))}
-          </div>
-          
-          <div className="flex flex-col items-center gap-3">
-            <Button onClick={scrollToForm} className="bg-[#FFD700] hover:bg-[#FFC800] text-black font-black uppercase text-sm px-10 h-12 rounded-lg">অর্ডার করতে চাই</Button>
-            {page.phone && (
-              <Button variant="outline" className="bg-black text-white border-none h-10 px-6 rounded-lg text-xs font-bold gap-2" asChild>
-                <a href={`tel:${page.phone}`}><Phone size={14} className="text-[#FFD700]" /> {page.phone}</a>
-              </Button>
-            )}
-          </div>
-          
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#FFD700] flex items-center justify-center gap-2">
-            <Zap size={12} fill="currentColor" /> ফ্রী হোম ডেলিভারি সারা দেশেই পাওয়া যাচ্ছে
-          </p>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 7. ORDER FORM SECTION */}
-      <section id="order-form" className="py-20 px-4 container mx-auto max-w-6xl">
-        <div className="bg-[#8B0000] text-white p-4 rounded-t-[2rem] text-center max-w-2xl mx-auto">
-          <h2 className="font-black text-sm md:text-lg uppercase">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h2>
+      <section id="order-form" className="py-24 px-4 container mx-auto max-w-6xl">
+        <div className="bg-[#8B0000] text-white p-5 rounded-t-[2.5rem] text-center max-w-2xl mx-auto shadow-xl">
+          <h2 className="font-black text-sm md:text-xl uppercase tracking-widest">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-0">
-          <div className="lg:col-span-7 bg-white p-8 md:p-12 rounded-b-[2.5rem] rounded-tl-[2.5rem] shadow-2xl border-t-4 border-[#8B0000]">
-            <form onSubmit={handleOrderSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-7 bg-white p-8 md:p-12 rounded-b-[3rem] rounded-tl-[3rem] shadow-2xl border-t-8 border-[#8B0000]">
+            <form onSubmit={handleOrderSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">আপনার নাম</Label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={24} />
                     <Input 
                       value={formData.name} 
                       onChange={e => setFormData({...formData, name: e.target.value})} 
                       placeholder="নাম লিখুন" 
-                      className="h-14 pl-12 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                      className="h-16 pl-14 bg-gray-50 border-none rounded-2xl font-bold text-xl focus:bg-white transition-all shadow-inner" 
                       required 
                     />
                   </div>
@@ -336,12 +315,12 @@ export default function DynamicLandingPage() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">ফোন নম্বর</Label>
                   <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={20} />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B0000]" size={24} />
                     <Input 
                       value={formData.phone} 
                       onChange={e => setFormData({...formData, phone: e.target.value})} 
                       placeholder="০১XXXXXXXXX" 
-                      className="h-14 pl-12 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                      className="h-16 pl-14 bg-gray-50 border-none rounded-2xl font-bold text-xl focus:bg-white transition-all shadow-inner" 
                       required 
                     />
                   </div>
@@ -351,68 +330,76 @@ export default function DynamicLandingPage() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">পূর্ণ ঠিকানা</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-4 text-[#8B0000]" size={20} />
+                  <MapPin className="absolute left-4 top-5 text-[#8B0000]" size={24} />
                   <Textarea 
                     value={formData.address} 
                     onChange={e => setFormData({...formData, address: e.target.value})} 
-                    placeholder="আপনার বিস্তারিত ঠিকানা দিন" 
-                    className="min-h-[120px] pl-12 pt-4 bg-gray-50 border-none rounded-xl font-bold text-lg" 
+                    placeholder="আপনার বিস্তারিত ঠিকানা দিন (বাসা নং, রোড নং, এলাকা)" 
+                    className="min-h-[150px] pl-14 pt-5 bg-gray-50 border-none rounded-2xl font-bold text-xl focus:bg-white transition-all shadow-inner" 
                     required 
                   />
                 </div>
               </div>
 
               {isSuccess ? (
-                <div className="p-8 bg-green-50 rounded-2xl text-center border-2 border-green-100">
-                  <CheckCircle2 className="text-green-600 mx-auto mb-4" size={48} />
-                  <h3 className="font-black text-green-800 text-xl uppercase">অর্ডার সফল হয়েছে!</h3>
+                <div className="p-10 bg-green-50 rounded-[2.5rem] text-center border-4 border-green-100 animate-in zoom-in">
+                  <CheckCircle2 className="text-green-600 mx-auto mb-4" size={64} />
+                  <h3 className="font-black text-green-800 text-2xl uppercase">অর্ডার সফল হয়েছে!</h3>
+                  <p className="text-green-700 font-bold mt-2">আমাদের প্রতিনিধি শীঘ্রই আপনার সাথে যোগাযোগ করবেন।</p>
                 </div>
               ) : (
                 <Button 
                   type="submit" 
                   disabled={isSubmitting || isOutOfStock} 
-                  className="w-full h-16 rounded-xl bg-[#8B0000] hover:bg-[#B22222] text-white font-black text-xl uppercase shadow-2xl"
+                  className="w-full h-20 rounded-2xl bg-[#8B0000] hover:bg-[#B22222] text-white font-black text-2xl uppercase shadow-2xl transform active:scale-95 transition-all"
                 >
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "অর্ডার সম্পন্ন করুন →"}
+                  {isSubmitting ? <Loader2 className="animate-spin h-10 w-10" /> : "অর্ডার সম্পন্ন করুন →"}
                 </Button>
               )}
             </form>
           </div>
 
+          {/* ORDER SUMMARY */}
           <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
-            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-[12px] border-[#8B0000]">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center gap-4 border-b pb-6">
-                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden border bg-gray-50 shrink-0">
+            <Card className="rounded-[3rem] border-none shadow-2xl overflow-hidden bg-white border-t-[16px] border-[#8B0000]">
+              <CardContent className="p-10 space-y-8">
+                <div className="flex items-center gap-6 border-b pb-8">
+                  <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-gray-100 bg-gray-50 shrink-0 shadow-lg">
                     <Image src={linkedProduct?.imageUrl || page.imageUrl} alt={page.title} fill className="object-cover" unoptimized />
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <h4 className="font-black text-gray-900 uppercase text-xs leading-tight line-clamp-2">
-                      {page.title}
+                  <div className="flex-1 space-y-2">
+                    <h4 className="font-black text-gray-900 uppercase text-sm leading-tight line-clamp-2">
+                      {page.title} {selectedPackage && `(${selectedPackage.name})`}
                     </h4>
-                    <div className="flex items-center gap-3 mt-2">
-                      <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-1 bg-gray-100 rounded-lg"><Minus size={14}/></button>
-                      <span className="font-black text-lg">{quantity}</span>
-                      <button onClick={() => setQuantity(quantity + 1)} className="p-1 bg-gray-100 rounded-lg"><Plus size={14}/></button>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"><Minus size={16}/></button>
+                      <span className="font-black text-2xl text-primary">{quantity}</span>
+                      <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"><Plus size={16}/></button>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                <div className="space-y-5">
+                  <div className="flex justify-between text-[11px] font-black uppercase text-gray-400 tracking-[0.2em]">
                     <span>প্রোডাক্ট প্রাইজ</span>
                     <span className="text-gray-900 font-black">৳{price}</span>
                   </div>
-                  <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                  <div className="flex justify-between text-[11px] font-black uppercase text-gray-400 tracking-[0.2em]">
                     <span>ডেলিভারি চার্জ</span>
                     <span className="text-blue-600 font-black">৳{deliveryCharge}</span>
                   </div>
-                  <div className="pt-6 border-t-2 border-dashed border-gray-100 flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] font-black text-[#8B0000] uppercase tracking-widest mb-1">মোট টাকা</p>
-                      <p className="text-4xl font-black text-gray-900 tracking-tighter">৳{totalPrice}</p>
+                  {regularPrice > price && (
+                    <div className="flex justify-between text-[11px] font-black uppercase text-green-600 tracking-[0.2em]">
+                      <span>আপনার সাশ্রয়</span>
+                      <span className="font-black">-৳{(regularPrice - price) * quantity}</span>
                     </div>
-                    <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-3">CASH ON DELIVERY</Badge>
+                  )}
+                  <div className="pt-8 border-t-4 border-dashed border-gray-50 flex justify-between items-end">
+                    <div>
+                      <p className="text-[11px] font-black text-[#8B0000] uppercase tracking-[0.3em] mb-2">সর্বমোট টাকা</p>
+                      <p className="text-5xl font-black text-gray-900 tracking-tighter">৳{totalPrice}</p>
+                    </div>
+                    <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-4 py-1.5 rounded-full">CASH ON DELIVERY</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -422,9 +409,13 @@ export default function DynamicLandingPage() {
       </section>
 
       {/* MOBILE STICKY CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-4 md:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-        <Button onClick={scrollToForm} className="h-14 w-full rounded-xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-sm uppercase tracking-widest shadow-xl">
-          অর্ডার করতে চাই <ArrowRight size={18} className="ml-2" />
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-4 md:hidden shadow-[0_-15px-50px_rgba(0,0,0,0.15)] flex gap-3">
+        <div className="flex flex-col justify-center pl-2">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">মোট টাকা</p>
+          <p className="text-2xl font-black text-[#8B0000] tracking-tighter">৳{totalPrice}</p>
+        </div>
+        <Button onClick={scrollToForm} className="h-14 flex-1 rounded-2xl bg-[#FFD700] hover:bg-[#FFC800] text-black font-black text-sm uppercase tracking-widest shadow-xl">
+          অর্ডার করুন <ArrowRight size={20} className="ml-2" />
         </Button>
       </div>
 

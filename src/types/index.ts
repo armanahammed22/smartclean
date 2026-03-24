@@ -44,27 +44,30 @@ export interface LandingPage {
   videoUrl?: string;
   active: boolean;
   productId?: string; // Linked product ID
-  benefits?: string[];
-  ingredients?: { name: string; imageUrl: string }[];
-  whyChoose?: string[];
-  packages?: { name: string; price: number; discountPrice: number }[];
-  offerText?: string;
-  stockText?: string;
   phone?: string;
   
-  // NEW FIELDS
+  // DYNAMIC SECTIONS
   heroTitle?: string;
   heroSubtitle?: string;
-  floatingServices?: { name: string; image: string; link: string }[];
-  includingItems?: { title: string; image: string; description: string }[];
-  detailsContent?: { 
-    text: string; 
-    features?: { title: string; description: string }[];
-  };
-  pricingCategories?: { 
-    name: string; 
-    packages: { name: string; price: number; originalPrice?: number }[];
-  }[];
+  heroBadge?: string;
+  
+  // Grid of ingredients/features (The 5-item grid)
+  ingredients?: { name: string; image: string }[];
+  
+  // Usage/How to eat section
+  usageTitle?: string;
+  usageImage?: string;
+  usagePoints?: string[];
+  
+  // Why trust us section
+  trustTitle?: string;
+  trustPoints?: string[];
+  
+  // Storage info box
+  storageText?: string;
+  
+  // Multi-tier pricing
+  packages?: { name: string; price: number; originalPrice?: number }[];
 
   createdAt: string;
   updatedAt?: string;
@@ -159,47 +162,6 @@ export interface Service {
   rating?: number;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface ServicePackage {
-  id: string;
-  name: string;
-  areaSize: string;
-  price: number;
-  isRecommended: boolean;
-}
-
-export interface ServiceAddOn {
-  id: string;
-  name: string;
-  price: number;
-  icon?: string;
-}
-
-export interface IncludedItem {
-  id: string;
-  title: string;
-  icon?: string;
-}
-
-export interface ServiceReview {
-  id: string;
-  name: string;
-  rating: number;
-  text: string;
-  createdAt: string;
-}
-
-export interface SubService {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: string;
-  mainServiceId: string;
-  imageUrl?: string;
-  type?: 'sub_service';
-  status?: 'Active' | 'Inactive';
 }
 
 export interface CartItem {
