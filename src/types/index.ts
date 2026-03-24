@@ -46,11 +46,19 @@ export interface LandingPage {
   productId?: string; // Linked product ID
   phone?: string;
   
-  // DYNAMIC SECTIONS
+  // DYNAMIC HERO
   heroTitle?: string;
   heroSubtitle?: string;
   heroBadge?: string;
+  heroCTA?: string;
+  heroBanner?: string;
   
+  // DYNAMIC GRID CONFIG
+  showCatalogGrid?: boolean;
+  catalogSource?: 'products' | 'services';
+  catalogTitle?: string;
+  catalogLimit?: number;
+
   // Grid of ingredients/features (The 5-item grid)
   ingredients?: { name: string; image: string }[];
   
