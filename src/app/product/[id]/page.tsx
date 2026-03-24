@@ -26,7 +26,8 @@ import {
   Headphones,
   CheckCircle2,
   Sparkles,
-  BadgeCheck
+  BadgeCheck,
+  Card as CardIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
@@ -45,7 +46,7 @@ export default function ProductDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const db = useFirestore();
-  const { addToCart, setCheckoutOpen } = useCart();
+  const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
   
   const [mounted, setMounted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -447,35 +448,38 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
-          <div className="flex flex-col min-w-[80px]">
-            <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Sale Price</span>
-            <span className="text-xl font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
-          </div>
-          
-          <div className="flex items-center border border-gray-200 rounded-xl h-11 bg-gray-50 shrink-0 shadow-inner">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 h-full"><Minus size={14} className="text-gray-400" /></button>
-            <span className="w-8 text-center text-xs font-black text-gray-900">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="px-3 h-full"><Plus size={14} className="text-gray-400" /></button>
-          </div>
+        {/* 📱 Mobile Sticky Bottom Bar (Hides when Checkout Modal is open) */}
+        {!isCheckoutOpen && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
+            <div className="flex flex-col min-w-[80px]">
+              <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Sale Price</span>
+              <span className="text-xl font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
+            </div>
+            
+            <div className="flex items-center border border-gray-200 rounded-xl h-11 bg-gray-50 shrink-0 shadow-inner">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 h-full"><Minus size={14} className="text-gray-400" /></button>
+              <span className="w-8 text-center text-xs font-black text-gray-900">{quantity}</span>
+              <button onClick={() => setQuantity(quantity + 1)} className="px-3 h-full"><Plus size={14} className="text-gray-400" /></button>
+            </div>
 
-          <div className="flex-1 flex gap-2">
-            <button 
-              onClick={() => addToCart(product as any, quantity)}
-              disabled={isOutOfStock}
-              className="flex-1 h-11 bg-[#2263C0] text-white font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-95 transition-all shadow-lg"
-            >
-              Cart
-            </button>
-            <button 
-              onClick={handleOrderNow}
-              disabled={isOutOfStock}
-              className="flex-1 h-11 bg-[#f85606] text-white font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-95 transition-all shadow-xl shadow-orange-600/20"
-            >
-              Buy
-            </button>
+            <div className="flex-1 flex gap-2">
+              <button 
+                onClick={() => addToCart(product as any, quantity)}
+                disabled={isOutOfStock}
+                className="flex-1 h-11 bg-[#2263C0] text-white font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-95 transition-all shadow-lg"
+              >
+                Cart
+              </button>
+              <button 
+                onClick={handleOrderNow}
+                disabled={isOutOfStock}
+                className="flex-1 h-11 bg-[#f85606] text-white font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-95 transition-all shadow-xl shadow-orange-600/20"
+              >
+                Buy
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </PublicLayout>
   );
