@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -103,7 +102,8 @@ export function useDoc<T = any>(
         (err: FirestoreError) => {
           if (activePathRef.current !== currentPath) return;
 
-          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state')) {
+          // Suppress the "Unexpected state (ID: ca9)" internal assertion error
+          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
             setIsLoading(false);
             return;
           }

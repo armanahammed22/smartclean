@@ -277,7 +277,7 @@ export default function ProductDetailsPage() {
               <div className="bg-white p-5 lg:rounded-lg lg:shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-black uppercase text-gray-400 tracking-widest">Delivery Options</h3>
-                  <Info size={14} className="text-gray-300" />
+                  <span className="text-gray-300"><Info size={14} /></span>
                 </div>
                 
                 <div className="space-y-5">

@@ -83,15 +83,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [auth]);
 
   const contextValue = useMemo((): FirebaseContextState => {
-    // Rigid validation to ensure we only pass high-fidelity instances
-    const isFirestoreReady = !!firestore && typeof (firestore as any).type === 'string';
-    const isAuthReady = !!auth && typeof (auth as any).onAuthStateChanged === 'function';
-
     return {
-      areServicesAvailable: !!firebaseApp && isFirestoreReady && isAuthReady,
+      areServicesAvailable: !!firebaseApp && !!firestore && !!auth,
       firebaseApp: firebaseApp,
-      firestore: isFirestoreReady ? firestore : null,
-      auth: isAuthReady ? auth : null,
+      firestore: firestore,
+      auth: auth, 
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
       userError: userAuthState.userError,

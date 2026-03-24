@@ -37,7 +37,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     // 3. Initialize Firestore with stable transport (Long Polling)
     if (firebaseApp && !firestore) {
       try {
-        // Attempt specialized initialization for transport stability
+        // Force Long Polling to prevent the common transport errors (ca9)
         firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),

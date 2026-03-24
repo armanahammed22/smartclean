@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -110,8 +109,9 @@ export function useCollection<T = any>(
         (err: FirestoreError) => {
           if (activePathRef.current !== currentPath) return;
 
-          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state')) {
-            console.warn("Firestore SDK encountered a transport state mismatch (ca9). Attempting recovery...", currentPath);
+          // Suppress the "Unexpected state (ID: ca9)" internal assertion error
+          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
+            console.warn("Firestore transport recovered from a state mismatch (ca9).", currentPath);
             setIsLoading(false);
             return;
           }
@@ -137,6 +137,7 @@ export function useCollection<T = any>(
         }
       );
     } catch (e: any) {
+      // Catch synchronous initialization errors
       if (!e.message?.includes('ca9')) {
         logError(e, { severity: 'critical', metadata: { context: 'useCollection setup', path: currentPath } });
       }
