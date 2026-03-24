@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -16,17 +15,14 @@ import {
   User, 
   Loader2,
   ShieldCheck,
-  TrendingUp,
-  ArrowRight,
-  XCircle,
   Zap,
   Star,
-  Award,
   Plus,
   Minus,
   MessageCircle,
-  X,
-  LayoutGrid
+  LayoutGrid,
+  ArrowRight,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -79,11 +75,6 @@ export default function DynamicLandingPage() {
   // 2. Fetch Linked Product
   const productRef = useMemoFirebase(() => (db && page?.productId) ? doc(db, 'products', page.productId) : null, [db, page?.productId]);
   const { data: linkedProduct } = useDoc(productRef);
-
-  // 3. Fetch Best Selling
-  const bestSellingQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'products'), where('isBestSelling', '==', true), limit(8)) : null, [db]);
-  const { data: bestSelling } = useCollection(bestSellingQuery);
 
   useEffect(() => {
     if (!isLoading && (!page || !page.active) && mounted) {
@@ -232,7 +223,7 @@ export default function DynamicLandingPage() {
             ]).map((item: any, i: number) => (
               <div key={i} className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center gap-4 hover:shadow-xl hover:scale-105 transition-all duration-500 group">
                 <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-2xl overflow-hidden bg-gray-50 border group-hover:rotate-6 transition-transform">
-                  <Image src={item.image} alt={item.title} fill className="object-cover p-2" unoptimized />
+                  <Image src={item.image || 'https://picsum.photos/seed/placeholder/200/200'} alt={item.title} fill className="object-cover p-2" unoptimized />
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-black text-gray-900 uppercase text-[11px] md:text-sm tracking-tight">{item.title}</h4>
@@ -289,7 +280,7 @@ export default function DynamicLandingPage() {
           <div className="w-20 h-1.5 bg-[#8B0000] mx-auto rounded-full" />
         </div>
 
-        {page.pricingCategories ? (
+        {page.pricingCategories && page.pricingCategories.length > 0 ? (
           <div className="space-y-12">
             <div className="flex justify-center gap-2 p-1 bg-gray-100 rounded-2xl w-fit mx-auto">
               {page.pricingCategories.map((cat: any, i: number) => (
@@ -307,7 +298,7 @@ export default function DynamicLandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {page.pricingCategories[activeCategory].packages.map((pkg: any, idx: number) => (
+              {page.pricingCategories[activeCategory]?.packages?.map((pkg: any, idx: number) => (
                 <div 
                   key={idx}
                   onClick={() => setSelectedPkgIndex(idx)}
@@ -543,7 +534,7 @@ export default function DynamicLandingPage() {
                   onClick={() => setIsHubOpen(false)}
                 >
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white border">
-                    <Image src={s.image} alt={s.name} fill className="object-cover p-2" unoptimized />
+                    <Image src={s.image || 'https://picsum.photos/seed/placeholder/200/200'} alt={s.name} fill className="object-cover p-2" unoptimized />
                   </div>
                   <span className="text-[10px] font-black uppercase text-gray-700 tracking-tighter leading-none">{s.name}</span>
                 </Link>
