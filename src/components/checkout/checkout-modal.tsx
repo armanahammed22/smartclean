@@ -38,11 +38,10 @@ const formSchema = z.object({
   phone: z.string().min(10, "Valid phone required"),
   email: z.string().email("Valid email required").optional().or(z.literal('')),
   address: z.string().min(10, "Address required"),
-  date: z.date({ required_error: "Please select a date" }),
-  time: z.string().min(1, "Please select a time slot"),
+  date: z.date({ required_error: "Please select a date" }).optional(),
+  time: z.string().optional(),
   paymentMethod: z.string(),
-  deliveryOption: z.string().min(1, "Required"),
-  coupon: z.string().optional(),
+  deliveryOption: z.string().optional(),
   notes: z.string().optional(),
   otp: z.string().optional(),
 });
@@ -57,8 +56,6 @@ export function CheckoutModal() {
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [couponData, setCouponData] = useState<any>(null);
-  const [couponError, setCouponError] = useState('');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -89,8 +86,8 @@ export function CheckoutModal() {
       phone: "", 
       email: user?.email || "", 
       address: "", 
-      date: undefined as any,
-      time: "morning", 
+      date: undefined,
+      time: "8AM - 12PM", 
       paymentMethod: "", 
       deliveryOption: "",
       notes: "",
@@ -98,35 +95,33 @@ export function CheckoutModal() {
     },
   });
 
+  // Pre-fill user data when modal opens
   useEffect(() => {
-    if (isCheckoutOpen && mounted) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      form.setValue('date', tomorrow);
+    if (isCheckoutOpen && user) {
+      form.setValue('name', user.displayName || "");
+      form.setValue('email', user.email || "");
     }
-  }, [isCheckoutOpen, mounted, form]);
+  }, [isCheckoutOpen, user, form]);
 
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
-  const deliveryCharge = Number(selectedDelivery?.amount) || 0;
+  const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
   useEffect(() => {
     if (availableMethods?.length) {
-      const defaultMethod = availableMethods.find(m => 
-        hasServices ? m.isDefaultForServices : m.isDefaultForProducts
-      ) || availableMethods[0];
-      form.setValue('paymentMethod', defaultMethod.id);
+      const cod = availableMethods.find(m => m.type === 'cod') || availableMethods[0];
+      form.setValue('paymentMethod', cod.id);
     }
-  }, [availableMethods, hasServices, form]);
+  }, [availableMethods, form]);
 
   useEffect(() => {
-    if (deliveryOptions?.length) {
+    if (!hasServices && deliveryOptions?.length) {
       form.setValue('deliveryOption', deliveryOptions[0].id);
     }
-  }, [deliveryOptions, form]);
+  }, [deliveryOptions, hasServices, form]);
 
-  const couponDiscount = couponData ? (couponData.discountType === 'percent' ? (subtotal * couponData.value / 100) : couponData.value) : 0;
-  const finalTotal = Number(((subtotal * 1.08 + deliveryCharge) - couponDiscount).toFixed(2));
+  const tax = Number((subtotal * 0.08).toFixed(2));
+  const finalTotal = Number((subtotal + tax + deliveryCharge).toFixed(2));
 
   const handleSendOtp = () => {
     const phoneVal = form.getValues('phone');
@@ -151,25 +146,6 @@ export function CheckoutModal() {
       toast({ title: t('otp_verified') });
     } else {
       toast({ variant: "destructive", title: t('invalid_otp') });
-    }
-  };
-
-  const handleApplyCoupon = async () => {
-    const code = form.getValues('coupon');
-    if (!code || !db) return;
-    setCouponError('');
-    try {
-      const q = query(collection(db, 'coupons'), where('code', '==', code.toUpperCase()), where('status', '==', 'Active'));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        setCouponError('Invalid coupon.');
-        setCouponData(null);
-      } else {
-        setCouponData(snap.docs[0].data());
-        toast({ title: "Coupon Applied" });
-      }
-    } catch (e) {
-      setCouponError('Error validating coupon.');
     }
   };
 
@@ -210,51 +186,12 @@ export function CheckoutModal() {
               totalEarnings: 0
             });
           } catch (authError: any) {
-            if (authError.code === 'auth/email-already-in-use') {
-              console.log("Account already exists in Auth system.");
-            } else {
-              throw authError;
-            }
+            if (authError.code !== 'auth/email-already-in-use') throw authError;
           }
         }
       }
 
       const collName = hasServices ? 'bookings' : 'orders';
-      let assignedTech = null;
-
-      if (hasServices) {
-        const serviceId = items.find(i => i.itemType === 'service')?.id;
-        if (serviceId) {
-          const techQuery = query(
-            collection(db, 'employee_profiles'),
-            where('skills', 'array-contains', serviceId),
-            where('status', '==', 'Active')
-          );
-          
-          const techSnap = await getDocs(techQuery);
-          const candidates = techSnap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
-
-          for (const tech of candidates) {
-            const availQuery = query(
-              collection(db, 'staff_availability'), 
-              where('uid', '==', tech.id), 
-              where('status', '==', 'Available')
-            );
-            const availSnap = await getDocs(availQuery);
-            if (!availSnap.empty) {
-              assignedTech = { id: tech.id, name: tech.name };
-              updateDoc(doc(db, 'staff_availability', tech.id as string), { 
-                status: 'Busy', 
-                updatedAt: serverTimestamp() 
-              });
-              break;
-            }
-          }
-        }
-      }
-
       const docRef = await addDoc(collection(db, collName), {
         customerId: currentUserId || 'guest',
         customerName: values.name,
@@ -268,19 +205,16 @@ export function CheckoutModal() {
           itemType: item.itemType
         })),
         subtotal: subtotal,
+        tax: tax,
         deliveryCharge: deliveryCharge,
         totalPrice: finalTotal,
         paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || 'Unknown',
         address: values.address,
         dateTime: values.date?.toISOString() || null,
-        timeSlot: values.time,
+        timeSlot: values.time || null,
         notes: values.notes,
         createdAt: new Date().toISOString(),
-        status: assignedTech ? 'Assigned' : 'New',
-        employeeId: assignedTech?.id || null,
-        employeeName: assignedTech?.name || null,
-        serviceId: items.find(i => i.itemType === 'service')?.id || null,
-        serviceTitle: items.find(i => i.itemType === 'service')?.name || null
+        status: 'New'
       });
 
       clearCart();
@@ -289,7 +223,6 @@ export function CheckoutModal() {
       router.push(`/order-success?id=${docRef.id}&type=${transactionType}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
       
     } catch (e: any) {
-      console.error("Checkout failed:", e);
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
       setIsSubmitting(false);
@@ -298,119 +231,91 @@ export function CheckoutModal() {
 
   if (!mounted) return null;
 
+  const currentPaymentId = form.watch('paymentMethod');
+  const isCOD = availableMethods?.find(m => m.id === currentPaymentId)?.type === 'cod';
+
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
-      <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
-        <div className="grid lg:grid-cols-5 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
+        <div className="grid lg:grid-cols-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
           {/* Form Section (Left) */}
           <div className="lg:col-span-3 p-6 md:p-12 bg-white">
-            <DialogHeader className="mb-10 text-left">
-              <div className="inline-flex items-center gap-2 bg-green-50 text-green-600 px-3 py-1 rounded-full mb-4">
-                <CheckCircle2 size={14} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Booking & Delivery</span>
+            <DialogHeader className="mb-8 text-left">
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
+                <ShieldCheck size={14} />
+                <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
               </div>
-              <DialogTitle className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#081621]">
-                {t('checkout_title')}
+              <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">
+                {hasServices ? 'Booking Details' : 'Order Details'}
               </DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                    <User size={14} className="text-blue-600" /> {t('delivery_info')}
-                  </h4>
-                  
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('full_name')}</FormLabel>
-                      <FormControl><Input placeholder="Your full name" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</FormLabel>
+                        <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
                     <FormField control={form.control} name="phone" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</FormLabel>
                         <div className="flex gap-2">
-                          <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-14 bg-gray-50 border-gray-100 flex-1 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                          <FormControl><Input placeholder="01XXXXXXXXX" {...field} disabled={isVerified} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
                           {isOtpSystemEnabled && !user && !isVerified && (
-                            <Button type="button" variant="secondary" onClick={handleSendOtp} disabled={isVerifying} className="h-14 px-6 font-black uppercase text-[10px] rounded-2xl">
+                            <Button type="button" variant="secondary" onClick={handleSendOtp} disabled={isVerifying} className="h-12 px-4 font-black uppercase text-[10px] rounded-xl">
                               {isVerifying ? <Loader2 className="animate-spin" /> : t('send_otp')}
                             </Button>
                           )}
-                          {isVerified && <div className="h-14 px-4 bg-green-50 text-green-600 rounded-2xl border border-green-100 flex items-center gap-2"><CheckCircle2 size={18} /> <span className="text-[10px] font-black">VERIFIED</span></div>}
                         </div>
                         <FormMessage />
                       </FormItem>
                     )} />
-
-                    {isOtpSent && !isVerified && (
-                      <div className="flex gap-2 animate-in slide-in-from-top-2">
-                        <FormField control={form.control} name="otp" render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormControl><Input placeholder="OTP Code" {...field} className="h-14 bg-white border-green-600/30 rounded-2xl text-center text-xl font-black tracking-widest" /></FormControl>
-                          </FormItem>
-                        )} />
-                        <Button type="button" onClick={handleVerifyOtp} className="h-14 px-8 font-black uppercase text-[10px] rounded-2xl bg-green-600 text-white">VERIFY</Button>
-                      </div>
-                    )}
                   </div>
+
+                  {isOtpSent && !isVerified && (
+                    <div className="flex gap-2 animate-in slide-in-from-top-2">
+                      <FormField control={form.control} name="otp" render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl><Input placeholder="OTP Code" {...field} className="h-12 bg-white border-primary rounded-xl text-center font-black tracking-widest" /></FormControl>
+                        </FormItem>
+                      )} />
+                      <Button type="button" onClick={handleVerifyOtp} className="h-12 px-6 font-black uppercase text-[10px] rounded-xl bg-primary text-white">VERIFY</Button>
+                    </div>
+                  )}
 
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('email_optional')}</FormLabel>
-                      <FormControl><Input placeholder="example@mail.com" {...field} className="h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address</FormLabel>
+                      <FormControl><Input placeholder="name@example.com" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
 
                   <FormField control={form.control} name="address" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('delivery_address')}</FormLabel>
-                      <div className="relative">
-                        <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                        <FormControl><Textarea placeholder="House, Street, Area" {...field} className="bg-gray-50 border-gray-100 min-h-[100px] rounded-2xl focus:bg-white transition-all pl-12 pt-4 text-base" /></FormControl>
-                      </div>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Address</FormLabel>
+                      <FormControl><Textarea placeholder="House, Road, Area" {...field} className="bg-gray-50 border-gray-100 rounded-xl focus:bg-white transition-all min-h-[80px]" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
 
-                <div className="space-y-6 pt-6 border-t">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                    <Truck size={14} className="text-primary" /> Delivery / Zone Charges
-                  </h4>
-                  <FormField control={form.control} name="deliveryOption" render={({ field }) => (
-                    <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {deliveryOptions?.map(opt => (
-                        <div key={opt.id} className={cn(
-                          "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all bg-white", 
-                          field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200"
-                        )}>
-                          <RadioGroupItem value={opt.id} id={`modal-del-${opt.id}`} className="sr-only" />
-                          <label htmlFor={`modal-del-${opt.id}`} className="flex flex-col cursor-pointer w-full">
-                            <span className="text-[10px] font-black uppercase text-[#081621]">{opt.label}</span>
-                            <span className="text-sm font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
-                          </label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  )} />
-                </div>
-
                 {hasServices && (
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-orange-500" /> Booking Schedule</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-orange-50/50 rounded-3xl border border-orange-100">
+                  <div className="space-y-6 pt-6 border-t">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-primary" /> Booking Schedule</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="date" render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" className="h-14 bg-white justify-start gap-2 font-bold rounded-2xl border-orange-200">
-                                {field.value ? format(field.value, "PPP") : <span>{t('pick_date')}</span>}
-                                <CalendarIcon size={16} className="ml-auto text-orange-500" />
+                              <Button variant="outline" className={cn("h-12 bg-gray-50 justify-start gap-2 font-bold rounded-xl border-gray-100", !field.value && "text-muted-foreground")}>
+                                <CalendarIcon size={16} className="text-primary" />
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
@@ -422,12 +327,12 @@ export function CheckoutModal() {
                       )} />
                       <FormField control={form.control} name="time" render={({ field }) => (
                         <FormItem>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="h-14 bg-white font-bold rounded-2xl border-orange-200"><SelectValue placeholder={t('select_time')} /></SelectTrigger></FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger className="h-12 bg-gray-50 font-bold rounded-xl border-gray-100"><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="morning">{t('morning')}</SelectItem>
-                              <SelectItem value="afternoon">{t('afternoon')}</SelectItem>
-                              <SelectItem value="evening">{t('evening')}</SelectItem>
+                              <SelectItem value="8AM - 12PM">8AM - 12PM (Morning)</SelectItem>
+                              <SelectItem value="12PM - 4PM">12PM - 4PM (Afternoon)</SelectItem>
+                              <SelectItem value="4PM - 8PM">4PM - 8PM (Evening)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -436,87 +341,95 @@ export function CheckoutModal() {
                     </div>
                   </div>
                 )}
+
+                <div className="space-y-6 pt-6 border-t">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-primary" /> Payment Method</h4>
+                  <FormField control={form.control} name="paymentMethod" render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormControl>
+                        <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
+                          {availableMethods?.map((m) => (
+                            <div key={m.id} className={cn(
+                              "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
+                              field.value === m.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                            )}>
+                              <RadioGroupItem value={m.id} id={`pay-${m.id}`} className="sr-only" />
+                              <label htmlFor={`pay-${m.id}`} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
+                                <div className={cn("p-2 rounded-lg", field.value === m.id ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
+                                  {m.type === 'cod' ? <Truck size={16} /> : m.type === 'mobile' ? <Smartphone size={16} /> : <CreditCard size={16} />}
+                                </div>
+                                <span className="flex-1 uppercase tracking-tight">{m.name}</span>
+                                {m.type === 'cod' && <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">DEFAULT</Badge>}
+                              </label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
               </form>
             </Form>
           </div>
 
-          {/* Action Section (Right) */}
-          <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-l border-gray-100 flex flex-col h-full">
+          {/* Summary Section (Right) */}
+          <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-l border-gray-100 flex flex-col">
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-              <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">{t('order_summary')}</h3>
-              <ShoppingCart size={20} className="text-green-600" />
+              <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Bill Summary</h3>
+              <ShoppingCart size={20} className="text-primary" />
             </div>
             
-            <div className="space-y-4 mb-10">
+            <div className="flex-1 space-y-4 mb-8">
               {items.map(item => (
                 <div key={item.id} className="flex justify-between items-start gap-4">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Qty: {item.quantity}</span>
                   </div>
-                  <span className="text-xs font-black text-green-600">৳{(item.price * item.quantity).toLocaleString()}</span>
+                  <span className="text-xs font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
-              
-              <div className="pt-4 border-t border-dashed space-y-2">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span>{t('subtotal')}</span>
-                  <span>৳{subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span>{t('tax')} (8%)</span>
-                  <span>৳{(subtotal * 0.08).toLocaleString()}</span>
-                </div>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t-2 border-dashed border-gray-200">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span>Subtotal</span>
+                <span>৳{subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span>Tax (8%)</span>
+                <span>৳{tax.toLocaleString()}</span>
+              </div>
+              {!hasServices && (
                 <div className="flex justify-between text-[10px] font-black uppercase text-primary">
-                  <span>{selectedDelivery?.label || 'Delivery'}</span>
+                  <span>Delivery Charge</span>
                   <span>৳{deliveryCharge.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-end pt-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Total Due</span>
-                    <span className="text-3xl font-black text-[#081621] tracking-tighter">৳{finalTotal.toLocaleString()}</span>
-                  </div>
-                  <Badge className="bg-[#081621] text-white border-none font-black text-[8px] px-2 rounded-full">VAT INC</Badge>
+              )}
+              
+              <div className="pt-6 flex justify-between items-end">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
+                  <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
                 </div>
+                <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
               </div>
             </div>
 
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-green-600" /> {t('payment_method')}</h4>
-                <Form {...form}>
-                  <form className="space-y-6">
-                    <FormField control={form.control} name="paymentMethod" render={({ field }) => (
-                      <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                        {availableMethods?.map(m => (
-                          <div key={m.id} className={cn(
-                            "flex items-center space-x-2 rounded-2xl border-2 p-4 cursor-pointer transition-all bg-white", 
-                            field.value === m.id ? "border-green-600 shadow-sm" : "border-gray-100"
-                          )}>
-                            <RadioGroupItem value={m.id} id={`modal-pay-${m.id}`} className="sr-only" />
-                            <label htmlFor={`modal-pay-${m.id}`} className="text-[10px] font-black uppercase flex items-center gap-3 w-full cursor-pointer text-[#081621]">
-                               <div className={cn("p-2 rounded-xl", field.value === m.id ? "bg-green-600 text-white" : "bg-gray-50 text-gray-400")}>
-                                  {m.type === 'mobile' ? <Smartphone size={14} /> : m.type === 'card' ? <CreditCard size={14} /> : <Wallet size={14} />}
-                               </div>
-                               {m.name}
-                            </label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    )} />
-                  </form>
-                </Form>
-              </div>
-
+            <div className="mt-10">
               <Button 
                 onClick={form.handleSubmit(onSubmit)} 
-                className="w-full h-16 font-black text-lg rounded-2xl shadow-xl uppercase tracking-tight bg-green-600 hover:bg-green-700 text-white gap-2 transition-transform active:scale-95" 
+                className="w-full h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white gap-3 transition-transform active:scale-95" 
                 disabled={isSubmitting || items.length === 0}
               >
                 {isSubmitting ? <Loader2 className="animate-spin" /> : (
-                  <>{hasServices ? 'Confirm Booking' : 'Place Order'} <Zap size={18} fill="currentColor" /></>
+                  <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>
                 )}
               </Button>
+              <p className="text-[9px] text-center mt-4 font-bold text-gray-400 uppercase tracking-widest">
+                By placing this {hasServices ? 'booking' : 'order'}, you agree to our Terms.
+              </p>
             </div>
           </div>
         </div>

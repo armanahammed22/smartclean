@@ -9,7 +9,7 @@ import { trackEvent } from '@/lib/tracking';
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Product | Service, quantity?: number) => void;
+  addToCart: (item: Product | Service, quantity?: number, showToast?: boolean) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -27,7 +27,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const addToCart = useCallback((item: Product | Service, quantity = 1) => {
+  const addToCart = useCallback((item: Product | Service, quantity = 1, showToast = true) => {
     const isService = 'basePrice' in item;
     const price = isService ? (item as Service).basePrice : (item as Product).price;
     const name = isService ? (item as Service).title : (item as Product).name;
@@ -62,10 +62,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }];
     });
     
-    toast({
-      title: isService ? t('book_now') : t('cart_added'),
-      description: `${name} ${t('cart_desc')}`,
-    });
+    if (showToast) {
+      toast({
+        title: "অর্ডার তালিকায় যুক্ত হয়েছে",
+        description: `${name} সফলভাবে যুক্ত করা হয়েছে।`,
+      });
+    }
   }, [toast, t]);
 
   const removeFromCart = useCallback((itemId: string) => {

@@ -100,7 +100,7 @@ export default function ProductDetailsPage() {
 
   const handleOrderNow = () => {
     if (!product) return;
-    addToCart(product as any, quantity);
+    addToCart(product as any, quantity, false);
     setCheckoutOpen(true);
   };
 
@@ -222,7 +222,7 @@ export default function ProductDetailsPage() {
                   </div>
                 ))}
 
-                {/* Quantity Selector (Desktop only) */}
+                {/* Quantity Selector (Visible on Desktop, Bottom on Mobile) */}
                 <div className="hidden lg:flex items-center gap-6 pt-4 border-t border-gray-50">
                   <span className="text-[11px] font-black uppercase text-gray-400 tracking-widest">Quantity</span>
                   <div className="flex items-center border border-gray-200 rounded-md bg-white">
@@ -343,18 +343,6 @@ export default function ProductDetailsPage() {
                   <p className="whitespace-pre-line text-sm font-medium">{product.description}</p>
                 </div>
               </div>
-
-              {/* Reviews Section Placeholder */}
-              <div className="bg-white p-6 lg:rounded-lg lg:shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b pb-4">
-                  <h3 className="text-lg font-black uppercase tracking-tight text-[#212121]">Ratings & Reviews</h3>
-                  <Button variant="ghost" className="text-[#1a9cb7] font-black text-xs">VIEW ALL</Button>
-                </div>
-                <div className="py-10 text-center space-y-2">
-                  <Star size={40} className="mx-auto text-gray-100" />
-                  <p className="text-sm font-bold text-gray-400">No reviews yet for this product.</p>
-                </div>
-              </div>
             </div>
 
             <div className="lg:col-span-3 mt-6 lg:mt-0">
@@ -370,28 +358,29 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        {/* MOBILE STICKY BOTTOM BAR (Hidden on Desktop) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
-          <div className="flex items-center gap-4 px-2 border-r pr-4 border-gray-100">
-            <button className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
-              <Store size={20} className="text-gray-500 group-hover:text-[#f85606]" />
-              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Store</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
-              <MessageCircle size={20} className="text-gray-500 group-hover:text-[#f85606]" />
-              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">Chat</span>
-            </button>
+        {/* MOBILE STICKY BOTTOM BAR */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
+          <div className="flex flex-col min-w-[80px]">
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Price</span>
+            <span className="text-lg font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
           </div>
+          
+          <div className="flex items-center border border-gray-200 rounded-xl h-11 bg-gray-50">
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 h-full"><Minus size={14} /></button>
+            <span className="w-8 text-center text-xs font-black">{quantity}</span>
+            <button onClick={() => setQuantity(quantity + 1)} className="px-3 h-full"><Plus size={14} /></button>
+          </div>
+
           <div className="flex-1 flex gap-2">
             <button 
               onClick={() => addToCart(product as any, quantity)}
-              className="flex-1 h-12 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white font-black text-[10px] uppercase tracking-wider rounded-[30px] active:scale-95 transition-all shadow-md"
+              className="flex-1 h-11 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white font-black text-[10px] uppercase tracking-wider rounded-xl active:scale-95 transition-all"
             >
               Add to Cart
             </button>
             <button 
               onClick={handleOrderNow}
-              className="flex-1 h-12 bg-gradient-to-r from-[#16a34a] to-[#15803d] text-white font-black text-[10px] uppercase tracking-wider rounded-[30px] active:scale-95 transition-all shadow-lg"
+              className="flex-1 h-11 bg-gradient-to-r from-[#16a34a] to-[#15803d] text-white font-black text-[10px] uppercase tracking-wider rounded-xl active:scale-95 transition-all shadow-lg"
             >
               Buy Now
             </button>

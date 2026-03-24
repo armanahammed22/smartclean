@@ -88,7 +88,7 @@ export default function ServiceDetailsPage() {
       ...service,
       title: combinedTitle,
       basePrice: totalPrice,
-    } as any);
+    } as any, 1, false);
     setCheckoutOpen(true);
   };
 
@@ -135,7 +135,6 @@ export default function ServiceDetailsPage() {
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/40"><Wrench size={80} /></div>
                   )}
                   
-                  {/* Badges TOP-LEFT Overlay */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                     {service.isPopular && (
                       <Badge className="bg-amber-500 text-white border-none px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest shadow-md flex items-center gap-1">
@@ -178,7 +177,7 @@ export default function ServiceDetailsPage() {
                 )}
               </div>
 
-              {/* What is Included (Sidebar Card) */}
+              {/* What is Included */}
               {includedItems && includedItems.length > 0 && (
                 <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
                   <CardContent className="p-6 space-y-4">
@@ -201,7 +200,6 @@ export default function ServiceDetailsPage() {
 
             {/* COLUMN 2: Identity & Sequential Selection (Middle) */}
             <div className="lg:col-span-5 space-y-8">
-              {/* Identity Row */}
               <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter uppercase leading-none">{service.title}</h1>
@@ -221,7 +219,6 @@ export default function ServiceDetailsPage() {
                 </div>
               </div>
 
-              {/* Steps Layout (Packages and Addons side by side) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Step 1: Package List */}
                 <div className="space-y-4">
@@ -285,21 +282,16 @@ export default function ServiceDetailsPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: Booking Summary (Right Sticky) */}
-            <div className="lg:col-span-3 lg:sticky lg:top-24">
+            {/* COLUMN 3: Booking Summary (Desktop) */}
+            <div className="hidden lg:block lg:col-span-3 lg:sticky lg:top-24">
               <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white border-t-8 border-primary">
                 <CardContent className="p-8 space-y-8">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Booking Summary</h3>
-                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Instant Quotation</p>
-                  </div>
-
+                  <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621]">Booking Summary</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-tight">
                       <span>{selectedPkg?.name || 'Base Package'}</span>
                       <span className="text-gray-900">৳{selectedPkg?.price?.toLocaleString() || '0'}</span>
                     </div>
-                    
                     {selectedAddOnIds.length > 0 && (
                       <div className="space-y-2 pt-2 border-t border-gray-100">
                         {addOns?.filter(a => selectedAddOnIds.includes(a.id)).map(a => (
@@ -310,86 +302,32 @@ export default function ServiceDetailsPage() {
                         ))}
                       </div>
                     )}
-
                     <div className="pt-6 border-t-2 border-dashed border-gray-100">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Payable</span>
-                        <span className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <Badge className="bg-accent text-white border-none font-black text-[8px] px-3 py-1 rounded-full uppercase">VAT Included</Badge>
-                        <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600">
-                          <ShieldCheck size={12} /> Secure Checkout
-                        </div>
-                      </div>
+                      <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Total Payable</p>
+                      <p className="text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</p>
                     </div>
                   </div>
-
-                  <Button 
-                    onClick={handleContinueBooking} 
-                    className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-accent/20 uppercase tracking-tight gap-3 transition-transform active:scale-95 bg-accent hover:bg-accent/90 text-white"
-                  >
+                  <Button onClick={handleContinueBooking} className="w-full h-16 rounded-2xl font-black text-lg shadow-xl bg-accent hover:bg-accent/90 text-white uppercase tracking-tight gap-3">
                     Confirm Booking <ChevronRight size={20} />
                   </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
-
-          {/* FULL WIDTH BOTTOM SECTIONS */}
-          <div className="mt-16 space-y-12">
-            {/* Service Details Section */}
-            <section className="px-4 lg:px-0">
-              <div className="bg-white p-8 md:p-16 rounded-[3rem] shadow-sm border border-gray-100 space-y-8">
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621] text-center">Service Details</h2>
-                <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed font-medium">
-                  <p className="whitespace-pre-line">{service.description}</p>
-                </div>
-              </div>
-            </section>
-
-            {/* Customer Reviews Section */}
-            {reviews && reviews.length > 0 && (
-              <section className="px-4 lg:px-0 space-y-8">
-                <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-[#081621] text-center">Client Feedback</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {reviews.map((rev) => (
-                    <div key={rev.id} className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-sm">{rev.name?.[0]}</div>
-                          <div>
-                            <span className="text-sm font-black text-gray-900 uppercase tracking-tight">{rev.name}</span>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Verified Client</p>
-                          </div>
-                        </div>
-                        <div className="flex text-amber-400 gap-0.5 bg-amber-50 px-3 py-1 rounded-full">
-                          {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < rev.rating ? "currentColor" : "none"} className={i < rev.rating ? "text-amber-400" : "text-gray-200"} />)}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 font-medium italic leading-relaxed text-sm">"{rev.text}"</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
         </div>
 
         {/* MOBILE STICKY BOTTOM BAR */}
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100] animate-in slide-in-from-bottom-10">
-          <div className="bg-white rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 pl-8 flex items-center justify-between h-[76px]">
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payable</span>
-              <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
-            </div>
-            <Button 
-              onClick={handleContinueBooking} 
-              className="h-14 px-8 rounded-full font-black text-xs uppercase shadow-xl bg-accent text-white gap-2 transition-all active:scale-90 border-none"
-            >
-              Book Now <ChevronRight size={18} />
-            </Button>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex items-center h-20 px-4 gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe-offset-2">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Payable</span>
+            <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
           </div>
+          <Button 
+            onClick={handleContinueBooking} 
+            className="flex-1 h-12 rounded-xl font-black text-xs uppercase shadow-xl bg-accent text-white gap-2 border-none"
+          >
+            Book Now <ChevronRight size={18} />
+          </Button>
         </div>
       </div>
     </PublicLayout>
