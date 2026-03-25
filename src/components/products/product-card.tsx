@@ -9,16 +9,16 @@ import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
+  isDark?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isDark = false }: ProductCardProps) {
   // Calculate discount percentage if regular price exists
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
 
-  // Mock data for Rating and Sales (since these aren't in the base schema)
-  // In a real app, these would come from the product object
+  // Mock data for Rating and Sales
   const rating = 4.7;
   const reviewCount = Math.floor((parseInt(product.id.slice(0, 2), 16) || 10) % 300);
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 1000);
@@ -54,31 +54,40 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* 📝 Content Section */}
         <div className="px-1 space-y-1.5">
           {/* Title */}
-          <h3 className="text-sm font-medium text-gray-800 line-clamp-1 leading-tight uppercase tracking-tight">
+          <h3 className={cn(
+            "text-[11px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
+            isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
+          )}>
             {product.name}
           </h3>
           
           {/* Price & Discount */}
           <div className="flex items-center gap-2">
-            <p className="text-lg font-black text-[#f85606] tracking-tighter">
-              <span className="text-base font-bold mr-0.5">৳</span>
+            <p className={cn(
+              "text-base md:text-lg font-black tracking-tighter",
+              isDark ? "text-orange-400" : "text-[#f85606]"
+            )}>
+              <span className="text-sm font-bold mr-0.5">৳</span>
               {product.price.toLocaleString()}
             </p>
             {discountPercent && (
-              <span className="text-[10px] font-bold text-[#f85606] bg-[#fff1eb] px-1.5 py-0.5 rounded-sm">
+              <span className="text-[9px] md:text-[10px] font-bold text-[#f85606] bg-[#fff1eb] px-1.5 py-0.5 rounded-sm">
                 -{discountPercent}%
               </span>
             )}
           </div>
           
           {/* Rating & Sold Count */}
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
+          <div className={cn(
+            "flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold",
+            isDark ? "text-white/50" : "text-gray-400"
+          )}>
             <div className="flex items-center gap-0.5 text-amber-400">
-              <Star size={12} fill="currentColor" />
-              <span className="text-gray-500">{rating}</span>
+              <Star size={10} fill="currentColor" />
+              <span className={cn(isDark ? "text-white/70" : "text-gray-500")}>{rating}</span>
             </div>
             <span>({reviewCount})</span>
-            <span className="text-gray-200">|</span>
+            <span className="opacity-20">|</span>
             <span>{soldCount >= 1000 ? (soldCount/1000).toFixed(1) + 'k' : soldCount} Sold</span>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -158,24 +157,24 @@ export default function SmartCleanHomePage() {
                   <h2 className="text-sm font-black uppercase tracking-tight italic leading-none">Flash Sale</h2>
                   <p className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-1">Limited Time Only</p>
                 </div>
-                <div className="flex gap-1 ml-2">
+                <div className="flex gap-1 ml-4">
                   {['02', '14', '55'].map((t, i) => (
                     <div key={i} className="flex items-center gap-1">
-                      <span className="bg-white/20 text-[10px] font-black px-1.5 py-0.5 rounded shadow-inner"> {t} </span>
-                      {i < 2 && <span className="text-[10px] font-black opacity-40">:</span>}
+                      <span className="bg-white text-primary text-[10px] font-black px-2 py-0.5 rounded shadow-lg min-w-[24px] text-center"> {t} </span>
+                      {i < 2 && <span className="text-[10px] font-black opacity-60">:</span>}
                     </div>
                   ))}
                 </div>
               </div>
-              <Link href="/products" className="text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-1">
-                View All <ChevronRight size={14} />
+              <Link href="/products" className="text-[9px] font-black uppercase tracking-widest text-white/80 hover:text-white flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full transition-all">
+                View All <ChevronRight size={12} />
               </Link>
             </div>
-            <div className="p-3 md:p-4">
-              <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+            <div className="p-3 md:p-6">
+              <div className="flex gap-3 md:gap-6 overflow-x-auto no-scrollbar">
                 {featuredProducts.map((product) => (
-                  <div key={product.id} className="w-[calc(33.33%-6px)] md:w-[180px] shrink-0">
-                    <ProductCard product={product} />
+                  <div key={product.id} className="w-[calc(33.33%-8px)] md:w-[180px] shrink-0">
+                    <ProductCard product={product} isDark={true} />
                   </div>
                 ))}
               </div>
