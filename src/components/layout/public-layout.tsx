@@ -84,7 +84,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
             </Button>
           ) : (
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm">
+              <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-md">
                 {displayLogo ? (
                   <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
                 ) : (

@@ -105,7 +105,7 @@ export default function LoginPage() {
         <div className="h-2 bg-primary w-full" />
         <CardHeader className="space-y-4 text-center pt-10 px-8">
           <div className="flex justify-center">
-            <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border border-gray-100 bg-white">
+            <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-md p-0">
               {displayLogo ? (
                 <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
               ) : (

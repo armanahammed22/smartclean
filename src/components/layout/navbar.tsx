@@ -100,7 +100,7 @@ export function Navbar() {
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
+            <div className="relative h-12 md:h-16 w-12 md:w-16 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-md border border-gray-100 p-0">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
@@ -131,7 +131,7 @@ export function Navbar() {
           <div className="flex-1 relative" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="relative group max-w-2xl">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 flex items-center gap-2 pointer-events-none">
-                <Wrench size={16} className="text-primary/60" />
+                <Search size={16} className="text-primary/60" />
                 <div className="w-px h-4 bg-gray-200" />
               </div>
               <Input 
