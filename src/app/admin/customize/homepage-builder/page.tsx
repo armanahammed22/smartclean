@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -40,10 +41,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const SECTION_TYPES = [
   { id: 'hero', label: 'Main Hero Slider', icon: Layout },
-  { id: 'search', label: 'Search Bar Block', icon: Settings2 },
+  { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap },
   { id: 'categories', label: 'Categories Grid', icon: Layers },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap },
-  { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap },
   { id: 'services', label: 'Services Grid', icon: Package },
   { id: 'products_feed', label: 'Dynamic Products Feed', icon: Tag },
   { id: 'custom_grid', label: 'Custom Products Grid', icon: Tag }
@@ -80,8 +80,6 @@ export default function HomepageBuilderPage() {
     const item = newSections.splice(draggedItem, 1)[0];
     newSections.splice(index, 0, item);
     
-    // We don't save to DB yet to avoid excessive writes during drag
-    // But we need a local state if we want smooth preview
     setDraggedItem(index);
   };
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -7,8 +8,8 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit as fireLimit } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, limit as fireLimit, doc } from 'firebase/firestore';
 import { 
   ArrowRight, 
   Wrench, 
@@ -22,7 +23,8 @@ import {
   X,
   Package,
   ChevronDown,
-  Layout as LayoutIcon
+  Layout as LayoutIcon,
+  Timer
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -34,6 +36,7 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
+import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 
@@ -42,12 +45,6 @@ export default function SmartCleanHomePage() {
   const db = useFirestore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [api, setApi] = useState<CarouselApi>();
-
-  // Search State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -63,11 +60,13 @@ export default function SmartCleanHomePage() {
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
 
   const { data: allBanners } = useCollection(bannersRef);
   const { data: allTopNav } = useCollection(topNavRef);
   const { data: allProducts } = useCollection(productsRef);
   const { data: allServices } = useCollection(servicesRef);
+  const { data: flashSaleConfig } = useDoc(flashSaleRef);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
 
@@ -78,24 +77,6 @@ export default function SmartCleanHomePage() {
     for (let i = 0; i < sorted.length; i += 8) chunks.push(sorted.slice(i, i + 8));
     return chunks;
   }, [allTopNav]);
-
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) return [];
-    const combined = [
-      ...(allProducts?.map(p => ({ ...p, type: 'product' })) || []),
-      ...(allServices?.map(s => ({ ...s, type: 'service' })) || [])
-    ];
-    return combined.filter(item => 
-      (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 6);
-  }, [searchQuery, allProducts, allServices]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/services?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   // 🧩 RENDERING ENGINE
   const renderSection = (section: any) => {
@@ -132,50 +113,6 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'search':
-        return (
-          <section key={section.id} className="px-4 -mt-6 md:-mt-8 relative z-20">
-            <div className="max-w-3xl mx-auto" ref={searchRef}>
-              <form onSubmit={handleSearchSubmit} className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-primary z-10 flex items-center gap-2 pointer-events-none">
-                  <Search size={22} />
-                </div>
-                <Input 
-                  value={searchQuery}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('search_placeholder')}
-                  className="w-full h-14 md:h-16 pl-14 pr-16 rounded-2xl md:rounded-[1.5rem] border-none shadow-2xl bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold text-base md:text-lg"
-                />
-                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 h-10 md:h-12 w-10 md:w-12 bg-primary flex items-center justify-center rounded-xl md:rounded-2xl text-white hover:bg-primary/90 transition-all active:scale-90">
-                  <Search size={20} />
-                </button>
-              </form>
-              {isSearchFocused && searchQuery.length >= 2 && (
-                <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="p-4 bg-gray-50/50 border-b flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-muted-foreground tracking-widest">Live Suggestions</span>
-                    <button onClick={() => setIsSearchFocused(false)} className="text-gray-400 hover:text-gray-600"><X size={16}/></button>
-                  </div>
-                  <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {searchResults.map(item => (
-                      <button key={item.id} onClick={() => router.push(`/${item.type}/${item.id}`)} className="w-full flex items-center gap-4 p-4 hover:bg-primary/5 border-b border-gray-50 last:border-none text-left group">
-                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border shrink-0">
-                          <Image src={item.imageUrl || ''} alt="Result" fill className="object-cover" unoptimized />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-black text-gray-900 uppercase truncate">{item.name || item.title}</p>
-                          <span className="text-xs font-black text-primary">৳{(item.price || item.basePrice)?.toLocaleString()}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-        );
-
       case 'categories':
         return (
           <section key={section.id} className="px-4 py-10">
@@ -206,20 +143,50 @@ export default function SmartCleanHomePage() {
         return <CampaignSection key={section.id} />;
 
       case 'flash_deals':
-        const flashProducts = allProducts?.filter(p => p.status === 'Active' && p.isPopular).slice(0, 6) || [];
+        const isFlashActive = flashSaleConfig?.isActive && new Date(flashSaleConfig.endDate) > new Date();
+        if (!isFlashActive) return null;
+
+        const flashProductIds = flashSaleConfig?.productIds || [];
+        const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
+
         return (
-          <section key={section.id} className="px-4 py-2">
-            <div className="app-card border-none bg-primary text-white shadow-xl">
-              <div className="p-4 flex items-center justify-between border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="bg-accent p-1.5 rounded-lg text-white"><Zap size={18} fill="currentColor" /></div>
-                  <h2 className="text-sm font-black uppercase italic">{section.title}</h2>
+          <section key={section.id} className="px-4 py-6">
+            <div className="app-card border-none bg-primary text-white shadow-2xl overflow-hidden rounded-[2.5rem]">
+              <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/10">
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-amber-400 p-2.5 rounded-2xl text-black shadow-lg animate-pulse">
+                      <Zap size={24} fill="currentColor" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic italic">
+                        {flashSaleConfig?.title || 'Flash Sale'}
+                      </h2>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white/60">Limited Time Only</p>
+                    </div>
+                  </div>
+                  <div className="h-10 w-px bg-white/10 hidden md:block" />
+                  <div className="flex flex-col items-center md:items-start gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Ends In:</span>
+                    <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
+                  </div>
                 </div>
-                <Link href="/products" className="text-[9px] font-black uppercase text-white/80 hover:text-white flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full">All <ChevronRight size={12} /></Link>
+                <Button variant="outline" className="rounded-full bg-white/10 border-white/20 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11 hover:bg-white/20" asChild>
+                  <Link href="/products">View All Deals</Link>
+                </Button>
               </div>
-              <div className="p-3">
-                <div className="flex gap-3 overflow-x-auto no-scrollbar">
-                  {flashProducts.map(p => <div key={p.id} className="w-[140px] shrink-0"><ProductCard product={p} isDark={true} /></div>)}
+              <div className="p-6 md:p-10 bg-white/5">
+                <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
+                  {flashProducts.map(p => (
+                    <div key={p.id} className="w-[160px] md:w-[220px] shrink-0">
+                      <ProductCard product={p} isDark={true} />
+                    </div>
+                  ))}
+                  {flashProducts.length === 0 && (
+                    <div className="w-full py-12 text-center text-white/40 italic text-sm">
+                      Deals are loading...
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -293,7 +260,7 @@ export default function SmartCleanHomePage() {
           /* 🛡️ DEFAULT FALLBACK LAYOUT */
           <>
             {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
-            {renderSection({ id: 'def-search', type: 'search', config: {} })}
+            {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Deals' })}
             {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
             {renderSection({ id: 'def-camp', type: 'campaign', config: {} })}
             {renderSection({ 
