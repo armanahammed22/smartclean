@@ -46,7 +46,9 @@ import {
   Code,
   Shield,
   TrendingUp,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Wrench,
+  Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
