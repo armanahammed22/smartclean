@@ -34,20 +34,15 @@ const PUBLIC_COLLECTIONS = [
  */
 function extractPath(target: any): string {
   if (!target) return 'unknown';
-  
-  // Try to extract from internal query object if it's a Query
+  if (target.path) return target.path;
   if (target._query?.path?.segments) {
     return target._query.path.segments.join('/');
   }
-  
-  // Standard path for CollectionReference
-  if (target.path) return target.path;
-  
   return 'query';
 }
 
 /**
- * Highly resilient real-time collection hook.
+ * Highly resilient real-time collection hook with internal error shielding.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -84,9 +79,9 @@ export function useCollection<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Assertion Shield (ca9 / b815) - Quietly recover
+        // 🛡️ SDK Assertion Shield (ca9 / b815) - Silence these system errors
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed transport failure at: ${currentPath}`);
+          console.warn(`[Resilience Shield] Suppressed Firestore internal failure at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -97,7 +92,7 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Emit for UI boundary, but database logging is now disabled in the emitter listener
+        // Only emit real permission errors for non-public collections
         if (!isPublic) {
           errorEmitter.emit('permission-error', contextualError);
         }

@@ -29,7 +29,7 @@ const PUBLIC_DOCS = [
 ];
 
 /**
- * Highly resilient real-time document hook.
+ * Highly resilient real-time document hook with internal error shielding.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -72,7 +72,7 @@ export function useDoc<T = any>(
         
         // 🛡️ SDK Assertion Shield (ca9 / b815)
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed transport failure at doc: ${currentPath}`);
+          console.warn(`[Resilience Shield] Suppressed Firestore internal failure at doc: ${currentPath}`);
           setIsLoading(false);
           return;
         }

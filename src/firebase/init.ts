@@ -30,8 +30,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       /**
-       * 🛡️ PERMANENT FIRESTORE FIX
-       * forceLongPolling: true - Required to bypass faulty streaming in Cloud Workstations.
+       * 🛡️ PERMANENT FIRESTORE RESILIENCE
+       * forceLongPolling: true - Required to bypass faulty streaming in Cloud Workstations and strict proxies.
        * memoryLocalCache: Required to avoid IndexDB assertion failures in dev-mode workstation loops.
        */
       firestore = initializeFirestore(firebaseApp, {
