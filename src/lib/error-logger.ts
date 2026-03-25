@@ -18,28 +18,38 @@ export interface ErrorContext {
  * Hardened to prevent recursive loops during Firestore transport failures.
  */
 export async function logError(error: any, context: ErrorContext = {}) {
-  // 1. Prevent logging the same error object repeatedly
-  if (error?._isLogged) return;
+  // 1. Prevent logging the same error object repeatedly or recursive calls
+  if (!error || error?._isLogged) return;
   
   const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
   const stack = error?.stack || 'No stack trace available';
+  const stringified = String(error);
 
   // 2. CRITICAL FILTER: Skip transport assertion errors (ca9, b815, internal failures)
-  // These errors indicate the Firestore connection is currently broken. 
-  // Attempting to log them TO Firestore will cause a recursive crash.
+  // These indicate the Firestore connection is currently broken or in an unstable state.
+  // Attempting to log them TO Firestore will cause a recursive crash (Assertion Loop).
   const isTransportFailure = 
     message.includes('ca9') || 
     message.includes('b815') || 
     message.includes('INTERNAL ASSERTION FAILED') ||
-    message.includes('Unexpected state');
+    message.includes('Unexpected state') ||
+    stringified.includes('ca9') ||
+    stringified.includes('b815') ||
+    stringified.includes('INTERNAL ASSERTION FAILED');
 
   if (isTransportFailure) {
-    console.warn('[Error Logger] Suppressed logging of Firestore transport failure to avoid recursive loop:', message);
+    // Only log to console to prevent recursion
+    console.warn('[Error Logger] Suppressed database logging for Firestore internal assertion failure to prevent loop.');
     return;
   }
 
-  if (error && typeof error === 'object') {
-    error._isLogged = true;
+  // Mark as logged to prevent duplicates
+  if (typeof error === 'object') {
+    try {
+      error._isLogged = true;
+    } catch (e) {
+      // ignore read-only errors
+    }
   }
 
   try {
@@ -68,7 +78,7 @@ export async function logError(error: any, context: ErrorContext = {}) {
     
     // 3. Fire-and-forget: Non-blocking write
     addDoc(colRef, errorPayload).catch((e) => {
-      // If logging itself fails, just log to console to prevent app crash
+      // If logging itself fails, just log to console
       console.error('[Error Logger] Failed to push log to Firestore:', e.message);
     });
     

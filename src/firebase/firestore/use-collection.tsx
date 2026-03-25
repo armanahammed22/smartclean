@@ -107,7 +107,7 @@ export function useCollection<T = any>(
         (err: FirestoreError) => {
           if (activePathRef.current !== currentPath) return;
 
-          const msg = err.message;
+          const msg = err.message || String(err);
           // Suppress transport assertion errors from logging loops
           const isTransportIssue = 
             msg.includes('ca9') || 
@@ -116,7 +116,8 @@ export function useCollection<T = any>(
             msg.includes('Unexpected state');
 
           if (isTransportIssue) {
-            console.warn(`[useCollection] Firestore transport issue (suppressed): ${currentPath}`, msg);
+            console.warn(`[useCollection] Firestore transport suppressed for path: ${currentPath}`);
+            setIsLoading(false);
             return;
           }
 
@@ -129,7 +130,7 @@ export function useCollection<T = any>(
           setError(contextualError);
           setIsLoading(false);
           
-          // Log to centralized error system (already has transport checks)
+          // Log to centralized error system (has its own transport checks)
           logError(contextualError, { 
             severity: isPublic ? 'low' : 'medium',
             metadata: { path: currentPath, originalError: msg }
@@ -141,7 +142,8 @@ export function useCollection<T = any>(
         }
       );
     } catch (e: any) {
-      if (!e.message?.includes('ca9') && !e.message?.includes('b815')) {
+      const isTransport = e.message?.includes('ca9') || e.message?.includes('b815') || e.message?.includes('INTERNAL ASSERTION');
+      if (!isTransport) {
         logError(e, { severity: 'critical', metadata: { context: 'useCollection setup', path: currentPath } });
       }
       setIsLoading(false);

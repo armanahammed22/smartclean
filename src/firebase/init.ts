@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -22,15 +21,17 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
   }
 
   try {
-    if (getApps().length > 0) {
-      firebaseApp = getApp();
-      auth = getAuth(firebaseApp);
-      firestore = getFirestore(firebaseApp);
-    } else {
-      firebaseApp = initializeApp(firebaseConfig);
+    if (!firebaseApp) {
+      if (getApps().length > 0) {
+        firebaseApp = getApp();
+      } else {
+        firebaseApp = initializeApp(firebaseConfig);
+      }
+      
       auth = getAuth(firebaseApp);
       
       // Force long polling to bypass faulty WebChannel behavior in proxy/workstation environments
+      // Using memoryLocalCache to prevent corruption-related assertion failures
       firestore = initializeFirestore(firebaseApp, {
         experimentalForceLongPolling: true,
         localCache: memoryLocalCache(),
@@ -38,10 +39,11 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     }
   } catch (error) {
     console.error("Critical Firebase Initialization Error:", error);
-    // Attempt fallback
-    if (firebaseApp) {
-      firestore = getFirestore(firebaseApp);
-      auth = getAuth(firebaseApp);
+    // Attempt absolute fallback
+    if (firebaseApp && !firestore) {
+      try {
+        firestore = getFirestore(firebaseApp);
+      } catch (e) {}
     }
   }
 
