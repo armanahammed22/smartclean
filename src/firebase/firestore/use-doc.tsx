@@ -96,17 +96,17 @@ export function useDoc<T = any>(
           if (activePathRef.current !== currentPath) return;
 
           const msg = err.message || String(err);
-          // BROAD SILENCE for transport assertion errors
-          const isTransportIssue = 
+          
+          // 🛡️ CRITICAL SILENCE: Check for assertion/transport issues early
+          if (
             msg.includes('ca9') || 
             msg.includes('b815') || 
             msg.includes('INTERNAL ASSERTION FAILED') ||
-            msg.includes('Unexpected state');
-
-          if (isTransportIssue) {
-            console.warn(`[useDoc] Firestore transport issue silenced for path: ${currentPath}`);
+            msg.includes('Unexpected state')
+          ) {
+            console.warn(`[useDoc] Internal Firestore transport issue on path: ${currentPath}. Waiting for reconnect...`);
             setIsLoading(false);
-            return;
+            return; // EXIT EARLY
           }
 
           const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
