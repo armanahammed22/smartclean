@@ -17,9 +17,14 @@ import {
   Sparkles,
   Zap,
   LayoutGrid,
-  Layout as LayoutIcon,
-  ZapIcon,
-  Star
+  Star,
+  Droplets,
+  Wind,
+  Armchair,
+  Briefcase,
+  Smartphone,
+  ShieldCheck,
+  Heart
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -32,6 +37,19 @@ import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 import { Card, CardContent } from '@/components/ui/card';
+
+// Colorful helper map for categories based on name
+const getCategoryStyles = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('clean')) return { bg: 'bg-blue-50', color: 'text-blue-600', icon: Droplets };
+  if (n.includes('ac')) return { bg: 'bg-cyan-50', color: 'text-cyan-600', icon: Wind };
+  if (n.includes('sofa') || n.includes('furniture')) return { bg: 'bg-orange-50', color: 'text-orange-600', icon: Armchair };
+  if (n.includes('repair')) return { bg: 'bg-red-50', color: 'text-red-600', icon: Wrench };
+  if (n.includes('office')) return { bg: 'bg-indigo-50', color: 'text-indigo-600', icon: Briefcase };
+  if (n.includes('device') || n.includes('gadget')) return { bg: 'bg-purple-50', color: 'text-purple-600', icon: Smartphone };
+  if (n.includes('health') || n.includes('sanit')) return { bg: 'bg-green-50', color: 'text-green-600', icon: ShieldCheck };
+  return { bg: 'bg-gray-50', color: 'text-gray-600', icon: LayoutGrid };
+};
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
@@ -62,12 +80,9 @@ export default function SmartCleanHomePage() {
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
 
-  const categoryChunks = useMemo(() => {
+  const categories = useMemo(() => {
     if (!allTopNav) return [];
-    const sorted = [...allTopNav].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const chunks = [];
-    for (let i = 0; i < sorted.length; i += 8) chunks.push(sorted.slice(i, i + 8));
-    return chunks;
+    return [...allTopNav].sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [allTopNav]);
 
   const renderSection = (section: any) => {
@@ -106,27 +121,40 @@ export default function SmartCleanHomePage() {
 
       case 'categories':
         return (
-          <section key={section.id} className="px-4 py-6 md:py-10">
+          <section key={section.id} className="px-2 md:px-4 py-6">
             <div className="container mx-auto max-w-7xl">
-              <div className="app-card p-4 md:p-6 shadow-md border-gray-50">
-                <Carousel className="w-full">
-                  <CarouselContent className="-ml-0">
-                    {categoryChunks.map((chunk, idx) => (
-                      <CarouselItem key={idx} className="pl-0 basis-full">
-                        <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-4">
-                          {chunk.map((cat) => (
-                            <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
-                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10 transition-colors">
-                                {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <LayoutGrid size={20} className="text-gray-400" />}
-                              </div>
-                              <span className="text-[9px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full">{cat.name}</span>
-                            </Link>
-                          ))}
+              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 overflow-hidden">
+                <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
+                  {categories.map((cat) => {
+                    const styles = getCategoryStyles(cat.name);
+                    const DisplayIcon = styles.icon;
+                    return (
+                      <Link 
+                        key={cat.id} 
+                        href={cat.link || `/services?search=${cat.name}`} 
+                        className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-0.75rem)] sm:basis-[calc(16.66%-1rem)] md:basis-[calc(12.5%-1.2rem)] snap-start"
+                      >
+                        <div className={cn(
+                          "w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110",
+                          styles.bg,
+                          styles.color,
+                          "border-transparent group-hover:border-white group-hover:shadow-md"
+                        )}>
+                          {cat.imageUrl ? (
+                            <div className="relative w-full h-full">
+                              <Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized />
+                            </div>
+                          ) : (
+                            <DisplayIcon size={28} className="transition-transform group-hover:rotate-12" />
+                          )}
                         </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
+                        <span className="text-[9px] md:text-[10px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
+                          {cat.name}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
@@ -143,7 +171,7 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
 
         return (
-          <section key={section.id} className="w-full py-4 md:py-6 px-2 md:px-4">
+          <section key={section.id} className="w-full py-4 md:py-6 px-3 md:px-4">
             <div className="bg-[#1E5F7A] overflow-hidden shadow-xl rounded-2xl md:rounded-[2.5rem] border border-white/5">
               <div className="container mx-auto max-w-7xl">
                 <div className="p-4 md:p-8 flex items-center justify-between">
@@ -161,8 +189,7 @@ export default function SmartCleanHomePage() {
                   </Link>
                 </div>
                 
-                <div className="px-2 md:px-8 pb-6 md:pb-8">
-                  {/* Single Row Horizontal Scrolling Container with Snap logic */}
+                <div className="px-3 md:px-8 pb-6 md:pb-8">
                   <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
                       <div 
