@@ -143,8 +143,8 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
 
         return (
-          <section key={section.id} className="w-full py-4 md:py-6">
-            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl border-y border-white/5">
+          <section key={section.id} className="w-full py-4 md:py-6 px-2 md:px-4">
+            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl rounded-2xl md:rounded-[2.5rem] border border-white/5">
               <div className="container mx-auto max-w-7xl">
                 <div className="p-4 md:p-8 flex items-center justify-between">
                   <div className="flex items-center gap-3">
