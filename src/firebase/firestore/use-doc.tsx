@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -58,6 +57,7 @@ const PUBLIC_DOCS = [
 /**
  * React hook to subscribe to a single Firestore document in real-time.
  * Automatically logs access errors to the global error monitoring system.
+ * Hardened against transport assertion failures.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -101,9 +101,16 @@ export function useDoc<T = any>(
         (err: FirestoreError) => {
           if (activePathRef.current !== currentPath) return;
 
-          // Suppress the "Unexpected state (ID: ca9)" internal assertion error
-          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
-            console.warn("Firestore transport recovered from a state mismatch (ca9).", currentPath);
+          const msg = err.message;
+          // Suppress transport assertion errors (ca9, b815)
+          const isTransportIssue = 
+            msg.includes('ca9') || 
+            msg.includes('b815') || 
+            msg.includes('INTERNAL ASSERTION FAILED') ||
+            msg.includes('Unexpected state');
+
+          if (isTransportIssue) {
+            console.warn(`[useDoc] Firestore transport issue (suppressed): ${currentPath}`, msg);
             return;
           }
 
@@ -117,10 +124,10 @@ export function useDoc<T = any>(
           setData(null);
           setIsLoading(false);
 
-          // Log to centralized error system
+          // Log to centralized error system (already has transport checks)
           logError(contextualError, { 
             severity: 'medium',
-            metadata: { path: currentPath, originalError: err.message }
+            metadata: { path: currentPath, originalError: msg }
           });
 
           if (!isPublic) {
@@ -129,7 +136,7 @@ export function useDoc<T = any>(
         }
       );
     } catch (e: any) {
-      if (!e.message?.includes('ca9')) {
+      if (!e.message?.includes('ca9') && !e.message?.includes('b815')) {
         logError(e, { severity: 'critical', metadata: { context: 'useDoc setup', path: currentPath } });
       }
       setIsLoading(false);

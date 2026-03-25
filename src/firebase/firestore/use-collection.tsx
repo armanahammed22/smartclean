@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -65,7 +64,7 @@ function getPathFromTarget(target: any): string {
 
 /**
  * Standardized hook for real-time Firestore collections.
- * Hardened against transport errors (ca9) and automatically logs permission issues.
+ * Hardened against transport errors (ca9, b815) and automatically logs permission issues.
  */
 export function useCollection<T = any>(
   memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -108,10 +107,16 @@ export function useCollection<T = any>(
         (err: FirestoreError) => {
           if (activePathRef.current !== currentPath) return;
 
-          // Suppress the "Unexpected state (ID: ca9)" internal assertion error
-          if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
-            console.warn("Firestore transport recovered from a state mismatch (ca9).", currentPath);
-            // We don't set error here, just keep loading or wait for next poll
+          const msg = err.message;
+          // Suppress transport assertion errors from logging loops
+          const isTransportIssue = 
+            msg.includes('ca9') || 
+            msg.includes('b815') || 
+            msg.includes('INTERNAL ASSERTION FAILED') ||
+            msg.includes('Unexpected state');
+
+          if (isTransportIssue) {
+            console.warn(`[useCollection] Firestore transport issue (suppressed): ${currentPath}`, msg);
             return;
           }
 
@@ -124,10 +129,10 @@ export function useCollection<T = any>(
           setError(contextualError);
           setIsLoading(false);
           
-          // Log to Error Logs database
+          // Log to centralized error system (already has transport checks)
           logError(contextualError, { 
             severity: isPublic ? 'low' : 'medium',
-            metadata: { path: currentPath, originalError: err.message }
+            metadata: { path: currentPath, originalError: msg }
           });
 
           if (!isPublic) {
@@ -136,7 +141,7 @@ export function useCollection<T = any>(
         }
       );
     } catch (e: any) {
-      if (!e.message?.includes('ca9')) {
+      if (!e.message?.includes('ca9') && !e.message?.includes('b815')) {
         logError(e, { severity: 'critical', metadata: { context: 'useCollection setup', path: currentPath } });
       }
       setIsLoading(false);

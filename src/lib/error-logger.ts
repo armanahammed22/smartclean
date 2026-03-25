@@ -1,4 +1,3 @@
-
 'use client';
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -16,18 +15,31 @@ export interface ErrorContext {
 /**
  * Global Error Logging Utility
  * Automatically dispatches system errors to Firestore for monitoring.
+ * Hardened to prevent recursive loops during Firestore transport failures.
  */
 export async function logError(error: any, context: ErrorContext = {}) {
-  // Prevent logging the same error repeatedly in a loop
+  // 1. Prevent logging the same error object repeatedly
   if (error?._isLogged) return;
-  if (error) error._isLogged = true;
-
-  const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
   
-  // Skip transport assertion errors from logging to avoid infinite feedback loops
-  if (message.includes('ca9') || message.includes('INTERNAL ASSERTION FAILED')) {
-    console.warn('[Error Logger] Skipping transport assertion log:', message);
+  const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
+  const stack = error?.stack || 'No stack trace available';
+
+  // 2. CRITICAL FILTER: Skip transport assertion errors (ca9, b815, internal failures)
+  // These errors indicate the Firestore connection is currently broken. 
+  // Attempting to log them TO Firestore will cause a recursive crash.
+  const isTransportFailure = 
+    message.includes('ca9') || 
+    message.includes('b815') || 
+    message.includes('INTERNAL ASSERTION FAILED') ||
+    message.includes('Unexpected state');
+
+  if (isTransportFailure) {
+    console.warn('[Error Logger] Suppressed logging of Firestore transport failure to avoid recursive loop:', message);
     return;
+  }
+
+  if (error && typeof error === 'object') {
+    error._isLogged = true;
   }
 
   try {
@@ -35,11 +47,9 @@ export async function logError(error: any, context: ErrorContext = {}) {
     
     // Safety check: Ensure firestore is available before attempting to log
     if (!firestore) {
-      console.error('[Error Logger] Firestore unavailable. Original error:', error);
+      console.error('[Error Logger] Firestore unavailable. Original error:', message);
       return;
     }
-
-    const stack = error?.stack || 'No stack trace available';
 
     const errorPayload = {
       message,
@@ -55,14 +65,16 @@ export async function logError(error: any, context: ErrorContext = {}) {
     };
 
     const colRef = collection(firestore, 'error_logs');
-    // Non-blocking write
-    addDoc(colRef, errorPayload).catch(() => {
-      console.error('[Error Logger] Failed to push log to Firestore.');
+    
+    // 3. Fire-and-forget: Non-blocking write
+    addDoc(colRef, errorPayload).catch((e) => {
+      // If logging itself fails, just log to console to prevent app crash
+      console.error('[Error Logger] Failed to push log to Firestore:', e.message);
     });
     
     console.warn('[Error Logger] Captured:', message);
   } catch (loggingError) {
-    console.error('[Error Logger] Crash:', loggingError);
-    console.error('[Original Error]:', error);
+    console.error('[Error Logger] Critical failure in logging mechanism:', loggingError);
+    console.error('[Original Error]:', message);
   }
 }
