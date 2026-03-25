@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -19,7 +19,11 @@ import {
   Zap,
   LayoutGrid,
   Flashlight,
-  Timer
+  Timer,
+  Search,
+  X,
+  Package,
+  ChevronDown
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -31,14 +35,22 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
+import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const db = useFirestore();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
+
+  // Search State for Home Page
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -77,6 +89,25 @@ export default function SmartCleanHomePage() {
     return chunks;
   }, [allTopNav]);
 
+  // Home Page Live Search Logic
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) return [];
+    const combined = [
+      ...(allProducts?.map(p => ({ ...p, type: 'product' })) || []),
+      ...(allServices?.map(s => ({ ...s, type: 'service' })) || [])
+    ];
+    return combined.filter(item => 
+      (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 6);
+  }, [searchQuery, allProducts, allServices]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/services?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -113,8 +144,93 @@ export default function SmartCleanHomePage() {
           </div>
         </section>
 
+        {/* 🔍 HOME PAGE PROMINENT SEARCH */}
+        <section className="px-4 -mt-6 md:-mt-8 relative z-20">
+          <div className="max-w-3xl mx-auto" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit} className="relative group">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-primary z-10 flex items-center gap-2 pointer-events-none">
+                <Search size={22} />
+              </div>
+              <Input 
+                value={searchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('search_placeholder')}
+                className="w-full h-14 md:h-16 pl-14 pr-16 rounded-2xl md:rounded-[1.5rem] border-none shadow-2xl bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold text-base md:text-lg"
+              />
+              <button 
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 md:h-12 w-10 md:w-12 bg-primary flex items-center justify-center rounded-xl md:rounded-2xl text-white hover:bg-primary/90 transition-all active:scale-90"
+              >
+                <Search size={20} />
+              </button>
+            </form>
+
+            {isSearchFocused && searchQuery.length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="p-4 bg-gray-50/50 border-b flex items-center justify-between">
+                  <span className="text-xs font-black uppercase text-muted-foreground tracking-widest">Suggestions for you</span>
+                  <button onClick={() => setIsSearchFocused(false)} className="text-gray-400 hover:text-gray-600"><X size={16}/></button>
+                </div>
+                <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
+                  {searchResults.length > 0 ? (
+                    searchResults.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setSearchQuery('');
+                          setIsSearchFocused(false);
+                          router.push(`/${item.type === 'product' ? 'product' : 'service'}/${item.id}`);
+                        }}
+                        className="w-full flex items-center gap-4 p-4 hover:bg-primary/5 transition-all border-b border-gray-50 last:border-none text-left group"
+                      >
+                        <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 border shrink-0">
+                          {item.imageUrl ? (
+                            <Image src={item.imageUrl} alt="Result" fill className="object-cover group-hover:scale-110 transition-transform" unoptimized />
+                          ) : (
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/20">
+                              {item.type === 'service' ? <Wrench size={24} /> : <Package size={24} />}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-black text-gray-900 uppercase truncate group-hover:text-primary transition-colors">{item.name || item.title}</p>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <Badge className={cn(
+                              "text-[8px] font-black uppercase px-2 h-4 border-none shadow-sm",
+                              item.type === 'service' ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
+                            )}>
+                              {item.type}
+                            </Badge>
+                            <span className="text-sm font-black text-primary tracking-tighter">৳{(item.price || item.basePrice)?.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <ChevronDown size={16} className="-rotate-90 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center space-y-4">
+                      <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 border border-dashed border-gray-200"><Search size={32} /></div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">No results for "{searchQuery}"</p>
+                    </div>
+                  )}
+                </div>
+                {searchResults.length > 0 && (
+                  <Link 
+                    href={`/services?search=${searchQuery}`}
+                    onClick={() => setIsSearchFocused(false)}
+                    className="block p-4 bg-primary text-white text-center text-xs font-black uppercase tracking-[0.3em] hover:bg-primary/90 transition-all"
+                  >
+                    See all results <ArrowRight size={14} className="inline ml-2" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* 📱 APP QUICK CATEGORIES */}
-        <section className="px-4 py-6">
+        <section className="px-4 py-10">
           <div className="app-card p-4 md:p-6">
             {topNavLoading ? (
               <div className="grid grid-cols-4 gap-4">

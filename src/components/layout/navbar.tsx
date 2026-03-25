@@ -5,12 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   Search, 
-  Wrench, 
   ShoppingCart,
   ChevronDown,
   X,
   Package,
-  Loader2
+  Loader2,
+  Wrench
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,6 @@ export function Navbar() {
   const logoLink = settings?.logoLink || '/';
   const companyName = settings?.websiteName || 'Smart Clean';
 
-  // 🔍 Unified Search Logic (Products + Services)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     
@@ -84,7 +83,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="w-full z-50 sticky top-0 bg-white shadow-sm">
+    <header className="w-full z-[160] sticky top-0 bg-white shadow-sm">
       <div className="hidden lg:block bg-gray-50 border-b py-1">
         <div className="container mx-auto px-4 flex justify-end gap-6">
           <Link href="/page/about-us" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">About Us</Link>
@@ -167,7 +166,9 @@ export function Navbar() {
                           {item.imageUrl ? (
                             <Image src={item.imageUrl} alt="Result" fill className="object-cover" unoptimized />
                           ) : (
-                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/20"><Package size={20} /></div>
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/20">
+                              {item.type === 'service' ? <Wrench size={20} /> : <Package size={20} />}
+                            </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
