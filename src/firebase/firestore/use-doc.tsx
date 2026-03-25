@@ -30,6 +30,7 @@ const PUBLIC_DOCS = [
 
 /**
  * Highly resilient real-time document hook with internal error shielding.
+ * Suppresses ca9/b815 assertion failures permanently.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -70,9 +71,9 @@ export function useDoc<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Assertion Shield (ca9 / b815)
+        // 🛡️ SDK Resilience Shield: Silently suppress internal failures (ca9 / b815)
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Resilience Shield] Suppressed Firestore internal failure at doc: ${currentPath}`);
+          console.warn(`[Resilience Shield] Suppressed Firestore internal error at doc: ${currentPath}`);
           setIsLoading(false);
           return;
         }

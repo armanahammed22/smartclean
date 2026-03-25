@@ -10,6 +10,7 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
+ * 🛡️ PERMANENT FIRESTORE RESILIENCE TERMINAL
  * Robust singleton pattern for Next.js.
  * Forces Long Polling and Memory Cache to permanently eliminate ca9/b815 assertion errors
  * common in proxy/workstation environments.
@@ -30,7 +31,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       /**
-       * 🛡️ PERMANENT FIRESTORE RESILIENCE
+       * 🛡️ THE ULTIMATE SHIELD
        * forceLongPolling: true - Required to bypass faulty streaming in Cloud Workstations and strict proxies.
        * memoryLocalCache: Required to avoid IndexDB assertion failures in dev-mode workstation loops.
        */

@@ -43,6 +43,7 @@ function extractPath(target: any): string {
 
 /**
  * Highly resilient real-time collection hook with internal error shielding.
+ * Suppresses ca9/b815 assertion failures permanently.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -79,9 +80,9 @@ export function useCollection<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Assertion Shield (ca9 / b815) - Silence these system errors
+        // 🛡️ SDK Resilience Shield: Silently suppress internal failures (ca9 / b815)
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Resilience Shield] Suppressed Firestore internal failure at: ${currentPath}`);
+          console.warn(`[Resilience Shield] Suppressed Firestore internal error at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -92,7 +93,6 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Only emit real permission errors for non-public collections
         if (!isPublic) {
           errorEmitter.emit('permission-error', contextualError);
         }
