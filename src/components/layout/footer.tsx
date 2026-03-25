@@ -60,22 +60,49 @@ export function Footer() {
               {settings?.seoDescription || "Expert cleaning services for your home and office in Bangladesh."}
             </p>
             
-            <div className="flex gap-4 pt-2">
-              {settings?.socialLinks?.facebook && (
-                <Link href={settings.socialLinks.facebook} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                  <Facebook size={18} />
-                </Link>
-              )}
-              {settings?.socialLinks?.instagram && (
-                <Link href={settings.socialLinks.instagram} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                  <Instagram size={18} />
-                </Link>
-              )}
-              {settings?.socialLinks?.whatsapp && (
-                <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                  <MessageCircle size={18} />
-                </Link>
-              )}
+            <div className="space-y-6">
+              <div className="flex gap-4 pt-2">
+                {settings?.socialLinks?.facebook && (
+                  <Link href={settings.socialLinks.facebook} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <Facebook size={18} />
+                  </Link>
+                )}
+                {settings?.socialLinks?.instagram && (
+                  <Link href={settings.socialLinks.instagram} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <Instagram size={18} />
+                  </Link>
+                )}
+                {settings?.socialLinks?.whatsapp && (
+                  <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <MessageCircle size={18} />
+                  </Link>
+                )}
+              </div>
+
+              {/* 📱 Customer App Download Section - Moved Here */}
+              <div className="pt-2">
+                <h4 className="text-[10px] md:text-xs font-black mb-4 text-primary uppercase tracking-[0.2em]">Download App</h4>
+                <div className="flex flex-col gap-2">
+                  <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group max-w-[180px]">
+                    <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                      <Smartphone size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
+                      <p className="text-[10px] font-black text-white uppercase mt-1">Get on Android</p>
+                    </div>
+                  </Link>
+                  <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group max-w-[180px]">
+                    <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                      <Download size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
+                      <p className="text-[10px] font-black text-white uppercase mt-1">Get on iOS</p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -98,31 +125,6 @@ export function Footer() {
                 <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
                 <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
               </ul>
-            </div>
-            
-            {/* 📱 Customer App Download Section */}
-            <div>
-              <h4 className="text-[10px] md:text-xs font-black mb-4 text-primary uppercase tracking-[0.2em]">Download App</h4>
-              <div className="flex flex-col gap-2">
-                <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
-                  <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
-                    <Smartphone size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
-                    <p className="text-[10px] font-black text-white uppercase mt-1">Get on Android</p>
-                  </div>
-                </Link>
-                <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
-                  <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
-                    <Download size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
-                    <p className="text-[10px] font-black text-white uppercase mt-1">Get on iOS</p>
-                  </div>
-                </Link>
-              </div>
             </div>
           </div>
 
