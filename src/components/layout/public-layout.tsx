@@ -12,10 +12,11 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat, LogIn, User } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat, Wrench } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Image from 'next/image';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -50,6 +51,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const isStaff = !!staffRole;
 
   const isHome = pathname === '/';
+  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   useEffect(() => {
     if (settings) {
@@ -76,41 +78,39 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       )}
 
       {/* 📱 TOP APP BAR (MOBILE ONLY) */}
-      <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 h-14 flex items-center justify-between">
+      <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {!isHome ? (
-            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
-              <ArrowLeft size={18} />
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
+              <ArrowLeft size={20} />
             </Button>
           ) : (
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs shadow-sm">S</div>
+            <Link href="/" className="relative h-8 w-24">
+              {displayLogo ? (
+                <Image src={displayLogo} alt="Logo" fill className="object-contain object-left" unoptimized />
+              ) : (
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
+              )}
+            </Link>
           )}
-          <div>
-            <h1 className="text-xs font-black text-gray-900 uppercase tracking-tight truncate max-w-[120px]">
-              {isHome ? (settings?.websiteName || 'Smart Clean') : 'Details'}
-            </h1>
-            {isHome && <p className="text-[8px] font-bold text-primary uppercase tracking-widest leading-none">Marketplace</p>}
-          </div>
+          {isHome && !displayLogo && (
+            <div>
+              <h1 className="text-xs font-black text-gray-900 uppercase tracking-tight truncate max-w-[120px]">
+                {settings?.websiteName || 'Smart Clean'}
+              </h1>
+              <p className="text-[8px] font-bold text-primary uppercase tracking-widest leading-none">Marketplace</p>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {user ? (
-            <Link href="/account/dashboard">
-              <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
-                <AvatarFallback className="bg-primary/10 text-primary font-black text-[10px] uppercase">
-                  {user.displayName?.[0] || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-          ) : (
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-gray-50 text-primary" asChild>
-              <Link href="/login"><LogIn size={18} /></Link>
-            </Button>
-          )}
-          <Link href="/cart" className="relative p-2 h-9 w-9 bg-gray-50 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm">
+        <div className="flex items-center gap-3">
+          <button className="p-2 text-gray-400 active:scale-90 transition-transform">
+            <Search size={20} />
+          </button>
+          <Link href="/cart" className="relative p-2.5 h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100">
             <ShoppingCart size={18} className="text-gray-700" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-4 w-4 flex items-center justify-center rounded-full border border-white shadow-lg">
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border border-white shadow-lg">
                 {itemCount}
               </span>
             )}
