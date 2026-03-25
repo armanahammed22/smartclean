@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -79,7 +78,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       )}
 
       {/* 📱 TOP APP BAR (MOBILE ONLY) */}
-      <header className="lg:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between">
+      <header className="lg:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           {!isHome ? (
             <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
@@ -87,29 +86,34 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
             </Button>
           ) : (
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative h-8 w-8 rounded-lg overflow-hidden border border-gray-100">
+              <div className="relative h-9 w-9 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm p-1">
                 {displayLogo ? (
-                  <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
+                  <Image src={displayLogo} alt="Logo" fill className="object-contain p-0.5" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] font-black text-gray-900 uppercase tracking-tight leading-none truncate max-w-[100px]">{companyName}</span>
+                <span className="text-[11px] font-black text-[#081621] uppercase tracking-tight leading-none truncate max-w-[120px]">{companyName}</span>
                 <span className="text-[7px] font-bold text-primary uppercase tracking-widest leading-none mt-0.5">Professional</span>
               </div>
             </Link>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="p-2 text-gray-400 active:scale-90 transition-transform">
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10 text-gray-500 active:scale-90 transition-transform rounded-full"
+            onClick={() => router.push('/services')}
+          >
             <Search size={20} />
-          </button>
+          </Button>
           <Link href="/cart" className="relative p-2.5 h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100">
             <ShoppingCart size={18} className="text-gray-700" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border border-white shadow-lg">
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border border-white shadow-lg animate-in zoom-in">
                 {itemCount}
               </span>
             )}

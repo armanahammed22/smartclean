@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -71,6 +70,14 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setIsSearchFocused(false);
+      router.push(`/services?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const handleSelectResult = (id: string, type: string) => {
     setSearchQuery('');
     setIsSearchFocused(false);
@@ -96,13 +103,13 @@ export function Navbar() {
           
           {/* Logo & Company Name */}
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-8 md:h-12 w-8 md:w-12 flex items-center justify-start overflow-hidden rounded-lg">
+            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm border border-gray-50 p-1">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
                   fill
-                  className="object-contain transition-transform group-hover:scale-110" 
+                  className="object-contain transition-transform group-hover:scale-110 p-1" 
                   priority 
                   unoptimized
                 />
@@ -126,8 +133,8 @@ export function Navbar() {
 
           {/* 🔍 Search Section */}
           <div className="flex-1 relative" ref={searchRef}>
-            <div className="relative group max-w-2xl">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 flex items-center gap-2">
+            <form onSubmit={handleSearchSubmit} className="relative group max-w-2xl">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 flex items-center gap-2 pointer-events-none">
                 <Wrench size={16} className="text-primary/60" />
                 <div className="w-px h-4 bg-gray-200" />
               </div>
@@ -138,10 +145,13 @@ export function Navbar() {
                 placeholder={t('search_placeholder')}
                 className="w-full bg-gray-100 border-none h-10 md:h-12 pl-12 pr-12 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-gray-400 text-xs md:text-sm shadow-inner"
               />
-              <button className="absolute right-0 top-0 h-full w-10 md:w-14 bg-primary flex items-center justify-center rounded-r-xl text-white hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+              <button 
+                type="submit"
+                className="absolute right-0 top-0 h-full w-10 md:w-14 bg-primary flex items-center justify-center rounded-r-xl text-white hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 active:scale-95"
+              >
                 <Search size={18} className="md:w-5 md:h-5" />
               </button>
-            </div>
+            </form>
 
             {/* 💡 Search Recommendations Dropdown */}
             {isSearchFocused && searchQuery.length >= 2 && (
