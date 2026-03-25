@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -40,7 +41,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // 🛡️ Portal Logic: Check if user is logged into a specialized role
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
@@ -62,7 +62,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden">
       
-      {/* 📱 PORTAL QUICK SWITCH (Floating Indicator) */}
       {user && (isAdmin || isStaff) && (
         <div className="fixed top-20 right-4 z-[200] animate-in slide-in-from-right-10">
           {isAdmin ? (
@@ -77,8 +76,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       )}
 
-      {/* 📱 TOP APP BAR (MOBILE ONLY) */}
-      <header className="lg:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
+      <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           {!isHome ? (
             <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
@@ -86,9 +84,9 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
             </Button>
           ) : (
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative h-9 w-9 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm p-1">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm">
                 {displayLogo ? (
-                  <Image src={displayLogo} alt="Logo" fill className="object-contain p-0.5" unoptimized />
+                  <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
                 )}
@@ -121,7 +119,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       </header>
 
-      {/* 💻 DESKTOP NAVBAR */}
       <div className="hidden lg:block">
         <Navbar />
       </div>
@@ -142,7 +139,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       </main>
       
-      {/* 📱 BOTTOM NAVIGATION (Hidden on minimal pages) */}
       {mounted && !minimalMobile && (
         <div className="lg:hidden">
           <BottomNav />

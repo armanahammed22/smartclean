@@ -46,7 +46,7 @@ export function Navbar() {
   const logoLink = settings?.logoLink || '/';
   const companyName = settings?.websiteName || 'Smart Clean';
 
-  // 🔍 Search Logic for both Products and Services
+  // 🔍 Unified Search Logic
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     
@@ -60,7 +60,6 @@ export function Navbar() {
     ).slice(0, 6);
   }, [searchQuery, products, services]);
 
-  // Handle click outside to close search
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -87,7 +86,6 @@ export function Navbar() {
 
   return (
     <header className="w-full z-50 sticky top-0 bg-white shadow-sm">
-      {/* Top Utility Bar */}
       <div className="hidden lg:block bg-gray-50 border-b py-1">
         <div className="container mx-auto px-4 flex justify-end gap-6">
           <Link href="/page/about-us" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">About Us</Link>
@@ -98,19 +96,17 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Header */}
-      <div className="bg-white py-2 md:py-4 px-3 md:px-4">
+      <div className="bg-white py-2 md:py-4 px-3 md:px-4 border-b border-gray-100">
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
-          {/* Logo & Company Name */}
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-md border border-gray-100 p-1">
+            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
                   fill
-                  className="object-contain transition-transform group-hover:scale-110 p-1" 
+                  className="object-contain transition-transform group-hover:scale-110" 
                   priority 
                   unoptimized
                 />
@@ -132,7 +128,6 @@ export function Navbar() {
             <NavbarOfferSlider />
           </div>
 
-          {/* 🔍 Search Section */}
           <div className="flex-1 relative" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="relative group max-w-2xl">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 flex items-center gap-2 pointer-events-none">
@@ -154,7 +149,6 @@ export function Navbar() {
               </button>
             </form>
 
-            {/* 💡 Search Recommendations Dropdown */}
             {isSearchFocused && searchQuery.length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 max-w-2xl">
                 <div className="p-3 bg-gray-50/50 border-b flex items-center justify-between">

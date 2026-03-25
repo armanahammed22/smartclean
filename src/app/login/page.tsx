@@ -39,7 +39,6 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  // Role Checks to filter non-customers
   const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRef);
   
@@ -98,7 +97,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 md:p-6">
-      {/* Back to Home Link */}
       <Link href="/" className="mb-6 flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest self-center md:self-start md:ml-4 lg:ml-10">
         <ArrowLeft size={16} /> Back to Site
       </Link>
@@ -107,9 +105,9 @@ export default function LoginPage() {
         <div className="h-2 bg-primary w-full" />
         <CardHeader className="space-y-4 text-center pt-10 px-8">
           <div className="flex justify-center">
-            <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border border-gray-100 shadow-sm p-2 bg-white">
+            <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl overflow-hidden border border-gray-100 bg-white">
               {displayLogo ? (
-                <Image src={displayLogo} alt="Logo" fill className="object-contain p-2" unoptimized />
+                <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
               ) : (
                 <div className="w-full h-full bg-primary flex items-center justify-center text-white font-black text-xl">S</div>
               )}
@@ -132,7 +130,6 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleEmailLogin} className="space-y-5">
-            {/* Email Field */}
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
               <div className="relative">
@@ -148,7 +145,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
               <div className="relative">
@@ -167,7 +163,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password - Same Line */}
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -185,14 +180,12 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Login Button */}
             <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Now</>}
             </Button>
           </form>
         </CardContent>
 
-        {/* Footer with Register Link */}
         <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-8 border-t border-gray-100">
           <div className="text-center space-y-3">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
