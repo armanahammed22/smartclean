@@ -18,7 +18,8 @@ import {
   Zap,
   LayoutGrid,
   Layout as LayoutIcon,
-  ZapIcon
+  ZapIcon,
+  Star
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -30,6 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
@@ -105,25 +107,27 @@ export default function SmartCleanHomePage() {
       case 'categories':
         return (
           <section key={section.id} className="px-4 py-6 md:py-10">
-            <div className="app-card p-4 md:p-6 shadow-md border-gray-50">
-              <Carousel className="w-full">
-                <CarouselContent className="-ml-0">
-                  {categoryChunks.map((chunk, idx) => (
-                    <CarouselItem key={idx} className="pl-0 basis-full">
-                      <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-4">
-                        {chunk.map((cat) => (
-                          <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10 transition-colors">
-                              {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <LayoutGrid size={20} className="text-gray-400" />}
-                            </div>
-                            <span className="text-[9px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full">{cat.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
+            <div className="container mx-auto max-w-7xl">
+              <div className="app-card p-4 md:p-6 shadow-md border-gray-50">
+                <Carousel className="w-full">
+                  <CarouselContent className="-ml-0">
+                    {categoryChunks.map((chunk, idx) => (
+                      <CarouselItem key={idx} className="pl-0 basis-full">
+                        <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-4">
+                          {chunk.map((cat) => (
+                            <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
+                              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10 transition-colors">
+                                {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <LayoutGrid size={20} className="text-gray-400" />}
+                              </div>
+                              <span className="text-[9px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full">{cat.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              </div>
             </div>
           </section>
         );
@@ -139,27 +143,29 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
 
         return (
-          <section key={section.id} className="px-4 py-6">
-            <div className="bg-[#1E5F7A] rounded-[2rem] overflow-hidden shadow-xl border border-white/10">
-              <div className="p-5 md:p-8 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">Flash Sale</span>
-                    <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
-                  </div>
-                </div>
-                <Link href="/products" className="flex items-center gap-1.5 text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity">
-                  ALL <ChevronRight size={14} className="bg-white/20 rounded-full" />
-                </Link>
-              </div>
-              
-              <div className="px-5 md:px-8 pb-8">
-                <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-2">
-                  {flashProducts.map(p => (
-                    <div key={p.id} className="w-[140px] md:w-[180px] lg:w-[200px] shrink-0">
-                      <FlashSaleCard product={p} />
+          <section key={section.id} className="w-full py-6">
+            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl border-y border-white/10">
+              <div className="container mx-auto max-w-7xl">
+                <div className="p-5 md:p-8 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">Flash Sale</span>
+                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
                     </div>
-                  ))}
+                  </div>
+                  <Link href="/products" className="flex items-center gap-1.5 text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity">
+                    ALL <ChevronRight size={14} className="bg-white/20 rounded-full" />
+                  </Link>
+                </div>
+                
+                <div className="px-4 md:px-8 pb-8">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 lg:gap-6">
+                    {flashProducts.slice(0, 12).map(p => (
+                      <div key={p.id} className="w-full">
+                        <FlashSaleCard product={p} />
+                      </div>
+                    ))}
+                  </div>
                   {flashProducts.length === 0 && (
                     <div className="w-full py-12 text-center text-white/40 italic text-sm">
                       Coming Soon...
@@ -175,25 +181,27 @@ export default function SmartCleanHomePage() {
         const activeServices = allServices?.filter(s => s.status === 'Active').slice(0, config.limit || 8) || [];
         return (
           <section key={section.id} className="px-4 py-8">
-            <div className="flex items-center justify-between mb-6 px-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-xl text-primary"><Wrench size={20} /></div>
-                <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
-              </div>
-              <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
-                ALL <ChevronRight size={14} className="bg-primary/10 rounded-full" />
-              </Link>
-            </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {activeServices.map(s => (
-                <Link key={s.id} href={`/service/${s.id}`} className="group relative aspect-[4/3] w-[220px] md:w-[280px] shrink-0 block active:scale-95 transition-transform rounded-[2rem] overflow-hidden shadow-lg border border-white">
-                  <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5">
-                    <h3 className="text-white font-black uppercase text-xs tracking-tight mb-1">{s.title}</h3>
-                    <p className="text-primary font-black text-sm">৳{s.basePrice?.toLocaleString()}</p>
-                  </div>
+            <div className="container mx-auto max-w-7xl">
+              <div className="flex items-center justify-between mb-6 px-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary"><Wrench size={20} /></div>
+                  <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+                </div>
+                <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
+                  ALL <ChevronRight size={14} className="bg-primary/10 rounded-full" />
                 </Link>
-              ))}
+              </div>
+              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                {activeServices.map(s => (
+                  <Link key={s.id} href={`/service/${s.id}`} className="group relative aspect-[4/3] w-[220px] md:w-[280px] shrink-0 block active:scale-95 transition-transform rounded-[2rem] overflow-hidden shadow-lg border border-white">
+                    <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5">
+                      <h3 className="text-white font-black uppercase text-xs tracking-tight mb-1">{s.title}</h3>
+                      <p className="text-primary font-black text-sm">৳{s.basePrice?.toLocaleString()}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         );
@@ -209,14 +217,16 @@ export default function SmartCleanHomePage() {
 
         return (
           <section key={section.id} className="px-4 py-8">
-            <div className="flex items-center justify-between mb-8 px-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent/10 rounded-xl text-accent"><Sparkles size={20} fill="currentColor" /></div>
-                <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+            <div className="container mx-auto max-w-7xl">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-accent/10 rounded-xl text-accent"><Sparkles size={20} fill="currentColor" /></div>
+                  <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-              {feed.map(p => <ProductCard key={p.id} product={p} />)}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                {feed.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
             </div>
           </section>
         );
