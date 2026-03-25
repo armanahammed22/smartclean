@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,6 +76,7 @@ export default function HomepageBuilderPage() {
     e.preventDefault();
     if (draggedItem === null || draggedItem === index) return;
 
+    // Local reorder for visual feedback
     const newSections = [...(sections || [])];
     const item = newSections.splice(draggedItem, 1)[0];
     newSections.splice(index, 0, item);
