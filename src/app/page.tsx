@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -9,41 +9,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, limit as fireLimit, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { 
-  ArrowRight, 
   Wrench, 
   ChevronRight, 
   Loader2, 
   Sparkles,
-  ShoppingCart,
   Zap,
   LayoutGrid,
-  Search,
-  X,
-  Package,
-  ChevronDown,
-  Layout as LayoutIcon,
-  Timer
+  Layout as LayoutIcon
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
-import { useCart } from '@/components/providers/cart-provider';
 import { 
   Carousel, 
   CarouselContent, 
-  CarouselItem,
-  type CarouselApi
+  CarouselItem
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
-import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const db = useFirestore();
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -55,7 +43,7 @@ export default function SmartCleanHomePage() {
     db ? query(collection(db, 'homepage_sections'), where('isActive', '==', true), orderBy('order', 'asc')) : null, [db]);
   const { data: layoutSections, isLoading: layoutLoading } = useCollection(sectionsQuery);
 
-  // 2. Fetch Base Data for sections to consume
+  // 2. Fetch Base Data for sections
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
@@ -78,14 +66,13 @@ export default function SmartCleanHomePage() {
     return chunks;
   }, [allTopNav]);
 
-  // 🧩 RENDERING ENGINE
   const renderSection = (section: any) => {
     const config = section.config || {};
     
     switch (section.type) {
       case 'hero':
         return (
-          <section key={section.id} className="bg-white pb-4 shadow-sm lg:shadow-none lg:bg-transparent lg:mt-4">
+          <section key={section.id} className="bg-white pb-4 lg:bg-transparent lg:mt-4">
             <div className="container mx-auto px-0 lg:px-4">
               <div className="relative aspect-[21/11] md:aspect-[982/400] w-full lg:rounded-2xl overflow-hidden bg-gray-100">
                 {mainBanners.length > 0 && (
@@ -124,7 +111,7 @@ export default function SmartCleanHomePage() {
                       <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-4">
                         {chunk.map((cat) => (
                           <Link key={cat.id} href={cat.link || `/services?category=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10">
+                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10 transition-colors">
                               {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <LayoutGrid size={20} className="text-gray-400" />}
                             </div>
                             <span className="text-[9px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full">{cat.name}</span>
@@ -151,31 +138,31 @@ export default function SmartCleanHomePage() {
 
         return (
           <section key={section.id} className="px-4 py-6">
-            <div className="app-card border-none bg-primary text-white shadow-2xl overflow-hidden rounded-[2.5rem]">
-              <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/10">
+            <div className="app-card border-none bg-[#081621] text-white shadow-2xl overflow-hidden rounded-[2.5rem]">
+              <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/10 bg-gradient-to-r from-[#081621] to-[#1a2533]">
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
                   <div className="flex items-center gap-3">
                     <div className="bg-amber-400 p-2.5 rounded-2xl text-black shadow-lg animate-pulse">
                       <Zap size={24} fill="currentColor" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic italic">
+                      <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic">
                         {flashSaleConfig?.title || 'Flash Sale'}
                       </h2>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-white/60">Limited Time Only</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/80">Exclusive Offers</p>
                     </div>
                   </div>
                   <div className="h-10 w-px bg-white/10 hidden md:block" />
                   <div className="flex flex-col items-center md:items-start gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Ends In:</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Ends In:</span>
                     <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
                   </div>
                 </div>
-                <Button variant="outline" className="rounded-full bg-white/10 border-white/20 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11 hover:bg-white/20" asChild>
+                <Button variant="outline" className="rounded-full bg-white/5 border-white/10 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11 hover:bg-white/10" asChild>
                   <Link href="/products">View All Deals</Link>
                 </Button>
               </div>
-              <div className="p-6 md:p-10 bg-white/5">
+              <div className="p-6 md:p-10">
                 <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
                   {flashProducts.map(p => (
                     <div key={p.id} className="w-[160px] md:w-[220px] shrink-0">
@@ -184,7 +171,7 @@ export default function SmartCleanHomePage() {
                   ))}
                   {flashProducts.length === 0 && (
                     <div className="w-full py-12 text-center text-white/40 italic text-sm">
-                      Deals are loading...
+                      Upcoming deals...
                     </div>
                   )}
                 </div>
@@ -230,7 +217,7 @@ export default function SmartCleanHomePage() {
           <section key={section.id} className="px-4 py-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-black uppercase text-[#081621] flex items-center gap-2">
-                <Sparkles className="text-accent" size={20} fill="currentColor" /> {section.title}
+                <Sparkles className="text-[#22C55E]" size={20} fill="currentColor" /> {section.title}
               </h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -252,7 +239,7 @@ export default function SmartCleanHomePage() {
         {layoutLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-32">
             <Loader2 className="animate-spin text-primary" size={48} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading UI Engine...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Environment...</p>
           </div>
         ) : layoutSections && layoutSections.length > 0 ? (
           layoutSections.map(renderSection)
@@ -266,13 +253,13 @@ export default function SmartCleanHomePage() {
             {renderSection({ 
               id: 'def-serv', 
               type: 'services', 
-              title: 'Professional Services',
+              title: 'Recommended Services',
               config: { layout: 'grid', itemsPerRow: 4, limit: 8 } 
             })}
             {renderSection({ 
               id: 'def-feed', 
               type: 'products_feed', 
-              title: 'Latest Products',
+              title: 'New Arrivals',
               config: { dataSource: 'latest', limit: 10 } 
             })}
           </>
