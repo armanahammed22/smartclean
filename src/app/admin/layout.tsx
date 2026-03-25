@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -50,7 +49,9 @@ import {
   FileSpreadsheet,
   Wrench,
   Layers,
-  MousePointer2
+  MousePointer2,
+  Store,
+  CheckCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -103,15 +104,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
+  // Stats for Badges
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
-  const newBookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'bookings'), where('status', '==', 'New')) : null, [db, isAuthorized]);
-  const newLeadsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'leads'), where('status', '==', 'New')) : null, [db, isAuthorized]);
-  const openTicketsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'support_tickets'), where('status', '==', 'Open')) : null, [db, isAuthorized]);
+  const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
+  const pendingProductsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), where('approvalStatus', '==', 'Pending')) : null, [db, isAuthorized]);
 
   const { data: newOrders } = useCollection(newOrdersQuery);
-  const { data: newBookings } = useCollection(newBookingsQuery);
-  const { data: newLeads } = useCollection(newLeadsQuery);
-  const { data: openTickets } = useCollection(openTicketsQuery);
+  const { data: newVendors } = useCollection(newVendorsQuery);
+  const { data: pendingProducts } = useCollection(pendingProductsQuery);
 
   const NAV_GROUPS = useMemo(() => [
     {
@@ -120,7 +120,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: LayoutDashboard,
       color: "text-blue-400",
       items: [
-        { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: "Global Insights", href: '/admin/dashboard', icon: LayoutDashboard },
+      ]
+    },
+    {
+      id: 'vendors',
+      title: "VENDOR HUB",
+      icon: Store,
+      color: "text-orange-400",
+      items: [
+        { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
+        { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
       ]
     },
     {
@@ -130,34 +140,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-emerald-400",
       items: [
         { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 },
-        { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, badge: newBookings?.length || 0 },
+        { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
         { name: "Logistics Hub", href: '/admin/couriers', icon: Truck },
       ]
     },
     {
       id: 'inventory',
-      title: "INVENTORY",
+      title: "CATALOG",
       icon: Box,
       color: "text-amber-400",
       items: [
-        { name: "Products", href: '/admin/products', icon: Box },
+        { name: "All Products", href: '/admin/products', icon: Box },
         { name: "Categories", href: '/admin/products/categories', icon: Tags },
-        { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
         { name: "Brands", href: '/admin/attributes/brands', icon: Award },
         { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
-        { name: "Key Features", href: '/admin/attributes/features', icon: ListChecks },
-        { name: "Technical Specs", href: '/admin/attributes/specifications', icon: Settings2 },
-      ]
-    },
-    {
-      id: 'services',
-      title: "SERVICES",
-      icon: Wrench,
-      color: "text-indigo-400",
-      items: [
-        { name: "Service List", href: '/admin/services', icon: Wrench },
-        { name: "Sub Services", href: '/admin/services/sub-services', icon: Layers },
-        { name: "Service Areas", href: '/admin/areas', icon: Globe },
       ]
     },
     {
@@ -166,23 +162,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Target,
       color: "text-rose-400",
       items: [
-        { name: "Analytics Overview", href: '/admin/marketing/overview', icon: TrendingUp },
         { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
         { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
-        { name: "Conversion Pixel", href: '/admin/marketing/pixel', icon: Code },
-        { name: "CAPI Sync", href: '/admin/marketing/capi', icon: Shield },
-      ]
-    },
-    {
-      id: 'promotions',
-      title: "OFFER & COUPONS",
-      icon: Zap,
-      color: "text-violet-400",
-      items: [
-        { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
-        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
-        { name: "Referrals", href: '/admin/referrals', icon: Share2 },
       ]
     },
     {
@@ -192,27 +174,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-purple-400",
       items: [
         { name: "Customer Directory", href: '/admin/customers', icon: Users },
-        { name: "Sales Leads", href: '/admin/leads', icon: Briefcase, badge: newLeads?.length || 0 },
         { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
         { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-      ]
-    },
-    {
-      id: 'portals',
-      title: "INTERNAL PORTALS",
-      icon: Globe,
-      color: "text-sky-400",
-      items: [
-        { name: "Staff App Portal", href: '/staff/dashboard', icon: HardHat },
-      ]
-    },
-    {
-      id: 'reports',
-      title: "BUSINESS REPORTS",
-      icon: BarChart3,
-      color: "text-blue-400",
-      items: [
-        { name: "Business Reports", href: '/admin/reports', icon: BarChart3 },
       ]
     },
     {
@@ -223,34 +186,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Layout & Theme", href: '/admin/customize/theme', icon: Palette },
-        { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-        { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
-        { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
-    },
-    {
-      id: 'system',
-      title: "SYSTEM",
-      icon: Settings,
-      color: "text-orange-400",
-      items: [
-        { name: "Global Settings", href: '/admin/settings', icon: Settings },
-        { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
-        { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
-      ]
-    },
-    {
-      id: 'support',
-      title: "SUPPORT",
-      icon: Headphones,
-      color: "text-sky-400",
-      items: [
-        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
-        { name: "Support Tickets", href: '/admin/support', icon: MessageCircle, badge: openTickets?.length || 0 },
-      ]
     }
-  ], [newOrders, newBookings, newLeads, openTickets]);
+  ], [newOrders, newVendors, pendingProducts]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -285,8 +224,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-black text-sm uppercase leading-none">Admin App</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Smart Control</p>
+            <h1 className="font-black text-sm uppercase leading-none">Multivendor</h1>
+            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
         )}
       </div>
@@ -346,7 +285,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <LogOut size={20} /> Logout Admin?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm font-medium leading-relaxed">
-                Are you sure you want to end your administrative session? You will need to login again to access the control center.
+                Confirm session termination. You will be redirected to the login page.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="pt-4 flex gap-2">
@@ -389,7 +328,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72"><SidebarContent /></SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase text-gray-400">Admin App</span>
+              <span className="text-[9px] font-black uppercase text-gray-400">Multivendor eCommerce</span>
               <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Terminal active <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
           </div>
