@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -22,36 +21,16 @@ export interface UseDocResult<T> {
 }
 
 const PUBLIC_DOCS = [
-  'products', 
-  'services', 
-  'campaigns',
-  'hero_banners', 
-  'site_settings', 
-  'pages_management', 
-  'quick_links', 
-  'quick_actions', 
-  'brands',
-  'marketing_offers',
-  'reusable_features',
-  'reusable_specs',
-  'variant_types',
-  'homepage_sections',
-  'payment_methods',
-  'coupons',
-  'service_areas',
-  'delivery_options',
-  'offers',
-  'categories',
-  'subcategories',
-  'childcategories',
-  'top_nav_categories',
-  'landing_pages',
-  'product_qna'
+  'products', 'services', 'campaigns', 'hero_banners', 'site_settings', 
+  'pages_management', 'quick_links', 'quick_actions', 'brands',
+  'marketing_offers', 'reusable_features', 'reusable_specs', 'variant_types',
+  'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
+  'delivery_options', 'offers', 'categories', 'subcategories', 
+  'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna'
 ];
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Silences transport assertion errors (ca9, b815) to prevent loops.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -77,61 +56,50 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    let unsubscribe = () => {};
-    try {
-      unsubscribe = onSnapshot(
-        memoizedDocRef,
-        (snapshot: DocumentSnapshot<DocumentData>) => {
-          if (activePathRef.current !== currentPath) return;
+    const unsubscribe = onSnapshot(
+      memoizedDocRef,
+      (snapshot: DocumentSnapshot<DocumentData>) => {
+        if (activePathRef.current !== currentPath) return;
 
-          if (snapshot.exists()) {
-            setData({ ...(snapshot.data() as T), id: snapshot.id });
-          } else {
-            setData(null);
-          }
-          setError(null);
-          setIsLoading(false);
-        },
-        (err: FirestoreError) => {
-          if (activePathRef.current !== currentPath) return;
-
-          const msg = err.message || String(err);
-          
-          // 🛡️ CRITICAL SILENCE: Check for assertion/transport issues early
-          if (
-            msg.includes('ca9') || 
-            msg.includes('b815') || 
-            msg.includes('INTERNAL ASSERTION FAILED') ||
-            msg.includes('Unexpected state')
-          ) {
-            console.warn(`[useDoc] Internal Firestore transport issue on path: ${currentPath}. Waiting for reconnect...`);
-            setIsLoading(false);
-            return; // EXIT EARLY
-          }
-
-          const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
-          const contextualError = new FirestorePermissionError({
-            operation: 'get',
-            path: currentPath,
-          });
-
-          setError(contextualError);
+        if (snapshot.exists()) {
+          setData({ ...(snapshot.data() as T), id: snapshot.id });
+        } else {
           setData(null);
-          setIsLoading(false);
-
-          if (!isPublic) {
-            logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
-            errorEmitter.emit('permission-error', contextualError);
-          }
         }
-      );
-    } catch (e: any) {
-      setIsLoading(false);
-    }
+        setError(null);
+        setIsLoading(false);
+      },
+      (err: FirestoreError) => {
+        if (activePathRef.current !== currentPath) return;
+
+        const msg = err.message || '';
+        if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion')) {
+          setIsLoading(false);
+          return;
+        }
+
+        const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
+        const contextualError = new FirestorePermissionError({
+          operation: 'get',
+          path: currentPath,
+        });
+
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
+
+        if (!isPublic) {
+          logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
+          errorEmitter.emit('permission-error', contextualError);
+        } else {
+          console.warn(`[useDoc] Access denied on public resource: ${currentPath}`);
+        }
+      }
+    );
 
     return () => {
       activePathRef.current = null;
-      if (typeof unsubscribe === 'function') unsubscribe();
+      unsubscribe();
     };
   }, [memoizedDocRef]);
 

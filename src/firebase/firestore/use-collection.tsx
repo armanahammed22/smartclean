@@ -30,14 +30,21 @@ const PUBLIC_COLLECTIONS = [
   'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna'
 ];
 
+/**
+ * Extracts path string from a CollectionReference or Query object.
+ */
 function getPathFromTarget(target: any): string {
   if (!target) return 'unknown';
-  return target.path || 'query';
+  // Standard path for CollectionReference
+  if (typeof target.path === 'string') return target.path;
+  // Internal path for Query objects in Firebase JS SDK v9+
+  if (target._query?.path) return target._query.path.toString();
+  return 'query';
 }
 
 /**
  * UI Hook optimized for resilient real-time collection syncing.
- * Permanently silences transport assertion errors (ca9, b815).
+ * Silences fatal errors for public collections to prevent app crashes on missing indexes or transient issues.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -72,7 +79,7 @@ export function useCollection<T = any>(
         if (pathRef.current !== currentPath) return;
 
         const msg = err.message.toLowerCase();
-        // 🛡️ SILENCE TRANSPORT FAILURES
+        // Silence transport failures (common in proxy/workstation environments)
         if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion')) {
           console.warn(`[Firestore Transport] Silent recovery for: ${currentPath}`);
           setIsLoading(false);
@@ -88,6 +95,9 @@ export function useCollection<T = any>(
         if (!isPublic) {
           logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
+        } else {
+          // If public read fails, it's usually an index or rule config issue. Log as warning, not fatal.
+          console.warn(`[useCollection] Access denied on public resource: ${currentPath}. Check indexes or rules.`);
         }
       }
     );
