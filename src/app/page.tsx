@@ -143,26 +143,32 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
 
         return (
-          <section key={section.id} className="w-full py-6">
-            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl border-y border-white/10">
+          <section key={section.id} className="w-full py-4 md:py-6">
+            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl border-y border-white/5">
               <div className="container mx-auto max-w-7xl">
-                <div className="p-5 md:p-8 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="p-4 md:p-8 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">Flash Sale</span>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="p-1 bg-amber-400 rounded text-[#1E5F7A]"><Zap size={14} fill="currentColor" /></div>
+                        <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em]">{flashSaleConfig.title || 'Flash Sale'}</span>
+                      </div>
                       <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
                     </div>
                   </div>
-                  <Link href="/products" className="flex items-center gap-1.5 text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity">
-                    ALL <ChevronRight size={14} className="bg-white/20 rounded-full" />
+                  <Link href="/products" className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity bg-white/10 px-3 py-1.5 rounded-full">
+                    ALL <ChevronRight size={12} className="text-amber-400" />
                   </Link>
                 </div>
                 
-                <div className="px-4 md:px-8 pb-8">
-                  {/* Single Row Horizontal Scrolling Container */}
-                  <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-2">
+                <div className="px-2 md:px-8 pb-6 md:pb-8">
+                  {/* Single Row Horizontal Scrolling Container with Snap logic */}
+                  <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
-                      <div key={p.id} className="min-w-[calc(33.33%-8px)] sm:min-w-[calc(25%-12px)] lg:min-w-[calc(16.66%-14px)] shrink-0">
+                      <div 
+                        key={p.id} 
+                        className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start"
+                      >
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
@@ -227,6 +233,41 @@ export default function SmartCleanHomePage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                 {feed.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'testimonials':
+        return (
+          <section key={section.id} className="py-12 md:py-20 bg-gray-50/50">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="text-center mb-12 space-y-3">
+                <Badge variant="outline" className="font-black text-primary border-primary/20 uppercase tracking-widest text-[9px] px-4 py-1 rounded-full">Reviews</Badge>
+                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">Satisfied Clients</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  { name: "Sarah J.", text: "The team arrived on time and did an incredible job with the kitchen. Worth every Taka!", area: "Gulshan" },
+                  { name: "Rafiq Ahmed", text: "I've tried many services in Dhaka, but Smart Clean's tech and professionalism are on another level.", area: "Uttara" },
+                  { name: "Mila K.", text: "Highly reliable. They arrived exactly on time and finished ahead of schedule.", area: "Banani" }
+                ].map((rev, i) => (
+                  <Card key={i} className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all">
+                    <CardContent className="p-0 space-y-6">
+                      <div className="flex text-amber-400 gap-0.5">
+                        {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}
+                      </div>
+                      <p className="text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xs uppercase">{rev.name[0]}</div>
+                        <div>
+                          <p className="font-black text-[11px] text-[#081621] uppercase tracking-tight">{rev.name}</p>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{rev.area}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           </section>
