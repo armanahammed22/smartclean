@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, User, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldAlert, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,12 +22,13 @@ const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 /**
- * Optimized Customer-Only Login Page
+ * Highly Optimized Customer Login Page
  */
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   
@@ -54,16 +56,14 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !roleLoading && !staffRoleLoading) {
       if (isAdmin || isStaff) {
-        // Restricted Role logged into Customer Portal
         setAccessDenied(true);
         toast({ 
           variant: "destructive", 
           title: "Restricted Access", 
           description: "This portal is for customers only. Please use the designated staff or admin login." 
         });
-        if (auth) signOut(auth); // Clear session
+        if (auth) signOut(auth);
       } else {
-        // Genuine Customer
         router.replace('/account/dashboard');
       }
     }
@@ -97,9 +97,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
-      {/* 📱 Focused Mobile Header */}
-      <Link href="/" className="mb-6 flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 md:p-6">
+      {/* Back to Home Link */}
+      <Link href="/" className="mb-6 flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest self-center md:self-start md:ml-4 lg:ml-10">
         <ArrowLeft size={16} /> Back to Site
       </Link>
 
@@ -116,22 +116,23 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Customer Login</CardTitle>
-            <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Smart Clean Network</CardDescription>
+            <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Welcome Back</CardTitle>
+            <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Customer Secure Login</CardDescription>
           </div>
         </CardHeader>
         
-        <CardContent className="px-8 pb-8 pt-4">
+        <CardContent className="px-8 pb-6 pt-4">
           {accessDenied && (
             <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 animate-in shake-1">
               <ShieldAlert className="text-red-600 shrink-0" size={20} />
               <p className="text-[11px] font-bold text-red-700 leading-tight">
-                ACCESS DENIED: Staff or Admin credentials cannot be used on the customer portal. Please contact management.
+                ACCESS DENIED: Please use your professional portal for management access.
               </p>
             </div>
           )}
 
           <form onSubmit={handleEmailLogin} className="space-y-5">
+            {/* Email Field */}
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
               <div className="relative">
@@ -146,11 +147,10 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            {/* Password Field */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                <Link href="#" className="text-[10px] font-black text-primary uppercase">Forgot Password?</Link>
-              </div>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -166,17 +166,44 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={20} />}
-              Login to Account
+
+            {/* Remember Me & Forgot Password - Same Line */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remember" 
+                  checked={rememberMe} 
+                  onCheckedChange={(val) => setRememberMe(!!val)} 
+                  className="border-gray-300 rounded"
+                />
+                <label htmlFor="remember" className="text-[11px] font-bold text-gray-600 uppercase tracking-tighter cursor-pointer">
+                  Remember Me
+                </label>
+              </div>
+              <Link href="#" className="text-[11px] font-black text-primary uppercase tracking-tighter hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
+
+            {/* Login Button */}
+            <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Now</>}
             </Button>
           </form>
         </CardContent>
 
+        {/* Footer with Register Link */}
         <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-8 border-t border-gray-100">
-          <p className="text-xs font-bold text-muted-foreground text-center">
-            New to Smart Clean? <Link href="/signup" className="text-primary hover:underline font-black uppercase tracking-widest ml-1">Create Account</Link>
-          </p>
+          <div className="text-center space-y-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+              New to Smart Clean?
+            </p>
+            <Button variant="outline" asChild className="w-full h-12 rounded-xl border-primary/20 bg-white hover:bg-primary/5 text-primary font-black uppercase text-xs gap-2">
+              <Link href="/signup">
+                <UserPlus size={16} /> Create an Account
+              </Link>
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>
