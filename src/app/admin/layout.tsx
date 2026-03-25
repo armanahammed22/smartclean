@@ -218,6 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Palette,
       color: "text-pink-400",
       items: [
+        { name: "Layout & Theme", href: '/admin/customize/theme', icon: Palette },
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
         { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
         { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },

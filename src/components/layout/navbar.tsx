@@ -35,6 +35,9 @@ export function Navbar() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  const layoutRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
+  const { data: layout } = useDoc(layoutRef);
+
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
 
@@ -82,19 +85,32 @@ export function Navbar() {
     router.push(`/${type === 'product' ? 'product' : 'service'}/${id}`);
   };
 
-  return (
-    <header className="w-full z-[160] sticky top-0 bg-white shadow-sm">
-      <div className="hidden lg:block bg-gray-50 border-b py-1">
-        <div className="container mx-auto px-4 flex justify-end gap-6">
-          <Link href="/page/about-us" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">About Us</Link>
-          <Link href="/support" className="text-[10px] font-bold text-gray-500 hover:text-primary uppercase tracking-wider">Support</Link>
-          <button onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black text-primary uppercase tracking-widest">
-            {language === 'bn' ? "English" : "বাংলা"}
-          </button>
-        </div>
-      </div>
+  // Theme overrides
+  const navStyles = {
+    backgroundColor: layout?.header?.bgColor || '#ffffff',
+    color: layout?.header?.textColor || '#081621'
+  };
 
-      <div className="bg-white py-2 md:py-4 px-3 md:px-4 border-b border-gray-100">
+  const topBarStyles = {
+    backgroundColor: layout?.header?.topBarBg || '#f9fafb',
+    color: layout?.header?.topBarText || '#6b7280'
+  };
+
+  return (
+    <header className="w-full z-[160] sticky top-0 shadow-sm transition-colors duration-500" style={navStyles}>
+      {(layout?.header?.showTopBar !== false) && (
+        <div className="hidden lg:block border-b py-1 transition-colors duration-500" style={topBarStyles}>
+          <div className="container mx-auto px-4 flex justify-end gap-6">
+            <Link href="/page/about-us" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>About Us</Link>
+            <Link href="/support" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>Support</Link>
+            <button onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black uppercase tracking-widest text-primary">
+              {language === 'bn' ? "English" : "বাংলা"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="py-2 md:py-4 px-3 md:px-4 border-b border-gray-100">
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
@@ -115,7 +131,7 @@ export function Navbar() {
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm md:text-xl font-black tracking-tighter font-headline uppercase leading-none text-[#081621]">
+              <span className="text-sm md:text-xl font-black tracking-tighter font-headline uppercase leading-none" style={{ color: layout?.header?.textColor || '#081621' }}>
                 {companyName}
               </span>
               <span className="text-[7px] md:text-[8px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1">Professional Care</span>
@@ -125,6 +141,23 @@ export function Navbar() {
           <div className="hidden xl:block">
             <NavbarOfferSlider />
           </div>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-6 ml-4">
+            {layout?.header?.menuItems?.map((item: any, i: number) => (
+              <Link 
+                key={i} 
+                href={item.link} 
+                className={cn(
+                  "font-bold uppercase tracking-widest transition-all",
+                  layout?.header?.fontSize || 'text-sm'
+                )}
+                style={{ color: layout?.header?.textColor || '#081621' }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
           <div className="flex-1 relative" ref={searchRef}>
             <form onSubmit={handleSearchSubmit} className="relative group max-w-2xl">
@@ -176,7 +209,7 @@ export function Navbar() {
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className={cn(
                               "text-[8px] font-black uppercase px-1.5 h-4 border-none",
-                              item.type === 'service' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+                              item.type === 'service' ? "bg-blue-600 text-blue-600" : "bg-emerald-600 text-emerald-600"
                             )}>
                               {item.type}
                             </Badge>
