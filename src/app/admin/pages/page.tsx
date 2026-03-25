@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -62,6 +61,7 @@ export default function PagesManagementPage() {
           await addDoc(collection(db, 'pages_management'), {
             ...page,
             isPublished: true,
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
           createdCount++;
@@ -127,11 +127,11 @@ export default function PagesManagementPage() {
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-5 pl-8">Page Title</TableHead>
-                <TableHead className="font-bold">Slug / URL</TableHead>
-                <TableHead className="font-bold">Status</TableHead>
-                <TableHead className="font-bold">Last Updated</TableHead>
-                <TableHead className="text-right pr-8">Actions</TableHead>
+                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Page Title</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Slug / URL</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Last Updated</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
