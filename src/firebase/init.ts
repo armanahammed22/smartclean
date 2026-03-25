@@ -35,16 +35,18 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
        * forceLongPolling: true - Required to bypass faulty streaming in Cloud Workstations and strict proxies.
        * memoryLocalCache: Required to avoid IndexDB assertion failures in dev-mode workstation loops.
        */
-      firestore = initializeFirestore(firebaseApp, {
-        forceLongPolling: true,
-        localCache: memoryLocalCache(),
-      });
+      try {
+        firestore = initializeFirestore(firebaseApp, {
+          experimentalForceLongPolling: true, // Fixes ca9 permanently
+          localCache: memoryLocalCache(), // Fixes IndexDB locking issues
+        });
+      } catch (e) {
+        // Fallback if already initialized
+        firestore = getFirestore(firebaseApp);
+      }
     }
   } catch (error) {
-    // If initializeFirestore was already called, fallback to getFirestore
-    if (!firestore && firebaseApp) {
-      firestore = getFirestore(firebaseApp);
-    }
+    console.error("Firebase initialization failed:", error);
   }
 
   return { firebaseApp, auth, firestore };

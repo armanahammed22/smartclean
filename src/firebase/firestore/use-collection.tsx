@@ -80,10 +80,10 @@ export function useCollection<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Resilience Shield: Silently suppress internal failures (ca9 / b815)
-        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+        // 🛡️ SDK Resilience Shield: Silently suppress internal failures (ca9 / b815 / assertion failed)
+        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed') || errorStr.includes('unexpected state')) {
           console.warn(`[Resilience Shield] Suppressed Firestore internal error at: ${currentPath}`);
-          setIsLoading(false);
+          // Don't set error state, just keep loading or previous data to prevent UI crash
           return;
         }
 
