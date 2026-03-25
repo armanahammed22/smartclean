@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -18,7 +19,8 @@ import {
   ShoppingCart,
   Zap,
   LayoutGrid,
-  Flashlight
+  Flashlight,
+  Timer
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -143,23 +145,35 @@ export default function SmartCleanHomePage() {
 
         <CampaignSection />
 
-        {/* 📱 APP FLASH DEALS */}
+        {/* 📱 APP FLASH DEALS - Optimized for 3 Products on Mobile */}
         <section className="px-4 py-2">
-          <div className="app-card border-none bg-primary text-white">
+          <div className="app-card border-none bg-primary text-white shadow-xl shadow-primary/10">
             <div className="p-4 flex items-center justify-between border-b border-white/10">
               <div className="flex items-center gap-3">
-                <Flashlight size={20} fill="currentColor" className="text-accent" />
-                <h2 className="text-sm font-black uppercase tracking-tight italic">Flash Sale</h2>
+                <div className="bg-accent p-1.5 rounded-lg text-white">
+                  <Zap size={18} fill="currentColor" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-tight italic leading-none">Flash Sale</h2>
+                  <p className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-1">Limited Time Only</p>
+                </div>
                 <div className="flex gap-1 ml-2">
-                  {['02', '14', '55'].map((t, i) => <span key={i} className="bg-white/20 text-[10px] font-black px-1.5 py-0.5 rounded"> {t} </span>)}
+                  {['02', '14', '55'].map((t, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <span className="bg-white/20 text-[10px] font-black px-1.5 py-0.5 rounded shadow-inner"> {t} </span>
+                      {i < 2 && <span className="text-[10px] font-black opacity-40">:</span>}
+                    </div>
+                  ))}
                 </div>
               </div>
-              <ChevronRight size={18} className="opacity-40" />
+              <Link href="/products" className="text-[9px] font-black uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-1">
+                View All <ChevronRight size={14} />
+              </Link>
             </div>
-            <div className="p-4 overflow-x-auto no-scrollbar">
-              <div className="flex gap-4 min-w-max">
+            <div className="p-3 md:p-4">
+              <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar">
                 {featuredProducts.map((product) => (
-                  <div key={product.id} className="w-[130px] md:w-[180px] shrink-0">
+                  <div key={product.id} className="w-[calc(33.33%-6px)] md:w-[180px] shrink-0">
                     <ProductCard product={product} />
                   </div>
                 ))}
