@@ -29,7 +29,7 @@ const PUBLIC_DOCS = [
 ];
 
 /**
- * Resilient document hook with aggressive internal error suppression.
+ * Resilient document hook with aggressive internal error suppression for SDK noise.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,

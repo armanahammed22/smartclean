@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, initializeFirestore, memoryLocalCache, terminate } from 'firebase/firestore';
+import { getFirestore, Firestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
 let firebaseApp: FirebaseApp | null = null;
@@ -48,8 +48,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       
       /**
        * Force Long Polling and Memory Cache.
-       * If firestore was already initialized (e.g. by another part of the SDK), 
-       * we skip re-initialization to avoid the "already initialized" error.
+       * experimentalForceLongPolling: Ensures stability behind proxies.
+       * localCache: memoryLocalCache() prevents IndexedDB corruption/assertion errors.
        */
       try {
         firestore = initializeFirestore(firebaseApp, {
@@ -57,7 +57,15 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
           localCache: memoryLocalCache(),
         });
       } catch (e) {
-        firestore = getFirestore(firebaseApp);
+        // Fallback if already initialized (common during hot-reloads)
+        const currentFirestore = (firebaseApp as any)._firestore;
+        if (currentFirestore) {
+          firestore = currentFirestore;
+        } else {
+          // Manual retrieval if all else fails
+          const { getFirestore: getFs } = require('firebase/firestore');
+          firestore = getFs(firebaseApp);
+        }
       }
     }
   } catch (error) {

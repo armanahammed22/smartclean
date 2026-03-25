@@ -39,7 +39,7 @@ function extractPath(target: any): string {
 }
 
 /**
- * Resilient collection hook with aggressive internal error suppression.
+ * Resilient collection hook with aggressive internal error suppression for SDK noise.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -78,7 +78,7 @@ export function useCollection<T = any>(
         
         // 🛡️ SDK Resilience Shield: Silently suppress common workstation assertion failures
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          // Keep loading or previous data, do not trigger error state to prevent UI crash
+          // Stay silent, let SDK retry internally
           console.warn(`[Firestore Shield] Suppressed transient assertion error at: ${currentPath}`);
           return;
         }
