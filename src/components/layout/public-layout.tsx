@@ -52,6 +52,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
 
   const isHome = pathname === '/';
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
+  const companyName = settings?.websiteName || 'Smart Clean';
 
   useEffect(() => {
     if (settings) {
@@ -85,21 +86,19 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
               <ArrowLeft size={20} />
             </Button>
           ) : (
-            <Link href="/" className="relative h-8 w-24">
-              {displayLogo ? (
-                <Image src={displayLogo} alt="Logo" fill className="object-contain object-left" unoptimized />
-              ) : (
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
-              )}
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="relative h-8 w-8 rounded-lg overflow-hidden border border-gray-100">
+                {displayLogo ? (
+                  <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
+                ) : (
+                  <div className="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-black text-gray-900 uppercase tracking-tight leading-none truncate max-w-[100px]">{companyName}</span>
+                <span className="text-[7px] font-bold text-primary uppercase tracking-widest leading-none mt-0.5">Professional</span>
+              </div>
             </Link>
-          )}
-          {isHome && !displayLogo && (
-            <div>
-              <h1 className="text-xs font-black text-gray-900 uppercase tracking-tight truncate max-w-[120px]">
-                {settings?.websiteName || 'Smart Clean'}
-              </h1>
-              <p className="text-[8px] font-bold text-primary uppercase tracking-widest leading-none">Marketplace</p>
-            </div>
           )}
         </div>
 
