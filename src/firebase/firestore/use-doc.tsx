@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -29,7 +30,7 @@ const PUBLIC_DOCS = [
 ];
 
 /**
- * Resilient document hook with aggressive internal error suppression for SDK noise.
+ * Hardened document hook with internal retry shield for internal SDK assertion failures.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -38,6 +39,7 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedDocRef);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   const activeToken = useRef<string | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -52,47 +54,59 @@ export function useDoc<T = any>(
     activeToken.current = token;
     setIsLoading(true);
 
-    const unsubscribe = onSnapshot(
-      memoizedDocRef,
-      (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (activeToken.current !== token) return;
+    let unsubscribe: () => void = () => {};
 
-        if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
-        } else {
-          setData(null);
+    const startListener = () => {
+      unsubscribe = onSnapshot(
+        memoizedDocRef,
+        (snapshot: DocumentSnapshot<DocumentData>) => {
+          if (activeToken.current !== token) return;
+
+          if (snapshot.exists()) {
+            setData({ ...(snapshot.data() as T), id: snapshot.id });
+          } else {
+            setData(null);
+          }
+          setError(null);
+          setIsLoading(false);
+        },
+        (err: any) => {
+          if (activeToken.current !== token) return;
+
+          const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
+          
+          // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
+          if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+            console.warn(`[Firestore Shield] Retrying transient assertion error at doc: ${currentPath}`);
+            
+            if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = setTimeout(() => {
+              if (activeToken.current === token) startListener();
+            }, 2000);
+            return;
+          }
+
+          const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
+          const contextualError = new FirestorePermissionError({
+            operation: 'get',
+            path: currentPath,
+          });
+
+          setError(contextualError);
+          setIsLoading(false);
+
+          if (!isPublic) {
+            errorEmitter.emit('permission-error', contextualError);
+          }
         }
-        setError(null);
-        setIsLoading(false);
-      },
-      (err: any) => {
-        if (activeToken.current !== token) return;
+      );
+    };
 
-        const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
-        
-        // 🛡️ SDK Resilience Shield: Silently suppress common workstation assertion failures
-        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed transient assertion error at doc: ${currentPath}`);
-          return;
-        }
-
-        const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
-        const contextualError = new FirestorePermissionError({
-          operation: 'get',
-          path: currentPath,
-        });
-
-        setError(contextualError);
-        setIsLoading(false);
-
-        if (!isPublic) {
-          errorEmitter.emit('permission-error', contextualError);
-        }
-      }
-    );
+    startListener();
 
     return () => {
       activeToken.current = null;
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       unsubscribe();
     };
   }, [memoizedDocRef]);

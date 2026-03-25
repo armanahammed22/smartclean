@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -134,6 +135,11 @@ export const useFirebaseApp = (): FirebaseApp | null => {
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 
+/**
+ * 🔒 Production Memoization Helper
+ * Ensures that Firestore queries are NOT recreated on every render.
+ * Re-creating queries is the primary cause of internal assertion failures.
+ */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
   if(typeof memoized !== 'object' || memoized === null) return memoized;

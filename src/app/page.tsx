@@ -54,6 +54,7 @@ export default function SmartCleanHomePage() {
     });
   }, [api]);
 
+  // 🛡️ Optimized Production-Safe Queries
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
