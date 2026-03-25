@@ -32,7 +32,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       /**
        * 🛡️ PERMANENT FIRESTORE FIX
        * forceLongPolling: Bypass faulty streaming in workstation/proxy.
-       * memoryLocalCache: Avoid persistence-related assertion failures.
+       * memoryLocalCache: Avoid persistence-related assertion failures in shared environments.
        */
       firestore = initializeFirestore(firebaseApp, {
         forceLongPolling: true,
@@ -43,6 +43,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     console.warn("[Firebase Init] Initialization issue:", error);
     if (firebaseApp && !firestore) {
       try {
+        // Fallback to basic getter if initializeFirestore fails
         firestore = getFirestore(firebaseApp);
       } catch (e) {
         console.error("[Firebase Init] Critical Failure:", e);

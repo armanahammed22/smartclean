@@ -35,16 +35,14 @@ const PUBLIC_COLLECTIONS = [
  */
 function getPathFromTarget(target: any): string {
   if (!target) return 'unknown';
-  // Standard path for CollectionReference
   if (typeof target.path === 'string') return target.path;
-  // Internal path for Query objects in Firebase JS SDK v9+
   if (target._query?.path) return target._query.path.toString();
   return 'query';
 }
 
 /**
  * UI Hook optimized for resilient real-time collection syncing.
- * Silences fatal errors for public collections to prevent app crashes on missing indexes or transient issues.
+ * Silences fatal errors for public collections and system assertions to prevent app crashes.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -78,10 +76,14 @@ export function useCollection<T = any>(
       (err: FirestoreError) => {
         if (pathRef.current !== currentPath) return;
 
-        const msg = err.message.toLowerCase();
-        // Silence transport failures (common in proxy/workstation environments)
-        if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion')) {
-          console.warn(`[Firestore Transport] Silent recovery for: ${currentPath}`);
+        const msg = (err.message || '').toLowerCase();
+        
+        /**
+         * 🛡️ TRANSPORT FILTER
+         * Silence transport failures (ca9, b815) to prevent infinite error loops.
+         */
+        if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion') || msg.includes('unexpected state')) {
+          console.warn(`[Firestore Resiliency] Recovering from transport failure at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -96,8 +98,7 @@ export function useCollection<T = any>(
           logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
         } else {
-          // If public read fails, it's usually an index or rule config issue. Log as warning, not fatal.
-          console.warn(`[useCollection] Access denied on public resource: ${currentPath}. Check indexes or rules.`);
+          console.warn(`[useCollection] Silent fail on public resource: ${currentPath}`);
         }
       }
     );

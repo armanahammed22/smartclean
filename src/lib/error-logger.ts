@@ -16,30 +16,35 @@ export interface ErrorContext {
 let isLoggingInternal = false;
 
 /**
- * Permanent Fix for Logging Loops
- * Automatically detects and silences Firestore transport/assertion errors
- * to prevent the 'ca9' and 'b815' error storm.
+ * Permanent Fix for Logging Loops (ca9 / b815)
+ * This function is hardened to never attempt a Firestore write if the error
+ * itself is related to a Firestore transport failure or internal assertion.
  */
 export async function logError(error: any, context: ErrorContext = {}) {
+  // If we are already in a logging process, abort to prevent recursion
   if (isLoggingInternal || !error) return;
   
   const message = error?.message || (typeof error === 'string' ? error : 'Unknown Error');
-  const errorStr = String(error).toLowerCase() + " " + JSON.stringify(error).toLowerCase();
+  const errorStr = (message + " " + (error?.stack || "") + " " + JSON.stringify(error)).toLowerCase();
 
-  // 🛡️ PERMANENT EXCLUSION FILTER
-  // Skip any errors related to Firestore transport or internal assertions.
-  // Writing these back to Firestore will ALWAYS trigger a recursive loop.
-  const isSystemAssertion = 
+  /**
+   * 🛡️ CRITICAL SYSTEM FILTER
+   * Identify errors that indicate Firestore is in a broken state (ca9, b815, transport failures).
+   * Attempting to write these BACK to Firestore will trigger an infinite loop.
+   */
+  const isBrokenStateError = 
     errorStr.includes('ca9') || 
     errorStr.includes('b815') || 
     errorStr.includes('assertion failed') ||
     errorStr.includes('unexpected state') ||
     errorStr.includes('transport') ||
-    errorStr.includes('webchannel');
+    errorStr.includes('webchannel') ||
+    errorStr.includes('offline') ||
+    errorStr.includes('unavailable');
 
-  if (isSystemAssertion) {
-    // Only log to local console to prevent network recursion
-    console.warn('[Error Logger] Suppressed Firestore internal transport failure from DB write to prevent recursion loop.');
+  if (isBrokenStateError) {
+    // Only log to local console to prevent network recursion and loop crashes
+    console.warn('[Error Logger] System-level Firestore failure detected. Suppressing DB write to prevent loop.', message);
     return;
   }
 
@@ -67,14 +72,19 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const colRef = collection(firestore, 'error_logs');
     
-    // Fire-and-forget
-    addDoc(colRef, errorPayload).catch(() => {
-      // Fail silently if DB write fails during a transport issue
+    // 3. Fire-and-forget: Non-blocking write
+    // We do NOT await this to ensure the UI remains responsive
+    addDoc(colRef, errorPayload).catch((e) => {
+      // If logging itself fails, just log to console
+      console.error('[Error Logger] Failed to push log to Firestore:', e.message);
     });
     
   } catch (loggingError) {
-    // Fail silently
+    // Silent fail for the logger itself
   } finally {
-    isLoggingInternal = false;
+    // Release the lock after a short delay to ensure clean state
+    setTimeout(() => {
+      isLoggingInternal = false;
+    }, 100);
   }
 }
