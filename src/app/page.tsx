@@ -17,9 +17,11 @@ import {
   Sparkles,
   Zap,
   LayoutGrid,
-  Layout as LayoutIcon
+  Layout as LayoutIcon,
+  ZapIcon
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
+import { FlashSaleCard } from '@/components/products/flash-sale-card';
 import { 
   Carousel, 
   CarouselContent, 
@@ -74,7 +76,7 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} className="bg-white pb-4 lg:bg-transparent lg:mt-4">
             <div className="container mx-auto px-0 lg:px-4">
-              <div className="relative aspect-[21/11] md:aspect-[982/400] w-full lg:rounded-2xl overflow-hidden bg-gray-100">
+              <div className="relative aspect-[21/11] md:aspect-[982/400] w-full lg:rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
                 {mainBanners.length > 0 && (
                   <Carousel className="w-full h-full" opts={{ loop: true }}>
                     <CarouselContent className="h-full -ml-0">
@@ -102,15 +104,15 @@ export default function SmartCleanHomePage() {
 
       case 'categories':
         return (
-          <section key={section.id} className="px-4 py-10">
-            <div className="app-card p-4 md:p-6">
+          <section key={section.id} className="px-4 py-6 md:py-10">
+            <div className="app-card p-4 md:p-6 shadow-md border-gray-50">
               <Carousel className="w-full">
                 <CarouselContent className="-ml-0">
                   {categoryChunks.map((chunk, idx) => (
                     <CarouselItem key={idx} className="pl-0 basis-full">
                       <div className="grid grid-cols-4 grid-rows-2 gap-y-6 gap-x-4">
                         {chunk.map((cat) => (
-                          <Link key={cat.id} href={cat.link || `/services?category=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
+                          <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-2 group app-button">
                             <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center p-3 border border-gray-50 shadow-sm group-hover:bg-primary/10 transition-colors">
                               {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <LayoutGrid size={20} className="text-gray-400" />}
                             </div>
@@ -138,40 +140,29 @@ export default function SmartCleanHomePage() {
 
         return (
           <section key={section.id} className="px-4 py-6">
-            <div className="app-card border-none bg-[#081621] text-white shadow-2xl overflow-hidden rounded-[2.5rem]">
-              <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/10 bg-gradient-to-r from-[#081621] to-[#1a2533]">
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-amber-400 p-2.5 rounded-2xl text-black shadow-lg animate-pulse">
-                      <Zap size={24} fill="currentColor" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter italic">
-                        {flashSaleConfig?.title || 'Flash Sale'}
-                      </h2>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/80">Exclusive Offers</p>
-                    </div>
-                  </div>
-                  <div className="h-10 w-px bg-white/10 hidden md:block" />
-                  <div className="flex flex-col items-center md:items-start gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Ends In:</span>
+            <div className="bg-[#1E5F7A] rounded-[2rem] overflow-hidden shadow-xl border border-white/10">
+              <div className="p-5 md:p-8 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">Flash Sale</span>
                     <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
                   </div>
                 </div>
-                <Button variant="outline" className="rounded-full bg-white/5 border-white/10 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11 hover:bg-white/10" asChild>
-                  <Link href="/products">View All Deals</Link>
-                </Button>
+                <Link href="/products" className="flex items-center gap-1.5 text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity">
+                  ALL <ChevronRight size={14} className="bg-white/20 rounded-full" />
+                </Link>
               </div>
-              <div className="p-6 md:p-10">
-                <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
+              
+              <div className="px-5 md:px-8 pb-8">
+                <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-2">
                   {flashProducts.map(p => (
-                    <div key={p.id} className="w-[160px] md:w-[220px] shrink-0">
-                      <ProductCard product={p} isDark={true} />
+                    <div key={p.id} className="w-[140px] md:w-[180px] lg:w-[200px] shrink-0">
+                      <FlashSaleCard product={p} />
                     </div>
                   ))}
                   {flashProducts.length === 0 && (
                     <div className="w-full py-12 text-center text-white/40 italic text-sm">
-                      Upcoming deals...
+                      Coming Soon...
                     </div>
                   )}
                 </div>
@@ -184,19 +175,22 @@ export default function SmartCleanHomePage() {
         const activeServices = allServices?.filter(s => s.status === 'Active').slice(0, config.limit || 8) || [];
         return (
           <section key={section.id} className="px-4 py-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-black uppercase text-[#081621] flex items-center gap-2">
-                <Wrench className="text-primary" size={20} /> {section.title}
-              </h2>
-              <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1">View All <ChevronRight size={14} /></Link>
+            <div className="flex items-center justify-between mb-6 px-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary"><Wrench size={20} /></div>
+                <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+              </div>
+              <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
+                ALL <ChevronRight size={14} className="bg-primary/10 rounded-full" />
+              </Link>
             </div>
-            <div className={cn("grid gap-4", (config.layout === 'grid' || !config.layout) ? `grid-cols-2 md:grid-cols-${config.itemsPerRow || 4}` : "flex overflow-x-auto no-scrollbar")}>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
               {activeServices.map(s => (
-                <Link key={s.id} href={`/service/${s.id}`} className="app-card group relative aspect-[4/3] block active:scale-95 transition-transform min-w-[160px]">
-                  <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover" unoptimized />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-3">
-                    <h3 className="text-white font-black uppercase text-[10px] leading-tight mb-1">{s.title}</h3>
-                    <p className="text-primary font-black text-xs">৳{s.basePrice?.toLocaleString()}</p>
+                <Link key={s.id} href={`/service/${s.id}`} className="group relative aspect-[4/3] w-[220px] md:w-[280px] shrink-0 block active:scale-95 transition-transform rounded-[2rem] overflow-hidden shadow-lg border border-white">
+                  <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5">
+                    <h3 className="text-white font-black uppercase text-xs tracking-tight mb-1">{s.title}</h3>
+                    <p className="text-primary font-black text-sm">৳{s.basePrice?.toLocaleString()}</p>
                   </div>
                 </Link>
               ))}
@@ -211,16 +205,17 @@ export default function SmartCleanHomePage() {
         if (config.dataSource === 'category' && config.categoryId) feed = feed.filter(p => p.categoryId === config.categoryId);
         if (config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         
-        feed = feed.slice(0, config.limit || 10);
+        feed = feed.slice(0, config.limit || 12);
 
         return (
-          <section key={section.id} className="px-4 py-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-black uppercase text-[#081621] flex items-center gap-2">
-                <Sparkles className="text-[#22C55E]" size={20} fill="currentColor" /> {section.title}
-              </h2>
+          <section key={section.id} className="px-4 py-8">
+            <div className="flex items-center justify-between mb-8 px-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-accent/10 rounded-xl text-accent"><Sparkles size={20} fill="currentColor" /></div>
+                <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
               {feed.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>
@@ -239,7 +234,7 @@ export default function SmartCleanHomePage() {
         {layoutLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-32">
             <Loader2 className="animate-spin text-primary" size={48} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Environment...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Marketplace...</p>
           </div>
         ) : layoutSections && layoutSections.length > 0 ? (
           layoutSections.map(renderSection)
@@ -247,20 +242,20 @@ export default function SmartCleanHomePage() {
           /* 🛡️ DEFAULT FALLBACK LAYOUT */
           <>
             {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
-            {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Deals' })}
+            {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Sale' })}
             {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
             {renderSection({ id: 'def-camp', type: 'campaign', config: {} })}
             {renderSection({ 
               id: 'def-serv', 
               type: 'services', 
-              title: 'Recommended Services',
+              title: 'Pro Services',
               config: { layout: 'grid', itemsPerRow: 4, limit: 8 } 
             })}
             {renderSection({ 
               id: 'def-feed', 
               type: 'products_feed', 
-              title: 'New Arrivals',
-              config: { dataSource: 'latest', limit: 10 } 
+              title: 'Just For You',
+              config: { dataSource: 'latest', limit: 12 } 
             })}
           </>
         )}
