@@ -12,9 +12,10 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat, LogIn } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat, LogIn, User } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -93,7 +94,15 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
 
         <div className="flex items-center gap-2">
-          {!user && (
+          {user ? (
+            <Link href="/account/dashboard">
+              <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
+                <AvatarFallback className="bg-primary/10 text-primary font-black text-[10px] uppercase">
+                  {user.displayName?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          ) : (
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-gray-50 text-primary" asChild>
               <Link href="/login"><LogIn size={18} /></Link>
             </Button>

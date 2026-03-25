@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -73,7 +74,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="w-full z-50 sticky top-0 bg-white">
+    <header className="w-full z-50 sticky top-0 bg-white shadow-sm">
       {/* Top Utility Bar */}
       <div className="hidden lg:block bg-gray-50 border-b py-1">
         <div className="container mx-auto px-4 flex justify-end gap-6">
@@ -86,7 +87,7 @@ export function Navbar() {
       </div>
 
       {/* Main Header */}
-      <div className="bg-white border-b py-2 md:py-4 px-3 md:px-4">
+      <div className="bg-white py-2 md:py-4 px-3 md:px-4">
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
           <Link href={logoLink} className="flex items-center shrink-0">
@@ -127,63 +128,81 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-1 md:gap-6 shrink-0">
-            {/* Account Dropdown with Role-based Portal Links */}
             <div className="hidden md:block">
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 text-gray-700 hover:text-primary transition-colors font-bold text-sm">
-                      <Avatar className="h-8 w-8 border-2 border-gray-100">
+                    <button className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100">
+                      <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
                         <AvatarImage src={user.photoURL || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-black text-xs uppercase">
+                        <AvatarFallback className="bg-primary/10 text-primary font-black text-[10px] uppercase">
                           {user.displayName?.[0] || 'U'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="max-w-[100px] truncate">{user.displayName?.split(' ')[0] || 'Account'}</span>
-                      <ChevronDown size={14} className="opacity-40" />
+                      <div className="text-left hidden lg:block">
+                        <p className="text-xs font-black text-gray-900 leading-none truncate max-w-[100px] uppercase">
+                          {user.displayName?.split(' ')[0] || 'User'}
+                        </p>
+                        <p className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5 tracking-tighter">My Account</p>
+                      </div>
+                      <ChevronDown size={14} className="opacity-30" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl p-2 border-none shadow-2xl">
-                    <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-3 py-2">Personal</DropdownMenuLabel>
-                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/dashboard" className="flex items-center gap-3 font-bold"><UserCircle size={18} /> Profile</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer"><Link href="/account/history" className="flex items-center gap-3 font-bold"><History size={18} /> History</Link></DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-60 mt-2 rounded-2xl p-2 border-none shadow-2xl animate-in slide-in-from-top-2">
+                    <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-3 py-2 tracking-widest">Navigation</DropdownMenuLabel>
+                    <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer hover:bg-primary/5 transition-colors">
+                      <Link href="/account/dashboard" className="flex items-center gap-3 font-bold text-gray-700">
+                        <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><UserCircle size={18} /></div>
+                        Profile Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer hover:bg-primary/5 transition-colors">
+                      <Link href="/account/history" className="flex items-center gap-3 font-bold text-gray-700">
+                        <div className="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><History size={18} /></div>
+                        Order History
+                      </Link>
+                    </DropdownMenuItem>
                     
-                    {(isAdmin || isStaff) && <DropdownMenuSeparator />}
-                    
-                    {isAdmin && (
-                      <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-red-50 text-red-700 mt-1">
-                        <Link href="/admin/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
-                          <ShieldCheck size={18} /> Admin Portal
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    
-                    {isStaff && (
-                      <DropdownMenuItem asChild className="rounded-lg p-3 cursor-pointer bg-amber-50 text-amber-700 mt-1">
-                        <Link href="/staff/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
-                          <HardHat size={18} /> Technician Portal
-                        </Link>
-                      </DropdownMenuItem>
+                    {(isAdmin || isStaff) && (
+                      <>
+                        <DropdownMenuSeparator className="my-2 opacity-50" />
+                        <DropdownMenuLabel className="text-[10px] font-black uppercase opacity-40 px-3 py-1 tracking-widest">Portal Entry</DropdownMenuLabel>
+                        {isAdmin && (
+                          <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer bg-red-50 hover:bg-red-100 text-red-700 mt-1">
+                            <Link href="/admin/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
+                              <ShieldCheck size={18} /> Admin Terminal
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        {isStaff && (
+                          <DropdownMenuItem asChild className="rounded-xl p-3 cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-700 mt-1">
+                            <Link href="/staff/dashboard" className="flex items-center gap-3 font-black uppercase text-[10px]">
+                              <HardHat size={18} /> Staff App
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                      </>
                     )}
 
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black p-3 rounded-lg cursor-pointer">
-                      <LogOut size={18} className="mr-2" /> {t('sign_out')}
+                    <DropdownMenuSeparator className="my-2 opacity-50" />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive font-black p-3 rounded-xl cursor-pointer hover:bg-red-50 transition-colors">
+                      <div className="p-1.5 bg-red-100 text-red-600 rounded-lg mr-1"><LogOut size={18} /></div>
+                      {t('sign_out')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link href="/login" className="flex items-center gap-2 text-gray-700 hover:text-primary font-bold text-sm">
-                  <User size={20} className="text-gray-400" />
+                <Link href="/login" className="flex items-center gap-2 text-gray-700 hover:text-primary font-black uppercase text-xs tracking-widest px-4 py-2 rounded-full border border-gray-100 hover:bg-gray-50 transition-all">
+                  <User size={18} className="text-gray-400" />
                   <span>Login</span>
                 </Link>
               )}
             </div>
 
-            <Link href="/cart" className="relative p-1.5 text-gray-600 hover:text-primary transition-colors group">
+            <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90">
               <ShoppingCart size={22} />
               {itemCount > 0 && (
-                <span className="absolute top-0 right-0 bg-primary text-white text-[8px] font-black h-4 w-4 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-in zoom-in">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-4.5 w-4.5 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-in zoom-in">
                   {itemCount}
                 </span>
               )}
