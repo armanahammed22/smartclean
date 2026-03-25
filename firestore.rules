@@ -61,6 +61,14 @@ service cloud.firestore {
       allow update: if isSignedIn() && (request.auth.uid == uid || isAdmin());
     }
 
+    match /vendor_profiles/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /blocked_users/{id} {
+      allow read, write: if isAdmin();
+    }
+
     match /orders/{id} {
       allow create: if true;
       allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
