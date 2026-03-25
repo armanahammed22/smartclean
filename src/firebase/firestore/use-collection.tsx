@@ -42,7 +42,6 @@ function extractPath(target: any): string {
 
 /**
  * Highly resilient real-time collection hook.
- * Strictly silences SDK internal assertion failures (ca9, b815) to prevent app crash loops.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -77,15 +76,15 @@ export function useCollection<T = any>(
       (err: any) => {
         if (activeToken.current !== token) return;
 
-        const errorStr = JSON.stringify(err).toLowerCase() + (err.message || '').toLowerCase();
+        const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
         /**
-         * 🛡️ INTERNAL ASSERTION SUPPRESSION
-         * ca9 and b815 are non-recoverable internal state errors. 
-         * We silence them to prevent the UI from crashing or looping.
+         * 🛡️ INTERNAL ASSERTION SHIELD
+         * IDs like ca9 and b815 are non-recoverable transport failures.
+         * We silence them to prevent the Error Logger from entering an infinite loop.
          */
-        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed') || errorStr.includes('unexpected state')) {
-          console.warn(`[Firestore Shield] Suppressed internal SDK failure at: ${currentPath}`);
+        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+          console.warn(`[Firestore Shield] Suppressed internal SDK error (ca9/b815) at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -96,7 +95,7 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Only trigger global handlers for non-public (protected) resources
+        // Only log and emit if it's NOT a system assertion error and NOT a public resource
         if (!isPublic) {
           logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);

@@ -69,11 +69,11 @@ export function useDoc<T = any>(
       (err: any) => {
         if (activeToken.current !== token) return;
 
-        const errorStr = JSON.stringify(err).toLowerCase() + (err.message || '').toLowerCase();
+        const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Assertion Shield
+        // 🛡️ SDK Assertion Shield (ca9 / b815)
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed internal SDK failure at doc: ${currentPath}`);
+          console.warn(`[Firestore Shield] Suppressed internal SDK error (ca9/b815) at doc: ${currentPath}`);
           setIsLoading(false);
           return;
         }

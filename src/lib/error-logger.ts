@@ -29,6 +29,7 @@ export async function logError(error: any, context: ErrorContext = {}) {
    * 🛡️ CRITICAL SYSTEM FILTER
    * We MUST NOT try to write back to Firestore if the error suggests 
    * Firestore's transport or internal state is broken (ca9, b815).
+   * Writing to Firestore during a Firestore crash creates an infinite loop.
    */
   const isBrokenStateError = 
     errorStr.includes('ca9') || 
@@ -38,6 +39,7 @@ export async function logError(error: any, context: ErrorContext = {}) {
     errorStr.includes('transport') ||
     errorStr.includes('webchannel') ||
     errorStr.includes('unavailable') ||
+    errorStr.includes('internal error') ||
     errorStr.includes('offline');
 
   if (isBrokenStateError) {
@@ -69,15 +71,15 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const colRef = collection(firestore, 'error_logs');
     
-    // Fire-and-forget
+    // Fire-and-forget: we don't await this to keep the UI snappy
     addDoc(colRef, errorPayload).catch(() => {
-      // Intentionally silent to prevent loop
+      // Intentionally silent if logging itself fails due to permission/connection
     });
     
   } catch (loggingError) {
-    // Silent fail
+    // Fail silently to avoid crashing the main app flow
   } finally {
-    // Lock release with delay
+    // Release lock with slight delay
     setTimeout(() => {
       isLoggingInternal = false;
     }, 500);
