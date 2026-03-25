@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -64,53 +63,60 @@ export function useCollection<T = any>(
     activeToken.current = token;
     setIsLoading(true);
 
-    let unsubscribe: () => void = () => {};
+    let unsubscribe: (() => void) | null = null;
 
     const startListener = () => {
-      // Cleanup previous listener before starting a new one
-      if (unsubscribe) unsubscribe();
+      // Cleanup previous listener
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (e) {}
+        unsubscribe = null;
+      }
 
-      unsubscribe = onSnapshot(
-        memoizedTarget,
-        (snapshot: QuerySnapshot<DocumentData>) => {
-          if (activeToken.current !== token) return;
-          const results = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
-          setData(results);
-          setError(null);
-          setIsLoading(false);
-        },
-        (err: any) => {
-          if (activeToken.current !== token) return;
+      try {
+        unsubscribe = onSnapshot(
+          memoizedTarget,
+          (snapshot: QuerySnapshot<DocumentData>) => {
+            if (activeToken.current !== token) return;
+            const results = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
+            setData(results);
+            setError(null);
+            setIsLoading(false);
+          },
+          (err: any) => {
+            if (activeToken.current !== token) return;
 
-          const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
-          
-          // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
-          if (
-            errorStr.includes('ca9') || 
-            errorStr.includes('b815') || 
-            errorStr.includes('assertion failed') || 
-            errorStr.includes('unexpected state')
-          ) {
-            console.warn(`[Firestore Shield] Retrying transient assertion error at: ${currentPath}`);
+            const errorStr = (err.message || String(err)).toLowerCase();
             
-            if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-            retryTimeoutRef.current = setTimeout(() => {
-              if (activeToken.current === token) startListener();
-            }, 2000); 
-            return;
-          }
+            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
+            if (
+              errorStr.includes('ca9') || 
+              errorStr.includes('b815') || 
+              errorStr.includes('assertion failed') || 
+              errorStr.includes('unexpected state')
+            ) {
+              console.warn(`[Firestore Shield] Retrying transient assertion error at: ${currentPath}`);
+              
+              if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+              retryTimeoutRef.current = setTimeout(() => {
+                if (activeToken.current === token) startListener();
+              }, 2000); 
+              return;
+            }
 
-          const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
-          const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
-          
-          setError(contextualError);
-          setIsLoading(false);
-          
-          if (!isPublic) {
-            errorEmitter.emit('permission-error', contextualError);
+            const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
+            const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
+            
+            setError(contextualError);
+            setIsLoading(false);
+            
+            if (!isPublic) {
+              errorEmitter.emit('permission-error', contextualError);
+            }
           }
-        }
-      );
+        );
+      } catch (setupError: any) {
+        console.warn('[Firestore Shield] Setup phase interception:', setupError.message);
+      }
     };
 
     startListener();
@@ -118,7 +124,11 @@ export function useCollection<T = any>(
     return () => {
       activeToken.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-      if (unsubscribe) unsubscribe();
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (e) {
+          console.warn('[Firestore Shield] Unsubscribe noise suppressed.');
+        }
+      }
     };
   }, [memoizedTarget]);
 

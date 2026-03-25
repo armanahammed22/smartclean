@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -54,59 +53,66 @@ export function useDoc<T = any>(
     activeToken.current = token;
     setIsLoading(true);
 
-    let unsubscribe: () => void = () => {};
+    let unsubscribe: (() => void) | null = null;
 
     const startListener = () => {
-      if (unsubscribe) unsubscribe();
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (e) {}
+        unsubscribe = null;
+      }
 
-      unsubscribe = onSnapshot(
-        memoizedDocRef,
-        (snapshot: DocumentSnapshot<DocumentData>) => {
-          if (activeToken.current !== token) return;
+      try {
+        unsubscribe = onSnapshot(
+          memoizedDocRef,
+          (snapshot: DocumentSnapshot<DocumentData>) => {
+            if (activeToken.current !== token) return;
 
-          if (snapshot.exists()) {
-            setData({ ...(snapshot.data() as T), id: snapshot.id });
-          } else {
-            setData(null);
-          }
-          setError(null);
-          setIsLoading(false);
-        },
-        (err: any) => {
-          if (activeToken.current !== token) return;
+            if (snapshot.exists()) {
+              setData({ ...(snapshot.data() as T), id: snapshot.id });
+            } else {
+              setData(null);
+            }
+            setError(null);
+            setIsLoading(false);
+          },
+          (err: any) => {
+            if (activeToken.current !== token) return;
 
-          const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
-          
-          // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
-          if (
-            errorStr.includes('ca9') || 
-            errorStr.includes('b815') || 
-            errorStr.includes('assertion failed') || 
-            errorStr.includes('unexpected state')
-          ) {
-            console.warn(`[Firestore Shield] Retrying transient assertion error at doc: ${currentPath}`);
+            const errorStr = (err.message || String(err)).toLowerCase();
             
-            if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-            retryTimeoutRef.current = setTimeout(() => {
-              if (activeToken.current === token) startListener();
-            }, 2000);
-            return;
+            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
+            if (
+              errorStr.includes('ca9') || 
+              errorStr.includes('b815') || 
+              errorStr.includes('assertion failed') || 
+              errorStr.includes('unexpected state')
+            ) {
+              console.warn(`[Firestore Shield] Retrying transient assertion error at doc: ${currentPath}`);
+              
+              if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+              retryTimeoutRef.current = setTimeout(() => {
+                if (activeToken.current === token) startListener();
+              }, 2000);
+              return;
+            }
+
+            const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
+            const contextualError = new FirestorePermissionError({
+              operation: 'get',
+              path: currentPath,
+            });
+
+            setError(contextualError);
+            setIsLoading(false);
+
+            if (!isPublic) {
+              errorEmitter.emit('permission-error', contextualError);
+            }
           }
-
-          const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
-          const contextualError = new FirestorePermissionError({
-            operation: 'get',
-            path: currentPath,
-          });
-
-          setError(contextualError);
-          setIsLoading(false);
-
-          if (!isPublic) {
-            errorEmitter.emit('permission-error', contextualError);
-          }
-        }
-      );
+        );
+      } catch (setupError: any) {
+        console.warn('[Firestore Shield] Setup phase interception:', setupError.message);
+      }
     };
 
     startListener();
@@ -114,7 +120,11 @@ export function useDoc<T = any>(
     return () => {
       activeToken.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-      if (unsubscribe) unsubscribe();
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (e) {
+          console.warn('[Firestore Shield] Unsubscribe noise suppressed.');
+        }
+      }
     };
   }, [memoizedDocRef]);
 
