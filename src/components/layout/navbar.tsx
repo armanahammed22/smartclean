@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -45,7 +46,7 @@ export function Navbar() {
   const logoLink = settings?.logoLink || '/';
   const companyName = settings?.websiteName || 'Smart Clean';
 
-  // 🔍 Search Logic
+  // 🔍 Search Logic for both Products and Services
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     
@@ -55,7 +56,7 @@ export function Navbar() {
     ];
 
     return combined.filter(item => 
-      (item.name || item.title)?.toLowerCase().includes(searchQuery.toLowerCase())
+      (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 6);
   }, [searchQuery, products, services]);
 
@@ -103,7 +104,7 @@ export function Navbar() {
           
           {/* Logo & Company Name */}
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm border border-gray-50 p-1">
+            <div className="relative h-10 md:h-14 w-10 md:w-14 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-md border border-gray-100 p-1">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
@@ -157,7 +158,7 @@ export function Navbar() {
             {isSearchFocused && searchQuery.length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 max-w-2xl">
                 <div className="p-3 bg-gray-50/50 border-b flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Suggestions</span>
+                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Suggestions (All Items)</span>
                   <button onClick={() => setIsSearchFocused(false)} className="text-gray-400 hover:text-gray-600"><X size={14}/></button>
                 </div>
                 
@@ -173,13 +174,16 @@ export function Navbar() {
                           {item.imageUrl ? (
                             <Image src={item.imageUrl} alt="Result" fill className="object-cover" unoptimized />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-200"><Package size={20} /></div>
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/20"><Package size={20} /></div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-gray-900 uppercase truncate group-hover:text-primary">{item.name || item.title}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-[8px] font-black uppercase px-1.5 h-4 border-gray-200 text-gray-400">
+                            <Badge variant="outline" className={cn(
+                              "text-[8px] font-black uppercase px-1.5 h-4 border-none",
+                              item.type === 'service' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+                            )}>
                               {item.type}
                             </Badge>
                             <span className="text-[11px] font-black text-primary">৳{(item.price || item.basePrice)?.toLocaleString()}</span>
