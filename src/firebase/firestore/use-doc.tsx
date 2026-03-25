@@ -57,6 +57,8 @@ export function useDoc<T = any>(
     let unsubscribe: () => void = () => {};
 
     const startListener = () => {
+      if (unsubscribe) unsubscribe();
+
       unsubscribe = onSnapshot(
         memoizedDocRef,
         (snapshot: DocumentSnapshot<DocumentData>) => {
@@ -76,7 +78,12 @@ export function useDoc<T = any>(
           const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
           
           // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
-          if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+          if (
+            errorStr.includes('ca9') || 
+            errorStr.includes('b815') || 
+            errorStr.includes('assertion failed') || 
+            errorStr.includes('unexpected state')
+          ) {
             console.warn(`[Firestore Shield] Retrying transient assertion error at doc: ${currentPath}`);
             
             if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
@@ -107,7 +114,7 @@ export function useDoc<T = any>(
     return () => {
       activeToken.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
   }, [memoizedDocRef]);
 

@@ -26,10 +26,17 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
   if (typeof window !== 'undefined' && !(window as any)._fs_shield_active) {
     const originalConsoleError = console.error;
     console.error = (...args: any[]) => {
-      const msg = args.join(' ');
-      if (msg.includes('ID: ca9') || msg.includes('ID: b815') || msg.includes('INTERNAL ASSERTION FAILED')) {
-        // Silently log to console without triggering the error overlay
-        console.warn('[Firestore Shield] Silenced internal SDK assertion noise:', msg.slice(0, 100) + '...');
+      const msg = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' ');
+      
+      // Target specific Firestore Internal Assertion IDs that trigger Next.js Overlays
+      if (
+        msg.includes('ID: ca9') || 
+        msg.includes('ID: b815') || 
+        msg.includes('INTERNAL ASSERTION FAILED') || 
+        msg.includes('WatchChangeAggregator')
+      ) {
+        // Silently log to console without triggering the Next.js error overlay
+        console.warn('[Firestore Shield] Silenced internal SDK assertion noise:', msg.slice(0, 150) + '...');
         return;
       }
       originalConsoleError.apply(console, args);
@@ -63,9 +70,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         if (currentFirestore) {
           firestore = currentFirestore;
         } else {
-          // Manual retrieval if all else fails
-          const { getFirestore: getFs } = require('firebase/firestore');
-          firestore = getFs(firebaseApp);
+          firestore = getFirestore(firebaseApp);
         }
       }
     }
