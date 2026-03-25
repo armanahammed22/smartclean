@@ -25,7 +25,8 @@ import {
   Star,
   ListChecks,
   Zap,
-  Layout
+  Layout,
+  Package
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -245,7 +246,7 @@ export default function ServicesManagementPage() {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Starts From (৳)</Label>
-                              <Input value={newServiceData.basePrice} onChange={e => setNewServiceData({...newServiceData, basePrice: e.target.value})} type="number" required placeholder="5000" className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                              <Input value={newServiceData.basePrice} onChange={e => setNewServiceData({...newServiceData, basePrice: e.target.value})} type="number" required placeholder="5000" className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Duration</Label>
