@@ -3,31 +3,20 @@
 import { useState, useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { logError } from '@/lib/error-logger';
-import { useUser } from '@/firebase';
 
 /**
  * An invisible component that listens for globally emitted 'permission-error' events.
- * It logs the error to the database and throws it to be caught by the UI boundary.
+ * Note: Database logging has been removed to prevent infinite loops.
  */
 export function FirebaseErrorListener() {
   const [error, setError] = useState<FirestorePermissionError | null>(null);
-  const { user } = useUser();
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      // 1. Log the permission failure to the error monitoring system immediately
-      logError(error, {
-        userId: user?.uid,
-        severity: 'critical',
-        metadata: {
-          type: 'Security Rule Violation',
-          path: error.request.path,
-          method: error.request.method
-        }
-      });
+      // We only log to console now to prevent recursive Firestore loops
+      console.error('[Firebase Security Rule Violation]:', error.request);
 
-      // 2. Set error in state to trigger the throw for the UI boundary
+      // Set error in state to trigger the throw for the UI boundary
       setError(error);
     };
 
@@ -36,7 +25,7 @@ export function FirebaseErrorListener() {
     return () => {
       errorEmitter.off('permission-error', handleError);
     };
-  }, [user]);
+  }, []);
 
   if (error) {
     throw error;

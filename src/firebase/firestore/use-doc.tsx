@@ -10,7 +10,6 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { logError } from '@/lib/error-logger';
 
 type WithId<T> = T & { id: string };
 
@@ -73,7 +72,7 @@ export function useDoc<T = any>(
         
         // 🛡️ SDK Assertion Shield (ca9 / b815)
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed internal SDK error (ca9/b815) at doc: ${currentPath}`);
+          console.warn(`[Firestore Shield] Suppressed transport failure at doc: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -88,7 +87,6 @@ export function useDoc<T = any>(
         setIsLoading(false);
 
         if (!isPublic) {
-          logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
         }
       }

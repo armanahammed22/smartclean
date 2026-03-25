@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -82,8 +81,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  const isLoginPage = pathname === '/admin/login';
-
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, 'roles_admins', user.uid);
@@ -91,19 +88,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
-  // 🛡️ RIGID ADMIN GATE
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  /**
-   * Real-time Notifications for Sidebar
-   */
-  const pendingErrorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'error_logs'), where('status', '==', 'pending')) : null, [db, isAuthorized]);
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newBookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'bookings'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newLeadsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'leads'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const openTicketsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'support_tickets'), where('status', '==', 'Open')) : null, [db, isAuthorized]);
 
-  const { data: pendingErrors } = useCollection(pendingErrorsQuery);
   const { data: newOrders } = useCollection(newOrdersQuery);
   const { data: newBookings } = useCollection(newBookingsQuery);
   const { data: newLeads } = useCollection(newLeadsQuery);
@@ -215,12 +206,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Global Settings", href: '/admin/settings', icon: Settings },
         { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
         { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
-        { 
-          name: "System Logs", 
-          href: '/admin/error-logs', 
-          icon: ShieldAlert,
-          badge: pendingErrors?.length || 0 
-        },
       ]
     },
     {
@@ -233,7 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Support Tickets", href: '/admin/support', icon: MessageCircle, badge: openTickets?.length || 0 },
       ]
     }
-  ], [newOrders, newBookings, newLeads, openTickets, pendingErrors]);
+  ], [newOrders, newBookings, newLeads, openTickets]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {

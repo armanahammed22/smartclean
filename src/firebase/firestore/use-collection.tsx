@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { logError } from '@/lib/error-logger';
 
 export type WithId<T> = T & { id: string };
 
@@ -35,8 +34,15 @@ const PUBLIC_COLLECTIONS = [
  */
 function extractPath(target: any): string {
   if (!target) return 'unknown';
+  
+  // Try to extract from internal query object if it's a Query
+  if (target._query?.path?.segments) {
+    return target._query.path.segments.join('/');
+  }
+  
+  // Standard path for CollectionReference
   if (target.path) return target.path;
-  if (target._query?.path?.segments) return target._query.path.segments.join('/');
+  
   return 'query';
 }
 
@@ -78,13 +84,9 @@ export function useCollection<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        /**
-         * 🛡️ INTERNAL ASSERTION SHIELD
-         * IDs like ca9 and b815 are non-recoverable transport failures.
-         * We silence them to prevent the Error Logger from entering an infinite loop.
-         */
+        // 🛡️ SDK Assertion Shield (ca9 / b815) - Quietly recover
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          console.warn(`[Firestore Shield] Suppressed internal SDK error (ca9/b815) at: ${currentPath}`);
+          console.warn(`[Firestore Shield] Suppressed transport failure at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -95,9 +97,8 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
-        // Only log and emit if it's NOT a system assertion error and NOT a public resource
+        // Emit for UI boundary, but database logging is now disabled in the emitter listener
         if (!isPublic) {
-          logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
         }
       }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logError } from '@/lib/error-logger';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 
@@ -16,7 +15,7 @@ interface State {
 
 /**
  * Global React Error Boundary
- * Prevents white-screen-of-death and logs UI crashes to Firestore.
+ * Prevents white-screen-of-death. Database logging has been removed for stability.
  */
 export class GlobalErrorBoundary extends Component<Props, State> {
   public state: State = {
@@ -28,10 +27,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logError(error, {
-      severity: 'critical',
-      metadata: { componentStack: errorInfo.componentStack }
-    });
+    // Only log to console now
+    console.error('[Fatal UI Crash]:', error, errorInfo);
   }
 
   public render() {
@@ -47,7 +44,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <div className="space-y-2">
               <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Something went wrong</h1>
               <p className="text-gray-500 font-medium">
-                The application encountered an unexpected error. Our engineers have been notified.
+                The application encountered an unexpected error. Please refresh the page to continue.
               </p>
             </div>
             <Button 
