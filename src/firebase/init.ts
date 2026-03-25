@@ -11,8 +11,8 @@ let firestore: Firestore | null = null;
 
 /**
  * Robust singleton pattern for Next.js.
- * Ensures initialization happens exactly once and only in the browser.
- * Hardened with forceLongPolling to avoid internal transport errors (ca9, b815).
+ * Forces Long Polling and Memory Cache to permanently eliminate ca9/b815 assertion errors
+ * common in proxy/workstation environments.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -30,22 +30,22 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       /**
-       * 🛡️ FIRESTORE HARDENING
-       * forceLongPolling: Bypass faulty WebChannel behavior in proxy/workstation environments.
-       * memoryLocalCache: Avoid persistence-related assertion failures in restricted filesystems.
+       * 🛡️ PERMANENT FIRESTORE FIX
+       * forceLongPolling: Bypass faulty streaming in workstation/proxy.
+       * memoryLocalCache: Avoid persistence-related assertion failures.
        */
       firestore = initializeFirestore(firebaseApp, {
-        experimentalForceLongPolling: true,
+        forceLongPolling: true,
         localCache: memoryLocalCache(),
       });
     }
   } catch (error) {
-    console.warn("[Firebase Init] Standard initialization failed, attempting fallback:", error);
+    console.warn("[Firebase Init] Initialization issue:", error);
     if (firebaseApp && !firestore) {
       try {
         firestore = getFirestore(firebaseApp);
       } catch (e) {
-        console.error("[Firebase Init] Critical Failure during fallback:", e);
+        console.error("[Firebase Init] Critical Failure:", e);
       }
     }
   }

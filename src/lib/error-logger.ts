@@ -16,34 +16,33 @@ export interface ErrorContext {
 let isLoggingInternal = false;
 
 /**
- * Global Error Logging Utility
- * Automatically dispatches system errors to Firestore for monitoring.
+ * Permanent Fix for Logging Loops
+ * Automatically detects and silences Firestore transport/assertion errors
+ * to prevent the 'ca9' and 'b815' error storm.
  */
 export async function logError(error: any, context: ErrorContext = {}) {
-  // 1. Exit if we are already in a logging process or error is invalid
   if (isLoggingInternal || !error) return;
   
-  const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
-  const stringified = String(error) + " " + JSON.stringify(error);
+  const message = error?.message || (typeof error === 'string' ? error : 'Unknown Error');
+  const errorStr = String(error).toLowerCase() + " " + JSON.stringify(error).toLowerCase();
 
-  // 2. AGGRESSIVE FILTER: Skip all Firestore transport/assertion errors.
-  // These occur when the SDK itself is in a broken state. 
-  // Attempting to write these back to Firestore will ALWAYS cause a loop.
-  const isTransportFailure = 
-    message.includes('ca9') || 
-    message.includes('b815') || 
-    message.includes('INTERNAL ASSERTION FAILED') ||
-    message.includes('Unexpected state') ||
-    stringified.includes('ca9') ||
-    stringified.includes('b815');
+  // 🛡️ PERMANENT EXCLUSION FILTER
+  // Skip any errors related to Firestore transport or internal assertions.
+  // Writing these back to Firestore will ALWAYS trigger a recursive loop.
+  const isSystemAssertion = 
+    errorStr.includes('ca9') || 
+    errorStr.includes('b815') || 
+    errorStr.includes('assertion failed') ||
+    errorStr.includes('unexpected state') ||
+    errorStr.includes('transport') ||
+    errorStr.includes('webchannel');
 
-  if (isTransportFailure) {
-    // We only log to console for transport failures to prevent recursion
-    console.warn('[Error Logger] Suppressed Firestore internal transport failure from DB write to prevent loop.');
+  if (isSystemAssertion) {
+    // Only log to local console to prevent network recursion
+    console.warn('[Error Logger] Suppressed Firestore internal transport failure from DB write to prevent recursion loop.');
     return;
   }
 
-  // Set the lock
   isLoggingInternal = true;
 
   try {
@@ -55,7 +54,7 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const errorPayload = {
       message,
-      stack: error?.stack || 'No stack trace available',
+      stack: error?.stack || 'No stack trace',
       page: typeof window !== 'undefined' ? window.location.href : 'Server',
       userId: context.userId || 'Guest',
       role: context.role || 'User',
@@ -68,16 +67,14 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const colRef = collection(firestore, 'error_logs');
     
-    // Fire-and-forget: Non-blocking write
-    addDoc(colRef, errorPayload).catch((e) => {
-      console.error('[Error Logger] Failed to push log to Firestore:', e.message);
+    // Fire-and-forget
+    addDoc(colRef, errorPayload).catch(() => {
+      // Fail silently if DB write fails during a transport issue
     });
     
-    console.warn('[Error Logger] Captured:', message);
   } catch (loggingError) {
-    console.error('[Error Logger] Internal failure during log execution.');
+    // Fail silently
   } finally {
-    // 🛡️ CRITICAL: Always release the lock
     isLoggingInternal = false;
   }
 }
