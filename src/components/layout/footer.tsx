@@ -10,8 +10,8 @@ import {
   MessageCircle,
   Facebook,
   Instagram,
-  Linkedin,
-  Twitter
+  Smartphone,
+  Download
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -90,15 +90,40 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_company')}</h4>
-            <ul className="space-y-3 md:space-y-4 text-[13px] text-gray-400">
-              <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
-              <li><Link href="/page/careers" className="hover:text-primary transition-colors">{t('footer_careers')}</Link></li>
-              <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
-              <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
-              <li><Link href="/page/refund-policy" className="hover:text-primary transition-colors">{t('footer_refund')}</Link></li>
-            </ul>
+          <div className="space-y-8">
+            <div>
+              <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]">{t('footer_company')}</h4>
+              <ul className="space-y-3 md:space-y-4 text-[13px] text-gray-400">
+                <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
+                <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
+                <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
+              </ul>
+            </div>
+            
+            {/* 📱 Customer App Download Section */}
+            <div>
+              <h4 className="text-[10px] md:text-xs font-black mb-4 text-primary uppercase tracking-[0.2em]">Download App</h4>
+              <div className="flex flex-col gap-2">
+                <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
+                  <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                    <Smartphone size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
+                    <p className="text-[10px] font-black text-white uppercase mt-1">Get on Android</p>
+                  </div>
+                </Link>
+                <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
+                  <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
+                    <Download size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
+                    <p className="text-[10px] font-black text-white uppercase mt-1">Get on iOS</p>
+                  </div>
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-6">

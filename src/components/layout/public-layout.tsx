@@ -11,7 +11,7 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -40,14 +40,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
-  const { data: adminRole } = useDoc(adminRoleRef);
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
-
-  const staffRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
-  const { data: staffRole } = useDoc(staffRoleRef);
-  const isStaff = !!staffRole;
-
   const isHome = pathname === '/';
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
   const companyName = settings?.websiteName || 'Smart Clean';
@@ -61,20 +53,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden">
       
-      {user && (isAdmin || isStaff) && (
-        <div className="fixed top-20 right-4 z-[200] animate-in slide-in-from-right-10">
-          {isAdmin ? (
-            <Button size="sm" className="rounded-full bg-red-600 shadow-2xl border-none font-black text-[10px] uppercase h-9 px-4 gap-2" asChild>
-              <Link href="/admin/dashboard"><ShieldCheck size={14} /> Admin App</Link>
-            </Button>
-          ) : (
-            <Button size="sm" className="rounded-full bg-amber-50 shadow-2xl border-none font-black text-[10px] uppercase h-9 px-4 gap-2" asChild>
-              <Link href="/staff/dashboard"><HardHat size={14} /> Staff App</Link>
-            </Button>
-          )}
-        </div>
-      )}
-
       <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           {!isHome ? (

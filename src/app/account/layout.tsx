@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -14,8 +13,8 @@ import {
   ChevronLeft,
   Loader2,
   ShieldCheck,
-  ShieldAlert,
-  AlertCircle
+  Globe,
+  HardHat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,9 @@ import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/fireb
 import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+
+const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -34,6 +36,15 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   const profileRef = useMemoFirebase(() => (db && user) ? doc(db, 'users', user.uid) : null, [db, user]);
   const { data: profile, isLoading: profileLoading, error: profileError } = useDoc(profileRef);
+
+  // Auth Guards for role-based internal portal links
+  const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
+  const { data: adminRole } = useDoc(adminRoleRef);
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
+
+  const staffRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
+  const { data: staffRole } = useDoc(staffRoleRef);
+  const isStaff = !!staffRole;
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -126,6 +137,23 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
               </Link>
             ))}
           </div>
+
+          {/* 🔐 Management Portals (Authorized Only) */}
+          {(isAdmin || isStaff) && (
+            <div className="pt-6 mt-6 border-t border-gray-200 space-y-3">
+              <p className="px-6 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Management Access</p>
+              {isAdmin && (
+                <Link href="/admin/dashboard" className="flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 transition-all">
+                  <Globe size={18} /> Admin Portal
+                </Link>
+              )}
+              {isStaff && (
+                <Link href="/staff/dashboard" className="flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-amber-600 hover:bg-amber-50 transition-all">
+                  <HardHat size={18} /> Staff Portal
+                </Link>
+              )}
+            </div>
+          )}
 
           <div className="pt-6 mt-6 border-t border-gray-200">
             <Button 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -38,9 +37,6 @@ import {
   LayoutGrid,
   Target,
   TicketPercent,
-  ShieldAlert,
-  Wrench,
-  Layers,
   HardHat,
   Briefcase,
   Award,
@@ -73,7 +69,7 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ portals: true });
   
   const pathname = usePathname();
   const router = useRouter();
@@ -102,6 +98,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: openTickets } = useCollection(openTicketsQuery);
 
   const NAV_GROUPS = useMemo(() => [
+    {
+      id: 'portals',
+      title: "INTERNAL PORTALS",
+      icon: Globe,
+      color: "text-sky-400",
+      items: [
+        { name: "Staff App Portal", href: '/staff/dashboard', icon: HardHat },
+      ]
+    },
     {
       id: 'dashboard',
       title: "DASHBOARD",
@@ -328,7 +333,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-0">
         <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
