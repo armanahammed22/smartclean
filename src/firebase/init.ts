@@ -13,7 +13,7 @@ let firestore: Firestore | null = null;
  * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD
  * 1. Suppresses SDK internal assertion noise to prevent Next.js error overlays.
  * 2. Enforces Long Polling to bypass proxy/workstation streaming failures.
- * 3. Uses Memory Cache to eliminate IndexDB locking issues.
+ * 3. Uses Memory Cache to eliminate IndexDB locking issues during HMR.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -12,7 +11,7 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat, Wrench } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search, ShieldCheck, HardHat } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -69,7 +68,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
               <Link href="/admin/dashboard"><ShieldCheck size={14} /> Admin App</Link>
             </Button>
           ) : (
-            <Button size="sm" className="rounded-full bg-amber-500 shadow-2xl border-none font-black text-[10px] uppercase h-9 px-4 gap-2" asChild>
+            <Button size="sm" className="rounded-full bg-amber-50 shadow-2xl border-none font-black text-[10px] uppercase h-9 px-4 gap-2" asChild>
               <Link href="/staff/dashboard"><HardHat size={14} /> Staff App</Link>
             </Button>
           )}
@@ -84,7 +83,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
             </Button>
           ) : (
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-md">
+              <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm">
                 {displayLogo ? (
                   <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
                 ) : (

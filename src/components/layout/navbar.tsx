@@ -45,7 +45,7 @@ export function Navbar() {
   const logoLink = settings?.logoLink || '/';
   const companyName = settings?.websiteName || 'Smart Clean';
 
-  // 🔍 Unified Search Logic
+  // 🔍 Unified Search Logic (Products + Services)
   const searchResults = useMemo(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     
@@ -80,7 +80,7 @@ export function Navbar() {
   const handleSelectResult = (id: string, type: string) => {
     setSearchQuery('');
     setIsSearchFocused(false);
-    router.push(`/${type}/${id}`);
+    router.push(`/${type === 'product' ? 'product' : 'service'}/${id}`);
   };
 
   return (
@@ -99,13 +99,13 @@ export function Navbar() {
         <div className="container mx-auto flex items-center gap-2 md:gap-8">
           
           <Link href={logoLink} className="flex items-center gap-3 shrink-0 group">
-            <div className="relative h-12 md:h-16 w-12 md:w-16 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-md border border-gray-100 p-0">
+            <div className="relative h-12 md:h-16 w-12 md:w-16 flex items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm border border-gray-100">
               {displayLogo ? (
                 <Image 
                   src={displayLogo} 
                   alt="Logo" 
                   fill
-                  className="object-contain transition-transform group-hover:scale-110" 
+                  className="object-contain" 
                   priority 
                   unoptimized
                 />

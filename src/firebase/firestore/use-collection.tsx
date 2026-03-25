@@ -78,7 +78,6 @@ export function useCollection<T = any>(
         
         // 🛡️ SDK Resilience Shield: Silently suppress common workstation assertion failures
         if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
-          // Stay silent, let SDK retry internally
           console.warn(`[Firestore Shield] Suppressed transient assertion error at: ${currentPath}`);
           return;
         }
