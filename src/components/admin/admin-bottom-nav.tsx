@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -13,11 +13,23 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -48,13 +60,30 @@ export function AdminBottomNav() {
           </Link>
         ))}
         
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center gap-1 flex-1 text-gray-400 hover:text-destructive h-full"
-        >
-          <LogOut size={20} />
-          <span className="text-[9px] font-bold uppercase tracking-tighter">Logout</span>
-        </button>
+        <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <button
+              className="flex flex-col items-center justify-center gap-1 flex-1 text-gray-400 hover:text-destructive h-full"
+            >
+              <LogOut size={20} />
+              <span className="text-[9px] font-bold uppercase tracking-tighter">Logout</span>
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="rounded-[2rem] max-w-[90vw]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600">Logout Admin?</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm font-medium leading-relaxed">
+                Confirm session termination. You will be redirected to the login page.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="pt-4 flex gap-3">
+              <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
+                Logout
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </nav>
   );

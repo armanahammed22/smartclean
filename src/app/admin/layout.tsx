@@ -62,6 +62,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 
@@ -71,7 +82,8 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ portals: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true });
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
   const router = useRouter();
@@ -101,22 +113,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const NAV_GROUPS = useMemo(() => [
     {
-      id: 'portals',
-      title: "INTERNAL PORTALS",
-      icon: Globe,
-      color: "text-sky-400",
-      items: [
-        { name: "Staff App Portal", href: '/staff/dashboard', icon: HardHat },
-      ]
-    },
-    {
       id: 'dashboard',
       title: "DASHBOARD",
       icon: LayoutDashboard,
       color: "text-blue-400",
       items: [
         { name: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: "Business Reports", href: '/admin/reports', icon: BarChart3 },
       ]
     },
     {
@@ -169,6 +171,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      id: 'promotions',
+      title: "OFFER & COUPONS",
+      icon: Zap,
+      color: "text-violet-400",
+      items: [
+        { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
+        { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
+        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
+        { name: "Referrals", href: '/admin/referrals', icon: Share2 },
+      ]
+    },
+    {
       id: 'crm',
       title: "CRM & USERS",
       icon: Users,
@@ -181,15 +195,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      id: 'promotions',
-      title: "OFFER & COUPONS",
-      icon: Zap,
-      color: "text-violet-400",
+      id: 'portals',
+      title: "INTERNAL PORTALS",
+      icon: Globe,
+      color: "text-sky-400",
       items: [
-        { name: "Mega Sale Campaigns", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
-        { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: LayoutGrid },
-        { name: "Referrals", href: '/admin/referrals', icon: Share2 },
+        { name: "Staff App Portal", href: '/staff/dashboard', icon: HardHat },
+      ]
+    },
+    {
+      id: 'reports',
+      title: "BUSINESS REPORTS",
+      icon: BarChart3,
+      color: "text-blue-400",
+      items: [
+        { name: "Business Reports", href: '/admin/reports', icon: BarChart3 },
       ]
     },
     {
@@ -309,10 +329,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       <div className="p-4 border-t border-white/5">
-        <Button variant="ghost" className="w-full justify-start text-white/40 hover:text-red-400 rounded-xl" onClick={handleLogout}>
-          <LogOut size={18} className="mr-3" />
-          {!collapsed && <span className="font-black text-[10px] uppercase">Logout</span>}
-        </Button>
+        <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12">
+              <LogOut size={18} className="mr-3" />
+              {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="rounded-[2rem] max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
+                <LogOut size={20} /> Logout Admin?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm font-medium leading-relaxed">
+                Are you sure you want to end your administrative session? You will need to login again to access the control center.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="pt-4 flex gap-2">
+              <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
+                Logout Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
