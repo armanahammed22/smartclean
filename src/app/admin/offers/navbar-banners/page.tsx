@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +17,9 @@ import {
   Loader2, 
   Layout, 
   ChevronRight,
-  ArrowUpCircle
+  ArrowUpCircle,
+  ImageIcon,
+  Grid
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -105,78 +108,87 @@ export default function NavbarOffersManagementPage() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Navbar Offers</h1>
-          <p className="text-muted-foreground text-sm font-medium">Small circular rotating offers in the main site navigation</p>
+          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Offer Banners Management</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage multiple rotating offers for your navbar and campaigns</p>
+        </div>
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border shadow-sm">
+           <Grid size={16} className="text-primary" />
+           <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{offers?.length || 0} Active Offers</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="border-none shadow-sm h-fit bg-white rounded-3xl overflow-hidden group border border-gray-100">
-          <div className="h-1.5 bg-primary w-full" />
-          <CardHeader className="p-8">
-            <CardTitle className="text-lg font-black uppercase tracking-tight">
-              {editingId ? 'Update Banner' : 'Register New Banner'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-8 pt-0">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <ImageUploader 
-                label="Circular Asset (1:1 Ratio)"
-                initialUrl={formData.image}
-                aspectRatio="aspect-square w-24"
-                onUpload={(url) => setFormData({...formData, image: url})}
-              />
-              
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Click Destination</Label>
-                <div className="relative">
-                  <ChevronRight size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
-                  <Input 
-                    value={formData.link} 
-                    onChange={e => setFormData({...formData, link: e.target.value})}
-                    placeholder="/campaign/flash-sale"
-                    className="h-12 pl-10 bg-gray-50 border-none rounded-xl font-bold"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Form Column */}
+        <div className="lg:col-span-4">
+          <Card className="border-none shadow-sm sticky top-24 bg-white rounded-3xl overflow-hidden group border border-gray-100">
+            <div className="h-1.5 bg-primary w-full" />
+            <CardHeader className="p-8">
+              <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                <ImageIcon size={20} className="text-primary" />
+                {editingId ? 'Edit Offer Banner' : 'Upload New Offer'}
+              </CardTitle>
+              <CardDescription className="text-xs">Multiple images will rotate in the navbar slider.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <ImageUploader 
+                  label="Offer Asset (1:1 Square)"
+                  initialUrl={formData.image}
+                  aspectRatio="aspect-square w-full"
+                  onUpload={(url) => setFormData({...formData, image: url})}
+                />
+                
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sequence</Label>
-                  <Input 
-                    type="number"
-                    value={formData.order} 
-                    onChange={e => setFormData({...formData, order: parseInt(e.target.value) || 0})}
-                    className="h-12 bg-gray-50 border-none rounded-xl font-black"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status</Label>
-                  <div className="h-12 flex items-center justify-between px-4 bg-gray-50 rounded-xl">
-                    <span className="text-xs font-bold">{formData.isActive ? 'Live' : 'Draft'}</span>
-                    <Switch checked={formData.isActive} onCheckedChange={val => setFormData({...formData, isActive: val})} />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Action Link</Label>
+                  <div className="relative">
+                    <ChevronRight size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
+                    <Input 
+                      value={formData.link} 
+                      onChange={e => setFormData({...formData, link: e.target.value})}
+                      placeholder="/campaign/sale"
+                      className="h-12 pl-10 bg-gray-50 border-none rounded-xl font-bold"
+                      required
+                    />
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-4 flex gap-2">
-                <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 rounded-xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
-                  {editingId ? 'Update' : 'Deploy'}
-                </Button>
-                {editingId && (
-                  <Button type="button" variant="ghost" onClick={resetForm} className="rounded-xl h-12">Cancel</Button>
-                )}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sort Priority</Label>
+                    <Input 
+                      type="number"
+                      value={formData.order} 
+                      onChange={e => setFormData({...formData, order: parseInt(e.target.value) || 0})}
+                      className="h-12 bg-gray-50 border-none rounded-xl font-black"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status</Label>
+                    <div className="h-12 flex items-center justify-between px-4 bg-gray-50 rounded-xl">
+                      <span className="text-[10px] font-bold">{formData.isActive ? 'LIVE' : 'DRAFT'}</span>
+                      <Switch checked={formData.isActive} onCheckedChange={val => setFormData({...formData, isActive: val})} />
+                    </div>
+                  </div>
+                </div>
 
-        <div className="lg:col-span-2 space-y-4">
+                <div className="pt-4 flex flex-col gap-2">
+                  <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={20} className="mr-2" />}
+                    {editingId ? 'Update Asset' : 'Publish Offer'}
+                  </Button>
+                  {editingId && (
+                    <Button type="button" variant="ghost" onClick={resetForm} className="rounded-2xl h-12">Discard Changes</Button>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* List Column */}
+        <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Active Rotation</h2>
-            <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[9px]">{offers?.length || 0} BANNERS</Badge>
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Manage Uploaded Assets</h2>
           </div>
 
           {isLoading ? (
@@ -189,13 +201,16 @@ export default function NavbarOffersManagementPage() {
                   !offer.isActive && "opacity-60 grayscale"
                 )}>
                   <CardContent className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-14 h-14 rounded-full border-2 border-primary/10 p-0.5 shrink-0 overflow-hidden">
-                        <Image src={offer.image} alt="Offer" fill className="object-cover rounded-full" unoptimized />
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="relative w-16 h-16 rounded-2xl border-2 border-primary/10 p-0.5 shrink-0 overflow-hidden bg-gray-50">
+                        <Image src={offer.image} alt="Offer" fill className="object-cover" unoptimized />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-black text-gray-900 uppercase tracking-tight text-[11px] leading-none mb-1">POS: {offer.order}</h4>
-                        <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{offer.link}</p>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-black text-gray-900 uppercase tracking-tight text-xs">Priority: {offer.order}</h4>
+                          {!offer.isActive && <Badge className="text-[7px] bg-gray-200 text-gray-500 h-4">DRAFT</Badge>}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[150px] mt-1">{offer.link}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -212,7 +227,7 @@ export default function NavbarOffersManagementPage() {
               {!offers?.length && !isLoading && (
                 <div className="col-span-full p-20 text-center border-2 border-dashed rounded-[2.5rem] bg-white text-muted-foreground italic flex flex-col items-center gap-4">
                   <ArrowUpCircle size={40} className="opacity-20" />
-                  <p className="font-medium">No offers in rotation.</p>
+                  <p className="font-medium">No offers found. Start uploading multiple images to show in rotation.</p>
                 </div>
               )}
             </div>

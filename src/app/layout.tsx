@@ -1,7 +1,9 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
 import {LanguageProvider} from '@/components/providers/language-provider';
+import {SupportProvider} from '@/components/providers/support-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 import {TrackingProvider} from '@/components/providers/tracking-provider';
@@ -47,14 +49,16 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
             <LanguageProvider>
-              <CartProvider>
-                <TrackingProvider>
-                  <main className="flex-1 flex flex-col h-full overflow-hidden">
-                    {children}
-                  </main>
-                  <Toaster />
-                </TrackingProvider>
-              </CartProvider>
+              <SupportProvider>
+                <CartProvider>
+                  <TrackingProvider>
+                    <main className="flex-1 flex flex-col h-full overflow-hidden">
+                      {children}
+                    </main>
+                    <Toaster />
+                  </TrackingProvider>
+                </CartProvider>
+              </SupportProvider>
             </LanguageProvider>
           </FirebaseClientProvider>
         </GlobalErrorBoundary>
