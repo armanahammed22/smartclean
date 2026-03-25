@@ -12,16 +12,14 @@ export interface ErrorContext {
   metadata?: Record<string, any>;
 }
 
-// 🛡️ GLOBAL RECURSION GUARD: Prevents infinite logging loops
+// 🛡️ GLOBAL RECURSION LOCK
 let isLoggingInternal = false;
 
 /**
  * Permanent Fix for Logging Loops (ca9 / b815)
- * This function is hardened to never attempt a Firestore write if the error
- * itself is related to a Firestore transport failure or internal assertion.
+ * Hardened to bail out immediately if the error is a Firestore transport or assertion failure.
  */
 export async function logError(error: any, context: ErrorContext = {}) {
-  // If we are already in a logging process, abort to prevent recursion
   if (isLoggingInternal || !error) return;
   
   const message = error?.message || (typeof error === 'string' ? error : 'Unknown Error');
@@ -29,8 +27,8 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
   /**
    * 🛡️ CRITICAL SYSTEM FILTER
-   * Identify errors that indicate Firestore is in a broken state (ca9, b815, transport failures).
-   * Attempting to write these BACK to Firestore will trigger an infinite loop.
+   * We MUST NOT try to write back to Firestore if the error suggests 
+   * Firestore's transport or internal state is broken (ca9, b815).
    */
   const isBrokenStateError = 
     errorStr.includes('ca9') || 
@@ -39,12 +37,11 @@ export async function logError(error: any, context: ErrorContext = {}) {
     errorStr.includes('unexpected state') ||
     errorStr.includes('transport') ||
     errorStr.includes('webchannel') ||
-    errorStr.includes('offline') ||
-    errorStr.includes('unavailable');
+    errorStr.includes('unavailable') ||
+    errorStr.includes('offline');
 
   if (isBrokenStateError) {
-    // Only log to local console to prevent network recursion and loop crashes
-    console.warn('[Error Logger] System-level Firestore failure detected. Suppressing DB write to prevent loop.', message);
+    console.warn('[Error Logger] Suppressing Firestore write for internal SDK failure to prevent loop.', message);
     return;
   }
 
@@ -72,19 +69,17 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const colRef = collection(firestore, 'error_logs');
     
-    // 3. Fire-and-forget: Non-blocking write
-    // We do NOT await this to ensure the UI remains responsive
-    addDoc(colRef, errorPayload).catch((e) => {
-      // If logging itself fails, just log to console
-      console.error('[Error Logger] Failed to push log to Firestore:', e.message);
+    // Fire-and-forget
+    addDoc(colRef, errorPayload).catch(() => {
+      // Intentionally silent to prevent loop
     });
     
   } catch (loggingError) {
-    // Silent fail for the logger itself
+    // Silent fail
   } finally {
-    // Release the lock after a short delay to ensure clean state
+    // Lock release with delay
     setTimeout(() => {
       isLoggingInternal = false;
-    }, 100);
+    }, 500);
   }
 }

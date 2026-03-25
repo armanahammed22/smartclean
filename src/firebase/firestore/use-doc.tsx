@@ -30,7 +30,7 @@ const PUBLIC_DOCS = [
 ];
 
 /**
- * React hook to subscribe to a single Firestore document in real-time.
+ * Highly resilient real-time document hook.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -38,28 +38,25 @@ export function useDoc<T = any>(
   const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedDocRef);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  
-  const activePathRef = useRef<string | null>(null);
+  const activeToken = useRef<string | null>(null);
 
   useEffect(() => {
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
       setError(null);
-      activePathRef.current = null;
       return;
     }
 
     const currentPath = memoizedDocRef.path;
-    activePathRef.current = currentPath;
-
+    const token = Math.random().toString(36);
+    activeToken.current = token;
     setIsLoading(true);
-    setError(null);
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
-        if (activePathRef.current !== currentPath) return;
+        if (activeToken.current !== token) return;
 
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
@@ -69,11 +66,14 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
-        if (activePathRef.current !== currentPath) return;
+      (err: any) => {
+        if (activeToken.current !== token) return;
 
-        const msg = err.message || '';
-        if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion')) {
+        const errorStr = JSON.stringify(err).toLowerCase() + (err.message || '').toLowerCase();
+        
+        // 🛡️ SDK Assertion Shield
+        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+          console.warn(`[Firestore Shield] Suppressed internal SDK failure at doc: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -85,20 +85,17 @@ export function useDoc<T = any>(
         });
 
         setError(contextualError);
-        setData(null);
         setIsLoading(false);
 
         if (!isPublic) {
           logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
-        } else {
-          console.warn(`[useDoc] Access denied on public resource: ${currentPath}`);
         }
       }
     );
 
     return () => {
-      activePathRef.current = null;
+      activeToken.current = null;
       unsubscribe();
     };
   }, [memoizedDocRef]);

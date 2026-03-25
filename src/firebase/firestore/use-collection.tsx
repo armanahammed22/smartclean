@@ -31,18 +31,18 @@ const PUBLIC_COLLECTIONS = [
 ];
 
 /**
- * Extracts path string from a CollectionReference or Query object.
+ * Extracts collection path from Query/CollectionReference.
  */
-function getPathFromTarget(target: any): string {
+function extractPath(target: any): string {
   if (!target) return 'unknown';
-  if (typeof target.path === 'string') return target.path;
-  if (target._query?.path) return target._query.path.toString();
+  if (target.path) return target.path;
+  if (target._query?.path?.segments) return target._query.path.segments.join('/');
   return 'query';
 }
 
 /**
- * UI Hook optimized for resilient real-time collection syncing.
- * Silences fatal errors for public collections and system assertions to prevent app crashes.
+ * Highly resilient real-time collection hook.
+ * Strictly silences SDK internal assertion failures (ca9, b815) to prevent app crash loops.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -50,7 +50,7 @@ export function useCollection<T = any>(
   const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!memoizedTarget);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
-  const pathRef = useRef<string>('');
+  const activeToken = useRef<string | null>(null);
 
   useEffect(() => {
     if (!memoizedTarget) {
@@ -60,30 +60,32 @@ export function useCollection<T = any>(
       return;
     }
 
-    const currentPath = getPathFromTarget(memoizedTarget);
-    pathRef.current = currentPath;
+    const currentPath = extractPath(memoizedTarget);
+    const token = Math.random().toString(36);
+    activeToken.current = token;
     setIsLoading(true);
 
     const unsubscribe = onSnapshot(
       memoizedTarget,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        if (pathRef.current !== currentPath) return;
+        if (activeToken.current !== token) return;
         const results = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
         setData(results);
         setError(null);
         setIsLoading(false);
       },
-      (err: FirestoreError) => {
-        if (pathRef.current !== currentPath) return;
+      (err: any) => {
+        if (activeToken.current !== token) return;
 
-        const msg = (err.message || '').toLowerCase();
+        const errorStr = JSON.stringify(err).toLowerCase() + (err.message || '').toLowerCase();
         
         /**
-         * 🛡️ TRANSPORT FILTER
-         * Silence transport failures (ca9, b815) to prevent infinite error loops.
+         * 🛡️ INTERNAL ASSERTION SUPPRESSION
+         * ca9 and b815 are non-recoverable internal state errors. 
+         * We silence them to prevent the UI from crashing or looping.
          */
-        if (msg.includes('ca9') || msg.includes('b815') || msg.includes('assertion') || msg.includes('unexpected state')) {
-          console.warn(`[Firestore Resiliency] Recovering from transport failure at: ${currentPath}`);
+        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed') || errorStr.includes('unexpected state')) {
+          console.warn(`[Firestore Shield] Suppressed internal SDK failure at: ${currentPath}`);
           setIsLoading(false);
           return;
         }
@@ -94,17 +96,16 @@ export function useCollection<T = any>(
         setError(contextualError);
         setIsLoading(false);
         
+        // Only trigger global handlers for non-public (protected) resources
         if (!isPublic) {
           logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
           errorEmitter.emit('permission-error', contextualError);
-        } else {
-          console.warn(`[useCollection] Silent fail on public resource: ${currentPath}`);
         }
       }
     );
 
     return () => {
-      pathRef.current = '';
+      activeToken.current = null;
       unsubscribe();
     };
   }, [memoizedTarget]);

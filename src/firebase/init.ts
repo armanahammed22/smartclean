@@ -31,8 +31,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       
       /**
        * 🛡️ PERMANENT FIRESTORE FIX
-       * forceLongPolling: Bypass faulty streaming in workstation/proxy.
-       * memoryLocalCache: Avoid persistence-related assertion failures in shared environments.
+       * forceLongPolling: true - Required to bypass faulty streaming in Cloud Workstations.
+       * memoryLocalCache: Required to avoid IndexDB assertion failures in dev-mode workstation loops.
        */
       firestore = initializeFirestore(firebaseApp, {
         forceLongPolling: true,
@@ -40,14 +40,9 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       });
     }
   } catch (error) {
-    console.warn("[Firebase Init] Initialization issue:", error);
-    if (firebaseApp && !firestore) {
-      try {
-        // Fallback to basic getter if initializeFirestore fails
-        firestore = getFirestore(firebaseApp);
-      } catch (e) {
-        console.error("[Firebase Init] Critical Failure:", e);
-      }
+    // If initializeFirestore was already called, fallback to getFirestore
+    if (!firestore && firebaseApp) {
+      firestore = getFirestore(firebaseApp);
     }
   }
 
