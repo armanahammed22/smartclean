@@ -29,9 +29,6 @@ const PUBLIC_COLLECTIONS = [
   'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna'
 ];
 
-/**
- * Extracts collection path from Query/CollectionReference.
- */
 function extractPath(target: any): string {
   if (!target) return 'unknown';
   if (target.path) return target.path;
@@ -42,8 +39,7 @@ function extractPath(target: any): string {
 }
 
 /**
- * Highly resilient real-time collection hook with internal error shielding.
- * Suppresses ca9/b815 assertion failures permanently.
+ * Resilient collection hook with aggressive internal error suppression.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -80,10 +76,10 @@ export function useCollection<T = any>(
 
         const errorStr = (err.message || JSON.stringify(err)).toLowerCase();
         
-        // 🛡️ SDK Resilience Shield: Silently suppress internal failures (ca9 / b815 / assertion failed)
-        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed') || errorStr.includes('unexpected state')) {
-          console.warn(`[Resilience Shield] Suppressed Firestore internal error at: ${currentPath}`);
-          // Don't set error state, just keep loading or previous data to prevent UI crash
+        // 🛡️ SDK Resilience Shield: Silently suppress common workstation assertion failures
+        if (errorStr.includes('ca9') || errorStr.includes('b815') || errorStr.includes('assertion failed')) {
+          // Keep loading or previous data, do not trigger error state to prevent UI crash
+          console.warn(`[Firestore Shield] Suppressed transient assertion error at: ${currentPath}`);
           return;
         }
 
