@@ -1,4 +1,3 @@
-
 'use client';
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -13,7 +12,7 @@ export interface ErrorContext {
   metadata?: Record<string, any>;
 }
 
-// 🛡️ Global recursion guard to prevent infinite logging loops
+// 🛡️ GLOBAL RECURSION GUARD: Prevents infinite logging loops
 let isLoggingInternal = false;
 
 /**
@@ -39,11 +38,14 @@ export async function logError(error: any, context: ErrorContext = {}) {
     stringified.includes('b815');
 
   if (isTransportFailure) {
-    console.warn('[Error Logger] Suppressed Firestore internal transport error to prevent loop:', message);
+    // We only log to console for transport failures to prevent recursion
+    console.warn('[Error Logger] Suppressed Firestore internal transport failure from DB write to prevent loop.');
     return;
   }
 
+  // Set the lock
   isLoggingInternal = true;
+
   try {
     const { firestore } = initializeFirebase();
     if (!firestore) {
@@ -66,17 +68,16 @@ export async function logError(error: any, context: ErrorContext = {}) {
 
     const colRef = collection(firestore, 'error_logs');
     
-    // 3. Fire-and-forget: Non-blocking write
+    // Fire-and-forget: Non-blocking write
     addDoc(colRef, errorPayload).catch((e) => {
-      // If logging itself fails, just log to console to break the chain
       console.error('[Error Logger] Failed to push log to Firestore:', e.message);
     });
     
     console.warn('[Error Logger] Captured:', message);
   } catch (loggingError) {
-    console.error('[Error Logger] Logging system failure.');
+    console.error('[Error Logger] Internal failure during log execution.');
   } finally {
-    // Release the lock
+    // 🛡️ CRITICAL: Always release the lock
     isLoggingInternal = false;
   }
 }

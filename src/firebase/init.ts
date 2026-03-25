@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -30,8 +29,11 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       
       auth = getAuth(firebaseApp);
       
-      // Force long polling to bypass faulty WebChannel behavior in proxy/workstation environments
-      // Memory cache is used to prevent assertion failures related to indexedDB in restricted environments
+      /**
+       * 🛡️ FIRESTORE HARDENING
+       * forceLongPolling: Bypass faulty WebChannel behavior in proxy/workstation environments.
+       * memoryLocalCache: Avoid persistence-related assertion failures in restricted filesystems.
+       */
       firestore = initializeFirestore(firebaseApp, {
         experimentalForceLongPolling: true,
         localCache: memoryLocalCache(),
@@ -43,7 +45,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       try {
         firestore = getFirestore(firebaseApp);
       } catch (e) {
-        console.error("[Firebase Init] Critical Failure:", e);
+        console.error("[Firebase Init] Critical Failure during fallback:", e);
       }
     }
   }

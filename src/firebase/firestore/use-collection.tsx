@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -105,15 +104,16 @@ export function useCollection<T = any>(
           const msg = err.message || String(err);
           
           // 🛡️ CRITICAL SILENCE: Check for assertion/transport issues early
+          // These are usually environment-specific and trying to handle them as app errors creates loops.
           if (
             msg.includes('ca9') || 
             msg.includes('b815') || 
             msg.includes('INTERNAL ASSERTION FAILED') ||
             msg.includes('Unexpected state')
           ) {
-            console.warn(`[useCollection] Internal Firestore transport issue on path: ${currentPath}. Waiting for reconnect...`);
+            console.warn(`[useCollection] Firestore internal transport failure detected on: ${currentPath}. The SDK will attempt to reconnect.`);
             setIsLoading(false);
-            return; // EXIT EARLY - Do not log or emit to avoid loops
+            return; // EXIT EARLY without throwing or logging to DB
           }
 
           const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
