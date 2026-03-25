@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
@@ -19,13 +18,11 @@ import {
   ShoppingCart,
   Zap,
   LayoutGrid,
-  Flashlight,
-  Timer,
   Search,
   X,
   Package,
   ChevronDown,
-  Layout
+  Layout as LayoutIcon
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { useCart } from '@/components/providers/cart-provider';
@@ -99,8 +96,6 @@ export default function SmartCleanHomePage() {
       router.push(`/services?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
-
-  if (!mounted) return null;
 
   // 🧩 RENDERING ENGINE
   const renderSection = (section: any) => {
@@ -241,7 +236,7 @@ export default function SmartCleanHomePage() {
               </h2>
               <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1">View All <ChevronRight size={14} /></Link>
             </div>
-            <div className={cn("grid gap-4", config.layout === 'grid' ? `grid-cols-2 md:grid-cols-${config.itemsPerRow || 4}` : "flex overflow-x-auto no-scrollbar")}>
+            <div className={cn("grid gap-4", (config.layout === 'grid' || !config.layout) ? `grid-cols-2 md:grid-cols-${config.itemsPerRow || 4}` : "flex overflow-x-auto no-scrollbar")}>
               {activeServices.map(s => (
                 <Link key={s.id} href={`/service/${s.id}`} className="app-card group relative aspect-[4/3] block active:scale-95 transition-transform min-w-[160px]">
                   <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover" unoptimized />
@@ -282,6 +277,8 @@ export default function SmartCleanHomePage() {
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <PublicLayout>
       <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24">
@@ -290,12 +287,28 @@ export default function SmartCleanHomePage() {
             <Loader2 className="animate-spin text-primary" size={48} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading UI Engine...</p>
           </div>
-        ) : layoutSections?.length ? (
+        ) : layoutSections && layoutSections.length > 0 ? (
           layoutSections.map(renderSection)
         ) : (
-          <div className="p-32 text-center text-muted-foreground italic uppercase font-black text-[10px] tracking-widest">
-            Welcome to Smart Clean. Deploying initial layout...
-          </div>
+          /* 🛡️ DEFAULT FALLBACK LAYOUT */
+          <>
+            {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
+            {renderSection({ id: 'def-search', type: 'search', config: {} })}
+            {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
+            {renderSection({ id: 'def-camp', type: 'campaign', config: {} })}
+            {renderSection({ 
+              id: 'def-serv', 
+              type: 'services', 
+              title: 'Professional Services',
+              config: { layout: 'grid', itemsPerRow: 4, limit: 8 } 
+            })}
+            {renderSection({ 
+              id: 'def-feed', 
+              type: 'products_feed', 
+              title: 'Latest Products',
+              config: { dataSource: 'latest', limit: 10 } 
+            })}
+          </>
         )}
       </div>
     </PublicLayout>

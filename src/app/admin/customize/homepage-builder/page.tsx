@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -34,6 +33,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -170,9 +170,9 @@ export default function HomepageBuilderPage() {
           <p className="text-muted-foreground text-sm font-medium">Drag, toggle, and customize your landing page layout</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setIsAddOpen(true)} className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg">
+          <button onClick={() => setIsAddOpen(true)} className="flex items-center gap-2 bg-primary text-white font-black h-11 px-6 rounded-xl shadow-lg hover:bg-primary/90 transition-all">
             <Plus size={18} /> Add New Section
-          </Button>
+          </button>
           <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="gap-2 font-black h-11 px-6 rounded-xl border-primary/20 text-primary">
             <Save size={18} /> Save Layout Order
           </Button>
