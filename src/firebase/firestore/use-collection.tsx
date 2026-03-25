@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -30,8 +31,6 @@ const PUBLIC_COLLECTIONS = [
   'pages_management', 
   'quick_links', 
   'quick_actions', 
-  'product_categories', 
-  'service_categories',
   'brands',
   'marketing_offers',
   'reusable_features',
@@ -112,7 +111,7 @@ export function useCollection<T = any>(
           // Suppress the "Unexpected state (ID: ca9)" internal assertion error
           if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
             console.warn("Firestore transport recovered from a state mismatch (ca9).", currentPath);
-            setIsLoading(false);
+            // We don't set error here, just keep loading or wait for next poll
             return;
           }
 
@@ -137,7 +136,6 @@ export function useCollection<T = any>(
         }
       );
     } catch (e: any) {
-      // Catch synchronous initialization errors
       if (!e.message?.includes('ca9')) {
         logError(e, { severity: 'critical', metadata: { context: 'useCollection setup', path: currentPath } });
       }

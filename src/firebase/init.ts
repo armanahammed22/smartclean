@@ -14,6 +14,7 @@ let firestore: Firestore | null = null;
  * Robust singleton pattern for Next.js.
  * Ensures initialization happens exactly once and only in the browser.
  * Hardened with experimentalForceLongPolling to avoid internal transport errors (ca9).
+ * The 'ca9' error is specifically related to the WebChannel state machine.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -21,27 +22,27 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
   }
 
   try {
-    if (!firebaseApp) {
-      firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    }
-
-    if (firebaseApp && !auth) {
+    if (getApps().length > 0) {
+      firebaseApp = getApp();
       auth = getAuth(firebaseApp);
-    }
-
-    if (firebaseApp && !firestore) {
-      try {
-        firestore = initializeFirestore(firebaseApp, {
-          experimentalForceLongPolling: true,
-          localCache: memoryLocalCache(),
-        });
-      } catch (e: any) {
-        // Fallback if already initialized (common during development reloads)
-        firestore = getFirestore(firebaseApp);
-      }
+      firestore = getFirestore(firebaseApp);
+    } else {
+      firebaseApp = initializeApp(firebaseConfig);
+      auth = getAuth(firebaseApp);
+      
+      // Force long polling to bypass faulty WebChannel behavior in proxy/workstation environments
+      firestore = initializeFirestore(firebaseApp, {
+        experimentalForceLongPolling: true,
+        localCache: memoryLocalCache(),
+      });
     }
   } catch (error) {
     console.error("Critical Firebase Initialization Error:", error);
+    // Attempt fallback
+    if (firebaseApp) {
+      firestore = getFirestore(firebaseApp);
+      auth = getAuth(firebaseApp);
+    }
   }
 
   return { firebaseApp, auth, firestore };

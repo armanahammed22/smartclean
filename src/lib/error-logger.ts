@@ -1,3 +1,4 @@
+
 'use client';
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -21,6 +22,14 @@ export async function logError(error: any, context: ErrorContext = {}) {
   if (error?._isLogged) return;
   if (error) error._isLogged = true;
 
+  const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
+  
+  // Skip transport assertion errors from logging to avoid infinite feedback loops
+  if (message.includes('ca9') || message.includes('INTERNAL ASSERTION FAILED')) {
+    console.warn('[Error Logger] Skipping transport assertion log:', message);
+    return;
+  }
+
   try {
     const { firestore } = initializeFirebase();
     
@@ -30,7 +39,6 @@ export async function logError(error: any, context: ErrorContext = {}) {
       return;
     }
 
-    const message = error?.message || (typeof error === 'string' ? error : 'Unknown System Error');
     const stack = error?.stack || 'No stack trace available';
 
     const errorPayload = {
@@ -47,12 +55,14 @@ export async function logError(error: any, context: ErrorContext = {}) {
     };
 
     const colRef = collection(firestore, 'error_logs');
-    await addDoc(colRef, errorPayload);
+    // Non-blocking write
+    addDoc(colRef, errorPayload).catch(() => {
+      console.error('[Error Logger] Failed to push log to Firestore.');
+    });
     
-    console.warn('[Error Logger] Captured & Dispatched:', message);
+    console.warn('[Error Logger] Captured:', message);
   } catch (loggingError) {
-    // If the logger itself fails, fallback to console only
-    console.error('[Error Logger] Failed to log to Firestore:', loggingError);
+    console.error('[Error Logger] Crash:', loggingError);
     console.error('[Original Error]:', error);
   }
 }

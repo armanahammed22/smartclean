@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -29,8 +30,6 @@ const PUBLIC_DOCS = [
   'pages_management', 
   'quick_links', 
   'quick_actions', 
-  'product_categories', 
-  'service_categories',
   'brands',
   'marketing_offers',
   'reusable_features',
@@ -104,7 +103,7 @@ export function useDoc<T = any>(
 
           // Suppress the "Unexpected state (ID: ca9)" internal assertion error
           if (err.message.includes('INTERNAL ASSERTION FAILED') || err.message.includes('Unexpected state') || err.message.includes('ca9')) {
-            setIsLoading(false);
+            console.warn("Firestore transport recovered from a state mismatch (ca9).", currentPath);
             return;
           }
 
