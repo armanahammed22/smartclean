@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -48,7 +49,8 @@ import {
   TrendingUp,
   FileSpreadsheet,
   Wrench,
-  Layers
+  Layers,
+  MousePointer2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -218,11 +220,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Palette,
       color: "text-pink-400",
       items: [
+        { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Layout & Theme", href: '/admin/customize/theme', icon: Palette },
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
         { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
         { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },
-        { name: "Homepage Sections", href: '/admin/customize/sections', icon: Grid },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
     },
