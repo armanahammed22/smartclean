@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -45,19 +46,12 @@ const PUBLIC_DOCS = [
   'childcategories',
   'top_nav_categories',
   'landing_pages',
-  'bookings',
-  'orders',
-  'leads',
-  'support_tickets',
-  'users',
-  'error_logs',
   'product_qna'
 ];
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Automatically logs access errors to the global error monitoring system.
- * Hardened against transport assertion failures.
+ * Silences transport assertion errors (ca9, b815) to prevent loops.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -102,7 +96,7 @@ export function useDoc<T = any>(
           if (activePathRef.current !== currentPath) return;
 
           const msg = err.message || String(err);
-          // Suppress transport assertion errors (ca9, b815)
+          // BROAD SILENCE for transport assertion errors
           const isTransportIssue = 
             msg.includes('ca9') || 
             msg.includes('b815') || 
@@ -110,7 +104,7 @@ export function useDoc<T = any>(
             msg.includes('Unexpected state');
 
           if (isTransportIssue) {
-            console.warn(`[useDoc] Firestore transport suppressed for path: ${currentPath}`);
+            console.warn(`[useDoc] Firestore transport issue silenced for path: ${currentPath}`);
             setIsLoading(false);
             return;
           }
@@ -125,30 +119,19 @@ export function useDoc<T = any>(
           setData(null);
           setIsLoading(false);
 
-          // Log to centralized error system (has its own transport checks)
-          logError(contextualError, { 
-            severity: 'medium',
-            metadata: { path: currentPath, originalError: msg }
-          });
-
           if (!isPublic) {
+            logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
             errorEmitter.emit('permission-error', contextualError);
           }
         }
       );
     } catch (e: any) {
-      const isTransport = e.message?.includes('ca9') || e.message?.includes('b815') || e.message?.includes('INTERNAL ASSERTION');
-      if (!isTransport) {
-        logError(e, { severity: 'critical', metadata: { context: 'useDoc setup', path: currentPath } });
-      }
       setIsLoading(false);
     }
 
     return () => {
       activePathRef.current = null;
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, [memoizedDocRef]);
 

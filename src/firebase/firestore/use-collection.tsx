@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -46,12 +47,6 @@ const PUBLIC_COLLECTIONS = [
   'childcategories',
   'top_nav_categories',
   'landing_pages',
-  'bookings',
-  'orders',
-  'leads',
-  'support_tickets',
-  'users',
-  'error_logs',
   'product_qna'
 ];
 
@@ -64,7 +59,7 @@ function getPathFromTarget(target: any): string {
 
 /**
  * Standardized hook for real-time Firestore collections.
- * Hardened against transport errors (ca9, b815) and automatically logs permission issues.
+ * Silences transport assertion errors (ca9, b815) to prevent app-wide loops.
  */
 export function useCollection<T = any>(
   memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -108,7 +103,7 @@ export function useCollection<T = any>(
           if (activePathRef.current !== currentPath) return;
 
           const msg = err.message || String(err);
-          // Suppress transport assertion errors from logging loops
+          // BROAD SILENCE for transport assertion errors
           const isTransportIssue = 
             msg.includes('ca9') || 
             msg.includes('b815') || 
@@ -116,7 +111,7 @@ export function useCollection<T = any>(
             msg.includes('Unexpected state');
 
           if (isTransportIssue) {
-            console.warn(`[useCollection] Firestore transport suppressed for path: ${currentPath}`);
+            console.warn(`[useCollection] Firestore transport issue silenced for path: ${currentPath}`);
             setIsLoading(false);
             return;
           }
@@ -130,30 +125,19 @@ export function useCollection<T = any>(
           setError(contextualError);
           setIsLoading(false);
           
-          // Log to centralized error system (has its own transport checks)
-          logError(contextualError, { 
-            severity: isPublic ? 'low' : 'medium',
-            metadata: { path: currentPath, originalError: msg }
-          });
-
           if (!isPublic) {
+            logError(contextualError, { severity: 'medium', metadata: { path: currentPath } });
             errorEmitter.emit('permission-error', contextualError);
           }
         }
       );
     } catch (e: any) {
-      const isTransport = e.message?.includes('ca9') || e.message?.includes('b815') || e.message?.includes('INTERNAL ASSERTION');
-      if (!isTransport) {
-        logError(e, { severity: 'critical', metadata: { context: 'useCollection setup', path: currentPath } });
-      }
       setIsLoading(false);
     }
 
     return () => {
       activePathRef.current = null;
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, [memoizedTargetRefOrQuery]);
 
