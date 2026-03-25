@@ -225,15 +225,51 @@ export default function SmartCleanHomePage() {
                   ALL <ChevronRight size={14} className="bg-primary/10 rounded-full" />
                 </Link>
               </div>
-              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+              <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-4 snap-x snap-mandatory">
                 {activeServices.map(s => (
-                  <Link key={s.id} href={`/service/${s.id}`} className="group relative aspect-[4/3] w-[220px] md:w-[280px] shrink-0 block active:scale-95 transition-transform rounded-[2rem] overflow-hidden shadow-lg border border-white">
-                    <Image src={s.imageUrl || ''} alt={s.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5">
-                      <h3 className="text-white font-black uppercase text-xs tracking-tight mb-1">{s.title}</h3>
-                      <p className="text-primary font-black text-sm">৳{s.basePrice?.toLocaleString()}</p>
-                    </div>
-                  </Link>
+                  <div key={s.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
+                    <Link href={`/service/${s.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
+                      <div className="p-1.5 shrink-0">
+                        <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-50 flex items-center justify-center">
+                          {s.imageUrl ? (
+                            <Image 
+                              src={s.imageUrl} 
+                              alt={s.title || 'Service'} 
+                              fill 
+                              className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                              unoptimized
+                            />
+                          ) : (
+                            <Wrench size={32} className="text-gray-200" />
+                          )}
+                          <div className="absolute top-2 left-2">
+                            <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md w-fit">
+                              {s.categoryId || 'Cleaning'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-2 md:p-3 flex flex-col flex-1 gap-1.5 pt-0">
+                        <h3 className="text-[9px] md:text-[11px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">
+                          {s.title}
+                        </h3>
+                        <div className="mt-auto space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] md:text-sm font-black text-primary tracking-tighter leading-none">
+                              ৳{(s.basePrice || 0).toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-0.5 text-amber-400">
+                              <Star size={8} fill="currentColor" className="md:w-2.5 md:h-2.5" />
+                              <span className="text-[7px] md:text-[9px] font-black text-gray-400">{s.rating || '4.8'}</span>
+                            </div>
+                          </div>
+                          <Button size="sm" className="w-full rounded-lg font-black text-[8px] md:text-[10px] uppercase shadow-sm h-7 md:h-9 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">
+                            Book Now
+                          </Button>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
                 ))}
               </div>
             </div>
