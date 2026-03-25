@@ -159,9 +159,10 @@ export default function SmartCleanHomePage() {
                 </div>
                 
                 <div className="px-4 md:px-8 pb-8">
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4 lg:gap-6">
-                    {flashProducts.slice(0, 12).map(p => (
-                      <div key={p.id} className="w-full">
+                  {/* Single Row Horizontal Scrolling Container */}
+                  <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-2">
+                    {flashProducts.map(p => (
+                      <div key={p.id} className="min-w-[calc(33.33%-8px)] sm:min-w-[calc(25%-12px)] lg:min-w-[calc(16.66%-14px)] shrink-0">
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
