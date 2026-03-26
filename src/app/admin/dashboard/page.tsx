@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
-import { collection, doc, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, doc, query, orderBy, limit, where, writeBatch, setDoc } from 'firebase/firestore';
 import { 
   Users, 
   Loader2,
@@ -17,7 +18,10 @@ import {
   DollarSign,
   Store,
   Box,
-  LayoutDashboard
+  LayoutDashboard,
+  Database,
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,13 +37,17 @@ import {
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { getMockServices, getMockSubServices } from '@/lib/data';
 
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 
 export default function AdminDashboard() {
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -53,21 +61,66 @@ export default function AdminDashboard() {
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
   const vendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
   
-  const { data: orders, isLoading: ordersLoading } = useCollection(ordersQuery);
-  const { data: products, isLoading: productsLoading } = useCollection(productsQuery);
-  const { data: vendors, isLoading: vendorsLoading } = useCollection(vendorsQuery);
+  const { data: orders } = useCollection(ordersQuery);
+  const { data: products } = useCollection(productsQuery);
+  const { data: vendors } = useCollection(vendorsQuery);
+
+  const handleSeedData = async () => {
+    if (!db) return;
+    setIsSeeding(true);
+    try {
+      const batch = writeBatch(db);
+      
+      const services = getMockServices('en');
+      const subServices = getMockSubServices();
+
+      // 1. Seed Main Services
+      services.forEach(srv => {
+        const sRef = doc(db, 'services', srv.id);
+        batch.set(sRef, {
+          ...srv,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      });
+
+      // 2. Seed Sub Services (Top Level)
+      // We will link them to Home Cleaning (srv_home_clean) and Deep Cleaning (srv_deep_clean)
+      const cleaningParents = ['srv_home_clean', 'srv_deep_clean'];
+      
+      subServices.forEach((sub, idx) => {
+        const subId = `sub_srv_${idx + 1}`;
+        const subRef = doc(db, 'sub_services', subId);
+        
+        // Logical Parent Mapping
+        let parentId = 'srv_home_clean';
+        if (sub.name === 'Sofa Cleaning') parentId = 'srv_sofa_carpet';
+
+        batch.set(subRef, {
+          ...sub,
+          id: subId,
+          mainServiceId: parentId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      });
+
+      await batch.commit();
+      toast({ title: "ERP Data Seeded", description: "Your custom services & sub-services are now live." });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Seeding Failed", description: e.message });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const metrics = useMemo(() => {
     if (!orders || !products || !vendors) return null;
-
     const totalRevenue = orders.reduce((acc, o) => acc + (o.totalPrice || 0), 0);
-    const pendingApprovals = products.filter(p => p.approvalStatus === 'Pending');
-    const activeVendors = vendors.filter(v => v.status === 'Approved');
-
     return {
       revenue: totalRevenue,
-      pendingProducts: pendingApprovals.length,
-      activeVendors: activeVendors.length,
+      pendingProducts: products.filter(p => p.approvalStatus === 'Pending').length,
+      activeVendors: vendors.filter(v => v.status === 'Approved').length,
       totalOrders: orders.length
     };
   }, [orders, products, vendors]);
@@ -95,11 +148,17 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3">
+          <Button 
+            onClick={handleSeedData} 
+            disabled={isSeeding} 
+            variant="outline" 
+            className="flex-1 sm:flex-none rounded-xl font-black bg-white border-primary/20 text-primary shadow-sm gap-2 text-[10px] h-10 uppercase tracking-widest"
+          >
+            {isSeeding ? <RefreshCw className="animate-spin" size={14} /> : <Database size={14} />}
+            Seed ERP Data
+          </Button>
           <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-10">
             <Link href="/admin/orders"><ShoppingCart size={16} /> Manage Orders</Link>
-          </Button>
-          <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-orange-600 hover:bg-orange-700 shadow-lg gap-2 text-xs h-10">
-            <Link href="/admin/vendors"><Store size={16} /> Vendor Hub</Link>
           </Button>
         </div>
       </div>
