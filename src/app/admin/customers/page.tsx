@@ -169,7 +169,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Customer Directory</h1>
@@ -189,7 +189,7 @@ export default function CustomersPage() {
                   {editingCustomer ? 'Edit Client Profile' : 'New Client Registration'}
                 </DialogTitle>
               </DialogHeader>
-              <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
+              <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Name</Label>
                   <Input name="name" defaultValue={editingCustomer?.name} required placeholder="Client Name" className="h-11 bg-gray-50 border-none" />
@@ -233,7 +233,7 @@ export default function CustomersPage() {
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table className="min-w-[800px]">
               <TableHeader className="bg-gray-50/50">
@@ -273,7 +273,7 @@ export default function CustomersPage() {
                       </TableCell>
                       <TableCell>
                          <Badge variant="secondary" className={cn(
-                           "text-[9px] font-black uppercase border-none",
+                           "text-[8px] font-black uppercase border-none",
                            customer.status === 'active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
                          )}>
                            {customer.status || 'Active'}
@@ -331,7 +331,7 @@ export default function CustomersPage() {
       </Card>
 
       <AlertDialog open={!!removalTarget} onOpenChange={(o) => { if(!o) setRemovalTarget(null); }}>
-        <AlertDialogContent className="rounded-[2rem] max-w-md w-[95vw]">
+        <AlertDialogContent className="rounded-t-[2rem] md:rounded-[2rem] max-w-md w-[95vw]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
               {removalType === 'block' ? <XCircle className="text-destructive" /> : <Trash2 className="text-amber-600" />}

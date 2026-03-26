@@ -188,10 +188,10 @@ export default function OrdersManagementPage() {
         <Button variant="outline" className="h-11 gap-2 w-full sm:w-auto"><Filter size={18} /> Filters</Button>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto">
+      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
-            <Table className="min-w-[800px]">
+            <Table className="min-w-[900px]">
               <TableHeader className="bg-gray-50/50">
                 <TableRow>
                   <TableHead className="font-bold py-5 pl-8">Order ID</TableHead>

@@ -394,17 +394,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-0">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-6 shrink-0 z-10 shadow-sm">
+      <div className="flex-1 flex flex-col h-full min-w-0">
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10"><Menu size={22} /></Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
-                <SheetHeader className="p-6 border-b border-white/5">
-                  <SheetTitle className="text-white uppercase font-black tracking-widest text-xs">Admin Navigation</SheetTitle>
-                  <SheetDescription className="text-white/40 text-[9px] uppercase font-bold">Smart Clean Central Control</SheetDescription>
+                <SheetHeader className="p-6 border-b border-white/5 sr-only">
+                  <SheetTitle>Admin Navigation</SheetTitle>
+                  <SheetDescription>Smart Clean Central Control</SheetDescription>
                 </SheetHeader>
                 <SidebarContent />
               </SheetContent>
@@ -414,14 +414,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Terminal active <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold" asChild><Link href="/"><Globe size={18} /><span className="text-[10px] font-black uppercase">Live Site</span></Link></Button>
-            <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">{user?.email?.[0].toUpperCase()}</div>
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold" asChild><Link href="/"><Globe size={18} /><span className="hidden sm:inline text-[10px] font-black uppercase">Live Site</span></Link></Button>
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">{user?.email?.[0].toUpperCase()}</div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
-          <div className="max-w-[1400px] mx-auto w-full">{children}</div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar overflow-x-hidden">
+          <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">{children}</div>
         </main>
 
         <AdminBottomNav />

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -135,7 +134,7 @@ export default function AdminDashboard() {
   const showSeedButton = !servicesLoading && (!dbServices || dbServices.length === 0);
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Global Overview</h1>
@@ -144,7 +143,7 @@ export default function AdminDashboard() {
             Terminal Operational
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 md:gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
           {showSeedButton && (
             <Button 
               onClick={handleSeedData} 
@@ -184,7 +183,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 min-w-0">
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -217,7 +216,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 space-y-6 md:gap-8">
+        <div className="lg:col-span-4 space-y-6 md:gap-8 min-w-0">
           <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
             <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
