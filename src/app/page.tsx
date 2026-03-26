@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, limit } from 'firebase/firestore';
 import { 
   Wrench, 
   ChevronRight, 
@@ -28,7 +28,11 @@ import {
   Award,
   Clock,
   Users,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp,
+  Package,
+  ShoppingBag,
+  Timer
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -42,7 +46,6 @@ import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 import { Card, CardContent } from '@/components/ui/card';
 
-// Colorful helper map for categories based on name
 const getCategoryStyles = (name: string) => {
   const n = name.toLowerCase();
   if (n.includes('clean')) return { bg: 'bg-blue-50', color: 'text-blue-600', icon: Droplets };
@@ -64,23 +67,23 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // 1. Fetch Layout Sections
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), where('isActive', '==', true), orderBy('order', 'asc')) : null, [db]);
   const { data: layoutSections, isLoading: layoutLoading } = useCollection(sectionsQuery);
 
-  // 2. Fetch Base Data for sections
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
+  const brandsRef = useMemoFirebase(() => db ? collection(db, 'brands') : null, [db]);
 
   const { data: allBanners } = useCollection(bannersRef);
   const { data: allTopNav } = useCollection(topNavRef);
   const { data: allProducts } = useCollection(productsRef);
   const { data: allServices } = useCollection(servicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
+  const { data: allBrands } = useCollection(brandsRef);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
 
@@ -91,8 +94,30 @@ export default function SmartCleanHomePage() {
 
   const renderSection = (section: any) => {
     const config = section.config || {};
+    const sectionType = section.type;
     
-    switch (section.type) {
+    // --- Shared Product Filtering Logic ---
+    const getFilteredProducts = () => {
+      let feed = allProducts?.filter(p => p.status === 'Active') || [];
+      if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
+      if (sectionType === 'products_new' || config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      if (sectionType === 'products_trending') feed = [...feed].sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+      if (config.dataSource === 'category' && config.categoryId) feed = feed.filter(p => p.categoryId === config.categoryId);
+      return feed.slice(0, config.limit || 12);
+    };
+
+    // --- Shared Service Filtering Logic ---
+    const getFilteredServices = () => {
+      let feed = allServices?.filter(s => s.status === 'Active') || [];
+      if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
+      if (sectionType === 'services_popular') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      if (sectionType === 'services_trending') feed = feed.filter(s => s.isPopular); // Mock trending
+      if (sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      if (sectionType === 'services_new') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      return feed.slice(0, config.limit || 8);
+    };
+
+    switch (sectionType) {
       case 'hero':
         return (
           <section key={section.id} className="bg-white pb-4 lg:bg-transparent lg:mt-4">
@@ -164,16 +189,11 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'campaign':
-        return <CampaignSection key={section.id} />;
-
       case 'flash_deals':
         const isFlashActive = flashSaleConfig?.isActive && new Date(flashSaleConfig.endDate) > new Date();
         if (!isFlashActive) return null;
-
         const flashProductIds = flashSaleConfig?.productIds || [];
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
-
         return (
           <section key={section.id} className="w-full py-4 md:py-6 px-3 md:px-4">
             <div className="bg-[#1E5F7A] overflow-hidden shadow-xl rounded-2xl md:rounded-[2.5rem] border border-white/5">
@@ -192,23 +212,14 @@ export default function SmartCleanHomePage() {
                     ALL <ChevronRight size={12} className="text-amber-400" />
                   </Link>
                 </div>
-                
                 <div className="px-3 md:px-8 pb-6 md:pb-8">
                   <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
-                      <div 
-                        key={p.id} 
-                        className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start"
-                      >
+                      <div key={p.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
                   </div>
-                  {flashProducts.length === 0 && (
-                    <div className="w-full py-12 text-center text-white/40 italic text-sm">
-                      Coming Soon...
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -216,7 +227,13 @@ export default function SmartCleanHomePage() {
         );
 
       case 'services':
-        const activeServices = allServices?.filter(s => s.status === 'Active').slice(0, config.limit || 8) || [];
+      case 'services_featured':
+      case 'services_popular':
+      case 'services_trending':
+      case 'services_top_rated':
+      case 'services_new':
+      case 'services_recommended':
+        const displayServices = getFilteredServices();
         return (
           <section key={section.id} className="px-4 py-8">
             <div className="container mx-auto max-w-7xl">
@@ -230,46 +247,27 @@ export default function SmartCleanHomePage() {
                 </Link>
               </div>
               <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-4 snap-x snap-mandatory">
-                {activeServices.map(s => (
+                {displayServices.map(s => (
                   <div key={s.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
                     <Link href={`/service/${s.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                       <div className="p-1.5 shrink-0">
                         <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
                           {s.imageUrl ? (
-                            <Image 
-                              src={s.imageUrl} 
-                              alt={s.title || 'Service'} 
-                              fill 
-                              className="object-cover transition-transform duration-500 group-hover:scale-105" 
-                              unoptimized
-                            />
+                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" unoptimized />
                           ) : (
                             <Wrench size={32} className="text-gray-200" />
                           )}
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md w-fit">
-                              {s.categoryId || 'Cleaning'}
-                            </Badge>
-                          </div>
+                          <div className="absolute top-2 left-2"><Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
                         </div>
                       </div>
                       <div className="p-2 md:p-3 flex flex-col flex-1 gap-1.5 pt-0">
-                        <h3 className="text-[9px] md:text-[11px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">
-                          {s.title}
-                        </h3>
+                        <h3 className="text-[9px] md:text-[11px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">{s.title}</h3>
                         <div className="mt-auto space-y-1">
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] md:text-sm font-black text-primary tracking-tighter leading-none">
-                              ৳{(s.basePrice || 0).toLocaleString()}
-                            </p>
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                              <Star size={8} fill="currentColor" className="md:w-2.5 md:h-2.5" />
-                              <span className="text-[7px] md:text-[9px] font-black text-gray-400">{s.rating || '4.8'}</span>
-                            </div>
+                            <p className="text-[11px] md:text-sm font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            <div className="flex items-center gap-0.5 text-amber-400"><Star size={8} fill="currentColor" className="md:w-2.5 md:h-2.5" /><span className="text-[7px] md:text-[9px] font-black text-gray-400">{s.rating || '4.8'}</span></div>
                           </div>
-                          <Button size="sm" className="w-full rounded-lg font-black text-[8px] md:text-[10px] uppercase shadow-sm h-7 md:h-9 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">
-                            Book Now
-                          </Button>
+                          <Button size="sm" className="w-full rounded-lg font-black text-[8px] md:text-[10px] uppercase shadow-sm h-7 md:h-9 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">Book Now</Button>
                         </div>
                       </div>
                     </Link>
@@ -281,14 +279,12 @@ export default function SmartCleanHomePage() {
         );
 
       case 'products_feed':
+      case 'products_featured':
+      case 'products_trending':
+      case 'products_new':
+      case 'products_recommended':
       case 'custom_grid':
-        let feed = allProducts?.filter(p => p.status === 'Active') || [];
-        if (config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
-        if (config.dataSource === 'category' && config.categoryId) feed = feed.filter(p => p.categoryId === config.categoryId);
-        if (config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        
-        feed = feed.slice(0, config.limit || 12);
-
+        const displayProducts = getFilteredProducts();
         return (
           <section key={section.id} className="px-4 py-8">
             <div className="container mx-auto max-w-7xl">
@@ -299,7 +295,24 @@ export default function SmartCleanHomePage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                {feed.map(p => <ProductCard key={p.id} product={p} />)}
+                {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'brands_grid':
+        const brands = allBrands?.slice(0, 12) || [];
+        return (
+          <section key={section.id} className="px-4 py-12 bg-white">
+            <div className="container mx-auto max-w-7xl">
+              <h2 className="text-xl font-black uppercase text-[#081621] mb-8 text-center tracking-widest">{section.title}</h2>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                {brands.map(brand => (
+                  <div key={brand.id} className="aspect-video bg-gray-50 rounded-2xl flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all border border-transparent hover:border-gray-100 hover:shadow-sm cursor-pointer">
+                    <span className="font-black text-gray-300 uppercase text-xs">{brand.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -368,9 +381,7 @@ export default function SmartCleanHomePage() {
                 ].map((rev, i) => (
                   <Card key={i} className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all">
                     <CardContent className="p-0 space-y-6">
-                      <div className="flex text-amber-400 gap-0.5">
-                        {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}
-                      </div>
+                      <div className="flex text-amber-400 gap-0.5">{[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}</div>
                       <p className="text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
                       <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xs uppercase">{rev.name[0]}</div>
@@ -405,7 +416,6 @@ export default function SmartCleanHomePage() {
         ) : layoutSections && layoutSections.length > 0 ? (
           layoutSections.map(renderSection)
         ) : (
-          /* 🛡️ DEFAULT FALLBACK LAYOUT */
           <>
             {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
             {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Sale' })}
@@ -413,15 +423,15 @@ export default function SmartCleanHomePage() {
             {renderSection({ id: 'def-camp', type: 'campaign', config: {} })}
             {renderSection({ 
               id: 'def-serv', 
-              type: 'services', 
-              title: 'Pro Services',
-              config: { layout: 'grid', itemsPerRow: 4, limit: 8 } 
+              type: 'services_featured', 
+              title: 'Featured Services',
+              config: { limit: 8 } 
             })}
             {renderSection({ 
               id: 'def-feed', 
-              type: 'products_feed', 
-              title: 'Just For You',
-              config: { dataSource: 'latest', limit: 12 } 
+              type: 'products_new', 
+              title: 'New Arrivals',
+              config: { limit: 12 } 
             })}
           </>
         )}
