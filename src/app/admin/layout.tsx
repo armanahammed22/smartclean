@@ -84,8 +84,11 @@ import { useToast } from '@/hooks/use-toast';
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
+const STORAGE_KEY = 'admin_sidebar_collapsed';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
@@ -96,6 +99,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  // Load persistence state
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState !== null) {
+      setIsCollapsed(savedState === 'true');
+    }
+    setMounted(true);
+  }, []);
+
+  const handleToggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem(STORAGE_KEY, String(newState));
+  };
 
   const adminRoleRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -166,12 +184,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-rose-400",
       items: [
         { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Email Marketing", href: '/admin/marketing/email', icon: Mail },
-        { name: "SMS Marketing", href: '/admin/marketing/sms', icon: Smartphone },
-        { name: "Push Notify", href: '/admin/marketing/push', icon: Bell },
         { name: "Referral System", href: '/admin/referrals', icon: Users },
         { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
-        { name: "Social Media", href: '/admin/marketing/social', icon: Facebook },
         { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
       ]
     },
@@ -183,8 +197,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
         { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
-        { name: "BOGO Offers", href: '/admin/offers/bogo', icon: Tag },
-        { name: "Usage Tracking", href: '/admin/offers/tracking', icon: BarChart3 },
       ]
     },
     {
@@ -210,16 +222,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      id: 'internal',
-      title: "INTERNAL PORTALS",
-      icon: Globe,
-      color: "text-teal-400",
-      items: [
-        { name: "Admin Portal", href: '/admin/dashboard', icon: Globe },
-        { name: "Staff Portal", href: '/staff/dashboard', icon: Wrench },
-      ]
-    },
-    {
       id: 'reports',
       title: "BUSINESS REPORTS",
       icon: BarChart3,
@@ -237,8 +239,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Banners / Sliders", href: '/admin/customize/hero', icon: Layout },
         { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
-        { name: "UI Settings", href: '/admin/customize/theme', icon: Palette },
-        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
     },
@@ -250,10 +250,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "General Settings", href: '/admin/settings', icon: Settings },
         { name: "Payment Settings", href: '/admin/payments', icon: CreditCard },
-        { name: "Language Settings", href: '/admin/settings/languages', icon: Languages },
-        { name: "Notifications", href: '/admin/settings/notifications', icon: Bell },
         { name: "API & Integrations", href: '/admin/settings/api', icon: Code },
-        { name: "Security Settings", href: '/admin/settings/security', icon: Shield },
         { name: "Error Logs", href: '/admin/error-logs', icon: AlertCircle },
       ]
     },
@@ -295,16 +292,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
-    <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden">
+    <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
       <div className={cn(
-        "flex items-center gap-3 border-b border-white/5 h-20 shrink-0",
-        collapsed ? "justify-center" : "px-6"
+        "flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all",
+        collapsed ? "justify-center px-0" : "px-6"
       )}>
         <div className="w-10 h-10 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10 flex items-center justify-center shrink-0">
           <ShieldCheck size={20} />
         </div>
         {!collapsed && (
-          <div className="animate-in fade-in slide-in-from-left-2 duration-300 overflow-hidden whitespace-nowrap">
+          <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
             <h1 className="font-black text-sm uppercase leading-none">Smart Clean</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
@@ -320,13 +317,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={() => toggleGroup(group.id)}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white group",
-                  collapsed ? "justify-center py-2" : "px-3 py-2",
+                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2",
                   isGroupActive && "bg-white/5 text-white"
                 )}
               >
                 <div className={cn(
                   "flex items-center",
-                  collapsed ? "" : "flex-1 gap-3"
+                  collapsed ? "justify-center w-full" : "flex-1 gap-3"
                 )}>
                   <div className={cn(
                     "w-8 h-8 rounded-lg transition-all shrink-0 flex items-center justify-center",
@@ -334,7 +331,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   )}>
                     <group.icon size={18} className={cn("shrink-0", group.color)} />
                   </div>
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-left">{group.title}</span>}
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-left animate-in fade-in slide-in-from-left-2">{group.title}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
@@ -364,41 +361,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </div>
 
-      <div className={cn("p-4 border-t border-white/5 shrink-0", collapsed && "flex justify-center")}>
-        <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-          <Button 
-            variant="ghost" 
-            onClick={() => setIsLogoutDialogOpen(true)} 
-            className={cn(
-              "justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12",
-              collapsed ? "w-12 px-0 flex justify-center" : "w-full px-4"
-            )}
-          >
-            <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
-            {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest whitespace-nowrap">Logout System</span>}
-          </Button>
-          <AlertDialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
-                <LogOut size={20} /> Logout Admin?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-sm font-medium leading-relaxed">
-                Confirm session termination. You will be redirected to the login page.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="pt-4 flex gap-2">
-              <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
-                Logout Now
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all", collapsed && "flex justify-center")}>
+        <Button 
+          variant="ghost" 
+          onClick={() => setIsLogoutDialogOpen(true)} 
+          className={cn(
+            "justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 transition-all",
+            collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4"
+          )}
+        >
+          <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
+          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest whitespace-nowrap">Logout System</span>}
+        </Button>
       </div>
     </div>
   );
 
-  if (isUserLoading || roleLoading) {
+  if (isUserLoading || roleLoading || !mounted) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -409,22 +388,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
+      {/* 🚀 DESKTOP SIDEBAR */}
       <aside className={cn(
-        "hidden lg:flex flex-col h-full bg-[#08101b] transition-[width] duration-300 ease-in-out relative border-r border-white/5 shrink-0",
+        "hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 ease-in-out relative border-r border-white/5 shrink-0 z-50",
         isCollapsed ? "w-20" : "w-72"
       )}>
         <SidebarContent collapsed={isCollapsed} />
         
+        {/* Floating Toggle Button */}
         <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3.5 top-20 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
+          onClick={handleToggleCollapse}
+          className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
         >
           {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
         </button>
       </aside>
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-sm">
+        {/* 🚀 FIXED HEADER */}
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
@@ -435,7 +417,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <SheetTitle>Admin Navigation</SheetTitle>
                   <SheetDescription>Smart Clean Central Control</SheetDescription>
                 </SheetHeader>
-                <SidebarContent />
+                <SidebarContent collapsed={false} />
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
@@ -445,8 +427,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-4 h-full">
-            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold hover:bg-gray-50 flex items-center" asChild>
+          
+          <div className="flex items-center gap-4 h-full">
+            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
               <Link href="/">
                 <Globe size={18} className="text-primary" />
                 <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Live Site</span>
@@ -454,7 +437,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Button>
             <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
               <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black uppercase tracking-tighter text-gray-900 leading-none">{user?.displayName || 'Administrator'}</p>
+                <p className="text-[10px] font-black uppercase text-gray-900 leading-none">{user?.displayName || 'Administrator'}</p>
                 <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60 mt-1">System Root</p>
               </div>
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">
@@ -464,7 +447,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar overflow-x-hidden">
+        {/* 🚀 MAIN CONTENT SPA AREA */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
           <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">
             {children}
           </div>
@@ -472,6 +456,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <AdminBottomNav />
       </div>
+
+      {/* Logout Confirmation */}
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
+              <LogOut size={20} /> Logout Admin?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium leading-relaxed">
+              Confirm session termination. You will be redirected to the login page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-4 flex gap-2">
+            <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
+              Logout Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
