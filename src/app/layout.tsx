@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   title: 'Smart Clean | Smart Service App',
   description: 'Professional cleaning and maintenance app for Bangladesh.',
   manifest: '/manifest.json',
+  icons: {
+    icon: 'https://picsum.photos/seed/smartclean-logo/32/32',
+    apple: 'https://picsum.photos/seed/smartclean-logo/180/180',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -43,7 +47,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-        <link rel="apple-touch-icon" href="https://picsum.photos/seed/smartclean-logo/192/192" />
+        <link rel="apple-touch-icon" href="https://picsum.photos/seed/smartclean-logo/512/512" />
       </head>
       <body className="font-body antialiased h-full">
         <GlobalErrorBoundary>
