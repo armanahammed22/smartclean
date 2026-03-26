@@ -12,8 +12,7 @@ interface FlashSaleCardProps {
 }
 
 /**
- * Highly optimized Flash Sale card for horizontal scroll layout.
- * Features rounded images, discount badges, and smooth typography.
+ * Highly optimized Flash Sale card with larger text and clear pricing.
  */
 export function FlashSaleCard({ product }: FlashSaleCardProps) {
   const discountPercent = product.regularPrice && product.regularPrice > product.price
@@ -25,7 +24,7 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
       <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1">
         
         {/* Image Container with Discount Badge */}
-        <div className="p-2">
+        <div className="p-2 md:p-3">
           <div className="relative aspect-square w-full rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
             {product.imageUrl ? (
               <Image
@@ -43,7 +42,7 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
             
             {/* Discount Badge */}
             {discountPercent && (
-              <div className="absolute top-2 left-2 bg-[#f85606] text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg z-10 uppercase tracking-tighter">
+              <div className="absolute top-2 left-2 bg-[#f85606] text-white text-[10px] md:text-xs font-black px-2.5 py-1 rounded-full shadow-lg z-10 uppercase tracking-tighter">
                 -{discountPercent}%
               </div>
             )}
@@ -51,26 +50,26 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
         </div>
 
         {/* Info Section */}
-        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1.5 pt-0">
-          <h3 className="text-[10px] md:text-[13px] font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
+        <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
+          <h3 className="text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           
-          <div className="mt-auto space-y-1">
+          <div className="mt-auto space-y-2">
             <div className="flex flex-col">
-              <p className="text-[12px] md:text-base font-black text-primary tracking-tighter leading-none">
+              <p className="text-sm md:text-xl font-black text-primary tracking-tighter leading-none">
                 ৳{product.price.toLocaleString()}
               </p>
               {product.regularPrice && product.regularPrice > product.price && (
-                <span className="text-[8px] md:text-[10px] font-bold text-gray-300 line-through mt-0.5">
+                <span className="text-[10px] md:text-xs font-bold text-gray-300 line-through mt-1">
                   ৳{product.regularPrice.toLocaleString()}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star size={8} fill="currentColor" className="md:w-3 md:h-3" />
-              <span className="text-[8px] md:text-[10px] font-black text-gray-400">4.8</span>
+            <div className="flex items-center gap-1.5 text-amber-400">
+              <Star size={12} fill="currentColor" />
+              <span className="text-[10px] md:text-xs font-black text-gray-600">4.8</span>
             </div>
           </div>
         </div>

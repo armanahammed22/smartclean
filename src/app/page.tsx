@@ -212,7 +212,7 @@ export default function SmartCleanHomePage() {
                 <div className="p-4 md:p-6">
                   <div className="flex gap-3 md:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
-                      <div key={p.id} className="w-[155px] md:w-[180px] shrink-0 snap-start">
+                      <div key={p.id} className="w-[165px] md:w-[200px] shrink-0 snap-start">
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
@@ -264,7 +264,7 @@ export default function SmartCleanHomePage() {
                   <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
             </div>
@@ -417,8 +417,7 @@ function ServiceGridItem({ s }: { s: any }) {
   return (
     <div className="relative group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1">
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
-        {/* Adjusted Image Container */}
-        <div className="p-1.5 md:p-2 shrink-0">
+        <div className="p-2 md:p-3 shrink-0">
           <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
             {s.imageUrl ? (
               <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
@@ -426,52 +425,50 @@ function ServiceGridItem({ s }: { s: any }) {
               <Wrench size={32} className="text-gray-200" />
             )}
             
-            {/* Custom Admin Badge */}
             {s.badgeText && (
               <div className="absolute top-2 left-2">
-                <Badge className="bg-primary text-white border-none shadow-md font-black text-[7px] md:text-[9px] uppercase px-2 py-0.5 rounded-full">
+                <Badge className="bg-primary text-white border-none shadow-md font-black text-[9px] md:text-[11px] uppercase px-3 py-1 rounded-full">
                   {s.badgeText}
                 </Badge>
               </div>
             )}
 
             <div className={cn("absolute bottom-2 left-2", s.badgeText ? "hidden" : "")}>
-              <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[8px] uppercase px-2 py-0.5 rounded-full">
+              <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
                 {s.categoryId || 'General'}
               </Badge>
             </div>
           </div>
         </div>
 
-        {/* Details Section */}
-        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1.5 pt-0">
-          <h3 className="text-[10px] md:text-xs font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
+        <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
+          <h3 className="text-xs md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}
           </h3>
           
-          <div className="mt-auto space-y-2">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm md:text-lg font-black text-primary tracking-tighter leading-none">
-                <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
+          <div className="mt-auto space-y-3">
+            <div className="flex items-center gap-2">
+              <p className="text-base md:text-xl font-black text-primary tracking-tighter leading-none">
+                <span className="text-[10px] md:text-xs font-bold mr-0.5">৳</span>
                 {(s.basePrice || 0).toLocaleString()}
               </p>
               {discountPercent && (
-                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[7px] md:text-[8px] px-1 py-0 h-auto">
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[9px] md:text-[11px] px-2 py-0.5 h-auto">
                   -{discountPercent}%
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-[7px] md:text-[9px] font-bold">
-              <div className="flex items-center gap-0.5 text-amber-400">
-                <Star size={10} fill="currentColor" />
-                <span className="text-gray-500">{s.rating || '4.8'}</span>
+            <div className="flex items-center justify-between text-[10px] md:text-xs font-bold">
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={14} fill="currentColor" />
+                <span className="text-gray-600">{s.rating || '4.8'}</span>
                 <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
               </div>
               <span className="text-gray-400 uppercase tracking-widest">{soldCount} Sold</span>
             </div>
 
-            <Button size="sm" className="w-full rounded-lg md:rounded-xl font-black text-[8px] md:text-[10px] uppercase shadow-md h-8 md:h-10 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
+            <Button size="sm" className="w-full rounded-xl font-black text-[10px] md:text-xs uppercase shadow-md h-10 md:h-12 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
               {t('book_now')}
             </Button>
           </div>
