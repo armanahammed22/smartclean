@@ -53,7 +53,11 @@ import {
   Tag,
   CreditCard,
   Languages,
-  Shield
+  Shield,
+  Activity,
+  History,
+  Navigation,
+  Grid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -141,6 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-indigo-400",
       items: [
         { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
       ]
     },
     {
@@ -161,6 +166,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-amber-400",
       items: [
         { name: "All Products", href: '/admin/products', icon: Box },
+        { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
         { name: "Categories", href: '/admin/products/categories', icon: Tags },
         { name: "Brands", href: '/admin/attributes/brands', icon: Award },
         { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
@@ -183,8 +189,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Target,
       color: "text-rose-400",
       items: [
+        { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
         { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Referral System", href: '/admin/referrals', icon: Users },
+        { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
         { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
         { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
       ]
@@ -197,6 +204,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
         { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
+        { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
       ]
     },
     {
@@ -228,6 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-blue-400",
       items: [
         { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
+        { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
       ]
     },
     {
@@ -237,7 +246,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-cyan-400",
       items: [
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
-        { name: "Banners / Sliders", href: '/admin/customize/hero', icon: Layout },
+        { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+        { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: Image.name === 'Image' ? Layers : ImageIcon },
+        { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
+        { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
+        { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
         { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
       ]
@@ -249,9 +262,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-slate-400",
       items: [
         { name: "General Settings", href: '/admin/settings', icon: Settings },
-        { name: "Payment Settings", href: '/admin/payments', icon: CreditCard },
-        { name: "API & Integrations", href: '/admin/settings/api', icon: Code },
-        { name: "Error Logs", href: '/admin/error-logs', icon: AlertCircle },
+        { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
+        { name: "Localization", href: '/admin/settings/languages', icon: Languages },
+        { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
+        { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
+        { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
       ]
     },
     {
