@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function SubServicesManagementPage() {
   const db = useFirestore();
@@ -117,12 +119,18 @@ export default function SubServicesManagementPage() {
       setEditingSub(null);
     } catch (error: any) {
       console.error("Firestore Permission/Write Error:", error);
+      
+      // Emit detailed security error for debugging
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: editingSub ? `sub_services/${editingSub.id}` : 'sub_services',
+        operation: editingSub ? 'update' : 'create',
+        requestResourceData: subData
+      }));
+
       toast({ 
         variant: "destructive", 
-        title: "Save Failed", 
-        description: error.message?.includes('permission') 
-          ? "Access Denied: Your account doesn't have write permissions for sub-services."
-          : "An error occurred while saving. Please check your internet and try again."
+        title: "Access Denied", 
+        description: "Your account does not have permission to write to this collection."
       });
     } finally {
       setIsSubmitting(false);
@@ -140,7 +148,11 @@ export default function SubServicesManagementPage() {
       await deleteDoc(doc(db, 'sub_services', id));
       toast({ title: "Removed Successfully" });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Delete Failed", description: e.message });
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: `sub_services/${id}`,
+        operation: 'delete'
+      }));
+      toast({ variant: "destructive", title: "Delete Failed" });
     }
   };
 
