@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -54,8 +55,6 @@ export default function ProductsManagementPage() {
   const [variants, setVariants] = useState<{ name: string; options: string[] }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
   const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories')) : null, [db, user]);
   const { data: products, isLoading } = useCollection(productsQuery);
@@ -74,6 +73,7 @@ export default function ProductsManagementPage() {
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
       categoryId: selectedCategory,
       brand: formData.get('brand') as string || 'General',
+      badgeText: formData.get('badgeText') as string || '',
       description: formData.get('description') as string,
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
       galleryImages: galleryImages,
@@ -266,14 +266,20 @@ export default function ProductsManagementPage() {
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Stock Quantity</Label>
                         <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
-                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Badge Text (Optional)</Label>
+                          <Input name="badgeText" defaultValue={editingProduct?.badgeText} placeholder="e.g. HOT" className="h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-red-600" />
+                        </div>
                       </div>
                     </div>
                   </div>

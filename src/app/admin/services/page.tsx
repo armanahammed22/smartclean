@@ -64,6 +64,7 @@ export default function ServicesManagementPage() {
     duration: '',
     teamSize: '',
     categoryId: 'Cleaning',
+    badgeText: '',
     description: '',
     status: 'Active',
     isPopular: false,
@@ -98,6 +99,7 @@ export default function ServicesManagementPage() {
       duration: '',
       teamSize: '',
       categoryId: 'Cleaning',
+      badgeText: '',
       description: '',
       status: 'Active',
       isPopular: false,
@@ -253,16 +255,22 @@ export default function ServicesManagementPage() {
                               <Input value={newServiceData.duration} onChange={e => setNewServiceData({...newServiceData, duration: e.target.value})} placeholder="e.g. 2-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Service Category</Label>
-                            <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
-                              <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                              <SelectContent className="rounded-xl">
-                                <SelectItem value="Cleaning">Cleaning</SelectItem>
-                                <SelectItem value="Repair">Repair</SelectItem>
-                                <SelectItem value="Maintenance">Maintenance</SelectItem>
-                              </SelectContent>
-                            </Select>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Service Category</Label>
+                              <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
+                                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                  <SelectItem value="Cleaning">Cleaning</SelectItem>
+                                  <SelectItem value="Repair">Repair</SelectItem>
+                                  <SelectItem value="Maintenance">Maintenance</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Badge Text (Optional)</Label>
+                              <Input value={newServiceData.badgeText} onChange={e => setNewServiceData({...newServiceData, badgeText: e.target.value})} placeholder="e.g. NEW" className="h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-primary" />
+                            </div>
                           </div>
                           <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                             <div className="space-y-0.5">

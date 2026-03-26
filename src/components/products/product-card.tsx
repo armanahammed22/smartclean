@@ -45,13 +45,21 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               </div>
             )}
             
-            {/* Delivery Badge */}
-            <div className="absolute bottom-2 left-2">
-              <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[6px] md:text-[8px] font-black px-2 py-0.5 md:py-1 rounded-full uppercase tracking-tighter shadow-lg">
-                <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
-                FREE
+            {/* Custom Admin Badge */}
+            {product.badgeText ? (
+              <div className="absolute top-2 left-2">
+                <div className="bg-primary text-white text-[7px] md:text-[9px] font-black px-2 py-0.5 md:py-1 rounded-full uppercase tracking-tighter shadow-lg">
+                  {product.badgeText}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="absolute bottom-2 left-2">
+                <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[6px] md:text-[8px] font-black px-2 py-0.5 md:py-1 rounded-full uppercase tracking-tighter shadow-lg">
+                  <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
+                  FREE
+                </div>
+              </div>
+            )}
 
             {/* Discount Badge */}
             {discountPercent && (

@@ -212,7 +212,7 @@ export default function SmartCleanHomePage() {
                 <div className="p-4 md:p-6">
                   <div className="flex gap-3 md:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
-                      <div key={p.id} className="w-[140px] md:w-[180px] shrink-0 snap-start">
+                      <div key={p.id} className="w-[155px] md:w-[180px] shrink-0 snap-start">
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
@@ -419,21 +419,23 @@ function ServiceGridItem({ s }: { s: any }) {
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
         {/* Taller Image Container */}
         <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
             {s.imageUrl ? (
               <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
             ) : (
               <Wrench size={40} className="text-gray-200" />
             )}
             
-            {/* Free Delivery Badge */}
-            <div className="absolute bottom-4 left-4">
-              <Badge className="bg-[#2E8B57] text-white border-none flex items-center gap-1 font-black text-[7px] md:text-[9px] uppercase px-2 py-1 rounded-full shadow-lg">
-                <Truck size={10} fill="white" /> FREE DELIVERY
-              </Badge>
-            </div>
+            {/* Custom Admin Badge */}
+            {s.badgeText && (
+              <div className="absolute top-4 left-4">
+                <Badge className="bg-primary text-white border-none shadow-md font-black text-[8px] md:text-[10px] uppercase px-3 py-1 rounded-full">
+                  {s.badgeText}
+                </Badge>
+              </div>
+            )}
 
-            <div className="absolute top-4 left-4">
+            <div className={cn("absolute bottom-4 left-4", s.badgeText ? "hidden" : "")}>
               <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-3 py-1 rounded-full">
                 {s.categoryId || 'General'}
               </Badge>
@@ -441,7 +443,7 @@ function ServiceGridItem({ s }: { s: any }) {
           </div>
         </div>
 
-        {/* Details Section (Matching Image Aesthetic) */}
+        {/* Details Section */}
         <div className="p-4 md:p-6 flex flex-col flex-1 gap-2 pt-0">
           <h3 className="text-xs md:text-sm font-black group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}

@@ -24,6 +24,7 @@ export interface Product {
   specifications?: { key: string; value: string }[];
   variants?: { name: string; options: string[] }[];
   size?: string;
+  badgeText?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -119,6 +120,7 @@ export interface Service {
   duration?: string;
   teamSize?: string;
   rating?: number;
+  badgeText?: string;
   createdAt?: string;
   updatedAt?: string;
 }
