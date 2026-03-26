@@ -30,6 +30,7 @@ const PUBLIC_DOCS = [
 
 /**
  * Hardened document hook with internal retry shield for internal SDK assertion failures (ca9/b815).
+ * Silently recovers if the watch stream encounters an internal SDK bug.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -39,6 +40,7 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   const activeToken = useRef<string | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!memoizedDocRef) {
@@ -80,20 +82,19 @@ export function useDoc<T = any>(
 
             const errorStr = (err.message || String(err)).toLowerCase();
             
-            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry after delay
+            // 🛡️ SDK Resilience Shield: Identification of SDK-internal assertion errors
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
-              errorStr.includes('unexpected state') ||
-              errorStr.includes('watchchangeaggregator')
+              errorStr.includes('unexpected state')
             ) {
-              console.warn(`[Firestore Shield] Suppressing transient assertion error at doc: ${currentPath}. Retrying in 2s...`);
+              console.warn(`[Firestore Shield] Recovering from SDK assertion in doc: ${currentPath}.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
-                if (activeToken.current === token) startListener();
-              }, 2000);
+                if (activeToken.current === token) setRefreshKey(k => k + 1);
+              }, 2500);
               return;
             }
 
@@ -113,11 +114,10 @@ export function useDoc<T = any>(
         );
       } catch (setupError: any) {
         const setupErrorStr = setupError.message.toLowerCase();
-        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
-          console.warn('[Firestore Shield] Intercepted doc setup phase assertion. Retrying...');
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815')) {
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
-            if (activeToken.current === token) startListener();
+            if (activeToken.current === token) setRefreshKey(k => k + 1);
           }, 3000);
         }
       }
@@ -132,7 +132,7 @@ export function useDoc<T = any>(
         try { unsubscribe(); } catch (e) {}
       }
     };
-  }, [memoizedDocRef]);
+  }, [memoizedDocRef, refreshKey]);
 
   return { data, isLoading, error };
 }

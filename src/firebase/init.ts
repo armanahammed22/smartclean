@@ -10,7 +10,7 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V5 - Hardened)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V6 - Hardened)
  * 1. Aggressively suppresses SDK internal assertion noise (ca9 / b815).
  * 2. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
  * 3. Enforces Long Polling to bypass proxy/workstation streaming failures.
@@ -45,7 +45,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       }).join(' ');
 
       if (isAssertionError(msg)) {
-        // Silently log to warning to keep console clean but reachable for devs
+        // Silently log to warning to keep console clean
         console.warn('[Firestore Shield] Intercepted SDK assertion:', msg.slice(0, 150) + '...');
         return;
       }

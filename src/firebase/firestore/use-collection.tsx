@@ -42,6 +42,7 @@ function extractPath(target: any): string {
 
 /**
  * Hardened collection hook with internal retry shield for internal SDK assertion failures (ca9/b815).
+ * Forces a silent refresh if the watch stream encounters an internal SDK bug.
  */
 export function useCollection<T = any>(
   memoizedTarget: ((CollectionReference<DocumentData> | Query<DocumentData>) & { __memo?: boolean }) | null | undefined,
@@ -51,6 +52,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
   const activeToken = useRef<string | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!memoizedTarget) {
@@ -68,7 +70,6 @@ export function useCollection<T = any>(
     let unsubscribe: (() => void) | null = null;
 
     const startListener = () => {
-      // Cleanup previous listener
       if (unsubscribe) {
         try { unsubscribe(); } catch (e) {}
         unsubscribe = null;
@@ -89,20 +90,19 @@ export function useCollection<T = any>(
 
             const errorStr = (err.message || String(err)).toLowerCase();
             
-            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry after delay
+            // 🛡️ SDK Resilience Shield: Detection of internal assertion IDs
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
-              errorStr.includes('unexpected state') ||
-              errorStr.includes('watchchangeaggregator')
+              errorStr.includes('unexpected state')
             ) {
-              console.warn(`[Firestore Shield] Suppressing transient assertion error at collection: ${currentPath}. Retrying in 2s...`);
+              console.warn(`[Firestore Shield] Recovering from SDK assertion in collection: ${currentPath}.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
-                if (activeToken.current === token) startListener();
-              }, 2000); 
+                if (activeToken.current === token) setRefreshKey(k => k + 1);
+              }, 2500); 
               return;
             }
 
@@ -119,11 +119,10 @@ export function useCollection<T = any>(
         );
       } catch (setupError: any) {
         const setupErrorStr = setupError.message.toLowerCase();
-        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
-          console.warn('[Firestore Shield] Intercepted setup phase assertion. Retrying...');
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815')) {
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
-            if (activeToken.current === token) startListener();
+            if (activeToken.current === token) setRefreshKey(k => k + 1);
           }, 3000);
         }
       }
@@ -138,7 +137,7 @@ export function useCollection<T = any>(
         try { unsubscribe(); } catch (e) {}
       }
     };
-  }, [memoizedTarget]);
+  }, [memoizedTarget, refreshKey]);
 
   return { data, isLoading, error };
 }
