@@ -10,20 +10,20 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V4)
- * 1. Suppresses SDK internal assertion noise (ca9 / b815).
- * 2. Enforces Long Polling to bypass proxy/workstation streaming failures.
- * 3. Intercepts window errors to prevent Next.js Error Overlay for SDK noise.
- * 4. Broadens detection for "Unexpected state" and "Assertion failed" strings.
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V5 - Hardened)
+ * 1. Aggressively suppresses SDK internal assertion noise (ca9 / b815).
+ * 2. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
+ * 3. Enforces Long Polling to bypass proxy/workstation streaming failures.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, auth: null, firestore: null };
   }
 
-  // 1. Global Silence for Firestore Assertion Failures (ca9 / b815)
+  // 1. Global Silence for Firestore Assertion Failures
   if (typeof window !== 'undefined' && !(window as any)._fs_shield_active) {
     const isAssertionError = (msg: string) => {
+      if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       return (
         lowMsg.includes('ca9') || 
@@ -45,17 +45,18 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       }).join(' ');
 
       if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Silenced internal SDK assertion noise:', msg.slice(0, 150) + '...');
+        // Silently log to warning to keep console clean but reachable for devs
+        console.warn('[Firestore Shield] Intercepted SDK assertion:', msg.slice(0, 150) + '...');
         return;
       }
       originalConsoleError.apply(console, args);
     };
 
-    // Filter Window Errors (Stops Next.js Overlay)
+    // Filter Window Errors (This stops the annoying Next.js RED OVERLAY for SDK internal bugs)
     window.addEventListener('error', (event) => {
-      const msg = event.message || '';
+      const msg = event.message || (event.error && event.error.message) || '';
       if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Intercepted window error:', msg.slice(0, 100));
+        console.warn('[Firestore Shield] Blocking window error overlay for SDK bug:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -66,7 +67,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     window.addEventListener('unhandledrejection', (event) => {
       const msg = String(event.reason?.message || event.reason || '');
       if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Intercepted unhandled rejection:', msg.slice(0, 100));
+        console.warn('[Firestore Shield] Blocking unhandled rejection overlay for SDK bug:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -87,7 +88,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       try {
-        // Enforce Long Polling and Memory Cache for maximum stability in dev/proxy environments
+        // Enforce Long Polling and Memory Cache for maximum stability in cloud environments
         firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),

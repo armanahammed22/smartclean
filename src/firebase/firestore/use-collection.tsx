@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -69,7 +68,7 @@ export function useCollection<T = any>(
     let unsubscribe: (() => void) | null = null;
 
     const startListener = () => {
-      // Cleanup previous listener before starting a new one
+      // Cleanup previous listener
       if (unsubscribe) {
         try { unsubscribe(); } catch (e) {}
         unsubscribe = null;
@@ -95,14 +94,15 @@ export function useCollection<T = any>(
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
-              errorStr.includes('unexpected state')
+              errorStr.includes('unexpected state') ||
+              errorStr.includes('watchchangeaggregator')
             ) {
-              console.warn(`[Firestore Shield] Suppressing transient assertion error (ID: ca9/b815) at collection: ${currentPath}. Retrying...`);
+              console.warn(`[Firestore Shield] Suppressing transient assertion error at collection: ${currentPath}. Retrying in 2s...`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) startListener();
-              }, 2500); 
+              }, 2000); 
               return;
             }
 

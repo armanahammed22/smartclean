@@ -85,14 +85,15 @@ export function useDoc<T = any>(
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
-              errorStr.includes('unexpected state')
+              errorStr.includes('unexpected state') ||
+              errorStr.includes('watchchangeaggregator')
             ) {
-              console.warn(`[Firestore Shield] Suppressing transient assertion error at doc: ${currentPath}. Retrying...`);
+              console.warn(`[Firestore Shield] Suppressing transient assertion error at doc: ${currentPath}. Retrying in 2s...`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) startListener();
-              }, 2500);
+              }, 2000);
               return;
             }
 
