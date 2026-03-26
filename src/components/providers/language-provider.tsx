@@ -98,7 +98,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Services
     services_title: "আমাদের বিশেষজ্ঞতা",
-    book_now: "বুকিং দিতে চাই",
+    book_now: "বুক করুন",
     price_from: "থেকে শুরু",
     
     // Checkout & Summary
@@ -217,7 +217,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Services
     services_title: "Our Expertise",
-    book_now: "I want to book",
+    book_now: "Book Now",
     price_from: "Starts From",
     
     // Checkout & Summary

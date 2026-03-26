@@ -247,9 +247,9 @@ export default function ServiceBookingPage() {
                     
                     <Button 
                       onClick={handleContinue}
-                      className="w-full h-16 md:h-20 rounded-2xl font-black text-2xl md:text-3xl bg-primary hover:bg-primary/90 text-white uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 group transition-all active:scale-95"
+                      className="w-full h-16 md:h-20 rounded-2xl font-black text-2xl md:text-4xl bg-primary hover:bg-primary/90 text-white uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 group transition-all active:scale-95 px-4"
                     >
-                      {t('book_now')} <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform" />
+                      {t('book_now')} <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform shrink-0" />
                     </Button>
                   </div>
                 </CardContent>
@@ -267,9 +267,9 @@ export default function ServiceBookingPage() {
             </div>
             <Button 
               onClick={handleContinue}
-              className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 gap-2"
+              className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-xl uppercase tracking-widest shadow-xl shadow-primary/20 gap-2 px-2"
             >
-              {t('book_now')} <ChevronRight size={20} className="ml-1" />
+              {t('book_now')} <ChevronRight size={20} className="ml-1 shrink-0" />
             </Button>
           </div>
         )}
