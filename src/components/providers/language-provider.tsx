@@ -98,7 +98,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Services
     services_title: "আমাদের বিশেষজ্ঞতা",
-    book_now: "বুক করুন",
+    book_now: "বুকিং দিতে চাই",
     price_from: "থেকে শুরু",
     
     // Checkout & Summary
@@ -125,7 +125,7 @@ const translations: Record<Language, Record<string, string>> = {
     back_to_shop: "দোকানে ফিরে যান",
     account_created: "আপনার অ্যাকাউন্ট তৈরি করা হয়েছে!",
     temp_password: "অস্থায়ী পাসওয়ার্ড",
-    login_info: "ভবিষ্যতে লগইন করার জন্য এই তথ্যগুলো সংরক্ষণ করুন。",
+    login_info: "ভবিষ্যতে লগইন করার জন্য এই তথ্যগুলো সংরক্ষণ করুন।",
 
     // UI
     cart_added: "অর্ডারে যোগ করা হয়েছে",
@@ -217,7 +217,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Services
     services_title: "Our Expertise",
-    book_now: "Book Now",
+    book_now: "I want to book",
     price_from: "Starts From",
     
     // Checkout & Summary
