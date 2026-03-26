@@ -25,7 +25,10 @@ import {
   Zap,
   Tag,
   Store,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -45,6 +48,8 @@ const SECTION_TYPES = [
   { id: 'categories', label: 'Categories Grid', icon: Layers },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap },
   { id: 'services', label: 'Services Grid', icon: Package },
+  { id: 'service_banner', label: 'Service Highlight Banner', icon: Sparkles },
+  { id: 'trust_stats', label: 'Trust Stats Counter', icon: ShieldCheck },
   { id: 'products_feed', label: 'Dynamic Products Feed', icon: Tag },
   { id: 'custom_grid', label: 'Custom Products Grid', icon: Tag }
 ];
@@ -64,6 +69,10 @@ export default function HomepageBuilderPage() {
   const categoriesQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
   const { data: categories } = useCollection(categoriesQuery);
+
+  const servicesQuery = useMemoFirebase(() => 
+    db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
+  const { data: services } = useCollection(servicesQuery);
 
   // Native DnD Logic
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
@@ -253,52 +262,66 @@ export default function HomepageBuilderPage() {
                 <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {editingSection?.type === 'service_banner' ? (
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Layout Type</Label>
-                  <Select value={editingSection?.config?.layout || 'grid'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, layout: v}})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Featured Service</Label>
+                  <Select value={editingSection?.config?.serviceId || ''} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, serviceId: v}})}>
+                    <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue placeholder="Choose Service" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="grid">Grid Layout</SelectItem>
-                      <SelectItem value="slider">Carousel Slider</SelectItem>
+                      {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Items Per Row</Label>
-                  <Input type="number" value={editingSection?.config?.itemsPerRow || 4} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, itemsPerRow: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Layout Type</Label>
+                      <Select value={editingSection?.config?.layout || 'grid'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, layout: v}})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="grid">Grid Layout</SelectItem>
+                          <SelectItem value="slider">Carousel Slider</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Items Per Row</Label>
+                      <Input type="number" value={editingSection?.config?.itemsPerRow || 4} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, itemsPerRow: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data Source</Label>
-                <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
-                  <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Active Products</SelectItem>
-                    <SelectItem value="popular">Most Popular Only</SelectItem>
-                    <SelectItem value="category">Specific Category</SelectItem>
-                    <SelectItem value="latest">Newly Added</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Data Source</Label>
+                    <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Active Products</SelectItem>
+                        <SelectItem value="popular">Most Popular Only</SelectItem>
+                        <SelectItem value="category">Specific Category</SelectItem>
+                        <SelectItem value="latest">Newly Added</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {editingSection?.config?.dataSource === 'category' && (
-                <div className="space-y-2 animate-in slide-in-from-top-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Category</Label>
-                  <Select value={editingSection?.config?.categoryId || ''} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, categoryId: v}})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue placeholder="Choose Category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {editingSection?.config?.dataSource === 'category' && (
+                    <div className="space-y-2 animate-in slide-in-from-top-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Category</Label>
+                      <Select value={editingSection?.config?.categoryId || ''} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, categoryId: v}})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none"><SelectValue placeholder="Choose Category" /></SelectTrigger>
+                        <SelectContent>
+                          {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Max Items Limit</Label>
+                    <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                  </div>
+                </>
               )}
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Max Items Limit</Label>
-                <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
-              </div>
             </div>
 
             <DialogFooter>

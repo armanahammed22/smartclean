@@ -24,7 +24,11 @@ import {
   Briefcase,
   Smartphone,
   ShieldCheck,
-  Heart
+  Heart,
+  Award,
+  Clock,
+  Users,
+  CheckCircle2
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -123,7 +127,7 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} className="px-2 md:px-4 py-6">
             <div className="container mx-auto max-w-7xl">
-              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-50 overflow-hidden">
+              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden">
                 <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
                   {categories.map((cat) => {
                     const styles = getCategoryStyles(cat.name);
@@ -230,7 +234,7 @@ export default function SmartCleanHomePage() {
                   <div key={s.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
                     <Link href={`/service/${s.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
                       <div className="p-1.5 shrink-0">
-                        <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-50 flex items-center justify-center">
+                        <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
                           {s.imageUrl ? (
                             <Image 
                               src={s.imageUrl} 
@@ -296,6 +300,53 @@ export default function SmartCleanHomePage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                 {feed.map(p => <ProductCard key={p.id} product={p} />)}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'service_banner':
+        const featuredSrv = allServices?.find(s => s.id === config.serviceId) || allServices?.[0];
+        if (!featuredSrv) return null;
+        return (
+          <section key={section.id} className="px-4 py-10">
+            <div className="container mx-auto max-w-7xl">
+              <div className="relative aspect-[21/9] md:aspect-[21/7] rounded-[2.5rem] overflow-hidden shadow-2xl group">
+                <Image src={featuredSrv.imageUrl || 'https://picsum.photos/seed/promo/1200/600'} alt="Featured" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent flex flex-col justify-center p-8 md:p-16 space-y-4 md:space-y-6">
+                  <Badge className="bg-primary text-white w-fit px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">Editor's Pick</Badge>
+                  <h2 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-none max-w-2xl">{featuredSrv.title}</h2>
+                  <p className="text-white/70 max-w-lg font-medium text-sm md:text-lg line-clamp-2">{featuredSrv.description}</p>
+                  <Button asChild size="lg" className="w-fit h-14 md:h-16 px-10 rounded-full font-black uppercase text-xs md:text-sm shadow-2xl tracking-widest">
+                    <Link href={`/service/${featuredSrv.id}`}>Book This Service <ChevronRight size={20} className="ml-2" /></Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'trust_stats':
+        return (
+          <section key={section.id} className="py-16 md:py-24 bg-white">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12">
+                {[
+                  { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                  { label: "Pro Technicians", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
+                  { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" },
+                  { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" }
+                ].map((stat, i) => (
+                  <div key={i} className="flex flex-col items-center text-center space-y-4">
+                    <div className={cn("p-5 rounded-3xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)}>
+                      <stat.icon size={32} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter">{stat.val}</h4>
+                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
