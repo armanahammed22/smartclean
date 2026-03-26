@@ -60,10 +60,12 @@ export default function AdminDashboard() {
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
   const vendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
+  const servicesQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
   
   const { data: orders } = useCollection(ordersQuery);
   const { data: products } = useCollection(productsQuery);
   const { data: vendors } = useCollection(vendorsQuery);
+  const { data: dbServices, isLoading: servicesLoading } = useCollection(servicesQuery);
 
   const handleSeedData = async () => {
     if (!db) return;
@@ -84,15 +86,11 @@ export default function AdminDashboard() {
         });
       });
 
-      // 2. Seed Sub Services (Top Level)
-      // We will link them to Home Cleaning (srv_home_clean) and Deep Cleaning (srv_deep_clean)
-      const cleaningParents = ['srv_home_clean', 'srv_deep_clean'];
-      
+      // 2. Seed Sub Services
       subServices.forEach((sub, idx) => {
         const subId = `sub_srv_${idx + 1}`;
         const subRef = doc(db, 'sub_services', subId);
         
-        // Logical Parent Mapping
         let parentId = 'srv_home_clean';
         if (sub.name === 'Sofa Cleaning') parentId = 'srv_sofa_carpet';
 
@@ -137,6 +135,9 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
+  // Show seed button only if database is empty of services
+  const showSeedButton = !servicesLoading && (!dbServices || dbServices.length === 0);
+
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -148,15 +149,17 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3">
-          <Button 
-            onClick={handleSeedData} 
-            disabled={isSeeding} 
-            variant="outline" 
-            className="flex-1 sm:flex-none rounded-xl font-black bg-white border-primary/20 text-primary shadow-sm gap-2 text-[10px] h-10 uppercase tracking-widest"
-          >
-            {isSeeding ? <RefreshCw className="animate-spin" size={14} /> : <Database size={14} />}
-            Seed ERP Data
-          </Button>
+          {showSeedButton && (
+            <Button 
+              onClick={handleSeedData} 
+              disabled={isSeeding} 
+              variant="outline" 
+              className="flex-1 sm:flex-none rounded-xl font-black bg-white border-primary/20 text-primary shadow-sm gap-2 text-[10px] h-10 uppercase tracking-widest"
+            >
+              {isSeeding ? <RefreshCw className="animate-spin" size={14} /> : <Database size={14} />}
+              Seed ERP Data
+            </Button>
+          )}
           <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-10">
             <Link href="/admin/orders"><ShoppingCart size={16} /> Manage Orders</Link>
           </Button>
@@ -228,7 +231,7 @@ export default function AdminDashboard() {
               {[
                 { label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending').length || 0, icon: Store },
                 { label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box },
-                { label: "Active Services", val: 12, icon: Wrench }
+                { label: "Active Services", val: dbServices?.length || 0, icon: Wrench }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
                   <div className="space-y-1">
