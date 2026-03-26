@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -318,14 +317,20 @@ export default function DynamicLandingPage() {
                     <div className="space-y-4 pt-4">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পেমেন্ট পদ্ধতি</Label>
                       <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                        <div className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'cod' ? "border-primary bg-primary/5" : "bg-white border-gray-100")}>
+                        <div 
+                          onClick={() => setPaymentMethod('cod')}
+                          className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'cod' ? "border-primary bg-primary/5" : "bg-white border-gray-100")}
+                        >
                           <RadioGroupItem value="cod" id="cod" className="sr-only" />
                           <label htmlFor="cod" className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
                             <div className={cn("p-2 rounded-lg", paymentMethod === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}><Smartphone size={16} /></div>
                             ক্যাশ অন ডেলিভারি
                           </label>
                         </div>
-                        <div className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'bkash' ? "border-pink-600 bg-pink-50" : "bg-white border-gray-100")}>
+                        <div 
+                          onClick={() => setPaymentMethod('bkash')}
+                          className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'bkash' ? "border-pink-600 bg-pink-50" : "bg-white border-gray-100")}
+                        >
                           <RadioGroupItem value="bkash" id="bkash" className="sr-only" />
                           <label htmlFor="bkash" className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
                             <div className={cn("p-2 rounded-lg", paymentMethod === 'bkash' ? "bg-pink-600 text-white" : "bg-gray-100 text-gray-400")}><Smartphone size={16} /></div>

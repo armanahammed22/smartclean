@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -269,7 +268,9 @@ function CheckoutContent() {
                           <FormField control={form.control} name="deliveryOption" render={({ field }) => (
                             <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                               {deliveryOptions?.map((opt) => (
-                                <div key={opt.id} className={cn(
+                                <div key={opt.id} 
+                                  onClick={() => field.onChange(opt.id)}
+                                  className={cn(
                                   "flex items-center space-x-2 rounded-xl md:rounded-2xl border-2 p-4 cursor-pointer transition-all",
                                   field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
                                 )}>
@@ -300,7 +301,9 @@ function CheckoutContent() {
                           <FormControl>
                             <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
                               {availableMethods?.map((m) => (
-                                <div key={m.id} className={cn(
+                                <div key={m.id} 
+                                  onClick={() => field.onChange(m.id)}
+                                  className={cn(
                                   "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
                                   field.value === m.id ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
                                 )}>
@@ -364,7 +367,6 @@ function CheckoutContent() {
                 </div>
               </div>
 
-              {/* Mobile Sticky CTA */}
               <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 z-[110] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Due</span>

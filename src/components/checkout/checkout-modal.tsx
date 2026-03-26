@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -58,7 +57,6 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Coupon States
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
@@ -113,7 +111,6 @@ export function CheckoutModal() {
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
-  // 1. Calculate Product Level Savings (Sale vs Regular Price)
   const productSavings = useMemo(() => {
     return items.reduce((acc, item) => {
       if (item.regularPrice && item.regularPrice > item.price) {
@@ -123,7 +120,6 @@ export function CheckoutModal() {
     }, 0);
   }, [items]);
 
-  // 2. Calculate Coupon Discount
   const couponDiscount = useMemo(() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.discountType === 'percent') {
@@ -153,13 +149,10 @@ export function CheckoutModal() {
         setAppliedCoupon(null);
       } else {
         const couponData = { id: snap.docs[0].id, ...snap.docs[0].data() };
-        
-        // Check Expiry
         if (couponData.expiryDate && new Date(couponData.expiryDate) < new Date()) {
           toast({ variant: "destructive", title: "Expired Coupon", description: "This coupon code has expired." });
           return;
         }
-
         setAppliedCoupon(couponData);
         toast({ title: "Coupon Applied!", description: `Discount of ${couponData.discountType === 'percent' ? couponData.value + '%' : '৳' + couponData.value} added.` });
       }
@@ -216,13 +209,11 @@ export function CheckoutModal() {
       if (!user) {
         const phoneCheckQ = query(collection(db, 'users'), where('phone', '==', values.phone));
         const phoneSnap = await getDocs(phoneCheckQ);
-        
         if (!phoneSnap.empty) {
           currentUserId = phoneSnap.docs[0].id;
         } else {
           const emailToCreate = values.email || `${values.phone}@smartclean.local`;
           tempPass = Math.random().toString(36).slice(-8);
-          
           try {
             const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
             currentUserId = userCred.user.uid;
@@ -244,7 +235,6 @@ export function CheckoutModal() {
       }
 
       const collName = hasServices ? 'bookings' : 'orders';
-      
       let finalPaymentName = "Cash on Delivery";
       if (values.paymentCategory === 'online') {
         const method = onlineMethods.find(m => m.id === values.onlineMethod);
@@ -282,7 +272,6 @@ export function CheckoutModal() {
       setCheckoutOpen(false);
       const transactionType = hasServices ? 'booking' : 'order';
       router.push(`/order-success?id=${docRef.id}&type=${transactionType}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
-      
     } catch (e: any) {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
@@ -296,10 +285,7 @@ export function CheckoutModal() {
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
         <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
-          
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5">
-            
-            {/* 📦 Summary Section */}
             <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col order-first lg:order-last">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621] flex items-center gap-2">
@@ -307,7 +293,6 @@ export function CheckoutModal() {
                 </h3>
                 <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black">{items.length} {items.length > 1 ? 'Items' : 'Item'}</Badge>
               </div>
-              
               <div className="space-y-3 mb-8">
                 {items.map(item => (
                   <div key={item.id} className="flex justify-between items-start gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
@@ -325,75 +310,34 @@ export function CheckoutModal() {
                   </div>
                 ))}
               </div>
-
-              {/* 🏷️ Coupon Section */}
               <div className="mb-8 p-4 bg-white rounded-2xl border border-dashed border-primary/30 space-y-3">
                 <div className="flex items-center gap-2 text-[#081621]">
                   <TicketPercent size={16} className="text-primary" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Apply Promo Code</span>
                 </div>
-                
                 {appliedCoupon ? (
                   <div className="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/20">
                     <div className="flex flex-col">
                       <span className="text-[10px] font-black text-primary uppercase">{appliedCoupon.code}</span>
                       <span className="text-[8px] font-bold text-gray-500">PROMO APPLIED</span>
                     </div>
-                    <button onClick={() => setAppliedCoupon(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors">
-                      <X size={14} />
-                    </button>
+                    <button onClick={() => setAppliedCoupon(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors"><X size={14} /></button>
                   </div>
                 ) : (
                   <div className="flex gap-2">
-                    <Input 
-                      placeholder="ENTER CODE" 
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      className="h-10 bg-gray-50 border-none rounded-xl text-xs font-black placeholder:font-normal"
-                    />
-                    <Button 
-                      onClick={handleApplyCoupon} 
-                      disabled={isVerifyingCoupon || !couponInput}
-                      className="h-10 px-4 rounded-xl font-black text-[10px] uppercase shadow-sm"
-                    >
+                    <Input placeholder="ENTER CODE" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-black placeholder:font-normal" />
+                    <Button onClick={handleApplyCoupon} disabled={isVerifyingCoupon || !couponInput} className="h-10 px-4 rounded-xl font-black text-[10px] uppercase shadow-sm">
                       {isVerifyingCoupon ? <Loader2 className="animate-spin" size={14} /> : 'APPLY'}
                     </Button>
                   </div>
                 )}
               </div>
-
               <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>৳{subtotal.toLocaleString()}</span>
-                </div>
-                
-                {productSavings > 0 && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-green-600">
-                    <span>Product Savings</span>
-                    <span>-৳{productSavings.toLocaleString()}</span>
-                  </div>
-                )}
-
-                {appliedCoupon && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95">
-                    <span>Coupon Discount ({appliedCoupon.code})</span>
-                    <span>-৳{couponDiscount.toLocaleString()}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span>Tax (8%)</span>
-                  <span>৳{tax.toLocaleString()}</span>
-                </div>
-                
-                {!hasServices && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-blue-600">
-                    <span>Delivery Charge</span>
-                    <span>৳{deliveryCharge.toLocaleString()}</span>
-                  </div>
-                )}
-                
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
+                {productSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-green-600"><span>Product Savings</span><span>-৳{productSavings.toLocaleString()}</span></div>}
+                {appliedCoupon && <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95"><span>Coupon Discount ({appliedCoupon.code})</span><span>-৳{couponDiscount.toLocaleString()}</span></div>}
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Tax (8%)</span><span>৳{tax.toLocaleString()}</span></div>
+                {!hasServices && <div className="flex justify-between text-[10px] font-black uppercase text-blue-600"><span>Delivery Charge</span><span>৳{deliveryCharge.toLocaleString()}</span></div>}
                 <div className="pt-4 flex justify-between items-end">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
@@ -402,32 +346,20 @@ export function CheckoutModal() {
                   <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
                 </div>
               </div>
-
               <div className="hidden lg:block mt-8">
-                <Button 
-                  onClick={form.handleSubmit(onSubmit)} 
-                  className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" 
-                  disabled={isSubmitting || items.length === 0}
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : (
-                    <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>
-                  )}
+                <Button onClick={form.handleSubmit(onSubmit)} className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
                 </Button>
               </div>
             </div>
-
-            {/* 📋 Form Section */}
             <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white">
               <DialogHeader className="mb-8 text-left hidden lg:block">
                 <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
                   <ShieldCheck size={14} />
                   <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
                 </div>
-                <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">
-                  {hasServices ? 'Booking Details' : 'Order Details'}
-                </DialogTitle>
+                <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">{hasServices ? 'Booking Details' : 'Order Details'}</DialogTitle>
               </DialogHeader>
-
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <div className="space-y-6">
@@ -455,7 +387,6 @@ export function CheckoutModal() {
                         </FormItem>
                       )} />
                     </div>
-
                     {isOtpSent && !isVerified && (
                       <div className="flex gap-2 animate-in slide-in-from-top-2">
                         <FormField control={form.control} name="otp" render={({ field }) => (
@@ -466,7 +397,6 @@ export function CheckoutModal() {
                         <Button type="button" onClick={handleVerifyOtp} className="h-12 px-6 font-black uppercase text-[10px] rounded-xl bg-primary text-white">VERIFY</Button>
                       </div>
                     )}
-
                     <FormField control={form.control} name="address" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Address</FormLabel>
@@ -475,7 +405,6 @@ export function CheckoutModal() {
                       </FormItem>
                     )} />
                   </div>
-
                   {hasServices && (
                     <div className="space-y-6 pt-6 border-t">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Clock size={14} className="text-primary" /> Booking Schedule</h4>
@@ -512,17 +441,19 @@ export function CheckoutModal() {
                       </div>
                     </div>
                   )}
-
                   <div className="space-y-6 pt-6 border-t">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><Wallet size={14} className="text-primary" /> Payment Method</h4>
                     <FormField control={form.control} name="paymentCategory" render={({ field }) => (
                       <FormItem className="space-y-4">
                         <FormControl>
                           <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                            <div className={cn(
-                              "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
-                              field.value === 'cod' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
-                            )}>
+                            <div 
+                              onClick={() => field.onChange('cod')}
+                              className={cn(
+                                "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
+                                field.value === 'cod' ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
+                              )}
+                            >
                               <RadioGroupItem value="cod" id="cat-cod" className="sr-only" />
                               <label htmlFor="cat-cod" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
                                 <div className={cn("p-2 rounded-lg", field.value === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>
@@ -534,11 +465,13 @@ export function CheckoutModal() {
                                 </div>
                               </label>
                             </div>
-
-                            <div className={cn(
-                              "flex flex-col rounded-xl border-2 transition-all cursor-pointer",
-                              field.value === 'online' ? "border-blue-600 bg-blue-50/30" : "border-gray-100 hover:border-gray-200 bg-white"
-                            )}>
+                            <div 
+                              onClick={() => field.onChange('online')}
+                              className={cn(
+                                "flex flex-col rounded-xl border-2 transition-all cursor-pointer",
+                                field.value === 'online' ? "border-blue-600 bg-blue-50/30" : "border-gray-100 hover:border-gray-200 bg-white"
+                              )}
+                            >
                               <div className="flex items-center gap-4 p-4">
                                 <RadioGroupItem value="online" id="cat-online" className="sr-only" />
                                 <label htmlFor="cat-online" className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
@@ -548,21 +481,14 @@ export function CheckoutModal() {
                                   <span className="uppercase tracking-tight">Online Payment</span>
                                 </label>
                               </div>
-
                               {field.value === 'online' && (
-                                <div className="p-4 pt-0 animate-in slide-in-from-top-2">
+                                <div className="p-4 pt-0 animate-in slide-in-from-top-2" onClick={(e) => e.stopPropagation()}>
                                   <FormField control={form.control} name="onlineMethod" render={({ field: subField }) => (
                                     <FormItem>
                                       <Select onValueChange={subField.onChange} value={subField.value}>
-                                        <FormControl>
-                                          <SelectTrigger className="h-12 bg-white border-blue-200 font-bold rounded-xl">
-                                            <SelectValue placeholder="Choose Provider" />
-                                          </SelectTrigger>
-                                        </FormControl>
+                                        <FormControl><SelectTrigger className="h-12 bg-white border-blue-200 font-bold rounded-xl"><SelectValue placeholder="Choose Provider" /></SelectTrigger></FormControl>
                                         <SelectContent className="rounded-xl">
-                                          {onlineMethods.map(m => (
-                                            <SelectItem key={m.id} value={m.id} className="font-bold uppercase text-[10px]">{m.name}</SelectItem>
-                                          ))}
+                                          {onlineMethods.map(m => <SelectItem key={m.id} value={m.id} className="font-bold uppercase text-[10px]">{m.name}</SelectItem>)}
                                         </SelectContent>
                                       </Select>
                                       <FormMessage />
@@ -581,24 +507,15 @@ export function CheckoutModal() {
               </Form>
             </div>
           </div>
-
-          {/* 📱 Mobile Sticky Bottom Bar */}
           <div className="lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-20">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Due</span>
               <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
             </div>
-            <Button 
-              onClick={form.handleSubmit(onSubmit)} 
-              className="flex-1 h-14 rounded-xl shadow-xl uppercase tracking-tighter bg-primary hover:bg-primary/90 text-white font-black text-sm gap-2"
-              disabled={isSubmitting || items.length === 0}
-            >
-              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                <>{hasServices ? 'Place Booking' : 'Place Order'} <ArrowRight size={18} /></>
-              )}
+            <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl shadow-xl uppercase tracking-tighter bg-primary hover:bg-primary/90 text-white font-black text-sm gap-2" disabled={isSubmitting || items.length === 0}>
+              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <ArrowRight size={18} /></>}
             </Button>
           </div>
-
         </div>
       </DialogContent>
     </Dialog>
