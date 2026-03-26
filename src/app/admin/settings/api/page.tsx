@@ -115,14 +115,14 @@ export default function APISettingsPage() {
             <h3 className="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
               <Zap size={16} /> Developer Help
             </h3>
-            <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
+            <div className="text-xs text-blue-800/70 leading-relaxed font-medium">
               Webhooks are triggered on:
               <ul className="mt-2 list-disc pl-4 space-y-1">
                 <li>Order Creation</li>
                 <li>Payment Status Change</li>
                 <li>New Lead Registration</li>
               </ul>
-            </p>
+            </div>
           </Card>
         </div>
       </div>
