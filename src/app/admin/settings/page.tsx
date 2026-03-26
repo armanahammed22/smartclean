@@ -19,7 +19,8 @@ import {
   Search, 
   Loader2,
   Link as LinkIcon,
-  ShieldCheck
+  ShieldCheck,
+  Smartphone
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -38,6 +39,7 @@ export default function AdminSettingsPage() {
     logoUrl: '',
     logoLink: '/',
     faviconUrl: '',
+    appIconUrl: '',
     contactEmail: 'smartclean422@gmail.com',
     contactPhone: '+8801919640422',
     address: 'Wireless Gate, Mohakhali, Dhaka-1212',
@@ -148,22 +150,13 @@ export default function AdminSettingsPage() {
                       className="h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest">Default Language</Label>
-                    <Input 
-                      value={formData.defaultLanguage} 
-                      onChange={(e) => setFormData({...formData, defaultLanguage: e.target.value})}
-                      placeholder="bn or en"
-                      className="h-11"
-                    />
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <ImageUploader 
-                    label="Site Logo"
+                    label="Main Site Logo"
                     initialUrl={formData.logoUrl}
-                    aspectRatio="aspect-square w-20"
+                    aspectRatio="aspect-square w-24"
                     onUpload={(url) => setFormData({...formData, logoUrl: url})}
                   />
                   <ImageUploader 
@@ -171,6 +164,12 @@ export default function AdminSettingsPage() {
                     initialUrl={formData.faviconUrl}
                     aspectRatio="aspect-square w-16"
                     onUpload={(url) => setFormData({...formData, faviconUrl: url})}
+                  />
+                  <ImageUploader 
+                    label="Mobile App Icon (Apple Touch)"
+                    initialUrl={formData.appIconUrl}
+                    aspectRatio="aspect-square w-24"
+                    onUpload={(url) => setFormData({...formData, appIconUrl: url})}
                   />
                 </div>
               </div>

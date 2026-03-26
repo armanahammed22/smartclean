@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -87,7 +88,6 @@ export function Navbar() {
     router.push(`/${type === 'product' ? 'product' : 'service'}/${id}`);
   };
 
-  // Theme overrides
   const navStyles = {
     backgroundColor: layout?.header?.bgColor || '#ffffff',
     color: layout?.header?.textColor || '#081621'
@@ -145,7 +145,6 @@ export function Navbar() {
               <NavbarOfferSlider />
             </div>
 
-            {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6">
               {layout?.header?.menuItems?.map((item: any, i: number) => (
                 <Link 
@@ -245,7 +244,6 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
-            {/* Cart Button */}
             <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center">
               <ShoppingCart size={22} />
               {itemCount > 0 && (
@@ -255,7 +253,6 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* Auth Icon */}
             <Link 
               href={user ? "/account/dashboard" : "/login"} 
               className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center"
