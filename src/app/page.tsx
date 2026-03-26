@@ -32,7 +32,8 @@ import {
   TrendingUp,
   Package,
   ShoppingBag,
-  Timer
+  Timer,
+  Truck
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -409,39 +410,66 @@ function ServiceSlider({ services }: { services: any[] }) {
 
 function ServiceGridItem({ s }: { s: any }) {
   const { t } = useLanguage();
+  const hasDiscount = s.regularPrice && s.regularPrice > s.basePrice;
+  const discountPercent = hasDiscount ? Math.round(((s.regularPrice - s.basePrice) / s.regularPrice) * 100) : null;
+  const soldCount = Math.floor(Math.random() * 500) + 10;
+
   return (
     <div className="relative group bg-white rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-2">
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+        {/* Taller Image Container */}
         <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
+          <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-[2rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
             {s.imageUrl ? (
               <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
             ) : (
               <Wrench size={40} className="text-gray-200" />
             )}
-            <div className="absolute top-3 left-3">
-              <Badge className="bg-primary/90 text-white border-none shadow-sm backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-3 py-1 rounded-full">
+            
+            {/* Free Delivery Badge */}
+            <div className="absolute bottom-4 left-4">
+              <Badge className="bg-[#2E8B57] text-white border-none flex items-center gap-1 font-black text-[7px] md:text-[9px] uppercase px-2 py-1 rounded-full shadow-lg">
+                <Truck size={10} fill="white" /> FREE DELIVERY
+              </Badge>
+            </div>
+
+            <div className="absolute top-4 left-4">
+              <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-3 py-1 rounded-full">
                 {s.categoryId || 'General'}
               </Badge>
             </div>
           </div>
         </div>
-        <div className="p-4 md:p-6 flex flex-col flex-1 gap-3 pt-0">
-          <h3 className="text-xs md:text-lg font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
+
+        {/* Details Section (Matching Image Aesthetic) */}
+        <div className="p-4 md:p-6 flex flex-col flex-1 gap-2 pt-0">
+          <h3 className="text-xs md:text-sm font-black group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}
           </h3>
-          <div className="mt-auto space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-400 leading-none mb-1">{t('price_from')}</span>
-                <p className="text-sm md:text-2xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-              </div>
-              <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
-                <Star size={12} fill="#f59e0b" className="text-amber-500" />
-                <span className="text-[10px] md:text-xs font-black text-amber-700">{s.rating || '5.0'}</span>
-              </div>
+          
+          <div className="mt-auto space-y-3">
+            <div className="flex items-center gap-2">
+              <p className="text-lg md:text-2xl font-black text-primary tracking-tighter leading-none">
+                <span className="text-sm md:text-base font-bold mr-0.5">৳</span>
+                {(s.basePrice || 0).toLocaleString()}
+              </p>
+              {discountPercent && (
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[8px] md:text-[10px] px-1.5">
+                  -{discountPercent}%
+                </Badge>
+              )}
             </div>
-            <Button size="sm" className="w-full rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase shadow-xl h-10 md:h-14 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">
+
+            <div className="flex items-center justify-between text-[8px] md:text-[10px] font-bold">
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={12} fill="currentColor" />
+                <span className="text-gray-500">{s.rating || '4.8'}</span>
+                <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
+              </div>
+              <span className="text-gray-400 uppercase tracking-widest">{soldCount} Sold</span>
+            </div>
+
+            <Button size="sm" className="w-full rounded-xl md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase shadow-lg h-10 md:h-12 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-2">
               {t('book_now')}
             </Button>
           </div>
