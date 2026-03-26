@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -42,9 +42,9 @@ import {
   CarouselItem
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
-import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
-import { Card, CardContent } from '@/components/ui/card';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 const getCategoryStyles = (name: string) => {
   const n = name.toLowerCase();
@@ -96,7 +96,6 @@ export default function SmartCleanHomePage() {
     const config = section.config || {};
     const sectionType = section.type;
     
-    // --- Shared Product Filtering Logic ---
     const getFilteredProducts = () => {
       let feed = allProducts?.filter(p => p.status === 'Active') || [];
       if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
@@ -106,7 +105,6 @@ export default function SmartCleanHomePage() {
       return feed.slice(0, config.limit || 12);
     };
 
-    // --- Shared Service Filtering Logic ---
     const getFilteredServices = () => {
       let feed = allServices?.filter(s => s.status === 'Active') || [];
       if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
@@ -114,7 +112,7 @@ export default function SmartCleanHomePage() {
       if (sectionType === 'services_trending') feed = feed.filter(s => s.isPopular);
       if (sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       if (sectionType === 'services_new') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      return feed.slice(0, config.limit || 12);
+      return feed.slice(0, 24); // Limit to 24 for a 2-row slider (up to 12 cols per slide)
     };
 
     switch (sectionType) {
@@ -196,26 +194,24 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
         return (
           <section key={section.id} className="w-full py-4 md:py-6 px-3 md:px-4">
-            <div className="bg-[#1E5F7A] overflow-hidden shadow-xl rounded-2xl md:rounded-[2.5rem] border border-white/5">
+            <div className="bg-white overflow-hidden shadow-md rounded-3xl border border-gray-100">
               <div className="container mx-auto max-w-7xl">
-                <div className="p-4 md:p-8 flex items-center justify-between">
+                <div className="p-4 md:p-6 flex items-center justify-between border-b">
                   <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="p-1 bg-amber-400 rounded text-[#1E5F7A]"><Zap size={14} fill="currentColor" /></div>
-                        <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em]">{flashSaleConfig.title || 'Flash Sale'}</span>
-                      </div>
-                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="light" />
+                      <span className="text-sm md:text-lg font-black text-[#081621] uppercase tracking-tight">{flashSaleConfig.title || 'Flash Sale'}</span>
+                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
                     </div>
                   </div>
-                  <Link href="/products" className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest hover:opacity-80 transition-opacity bg-white/10 px-3 py-1.5 rounded-full">
-                    ALL <ChevronRight size={12} className="text-amber-400" />
+                  <Link href="/products" className="flex items-center gap-1 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
+                    ALL <ChevronRight size={14} />
                   </Link>
                 </div>
-                <div className="px-3 md:px-8 pb-6 md:pb-8">
-                  <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
+                <div className="p-4 md:p-6">
+                  <div className="flex gap-3 md:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
                     {flashProducts.map(p => (
-                      <div key={p.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
+                      <div key={p.id} className="w-[140px] md:w-[180px] shrink-0 snap-start">
                         <FlashSaleCard product={p} />
                       </div>
                     ))}
@@ -232,53 +228,31 @@ export default function SmartCleanHomePage() {
       case 'services_trending':
       case 'services_top_rated':
       case 'services_new':
-      case 'services_recommended':
         const displayServices = getFilteredServices();
+        const itemsPerViewMobile = 4; // 2 cols * 2 rows
+        const itemsPerViewTablet = 8; // 4 cols * 2 rows
+        const itemsPerViewDesktop = 12; // 6 cols * 2 rows
+
+        // Chunk items for Embla pages
+        const chunkArray = (arr: any[], size: number) => 
+          Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+            arr.slice(i * size, i * size + size)
+          );
+
         return (
-          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12">
+          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12 bg-white/50">
             <div className="container mx-auto max-w-7xl">
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-primary/10 rounded-xl text-primary"><Wrench size={24} /></div>
-                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+                  <div className="p-2.5 bg-primary/10 rounded-xl text-primary"><Sparkles size={24} fill="currentColor" /></div>
+                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
                 </div>
-                <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-primary/5 px-4 py-2 rounded-full hover:bg-primary/10 transition-colors">
-                  VIEW ALL <ChevronRight size={14} className="text-primary" />
+                <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-white border border-primary/20 px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm">
+                  VIEW ALL <ChevronRight size={14} />
                 </Link>
               </div>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 md:gap-6">
-                {displayServices.map(s => (
-                  <div key={s.id} className="relative group bg-white rounded-[1rem] md:rounded-[1.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
-                    <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
-                      <div className="p-1 md:p-1.5 shrink-0">
-                        <div className="relative aspect-[4/3] overflow-hidden rounded-[0.8rem] md:rounded-[1.2rem] bg-gray-50 border border-gray-50 flex items-center justify-center">
-                          {s.imageUrl ? (
-                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
-                          ) : (
-                            <Wrench size={32} className="text-gray-200" />
-                          )}
-                          <div className="absolute top-1.5 left-1.5"><Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-md font-black text-[6px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
-                        </div>
-                      </div>
-                      <div className="p-2 md:p-3 flex flex-col flex-1 gap-1.5 md:gap-2 pt-0">
-                        <h3 className="text-[8px] md:text-[12px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">
-                          {s.title}
-                        </h3>
-                        <div className="mt-auto space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <p className="text-[10px] md:text-base font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                              <Star size={8} fill="currentColor" className="md:w-3 md:h-3" />
-                              <span className="text-[7px] md:text-[10px] font-black text-gray-400">{s.rating || '5.0'}</span>
-                            </div>
-                          </div>
-                          <Button size="sm" className="w-full rounded-lg md:rounded-xl font-black text-[7px] md:text-[10px] uppercase shadow-md h-7 md:h-10 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none p-0">Book Now</Button>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-                ))}
-              </div>
+
+              <ServiceSlider services={displayServices} />
             </div>
           </section>
         );
@@ -295,8 +269,8 @@ export default function SmartCleanHomePage() {
             <div className="container mx-auto max-w-7xl">
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-accent/10 rounded-xl text-accent"><Sparkles size={24} fill="currentColor" /></div>
-                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+                  <div className="p-2.5 bg-accent/10 rounded-xl text-accent"><TrendingUp size={24} fill="currentColor" /></div>
+                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
@@ -318,27 +292,6 @@ export default function SmartCleanHomePage() {
                     <span className="font-black text-gray-300 uppercase text-xs">{brand.name}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-          </section>
-        );
-
-      case 'service_banner':
-        const featuredSrv = allServices?.find(s => s.id === config.serviceId) || allServices?.[0];
-        if (!featuredSrv) return null;
-        return (
-          <section key={section.id} className="px-4 py-10">
-            <div className="container mx-auto max-w-7xl">
-              <div className="relative aspect-[21/9] md:aspect-[21/7] rounded-[2.5rem] overflow-hidden shadow-2xl group">
-                <Image src={featuredSrv.imageUrl || 'https://picsum.photos/seed/promo/1200/600'} alt="Featured" fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent flex flex-col justify-center p-8 md:p-16 space-y-4 md:space-y-6">
-                  <Badge className="bg-primary text-white w-fit px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">Editor's Pick</Badge>
-                  <h2 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-none max-w-2xl">{featuredSrv.title}</h2>
-                  <p className="text-white/70 max-w-lg font-medium text-sm md:text-lg line-clamp-2">{featuredSrv.description}</p>
-                  <Button asChild size="lg" className="w-fit h-14 md:h-16 px-10 rounded-full font-black uppercase text-xs md:text-sm shadow-2xl tracking-widest text-white border-none bg-primary hover:bg-primary/90">
-                    <Link href={`/service/${featuredSrv.id}`}>Book This Service <ChevronRight size={20} className="ml-2" /></Link>
-                  </Button>
-                </div>
               </div>
             </div>
           </section>
@@ -425,7 +378,6 @@ export default function SmartCleanHomePage() {
             {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
             {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Sale' })}
             {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
-            {renderSection({ id: 'def-camp', type: 'campaign', config: {} })}
             {renderSection({ 
               id: 'def-serv', 
               type: 'services_featured', 
@@ -442,5 +394,65 @@ export default function SmartCleanHomePage() {
         )}
       </div>
     </PublicLayout>
+  );
+}
+
+function ServiceSlider({ services }: { services: any[] }) {
+  const [emblaRef] = useEmblaCarousel({ loop: true, align: 'start', skipSnaps: false }, [Autoplay({ delay: 2500, stopOnInteraction: false })]);
+
+  return (
+    <div className="overflow-hidden" ref={emblaRef}>
+      <div className="flex -ml-4">
+        {/* We group services into 'pages' but since we want items to be in a 2-row grid, 
+            we can actually just use a simple grid layout and let Embla handle the scroll. 
+            However, the prompt says "Slides per view (2 / 4 / 6)". 
+            Let's use a multi-item slide strategy. */}
+        {services.map((s) => (
+          <div key={s.id} className="flex-[0_0_50%] md:flex-[0_0_25%] lg:flex-[0_0_16.66%] min-w-0 pl-4">
+            <ServiceGridItem s={s} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ServiceGridItem({ s }: { s: any }) {
+  return (
+    <div className="relative group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-2">
+      <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+        <div className="p-1.5 shrink-0">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 border border-gray-50 flex items-center justify-center">
+            {s.imageUrl ? (
+              <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+            ) : (
+              <Wrench size={32} className="text-gray-200" />
+            )}
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-primary/90 text-white border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-2 py-0.5 rounded-full">
+                {s.categoryId || 'General'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        <div className="p-3 md:p-4 flex flex-col flex-1 gap-2 pt-0">
+          <h3 className="text-[11px] md:text-[14px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">
+            {s.title}
+          </h3>
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs md:text-lg font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+              <div className="flex items-center gap-0.5 text-amber-400">
+                <Star size={10} fill="currentColor" className="md:w-3.5 md:h-3.5" />
+                <span className="text-[9px] md:text-[11px] font-black text-gray-400">{s.rating || '5.0'}</span>
+              </div>
+            </div>
+            <Button size="sm" className="w-full rounded-xl font-black text-[9px] md:text-[11px] uppercase shadow-lg h-8 md:h-11 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">
+              Book Now
+            </Button>
+          </div>
+        </div>
+      </Link>
+    </div>
   );
 }
