@@ -32,7 +32,7 @@ export const getMockProducts = (language: 'bn' | 'en'): Product[] => [
 ];
 
 /**
- * User provided Service List
+ * User provided Service List (Mapped to specific IDs)
  */
 export const getMockServices = (language: 'bn' | 'en'): Service[] => [
   {
@@ -82,7 +82,7 @@ export const getMockServices = (language: 'bn' | 'en'): Service[] => [
 ];
 
 /**
- * User provided Sub-service List
+ * User provided Sub-service List with pre-defined Parent Mapping
  */
 export const getMockSubServices = (): Partial<SubService>[] => [
   {
@@ -91,6 +91,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 500,
     duration: '45-60 minutes',
     status: 'Active',
+    mainServiceId: 'srv_home_clean',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   },
@@ -100,6 +101,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 400,
     duration: '30-45 minutes',
     status: 'Active',
+    mainServiceId: 'srv_home_clean',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   },
@@ -109,6 +111,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 400,
     duration: '30-45 minutes',
     status: 'Active',
+    mainServiceId: 'srv_home_clean',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   },
@@ -118,6 +121,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 600,
     duration: '60 minutes',
     status: 'Active',
+    mainServiceId: 'srv_sofa_carpet',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   },
@@ -127,6 +131,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 300,
     duration: '30 minutes',
     status: 'Active',
+    mainServiceId: 'srv_home_clean',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   },
@@ -136,6 +141,7 @@ export const getMockSubServices = (): Partial<SubService>[] => [
     price: 700,
     duration: '60-90 minutes',
     status: 'Active',
+    mainServiceId: 'srv_home_clean',
     isAddOnEnabled: true,
     isDefaultAddOn: false
   }

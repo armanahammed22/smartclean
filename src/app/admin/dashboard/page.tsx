@@ -91,20 +91,16 @@ export default function AdminDashboard() {
         const subId = `sub_srv_${idx + 1}`;
         const subRef = doc(db, 'sub_services', subId);
         
-        let parentId = 'srv_home_clean';
-        if (sub.name === 'Sofa Cleaning') parentId = 'srv_sofa_carpet';
-
         batch.set(subRef, {
           ...sub,
           id: subId,
-          mainServiceId: parentId,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
       });
 
       await batch.commit();
-      toast({ title: "ERP Data Seeded", description: "Your custom services & sub-services are now live." });
+      toast({ title: "ERP Data Seeded", description: "All services and sub-services are now live." });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Seeding Failed", description: e.message });
     } finally {
