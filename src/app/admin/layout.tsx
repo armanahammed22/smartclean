@@ -59,7 +59,9 @@ import {
   Navigation,
   Grid,
   TrendingUp,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -83,6 +85,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -150,6 +153,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      id: 'ai_agents',
+      title: "AI AGENTS (STAFF)",
+      icon: Bot,
+      color: "text-blue-400",
+      items: [
+        { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
+        { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
+      ]
+    },
+    {
       id: 'orders',
       title: "ORDER & BOOKING",
       icon: ShoppingCart,
@@ -206,6 +219,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
         { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
+        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileText },
         { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
       ]
     },
@@ -250,6 +264,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
         { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+        { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
         { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
         { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
         { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
