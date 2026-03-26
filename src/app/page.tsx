@@ -111,10 +111,10 @@ export default function SmartCleanHomePage() {
       let feed = allServices?.filter(s => s.status === 'Active') || [];
       if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
       if (sectionType === 'services_popular') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      if (sectionType === 'services_trending') feed = feed.filter(s => s.isPopular); // Mock trending
+      if (sectionType === 'services_trending') feed = feed.filter(s => s.isPopular);
       if (sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       if (sectionType === 'services_new') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      return feed.slice(0, config.limit || 8);
+      return feed.slice(0, config.limit || 12);
     };
 
     switch (sectionType) {
@@ -235,39 +235,44 @@ export default function SmartCleanHomePage() {
       case 'services_recommended':
         const displayServices = getFilteredServices();
         return (
-          <section key={section.id} className="px-4 py-8">
+          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
-              <div className="flex items-center justify-between mb-6 px-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-xl text-primary"><Wrench size={20} /></div>
-                  <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-primary/10 rounded-xl text-primary"><Wrench size={24} /></div>
+                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
                 </div>
-                <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5">
-                  ALL <ChevronRight size={14} className="bg-primary/10 rounded-full" />
+                <Link href="/services" className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-primary/5 px-4 py-2 rounded-full hover:bg-primary/10 transition-colors">
+                  VIEW ALL <ChevronRight size={14} className="text-primary" />
                 </Link>
               </div>
-              <div className="flex gap-3 md:gap-4 overflow-x-auto no-scrollbar pb-4 snap-x snap-mandatory">
+              <div className="flex gap-2.5 md:gap-6 overflow-x-auto no-scrollbar pb-6 snap-x snap-mandatory">
                 {displayServices.map(s => (
-                  <div key={s.id} className="w-[calc(33.33%-0.5rem)] sm:w-[calc(25%-0.75rem)] lg:w-[calc(16.66%-1rem)] shrink-0 snap-start">
-                    <Link href={`/service/${s.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
-                      <div className="p-1.5 shrink-0">
-                        <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <div key={s.id} className="w-[calc(33.33%-0.5rem)] md:w-[calc(25%-1rem)] lg:w-[calc(16.66%-1.25rem)] shrink-0 snap-start">
+                    <Link href={`/service/${s.id}`} className="group bg-white rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
+                      <div className="p-1.5 md:p-2 shrink-0">
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-[1rem] md:rounded-[1.5rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
                           {s.imageUrl ? (
-                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" unoptimized />
+                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
                           ) : (
-                            <Wrench size={32} className="text-gray-200" />
+                            <Wrench size={40} className="text-gray-200" />
                           )}
-                          <div className="absolute top-2 left-2"><Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
+                          <div className="absolute top-2 left-2"><Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-2 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
                         </div>
                       </div>
-                      <div className="p-2 md:p-3 flex flex-col flex-1 gap-1.5 pt-0">
-                        <h3 className="text-[9px] md:text-[11px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">{s.title}</h3>
-                        <div className="mt-auto space-y-1">
+                      <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-2 pt-0">
+                        <h3 className="text-[10px] md:text-[13px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">
+                          {s.title}
+                        </h3>
+                        <div className="mt-auto space-y-2">
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] md:text-sm font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                            <div className="flex items-center gap-0.5 text-amber-400"><Star size={8} fill="currentColor" className="md:w-2.5 md:h-2.5" /><span className="text-[7px] md:text-[9px] font-black text-gray-400">{s.rating || '4.8'}</span></div>
+                            <p className="text-[12px] md:text-lg font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            <div className="flex items-center gap-0.5 text-amber-400">
+                              <Star size={10} fill="currentColor" className="md:w-3 md:h-3" />
+                              <span className="text-[8px] md:text-[11px] font-black text-gray-400">{s.rating || '5.0'}</span>
+                            </div>
                           </div>
-                          <Button size="sm" className="w-full rounded-lg font-black text-[8px] md:text-[10px] uppercase shadow-sm h-7 md:h-9 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">Book Now</Button>
+                          <Button size="sm" className="w-full rounded-xl font-black text-[8px] md:text-[11px] uppercase shadow-lg h-8 md:h-11 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">Book Now</Button>
                         </div>
                       </div>
                     </Link>
@@ -286,15 +291,15 @@ export default function SmartCleanHomePage() {
       case 'custom_grid':
         const displayProducts = getFilteredProducts();
         return (
-          <section key={section.id} className="px-4 py-8">
+          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
               <div className="flex items-center justify-between mb-8 px-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-accent/10 rounded-xl text-accent"><Sparkles size={20} fill="currentColor" /></div>
-                  <h2 className="text-xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-accent/10 rounded-xl text-accent"><Sparkles size={24} fill="currentColor" /></div>
+                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
                 </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
             </div>
@@ -330,7 +335,7 @@ export default function SmartCleanHomePage() {
                   <Badge className="bg-primary text-white w-fit px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">Editor's Pick</Badge>
                   <h2 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-none max-w-2xl">{featuredSrv.title}</h2>
                   <p className="text-white/70 max-w-lg font-medium text-sm md:text-lg line-clamp-2">{featuredSrv.description}</p>
-                  <Button asChild size="lg" className="w-fit h-14 md:h-16 px-10 rounded-full font-black uppercase text-xs md:text-sm shadow-2xl tracking-widest">
+                  <Button asChild size="lg" className="w-fit h-14 md:h-16 px-10 rounded-full font-black uppercase text-xs md:text-sm shadow-2xl tracking-widest text-white border-none bg-primary hover:bg-primary/90">
                     <Link href={`/service/${featuredSrv.id}`}>Book This Service <ChevronRight size={20} className="ml-2" /></Link>
                   </Button>
                 </div>
@@ -379,7 +384,7 @@ export default function SmartCleanHomePage() {
                   { name: "Rafiq Ahmed", text: "I've tried many services in Dhaka, but Smart Clean's tech and professionalism are on another level.", area: "Uttara" },
                   { name: "Mila K.", text: "Highly reliable. They arrived exactly on time and finished ahead of schedule.", area: "Banani" }
                 ].map((rev, i) => (
-                  <Card key={i} className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all">
+                  <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all">
                     <CardContent className="p-0 space-y-6">
                       <div className="flex text-amber-400 gap-0.5">{[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}</div>
                       <p className="text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
@@ -425,7 +430,7 @@ export default function SmartCleanHomePage() {
               id: 'def-serv', 
               type: 'services_featured', 
               title: 'Featured Services',
-              config: { limit: 8 } 
+              config: { limit: 12 } 
             })}
             {renderSection({ 
               id: 'def-feed', 

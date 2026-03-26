@@ -24,7 +24,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
   return (
     <Link href={`/product/${product.id}`} className="block h-full app-button">
       <div className="flex flex-col h-full bg-transparent group">
-        <div className="relative aspect-square w-full rounded-2xl md:rounded-[1.5rem] overflow-hidden bg-white shadow-sm border border-gray-100 mb-3">
+        <div className="relative aspect-square w-full rounded-[1.2rem] md:rounded-[1.5rem] overflow-hidden bg-white shadow-sm border border-gray-100 mb-2 md:mb-3">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -39,48 +39,48 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
             </div>
           )}
           
-          <div className="absolute bottom-2 left-2">
-            <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-tighter shadow-lg">
-              <Truck size={10} fill="white" className="shrink-0" />
-              FREE DELIVERY
+          <div className="absolute bottom-1.5 left-1.5 md:bottom-2 md:left-2">
+            <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[6px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-tighter shadow-lg">
+              <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
+              FREE
             </div>
           </div>
         </div>
 
-        <div className="px-1 space-y-1.5">
+        <div className="px-0.5 space-y-1">
           <h3 className={cn(
-            "text-[11px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
+            "text-[9px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
             isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
           )}>
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <p className={cn(
-              "text-base md:text-lg font-black tracking-tighter",
+              "text-xs md:text-lg font-black tracking-tighter",
               isDark ? "text-amber-400" : "text-[#f85606]"
             )}>
-              <span className="text-sm font-bold mr-0.5">৳</span>
+              <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
               {product.price.toLocaleString()}
             </p>
             {discountPercent && (
-              <span className="text-[9px] md:text-[10px] font-bold text-[#f85606] bg-[#fff1eb] px-1.5 py-0.5 rounded-sm">
+              <span className="text-[7px] md:text-[10px] font-bold text-[#f85606] bg-[#fff1eb] px-1 py-0.5 rounded-sm">
                 -{discountPercent}%
               </span>
             )}
           </div>
           
           <div className={cn(
-            "flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold",
+            "flex items-center gap-1 text-[7px] md:text-[10px] font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
             <div className="flex items-center gap-0.5 text-amber-400">
-              <Star size={10} fill="currentColor" />
+              <Star size={8} fill="currentColor" className="md:w-2.5 md:h-2.5" />
               <span className={cn(isDark ? "text-white/60" : "text-gray-500")}>{rating}</span>
             </div>
-            <span>({reviewCount})</span>
-            <span className="opacity-20">|</span>
-            <span>{soldCount} Sold</span>
+            <span className="hidden sm:inline">({reviewCount})</span>
+            <span className="opacity-20 hidden sm:inline">|</span>
+            <span className="truncate">{soldCount} Sold</span>
           </div>
         </div>
       </div>
