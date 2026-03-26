@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
   ArrowLeft, 
+  ArrowRight,
   ShieldCheck, 
   Clock, 
   Loader2, 
@@ -107,7 +108,6 @@ export default function ServiceBookingPage() {
 
   const handleContinue = () => {
     if (!baseService) return;
-    const chosenAddOns = addOnOptions.filter(a => selectedAddOnIds.includes(a.id));
     const title = baseService.title || baseService.name;
 
     addToCart({
@@ -248,9 +248,9 @@ export default function ServiceBookingPage() {
                     
                     <Button 
                       onClick={handleContinue}
-                      className="w-full h-16 rounded-2xl font-black text-lg bg-primary hover:bg-primary/90 text-white uppercase tracking-tight shadow-xl shadow-primary/20 gap-3 group"
+                      className="w-full h-16 md:h-20 rounded-2xl font-black text-2xl md:text-3xl bg-primary hover:bg-primary/90 text-white uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 group transition-all active:scale-95"
                     >
-                      বুকিং দিতে চাই <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                      বুকিং দিতে চাই <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform" />
                     </Button>
                   </div>
                 </CardContent>
@@ -268,9 +268,9 @@ export default function ServiceBookingPage() {
             </div>
             <Button 
               onClick={handleContinue}
-              className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20"
+              className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-base uppercase tracking-widest shadow-xl shadow-primary/20 gap-2"
             >
-              বুকিং দিতে চাই <ChevronRight size={18} className="ml-1" />
+              বুকিং দিতে চাই <ChevronRight size={20} className="ml-1" />
             </Button>
           </div>
         )}
