@@ -6,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, X } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, X, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -77,11 +77,28 @@ export default function SubServicesManagementPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
+
+    // Validation
+    if (!formValues.name.trim()) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Sub-service name is required." });
+      return;
+    }
+    if (!formValues.mainServiceId) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Please select a parent service." });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const subData = {
-      ...formValues,
+      name: formValues.name.trim(),
+      mainServiceId: formValues.mainServiceId,
       price: parseFloat(formValues.price) || 0,
+      duration: formValues.duration.trim(),
+      description: formValues.description.trim(),
+      status: formValues.status,
+      isAddOnEnabled: formValues.isAddOnEnabled,
+      isDefaultAddOn: formValues.isDefaultAddOn,
       imageUrl: imageUrl,
       updatedAt: new Date().toISOString()
     };
@@ -89,16 +106,23 @@ export default function SubServicesManagementPage() {
     try {
       if (editingSub) {
         await updateDoc(doc(db, 'sub_services', editingSub.id), subData);
-        toast({ title: "Sub-Service Updated" });
+        toast({ title: "Updated Successfully", description: `${subData.name} has been updated.` });
       } else {
-        await addDoc(collection(db, 'sub_services'), { ...subData, createdAt: new Date().toISOString() });
-        toast({ title: "Sub-Service Added" });
+        await addDoc(collection(db, 'sub_services'), { 
+          ...subData, 
+          createdAt: new Date().toISOString() 
+        });
+        toast({ title: "Created Successfully", description: `${subData.name} has been added to the catalog.` });
       }
       setIsDialogOpen(false);
       setEditingSub(null);
     } catch (error: any) {
-      console.error("Error saving sub-service:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not save task. Check permissions or logs." });
+      console.error("Firestore Save Error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Save Failed", 
+        description: error.message || "An unexpected error occurred while saving."
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -110,12 +134,12 @@ export default function SubServicesManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete this sub-service?")) return;
+    if (!db || !confirm("Delete this sub-service permanently?")) return;
     try {
       await deleteDoc(doc(db, 'sub_services', id));
       toast({ title: "Removed Successfully" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Delete Failed" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Delete Failed", description: e.message });
     }
   };
 
@@ -244,41 +268,42 @@ export default function SubServicesManagementPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-                ) : subServices?.map((sub) => (
-                  <TableRow key={sub.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <TableCell className="py-5 pl-8">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-inner">
-                          {sub.imageUrl && <Image src={sub.imageUrl} alt={sub.name} fill className="object-cover" unoptimized />}
+                ) : subServices?.length ? (
+                  subServices.map((sub) => (
+                    <TableRow key={sub.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <TableCell className="py-5 pl-8">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100 shadow-inner">
+                            {sub.imageUrl && <Image src={sub.imageUrl} alt={sub.name} fill className="object-cover" unoptimized />}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[250px] leading-tight">{sub.name}</div>
+                            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">ID: {sub.id.slice(0, 6)}</div>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[250px] leading-tight">{sub.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-mono mt-0.5">ID: {sub.id.slice(0, 6)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px] tracking-widest">
+                          {services?.find(s => s.id === sub.mainServiceId)?.title || 'Independent'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-black text-sm text-gray-900">৳{sub.price?.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        {sub.isAddOnEnabled ? (
+                          <Badge className="bg-green-100 text-green-700 border-none text-[8px] font-black uppercase px-2 py-0.5">ENABLED</Badge>
+                        ) : (
+                          <Badge className="bg-gray-100 text-gray-400 border-none text-[8px] font-black uppercase px-2 py-0.5">DISABLED</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right pr-8">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => openEdit(sub)}><Edit size={16} /></Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(sub.id)}><Trash2 size={16} /></Button>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px] tracking-widest">
-                        {services?.find(s => s.id === sub.mainServiceId)?.title || 'Independent'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-black text-sm text-gray-900">৳{sub.price?.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">
-                      {sub.isAddOnEnabled ? (
-                        <Badge className="bg-green-100 text-green-700 border-none text-[8px] font-black uppercase px-2 py-0.5">ENABLED</Badge>
-                      ) : (
-                        <Badge className="bg-gray-100 text-gray-400 border-none text-[8px] font-black uppercase px-2 py-0.5">DISABLED</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => openEdit(sub)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(sub.id)}><Trash2 size={16} /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!subServices?.length && !isLoading && (
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow><TableCell colSpan={5} className="text-center py-24 text-muted-foreground italic font-medium">No sub-services configured yet.</TableCell></TableRow>
                 )}
               </TableBody>
