@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Layers, Plus, Trash2, Edit, Loader2, Save, X, AlertTriangle } from 'lucide-react';
@@ -78,7 +78,6 @@ export default function SubServicesManagementPage() {
     e.preventDefault();
     if (!db) return;
 
-    // Validation
     if (!formValues.name.trim()) {
       toast({ variant: "destructive", title: "Validation Error", description: "Sub-service name is required." });
       return;
@@ -100,7 +99,7 @@ export default function SubServicesManagementPage() {
       isAddOnEnabled: formValues.isAddOnEnabled,
       isDefaultAddOn: formValues.isDefaultAddOn,
       imageUrl: imageUrl,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp()
     };
 
     try {
@@ -110,18 +109,20 @@ export default function SubServicesManagementPage() {
       } else {
         await addDoc(collection(db, 'sub_services'), { 
           ...subData, 
-          createdAt: new Date().toISOString() 
+          createdAt: serverTimestamp() 
         });
         toast({ title: "Created Successfully", description: `${subData.name} has been added to the catalog.` });
       }
       setIsDialogOpen(false);
       setEditingSub(null);
     } catch (error: any) {
-      console.error("Firestore Save Error:", error);
+      console.error("Firestore Permission/Write Error:", error);
       toast({ 
         variant: "destructive", 
         title: "Save Failed", 
-        description: error.message || "An unexpected error occurred while saving. Check your permissions."
+        description: error.message?.includes('permission') 
+          ? "Access Denied: Your account doesn't have write permissions for sub-services."
+          : "An error occurred while saving. Please check your internet and try again."
       });
     } finally {
       setIsSubmitting(false);

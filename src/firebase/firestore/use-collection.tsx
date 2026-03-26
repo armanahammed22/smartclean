@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -21,7 +22,7 @@ export interface UseCollectionResult<T> {
 }
 
 const PUBLIC_COLLECTIONS = [
-  'products', 'services', 'campaigns', 'hero_banners', 'site_settings', 
+  'products', 'services', 'sub_services', 'campaigns', 'hero_banners', 'site_settings', 
   'pages_management', 'quick_links', 'quick_actions', 'brands',
   'marketing_offers', 'reusable_features', 'reusable_specs', 'variant_types',
   'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
