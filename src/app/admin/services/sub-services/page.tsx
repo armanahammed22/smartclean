@@ -121,7 +121,7 @@ export default function SubServicesManagementPage() {
       toast({ 
         variant: "destructive", 
         title: "Save Failed", 
-        description: error.message || "An unexpected error occurred while saving."
+        description: error.message || "An unexpected error occurred while saving. Check your permissions."
       });
     } finally {
       setIsSubmitting(false);
@@ -252,7 +252,7 @@ export default function SubServicesManagementPage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table className="min-w-[900px]">
