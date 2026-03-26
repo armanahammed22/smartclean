@@ -111,12 +111,14 @@ export function useDoc<T = any>(
           }
         );
       } catch (setupError: any) {
-        console.warn('[Firestore Shield] Setup phase doc interception:', setupError.message);
-        
-        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = setTimeout(() => {
-          if (activeToken.current === token) startListener();
-        }, 3000);
+        const setupErrorStr = setupError.message.toLowerCase();
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
+          console.warn('[Firestore Shield] Intercepted doc setup phase assertion. Retrying...');
+          if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (activeToken.current === token) startListener();
+          }, 3000);
+        }
       }
     };
 
@@ -126,9 +128,7 @@ export function useDoc<T = any>(
       activeToken.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       if (unsubscribe) {
-        try { unsubscribe(); } catch (e) {
-          // Unsubscribe noise suppressed during cleanup
-        }
+        try { unsubscribe(); } catch (e) {}
       }
     };
   }, [memoizedDocRef]);

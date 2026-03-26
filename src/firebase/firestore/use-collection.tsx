@@ -68,7 +68,7 @@ export function useCollection<T = any>(
     let unsubscribe: (() => void) | null = null;
 
     const startListener = () => {
-      // Cleanup previous listener
+      // Cleanup previous listener before starting a new one
       if (unsubscribe) {
         try { unsubscribe(); } catch (e) {}
         unsubscribe = null;
@@ -96,7 +96,7 @@ export function useCollection<T = any>(
               errorStr.includes('assertion failed') || 
               errorStr.includes('unexpected state')
             ) {
-              console.warn(`[Firestore Shield] Suppressing transient assertion error (ID: ca9/b815) at: ${currentPath}. Retrying...`);
+              console.warn(`[Firestore Shield] Suppressing transient assertion error (ID: ca9/b815) at collection: ${currentPath}. Retrying...`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
@@ -117,13 +117,14 @@ export function useCollection<T = any>(
           }
         );
       } catch (setupError: any) {
-        console.warn('[Firestore Shield] Setup phase interception:', setupError.message);
-        
-        // Retry even if setup fails due to internal state
-        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = setTimeout(() => {
-          if (activeToken.current === token) startListener();
-        }, 3000);
+        const setupErrorStr = setupError.message.toLowerCase();
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
+          console.warn('[Firestore Shield] Intercepted setup phase assertion. Retrying...');
+          if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (activeToken.current === token) startListener();
+          }, 3000);
+        }
       }
     };
 
@@ -133,9 +134,7 @@ export function useCollection<T = any>(
       activeToken.current = null;
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       if (unsubscribe) {
-        try { unsubscribe(); } catch (e) {
-          // Unsubscribe errors are common during HMR, suppressing noise
-        }
+        try { unsubscribe(); } catch (e) {}
       }
     };
   }, [memoizedTarget]);
