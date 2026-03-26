@@ -57,7 +57,9 @@ import {
   Activity,
   History,
   Navigation,
-  Grid
+  Grid,
+  TrendingUp,
+  ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -247,7 +249,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-        { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: Image.name === 'Image' ? Layers : ImageIcon },
+        { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
         { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
         { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
         { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
