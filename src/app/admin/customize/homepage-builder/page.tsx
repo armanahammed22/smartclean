@@ -33,7 +33,8 @@ import {
   ShoppingBag,
   Star,
   TrendingUp,
-  Clock
+  Clock,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
