@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       id: 'dashboard',
       title: "DASHBOARD",
       icon: LayoutDashboard,
-      color: "text-blue-400",
+      color: "text-indigo-400",
       items: [
         { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
       ]
@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       id: 'reports',
       title: "BUSINESS REPORTS",
       icon: BarChart3,
-      color: "text-indigo-400",
+      color: "text-blue-400",
       items: [
         { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
       ]
@@ -301,7 +301,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ShieldCheck size={20} />
         </div>
         {!collapsed && (
-          <div>
+          <div className="animate-in fade-in slide-in-from-left-2 duration-300">
             <h1 className="font-black text-sm uppercase leading-none">Smart Clean</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
@@ -309,53 +309,61 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-3 custom-scrollbar">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.id} className="space-y-1">
-            <button
-              onClick={() => toggleGroup(group.id)}
-              className={cn(
-                "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white",
-                group.items.some(item => pathname === item.href) && "bg-white/10 text-white"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <group.icon size={18} className={cn("shrink-0", group.items.some(item => pathname === item.href) ? group.color : "opacity-40")} />
-                {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest">{group.title}</span>}
-              </div>
-              {!collapsed && <ChevronRight size={14} className={cn("transition-transform", expandedGroups[group.id] ? "rotate-90" : "")} />}
-            </button>
+        {NAV_GROUPS.map((group) => {
+          const isGroupActive = group.items.some(item => pathname === item.href);
+          return (
+            <div key={group.id} className="space-y-1">
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white group",
+                  isGroupActive && "bg-white/5 text-white"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "p-1.5 rounded-lg transition-all",
+                    isGroupActive ? "bg-white/10" : "group-hover:bg-white/10"
+                  )}>
+                    <group.icon size={18} className={cn("shrink-0", group.color)} />
+                  </div>
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest">{group.title}</span>}
+                </div>
+                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300", expandedGroups[group.id] ? "rotate-90" : "")} />}
+              </button>
 
-            {expandedGroups[group.id] && !collapsed && (
-              <div className="pl-4 mt-1 space-y-1 border-l border-white/5 ml-3">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center px-4 py-2.5 rounded-lg text-[11px] font-bold transition-all relative",
-                      pathname === item.href ? "bg-white text-[#081621] shadow-lg" : "text-white/50 hover:text-white"
-                    )}
-                  >
-                    <item.icon size={14} className="mr-3 opacity-60" />
-                    {item.name}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute right-3 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+              {expandedGroups[group.id] && !collapsed && (
+                <div className="pl-4 mt-1 space-y-1 border-l border-white/5 ml-6 animate-in slide-in-from-top-2 duration-300">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center px-4 py-2.5 rounded-lg text-[11px] font-bold transition-all relative group/item",
+                        pathname === item.href ? "bg-white text-[#081621] shadow-lg scale-[1.02]" : "text-white/50 hover:text-white"
+                      )}
+                    >
+                      <item.icon size={14} className={cn("mr-3 transition-colors", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
+                      {item.name}
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute right-3 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="p-4 border-t border-white/5">
         <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
           <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12">
-            <LogOut size={18} className="mr-3" />
+            <LogOut size={18} className="mr-3 text-red-400" />
             {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
           </Button>
-          <AlertDialogContent className="rounded-[2rem] max-w-sm">
+          <AlertDialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
                 <LogOut size={20} /> Logout Admin?
@@ -387,19 +395,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
+      <aside className={cn(
+        "hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 relative border-r border-white/5",
+        isCollapsed ? "w-20" : "w-72"
+      )}>
         <SidebarContent collapsed={isCollapsed} />
-        <Button variant="ghost" size="icon" className="absolute -right-3 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-50" onClick={() => setIsCollapsed(!isCollapsed)}>
-          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </Button>
+        
+        {/* Modern Floating Toggle Button */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3.5 top-20 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
+        >
+          {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
+        </button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-w-0">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10"><Menu size={22} /></Button>
+                <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 text-gray-600"><Menu size={22} /></Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
                 <SheetHeader className="p-6 border-b border-white/5 sr-only">
@@ -410,18 +426,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase text-gray-400">Admin Control</span>
-              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Terminal active <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
+              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Management Terminal</span>
+              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                Server Status: Online <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold" asChild><Link href="/"><Globe size={18} /><span className="hidden sm:inline text-[10px] font-black uppercase">Live Site</span></Link></Button>
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">{user?.email?.[0].toUpperCase()}</div>
+            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
+              <Link href="/">
+                <Globe size={18} className="text-primary" />
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Live Site</span>
+              </Link>
+            </Button>
+            <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
+              <div className="text-right hidden sm:block">
+                <p className="text-[10px] font-black uppercase tracking-tighter text-gray-900">{user?.displayName || 'Administrator'}</p>
+                <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60">System Root</p>
+              </div>
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">
+                {user?.email?.[0].toUpperCase()}
+              </div>
+            </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar overflow-x-hidden">
-          <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">{children}</div>
+          <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">
+            {children}
+          </div>
         </main>
 
         <AdminBottomNav />
