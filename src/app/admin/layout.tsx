@@ -18,11 +18,7 @@ import {
   Truck,
   Box,
   Tags,
-  Share2,
-  Calendar,
-  Grid,
   Zap,
-  Wallet,
   Globe,
   Headphones,
   Layout,
@@ -34,24 +30,20 @@ import {
   MessageCircle,
   List,
   Megaphone,
-  LayoutGrid,
   Target,
   TicketPercent,
   HardHat,
   Briefcase,
   Award,
   Shapes,
-  ListChecks,
-  Settings2,
-  Code,
-  Shield,
-  TrendingUp,
-  FileSpreadsheet,
-  Wrench,
   Layers,
   MousePointer2,
   Store,
-  CheckCircle
+  CheckCircle,
+  Wrench,
+  Smartphone,
+  ShieldAlert,
+  Code
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -61,8 +53,6 @@ import { doc, collection, query, where } from 'firebase/firestore';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
@@ -74,7 +64,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -104,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  // Stats for Badges
+  // Dynamic Badges
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
   const pendingProductsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), where('approvalStatus', '==', 'Pending')) : null, [db, isAuthorized]);
@@ -120,17 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: LayoutDashboard,
       color: "text-blue-400",
       items: [
-        { name: "Global Insights", href: '/admin/dashboard', icon: LayoutDashboard },
-      ]
-    },
-    {
-      id: 'vendors',
-      title: "VENDOR HUB",
-      icon: Store,
-      color: "text-orange-400",
-      items: [
-        { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-        { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+        { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
       ]
     },
     {
@@ -141,12 +120,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       items: [
         { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 },
         { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
-        { name: "Logistics Hub", href: '/admin/couriers', icon: Truck },
+        { name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck },
       ]
     },
     {
       id: 'inventory',
-      title: "CATALOG",
+      title: "INVENTORY",
       icon: Box,
       color: "text-amber-400",
       items: [
@@ -157,14 +136,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
+      id: 'services',
+      title: "SERVICES",
+      icon: Wrench,
+      color: "text-sky-400",
+      items: [
+        { name: "Service List", href: '/admin/services', icon: Wrench },
+        { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
+        { name: "Service Areas", href: '/admin/areas', icon: Globe },
+      ]
+    },
+    {
       id: 'marketing',
       title: "MARKETING",
       icon: Target,
       color: "text-rose-400",
       items: [
+        { name: "Marketing Overview", href: '/admin/marketing/overview', icon: Target },
         { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
         { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
+        { name: "Facebook CAPI", href: '/admin/marketing/capi', icon: ShieldCheck },
+        { name: "Facebook Pixel", href: '/admin/marketing/pixel', icon: Code },
+      ]
+    },
+    {
+      id: 'offers',
+      title: "OFFER & COUPONS",
+      icon: TicketPercent,
+      color: "text-pink-400",
+      items: [
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
+        { name: "Homepage Banners", href: '/admin/offers/homepage-banners', icon: Layout },
+        { name: "Navbar Offers", href: '/admin/offers/navbar-banners', icon: Smartphone },
       ]
     },
     {
@@ -176,17 +179,69 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Customer Directory", href: '/admin/customers', icon: Users },
         { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
         { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+        { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
+      ]
+    },
+    {
+      id: 'vendor_hub',
+      title: "VENDOR HUB",
+      icon: Store,
+      color: "text-orange-400",
+      items: [
+        { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
+        { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+      ]
+    },
+    {
+      id: 'internal',
+      title: "INTERNAL PORTALS",
+      icon: Globe,
+      color: "text-teal-400",
+      items: [
+        { name: "Admin Portal", href: '/admin/dashboard', icon: Globe },
+        { name: "Staff Portal", href: '/staff/dashboard', icon: Wrench },
+      ]
+    },
+    {
+      id: 'reports',
+      title: "BUSINESS REPORTS",
+      icon: BarChart3,
+      color: "text-indigo-400",
+      items: [
+        { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
       ]
     },
     {
       id: 'customize',
       title: "SITE CUSTOMIZE",
       icon: Palette,
-      color: "text-pink-400",
+      color: "text-cyan-400",
       items: [
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
         { name: "Layout & Theme", href: '/admin/customize/theme', icon: Palette },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
+        { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: Zap },
+        { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },
+      ]
+    },
+    {
+      id: 'system',
+      title: "SYSTEM",
+      icon: Settings,
+      color: "text-slate-400",
+      items: [
+        { name: "Global Settings", href: '/admin/settings', icon: Settings },
+        { name: "Error Logs", href: '/admin/error-logs', icon: AlertCircle },
+      ]
+    },
+    {
+      id: 'support',
+      title: "SUPPORT",
+      icon: MessageCircle,
+      color: "text-green-400",
+      items: [
+        { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
+        { name: "Support Hub (Floating)", href: '/admin/support-hub', icon: Headphones },
       ]
     }
   ], [newOrders, newVendors, pendingProducts]);
@@ -224,7 +279,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-black text-sm uppercase leading-none">Multivendor</h1>
+            <h1 className="font-black text-sm uppercase leading-none">Smart Clean</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
         )}
@@ -273,12 +328,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="p-4 border-t border-white/5">
         <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12">
-              <LogOut size={18} className="mr-3" />
-              {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
-            </Button>
-          </AlertDialogTrigger>
+          <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12">
+            <LogOut size={18} className="mr-3" />
+            {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
+          </Button>
           <AlertDialogContent className="rounded-[2rem] max-w-sm">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
@@ -328,7 +381,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72"><SidebarContent /></SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase text-gray-400">Multivendor eCommerce</span>
+              <span className="text-[9px] font-black uppercase text-gray-400">Admin Control</span>
               <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Terminal active <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
           </div>
