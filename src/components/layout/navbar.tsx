@@ -243,16 +243,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-1 md:gap-4 shrink-0">
-            {/* Desktop Auth Icon - Hidden on Mobile */}
-            <Link 
-              href={user ? "/account/dashboard" : "/login"} 
-              className="hidden lg:flex relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm"
-              title={user ? "Account Dashboard" : "Login"}
-            >
-              <User size={22} />
-              {user && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white shadow-sm" />}
-            </Link>
-
+            {/* Cart Button - Now on Left */}
             <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm">
               <ShoppingCart size={22} />
               {itemCount > 0 && (
@@ -260,6 +251,16 @@ export function Navbar() {
                   {itemCount}
                 </span>
               )}
+            </Link>
+
+            {/* Desktop Auth Icon - Now on Right */}
+            <Link 
+              href={user ? "/account/dashboard" : "/login"} 
+              className="hidden lg:flex relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm"
+              title={user ? "Account Dashboard" : "Login"}
+            >
+              <User size={22} />
+              {user && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white shadow-sm" />}
             </Link>
           </div>
         </div>
