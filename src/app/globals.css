@@ -34,7 +34,7 @@
   }
   
   html, body {
-    @apply h-full overflow-x-hidden select-none touch-none;
+    @apply h-full overflow-x-hidden select-none;
     overscroll-behavior-y: none;
   }
 
@@ -44,6 +44,7 @@
     position: fixed;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 }
 
@@ -62,6 +63,22 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* 🛠️ Modern Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
   }
 }
 

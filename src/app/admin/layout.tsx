@@ -297,11 +297,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
     <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden">
       <div className="p-6 flex items-center gap-3 border-b border-white/5 h-20 shrink-0">
-        <div className="p-2.5 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10">
+        <div className="p-2.5 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10 shrink-0">
           <ShieldCheck size={20} />
         </div>
         {!collapsed && (
-          <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+          <div className="animate-in fade-in slide-in-from-left-2 duration-300 overflow-hidden whitespace-nowrap">
             <h1 className="font-black text-sm uppercase leading-none">Smart Clean</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
@@ -322,12 +322,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    "p-1.5 rounded-lg transition-all",
+                    "p-1.5 rounded-lg transition-all shrink-0",
                     isGroupActive ? "bg-white/10" : "group-hover:bg-white/10"
                   )}>
                     <group.icon size={18} className={cn("shrink-0", group.color)} />
                   </div>
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest">{group.title}</span>}
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
@@ -343,8 +343,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         pathname === item.href ? "bg-white text-[#081621] shadow-lg scale-[1.02]" : "text-white/50 hover:text-white"
                       )}
                     >
-                      <item.icon size={14} className={cn("mr-3 transition-colors", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
-                      {item.name}
+                      <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
+                      <span className="truncate">{item.name}</span>
                       {item.badge !== undefined && item.badge > 0 && (
                         <span className="absolute right-3 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
                       )}
@@ -357,11 +357,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </div>
 
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-white/5 shrink-0">
         <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-          <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12">
-            <LogOut size={18} className="mr-3 text-red-400" />
-            {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
+          <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 px-4">
+            <LogOut size={18} className="mr-3 text-red-400 shrink-0" />
+            {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest whitespace-nowrap">Logout System</span>}
           </Button>
           <AlertDialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
             <AlertDialogHeader>
@@ -396,7 +396,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside className={cn(
-        "hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 relative border-r border-white/5",
+        "hidden lg:flex flex-col h-full bg-[#08101b] transition-[width] duration-300 ease-in-out relative border-r border-white/5 shrink-0",
         isCollapsed ? "w-20" : "w-72"
       )}>
         <SidebarContent collapsed={isCollapsed} />
@@ -432,17 +432,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
+          <div className="flex items-center gap-2 md:gap-4 h-full">
+            <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-2 md:px-3 rounded-xl font-bold hover:bg-gray-50 flex items-center" asChild>
               <Link href="/">
                 <Globe size={18} className="text-primary" />
                 <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Live Site</span>
               </Link>
             </Button>
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
+            <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
               <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black uppercase tracking-tighter text-gray-900">{user?.displayName || 'Administrator'}</p>
-                <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60">System Root</p>
+                <p className="text-[10px] font-black uppercase tracking-tighter text-gray-900 leading-none">{user?.displayName || 'Administrator'}</p>
+                <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60 mt-1">System Root</p>
               </div>
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">
                 {user?.email?.[0].toUpperCase()}
