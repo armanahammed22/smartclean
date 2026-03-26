@@ -45,7 +45,15 @@ import {
   ShieldAlert,
   Code,
   Calendar,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Mail,
+  Bell,
+  Facebook,
+  Search,
+  Tag,
+  CreditCard,
+  Languages,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -157,11 +165,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Target,
       color: "text-rose-400",
       items: [
-        { name: "Marketing Overview", href: '/admin/marketing/overview', icon: Target },
-        { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
-        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
-        { name: "Facebook CAPI", href: '/admin/marketing/capi', icon: ShieldCheck },
-        { name: "Facebook Pixel", href: '/admin/marketing/pixel', icon: Code },
+        { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
+        { name: "Email Marketing", href: '/admin/marketing/email', icon: Mail },
+        { name: "SMS Marketing", href: '/admin/marketing/sms', icon: Smartphone },
+        { name: "Push Notify", href: '/admin/marketing/push', icon: Bell },
+        { name: "Referral System", href: '/admin/referrals', icon: Users },
+        { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
+        { name: "Social Media", href: '/admin/marketing/social', icon: Facebook },
+        { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
       ]
     },
     {
@@ -171,8 +182,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-pink-400",
       items: [
         { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
-        { name: "Homepage Banners", href: '/admin/offers/homepage-banners', icon: Layout },
-        { name: "Navbar Offers", href: '/admin/offers/navbar-banners', icon: Smartphone },
+        { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
+        { name: "BOGO Offers", href: '/admin/offers/bogo', icon: Tag },
+        { name: "Usage Tracking", href: '/admin/offers/tracking', icon: BarChart3 },
       ]
     },
     {
@@ -223,10 +235,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-cyan-400",
       items: [
         { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
-        { name: "Layout & Theme", href: '/admin/customize/theme', icon: Palette },
+        { name: "Banners / Sliders", href: '/admin/customize/hero', icon: Layout },
+        { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
+        { name: "UI Settings", href: '/admin/customize/theme', icon: Palette },
+        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileSpreadsheet },
         { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
-        { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: Zap },
-        { name: "Quick Links", href: '/admin/customize/quick-links', icon: LinkIcon },
       ]
     },
     {
@@ -235,7 +248,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Settings,
       color: "text-slate-400",
       items: [
-        { name: "Global Settings", href: '/admin/settings', icon: Settings },
+        { name: "General Settings", href: '/admin/settings', icon: Settings },
+        { name: "Payment Settings", href: '/admin/payments', icon: CreditCard },
+        { name: "Language Settings", href: '/admin/settings/languages', icon: Languages },
+        { name: "Notifications", href: '/admin/settings/notifications', icon: Bell },
+        { name: "API & Integrations", href: '/admin/settings/api', icon: Code },
+        { name: "Security Settings", href: '/admin/settings/security', icon: Shield },
         { name: "Error Logs", href: '/admin/error-logs', icon: AlertCircle },
       ]
     },
@@ -246,7 +264,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-green-400",
       items: [
         { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
-        { name: "Support Hub (Floating)", href: '/admin/support-hub', icon: Headphones },
+        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
       ]
     }
   ], [newOrders, newVendors, pendingProducts]);
@@ -384,9 +402,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10"><Menu size={22} /></Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
-                <SheetHeader className="sr-only">
-                  <SheetTitle>Admin Navigation</SheetTitle>
-                  <SheetDescription>Main administrative tools and management modules</SheetDescription>
+                <SheetHeader className="p-6 border-b border-white/5">
+                  <SheetTitle className="text-white uppercase font-black tracking-widest text-xs">Admin Navigation</SheetTitle>
+                  <SheetDescription className="text-white/40 text-[9px] uppercase font-bold">Smart Clean Central Control</SheetDescription>
                 </SheetHeader>
                 <SidebarContent />
               </SheetContent>
