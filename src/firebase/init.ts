@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -11,11 +10,11 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V7 - Final)
- * 1. Aggressively suppresses SDK internal assertion noise (ca9 / b815).
- * 2. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
- * 3. Enforces Long Polling to bypass proxy/workstation streaming failures.
- * 4. Silences recursive assertion loops in error listeners.
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V8 - HMR Optimized)
+ * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
+ * 2. Specifically ignores Turbopack/Next.js internal HMR messages to avoid dev-tool conflicts.
+ * 3. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
+ * 4. Enforces Long Polling to bypass proxy/workstation streaming failures.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -27,6 +26,12 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     const isAssertionError = (msg: string) => {
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
+      
+      // EXCLUDE: Do not intercept dev-tool or Turbopack specific messages
+      if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr')) {
+        return false;
+      }
+
       return (
         lowMsg.includes('ca9') || 
         lowMsg.includes('b815') || 
@@ -35,7 +40,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
-        lowMsg.includes('cc') // Common in ca9/b815 stack traces
+        lowMsg.includes('cc')
       );
     };
 
@@ -58,7 +63,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       originalConsoleError.apply(console, args);
     };
 
-    // Filter Window Errors (This stops the annoying Next.js RED OVERLAY for SDK internal bugs)
+    // Filter Window Errors
     window.addEventListener('error', (event) => {
       const msg = event.message || (event.error && event.error.message) || '';
       if (isAssertionError(msg)) {
