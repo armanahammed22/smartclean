@@ -246,33 +246,33 @@ export default function SmartCleanHomePage() {
                   VIEW ALL <ChevronRight size={14} className="text-primary" />
                 </Link>
               </div>
-              <div className="flex gap-2.5 md:gap-6 overflow-x-auto no-scrollbar pb-6 snap-x snap-mandatory">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 md:gap-6">
                 {displayServices.map(s => (
-                  <div key={s.id} className="w-[calc(33.33%-0.5rem)] md:w-[calc(25%-1rem)] lg:w-[calc(16.66%-1.25rem)] shrink-0 snap-start">
-                    <Link href={`/service/${s.id}`} className="group bg-white rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
-                      <div className="p-1.5 md:p-2 shrink-0">
-                        <div className="relative aspect-[4/3] overflow-hidden rounded-[1rem] md:rounded-[1.5rem] bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <div key={s.id} className="relative group bg-white rounded-[1rem] md:rounded-[1.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full">
+                    <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+                      <div className="p-1 md:p-1.5 shrink-0">
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-[0.8rem] md:rounded-[1.2rem] bg-gray-50 border border-gray-50 flex items-center justify-center">
                           {s.imageUrl ? (
                             <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
                           ) : (
-                            <Wrench size={40} className="text-gray-200" />
+                            <Wrench size={32} className="text-gray-200" />
                           )}
-                          <div className="absolute top-2 left-2"><Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-2 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
+                          <div className="absolute top-1.5 left-1.5"><Badge className="bg-white/90 text-primary border-none shadow-sm backdrop-blur-md font-black text-[6px] md:text-[8px] uppercase px-1.5 py-0.5 rounded-md">{s.categoryId || 'Cleaning'}</Badge></div>
                         </div>
                       </div>
-                      <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-2 pt-0">
-                        <h3 className="text-[10px] md:text-[13px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">
+                      <div className="p-2 md:p-3 flex flex-col flex-1 gap-1.5 md:gap-2 pt-0">
+                        <h3 className="text-[8px] md:text-[12px] font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tighter">
                           {s.title}
                         </h3>
-                        <div className="mt-auto space-y-2">
+                        <div className="mt-auto space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <p className="text-[12px] md:text-lg font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            <p className="text-[10px] md:text-base font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
                             <div className="flex items-center gap-0.5 text-amber-400">
-                              <Star size={10} fill="currentColor" className="md:w-3 md:h-3" />
-                              <span className="text-[8px] md:text-[11px] font-black text-gray-400">{s.rating || '5.0'}</span>
+                              <Star size={8} fill="currentColor" className="md:w-3 md:h-3" />
+                              <span className="text-[7px] md:text-[10px] font-black text-gray-400">{s.rating || '5.0'}</span>
                             </div>
                           </div>
-                          <Button size="sm" className="w-full rounded-xl font-black text-[8px] md:text-[11px] uppercase shadow-lg h-8 md:h-11 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none">Book Now</Button>
+                          <Button size="sm" className="w-full rounded-lg md:rounded-xl font-black text-[7px] md:text-[10px] uppercase shadow-md h-7 md:h-10 tracking-tighter transition-transform active:scale-95 bg-primary hover:bg-primary/90 text-white border-none p-0">Book Now</Button>
                         </div>
                       </div>
                     </Link>
@@ -299,7 +299,7 @@ export default function SmartCleanHomePage() {
                   <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tight">{section.title}</h2>
                 </div>
               </div>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
             </div>
