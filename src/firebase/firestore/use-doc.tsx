@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -87,14 +88,15 @@ export function useDoc<T = any>(
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
-              errorStr.includes('unexpected state')
+              errorStr.includes('unexpected state') ||
+              errorStr.includes('persistent_stream')
             ) {
               console.warn(`[Firestore Shield] Recovering from SDK assertion in doc: ${currentPath}.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) setRefreshKey(k => k + 1);
-              }, 2500);
+              }, 1500);
               return;
             }
 
@@ -118,7 +120,7 @@ export function useDoc<T = any>(
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
             if (activeToken.current === token) setRefreshKey(k => k + 1);
-          }, 3000);
+          }, 2000);
         }
       }
     };

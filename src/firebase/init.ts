@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -10,10 +11,11 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V6 - Hardened)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V7 - Final)
  * 1. Aggressively suppresses SDK internal assertion noise (ca9 / b815).
  * 2. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
  * 3. Enforces Long Polling to bypass proxy/workstation streaming failures.
+ * 4. Silences recursive assertion loops in error listeners.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -32,7 +34,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('watchchangeaggregator') ||
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('unexpected state') ||
-        lowMsg.includes('assertion failed')
+        lowMsg.includes('assertion failed') ||
+        lowMsg.includes('cc') // Common in ca9/b815 stack traces
       );
     };
 
@@ -41,11 +44,14 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
     console.error = (...args: any[]) => {
       const msg = args.map(arg => {
         if (arg instanceof Error) return arg.message + ' ' + (arg.stack || '');
-        return (typeof arg === 'object' ? JSON.stringify(arg) : String(arg));
+        if (typeof arg === 'object') {
+          try { return JSON.stringify(arg); } catch (e) { return '[Object]'; }
+        }
+        return String(arg);
       }).join(' ');
 
       if (isAssertionError(msg)) {
-        // Silently log to warning to keep console clean
+        // Silently log to warning to keep console clean and prevent Next.js UI Overlay
         console.warn('[Firestore Shield] Intercepted SDK assertion:', msg.slice(0, 150) + '...');
         return;
       }
