@@ -147,7 +147,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-indigo-400",
       items: [
         { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
       ]
     },
     {
@@ -183,6 +182,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Service List", href: '/admin/services', icon: Wrench },
         { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
         { name: "Service Areas", href: '/admin/areas', icon: Globe },
+        { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
       ]
     },
     {
