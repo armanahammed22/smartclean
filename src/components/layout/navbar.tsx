@@ -10,12 +10,13 @@ import {
   X,
   Package,
   Loader2,
-  Wrench
+  Wrench,
+  User
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, useCollection, useUser } from '@/firebase';
 import { useCart } from '@/components/providers/cart-provider';
 import { doc, collection } from 'firebase/firestore';
 import { NavbarOfferSlider } from './navbar-offer-slider';
@@ -25,6 +26,7 @@ import { useRouter } from 'next/navigation';
 export function Navbar() {
   const { setLanguage, language, t } = useLanguage();
   const { itemCount } = useCart();
+  const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
   
@@ -240,7 +242,17 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="flex items-center gap-1 md:gap-6 shrink-0">
+          <div className="flex items-center gap-1 md:gap-4 shrink-0">
+            {/* Desktop Auth Icon - Hidden on Mobile */}
+            <Link 
+              href={user ? "/account/dashboard" : "/login"} 
+              className="hidden lg:flex relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm"
+              title={user ? "Account Dashboard" : "Login"}
+            >
+              <User size={22} />
+              {user && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white shadow-sm" />}
+            </Link>
+
             <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm">
               <ShoppingCart size={22} />
               {itemCount > 0 && (
