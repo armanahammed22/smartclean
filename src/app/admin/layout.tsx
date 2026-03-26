@@ -56,6 +56,9 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -380,7 +383,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10"><Menu size={22} /></Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72"><SidebarContent /></SheetContent>
+              <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Admin Navigation</SheetTitle>
+                  <SheetDescription>Main administrative tools and management modules</SheetDescription>
+                </SheetHeader>
+                <SidebarContent />
+              </SheetContent>
             </Sheet>
             <div className="flex flex-col">
               <span className="text-[9px] font-black uppercase text-gray-400">Admin Control</span>
