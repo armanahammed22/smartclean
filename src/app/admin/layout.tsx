@@ -296,8 +296,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
     <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden">
-      <div className="p-6 flex items-center gap-3 border-b border-white/5 h-20 shrink-0">
-        <div className="p-2.5 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10 shrink-0">
+      <div className={cn(
+        "flex items-center gap-3 border-b border-white/5 h-20 shrink-0",
+        collapsed ? "justify-center" : "px-6"
+      )}>
+        <div className="w-10 h-10 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10 flex items-center justify-center shrink-0">
           <ShieldCheck size={20} />
         </div>
         {!collapsed && (
@@ -308,7 +311,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
           const isGroupActive = group.items.some(item => pathname === item.href);
           return (
@@ -316,37 +319,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <button
                 onClick={() => toggleGroup(group.id)}
                 className={cn(
-                  "flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white group",
+                  "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white group",
+                  collapsed ? "justify-center py-2" : "px-3 py-2",
                   isGroupActive && "bg-white/5 text-white"
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className={cn(
+                  "flex items-center",
+                  collapsed ? "" : "flex-1 gap-3"
+                )}>
                   <div className={cn(
-                    "p-1.5 rounded-lg transition-all shrink-0",
+                    "w-8 h-8 rounded-lg transition-all shrink-0 flex items-center justify-center",
                     isGroupActive ? "bg-white/10" : "group-hover:bg-white/10"
                   )}>
                     <group.icon size={18} className={cn("shrink-0", group.color)} />
                   </div>
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-left">{group.title}</span>}
                 </div>
-                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300", expandedGroups[group.id] ? "rotate-90" : "")} />}
+                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
 
               {expandedGroups[group.id] && !collapsed && (
-                <div className="pl-4 mt-1 space-y-1 border-l border-white/5 ml-6 animate-in slide-in-from-top-2 duration-300">
+                <div className="mt-1 space-y-1 pl-11 animate-in slide-in-from-top-2 duration-300">
                   {group.items.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        "flex items-center px-4 py-2.5 rounded-lg text-[11px] font-bold transition-all relative group/item",
+                        "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item",
                         pathname === item.href ? "bg-white text-[#081621] shadow-lg scale-[1.02]" : "text-white/50 hover:text-white"
                       )}
                     >
                       <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
                       <span className="truncate">{item.name}</span>
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute right-3 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
+                        <span className="absolute right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
                       )}
                     </Link>
                   ))}
@@ -357,10 +364,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </div>
 
-      <div className="p-4 border-t border-white/5 shrink-0">
+      <div className={cn("p-4 border-t border-white/5 shrink-0", collapsed && "flex justify-center")}>
         <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-          <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className="w-full justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 px-4">
-            <LogOut size={18} className="mr-3 text-red-400 shrink-0" />
+          <Button 
+            variant="ghost" 
+            onClick={() => setIsLogoutDialogOpen(true)} 
+            className={cn(
+              "justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12",
+              collapsed ? "w-12 px-0 flex justify-center" : "w-full px-4"
+            )}
+          >
+            <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
             {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest whitespace-nowrap">Logout System</span>}
           </Button>
           <AlertDialogContent className="rounded-[2rem] max-w-sm border-none shadow-2xl">
@@ -401,7 +415,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}>
         <SidebarContent collapsed={isCollapsed} />
         
-        {/* Modern Floating Toggle Button */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="absolute -right-3.5 top-20 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
