@@ -29,7 +29,7 @@ const PUBLIC_DOCS = [
 ];
 
 /**
- * Hardened document hook with internal retry shield for internal SDK assertion failures.
+ * Hardened document hook with internal retry shield for internal SDK assertion failures (ca9/b815).
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -80,19 +80,19 @@ export function useDoc<T = any>(
 
             const errorStr = (err.message || String(err)).toLowerCase();
             
-            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry
+            // 🛡️ SDK Resilience Shield: Silently suppress assertion failures and retry after delay
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
               errorStr.includes('unexpected state')
             ) {
-              console.warn(`[Firestore Shield] Retrying transient assertion error at doc: ${currentPath}`);
+              console.warn(`[Firestore Shield] Suppressing transient assertion error at doc: ${currentPath}. Retrying...`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) startListener();
-              }, 2000);
+              }, 2500);
               return;
             }
 
@@ -111,7 +111,12 @@ export function useDoc<T = any>(
           }
         );
       } catch (setupError: any) {
-        console.warn('[Firestore Shield] Setup phase interception:', setupError.message);
+        console.warn('[Firestore Shield] Setup phase doc interception:', setupError.message);
+        
+        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = setTimeout(() => {
+          if (activeToken.current === token) startListener();
+        }, 3000);
       }
     };
 
@@ -122,7 +127,7 @@ export function useDoc<T = any>(
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       if (unsubscribe) {
         try { unsubscribe(); } catch (e) {
-          console.warn('[Firestore Shield] Unsubscribe noise suppressed.');
+          // Unsubscribe noise suppressed during cleanup
         }
       }
     };

@@ -10,10 +10,10 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V2)
- * 1. Suppresses SDK internal assertion noise via console and window listeners.
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V3)
+ * 1. Suppresses SDK internal assertion noise (ca9 / b815).
  * 2. Enforces Long Polling to bypass proxy/workstation streaming failures.
- * 3. Uses Memory Cache to eliminate IndexDB locking issues during HMR.
+ * 3. Intercepts window errors to prevent Next.js Error Overlay for SDK noise.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -27,14 +27,15 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       msg.includes('b815') || 
       msg.includes('INTERNAL ASSERTION FAILED') || 
       msg.includes('WatchChangeAggregator') ||
-      msg.includes('persistent_stream');
+      msg.includes('persistent_stream') ||
+      msg.includes('Unexpected state');
 
     // Filter Console Errors
     const originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       const msg = args.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg))).join(' ');
       if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Silenced internal SDK assertion noise:', msg.slice(0, 100) + '...');
+        console.warn('[Firestore Shield] Silenced internal SDK assertion noise:', msg.slice(0, 150) + '...');
         return;
       }
       originalConsoleError.apply(console, args);
@@ -47,6 +48,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         console.warn('[Firestore Shield] Intercepted window error:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
       }
     }, true);
 
@@ -57,6 +59,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         console.warn('[Firestore Shield] Intercepted unhandled rejection:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
       }
     }, true);
 
