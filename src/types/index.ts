@@ -80,79 +80,28 @@ export interface LandingPage {
   type: 'product' | 'service';
   title: string;
   active: boolean;
-  
-  // SHARED UI
   bannerImage: string;
   heroTitle?: string;
   heroSubtitle?: string;
   phone?: string;
-  
-  // FEATURES GRID
   featuresTitle?: string;
   features: LandingPageFeature[];
-  
-  // DETAILS SECTION
   detailsTitle?: string;
   detailsText?: string;
   detailsImage?: string;
-  
-  // WHY CHOOSE US
   whyTitle?: string;
   whyItems: string[];
-  
-  // PRICING CONFIG
   discountValue: number;
   discountType: 'percent' | 'fixed';
-  
-  // PRODUCT MODE SPECIFIC
-  productIds: string[]; // For the 8-item grid
+  productIds: string[];
   deliveryCharge: number;
-  
-  // SERVICE MODE SPECIFIC
   serviceId?: string;
   serviceImage?: string;
   packages: LandingPagePackage[];
   addOns: LandingPageAddOn[];
   additionalCharge: number;
-
   createdAt: string;
   updatedAt?: string;
-}
-
-export interface OrderLandingProduct {
-  id: string;
-  pageId: string;
-  customerName: string;
-  customerPhone: string;
-  address: string;
-  items: any[];
-  quantity: number;
-  subtotal: number;
-  discount: number;
-  deliveryCharge: number;
-  totalPrice: number;
-  paymentMethod: string;
-  transactionId?: string;
-  status: 'New' | 'Paid' | 'Processing' | 'Shipped' | 'Cancelled';
-  createdAt: string;
-}
-
-export interface OrderLandingService {
-  id: string;
-  pageId: string;
-  customerName: string;
-  customerPhone: string;
-  address: string;
-  package: any;
-  selectedAddOns: any[];
-  subtotal: number;
-  discount: number;
-  additionalCharge: number;
-  totalPrice: number;
-  paymentMethod: string;
-  transactionId?: string;
-  status: 'New' | 'Paid' | 'Confirmed' | 'Completed' | 'Cancelled';
-  createdAt: string;
 }
 
 export interface Service {
@@ -161,17 +110,30 @@ export interface Service {
   categoryId: string;
   description: string;
   shortDescription?: string;
-  icon?: string;
   basePrice: number;
-  displayPrice?: string;
   imageUrl?: string;
   galleryImages?: string[];
-  type?: 'service';
+  type: 'service';
   status: 'Active' | 'Inactive';
   isPopular?: boolean;
   duration?: string;
   teamSize?: string;
   rating?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SubService {
+  id: string;
+  mainServiceId: string;
+  name: string;
+  price: number;
+  description?: string;
+  imageUrl?: string;
+  isAddOnEnabled: boolean;
+  isDefaultAddOn: boolean;
+  status: 'Active' | 'Inactive';
+  duration?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -185,4 +147,5 @@ export interface CartItem {
   category: string;
   quantity: number;
   itemType: 'product' | 'service';
+  selectedAddOns?: any[];
 }
