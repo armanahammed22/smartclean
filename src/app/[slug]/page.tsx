@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Smartphone,
   Info,
-  ChevronRight
+  ChevronRight,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -102,6 +103,22 @@ export default function DynamicLandingPage() {
 
     return { subtotal, discount, delivery, additional, total };
   }, [page, mainProduct, quantity, selectedPkgId, selectedAddOnIds]);
+
+  const scrollToForm = () => {
+    const el = document.getElementById('booking-form-start');
+    if (el) {
+      const offset = 100;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = el.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +207,7 @@ export default function DynamicLandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <button 
                 className="w-full sm:w-auto h-14 md:h-16 px-10 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black text-lg md:text-xl uppercase shadow-xl gap-2 flex items-center justify-center" 
-                onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={scrollToForm}
               >
                 <ShoppingCart size={24} /> {isProduct ? 'অর্ডার করতে চাই' : 'বুকিং দিতে চাই'}
               </button>
@@ -270,7 +287,7 @@ export default function DynamicLandingPage() {
                   <div className="prose prose-slate max-w-none text-gray-600 font-medium leading-loose text-sm md:text-lg">
                     {page.detailsText}
                   </div>
-                  <Button onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-xl font-black uppercase shadow-lg">অর্ডার করুন <ArrowRight size={20} className="ml-2" /></Button>
+                  <Button onClick={scrollToForm} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-xl font-black uppercase shadow-lg">অর্ডার করুন <ArrowRight size={20} className="ml-2" /></Button>
                 </div>
                 {page.detailsImage && (
                   <div className="relative aspect-square rounded-2xl md:rounded-[3rem] overflow-hidden shadow-2xl border-4 md:border-8 border-white">
@@ -289,8 +306,8 @@ export default function DynamicLandingPage() {
               <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">নিচের ফর্মটি নির্ভুলভাবে পূরণ করুন</p>
             </div>
 
-            <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-10 items-start">
-              <div className="lg:col-span-7 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              <div className="lg:col-span-7 w-full" id="booking-form-start">
                 <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-2xl overflow-hidden bg-white">
                   <CardHeader className={cn("p-6 md:p-8 text-white", themeColor)}>
                     <div className="flex items-center gap-3">
@@ -316,28 +333,26 @@ export default function DynamicLandingPage() {
 
                     <div className="space-y-4 pt-4">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পেমেন্ট পদ্ধতি</Label>
-                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                         <div 
                           onClick={() => setPaymentMethod('cod')}
                           className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'cod' ? "border-primary bg-primary/5" : "bg-white border-gray-100")}
                         >
-                          <RadioGroupItem value="cod" id="cod" className="sr-only" />
-                          <label htmlFor="cod" className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
-                            <div className={cn("p-2 rounded-lg", paymentMethod === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}><Smartphone size={16} /></div>
+                          <div className={cn("p-2 rounded-lg", paymentMethod === 'cod' ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}><Smartphone size={16} /></div>
+                          <span className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
                             ক্যাশ অন ডেলিভারি
-                          </label>
+                          </span>
                         </div>
                         <div 
                           onClick={() => setPaymentMethod('bkash')}
                           className={cn("flex items-center gap-4 p-4 rounded-xl md:rounded-2xl border-2 transition-all cursor-pointer", paymentMethod === 'bkash' ? "border-pink-600 bg-pink-50" : "bg-white border-gray-100")}
                         >
-                          <RadioGroupItem value="bkash" id="bkash" className="sr-only" />
-                          <label htmlFor="bkash" className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
-                            <div className={cn("p-2 rounded-lg", paymentMethod === 'bkash' ? "bg-pink-600 text-white" : "bg-gray-100 text-gray-400")}><Smartphone size={16} /></div>
+                          <div className={cn("p-2 rounded-lg", paymentMethod === 'bkash' ? "bg-pink-600 text-white" : "bg-gray-100 text-gray-400")}><Wallet size={16} /></div>
+                          <span className="flex items-center gap-3 font-black text-[10px] md:text-xs uppercase cursor-pointer w-full">
                             বিকাশ / নগদ
-                          </label>
+                          </span>
                         </div>
-                      </RadioGroup>
+                      </div>
                     </div>
 
                     {paymentMethod !== 'cod' && (
@@ -457,8 +472,8 @@ export default function DynamicLandingPage() {
             <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>
             <span className={cn("text-xl md:text-2xl font-black tracking-tighter leading-none", isProduct ? "text-[#D60000]" : "text-blue-600")}>৳{calculations.total}</span>
           </div>
-          <Button className={cn("flex-1 h-14 md:h-16 rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-xs shadow-xl", themeColor, "text-white")} onClick={() => document.getElementById('order-section')?.scrollIntoView({ behavior: 'smooth' })}>
-            বুকিং সম্পন্ন করুন →
+          <Button className={cn("flex-1 h-14 md:h-16 rounded-xl md:rounded-2xl font-black uppercase text-[10px] md:text-xs shadow-xl", themeColor, "text-white")} onClick={scrollToForm}>
+            {isProduct ? 'অর্ডার সম্পন্ন করুন' : 'বুকিং সম্পন্ন করুন'} →
           </Button>
         </div>
 
