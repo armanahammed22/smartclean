@@ -36,6 +36,8 @@ service cloud.firestore {
       }
     }
 
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -100,6 +102,7 @@ service cloud.firestore {
     
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn(); }
     match /leads/{id} { allow read, write: if isAdmin(); }
+    match /leads_crm/{id} { allow read, write: if isAdmin(); }
     match /leads_crm/{id} { allow read, write: if isAdmin(); }
     match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
     
