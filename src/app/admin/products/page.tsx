@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
@@ -292,7 +291,13 @@ export default function ProductsManagementPage() {
 
               {activeTab === 'media' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                  <ImageUploader label="Main Feature Image" initialUrl={uploadedImageUrl} onUpload={setUploadedImageUrl} />
+                  <ImageUploader 
+                    label="Primary Display Image" 
+                    hint="800 x 800 px (1:1 Square)"
+                    initialUrl={uploadedImageUrl} 
+                    onUpload={setUploadedImageUrl} 
+                    aspectRatio="aspect-square"
+                  />
                 </div>
               )}
 

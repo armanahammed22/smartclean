@@ -261,7 +261,13 @@ export default function RebuiltLandingPageAdmin() {
                       <Input value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-mono text-primary font-bold" required />
                     </div>
                     <div className="md:col-span-2">
-                      <ImageUploader label="Hero Banner (1200x400)" initialUrl={formData.bannerImage} onUpload={url => setFormData({...formData, bannerImage: url})} aspectRatio="aspect-[21/7]" />
+                      <ImageUploader 
+                        label="Main Hero Banner" 
+                        hint="1200 x 400 px (3:1 Ratio)"
+                        initialUrl={formData.bannerImage} 
+                        onUpload={url => setFormData({...formData, bannerImage: url})} 
+                        aspectRatio="aspect-[21/7]" 
+                      />
                     </div>
                   </div>
                 </section>
@@ -362,11 +368,17 @@ export default function RebuiltLandingPageAdmin() {
                           {formData.addOns?.map((add: any, idx: number) => (
                             <div key={add.id} className="p-4 bg-white rounded-2xl border border-gray-100 space-y-4 relative group">
                               <div className="flex flex-col sm:flex-row gap-4">
-                                <ImageUploader initialUrl={add.imageUrl} onUpload={(url) => {
-                                  const list = [...formData.addOns];
-                                  list[idx].imageUrl = url;
-                                  setFormData({...formData, addOns: list});
-                                }} aspectRatio="aspect-square w-16" label="Icon" />
+                                <ImageUploader 
+                                  initialUrl={add.imageUrl} 
+                                  onUpload={(url) => {
+                                    const list = [...formData.addOns];
+                                    list[idx].imageUrl = url;
+                                    setFormData({...formData, addOns: list});
+                                  }} 
+                                  aspectRatio="aspect-square w-16" 
+                                  label="Add-on Icon" 
+                                  hint="200 x 200 px"
+                                />
                                 <div className="flex-1 space-y-3">
                                   <Input placeholder="Service Name" value={add.name} onChange={e => {
                                     const list = [...formData.addOns];
@@ -422,7 +434,12 @@ export default function RebuiltLandingPageAdmin() {
                     <div className="space-y-4">
                       <Input placeholder="Section Title" value={formData.detailsTitle} onChange={e => setFormData({...formData, detailsTitle: e.target.value})} className="h-12 bg-gray-50" />
                       <Textarea placeholder="Content text" value={formData.detailsText} onChange={e => setFormData({...formData, detailsText: e.target.value})} className="min-h-[150px] bg-gray-50" />
-                      <ImageUploader label="Section Image" initialUrl={formData.detailsImage} onUpload={url => setFormData({...formData, detailsImage: url})} />
+                      <ImageUploader 
+                        label="Section Feature Image" 
+                        hint="800 x 800 px"
+                        initialUrl={formData.detailsImage} 
+                        onUpload={url => setFormData({...formData, detailsImage: url})} 
+                      />
                     </div>
                   </div>
                 </section>

@@ -76,6 +76,8 @@ export default function HomepageBannersPage() {
           <Card key={offer.id} className="border-none shadow-sm overflow-hidden bg-white rounded-3xl group border border-gray-100">
             <ImageUploader 
               initialUrl={offer.imageUrl}
+              label="Horizontal Content Banner"
+              hint="1200 x 400 px (3:1 Ratio)"
               aspectRatio="aspect-[21/7]"
               onUpload={(url) => handleUpdateField(offer.id, { imageUrl: url })}
             />

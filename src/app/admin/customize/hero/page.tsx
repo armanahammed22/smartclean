@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -203,7 +202,8 @@ function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onU
           <div className="max-w-[350px] mx-auto w-full">
             <ImageUploader 
               initialUrl={localData.imageUrl}
-              label={isSide ? "Banner Image" : "Slide Background (982x500)"}
+              label={isSide ? "Side Action Banner" : "Hero Slide Background"}
+              hint={isSide ? "600 x 600 px (1:1 Square)" : "982 x 500 px (21:11 Ratio)"}
               aspectRatio={isSide ? "aspect-[1/1]" : "aspect-[982/500]"}
               onUpload={(url) => updateLocal('imageUrl', url)}
             />

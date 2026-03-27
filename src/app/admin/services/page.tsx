@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -238,7 +237,13 @@ export default function ServicesManagementPage() {
                     <TabsContent value="identity" className="mt-0 space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
-                          <ImageUploader onUpload={setMainImageUrl} initialUrl={mainImageUrl} label="Primary Photo" aspectRatio="aspect-video" />
+                          <ImageUploader 
+                            onUpload={setMainImageUrl} 
+                            initialUrl={mainImageUrl} 
+                            label="Primary Thumbnail" 
+                            hint="800 x 600 px (4:3 Ratio)"
+                            aspectRatio="aspect-video" 
+                          />
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Title</Label>
                             <Input value={newServiceData.title} onChange={e => setNewServiceData({...newServiceData, title: e.target.value})} required placeholder="e.g. Sofa Deep Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />

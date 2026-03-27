@@ -129,7 +129,8 @@ export default function CampaignEditorPage() {
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <ImageUploader 
-                label="Mega Banner (Desktop 1200x400)"
+                label="Campaign Mega Banner"
+                hint="1200 x 400 px (3:1 Ratio)"
                 initialUrl={formData.bannerImage || ''}
                 onUpload={(url) => setFormData({ ...formData, bannerImage: url })}
                 aspectRatio="aspect-[21/7]"

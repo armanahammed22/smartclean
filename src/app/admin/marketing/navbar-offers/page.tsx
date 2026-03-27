@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -128,7 +127,8 @@ export default function NavbarOffersManagementPage() {
           <CardContent className="p-8 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <ImageUploader 
-                label="Offer Image (Circle Crop)"
+                label="Offer Image (Floating Icon)"
+                hint="200 x 200 px (1:1 Ratio)"
                 initialUrl={formData.image}
                 aspectRatio="aspect-square w-24"
                 onUpload={(url) => setFormData({...formData, image: url})}

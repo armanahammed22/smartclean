@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -155,22 +154,27 @@ export default function AdminSettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <ImageUploader 
                     label="Main Site Logo"
+                    hint="512 x 512 px (PNG)"
                     initialUrl={formData.logoUrl}
                     aspectRatio="aspect-square w-24"
                     onUpload={(url) => setFormData({...formData, logoUrl: url})}
                   />
                   <ImageUploader 
-                    label="Favicon (32x32)"
+                    label="Favicon"
+                    hint="32 x 32 px (.ico/png)"
                     initialUrl={formData.faviconUrl}
                     aspectRatio="aspect-square w-16"
                     onUpload={(url) => setFormData({...formData, faviconUrl: url})}
                   />
-                  <ImageUploader 
-                    label="Mobile App Icon (Apple Touch)"
-                    initialUrl={formData.appIconUrl}
-                    aspectRatio="aspect-square w-24"
-                    onUpload={(url) => setFormData({...formData, appIconUrl: url})}
-                  />
+                  <div className="sm:col-span-2">
+                    <ImageUploader 
+                      label="Mobile App Icon"
+                      hint="180 x 180 px (Apple Touch)"
+                      initialUrl={formData.appIconUrl}
+                      aspectRatio="aspect-square w-24"
+                      onUpload={(url) => setFormData({...formData, appIconUrl: url})}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, X, ImageIcon, Loader2, AlertCircle, CheckCircle2, Link as LinkIcon, Globe } from 'lucide-react';
+import { Upload, X, ImageIcon, Loader2, AlertCircle, CheckCircle2, Link as LinkIcon, Globe, Info } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from './button';
 import { Input } from './input';
@@ -12,6 +12,7 @@ interface ImageUploaderProps {
   onUpload: (value: string) => void;
   initialUrl?: string;
   label?: string;
+  hint?: string; // New prop for showing dimensions/size
   maxSizeMB?: number;
   className?: string;
   aspectRatio?: string;
@@ -21,6 +22,7 @@ export function ImageUploader({
   onUpload,
   initialUrl = '',
   label = 'Upload Image',
+  hint = '',
   maxSizeMB = 2,
   className = '',
   aspectRatio = 'aspect-video'
@@ -33,26 +35,17 @@ export function ImageUploader({
   const [activeTab, setActiveMode] = useState<'upload' | 'url'>(initialUrl.startsWith('data:') || !initialUrl ? 'upload' : 'url');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /**
-   * Transforms common image hosting links (like Google Drive) into direct image URLs
-   */
   const transformUrl = (url: string): string => {
     let transformed = url.trim();
-    
-    // Handle Google Drive Links
     if (transformed.includes('drive.google.com')) {
       const match = transformed.match(/\/d\/([^/]+)/) || transformed.match(/id=([^&]+)/);
       if (match && match[1]) {
-        // Transform to direct view link
         return `https://lh3.googleusercontent.com/d/${match[1]}`;
       }
     }
-
-    // Handle Dropbox
     if (transformed.includes('dropbox.com')) {
       return transformed.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
     }
-
     return transformed;
   };
 
@@ -116,7 +109,15 @@ export function ImageUploader({
 
   return (
     <div className={cn("space-y-3 w-full", className)}>
-      {label && <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest block">{label}</label>}
+      <div className="flex flex-col gap-1">
+        {label && <label className="text-[10px] font-black uppercase text-gray-900 tracking-widest block leading-none">{label}</label>}
+        {hint && (
+          <div className="flex items-center gap-1 text-[9px] font-bold text-primary uppercase">
+            <Info size={10} /> 
+            <span>Required: {hint}</span>
+          </div>
+        )}
+      </div>
       
       <Tabs value={activeTab} onValueChange={(v) => setActiveMode(v as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-2 h-9 p-1 bg-gray-100 rounded-xl mb-3">
