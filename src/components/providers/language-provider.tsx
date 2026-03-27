@@ -32,6 +32,11 @@ const translations: Record<Language, Record<string, string>> = {
     admin_portal: "অ্যাডমিন পোর্টাল",
     manage_orders: "অর্ডার ম্যানেজ করুন",
     sign_out: "সাইন আউট",
+    search_suggestions: "পরামর্শ (সব আইটেম)",
+    view_all_results: "সব ফলাফল দেখুন",
+    no_match_found: "কোনো মিল পাওয়া যায়নি",
+    service: "সার্ভিস",
+    product: "পণ্য",
     
     // Header
     all_services_title: "সব সেবা",
@@ -95,6 +100,12 @@ const translations: Record<Language, Record<string, string>> = {
     quantity: "পরিমাণ",
     remove: "সরিয়ে ফেলুন",
     back_to_list: "তালিকায় ফিরে যান",
+    sold: "বিক্রি",
+    book: "বুকিং",
+    units_available: "টি অবশিষ্ট",
+    out_of_stock: "স্টক শেষ",
+    flash_sale: "ফ্ল্যাশ সেল",
+    ends_in: "শেষ হতে বাকি",
     
     // Services
     services_title: "আমাদের বিশেষজ্ঞতা",
@@ -117,6 +128,11 @@ const translations: Record<Language, Record<string, string>> = {
     processing: "প্রসেসিং হচ্ছে...",
     secure_checkout: "আপনার তথ্য সুরক্ষিত এবং এনক্রিপ্ট করা।",
     payment_method: "পেমেন্ট পদ্ধতি",
+    send_otp: "ওটিপি পাঠান",
+    otp_sent: "ওটিপি পাঠানো হয়েছে",
+    otp_verified: "ফোন ভেরিফাইড",
+    invalid_otp: "ভুল ওটিপি",
+    phone_exists_error: "এই নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে",
     
     // Order Success
     order_confirmed: "অর্ডার নিশ্চিত করা হয়েছে!",
@@ -127,10 +143,20 @@ const translations: Record<Language, Record<string, string>> = {
     temp_password: "অস্থায়ী পাসওয়ার্ড",
     login_info: "ভবিষ্যতে লগইন করার জন্য এই তথ্যগুলো সংরক্ষণ করুন।",
 
-    // UI
+    // UI & Footer
     cart_added: "অর্ডারে যোগ করা হয়েছে",
     cart_desc: "আইটেমটি আপনার অর্ডারের তালিকায় যোগ করা হয়েছে।",
-    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন"
+    chat_wa: "হোয়াটসঅ্যাপে চ্যাট করুন",
+    footer_services: "সার্ভিস সমূহ",
+    footer_company: "কোম্পানি",
+    footer_contact: "যোগাযোগ",
+    footer_about: "আমাদের সম্পর্কে",
+    footer_privacy: "প্রাইভেসি পলিসি",
+    footer_terms: "শর্তাবলী",
+    results_for: "ফলাফল",
+    no_results: "কোনো ফলাফল পাওয়া যায়নি",
+    clear_all: "সব মুছুন",
+    free: "ফ্রি"
   },
   en: {
     // Navbar
@@ -151,6 +177,11 @@ const translations: Record<Language, Record<string, string>> = {
     admin_portal: "Admin Portal",
     manage_orders: "Manage Orders",
     sign_out: "Sign Out",
+    search_suggestions: "Suggestions (All Items)",
+    view_all_results: "View All Results",
+    no_match_found: "No matching results found",
+    service: "Service",
+    product: "Product",
     
     // Header
     all_services_title: "All Services",
@@ -214,6 +245,12 @@ const translations: Record<Language, Record<string, string>> = {
     quantity: "Quantity",
     remove: "Remove",
     back_to_list: "Back to List",
+    sold: "Sold",
+    book: "Book",
+    units_available: "Units Available",
+    out_of_stock: "Out of Stock",
+    flash_sale: "Flash Sale",
+    ends_in: "Ends In",
     
     // Services
     services_title: "Our Expertise",
@@ -236,6 +273,11 @@ const translations: Record<Language, Record<string, string>> = {
     processing: "Processing...",
     secure_checkout: "Your data is protected and encrypted.",
     payment_method: "Payment Method",
+    send_otp: "Send OTP",
+    otp_sent: "OTP Sent",
+    otp_verified: "Phone Verified",
+    invalid_otp: "Invalid OTP",
+    phone_exists_error: "Phone number already registered",
 
     // Order Success
     order_confirmed: "Order Confirmed!",
@@ -246,10 +288,20 @@ const translations: Record<Language, Record<string, string>> = {
     temp_password: "Temporary Password",
     login_info: "Save these details for future logins.",
 
-    // UI
+    // UI & Footer
     cart_added: "Added to Order",
     cart_desc: "Item has been added to your order list.",
-    chat_wa: "Chat via WhatsApp"
+    chat_wa: "Chat via WhatsApp",
+    footer_services: "Services",
+    footer_company: "Company",
+    footer_contact: "Contact",
+    footer_about: "About Us",
+    footer_privacy: "Privacy Policy",
+    footer_terms: "Terms & Conditions",
+    results_for: "Results for",
+    no_results: "No results found",
+    clear_all: "Clear All",
+    free: "FREE"
   }
 };
 

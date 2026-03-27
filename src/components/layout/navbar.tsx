@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -20,7 +19,6 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirestore, useDoc, useMemoFirebase, useCollection, useUser } from '@/firebase';
 import { useCart } from '@/components/providers/cart-provider';
 import { doc, collection } from 'firebase/firestore';
-import { NavbarOfferSlider } from './navbar-offer-slider';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -103,8 +101,8 @@ export function Navbar() {
       {(layout?.header?.showTopBar !== false) && (
         <div className="hidden lg:block border-b py-1 transition-colors duration-500" style={topBarStyles}>
           <div className="container mx-auto px-4 flex justify-end gap-6 h-8 items-center">
-            <Link href="/page/about-us" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>About Us</Link>
-            <Link href="/support" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>Support</Link>
+            <Link href="/page/about-us" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>{t('footer_about')}</Link>
+            <Link href="/support" className="text-[10px] font-bold uppercase tracking-wider opacity-80 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>{t('item_supporthub')}</Link>
             <button onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black uppercase tracking-widest text-primary">
               {language === 'bn' ? "English" : "বাংলা"}
             </button>
@@ -140,10 +138,6 @@ export function Navbar() {
                 <span className="text-[7px] md:text-[8px] font-bold text-primary uppercase tracking-[0.2em] leading-none mt-1">Professional Care</span>
               </div>
             </Link>
-
-            <div className="hidden xl:block">
-              <NavbarOfferSlider />
-            </div>
 
             <nav className="hidden lg:flex items-center gap-6">
               {layout?.header?.menuItems?.map((item: any, i: number) => (
@@ -186,7 +180,7 @@ export function Navbar() {
             {isSearchFocused && searchQuery.length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-3 bg-gray-50/50 border-b flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Suggestions (All Items)</span>
+                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{t('search_suggestions')}</span>
                   <button onClick={() => setIsSearchFocused(false)} className="text-gray-400 hover:text-gray-600"><X size={14}/></button>
                 </div>
                 
@@ -214,7 +208,7 @@ export function Navbar() {
                               "text-[8px] font-black uppercase px-1.5 h-4 border-none",
                               item.type === 'service' ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
                             )}>
-                              {item.type}
+                              {item.type === 'service' ? t('service') : t('product')}
                             </Badge>
                             <span className="text-[11px] font-black text-primary">৳{(item.price || item.basePrice)?.toLocaleString()}</span>
                           </div>
@@ -225,7 +219,7 @@ export function Navbar() {
                   ) : (
                     <div className="p-10 text-center space-y-3">
                       <div className="mx-auto w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-300"><Search size={24} /></div>
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">No matching results found</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{t('no_match_found')}</p>
                     </div>
                   )}
                 </div>
@@ -236,7 +230,7 @@ export function Navbar() {
                     onClick={() => setIsSearchFocused(false)}
                     className="block p-3 bg-primary text-white text-center text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-colors"
                   >
-                    View All Results
+                    {t('view_all_results')}
                   </Link>
                 )}
               </div>
@@ -256,7 +250,7 @@ export function Navbar() {
             <Link 
               href={user ? "/account/dashboard" : "/login"} 
               className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center"
-              title={user ? "Account Dashboard" : "Login"}
+              title={user ? t('personal_dashboard') : t('portal_access')}
             >
               <User size={22} />
               {user && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white shadow-sm" />}

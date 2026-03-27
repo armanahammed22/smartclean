@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -6,6 +5,7 @@ import Link from 'next/link';
 import { Star, Package, Truck } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +17,7 @@ interface ProductCardProps {
  * Refined for a cleaner, balanced look on larger displays.
  */
 export function ProductCard({ product, isDark = false }: ProductCardProps) {
+  const { t } = useLanguage();
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
@@ -57,7 +58,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               <div className="absolute bottom-2 left-2">
                 <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
                   <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
-                  FREE
+                  {t('free').toUpperCase()}
                 </div>
               </div>
             )}
@@ -103,7 +104,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
               <span className="opacity-50 text-[8px] md:text-[10px]">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black">{soldCount} Sold</span>
+            <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black">{soldCount} {t('sold')}</span>
           </div>
         </div>
       </div>

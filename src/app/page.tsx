@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -133,7 +132,7 @@ export default function SmartCleanHomePage() {
                               <h2 className="text-white text-xl md:text-4xl font-black uppercase tracking-tight mb-1 drop-shadow-md">{banner.title}</h2>
                               <p className="text-white/90 text-[10px] md:text-lg font-medium mb-4 max-w-[180px] md:max-w-md line-clamp-2">{banner.subtitle}</p>
                               <Button size="sm" className="w-fit h-8 md:h-10 rounded-full px-6 font-black uppercase text-[9px]" style={{ backgroundColor: banner.buttonColor }}>
-                                {banner.buttonText || 'Discover'}
+                                {banner.buttonText || t('view_all')}
                               </Button>
                             </div>
                           </Link>
@@ -201,12 +200,15 @@ export default function SmartCleanHomePage() {
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
-                      <span className="text-sm md:text-lg font-black text-[#081621] uppercase tracking-tight">{flashSaleConfig.title || 'Flash Sale'}</span>
-                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
+                      <span className="text-sm md:text-lg font-black text-[#081621] uppercase tracking-tight">{flashSaleConfig.title || t('flash_sale')}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold text-gray-400 uppercase">{t('ends_in')}</span>
+                        <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
+                      </div>
                     </div>
                   </div>
                   <Link href="/products" className="flex items-center gap-1 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-                    ALL <ChevronRight size={14} />
+                    {t('cat_all').toUpperCase()} <ChevronRight size={14} />
                   </Link>
                 </div>
                 <div className="p-4 md:p-6">
@@ -239,7 +241,7 @@ export default function SmartCleanHomePage() {
                   <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
                 </div>
                 <Link href="/services" className="text-[10px] md:text-xs font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-white border border-primary/20 px-5 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm">
-                  VIEW ALL <ChevronRight size={14} />
+                  {t('view_all').toUpperCase()} <ChevronRight size={14} />
                 </Link>
               </div>
 
@@ -316,39 +318,6 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'testimonials':
-        return (
-          <section key={section.id} className="py-12 md:py-16 bg-gray-50/50">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <div className="text-center mb-10 space-y-2">
-                <Badge variant="outline" className="font-black text-primary border-primary/20 uppercase tracking-widest text-[8px] px-3 py-0.5 rounded-full">Reviews</Badge>
-                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#081621]">Satisfied Clients</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                {[
-                  { name: "Sarah J.", text: "The team arrived on time and did an incredible job with the kitchen. Worth every Taka!", area: "Gulshan" },
-                  { name: "Rafiq Ahmed", text: "I've tried many services in Dhaka, but Smart Clean's tech and professionalism are on another level.", area: "Uttara" },
-                  { name: "Mila K.", text: "Highly reliable. They arrived exactly on time and finished ahead of schedule.", area: "Banani" }
-                ].map((rev, i) => (
-                  <Card key={i} className="border-none shadow-sm rounded-[1.5rem] bg-white p-6 md:p-8 space-y-4 group hover:shadow-xl transition-all">
-                    <CardContent className="p-0 space-y-4">
-                      <div className="flex text-amber-400 gap-0.5">{[1,2,3,4,5].map(j => <Star key={j} size={12} fill="currentColor" />)}</div>
-                      <p className="text-sm text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
-                      <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-[10px] uppercase">{rev.name[0]}</div>
-                        <div>
-                          <p className="font-black text-[10px] text-[#081621] uppercase tracking-tight">{rev.name}</p>
-                          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{rev.area}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-
       default:
         return null;
     }
@@ -369,18 +338,18 @@ export default function SmartCleanHomePage() {
         ) : (
           <>
             {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
-            {renderSection({ id: 'def-flash', type: 'flash_deals', title: 'Flash Sale' })}
+            {renderSection({ id: 'def-flash', type: 'flash_deals', title: t('flash_sale') })}
             {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
             {renderSection({ 
               id: 'def-serv', 
               type: 'services_featured', 
-              title: 'Featured Services',
+              title: t('services_title'),
               config: { limit: 12 } 
             })}
             {renderSection({ 
               id: 'def-feed', 
               type: 'products_new', 
-              title: 'New Arrivals',
+              title: t('products_title'),
               config: { limit: 12 } 
             })}
           </>
@@ -443,12 +412,12 @@ function ServiceGridItem({ s }: { s: any }) {
               )}
             </div>
 
-            <div className="flex items-center justify-between text-[9px] md:text-xs font-bold">
+            <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold">
               <div className="flex items-center gap-1 text-amber-400">
                 <Star size={12} fill="currentColor" />
-                <span className="text-gray-600">{s.rating || '4.8'}</span>
+                <span className="font-black text-gray-600">{s.rating || '4.8'}</span>
               </div>
-              <span className="text-gray-400 uppercase tracking-widest text-[8px] md:text-[9px] font-black">{bookCount} Book</span>
+              <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black text-gray-400">{bookCount} {t('book')}</span>
             </div>
 
             <Button size="sm" className="w-full rounded-xl font-black text-sm md:text-base uppercase shadow-xl h-10 md:h-11 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">

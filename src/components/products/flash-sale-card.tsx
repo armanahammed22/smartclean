@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -6,6 +5,7 @@ import Link from 'next/link';
 import { Star } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface FlashSaleCardProps {
   product: Product;
@@ -15,6 +15,7 @@ interface FlashSaleCardProps {
  * Flash Sale card with refined typography for better balance on tablet/desktop.
  */
 export function FlashSaleCard({ product }: FlashSaleCardProps) {
+  const { t } = useLanguage();
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
@@ -75,7 +76,7 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
                 <Star size={10} fill="currentColor" />
                 <span className="font-black text-gray-600">{rating}</span>
               </div>
-              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400">{soldCount} Sold</span>
+              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400">{soldCount} {t('sold')}</span>
             </div>
           </div>
         </div>
