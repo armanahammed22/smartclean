@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Navbar } from './navbar';
 import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
