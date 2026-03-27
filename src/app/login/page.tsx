@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldAlert, UserPlus, CheckCircle2, Sparkles } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldAlert, UserPlus, CheckCircle2, Zap, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -94,8 +94,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col lg:flex-row">
-      
-      {/* Visual Branding Section - Visible on Desktop */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#081621] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-0 left-0 w-full h-full opacity-20">
           <Image 
@@ -136,7 +134,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Login Form Section */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
         <div className="w-full max-w-md space-y-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest mb-4">
@@ -163,7 +160,7 @@ export default function LoginPage() {
             
             <CardContent className="px-8 pb-6 pt-4">
               {accessDenied && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 animate-in shake-1">
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
                   <ShieldAlert className="text-red-600 shrink-0" size={20} />
                   <p className="text-[11px] font-bold text-red-700 leading-tight">
                     ACCESS DENIED: Please use your professional portal for management access.
@@ -205,40 +202,14 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="remember" 
-                      checked={rememberMe} 
-                      onCheckedChange={(val) => setRememberMe(!!val)} 
-                      className="border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember" className="text-[11px] font-bold text-gray-600 uppercase tracking-tighter cursor-pointer">
-                      Remember Me
-                    </label>
-                  </div>
-                  <Link href="#" className="text-[11px] font-black text-primary uppercase tracking-tighter hover:underline">
-                    Forgot Password?
-                  </Link>
-                </div>
-
                 <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Now</>}
                 </Button>
               </form>
             </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4 pb-10 bg-gray-50/50 pt-8 border-t border-gray-100">
-              <div className="text-center space-y-3">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
-                  New to Smart Clean?
-                </p>
-                <Button variant="outline" asChild className="w-full h-12 rounded-xl border-primary/20 bg-white hover:bg-primary/5 text-primary font-black uppercase text-xs gap-2">
-                  <Link href="/signup">
-                    <UserPlus size={16} /> Create an Account
-                  </Link>
-                </Button>
-              </div>
+            <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
+              <p className="text-xs font-bold text-muted-foreground">New to Smart Clean? <Link href="/signup" className="text-primary font-black hover:underline">Signup</Link></p>
             </CardFooter>
           </Card>
         </div>

@@ -17,18 +17,18 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
-/**
- * Highly optimized Colorful Bottom Navigation for Mobile & Tablet.
- * Features: Gradients, Glow Effects, and Smooth Animations.
- */
 export function BottomNav() {
   const { itemCount } = useCart();
   const { toggleSupport, isSupportOpen } = useSupport();
   const pathname = usePathname();
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
   const [currentOffer, setCurrentOffer] = useState(0);
 
-  // Fetch dynamic offers for the middle rotating button
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const offersQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'offers'), orderBy('order', 'asc'));
@@ -37,7 +37,6 @@ export function BottomNav() {
   const { data: allOffers } = useCollection(offersQuery);
   const offers = useMemo(() => allOffers?.filter(o => o.isActive === true) || [], [allOffers]);
 
-  // Handle offer rotation
   useEffect(() => {
     if (offers.length <= 1) return;
     const interval = setInterval(() => {
@@ -46,36 +45,31 @@ export function BottomNav() {
     return () => clearInterval(interval);
   }, [offers]);
 
+  if (!mounted) return null;
+
   const NAV_ITEMS = [
     { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
     { label: 'মেসেজ', href: '#', icon: MessageCircle, badge: 0, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
-    { label: 'অফার', href: '/#offers', isMiddle: true },
+    { label: 'অফার', href: '#', isMiddle: true },
     { label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount, color: 'from-orange-500 to-red-600' },
     { label: 'একাউন্ট', href: '/account/dashboard', icon: User, color: 'from-purple-500 to-pink-600' },
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] h-[75px] md:h-[85px] w-full flex items-center justify-around px-2 pb-safe shadow-[0_-15px_50px_rgba(0,0,0,0.15)]">
-      {/* Premium Glassmorphism Background */}
-      <div className="absolute inset-0 bg-white/95 backdrop-blur-3xl border-t border-gray-100" />
-
+    <nav className="fixed bottom-0 left-0 right-0 z-[150] h-[75px] md:h-[85px] w-full flex items-center justify-around px-2 pb-safe shadow-[0_-15px_50px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-3xl border-t border-gray-100">
       <div className="relative flex w-full max-w-5xl mx-auto items-center justify-between z-10 px-1 sm:px-8">
         {NAV_ITEMS.map((item, idx) => {
           const isActive = (item.href !== '#' && pathname === item.href) || (item.label === 'মেসেজ' && isSupportOpen);
           const Icon = item.icon;
 
           if (item.isMiddle) {
+            const activeOffer = offers[currentOffer];
             return (
               <div key="middle-offer" className="relative -mt-12 md:-mt-14 px-1 group animate-in slide-in-from-bottom-4 duration-700">
-                <Link href={offers[currentOffer]?.link || "/#offers"} className="flex flex-col items-center gap-1.5">
+                <Link href={activeOffer?.link || "/#offers"} className="flex flex-col items-center gap-1.5">
                   <div className="relative w-[62px] h-[62px] md:w-[72px] md:h-[72px] flex items-center justify-center">
-                    {/* Animated Outer Glow */}
                     <div className="absolute inset-[-6px] rounded-full opacity-40 blur-2xl animate-pulse bg-primary" />
-                    
-                    {/* Golden Ring Spinner */}
                     <div className="absolute inset-[-2px] rounded-full border-2 border-dashed border-yellow-400/50 animate-[spin_10s_linear_infinite]" />
-
-                    {/* Circle Image Container */}
                     <div className="relative w-full h-full rounded-full bg-white border-[4px] border-white shadow-2xl overflow-hidden transition-transform duration-300 group-hover:scale-110">
                       {offers.length > 0 ? (
                         <div className="relative w-full h-full">
@@ -83,7 +77,7 @@ export function BottomNav() {
                             <div
                               key={offer.id}
                               className={cn(
-                                "absolute inset-0 transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1)",
+                                "absolute inset-0 transition-transform duration-700",
                                 i === currentOffer ? "translate-y-0" : i < currentOffer ? "-translate-y-full" : "translate-y-full"
                               )}
                             >
@@ -97,10 +91,8 @@ export function BottomNav() {
                         </div>
                       )}
                     </div>
-
-                    {/* Sparkle Badge */}
-                    <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full w-7 h-7 flex items-center justify-center text-white shadow-lg animate-bounce [animation-duration:3s]">
-                      <Sparkles size={14} className="animate-spin [animation-duration:5s]" />
+                    <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full w-7 h-7 flex items-center justify-center text-white shadow-lg">
+                      <Sparkles size={14} className="animate-spin" />
                     </div>
                   </div>
                   <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] mt-1.5 drop-shadow-sm">অফার</span>
@@ -115,13 +107,12 @@ export function BottomNav() {
                 "relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl transition-all duration-500",
                 isActive 
                   ? `bg-gradient-to-br ${item.color} text-white shadow-xl scale-110 -translate-y-1` 
-                  : "text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-gray-600"
+                  : "text-gray-400 bg-gray-50 hover:bg-gray-100"
               )}>
                 {Icon && <Icon size={isActive ? 24 : 22} strokeWidth={isActive ? 2.5 : 2} />}
-                
                 {item.badge !== undefined && item.badge > 0 && (
                   <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-black h-5 min-w-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-lg px-1 animate-bounce">
-                    {item.badge > 9 ? '9+' : item.badge}
+                    {item.badge}
                   </div>
                 )}
               </div>
@@ -135,21 +126,11 @@ export function BottomNav() {
           );
 
           return item.onClick ? (
-            <button 
-              key={item.label} 
-              onClick={item.onClick} 
-              className="flex-1 app-button animate-in slide-in-from-bottom-4 duration-500 flex justify-center py-1"
-              style={{ animationDelay: `${idx * 60}ms` }}
-            >
+            <button key={item.label} onClick={item.onClick} className="flex-1 flex justify-center py-1">
               {NavContent}
             </button>
           ) : (
-            <Link 
-              key={item.label} 
-              href={item.href} 
-              className="flex-1 app-button animate-in slide-in-from-bottom-4 duration-500 flex justify-center py-1"
-              style={{ animationDelay: `${idx * 60}ms` }}
-            >
+            <Link key={item.label} href={item.href} className="flex-1 flex justify-center py-1">
               {NavContent}
             </Link>
           );
