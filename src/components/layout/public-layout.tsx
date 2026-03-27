@@ -91,14 +91,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
           >
             <Search size={20} />
           </Button>
-          <Link href="/cart" className="relative p-2.5 h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-100">
-            <ShoppingCart size={18} className="text-gray-700" />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border border-white shadow-lg animate-in zoom-in">
-                {itemCount}
-              </span>
-            )}
-          </Link>
+          {/* Cart Icon removed from mobile header as requested */}
         </div>
       </header>
 

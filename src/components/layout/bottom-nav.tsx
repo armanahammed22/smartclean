@@ -52,6 +52,7 @@ export function BottomNav() {
 
   if (!mounted) return null;
 
+  // Re-ordered NAV_ITEMS to place Cart to the right of the middle Offer button
   const NAV_ITEMS = [
     { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
     { label: 'মেসেজ', href: '#', icon: MessageCircle, badge: 0, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
