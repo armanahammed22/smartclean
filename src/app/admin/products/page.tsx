@@ -5,6 +5,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebas
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Package, 
   Plus, 
@@ -18,7 +19,9 @@ import {
   XCircle,
   Star,
   Eye,
-  Settings2
+  Settings2,
+  FileText,
+  Download
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -31,7 +34,6 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -44,8 +46,9 @@ export default function ProductsManagementPage() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [viewingProduct, setViewingProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   
   const [activeTab, setActiveTab] = useState('identity');
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
@@ -58,6 +61,43 @@ export default function ProductsManagementPage() {
   const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories')) : null, [db, user]);
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);
+
+  const stats = useMemo(() => {
+    if (!products) return { total: 0, low: 0, out: 0, cats: 0 };
+    return {
+      total: products.length,
+      low: products.filter(p => p.stockQuantity > 0 && p.stockQuantity < 10).length,
+      out: products.filter(p => p.stockQuantity <= 0).length,
+      cats: categories?.length || 0
+    };
+  }, [products, categories]);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === products?.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products?.map(p => p.id) || []);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!db || selectedIds.length === 0) return;
+    if (!confirm("Delete selected items?")) return;
+    setIsBulkProcessing(true);
+    try {
+      const batch = writeBatch(db);
+      selectedIds.forEach(id => batch.delete(doc(db, 'products', id)));
+      await batch.commit();
+      setSelectedIds([]);
+      toast({ title: "Bulk Delete Completed" });
+    } catch (e) {} finally {
+      setIsBulkProcessing(false);
+    }
+  };
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -123,48 +163,47 @@ export default function ProductsManagementPage() {
     setIsDialogOpen(true);
   };
 
-  const deleteProduct = (id: string) => {
-    if (!db || !confirm("Delete this SKU?")) return;
-    deleteDoc(doc(db, 'products', id))
-      .then(() => toast({ title: "Product Removed" }))
-      .catch(async (err) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: `products/${id}`,
-          operation: 'delete'
-        }));
-      });
-  };
-
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Catalog Management</h1>
-          <p className="text-muted-foreground text-sm">Full Daraz-style SKU and inventory control</p>
+          <h1 className="text-2xl font-bold text-gray-900 uppercase">Inventory Catalog</h1>
+          <p className="text-muted-foreground text-sm">Full SKU and inventory control center</p>
         </div>
         <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-8 rounded-xl bg-primary" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
           <Plus size={18} /> Add New SKU
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "Active SKUs", val: products?.length || 0, icon: Package, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "Low Stock (<5)", val: products?.filter(p => p.stockQuantity < 5).length || 0, icon: AlertCircle, bg: "bg-orange-50", color: "text-orange-600" },
-          { label: "Out of Stock", val: products?.filter(p => p.stockQuantity === 0).length || 0, icon: XCircle, bg: "bg-red-50", color: "text-red-600" },
-          { label: "Categories", val: categories?.length || 0, icon: Tag, bg: "bg-green-50", color: "text-green-600" }
+          { label: "Active SKUs", val: stats.total, icon: Package, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Low Stock", val: stats.low, icon: AlertCircle, bg: "bg-orange-50", color: "text-orange-600" },
+          { label: "Out of Stock", val: stats.out, icon: XCircle, bg: "bg-red-50", color: "text-red-600" },
+          { label: "Taxonomies", val: stats.cats, icon: Tag, bg: "bg-green-50", color: "text-green-600" }
         ].map((s, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl shrink-0", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl group-hover:scale-110 transition-transform", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
+          <div className="flex items-center gap-4 px-2">
+            <span className="text-xs font-black uppercase">{selectedIds.length} SKUS SELECTED</span>
+          </div>
+          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
+            <Trash2 size={14} className="mr-2" /> Delete Catalog Items
+          </Button>
+        </div>
+      )}
 
       <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
@@ -172,26 +211,38 @@ export default function ProductsManagementPage() {
             <Table className="min-w-[900px]">
               <TableHeader className="bg-gray-50/50">
                 <TableRow>
-                  <TableHead className="font-bold py-5 pl-8">Product</TableHead>
-                  <TableHead className="font-bold">Category</TableHead>
-                  <TableHead className="font-bold">Price</TableHead>
-                  <TableHead className="font-bold">Stock</TableHead>
-                  <TableHead className="text-right pr-8">Action</TableHead>
+                  <TableHead className="w-12 pl-6">
+                    <Checkbox 
+                      checked={products?.length ? selectedIds.length === products.length : false}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest">Product</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Category</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Stock</TableHead>
+                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
                 ) : products?.map((product) => (
-                  <TableRow key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <TableCell className="py-5 pl-8">
+                  <TableRow key={product.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(product.id) && "bg-primary/5")}>
+                    <TableCell className="pl-6">
+                      <Checkbox 
+                        checked={selectedIds.includes(product.id)}
+                        onCheckedChange={() => toggleSelect(product.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="py-5 pl-4">
                       <div className="flex items-center gap-4">
                         <div className="relative w-12 h-12 rounded-xl overflow-hidden border bg-gray-50 shrink-0">
                           {product.imageUrl && <Image src={product.imageUrl} alt={product.name} fill className="object-cover" unoptimized />}
                         </div>
                         <div className="min-w-0">
                           <span className="font-black text-gray-900 uppercase text-xs truncate max-w-[200px] block leading-none mb-1">{product.name}</span>
-                          <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest">SKU: {product.id.slice(0, 8)}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest">SKU: {product.id.slice(0, 8).toUpperCase()}</span>
                         </div>
                       </div>
                     </TableCell>
@@ -211,7 +262,7 @@ export default function ProductsManagementPage() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => handleOpenEdit(product)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteProduct(product.id)}><Trash2 size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'products', product.id))}><Trash2 size={16} /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
