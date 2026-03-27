@@ -14,6 +14,7 @@ interface ProductCardProps {
 
 /**
  * Standard Product Card with optimized typography for tablet/desktop.
+ * Refined for a cleaner, balanced look on larger displays.
  */
 export function ProductCard({ product, isDark = false }: ProductCardProps) {
   const discountPercent = product.regularPrice && product.regularPrice > product.price
@@ -26,11 +27,11 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
 
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.98] transition-all">
-      <div className="flex flex-col h-full bg-white rounded-2xl md:rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden">
+      <div className="flex flex-col h-full bg-white rounded-2xl md:rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
         
         {/* Rounded Image Container */}
         <div className="p-2 md:p-3">
-          <div className="relative aspect-square w-full rounded-2xl md:rounded-3xl overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div className="relative aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
             {product.imageUrl ? (
               <Image
                 src={product.imageUrl}
@@ -41,21 +42,21 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               />
             ) : (
               <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-100">
-                <Package size={40} />
+                <Package size={32} />
               </div>
             )}
             
             {/* Custom Admin Badge */}
             {product.badgeText ? (
-              <div className="absolute top-3 left-3">
-                <div className="bg-primary text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg">
+              <div className="absolute top-2 left-2">
+                <div className="bg-primary text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
                   {product.badgeText}
                 </div>
               </div>
             ) : (
-              <div className="absolute bottom-3 left-3">
-                <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[8px] md:text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg">
-                  <Truck size={10} fill="white" className="shrink-0 md:w-3 md:h-3" />
+              <div className="absolute bottom-2 left-2">
+                <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
+                  <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
                   FREE
                 </div>
               </div>
@@ -63,46 +64,46 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
 
             {/* Discount Badge */}
             {discountPercent && (
-              <div className="absolute top-3 right-3 bg-[#f85606] text-white text-[9px] md:text-[10px] font-black px-2 py-1 rounded-full shadow-md uppercase">
+              <div className="absolute top-2 right-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-md uppercase">
                 -{discountPercent}%
               </div>
             )}
           </div>
         </div>
 
-        <div className="px-4 md:px-5 pb-6 space-y-2 pt-1">
+        <div className="px-3 md:px-4 pb-5 space-y-1.5 pt-0.5">
           <h3 className={cn(
-            "text-sm md:text-base font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
+            "text-[12px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
             isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
           )}>
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <p className={cn(
-              "text-lg md:text-2xl font-black tracking-tighter leading-none",
+              "text-lg md:text-xl font-black tracking-tighter leading-none",
               isDark ? "text-amber-400" : "text-[#f85606]"
             )}>
-              <span className="text-[10px] md:text-xs font-bold mr-0.5">৳</span>
+              <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
               {product.price.toLocaleString()}
             </p>
             {product.regularPrice && product.regularPrice > product.price && (
-              <span className="text-[10px] md:text-xs text-gray-300 line-through font-bold">
+              <span className="text-[9px] md:text-[10px] text-gray-300 line-through font-bold">
                 ৳{product.regularPrice.toLocaleString()}
               </span>
             )}
           </div>
           
           <div className={cn(
-            "flex items-center justify-between gap-1 text-[10px] md:text-xs font-bold",
+            "flex items-center justify-between gap-1 text-[9px] md:text-xs font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
-            <div className="flex items-center gap-1.5 text-amber-400">
-              <Star size={14} fill="currentColor" />
+            <div className="flex items-center gap-1 text-amber-400">
+              <Star size={12} fill="currentColor" />
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
-              <span className="opacity-50">({reviewCount})</span>
+              <span className="opacity-50 text-[8px] md:text-[10px]">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-[9px] font-black">{soldCount} Sold</span>
+            <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black">{soldCount} Sold</span>
           </div>
         </div>
       </div>

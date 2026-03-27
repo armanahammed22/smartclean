@@ -24,11 +24,11 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
 
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.97] transition-all">
-      <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1">
+      <div className="bg-white rounded-[1.2rem] md:rounded-[1.5rem] overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1">
         
         {/* Image Container with Discount Badge */}
         <div className="p-2 md:p-3">
-          <div className="relative aspect-square w-full rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
+          <div className="relative aspect-square w-full rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
             {product.imageUrl ? (
               <Image
                 src={product.imageUrl}
@@ -38,14 +38,14 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
                 unoptimized
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-200">
-                <Star size={24} />
+              <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200">
+                <Star size={20} />
               </div>
             )}
             
             {/* Discount Badge */}
             {discountPercent && (
-              <div className="absolute top-2 left-2 bg-[#f85606] text-white text-[10px] md:text-xs font-black px-2.5 py-1 rounded-full shadow-lg z-10 uppercase tracking-tighter">
+              <div className="absolute top-2 left-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg z-10 uppercase tracking-tighter">
                 -{discountPercent}%
               </div>
             )}
@@ -53,29 +53,29 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
         </div>
 
         {/* Info Section */}
-        <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
-          <h3 className="text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
+        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+          <h3 className="text-[11px] md:text-xs font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           
-          <div className="mt-auto space-y-2">
+          <div className="mt-auto space-y-1.5">
             <div className="flex flex-col">
-              <p className="text-lg md:text-2xl font-black text-primary tracking-tighter leading-none">
+              <p className="text-base md:text-lg font-black text-primary tracking-tighter leading-none">
                 ৳{product.price.toLocaleString()}
               </p>
               {product.regularPrice && product.regularPrice > product.price && (
-                <span className="text-[10px] md:text-xs font-bold text-gray-300 line-through mt-1">
+                <span className="text-[8px] md:text-[10px] font-bold text-gray-300 line-through mt-0.5">
                   ৳{product.regularPrice.toLocaleString()}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center justify-between text-[10px] md:text-xs font-bold">
+            <div className="flex items-center justify-between text-[8px] md:text-[10px] font-bold">
               <div className="flex items-center gap-1 text-amber-400">
-                <Star size={14} fill="currentColor" />
+                <Star size={10} fill="currentColor" />
                 <span className="font-black text-gray-600">{rating}</span>
               </div>
-              <span className="uppercase tracking-widest text-[9px] font-black text-gray-400">{soldCount} Sold</span>
+              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400">{soldCount} Sold</span>
             </div>
           </div>
         </div>

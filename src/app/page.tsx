@@ -236,7 +236,7 @@ export default function SmartCleanHomePage() {
               <div className="flex items-center justify-between mb-8 px-2">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-primary/10 rounded-xl text-primary"><Sparkles size={24} fill="currentColor" /></div>
-                  <h2 className="text-xl md:text-3xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
+                  <h2 className="text-xl md:text-2xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
                 </div>
                 <Link href="/services" className="text-[10px] md:text-xs font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-white border border-primary/20 px-5 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm">
                   VIEW ALL <ChevronRight size={14} />
@@ -278,11 +278,11 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} className="px-4 py-12 bg-white">
             <div className="container mx-auto max-w-7xl">
-              <h2 className="text-xl font-black uppercase text-[#081621] mb-8 text-center tracking-widest">{section.title}</h2>
+              <h2 className="text-lg font-black uppercase text-[#081621] mb-8 text-center tracking-widest">{section.title}</h2>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                 {brands.map(brand => (
                   <div key={brand.id} className="aspect-video bg-gray-50 rounded-2xl flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all border border-transparent hover:border-gray-100 hover:shadow-sm cursor-pointer">
-                    <span className="font-black text-gray-300 uppercase text-xs">{brand.name}</span>
+                    <span className="font-black text-gray-300 uppercase text-[10px]">{brand.name}</span>
                   </div>
                 ))}
               </div>
@@ -292,22 +292,22 @@ export default function SmartCleanHomePage() {
 
       case 'trust_stats':
         return (
-          <section key={section.id} className="py-16 md:py-24 bg-white">
+          <section key={section.id} className="py-12 md:py-16 bg-white">
             <div className="container mx-auto px-4 max-w-7xl">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
                 {[
                   { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
                   { label: "Pro Technicians", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
                   { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" },
                   { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" }
                 ].map((stat, i) => (
-                  <div key={i} className="flex flex-col items-center text-center space-y-4">
-                    <div className={cn("p-5 rounded-3xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)}>
-                      <stat.icon size={32} strokeWidth={2.5} />
+                  <div key={i} className="flex flex-col items-center text-center space-y-3">
+                    <div className={cn("p-4 rounded-2xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)}>
+                      <stat.icon size={24} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <h4 className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter">{stat.val}</h4>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                      <h4 className="text-2xl md:text-3xl font-black text-[#081621] tracking-tighter">{stat.val}</h4>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
                     </div>
                   </div>
                 ))}
@@ -318,27 +318,27 @@ export default function SmartCleanHomePage() {
 
       case 'testimonials':
         return (
-          <section key={section.id} className="py-12 md:py-20 bg-gray-50/50">
+          <section key={section.id} className="py-12 md:py-16 bg-gray-50/50">
             <div className="container mx-auto px-4 max-w-7xl">
-              <div className="text-center mb-12 space-y-3">
-                <Badge variant="outline" className="font-black text-primary border-primary/20 uppercase tracking-widest text-[9px] px-4 py-1 rounded-full">Reviews</Badge>
-                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">Satisfied Clients</h2>
+              <div className="text-center mb-10 space-y-2">
+                <Badge variant="outline" className="font-black text-primary border-primary/20 uppercase tracking-widest text-[8px] px-3 py-0.5 rounded-full">Reviews</Badge>
+                <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#081621]">Satisfied Clients</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 {[
                   { name: "Sarah J.", text: "The team arrived on time and did an incredible job with the kitchen. Worth every Taka!", area: "Gulshan" },
                   { name: "Rafiq Ahmed", text: "I've tried many services in Dhaka, but Smart Clean's tech and professionalism are on another level.", area: "Uttara" },
                   { name: "Mila K.", text: "Highly reliable. They arrived exactly on time and finished ahead of schedule.", area: "Banani" }
                 ].map((rev, i) => (
-                  <Card key={i} className="border-none shadow-sm rounded-[2rem] bg-white p-8 space-y-6 group hover:shadow-xl transition-all">
-                    <CardContent className="p-0 space-y-6">
-                      <div className="flex text-amber-400 gap-0.5">{[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}</div>
-                      <p className="text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
+                  <Card key={i} className="border-none shadow-sm rounded-[1.5rem] bg-white p-6 md:p-8 space-y-4 group hover:shadow-xl transition-all">
+                    <CardContent className="p-0 space-y-4">
+                      <div className="flex text-amber-400 gap-0.5">{[1,2,3,4,5].map(j => <Star key={j} size={12} fill="currentColor" />)}</div>
+                      <p className="text-sm text-gray-600 font-medium italic leading-relaxed">"{rev.text}"</p>
                       <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xs uppercase">{rev.name[0]}</div>
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-[10px] uppercase">{rev.name[0]}</div>
                         <div>
-                          <p className="font-black text-[11px] text-[#081621] uppercase tracking-tight">{rev.name}</p>
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{rev.area}</p>
+                          <p className="font-black text-[10px] text-[#081621] uppercase tracking-tight">{rev.name}</p>
+                          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{rev.area}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -397,10 +397,10 @@ function ServiceGridItem({ s }: { s: any }) {
   const bookCount = Math.floor(Math.random() * 500) + 10;
 
   return (
-    <div className="relative group bg-white rounded-2xl md:rounded-[2rem] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1.5">
+    <div className="relative group bg-white rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1">
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
         <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
             {s.imageUrl ? (
               <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
             ) : (
@@ -408,16 +408,16 @@ function ServiceGridItem({ s }: { s: any }) {
             )}
             
             {s.badgeText && (
-              <div className="absolute top-3 left-3">
-                <Badge className="bg-primary text-white border-none shadow-lg font-black text-[9px] md:text-[11px] uppercase px-3 py-1 rounded-full">
+              <div className="absolute top-2 left-2">
+                <Badge className="bg-primary text-white border-none shadow-lg font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
                   {s.badgeText}
                 </Badge>
               </div>
             )}
 
             {!s.badgeText && (
-              <div className="absolute bottom-3 left-3">
-                <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
+              <div className="absolute bottom-2 left-2">
+                <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-1.5 py-0.5 rounded-full">
                   {s.categoryId || 'General'}
                 </Badge>
               </div>
@@ -425,34 +425,33 @@ function ServiceGridItem({ s }: { s: any }) {
           </div>
         </div>
 
-        <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
-          <h3 className="text-[13px] md:text-base font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
+        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+          <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}
           </h3>
           
-          <div className="mt-auto space-y-3">
-            <div className="flex items-center gap-3">
-              <p className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">
-                <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center gap-2">
+              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">
+                <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
                 {(s.basePrice || 0).toLocaleString()}
               </p>
               {discountPercent && (
-                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[10px] px-2 py-0.5 h-auto">
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[8px] px-1.5 py-0.5 h-auto">
                   -{discountPercent}%
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-[10px] md:text-sm font-bold">
-              <div className="flex items-center gap-1.5 text-amber-400">
-                <Star size={14} fill="currentColor" />
+            <div className="flex items-center justify-between text-[9px] md:text-xs font-bold">
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={12} fill="currentColor" />
                 <span className="text-gray-600">{s.rating || '4.8'}</span>
-                <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
               </div>
-              <span className="text-gray-400 uppercase tracking-widest text-[9px] font-black">{bookCount} Book</span>
+              <span className="text-gray-400 uppercase tracking-widest text-[8px] md:text-[9px] font-black">{bookCount} Book</span>
             </div>
 
-            <Button size="sm" className="w-full rounded-xl font-black text-lg md:text-xl uppercase shadow-xl h-12 md:h-14 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
+            <Button size="sm" className="w-full rounded-xl font-black text-sm md:text-base uppercase shadow-xl h-10 md:h-11 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
               {t('book_now')}
             </Button>
           </div>
