@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, doc, limit } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { 
   Wrench, 
   ChevronRight, 
@@ -23,19 +23,16 @@ import {
   Briefcase,
   Smartphone,
   ShieldCheck,
-  Heart,
   Award,
   Clock,
   Users,
-  CheckCircle2,
   TrendingUp,
   Package,
-  ShoppingBag,
-  Timer,
-  Truck
+  ShoppingBag
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
+import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { 
   Carousel, 
   CarouselContent, 
@@ -43,6 +40,17 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
+
+// Default layout used if the database collection is empty
+const DEFAULT_LAYOUT = [
+  { id: 'def-hero', type: 'hero', isActive: true, order: 0 },
+  { id: 'def-cats', type: 'categories', isActive: true, order: 1 },
+  { id: 'def-flash', type: 'flash_deals', isActive: true, order: 2 },
+  { id: 'def-camp', type: 'campaign', isActive: true, order: 3 },
+  { id: 'def-srv-feat', type: 'services_featured', title: 'Our Featured Services', isActive: true, order: 4 },
+  { id: 'def-prod-new', type: 'products_new', title: 'Latest Arrivals', isActive: true, order: 5 },
+  { id: 'def-trust', type: 'trust_stats', isActive: true, order: 6 }
+];
 
 const getCategoryStyles = (name: string) => {
   const n = name.toLowerCase();
@@ -65,18 +73,8 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // Use a simplified query to avoid Firestore index requirements (which can break the layout)
+  // Fetch collections
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
-  const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
-
-  // Filter and Sort in memory for 100% stability
-  const layoutSections = useMemo(() => {
-    if (!allSectionsRaw) return [];
-    return allSectionsRaw
-      .filter(s => s.isActive === true)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [allSectionsRaw]);
-
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
@@ -84,6 +82,7 @@ export default function SmartCleanHomePage() {
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const brandsRef = useMemoFirebase(() => db ? collection(db, 'brands') : null, [db]);
 
+  const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
   const { data: allTopNav } = useCollection(topNavRef);
   const { data: allProducts } = useCollection(productsRef);
@@ -91,12 +90,18 @@ export default function SmartCleanHomePage() {
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: allBrands } = useCollection(brandsRef);
 
-  const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
+  // Filter and Sort layout in memory
+  const layoutSections = useMemo(() => {
+    if (layoutLoading) return [];
+    if (!allSectionsRaw || allSectionsRaw.length === 0) return DEFAULT_LAYOUT;
+    
+    return [...allSectionsRaw]
+      .filter(s => s.isActive === true)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [allSectionsRaw, layoutLoading]);
 
-  const categories = useMemo(() => {
-    if (!allTopNav) return [];
-    return [...allTopNav].sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [allTopNav]);
+  const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
+  const categories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
   const renderSection = (section: any) => {
     const config = section.config || {};
@@ -107,18 +112,14 @@ export default function SmartCleanHomePage() {
       if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
       if (sectionType === 'products_new' || config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       if (sectionType === 'products_trending') feed = [...feed].sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
-      if (config.dataSource === 'category' && config.categoryId) feed = feed.filter(p => p.categoryId === config.categoryId);
-      return feed.slice(0, config.limit || 12);
+      return feed.slice(0, config.limit || 10);
     };
 
     const getFilteredServices = () => {
       let feed = allServices?.filter(s => s.status === 'Active') || [];
       if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
-      if (sectionType === 'services_popular') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      if (sectionType === 'services_trending') feed = feed.filter(s => s.isPopular);
-      if (sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      if (sectionType === 'services_new') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      return feed.slice(0, 24); 
+      if (sectionType === 'services_popular' || sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      return feed.slice(0, 12);
     };
 
     switch (sectionType) {
@@ -127,7 +128,7 @@ export default function SmartCleanHomePage() {
           <section key={section.id} className="bg-white pb-4 lg:bg-transparent lg:mt-4">
             <div className="container mx-auto px-0 lg:px-4">
               <div className="relative aspect-[21/11] md:aspect-[982/400] w-full lg:rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
-                {mainBanners.length > 0 && (
+                {mainBanners.length > 0 ? (
                   <Carousel className="w-full h-full" opts={{ loop: true }}>
                     <CarouselContent className="h-full -ml-0">
                       {mainBanners.map((banner) => (
@@ -146,6 +147,8 @@ export default function SmartCleanHomePage() {
                       ))}
                     </CarouselContent>
                   </Carousel>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20"><Package size={60} /></div>
                 )}
               </div>
             </div>
@@ -178,7 +181,7 @@ export default function SmartCleanHomePage() {
                               <Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized />
                             </div>
                           ) : (
-                            <DisplayIcon size={28} className="transition-transform group-hover:rotate-12" />
+                            <DisplayIcon size={28} />
                           )}
                         </div>
                         <span className="text-[9px] md:text-[10px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
@@ -194,10 +197,12 @@ export default function SmartCleanHomePage() {
         );
 
       case 'flash_deals':
-        const isFlashActive = flashSaleConfig?.isActive && new Date(flashSaleConfig.endDate) > new Date();
+        const isFlashActive = flashSaleConfig?.isActive;
         if (!isFlashActive) return null;
         const flashProductIds = flashSaleConfig?.productIds || [];
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
+        if (flashProducts.length === 0) return null;
+
         return (
           <section key={section.id} className="w-full py-4 md:py-6 px-3 md:px-4">
             <div className="bg-white overflow-hidden shadow-md rounded-3xl border border-gray-100">
@@ -207,10 +212,12 @@ export default function SmartCleanHomePage() {
                     <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
                       <span className="text-sm md:text-lg font-black text-[#081621] uppercase tracking-tight">{flashSaleConfig.title || t('flash_sale')}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-bold text-gray-400 uppercase">{t('ends_in')}</span>
-                        <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
-                      </div>
+                      {flashSaleConfig.endDate && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase">{t('ends_in')}</span>
+                          <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Link href="/products" className="flex items-center gap-1 text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
@@ -231,6 +238,9 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
+      case 'campaign':
+        return <CampaignSection key={section.id} />;
+
       case 'services':
       case 'services_featured':
       case 'services_popular':
@@ -238,6 +248,7 @@ export default function SmartCleanHomePage() {
       case 'services_top_rated':
       case 'services_new':
         const displayServices = getFilteredServices();
+        if (displayServices.length === 0) return null;
         return (
           <section key={section.id} className="px-3 md:px-4 py-8 md:py-12 bg-white/50">
             <div className="container mx-auto max-w-7xl">
@@ -250,7 +261,6 @@ export default function SmartCleanHomePage() {
                   {t('view_all').toUpperCase()} <ChevronRight size={14} />
                 </Link>
               </div>
-
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
                 {displayServices.map(s => <ServiceGridItem key={s.id} s={s} />)}
               </div>
@@ -262,9 +272,8 @@ export default function SmartCleanHomePage() {
       case 'products_featured':
       case 'products_trending':
       case 'products_new':
-      case 'products_recommended':
-      case 'custom_grid':
         const displayProducts = getFilteredProducts();
+        if (displayProducts.length === 0) return null;
         return (
           <section key={section.id} className="px-3 md:px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
@@ -339,13 +348,8 @@ export default function SmartCleanHomePage() {
             <Loader2 className="animate-spin text-primary" size={48} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Marketplace...</p>
           </div>
-        ) : layoutSections && layoutSections.length > 0 ? (
-          layoutSections.map(renderSection)
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-4">
-            <Package size={48} className="text-gray-200" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading default layout...</p>
-          </div>
+          layoutSections.map(renderSection)
         )}
       </div>
     </PublicLayout>
@@ -354,8 +358,6 @@ export default function SmartCleanHomePage() {
 
 function ServiceGridItem({ s }: { s: any }) {
   const { t } = useLanguage();
-  const hasDiscount = s.regularPrice && s.regularPrice > s.basePrice;
-  const discountPercent = hasDiscount ? Math.round(((s.regularPrice - s.basePrice) / s.regularPrice) * 100) : null;
   const bookCount = Math.floor(Math.random() * 500) + 10;
 
   return (
@@ -368,22 +370,11 @@ function ServiceGridItem({ s }: { s: any }) {
             ) : (
               <Wrench size={32} className="text-gray-200" />
             )}
-            
-            {s.badgeText && (
-              <div className="absolute top-2 left-2">
-                <Badge className="bg-primary text-white border-none shadow-lg font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
-                  {s.badgeText}
-                </Badge>
-              </div>
-            )}
-
-            {!s.badgeText && (
-              <div className="absolute bottom-2 left-2">
-                <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-1.5 py-0.5 rounded-full">
-                  {s.categoryId || 'General'}
-                </Badge>
-              </div>
-            )}
+            <div className="absolute bottom-2 left-2">
+              <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-1.5 py-0.5 rounded-full">
+                {s.categoryId || 'General'}
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -391,20 +382,11 @@ function ServiceGridItem({ s }: { s: any }) {
           <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}
           </h3>
-          
           <div className="mt-auto space-y-2">
-            <div className="flex items-center gap-2">
-              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">
-                <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
-                {(s.basePrice || 0).toLocaleString()}
-              </p>
-              {discountPercent && (
-                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[8px] px-1.5 py-0.5 h-auto">
-                  -{discountPercent}%
-                </Badge>
-              )}
-            </div>
-
+            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">
+              <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
+              {(s.basePrice || 0).toLocaleString()}
+            </p>
             <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold">
               <div className="flex items-center gap-1 text-amber-400">
                 <Star size={12} fill="currentColor" />
@@ -412,7 +394,6 @@ function ServiceGridItem({ s }: { s: any }) {
               </div>
               <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black text-gray-400">{bookCount} {t('book')}</span>
             </div>
-
             <Button size="sm" className="w-full rounded-xl font-black text-sm md:text-base uppercase shadow-xl h-10 md:h-11 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
               {t('book_now')}
             </Button>
