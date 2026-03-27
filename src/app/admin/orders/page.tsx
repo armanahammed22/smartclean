@@ -234,7 +234,7 @@ export default function OrdersManagementPage() {
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl group-hover:scale-110 transition-transform", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
