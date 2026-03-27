@@ -242,7 +242,9 @@ export default function SmartCleanHomePage() {
                 </Link>
               </div>
 
-              <ServiceSlider services={displayServices} />
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
+                {displayServices.map(s => <ServiceGridItem key={s.id} s={s} />)}
+              </div>
             </div>
           </section>
         );
@@ -387,26 +389,6 @@ export default function SmartCleanHomePage() {
   );
 }
 
-function ServiceSlider({ services }: { services: any[] }) {
-  const [emblaRef] = useEmblaCarousel({ 
-    loop: true, 
-    align: 'start', 
-    skipSnaps: false 
-  }, [Autoplay({ delay: 2500, stopOnInteraction: false })]);
-
-  return (
-    <div className="overflow-hidden pb-4" ref={emblaRef}>
-      <div className="flex -ml-4">
-        {services.map((s) => (
-          <div key={s.id} className="flex-[0_0_50%] md:flex-[0_0_25%] lg:flex-[0_0_16.66%] min-w-0 pl-4">
-            <ServiceGridItem s={s} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ServiceGridItem({ s }: { s: any }) {
   const { t } = useLanguage();
   const hasDiscount = s.regularPrice && s.regularPrice > s.basePrice;
@@ -414,10 +396,10 @@ function ServiceGridItem({ s }: { s: any }) {
   const bookCount = Math.floor(Math.random() * 500) + 10;
 
   return (
-    <div className="relative group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1">
+    <div className="relative group bg-white rounded-2xl md:rounded-[2rem] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1.5">
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
         <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center">
             {s.imageUrl ? (
               <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
             ) : (
@@ -425,30 +407,32 @@ function ServiceGridItem({ s }: { s: any }) {
             )}
             
             {s.badgeText && (
-              <div className="absolute top-2 left-2">
-                <Badge className="bg-primary text-white border-none shadow-md font-black text-[9px] md:text-[11px] uppercase px-3 py-1 rounded-full">
+              <div className="absolute top-3 left-3">
+                <Badge className="bg-primary text-white border-none shadow-lg font-black text-[9px] md:text-[11px] uppercase px-3 py-1 rounded-full">
                   {s.badgeText}
                 </Badge>
               </div>
             )}
 
-            <div className={cn("absolute bottom-2 left-2", s.badgeText ? "hidden" : "")}>
-              <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
-                {s.categoryId || 'General'}
-              </Badge>
-            </div>
+            {!s.badgeText && (
+              <div className="absolute bottom-3 left-3">
+                <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] md:text-[10px] uppercase px-2 py-0.5 rounded-full">
+                  {s.categoryId || 'General'}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
-          <h3 className="text-[13px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
+          <h3 className="text-[13px] md:text-base font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
             {s.title}
           </h3>
           
           <div className="mt-auto space-y-3">
-            <div className="flex items-center gap-2">
-              <p className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">
-                <span className="text-xs md:text-sm font-bold mr-0.5">৳</span>
+            <div className="flex items-center gap-3">
+              <p className="text-xl md:text-3xl font-black text-primary tracking-tighter leading-none">
+                <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
                 {(s.basePrice || 0).toLocaleString()}
               </p>
               {discountPercent && (
@@ -459,15 +443,15 @@ function ServiceGridItem({ s }: { s: any }) {
             </div>
 
             <div className="flex items-center justify-between text-xs md:text-sm font-bold">
-              <div className="flex items-center gap-1 text-amber-400">
+              <div className="flex items-center gap-1.5 text-amber-400">
                 <Star size={16} fill="currentColor" />
                 <span className="text-gray-600">{s.rating || '4.8'}</span>
                 <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
               </div>
-              <span className="text-gray-400 uppercase tracking-widest text-xs md:text-sm font-black">{bookCount} Book</span>
+              <span className="text-gray-400 uppercase tracking-widest text-[9px] md:text-[11px] font-black">{bookCount} Book</span>
             </div>
 
-            <Button size="sm" className="w-full rounded-xl font-black text-xs md:text-sm uppercase shadow-md h-10 md:h-12 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
+            <Button size="sm" className="w-full rounded-xl font-black text-lg md:text-xl uppercase shadow-xl h-12 md:h-14 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
               {t('book_now')}
             </Button>
           </div>

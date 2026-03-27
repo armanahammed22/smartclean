@@ -79,7 +79,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
           
           <div className="flex items-center gap-3">
             <p className={cn(
-              "text-lg md:text-2xl font-black tracking-tighter leading-none",
+              "text-lg md:text-3xl font-black tracking-tighter leading-none",
               isDark ? "text-amber-400" : "text-[#f85606]"
             )}>
               <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
@@ -96,12 +96,12 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
             "flex items-center justify-between gap-1 text-xs md:text-sm font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star size={14} fill="currentColor" />
+            <div className="flex items-center gap-1.5 text-amber-400">
+              <Star size={16} fill="currentColor" />
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
               <span className="opacity-50">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-xs md:text-sm font-black">{soldCount} Sold</span>
+            <span className="uppercase tracking-widest text-[9px] md:text-[11px] font-black">{soldCount} Sold</span>
           </div>
         </div>
       </div>
