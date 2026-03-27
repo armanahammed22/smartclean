@@ -13,7 +13,6 @@ import {
   Wrench, 
   ChevronRight, 
   Loader2, 
-  Sparkles,
   Zap,
   LayoutGrid,
   Star,
@@ -78,7 +77,6 @@ export default function SmartCleanHomePage() {
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
-  const brandsRef = useMemoFirebase(() => db ? collection(db, 'brands') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
@@ -87,7 +85,6 @@ export default function SmartCleanHomePage() {
   const { data: allProducts } = useCollection(productsRef);
   const { data: allServices } = useCollection(servicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
-  const { data: allBrands } = useCollection(brandsRef);
   const { data: settings } = useDoc(settingsRef);
 
   const productsEnabled = settings?.productsEnabled !== false;
@@ -118,14 +115,13 @@ export default function SmartCleanHomePage() {
       let feed = allProducts?.filter(p => p.status === 'Active') || [];
       if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
       if (sectionType === 'products_new' || config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      if (sectionType === 'products_trending') feed = [...feed].sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
       return feed.slice(0, config.limit || 10);
     };
 
     const getFilteredServices = () => {
       let feed = allServices?.filter(s => s.status === 'Active') || [];
       if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
-      if (sectionType === 'services_popular' || sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      if (sectionType === 'services_popular') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
       return feed.slice(0, config.limit || 12);
     };
 
@@ -139,6 +135,9 @@ export default function SmartCleanHomePage() {
       color: style.titleColor || '#081621',
       textAlign: (style.textAlign || 'left') as any,
     };
+
+    // Responsive Title Font Size Logic
+    const titleSizeClass = mounted ? "" : "text-2xl md:text-4xl"; // Default for SSR
 
     switch (sectionType) {
       case 'hero':
@@ -177,14 +176,14 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden" style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+              <div className="bg-white p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden" style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius || 24}px` }}>
                 <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
                   {topCategories.map((cat) => {
-                    const styles = getCategoryStyles(cat.name);
-                    const DisplayIcon = styles.icon;
+                    const catStyle = getCategoryStyles(cat.name);
+                    const DisplayIcon = catStyle.icon;
                     return (
                       <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-0.75rem)] sm:basis-[calc(16.66%-1rem)] md:basis-[calc(12.5%-1.2rem)] snap-start">
-                        <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110", styles.bg, styles.color)}>
+                        <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110", catStyle.bg, catStyle.color)}>
                           {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <DisplayIcon size={28} />}
                         </div>
                         <span className="text-[9px] md:text-[10px] lg:text-[11px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
@@ -205,7 +204,7 @@ export default function SmartCleanHomePage() {
         if (flashProducts.length === 0) return null;
         return (
           <section key={section.id} style={sectionStyles} className="w-full px-3 md:px-4">
-            <div className={cn("bg-white overflow-hidden shadow-md rounded-3xl border border-gray-100", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+            <div className={cn("bg-white overflow-hidden shadow-md border border-gray-100", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius || 24}px` }}>
               <div className="container mx-auto max-w-7xl">
                 <div className="p-4 md:p-6 flex items-center justify-between border-b">
                   <div className="flex items-center gap-3">
@@ -232,14 +231,21 @@ export default function SmartCleanHomePage() {
 
       case 'services_featured':
       case 'services_popular':
-      case 'services_new':
         const displayServices = getFilteredServices();
         if (displayServices.length === 0) return null;
         return (
           <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-4' : '')}>
-                <h2 className="font-black uppercase tracking-tighter" style={{ ...titleStyles, fontSize: `${mounted && window.innerWidth < 768 ? style.titleSizeMobile || 24 : style.titleSizeDesktop || 40}px` }}>{section.title}</h2>
+              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 
+                  className={cn("font-black uppercase tracking-tighter", titleSizeClass)}
+                  style={{ 
+                    ...titleStyles, 
+                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : undefined 
+                  }}
+                >
+                  {section.title}
+                </h2>
                 <Link href="/services" className="text-[10px] md:text-sm font-black uppercase px-5 py-2.5 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
                   {t('view_all').toUpperCase()}
                 </Link>
@@ -253,13 +259,20 @@ export default function SmartCleanHomePage() {
 
       case 'products_featured':
       case 'products_new':
-      case 'products_trending':
         const displayProducts = getFilteredProducts();
         if (displayProducts.length === 0) return null;
         return (
           <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <h2 className="mb-8 px-2 font-black uppercase tracking-tighter" style={{ ...titleStyles, fontSize: `${mounted && window.innerWidth < 768 ? style.titleSizeMobile || 24 : style.titleSizeDesktop || 40}px` }}>{section.title}</h2>
+              <h2 
+                className={cn("mb-8 px-2 font-black uppercase tracking-tighter", titleSizeClass)}
+                style={{ 
+                  ...titleStyles, 
+                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : undefined 
+                }}
+              >
+                {section.title}
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
@@ -315,7 +328,10 @@ export default function SmartCleanHomePage() {
 function ServiceGridItem({ s, customStyle }: { s: any, customStyle?: any }) {
   const { t } = useLanguage();
   return (
-    <div className={cn("relative group bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", customStyle?.cardShadow)} style={{ backgroundColor: customStyle?.cardBg || '#ffffff', borderRadius: `${customStyle?.cardRadius || 24}px` }}>
+    <div 
+      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", customStyle?.cardShadow)}
+      style={{ backgroundColor: customStyle?.cardBg || '#ffffff', borderRadius: `${customStyle?.cardRadius || 24}px` }}
+    >
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
         <div className="p-2 md:p-3 shrink-0">
           <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
@@ -326,7 +342,7 @@ function ServiceGridItem({ s, customStyle }: { s: any, customStyle?: any }) {
           <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
           <div className="mt-auto space-y-2">
             <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-            <Button size="sm" className="w-full rounded-xl font-black text-sm uppercase shadow-xl h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: customStyle?.btnBg || '#1E5F7A', color: customStyle?.btnText || '#ffffff', borderRadius: `${customStyle?.btnRadius || 12}px` }}>
+            <Button size="sm" className="w-full font-black text-[10px] md:text-xs uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: customStyle?.btnBg || '#1E5F7A', color: customStyle?.btnText || '#ffffff', borderRadius: `${customStyle?.btnRadius || 12}px` }}>
               {t('book_now')}
             </Button>
           </div>

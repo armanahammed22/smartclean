@@ -76,39 +76,39 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           </div>
         </div>
 
-        <div className="px-3 md:px-4 pb-5 space-y-1.5 pt-0.5">
+        <div className="px-3 md:px-4 pb-5 space-y-1 pt-0.5 flex flex-col flex-1">
           <h3 className={cn(
-            "text-[12px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
+            "text-[11px] md:text-sm font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
             isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
           )}>
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-auto">
             <p className={cn(
-              "text-lg md:text-xl font-black tracking-tighter leading-none",
+              "text-base md:text-xl font-black tracking-tighter leading-none",
               isDark ? "text-amber-400" : "text-[#f85606]"
             )}>
               <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
               {product.price.toLocaleString()}
             </p>
             {product.regularPrice && product.regularPrice > product.price && (
-              <span className="text-[9px] md:text-[10px] text-gray-300 line-through font-bold">
+              <span className="text-[8px] md:text-[10px] text-gray-300 line-through font-bold">
                 ৳{product.regularPrice.toLocaleString()}
               </span>
             )}
           </div>
           
           <div className={cn(
-            "flex items-center justify-between gap-1 text-[9px] md:text-xs font-bold",
+            "flex items-center justify-between gap-1 text-[8px] md:text-[10px] font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
             <div className="flex items-center gap-1 text-amber-400">
-              <Star size={12} fill="currentColor" />
+              <Star size={10} fill="currentColor" />
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
-              <span className="opacity-50 text-[8px] md:text-[10px]">({reviewCount})</span>
+              <span className="opacity-50 text-[7px] md:text-[9px]">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black">{soldCount} {t('sold')}</span>
+            <span className="uppercase tracking-widest font-black">{soldCount} {t('sold')}</span>
           </div>
         </div>
       </div>
