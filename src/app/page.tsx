@@ -41,7 +41,6 @@ import {
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 
-// Default layout used if the database collection is empty
 const DEFAULT_LAYOUT = [
   { id: 'def-hero', type: 'hero', isActive: true, order: 0 },
   { id: 'def-cats', type: 'categories', isActive: true, order: 1 },
@@ -73,7 +72,6 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // Fetch collections
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
@@ -95,34 +93,25 @@ export default function SmartCleanHomePage() {
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
 
-  // Filter and Sort layout in memory
   const layoutSections = useMemo(() => {
     if (layoutLoading) return [];
     const baseLayout = (!allSectionsRaw || allSectionsRaw.length === 0) ? DEFAULT_LAYOUT : allSectionsRaw;
-    
     return [...baseLayout]
       .filter(s => {
         if (!s.isActive) return false;
-        
-        // Hide entire sections if core feature is off
-        if (!productsEnabled && (
-          s.type === 'flash_deals' || 
-          s.type.startsWith('products_') || 
-          s.type === 'brands_grid'
-        )) return false;
-
+        if (!productsEnabled && (s.type === 'flash_deals' || s.type.startsWith('products_') || s.type === 'brands_grid')) return false;
         if (!servicesEnabled && s.type.startsWith('services_')) return false;
-
         return true;
       })
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [allSectionsRaw, layoutLoading, productsEnabled, servicesEnabled]);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
-  const categories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
+  const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
   const renderSection = (section: any) => {
     const config = section.config || {};
+    const style = section.styleConfig || {};
     const sectionType = section.type;
     
     const getFilteredProducts = () => {
@@ -137,7 +126,18 @@ export default function SmartCleanHomePage() {
       let feed = allServices?.filter(s => s.status === 'Active') || [];
       if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
       if (sectionType === 'services_popular' || sectionType === 'services_top_rated') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      return feed.slice(0, 12);
+      return feed.slice(0, config.limit || 12);
+    };
+
+    const sectionStyles = {
+      backgroundColor: style.sectionBg || 'transparent',
+      paddingTop: `${style.paddingTop || 40}px`,
+      paddingBottom: `${style.paddingBottom || 40}px`,
+    };
+
+    const titleStyles = {
+      color: style.titleColor || '#081621',
+      textAlign: (style.textAlign || 'left') as any,
     };
 
     switch (sectionType) {
@@ -175,32 +175,17 @@ export default function SmartCleanHomePage() {
 
       case 'categories':
         return (
-          <section key={section.id} className="px-2 md:px-4 py-6">
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden" style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
                 <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
-                  {categories.map((cat) => {
+                  {topCategories.map((cat) => {
                     const styles = getCategoryStyles(cat.name);
                     const DisplayIcon = styles.icon;
                     return (
-                      <Link 
-                        key={cat.id} 
-                        href={cat.link || `/services?search=${cat.name}`} 
-                        className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-0.75rem)] sm:basis-[calc(16.66%-1rem)] md:basis-[calc(12.5%-1.2rem)] snap-start"
-                      >
-                        <div className={cn(
-                          "w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110",
-                          styles.bg,
-                          styles.color,
-                          "border-transparent group-hover:border-white group-hover:shadow-md"
-                        )}>
-                          {cat.imageUrl ? (
-                            <div className="relative w-full h-full">
-                              <Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized />
-                            </div>
-                          ) : (
-                            <DisplayIcon size={28} />
-                          )}
+                      <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-0.75rem)] sm:basis-[calc(16.66%-1rem)] md:basis-[calc(12.5%-1.2rem)] snap-start">
+                        <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110", styles.bg, styles.color)}>
+                          {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <DisplayIcon size={28} />}
                         </div>
                         <span className="text-[9px] md:text-[10px] lg:text-[11px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
                           {cat.name}
@@ -215,41 +200,27 @@ export default function SmartCleanHomePage() {
         );
 
       case 'flash_deals':
-        const isFlashActive = flashSaleConfig?.isActive && productsEnabled;
-        if (!isFlashActive) return null;
-        const flashProductIds = flashSaleConfig?.productIds || [];
-        const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
+        if (!flashSaleConfig?.isActive || !productsEnabled) return null;
+        const flashProducts = allProducts?.filter(p => flashSaleConfig.productIds?.includes(p.id) && p.status === 'Active') || [];
         if (flashProducts.length === 0) return null;
-
         return (
-          <section key={section.id} className="w-full py-4 md:py-6 px-3 md:px-4">
-            <div className="bg-white overflow-hidden shadow-md rounded-3xl border border-gray-100">
+          <section key={section.id} style={sectionStyles} className="w-full px-3 md:px-4">
+            <div className={cn("bg-white overflow-hidden shadow-md rounded-3xl border border-gray-100", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
               <div className="container mx-auto max-w-7xl">
                 <div className="p-4 md:p-6 flex items-center justify-between border-b">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
-                      <span className="text-sm md:text-xl lg:text-2xl font-black text-[#081621] uppercase tracking-tight">{flashSaleConfig.title || t('flash_sale')}</span>
-                      {flashSaleConfig.endDate && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">{t('ends_in')}</span>
-                          <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
-                        </div>
-                      )}
+                      <span className="text-sm md:text-xl lg:text-2xl font-black uppercase tracking-tight" style={{ color: style.titleColor }}>{flashSaleConfig.title || t('flash_sale')}</span>
+                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
                     </div>
                   </div>
-                  <Link href="/products" className="flex items-center gap-1 text-[10px] md:text-xs font-black text-primary uppercase tracking-widest hover:underline">
+                  <Link href="/products" className="flex items-center gap-1 text-[10px] md:text-xs font-black text-primary uppercase tracking-widest hover:underline" style={{ color: style.btnBg }}>
                     {t('cat_all').toUpperCase()} <ChevronRight size={14} />
                   </Link>
                 </div>
-                <div className="p-4 md:p-6">
-                  <div className="flex gap-3 md:gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-2">
-                    {flashProducts.map(p => (
-                      <div key={p.id} className="w-[165px] md:w-[220px] shrink-0 snap-start">
-                        <FlashSaleCard product={p} />
-                      </div>
-                    ))}
-                  </div>
+                <div className="p-4 md:p-6 flex gap-3 md:gap-6 overflow-x-auto no-scrollbar">
+                  {flashProducts.map(p => <div key={p.id} className="w-[165px] md:w-[220px] shrink-0"><FlashSaleCard product={p} customStyle={style} /></div>)}
                 </div>
               </div>
             </div>
@@ -259,70 +230,38 @@ export default function SmartCleanHomePage() {
       case 'campaign':
         return <CampaignSection key={section.id} />;
 
-      case 'services':
       case 'services_featured':
       case 'services_popular':
-      case 'services_trending':
-      case 'services_top_rated':
       case 'services_new':
-        if (!servicesEnabled) return null;
         const displayServices = getFilteredServices();
         if (displayServices.length === 0) return null;
         return (
-          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12 lg:py-16 bg-white/50">
+          <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className="flex items-center justify-between mb-8 px-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-primary/10 rounded-xl text-primary"><Sparkles size={24} fill="currentColor" /></div>
-                  <h2 className="text-xl md:text-3xl lg:text-4xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
-                </div>
-                <Link href="/services" className="text-[10px] md:text-sm font-black uppercase text-primary tracking-widest flex items-center gap-1.5 bg-white border border-primary/20 px-5 py-2.5 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm">
-                  {t('view_all').toUpperCase()} <ChevronRight size={14} />
+              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-4' : '')}>
+                <h2 className="font-black uppercase tracking-tighter" style={{ ...titleStyles, fontSize: `${mounted && window.innerWidth < 768 ? style.titleSizeMobile || 24 : style.titleSizeDesktop || 40}px` }}>{section.title}</h2>
+                <Link href="/services" className="text-[10px] md:text-sm font-black uppercase px-5 py-2.5 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
+                  {t('view_all').toUpperCase()}
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
-                {displayServices.map(s => <ServiceGridItem key={s.id} s={s} />)}
+                {displayServices.map(s => <ServiceGridItem key={s.id} s={s} customStyle={style} />)}
               </div>
             </div>
           </section>
         );
 
-      case 'products_feed':
       case 'products_featured':
-      case 'products_trending':
       case 'products_new':
-        if (!productsEnabled) return null;
+      case 'products_trending':
         const displayProducts = getFilteredProducts();
         if (displayProducts.length === 0) return null;
         return (
-          <section key={section.id} className="px-3 md:px-4 py-8 md:py-12 lg:py-16">
+          <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className="flex items-center justify-between mb-8 px-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-accent/10 rounded-xl text-accent"><TrendingUp size={24} fill="currentColor" /></div>
-                  <h2 className="text-xl md:text-3xl lg:text-4xl font-black uppercase text-[#081621] tracking-tighter">{section.title}</h2>
-                </div>
-              </div>
+              <h2 className="mb-8 px-2 font-black uppercase tracking-tighter" style={{ ...titleStyles, fontSize: `${mounted && window.innerWidth < 768 ? style.titleSizeMobile || 24 : style.titleSizeDesktop || 40}px` }}>{section.title}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-                {displayProducts.map(p => <ProductCard key={p.id} product={p} />)}
-              </div>
-            </div>
-          </section>
-        );
-
-      case 'brands_grid':
-        if (!productsEnabled) return null;
-        const brands = allBrands?.slice(0, 12) || [];
-        return (
-          <section key={section.id} className="px-4 py-12 lg:py-20 bg-white">
-            <div className="container mx-auto max-w-7xl">
-              <h2 className="text-lg md:text-2xl font-black uppercase text-[#081621] mb-8 md:mb-12 text-center tracking-widest">{section.title}</h2>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-8">
-                {brands.map(brand => (
-                  <div key={brand.id} className="aspect-video bg-gray-50 rounded-2xl flex items-center justify-center p-4 grayscale hover:grayscale-0 transition-all border border-transparent hover:border-gray-100 hover:shadow-md cursor-pointer">
-                    <span className="font-black text-gray-300 uppercase text-[10px] md:text-xs">{brand.name}</span>
-                  </div>
-                ))}
+                {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
           </section>
@@ -330,26 +269,24 @@ export default function SmartCleanHomePage() {
 
       case 'trust_stats':
         return (
-          <section key={section.id} className="py-12 md:py-20 lg:py-24 bg-white">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 lg:gap-16">
-                {[
-                  { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-                  ...(servicesEnabled ? [{ label: "Pro Technicians", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" }] : []),
-                  ...(servicesEnabled ? [{ label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }] : []),
-                  { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" }
-                ].map((stat, i) => (
-                  <div key={i} className="flex flex-col items-center text-center space-y-4">
-                    <div className={cn("p-4 md:p-6 rounded-2xl md:rounded-[2rem] transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)}>
-                      <stat.icon size={32} className="md:w-10 md:h-10" strokeWidth={2.5} />
-                    </div>
-                    <div>
-                      <h4 className="text-2xl md:text-4xl lg:text-5xl font-black text-[#081621] tracking-tighter">{stat.val}</h4>
-                      <p className="text-[9px] md:text-[11px] lg:text-xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1.5">{stat.label}</p>
-                    </div>
+          <section key={section.id} style={sectionStyles} className="px-4 bg-white">
+            <div className="container mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-8">
+              {[
+                { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
+                { label: "Verified Pros", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
+                { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
+              ].map((stat, i) => (
+                <div key={i} className="flex flex-col items-center text-center space-y-4">
+                  <div className={cn("p-4 md:p-6 rounded-2xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)} style={{ borderRadius: `${style.cardRadius || 24}px` }}>
+                    <stat.icon size={32} strokeWidth={2.5} />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <h4 className="text-2xl md:text-4xl font-black text-[#081621] tracking-tighter" style={{ color: style.titleColor }}>{stat.val}</h4>
+                    <p className="text-[9px] md:text-xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         );
@@ -369,53 +306,27 @@ export default function SmartCleanHomePage() {
             <Loader2 className="animate-spin text-primary" size={48} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Marketplace...</p>
           </div>
-        ) : (
-          layoutSections.map(renderSection)
-        )}
+        ) : layoutSections.map(renderSection)}
       </div>
     </PublicLayout>
   );
 }
 
-function ServiceGridItem({ s }: { s: any }) {
+function ServiceGridItem({ s, customStyle }: { s: any, customStyle?: any }) {
   const { t } = useLanguage();
-  const bookCount = Math.floor(Math.random() * 500) + 10;
-
   return (
-    <div className="relative group bg-white rounded-2xl md:rounded-[1.5rem] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1">
+    <div className={cn("relative group bg-white rounded-2xl overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", customStyle?.cardShadow)} style={{ backgroundColor: customStyle?.cardBg || '#ffffff', borderRadius: `${customStyle?.cardRadius || 24}px` }}>
       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
         <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-            {s.imageUrl ? (
-              <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
-            ) : (
-              <Wrench size={32} className="text-gray-200" />
-            )}
-            <div className="absolute bottom-2 left-2">
-              <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[7px] md:text-[9px] uppercase px-1.5 py-0.5 rounded-full">
-                {s.categoryId || 'General'}
-              </Badge>
-            </div>
+          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
+            {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
           </div>
         </div>
-
         <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
-          <h3 className="text-[12px] md:text-sm lg:text-base font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">
-            {s.title}
-          </h3>
+          <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
           <div className="mt-auto space-y-2">
-            <p className="text-lg md:text-xl lg:text-2xl font-black text-primary tracking-tighter leading-none">
-              <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
-              {(s.basePrice || 0).toLocaleString()}
-            </p>
-            <div className="flex items-center justify-between text-[9px] md:text-[10px] lg:text-[11px] font-bold">
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star size={12} fill="currentColor" />
-                <span className="font-black text-gray-600">{s.rating || '4.8'}</span>
-              </div>
-              <span className="uppercase tracking-widest text-[8px] md:text-[9px] font-black text-gray-400">{bookCount} {t('book')}</span>
-            </div>
-            <Button size="sm" className="w-full rounded-xl font-black text-sm md:text-base uppercase shadow-xl h-10 md:h-11 lg:h-12 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
+            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+            <Button size="sm" className="w-full rounded-xl font-black text-sm uppercase shadow-xl h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: customStyle?.btnBg || '#1E5F7A', color: customStyle?.btnText || '#ffffff', borderRadius: `${customStyle?.btnRadius || 12}px` }}>
               {t('book_now')}
             </Button>
           </div>

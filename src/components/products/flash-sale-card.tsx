@@ -9,12 +9,10 @@ import { useLanguage } from '@/components/providers/language-provider';
 
 interface FlashSaleCardProps {
   product: Product;
+  customStyle?: any;
 }
 
-/**
- * Flash Sale card with refined typography for better balance on tablet/desktop.
- */
-export function FlashSaleCard({ product }: FlashSaleCardProps) {
+export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
   const { t } = useLanguage();
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
@@ -23,11 +21,20 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
   const rating = 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
+  const cardStyle = {
+    backgroundColor: customStyle?.cardBg || '#ffffff',
+    borderRadius: `${customStyle?.cardRadius || 24}px`,
+  };
+
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.97] transition-all">
-      <div className="bg-white rounded-[1.2rem] md:rounded-[1.5rem] overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1">
-        
-        {/* Image Container with Discount Badge */}
+      <div 
+        className={cn(
+          "overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1",
+          customStyle?.cardShadow
+        )}
+        style={cardStyle}
+      >
         <div className="p-2 md:p-3">
           <div className="relative aspect-square w-full rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
             {product.imageUrl ? (
@@ -44,7 +51,6 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
               </div>
             )}
             
-            {/* Discount Badge */}
             {discountPercent && (
               <div className="absolute top-2 left-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg z-10 uppercase tracking-tighter">
                 -{discountPercent}%
@@ -53,7 +59,6 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
           </div>
         </div>
 
-        {/* Info Section */}
         <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
           <h3 className="text-[11px] md:text-xs font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
             {product.name}

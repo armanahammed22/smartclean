@@ -10,13 +10,10 @@ import { useLanguage } from '@/components/providers/language-provider';
 interface ProductCardProps {
   product: Product;
   isDark?: boolean;
+  customStyle?: any;
 }
 
-/**
- * Standard Product Card with optimized typography for tablet/desktop.
- * Refined for a cleaner, balanced look on larger displays.
- */
-export function ProductCard({ product, isDark = false }: ProductCardProps) {
+export function ProductCard({ product, isDark = false, customStyle }: ProductCardProps) {
   const { t } = useLanguage();
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
@@ -26,11 +23,20 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
   const reviewCount = Math.floor((parseInt(product.id.slice(0, 2), 16) || 10) % 250);
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
+  const cardStyle = {
+    backgroundColor: customStyle?.cardBg || (isDark ? 'transparent' : '#ffffff'),
+    borderRadius: `${customStyle?.cardRadius || 24}px`,
+  };
+
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.98] transition-all">
-      <div className="flex flex-col h-full bg-white rounded-2xl md:rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-        
-        {/* Rounded Image Container */}
+      <div 
+        className={cn(
+          "flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden",
+          customStyle?.cardShadow
+        )}
+        style={cardStyle}
+      >
         <div className="p-2 md:p-3">
           <div className="relative aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
             {product.imageUrl ? (
@@ -47,7 +53,6 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               </div>
             )}
             
-            {/* Custom Admin Badge */}
             {product.badgeText ? (
               <div className="absolute top-2 left-2">
                 <div className="bg-primary text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
@@ -57,13 +62,12 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
             ) : (
               <div className="absolute bottom-2 left-2">
                 <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
-                  <Truck size={8} fill="white" className="shrink-0 md:w-2.5 md:h-2.5" />
+                  <Truck size={8} fill="white" className="shrink-0" />
                   {t('free').toUpperCase()}
                 </div>
               </div>
             )}
 
-            {/* Discount Badge */}
             {discountPercent && (
               <div className="absolute top-2 right-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-md uppercase">
                 -{discountPercent}%
