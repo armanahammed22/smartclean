@@ -7,6 +7,8 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, query, orderBy } from 'firebase/firestore';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function CreateSalesContent() {
     const searchParams = useSearchParams();
@@ -179,7 +181,7 @@ function CreateSalesContent() {
                                 <span className="search-icon">🔍</span>
                                 <input 
                                     type="text" 
-                                    class="search-input" 
+                                    className="search-input" 
                                     placeholder={`${currentMode === 'order' ? 'পণ্য' : 'সেবা'} খুঁজুন...`}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
