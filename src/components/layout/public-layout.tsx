@@ -11,7 +11,7 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search, ChevronRight, Zap } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -39,6 +39,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const isHome = pathname === '/';
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
   const companyName = settings?.websiteName || 'Smart Clean';
+  const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
     if (settings) {
@@ -82,7 +83,17 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          {servicesEnabled && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 text-primary active:scale-90 transition-transform rounded-full"
+              onClick={() => router.push('/account/custom-requests')}
+            >
+              <Zap size={20} fill="currentColor" />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -91,7 +102,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
           >
             <Search size={20} />
           </Button>
-          {/* Cart Icon removed from mobile header as requested */}
         </div>
       </header>
 

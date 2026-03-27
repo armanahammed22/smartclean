@@ -11,7 +11,8 @@ import {
   Package,
   Loader2,
   Wrench,
-  User
+  User,
+  Zap
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Input } from '@/components/ui/input';
@@ -144,7 +145,6 @@ export function Navbar() {
 
             <nav className="hidden lg:flex items-center gap-6">
               {layout?.header?.menuItems?.map((item: any, i: number) => {
-                // Conditional filtering for menu items
                 const isProdLink = item.link === '/products' || item.link === '/cart';
                 const isServLink = item.link === '/services';
                 if (isProdLink && !productsEnabled) return null;
@@ -164,6 +164,17 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              {servicesEnabled && (
+                <Link 
+                  href="/account/custom-requests" 
+                  className={cn(
+                    "font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5 text-primary",
+                    layout?.header?.fontSize || 'text-sm'
+                  )}
+                >
+                  <Zap size={14} fill="currentColor" /> কাস্টম রিকোয়েস্ট
+                </Link>
+              )}
             </nav>
           </div>
 
