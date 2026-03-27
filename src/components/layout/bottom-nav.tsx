@@ -70,12 +70,12 @@ export function BottomNav() {
           if (item.isMiddle) {
             const activeOffer = offers[currentOffer];
             return (
-              <div key="middle-offer" className="relative -mt-12 md:-mt-14 px-1 group animate-in slide-in-from-bottom-4 duration-700">
+              <div key="middle-offer" className="relative -mt-10 md:-mt-12 px-1 group animate-in slide-in-from-bottom-4 duration-700">
                 <Link href={activeOffer?.link || "/#offers"} className="flex flex-col items-center gap-1.5">
-                  <div className="relative w-[62px] h-[62px] md:w-[72px] md:h-[72px] flex items-center justify-center">
+                  <div className="relative w-[58px] h-[58px] md:w-[68px] md:h-[68px] flex items-center justify-center">
                     <div className="absolute inset-[-6px] rounded-full opacity-40 blur-2xl animate-pulse bg-primary" />
                     <div className="absolute inset-[-2px] rounded-full border-2 border-dashed border-yellow-400/50 animate-[spin_10s_linear_infinite]" />
-                    <div className="relative w-full h-full rounded-full bg-white border-[4px] border-white shadow-2xl overflow-hidden transition-transform duration-300 group-hover:scale-110">
+                    <div className="relative w-full h-full rounded-full bg-white border-[3px] border-white shadow-2xl overflow-hidden transition-transform duration-300 group-hover:scale-110">
                       {offers.length > 0 ? (
                         <div className="relative w-full h-full">
                           {offers.map((offer, i) => (
@@ -92,37 +92,37 @@ export function BottomNav() {
                         </div>
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white">
-                          <Sparkles size={28} />
+                          <Sparkles size={24} />
                         </div>
                       )}
                     </div>
-                    <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full w-7 h-7 flex items-center justify-center text-white shadow-lg">
-                      <Sparkles size={14} className="animate-spin" />
+                    <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-lg">
+                      <Sparkles size={12} className="animate-spin" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] mt-1.5 drop-shadow-sm">অফার</span>
+                  <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.1em] mt-1 drop-shadow-sm">অফার</span>
                 </Link>
               </div>
             );
           }
 
           const NavContent = (
-            <div className="flex flex-col items-center gap-1.5 transition-all duration-300">
+            <div className="flex flex-col items-center gap-1 transition-all duration-300">
               <div className={cn(
-                "relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl transition-all duration-500",
+                "relative w-9 h-9 md:w-11 md:h-11 flex items-center justify-center rounded-2xl transition-all duration-500",
                 isActive 
                   ? `bg-gradient-to-br ${item.color} text-white shadow-xl scale-110 -translate-y-1` 
                   : "text-gray-400 bg-gray-50 hover:bg-gray-100"
               )}>
-                {Icon && <Icon size={isActive ? 24 : 22} strokeWidth={isActive ? 2.5 : 2} />}
+                {Icon && <Icon size={isActive ? 22 : 20} strokeWidth={isActive ? 2.5 : 2} />}
                 {item.badge !== undefined && item.badge > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[9px] font-black h-5 min-w-[20px] flex items-center justify-center rounded-full border-2 border-white shadow-lg px-1 animate-bounce">
+                  <div className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[8px] font-black h-4.5 min-w-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-lg px-1 animate-bounce">
                     {item.badge}
                   </div>
                 )}
               </div>
               <span className={cn(
-                "text-[9px] md:text-[11px] font-bold uppercase tracking-tight transition-all duration-300",
+                "text-[8px] md:text-[10px] font-bold uppercase tracking-tight transition-all duration-300",
                 isActive ? "text-primary font-black scale-105" : "text-gray-500"
               )}>
                 {item.label}
@@ -131,11 +131,11 @@ export function BottomNav() {
           );
 
           return item.onClick ? (
-            <button key={item.label} onClick={item.onClick} className="flex-1 flex justify-center py-1">
+            <button key={item.label} onClick={item.onClick} className="flex-1 flex justify-center py-1 outline-none">
               {NavContent}
             </button>
           ) : (
-            <Link key={item.label} href={item.href} className="flex-1 flex justify-center py-1">
+            <Link key={item.label} href={item.href} className="flex-1 flex justify-center py-1 outline-none">
               {NavContent}
             </Link>
           );
