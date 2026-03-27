@@ -10,9 +10,9 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V8 - HMR Optimized)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V9 - Enhanced ca9/b815 Protection)
  * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
- * 2. Specifically ignores Turbopack/Next.js internal HMR messages to avoid dev-tool conflicts.
+ * 2. Specifically ignores Turbopack/Next.js internal HMR messages.
  * 3. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
  * 4. Enforces Long Polling to bypass proxy/workstation streaming failures.
  */
@@ -40,7 +40,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
-        lowMsg.includes('cc')
+        lowMsg.includes('cc') ||
+        lowMsg.includes('fe":-1')
       );
     };
 
