@@ -411,7 +411,7 @@ function ServiceGridItem({ s }: { s: any }) {
   const { t } = useLanguage();
   const hasDiscount = s.regularPrice && s.regularPrice > s.basePrice;
   const discountPercent = hasDiscount ? Math.round(((s.regularPrice - s.basePrice) / s.regularPrice) * 100) : null;
-  const soldCount = Math.floor(Math.random() * 500) + 10;
+  const bookCount = Math.floor(Math.random() * 500) + 10;
 
   return (
     <div className="relative group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1">
@@ -464,7 +464,7 @@ function ServiceGridItem({ s }: { s: any }) {
                 <span className="text-gray-600">{s.rating || '4.8'}</span>
                 <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
               </div>
-              <span className="text-gray-400 uppercase tracking-widest text-[9px] md:text-[10px] font-black">{soldCount} Sold</span>
+              <span className="text-gray-400 uppercase tracking-widest text-xs md:text-sm font-black">{bookCount} Book</span>
             </div>
 
             <Button size="sm" className="w-full rounded-xl font-black text-xs md:text-sm uppercase shadow-md h-10 md:h-12 tracking-widest transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">

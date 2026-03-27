@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -94,7 +93,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
           </div>
           
           <div className={cn(
-            "flex items-center justify-between gap-1 text-[11px] md:text-sm font-bold",
+            "flex items-center justify-between gap-1 text-xs md:text-sm font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
             <div className="flex items-center gap-1 text-amber-400">
@@ -102,7 +101,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
               <span className="opacity-50">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-[8px] md:text-[10px] font-black">{soldCount} Sold</span>
+            <span className="uppercase tracking-widest text-xs md:text-sm font-black">{soldCount} Sold</span>
           </div>
         </div>
       </div>

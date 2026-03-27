@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -18,6 +17,9 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
+
+  const rating = 4.8;
+  const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.97] transition-all">
@@ -67,9 +69,12 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
               )}
             </div>
             
-            <div className="flex items-center gap-1.5 text-amber-400">
-              <Star size={12} fill="currentColor" />
-              <span className="text-[10px] md:text-xs font-black text-gray-600">4.8</span>
+            <div className="flex items-center justify-between text-xs md:text-sm font-bold">
+              <div className="flex items-center gap-1.5 text-amber-400">
+                <Star size={12} fill="currentColor" />
+                <span className="text-xs font-black text-gray-600">{rating}</span>
+              </div>
+              <span className="uppercase tracking-widest text-xs font-black text-gray-400">{soldCount} Sold</span>
             </div>
           </div>
         </div>
