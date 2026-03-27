@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales_manual: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -158,13 +158,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       ]
     },
     {
-      id: 'sales_manual',
-      title: "SALES",
+      id: 'sales',
+      title: "SALES TERMINAL",
       icon: ShoppingCart,
       color: "text-rose-400",
       items: [
-        { name: "New Order", href: '/admin/sales/create?mode=order', icon: Plus },
-        { name: "New Booking", href: '/admin/sales/create?mode=booking', icon: Plus },
+        { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
+        { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
       ]
     },
     {

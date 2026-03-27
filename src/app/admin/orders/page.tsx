@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
   TableBody, 
@@ -20,23 +21,25 @@ import {
   Search, 
   Filter, 
   ShoppingCart, 
-  Truck, 
   Trash2,
-  Eye,
   Loader2,
   Zap,
-  AlertTriangle,
   FileText,
   Download,
   MoreVertical,
   CheckCircle2,
-  XCircle,
-  Clock
+  Clock,
+  Plus,
+  X,
+  User,
+  MapPin,
+  Package,
+  Wallet
 } from 'lucide-react';
 import { format, isToday, isThisMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -50,40 +53,62 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function OrdersManagementPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessingInvoice, setIsProcessingInvoice] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Creation State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
+  const [pricing, setPricing] = useState({ discount: 0, delivery: 80 });
+  const [paymentMethod, setPaymentMethod] = useState('cod');
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (searchParams.get('create') === 'true') {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db, user]);
 
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
+  
   const { data: orders, isLoading } = useCollection(ordersQuery);
+  const { data: allProducts } = useCollection(productsQuery);
 
-  // Dynamic KPIs
   const stats = useMemo(() => {
-    if (!orders) return { total: 0, processing: 0, delivered: 0, cancelled: 0, daily: 0, monthly: 0 };
+    if (!orders) return { total: 0, processing: 0, delivered: 0, daily: 0 };
     return {
       total: orders.length,
       processing: orders.filter(o => o.status === 'Processing').length,
       delivered: orders.filter(o => o.status === 'Delivered').length,
-      cancelled: orders.filter(o => o.status === 'Cancelled').length,
       daily: orders.filter(o => isToday(new Date(o.createdAt))).reduce((acc, o) => acc + (o.totalPrice || 0), 0),
-      monthly: orders.filter(o => isThisMonth(new Date(o.createdAt))).reduce((acc, o) => acc + (o.totalPrice || 0), 0),
     };
   }, [orders]);
 
@@ -91,6 +116,69 @@ export default function OrdersManagementPage() {
     o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.id?.includes(searchTerm)
   );
+
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return allProducts?.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.id.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [searchQuery, allProducts]);
+
+  const addItem = (p: any) => {
+    const existing = selectedItems.find(i => i.id === p.id);
+    if (existing) {
+      setSelectedItems(selectedItems.map(i => i.id === p.id ? { ...i, quantity: i.quantity + 1 } : i));
+    } else {
+      setSelectedItems([...selectedItems, { id: p.id, name: p.name, price: p.price, quantity: 1 }]);
+    }
+    setSearchQuery('');
+  };
+
+  const calculateTotals = () => {
+    const subtotal = selectedItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const total = subtotal + pricing.delivery - pricing.discount;
+    return { subtotal, total };
+  };
+
+  const { subtotal, total } = calculateTotals();
+
+  const handleCreateOrder = async () => {
+    if (!db) return;
+    if (selectedItems.length === 0 || !customer.name || !customer.phone || !customer.address) {
+      toast({ variant: "destructive", title: "তথ্য অসম্পূর্ণ", description: "সবগুলো ঘর সঠিকভাবে পূরণ করুন।" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const orderData = {
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        address: customer.address,
+        items: selectedItems.map(i => ({ ...i, itemType: 'product' })),
+        subtotal,
+        discount: pricing.discount,
+        deliveryCharge: pricing.delivery,
+        totalPrice: total,
+        paymentMethod,
+        status: 'New',
+        createdAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      await getOrCreateInvoice(db, docRef.id, 'order', orderData);
+
+      toast({ title: "সফল হয়েছে", description: "নতুন অর্ডার তৈরি হয়েছে!" });
+      setIsCreateOpen(false);
+      setSelectedItems([]);
+      setCustomer({ name: '', phone: '', address: '' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "অর্ডার তৈরি করা সম্ভব হয়নি।" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     if (!db) return;
@@ -111,93 +199,24 @@ export default function OrdersManagementPage() {
     }
   };
 
-  const handleDownloadInvoice = async (order: any) => {
-    if (!db) return;
-    setIsProcessingInvoice(order.id);
-    try {
-      const invId = await getOrCreateInvoice(db, order.id, 'order', order);
-      router.push(`/admin/invoices/${invId}?download=true`);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Download Error" });
-    } finally {
-      setIsProcessingInvoice(null);
-    }
-  };
-
-  // Selection Logic
-  const toggleSelectAll = () => {
-    if (selectedIds.length === filteredOrders?.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredOrders?.map(o => o.id) || []);
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const handleBulkStatus = async (status: string) => {
-    if (!db || selectedIds.length === 0) return;
-    setIsBulkProcessing(true);
-    try {
-      const batch = writeBatch(db);
-      selectedIds.forEach(id => {
-        batch.update(doc(db, 'orders', id), { status });
-      });
-      await batch.commit();
-      toast({ title: `Bulk Update: ${status}`, description: `${selectedIds.length} orders updated.` });
-      setSelectedIds([]);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Bulk Action Failed" });
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!db || selectedIds.length === 0) return;
-    if (!confirm(`Permanently delete ${selectedIds.length} orders?`)) return;
-    setIsBulkProcessing(true);
-    try {
-      const batch = writeBatch(db);
-      selectedIds.forEach(id => {
-        batch.delete(doc(db, 'orders', id));
-      });
-      await batch.commit();
-      toast({ title: "Bulk Delete Success", description: "Orders removed from database." });
-      setSelectedIds([]);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Delete Failed" });
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  const STATUS_COLORS: Record<string, string> = {
-    'New': 'bg-blue-50 text-blue-700',
-    'Processing': 'bg-amber-50 text-amber-700',
-    'Shipped': 'bg-purple-50 text-purple-700',
-    'Delivered': 'bg-green-50 text-green-700',
-    'Cancelled': 'bg-red-50 text-red-700',
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 uppercase">Product Orders</h1>
-          <p className="text-muted-foreground text-sm">Manage sales, shipping and billing lifecycle</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">অর্ডার ম্যানেজমেন্ট</h1>
+          <p className="text-muted-foreground text-sm font-medium">পণ্য বিক্রয় এবং ডেলিভারি ট্র্যাকিং</p>
         </div>
+        <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl font-black gap-2 h-11 px-6 shadow-xl shadow-primary/20 uppercase text-xs tracking-widest">
+          <Plus size={18} /> নতুন অর্ডার
+        </Button>
       </div>
 
-      {/* KPI Section */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "Total Volume", val: stats.total, icon: ShoppingCart, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "Processing", val: stats.processing, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
-          { label: "Delivered", val: stats.delivered, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
-          { label: "Revenue (Today)", val: `৳${stats.daily.toLocaleString()}`, icon: Zap, bg: "bg-primary/5", color: "text-primary" }
+          { label: "মোট অর্ডার", val: stats.total, icon: ShoppingCart, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "প্রসেসিং", val: stats.processing, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
+          { label: "ডেলিভারড", val: stats.delivered, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: "আজকের আয়", val: `৳${stats.daily.toLocaleString()}`, icon: Zap, bg: "bg-primary/5", color: "text-primary" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
@@ -211,70 +230,37 @@ export default function OrdersManagementPage() {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <Input 
-            placeholder="Search Order ID or Customer..." 
-            className="pl-10 h-11 border-gray-200"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" className="h-11 gap-2 w-full sm:w-auto"><Filter size={18} /> Filters</Button>
-      </div>
-
-      {/* Bulk Action Bar */}
-      {selectedIds.length > 0 && (
-        <div className="bg-primary text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs font-black uppercase tracking-widest">{selectedIds.length} SELECTED</span>
-            <div className="h-6 w-px bg-white/20" />
-            <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Processing')} disabled={isBulkProcessing} className="h-8 text-[10px] font-black uppercase">Process</Button>
-              <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Delivered')} disabled={isBulkProcessing} className="h-8 text-[10px] font-black uppercase">Deliver</Button>
-            </div>
+      <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+        <div className="p-4 border-b bg-gray-50/50">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Input 
+              placeholder="অর্ডার আইডি বা নাম দিয়ে খুঁজুন..." 
+              className="pl-10 h-11 bg-white border-gray-200"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
-            <Trash2 size={14} className="mr-2" /> Delete Bulk
-          </Button>
         </div>
-      )}
-
-      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50/50">
+            <TableHeader className="bg-gray-50/30">
               <TableRow>
-                <TableHead className="w-12 pl-6">
-                  <Checkbox 
-                    checked={filteredOrders?.length ? selectedIds.length === filteredOrders.length : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest">Order ID</TableHead>
+                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Order ID</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Customer</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
               ) : filteredOrders?.map((order) => (
-                <TableRow key={order.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(order.id) && "bg-primary/5")}>
-                  <TableCell className="pl-6">
-                    <Checkbox 
-                      checked={selectedIds.includes(order.id)}
-                      onCheckedChange={() => toggleSelect(order.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="py-5 pl-4">
+                <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <TableCell className="py-5 pl-8">
                     <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
-                    <div className="text-[9px] text-muted-foreground mt-1 uppercase font-bold">
-                      {mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}
-                    </div>
+                    <div className="text-[9px] text-muted-foreground mt-1 font-bold">{mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-xs font-bold text-gray-700 uppercase">{order.customerName}</div>
@@ -283,7 +269,7 @@ export default function OrdersManagementPage() {
                   <TableCell className="font-black text-sm text-gray-900">৳{order.totalPrice?.toLocaleString()}</TableCell>
                   <TableCell>
                     <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
-                      <SelectTrigger className={cn("h-8 text-[9px] font-black uppercase w-[110px] border-none", STATUS_COLORS[order.status])}>
+                      <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-blue-50 text-blue-700">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -293,35 +279,8 @@ export default function OrdersManagementPage() {
                   </TableCell>
                   <TableCell className="text-right pr-8">
                     <div className="flex justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-primary" 
-                        onClick={() => handleOpenInvoice(order)}
-                        title="View Invoice"
-                        disabled={isProcessingInvoice === order.id}
-                      >
-                        {isProcessingInvoice === order.id ? <Loader2 className="animate-spin h-4 w-4" /> : <FileText size={16} />}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-indigo-600" 
-                        onClick={() => handleDownloadInvoice(order)}
-                        title="Download PDF"
-                        disabled={isProcessingInvoice === order.id}
-                      >
-                        <Download size={16} />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical size={16}/></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl border-none shadow-xl">
-                          <DropdownMenuItem className="text-xs font-bold" onClick={() => router.push(`/admin/orders/${order.id}`)}>Edit Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-xs font-bold text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}>Delete Record</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(order)} disabled={isProcessingInvoice === order.id}><FileText size={16} /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}><Trash2 size={16} /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -330,6 +289,137 @@ export default function OrdersManagementPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* CREATE ORDER DIALOG */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
+          <div className="flex flex-col h-[85vh]">
+            <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary rounded-xl"><ShoppingCart size={24} /></div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন অর্ডার তৈরি করুন</DialogTitle>
+              </div>
+              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* Unified Form Side */}
+                <div className="space-y-8">
+                  {/* Search Section */}
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পণ্য যোগ করুন</Label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <Input 
+                        placeholder="নাম বা আইডি দিয়ে সার্চ করুন..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold focus:ring-2 focus:ring-primary/20"
+                      />
+                      {filteredProducts.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden border-gray-100">
+                          {filteredProducts.map(p => (
+                            <div key={p.id} onClick={() => addItem(p)} className="p-4 flex items-center justify-between hover:bg-primary/5 cursor-pointer transition-colors border-b last:border-none">
+                              <div>
+                                <p className="font-bold text-sm text-gray-900 uppercase">{p.name}</p>
+                                <p className="text-[10px] text-muted-foreground">৳{p.price}</p>
+                              </div>
+                              <Plus size={16} className="text-primary" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {selectedItems.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                          <div className="flex-1 min-w-0 mr-4">
+                            <p className="font-black text-xs uppercase truncate text-gray-900">{item.name}</p>
+                            <p className="text-[9px] font-bold text-primary mt-0.5">৳{item.price} × {item.quantity}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => {
+                              const next = [...selectedItems];
+                              next[idx].quantity = Math.max(1, next[idx].quantity - 1);
+                              setSelectedItems(next);
+                            }} className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center font-black">-</button>
+                            <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
+                            <button onClick={() => {
+                              const next = [...selectedItems];
+                              next[idx].quantity++;
+                              setSelectedItems(next);
+                            }} className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center font-black">+</button>
+                            <button onClick={() => setSelectedItems(selectedItems.filter((_, i) => i !== idx))} className="ml-2 text-red-400 hover:text-red-600"><X size={16}/></button>
+                          </div>
+                        </div>
+                      ))}
+                      {selectedItems.length === 0 && (
+                        <div className="p-10 text-center border-2 border-dashed rounded-2xl text-muted-foreground text-xs font-bold uppercase opacity-40">
+                          এখনও কোনো পণ্য যোগ করা হয়নি
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Customer Info Section */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহকের তথ্য</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <Textarea placeholder="পূর্ণ ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
+                  </div>
+                </div>
+
+                {/* Summary & Payment Side */}
+                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <Wallet size={16} /> সারসংক্ষেপ
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সাবটোটাল</span><span>৳{subtotal.toLocaleString()}</span></div>
+                      <div className="grid grid-cols-2 gap-4 items-center">
+                        <Label className="text-[10px] font-black uppercase text-gray-400">ডেলিভারি চার্জ</Label>
+                        <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 items-center">
+                        <Label className="text-[10px] font-black uppercase text-gray-400">ডিসকাউন্ট</Label>
+                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600" />
+                      </div>
+                      <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black uppercase text-gray-400">মোট প্রদেয়</span>
+                          <span className="text-4xl font-black text-primary tracking-tighter">৳{total.toLocaleString()}</span>
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-none font-black text-[10px]">BDT</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট পদ্ধতি</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['cod', 'bkash', 'nagad', 'bank'].map(m => (
+                        <div key={m} onClick={() => setPaymentMethod(m)} className={cn("p-3 rounded-xl border-2 cursor-pointer transition-all text-center", paymentMethod === m ? "border-primary bg-primary/5 font-black text-primary" : "bg-white border-gray-100 font-bold text-gray-400")}>
+                          <span className="text-[10px] uppercase">{m === 'cod' ? 'CASH' : m}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button onClick={handleCreateOrder} disabled={isSubmitting} className="w-full h-16 rounded-2xl font-black text-xl shadow-xl shadow-primary/20 uppercase tracking-tight gap-2 active:scale-95 transition-transform">
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "অর্ডার নিশ্চিত করুন"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

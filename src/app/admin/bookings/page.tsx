@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -14,28 +15,27 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Calendar, 
   Clock, 
-  User, 
-  ClipboardList, 
   Trash2, 
-  MapPin, 
   FileText, 
   Loader2, 
-  MoreVertical,
   CheckCircle2,
-  AlertCircle,
   XCircle,
-  Download,
-  Filter,
-  Search
+  Plus,
+  Search,
+  X,
+  User,
+  MapPin,
+  Wrench,
+  Zap,
+  Wallet
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -44,29 +44,52 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function BookingsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const [isProcessingInvoice, setIsProcessingInvoice] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const searchParams = useSearchParams();
+  
   const [searchTerm, setSearchTerm] = useState('');
+  const [isProcessingInvoice, setIsProcessingInvoice] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Creation State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [customer, setCustomer] = useState({ name: '', phone: '', address: '', date: '', time: '8AM - 12PM' });
+  const [pricing, setPricing] = useState({ discount: 0, serviceFee: 100 });
+  const [paymentMethod, setPaymentMethod] = useState('cod');
+
+  useEffect(() => {
+    setMounted(true);
+    if (searchParams.get('create') === 'true') {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'));
   }, [db, user]);
 
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
+
   const { data: bookings, isLoading } = useCollection(bookingsQuery);
+  const { data: allServices } = useCollection(servicesQuery);
 
   const stats = useMemo(() => {
     if (!bookings) return { total: 0, pending: 0, completed: 0, cancelled: 0 };
@@ -83,6 +106,75 @@ export default function BookingsPage() {
     b.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredServices = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return allServices?.filter(s => 
+      s.title.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [searchQuery, allServices]);
+
+  const addItem = (s: any) => {
+    const existing = selectedItems.find(i => i.id === s.id);
+    if (!existing) {
+      setSelectedItems([...selectedItems, { id: s.id, name: s.title, price: s.basePrice, quantity: 1 }]);
+    }
+    setSearchQuery('');
+  };
+
+  const calculateTotals = () => {
+    const subtotal = selectedItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const total = subtotal + pricing.serviceFee - pricing.discount;
+    return { subtotal, total };
+  };
+
+  const { subtotal, total } = calculateTotals();
+
+  const handleCreateBooking = async () => {
+    if (!db) return;
+    if (selectedItems.length === 0 || !customer.name || !customer.phone || !customer.address || !customer.date) {
+      toast({ variant: "destructive", title: "তথ্য অসম্পূর্ণ", description: "সবগুলো ঘর সঠিকভাবে পূরণ করুন।" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const bookingData = {
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        address: customer.address,
+        dateTime: customer.date,
+        timeSlot: customer.time,
+        serviceTitle: selectedItems[0]?.name,
+        items: selectedItems.map(i => ({ ...i, itemType: 'service' })),
+        subtotal,
+        discount: pricing.discount,
+        serviceFee: pricing.serviceFee,
+        totalPrice: total,
+        paymentMethod,
+        status: 'New',
+        createdAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+      await getOrCreateInvoice(db, docRef.id, 'booking', bookingData);
+
+      toast({ title: "সফল হয়েছে", description: "নতুন বুকিং তৈরি হয়েছে!" });
+      setIsCreateOpen(false);
+      setSelectedItems([]);
+      setCustomer({ name: '', phone: '', address: '', date: '', time: '8AM - 12PM' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    if (!db) return;
+    await updateDoc(doc(db, 'bookings', id), { status });
+    toast({ title: "Booking Updated" });
+  };
+
   const handleOpenInvoice = async (booking: any) => {
     if (!db) return;
     setIsProcessingInvoice(booking.id);
@@ -96,147 +188,54 @@ export default function BookingsPage() {
     }
   };
 
-  const handleDownloadInvoice = async (booking: any) => {
-    if (!db) return;
-    setIsProcessingInvoice(booking.id);
-    try {
-      const invId = await getOrCreateInvoice(db, booking.id, 'booking', booking);
-      router.push(`/admin/invoices/${invId}?download=true`);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Download Error" });
-    } finally {
-      setIsProcessingInvoice(null);
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.length === filteredBookings?.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredBookings?.map(b => b.id) || []);
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const handleBulkStatus = async (status: string) => {
-    if (!db || selectedIds.length === 0) return;
-    setIsBulkProcessing(true);
-    try {
-      const batch = writeBatch(db);
-      selectedIds.forEach(id => {
-        batch.update(doc(db, 'bookings', id), { status });
-      });
-      await batch.commit();
-      toast({ title: "Bulk Update Success", description: `${selectedIds.length} bookings updated.` });
-      setSelectedIds([]);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Bulk Action Failed" });
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!db || selectedIds.length === 0) return;
-    if (!confirm("Remove selected booking logs?")) return;
-    setIsBulkProcessing(true);
-    try {
-      const batch = writeBatch(db);
-      selectedIds.forEach(id => {
-        batch.delete(doc(db, 'bookings', id));
-      });
-      await batch.commit();
-      setSelectedIds([]);
-      toast({ title: "Logs Removed" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Action Failed" });
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  const STATUS_CONFIG: Record<string, string> = {
-    'New': 'bg-blue-50 text-blue-700',
-    'Assigned': 'bg-indigo-50 text-indigo-700',
-    'In Progress': 'bg-amber-50 text-amber-700',
-    'Completed': 'bg-green-50 text-green-700',
-    'Cancelled': 'bg-red-50 text-red-700',
-  };
-
   return (
     <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold uppercase">Service Bookings</h1>
-          <p className="text-muted-foreground text-sm">Schedule and track on-site appointments</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">বুকিং ম্যানেজমেন্ট</h1>
+          <p className="text-muted-foreground text-sm font-medium">সার্ভিস শিডিউল এবং টেকনিশিয়ান ট্র্যাকিং</p>
         </div>
+        <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl font-black gap-2 h-11 px-6 shadow-xl shadow-primary/20 uppercase text-xs tracking-widest">
+          <Plus size={18} /> নতুন বুকিং
+        </Button>
       </div>
 
-      {/* KPI Section */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "Total Bookings", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "Pending Tasks", val: stats.pending, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
-          { label: "Completed", val: stats.completed, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
-          { label: "Cancelled", val: stats.cancelled, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }
+          { label: "মোট বুকিং", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "পেন্ডিং", val: stats.pending, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
+          { label: "সম্পন্ন", val: stats.completed, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: "বাতিল", val: stats.cancelled, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }
         ].map((s, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <Input 
-            placeholder="Search by customer or service..." 
-            className="pl-10 h-11 border-gray-200"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" className="h-11 gap-2 w-full sm:w-auto"><Filter size={18} /> Filters</Button>
-      </div>
-
-      {/* Bulk Action Bar */}
-      {selectedIds.length > 0 && (
-        <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs font-black uppercase tracking-widest">{selectedIds.length} SELECTED</span>
-            <div className="h-6 w-px bg-white/20" />
-            <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Completed')} disabled={isBulkProcessing} className="h-8 text-[10px] font-black uppercase">Mark Done</Button>
-              <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Cancelled')} disabled={isBulkProcessing} className="h-8 text-[10px] font-black uppercase">Cancel Bulk</Button>
-            </div>
+      <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+        <div className="p-4 border-b bg-gray-50/50">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Input 
+              placeholder="কাস্টমার বা সার্ভিস দিয়ে খুঁজুন..." 
+              className="pl-10 h-11 bg-white border-gray-200"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
-            <Trash2 size={14} className="mr-2" /> Delete
-          </Button>
         </div>
-      )}
-
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50/50">
+            <TableHeader className="bg-gray-50/30">
               <TableRow>
-                <TableHead className="w-12 pl-6">
-                  <Checkbox 
-                    checked={filteredBookings?.length ? selectedIds.length === filteredBookings.length : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="font-bold py-4 pl-4 uppercase text-[10px] tracking-widest">Service</TableHead>
+                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Service</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Customer</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Schedule</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
@@ -245,63 +244,31 @@ export default function BookingsPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
               ) : filteredBookings?.map((booking) => (
-                <TableRow key={booking.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(booking.id) && "bg-primary/5")}>
-                  <TableCell className="pl-6">
-                    <Checkbox 
-                      checked={selectedIds.includes(booking.id)}
-                      onCheckedChange={() => toggleSelect(booking.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="py-4 pl-4 font-black text-gray-900 text-xs uppercase">
-                    {booking.serviceTitle || 'General Service'}
-                  </TableCell>
+                <TableRow key={booking.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <TableCell className="py-5 pl-8 font-black text-gray-900 text-xs uppercase">{booking.serviceTitle || 'General'}</TableCell>
                   <TableCell>
                     <div className="text-xs font-bold text-gray-700 uppercase">{booking.customerName}</div>
                     <div className="text-[10px] text-muted-foreground truncate max-w-[150px]">{booking.address}</div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-[10px] font-bold uppercase text-gray-500">
-                      {booking.dateTime ? format(new Date(booking.dateTime), 'MMM dd, hh:mm a') : 'N/A'}
-                    </div>
+                  <TableCell className="text-[10px] font-bold text-gray-500">
+                    {booking.dateTime ? format(new Date(booking.dateTime), 'MMM dd, HH:mm') : 'N/A'}
                   </TableCell>
                   <TableCell>
-                    <Badge className={cn("text-[8px] font-black uppercase border-none px-2", STATUS_CONFIG[booking.status] || "bg-gray-50")}>
-                      {booking.status}
-                    </Badge>
+                    <Select defaultValue={booking.status} onValueChange={(v) => handleUpdateStatus(booking.id, v)}>
+                      <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-indigo-50 text-indigo-700">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['New', 'Assigned', 'In Progress', 'Completed', 'Cancelled'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="text-right pr-8">
                     <div className="flex justify-end gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-primary" 
-                        onClick={() => handleOpenInvoice(booking)}
-                        disabled={isProcessingInvoice === booking.id}
-                        title="View Invoice"
-                      >
-                        {isProcessingInvoice === booking.id ? <Loader2 className="animate-spin h-4 w-4" /> : <FileText size={16} />}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-indigo-600" 
-                        onClick={() => handleDownloadInvoice(booking)}
-                        disabled={isProcessingInvoice === booking.id}
-                        title="Download PDF"
-                      >
-                        <Download size={16} />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical size={16}/></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl shadow-xl border-none">
-                          <DropdownMenuItem className="text-xs font-bold" onClick={() => router.push(`/admin/bookings/${booking.id}`)}>Edit Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-xs font-bold text-destructive" onClick={() => deleteDoc(doc(db!, 'bookings', booking.id))}>Delete Log</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(booking)} disabled={isProcessingInvoice === booking.id}><FileText size={16} /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'bookings', booking.id))}><Trash2 size={16} /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -310,6 +277,126 @@ export default function BookingsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* CREATE BOOKING DIALOG */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
+          <div className="flex flex-col h-[85vh]">
+            <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary rounded-xl"><Calendar size={24} /></div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন বুকিং তৈরি করুন</DialogTitle>
+              </div>
+              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* Form Side */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">সার্ভিস নির্বাচন করুন</Label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <Input 
+                        placeholder="সার্ভিস সার্চ করুন..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold"
+                      />
+                      {filteredServices.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden border-gray-100">
+                          {filteredServices.map(s => (
+                            <div key={s.id} onClick={() => addItem(s)} className="p-4 flex items-center justify-between hover:bg-primary/5 cursor-pointer transition-colors border-b last:border-none">
+                              <div>
+                                <p className="font-bold text-sm text-gray-900 uppercase">{s.title}</p>
+                                <p className="text-[10px] text-muted-foreground">বেস প্রাইস: ৳{s.basePrice}</p>
+                              </div>
+                              <Plus size={16} className="text-primary" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {selectedItems.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-xs uppercase truncate text-gray-900">{item.name}</p>
+                            <p className="text-[10px] font-bold text-primary mt-0.5">৳{item.price}</p>
+                          </div>
+                          <button onClick={() => setSelectedItems([])} className="text-red-400 hover:text-red-600"><X size={16}/></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহক ও শিডিউল</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input placeholder="গ্রাহকের নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input type="date" value={customer.date} onChange={e => setCustomer({...customer, date: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Select value={customer.time} onValueChange={v => setCustomer({...customer, time: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="8AM - 12PM">সকাল (8AM - 12PM)</SelectItem>
+                          <SelectItem value="12PM - 4PM">দুপুর (12PM - 4PM)</SelectItem>
+                          <SelectItem value="4PM - 8PM">বিকাল (4PM - 8PM)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Textarea placeholder="সার্ভিস অ্যাড্রেস" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
+                  </div>
+                </div>
+
+                {/* Summary Side */}
+                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <Wallet size={16} /> বুকিং সামারি
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সার্ভিস প্রাইস</span><span>৳{subtotal.toLocaleString()}</span></div>
+                      <div className="grid grid-cols-2 gap-4 items-center">
+                        <Label className="text-[10px] font-black uppercase text-gray-400">সার্ভিস ফি</Label>
+                        <Input type="number" value={pricing.serviceFee} onChange={e => setPricing({...pricing, serviceFee: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 items-center">
+                        <Label className="text-[10px] font-black uppercase text-gray-400">ডিসকাউন্ট</Label>
+                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600" />
+                      </div>
+                      <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black uppercase text-gray-400">মোট প্রদেয়</span>
+                          <span className="text-4xl font-black text-primary tracking-tighter">৳{total.toLocaleString()}</span>
+                        </div>
+                        <Badge className="bg-primary/10 text-primary border-none font-black text-[8px]">BDT</Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট মেথড</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['cod', 'online'].map(m => (
+                        <div key={m} onClick={() => setPaymentMethod(m)} className={cn("p-3 rounded-xl border-2 cursor-pointer transition-all text-center", paymentMethod === m ? "border-primary bg-primary/5 font-black text-primary" : "bg-white border-gray-100 font-bold text-gray-400")}>
+                          <span className="text-[10px] uppercase">{m === 'cod' ? 'CASH' : 'ONLINE'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button onClick={handleCreateBooking} disabled={isSubmitting} className="w-full h-16 rounded-2xl font-black text-xl shadow-xl shadow-primary/20 uppercase tracking-tight gap-2 active:scale-95 transition-transform">
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "বুকিং নিশ্চিত করুন"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
