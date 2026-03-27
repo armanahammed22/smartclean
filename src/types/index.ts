@@ -187,17 +187,31 @@ export interface Invoice {
   publicLink?: string;
 }
 
-export interface InvoiceRequest {
+export interface AssignedEmployee {
+  uid: string;
+  name: string;
+  role: 'leader' | 'member';
+}
+
+export interface Booking {
   id: string;
-  invoiceId: string;
-  staffId: string;
-  staffName: string;
-  changes: {
-    type: 'add' | 'remove' | 'update';
-    item?: any;
-    price?: number;
-  }[];
-  note: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  customerName: string;
+  customerPhone: string;
+  address: string;
+  serviceTitle: string;
+  totalPrice: number;
+  status: 'New' | 'Assigned' | 'On The Way' | 'Service Started' | 'Completed' | 'Cancelled';
+  assignedEmployees?: AssignedEmployee[];
+  teamLeaderId?: string;
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+  dateTime: string;
   createdAt: string;
+}
+
+export interface TrackingConfig {
+  googleMapsApiKey: string;
+  trackingInterval: number; // in seconds
+  isTrackingEnabled: boolean;
 }

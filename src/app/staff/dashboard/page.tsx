@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, updateDoc, doc, setDoc, serverTimestamp, addDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, updateDoc, doc, setDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,9 @@ import {
   AlertCircle,
   FileText,
   Loader2,
-  FileEdit
+  FileEdit,
+  Zap,
+  Crown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +37,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { useTracking } from '@/hooks/use-tracking';
 
 const STATUS_ORDER = ['Assigned', 'On The Way', 'Service Started', 'Completed'];
 
@@ -43,19 +46,21 @@ export default function StaffDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
 
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedBookingForRequest, setSelectedBookingForRequest] = useState<any>(null);
   const [requestNote, setRequestNote] = useState('');
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
-  const myBookingsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(
-      collection(db, 'bookings'),
-      where('employeeId', '==', user.uid),
-      orderBy('dateTime', 'asc')
-    );
-  }, [db, user]);
+  // My Bookings (As Team Member or Leader)
+  // Fetching all and filtering in memory to avoid complex indexing for now
+  const allBookingsQuery = useMemoFirebase(() => 
+    db ? query(collection(db, 'bookings'), orderBy('dateTime', 'asc')) : null, [db]);
+  const { data: allBookings, isLoading: bLoading } = useCollection(allBookingsQuery);
+
+  const myBookings = useMemo(() => {
+    return allBookings?.filter(b => b.assignedEmployees?.some((e: any) => e.uid === user?.uid)) || [];
+  }, [allBookings, user]);
 
   const earningsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -65,27 +70,45 @@ export default function StaffDashboard() {
   const availabilityRef = useMemoFirebase(() => user ? doc(db!, 'staff_availability', user.uid) : null, [db, user]);
   const profileRef = useMemoFirebase(() => user ? doc(db!, 'employee_profiles', user.uid) : null, [db, user]);
 
-  const { data: bookings, isLoading } = useCollection(myBookingsQuery);
   const { data: earnings } = useCollection(earningsQuery);
   const { data: availability } = useDoc(availabilityRef);
   const { data: profile } = useDoc(profileRef);
 
   const totalEarned = earnings?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
 
+  // Active Job Detection for Tracking
+  const activeBooking = myBookings.find(b => b.status === 'Service Started' || b.status === 'On The Way');
+  const isTeamLeader = activeBooking?.teamLeaderId === user?.uid;
+  const isTrackingActive = !!activeBooking && isTeamLeader;
+
+  // Initialize Tracking Hook
+  useTracking(activeBooking?.id || null, isTeamLeader, isTrackingActive);
+
   const updateJobStatus = async (bookingId: string, currentStatus: string) => {
-    if (!db) return;
+    if (!db || !user) return;
     const nextIndex = STATUS_ORDER.indexOf(currentStatus) + 1;
     if (nextIndex >= STATUS_ORDER.length) return;
     
     const nextStatus = STATUS_ORDER[nextIndex];
     try {
-      await updateDoc(doc(db, 'bookings', bookingId), { 
+      const updateData: any = { 
         status: nextStatus,
         updatedAt: serverTimestamp()
-      });
+      };
+
+      if (nextStatus === 'Service Started') {
+        updateData.startTime = new Date().toISOString();
+      }
 
       if (nextStatus === 'Completed') {
-        await updateDoc(doc(db!, 'staff_availability', user!.uid), {
+        updateData.endTime = new Date().toISOString();
+        // Calculate duration logic here...
+      }
+
+      await updateDoc(doc(db, 'bookings', bookingId), updateData);
+
+      if (nextStatus === 'Completed') {
+        await updateDoc(doc(db!, 'staff_availability', user.uid), {
           status: 'Available',
           updatedAt: serverTimestamp()
         });
@@ -107,10 +130,8 @@ export default function StaffDashboard() {
     if (!db || !user || !selectedBookingForRequest) return;
     setIsSubmittingRequest(true);
     try {
-      // 1. Ensure invoice exists
       const invId = await getOrCreateInvoice(db, selectedBookingForRequest.id, 'booking', selectedBookingForRequest);
       
-      // 2. Add request
       await addDoc(collection(db, 'invoiceRequests'), {
         invoiceId: invId,
         staffId: user.uid,
@@ -140,22 +161,34 @@ export default function StaffDashboard() {
           <p className="text-muted-foreground text-sm font-medium">Field Operations & Performance</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Select value={availability?.status || 'Offline'} onValueChange={(val) => setDoc(availabilityRef!, { status: val, isOnline: val !== 'Offline', updatedAt: serverTimestamp() }, { merge: true })}>
-            <SelectTrigger className="h-12 w-full md:w-[180px] rounded-xl font-bold bg-green-600 text-white border-none shadow-lg">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="Available">Available</SelectItem>
-              <SelectItem value="Busy">Busy (On Site)</SelectItem>
-              <SelectItem value="Offline">Offline</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex-1 md:w-auto">
+            <Select value={availability?.status || 'Offline'} onValueChange={(val) => setDoc(availabilityRef!, { status: val, isOnline: val !== 'Offline', updatedAt: serverTimestamp() }, { merge: true })}>
+              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-xl font-bold bg-green-600 text-white border-none shadow-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="Available">Available</SelectItem>
+                <SelectItem value="Busy">Busy (On Site)</SelectItem>
+                <SelectItem value="Offline">Offline</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </header>
 
+      {isTrackingActive && (
+        <div className="bg-amber-500 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-3">
+            <Zap size={20} fill="white" />
+            <span className="text-xs font-black uppercase tracking-widest">Team Leader Live Tracking Active</span>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-white animate-ping" />
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Today's Jobs", val: bookings?.filter(b => b.status !== 'Completed').length || 0, icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "My Jobs", val: myBookings?.filter(b => b.status !== 'Completed').length || 0, icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Earnings", val: `৳${totalEarned}`, icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
           { label: "Career Jobs", val: earnings?.length || 0, icon: CheckCircle2, color: "text-indigo-600", bg: "bg-indigo-50" },
           { label: "Rating", val: profile?.rating?.toFixed(1) || "5.0", icon: Star, color: "text-amber-600", bg: "bg-amber-50" }
@@ -176,13 +209,18 @@ export default function StaffDashboard() {
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-lg font-bold flex items-center gap-2 uppercase tracking-tight"><Activity className="text-primary" size={20} /> Active Schedule</h2>
           <div className="grid grid-cols-1 gap-4">
-            {bookings?.map((booking) => (
+            {bLoading ? (
+              <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" /></div>
+            ) : myBookings.length > 0 ? myBookings.map((booking) => (
               <Card key={booking.id} className="border-none shadow-sm overflow-hidden bg-white rounded-3xl group hover:shadow-md transition-all border-l-4 border-l-primary">
                 <CardContent className="p-6">
                   <div className="flex flex-col gap-6">
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <h3 className="text-lg font-black text-gray-900 uppercase leading-none">{booking.serviceTitle || 'General Service'}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-black text-gray-900 uppercase leading-none">{booking.serviceTitle || 'General Service'}</h3>
+                          {booking.teamLeaderId === user.uid && <Badge className="bg-amber-100 text-amber-700 border-none px-2 py-0.5 text-[8px] font-black"><Crown size={10} className="mr-1" /> LEADER</Badge>}
+                        </div>
                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                           <Clock size={14} className="text-primary" /> {booking.dateTime ? format(new Date(booking.dateTime), 'hh:mm a') : 'N/A'}
                           <Badge variant="secondary" className="text-[9px] font-black px-2 uppercase tracking-widest ml-2">{booking.status}</Badge>
@@ -205,7 +243,11 @@ export default function StaffDashboard() {
                       </div>
                       <div className="flex items-end justify-end">
                         {booking.status !== 'Completed' && (
-                          <Button onClick={() => updateJobStatus(booking.id, booking.status)} className="w-full md:w-auto h-11 px-8 rounded-xl font-black text-xs uppercase shadow-lg shadow-primary/20">
+                          <Button 
+                            onClick={() => updateJobStatus(booking.id, booking.status)} 
+                            className="w-full md:w-auto h-11 px-8 rounded-xl font-black text-xs uppercase shadow-lg shadow-primary/20"
+                            disabled={booking.teamLeaderId !== user.uid}
+                          >
                             {booking.status === 'Assigned' && "On The Way"}
                             {booking.status === 'On The Way' && "Start Service"}
                             {booking.status === 'Service Started' && "Complete Job"}
@@ -213,10 +255,17 @@ export default function StaffDashboard() {
                         )}
                       </div>
                     </div>
+                    {booking.teamLeaderId !== user.uid && booking.status !== 'Completed' && (
+                      <p className="text-[9px] text-muted-foreground italic text-center border-t pt-2">Only the Team Leader can update status and tracking.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <div className="p-20 text-center border-2 border-dashed rounded-3xl bg-white text-muted-foreground font-bold uppercase text-[10px] tracking-widest">
+                No active bookings assigned to you.
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -60,9 +60,10 @@ import {
   Navigation,
   Grid,
   TrendingUp,
-  Image as ImageIcon,
+  ImageIcon,
   Bot,
-  Sparkles
+  Sparkles,
+  MapPin
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -308,6 +309,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(productsEnabled ? [{ name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck }] : []),
           { name: "Localization", href: '/admin/settings/languages', icon: Languages },
           { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
+          { name: "Fleet Tracking", href: '/admin/settings/tracking', icon: MapPin },
           { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
           { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
         ].filter(Boolean)
@@ -328,9 +330,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     let orderedKeys = Object.keys(baseGroups);
     if (sidebarConfig?.order) {
       const savedOrder = sidebarConfig.order as string[];
-      // Filter out keys that might have been deleted in code
       const validSaved = savedOrder.filter(k => baseGroups[k]);
-      // Add any new keys that were added in code but not in saved order
       const missing = orderedKeys.filter(k => !validSaved.includes(k));
       orderedKeys = [...validSaved, ...missing];
     }
@@ -340,6 +340,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .filter(g => g && g.visible !== false && g.items.length > 0);
   }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
 
+  // Rest of layout logic remains same...
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.replace('/login');
