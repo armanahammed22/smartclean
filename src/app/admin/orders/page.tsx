@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc, where } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -34,9 +34,11 @@ import {
   User,
   MapPin,
   Package,
-  Wallet
+  Wallet,
+  Smartphone,
+  ChevronDown
 } from 'lucide-react';
-import { format, isToday, isThisMonth } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -48,12 +50,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -62,6 +58,7 @@ import {
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
 
 export default function OrdersManagementPage() {
   const { user } = useUser();
@@ -83,7 +80,10 @@ export default function OrdersManagementPage() {
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 80 });
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  
+  // Payment State
+  const [paymentCategory, setPaymentCategory] = useState<'cod' | 'online'>('cod');
+  const [selectedGatewayId, setSelectedGatewayId] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -98,9 +98,11 @@ export default function OrdersManagementPage() {
   }, [db, user]);
 
   const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
+  const gatewaysQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   
   const { data: orders, isLoading } = useCollection(ordersQuery);
   const { data: allProducts } = useCollection(productsQuery);
+  const { data: activeGateways } = useCollection(gatewaysQuery);
 
   const stats = useMemo(() => {
     if (!orders) return { total: 0, processing: 0, delivered: 0, daily: 0 };
@@ -150,8 +152,14 @@ export default function OrdersManagementPage() {
       return;
     }
 
+    if (paymentCategory === 'online' && !selectedGatewayId) {
+      toast({ variant: "destructive", title: "Payment Method Error", description: "Please select an online gateway." });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      const selectedGateway = activeGateways?.find(g => g.id === selectedGatewayId);
       const orderData = {
         customerName: customer.name,
         customerPhone: customer.phone,
@@ -161,7 +169,7 @@ export default function OrdersManagementPage() {
         discount: pricing.discount,
         deliveryCharge: pricing.delivery,
         totalPrice: total,
-        paymentMethod,
+        paymentMethod: paymentCategory === 'cod' ? 'Cash on Delivery' : (selectedGateway?.name || 'Online'),
         status: 'New',
         createdAt: new Date().toISOString()
       };
@@ -173,8 +181,10 @@ export default function OrdersManagementPage() {
       setIsCreateOpen(false);
       setSelectedItems([]);
       setCustomer({ name: '', phone: '', address: '' });
+      setPaymentCategory('cod');
+      setSelectedGatewayId('');
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "অর্ডার তৈরি করা সম্ভব হয়নি।" });
+      toast({ variant: "destructive", title: "Error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -278,7 +288,7 @@ export default function OrdersManagementPage() {
                     </Select>
                   </TableCell>
                   <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(order)} disabled={isProcessingInvoice === order.id}><FileText size={16} /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}><Trash2 size={16} /></Button>
                     </div>
@@ -292,37 +302,35 @@ export default function OrdersManagementPage() {
 
       {/* CREATE ORDER DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
+        <DialogContent className="max-w-5xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
           <div className="flex flex-col h-[85vh]">
             <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary rounded-xl"><ShoppingCart size={24} /></div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন অর্ডার তৈরি করুন</DialogTitle>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন অর্ডার</DialogTitle>
               </div>
               <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                {/* Unified Form Side */}
                 <div className="space-y-8">
-                  {/* Search Section */}
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পণ্য যোগ করুন</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পণ্য নির্বাচন</Label>
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <Input 
-                        placeholder="নাম বা আইডি দিয়ে সার্চ করুন..." 
+                        placeholder="সার্চ করুন..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold focus:ring-2 focus:ring-primary/20"
+                        className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold"
                       />
                       {filteredProducts.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden border-gray-100">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden">
                           {filteredProducts.map(p => (
-                            <div key={p.id} onClick={() => addItem(p)} className="p-4 flex items-center justify-between hover:bg-primary/5 cursor-pointer transition-colors border-b last:border-none">
+                            <div key={p.id} onClick={() => addItem(p)} className="p-4 flex items-center justify-between hover:bg-primary/5 cursor-pointer border-b last:border-none">
                               <div>
-                                <p className="font-bold text-sm text-gray-900 uppercase">{p.name}</p>
+                                <p className="font-bold text-sm uppercase">{p.name}</p>
                                 <p className="text-[10px] text-muted-foreground">৳{p.price}</p>
                               </div>
                               <Plus size={16} className="text-primary" />
@@ -336,7 +344,7 @@ export default function OrdersManagementPage() {
                       {selectedItems.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                           <div className="flex-1 min-w-0 mr-4">
-                            <p className="font-black text-xs uppercase truncate text-gray-900">{item.name}</p>
+                            <p className="font-black text-xs uppercase truncate">{item.name}</p>
                             <p className="text-[9px] font-bold text-primary mt-0.5">৳{item.price} × {item.quantity}</p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -355,31 +363,22 @@ export default function OrdersManagementPage() {
                           </div>
                         </div>
                       ))}
-                      {selectedItems.length === 0 && (
-                        <div className="p-10 text-center border-2 border-dashed rounded-2xl text-muted-foreground text-xs font-bold uppercase opacity-40">
-                          এখনও কোনো পণ্য যোগ করা হয়নি
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  {/* Customer Info Section */}
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহকের তথ্য</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                       <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
-                    <Textarea placeholder="পূর্ণ ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
+                    <Textarea placeholder="ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
                   </div>
                 </div>
 
-                {/* Summary & Payment Side */}
                 <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
                   <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <Wallet size={16} /> সারসংক্ষেপ
-                    </h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> সারসংক্ষেপ</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সাবটোটাল</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
@@ -400,18 +399,51 @@ export default function OrdersManagementPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট পদ্ধতি</Label>
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট মেথড</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {['cod', 'bkash', 'nagad', 'bank'].map(m => (
-                        <div key={m} onClick={() => setPaymentMethod(m)} className={cn("p-3 rounded-xl border-2 cursor-pointer transition-all text-center", paymentMethod === m ? "border-primary bg-primary/5 font-black text-primary" : "bg-white border-gray-100 font-bold text-gray-400")}>
-                          <span className="text-[10px] uppercase">{m === 'cod' ? 'CASH' : m}</span>
-                        </div>
-                      ))}
+                      <div 
+                        onClick={() => setPaymentCategory('cod')} 
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5" : "bg-white border-gray-100 opacity-60")}
+                      >
+                        <Package size={20} className={paymentCategory === 'cod' ? "text-primary" : "text-gray-400"} />
+                        <span className="text-[10px] font-black uppercase">Cash on Delivery</span>
+                      </div>
+                      <div 
+                        onClick={() => setPaymentCategory('online')} 
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50" : "bg-white border-gray-100 opacity-60")}
+                      >
+                        <Smartphone size={20} className={paymentCategory === 'online' ? "text-blue-600" : "text-gray-400"} />
+                        <span className="text-[10px] font-black uppercase">Online Payment</span>
+                      </div>
                     </div>
+
+                    {paymentCategory === 'online' && (
+                      <div className="space-y-3 pt-2 animate-in slide-in-from-top-2">
+                        <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">সিলেক্ট গেটওয়ে</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {activeGateways?.filter(g => g.type !== 'cod' && g.type !== 'cash').map(gateway => (
+                            <div 
+                              key={gateway.id}
+                              onClick={() => setSelectedGatewayId(gateway.id)}
+                              className={cn(
+                                "flex items-center gap-4 p-3 rounded-xl border-2 transition-all cursor-pointer",
+                                selectedGatewayId === gateway.id ? "border-blue-600 bg-white" : "border-gray-100 bg-gray-50/50"
+                              )}
+                            >
+                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border bg-white flex-shrink-0">
+                                {gateway.logoUrl ? <Image src={gateway.logoUrl} alt={gateway.name} fill className="object-contain p-1" unoptimized /> : <Wallet size={16} className="m-auto text-gray-300" />}
+                              </div>
+                              <span className="text-xs font-bold uppercase flex-1">{gateway.name}</span>
+                              {selectedGatewayId === gateway.id && <CheckCircle2 size={16} className="text-blue-600" />}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <Button onClick={handleCreateOrder} disabled={isSubmitting} className="w-full h-16 rounded-2xl font-black text-xl shadow-xl shadow-primary/20 uppercase tracking-tight gap-2 active:scale-95 transition-transform">
+                  <Button onClick={handleCreateOrder} disabled={isSubmitting} className="w-full h-16 rounded-2xl font-black text-xl shadow-xl shadow-primary/20 uppercase tracking-tight gap-2 transition-transform active:scale-95">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "অর্ডার নিশ্চিত করুন"}
                   </Button>
                 </div>
