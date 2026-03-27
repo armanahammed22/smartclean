@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -16,7 +16,7 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useSupport } from '@/components/providers/support-provider';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 /**
@@ -28,14 +28,19 @@ function LogoSlider() {
 
   const offersQuery = useMemoFirebase(() => {
     if (!db) return null;
+    // Removed 'where' to avoid missing index errors, filtering in memory instead
     return query(
       collection(db, 'offers'),
-      where('isActive', '==', true),
       orderBy('order', 'asc')
     );
   }, [db]);
 
-  const { data: offers } = useCollection(offersQuery);
+  const { data: allOffers } = useCollection(offersQuery);
+
+  // Filter active offers in memory
+  const offers = useMemo(() => {
+    return allOffers?.filter(o => o.isActive === true) || [];
+  }, [allOffers]);
 
   useEffect(() => {
     if (!offers || offers.length <= 1) return;

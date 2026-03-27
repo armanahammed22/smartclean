@@ -1,11 +1,11 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 /**
@@ -18,14 +18,19 @@ export function NavbarOfferSlider() {
 
   const offersQuery = useMemoFirebase(() => {
     if (!db) return null;
+    // Removed 'where' to avoid missing index errors, filtering in memory instead
     return query(
       collection(db, 'offers'),
-      where('isActive', '==', true),
       orderBy('order', 'asc')
     );
   }, [db]);
 
-  const { data: offers, isLoading } = useCollection(offersQuery);
+  const { data: allOffers, isLoading } = useCollection(offersQuery);
+
+  // Filter active offers in memory
+  const offers = useMemo(() => {
+    return allOffers?.filter(o => o.isActive === true) || [];
+  }, [allOffers]);
 
   useEffect(() => {
     if (!offers || offers.length <= 1) return;
