@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -115,6 +116,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
+  const sidebarConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
+  const { data: sidebarConfig } = useDoc(sidebarConfigRef);
+
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
 
@@ -150,8 +154,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: pendingProducts } = useCollection(pendingProductsQuery);
 
   const NAV_GROUPS = useMemo(() => {
-    const groups = [
-      {
+    const baseGroups: Record<string, any> = {
+      dashboard: {
         id: 'dashboard',
         title: "DASHBOARD",
         icon: LayoutDashboard,
@@ -160,7 +164,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
         ]
       },
-      {
+      sales: {
         id: 'sales',
         title: "SALES TERMINAL",
         icon: ShoppingCart,
@@ -170,7 +174,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "New Booking", href: '/admin/bookings?create=true', icon: Plus }] : []),
         ].filter(Boolean)
       },
-      {
+      ai_agents: {
         id: 'ai_agents',
         title: "AI AGENTS (STAFF)",
         icon: Bot,
@@ -180,7 +184,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles }] : []),
         ].filter(Boolean)
       },
-      {
+      orders: {
         id: 'orders',
         title: "ORDER & BOOKING",
         icon: ShoppingCart,
@@ -192,7 +196,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(productsEnabled ? [{ name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck }] : []),
         ].filter(Boolean)
       },
-      {
+      inventory: {
         id: 'inventory',
         title: "INVENTORY",
         icon: Box,
@@ -206,7 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
         ]
       },
-      {
+      services: {
         id: 'services',
         title: "SERVICES",
         icon: Wrench,
@@ -219,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
         ]
       },
-      {
+      marketing: {
         id: 'marketing',
         title: "MARKETING",
         icon: Target,
@@ -232,7 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
         ].filter(Boolean)
       },
-      {
+      offers: {
         id: 'offers',
         title: "OFFER & COUPONS",
         icon: TicketPercent,
@@ -244,7 +248,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
         ].filter(Boolean)
       },
-      {
+      crm: {
         id: 'crm',
         title: "CRM & USERS",
         icon: Users,
@@ -256,7 +260,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
         ].filter(Boolean)
       },
-      {
+      vendor_hub: {
         id: 'vendor_hub',
         title: "VENDOR HUB",
         icon: Store,
@@ -267,7 +271,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
         ]
       },
-      {
+      reports: {
         id: 'reports',
         title: "BUSINESS REPORTS",
         icon: BarChart3,
@@ -277,7 +281,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
         ]
       },
-      {
+      customize: {
         id: 'customize',
         title: "SITE CUSTOMIZE",
         icon: Palette,
@@ -294,7 +298,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
       },
-      {
+      system: {
         id: 'system',
         title: "SYSTEM",
         icon: Settings,
@@ -308,7 +312,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
         ].filter(Boolean)
       },
-      {
+      support: {
         id: 'support',
         title: "SUPPORT",
         icon: MessageCircle,
@@ -318,10 +322,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
         ]
       }
-    ];
+    };
 
-    return groups.filter(g => g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled]);
+    // Apply custom order if exists
+    let orderedKeys = Object.keys(baseGroups);
+    if (sidebarConfig?.order) {
+      const savedOrder = sidebarConfig.order as string[];
+      // Filter out keys that might have been deleted in code
+      const validSaved = savedOrder.filter(k => baseGroups[k]);
+      // Add any new keys that were added in code but not in saved order
+      const missing = orderedKeys.filter(k => !validSaved.includes(k));
+      orderedKeys = [...validSaved, ...missing];
+    }
+
+    return orderedKeys
+      .map(key => baseGroups[key])
+      .filter(g => g && g.visible !== false && g.items.length > 0);
+  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
