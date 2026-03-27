@@ -9,7 +9,8 @@ import {
   ShoppingCart, 
   Sparkles, 
   MessageCircle, 
-  User 
+  User,
+  Layers
 } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useSupport } from '@/components/providers/support-provider';
@@ -50,15 +51,27 @@ export function BottomNav() {
     return () => clearInterval(interval);
   }, [offers]);
 
-  if (!mounted) return null;
+  const NAV_ITEMS = useMemo(() => {
+    if (productsEnabled) {
+      return [
+        { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
+        { label: 'মেসেজ', href: '#', icon: MessageCircle, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
+        { label: 'অফার', href: '#', isMiddle: true },
+        { label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount, color: 'from-orange-500 to-red-600' },
+        { label: 'একাউন্ট', href: '/account/dashboard', icon: User, color: 'from-purple-500 to-pink-600' },
+      ];
+    } else {
+      return [
+        { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
+        { label: 'প্যাকেজ', href: '/services', icon: Layers, color: 'from-amber-500 to-orange-600' },
+        { label: 'অফার', href: '#', isMiddle: true },
+        { label: 'মেসেজ', href: '#', icon: MessageCircle, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
+        { label: 'একাউন্ট', href: '/account/dashboard', icon: User, color: 'from-purple-500 to-pink-600' },
+      ];
+    }
+  }, [productsEnabled, itemCount, toggleSupport]);
 
-  const NAV_ITEMS = [
-    { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
-    { label: 'মেসেজ', href: '#', icon: MessageCircle, badge: 0, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
-    { label: 'অফার', href: '#', isMiddle: true },
-    ...(productsEnabled ? [{ label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount, color: 'from-orange-500 to-red-600' }] : []),
-    { label: 'একাউন্ট', href: '/account/dashboard', icon: User, color: 'from-purple-500 to-pink-600' },
-  ];
+  if (!mounted) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[150] h-[70px] md:h-[80px] w-full flex items-center justify-around px-2 pb-safe shadow-[0_-15px_50px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-3xl border-t border-gray-100">
