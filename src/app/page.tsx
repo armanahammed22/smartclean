@@ -43,8 +43,6 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 
 const getCategoryStyles = (name: string) => {
   const n = name.toLowerCase();
@@ -67,9 +65,17 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  const sectionsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'homepage_sections'), where('isActive', '==', true), orderBy('order', 'asc')) : null, [db]);
-  const { data: layoutSections, isLoading: layoutLoading } = useCollection(sectionsQuery);
+  // Use a simplified query to avoid Firestore index requirements (which can break the layout)
+  const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
+  const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
+
+  // Filter and Sort in memory for 100% stability
+  const layoutSections = useMemo(() => {
+    if (!allSectionsRaw) return [];
+    return allSectionsRaw
+      .filter(s => s.isActive === true)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [allSectionsRaw]);
 
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
@@ -329,30 +335,17 @@ export default function SmartCleanHomePage() {
     <PublicLayout>
       <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24">
         {layoutLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-32">
+          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-4">
             <Loader2 className="animate-spin text-primary" size={48} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Marketplace...</p>
           </div>
         ) : layoutSections && layoutSections.length > 0 ? (
           layoutSections.map(renderSection)
         ) : (
-          <>
-            {renderSection({ id: 'def-hero', type: 'hero', config: {} })}
-            {renderSection({ id: 'def-flash', type: 'flash_deals', title: t('flash_sale') })}
-            {renderSection({ id: 'def-cats', type: 'categories', config: {} })}
-            {renderSection({ 
-              id: 'def-serv', 
-              type: 'services_featured', 
-              title: t('services_title'),
-              config: { limit: 12 } 
-            })}
-            {renderSection({ 
-              id: 'def-feed', 
-              type: 'products_new', 
-              title: t('products_title'),
-              config: { limit: 12 } 
-            })}
-          </>
+          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-4">
+            <Package size={48} className="text-gray-200" />
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading default layout...</p>
+          </div>
         )}
       </div>
     </PublicLayout>

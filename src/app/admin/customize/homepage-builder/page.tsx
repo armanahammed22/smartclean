@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -80,10 +79,17 @@ export default function HomepageBuilderPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<any>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [localSections, setLocalSections] = useState<any[]>([]);
 
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
+
+  useEffect(() => {
+    if (sections) {
+      setLocalSections(sections);
+    }
+  }, [sections]);
 
   const categoriesQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
@@ -102,18 +108,19 @@ export default function HomepageBuilderPage() {
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedItem === null || draggedItem === index) return;
-    const newSections = [...(sections || [])];
+    const newSections = [...localSections];
     const item = newSections.splice(draggedItem, 1)[0];
     newSections.splice(index, 0, item);
+    setLocalSections(newSections);
     setDraggedItem(index);
   };
 
   const saveOrder = async () => {
-    if (!db || !sections) return;
+    if (!db || !localSections) return;
     setIsSubmitting(true);
     try {
       const batch = writeBatch(db);
-      sections.forEach((s, idx) => {
+      localSections.forEach((s, idx) => {
         batch.update(doc(db, 'homepage_sections', s.id), { order: idx });
       });
       await batch.commit();
@@ -127,7 +134,10 @@ export default function HomepageBuilderPage() {
 
   const handleToggle = async (id: string, current: boolean) => {
     if (!db) return;
-    await updateDoc(doc(db, 'homepage_sections', id), { isActive: !current });
+    const nextVal = !current;
+    // Update local state first for instant feedback
+    setLocalSections(prev => prev.map(s => s.id === id ? { ...s, isActive: nextVal } : s));
+    await updateDoc(doc(db, 'homepage_sections', id), { isActive: nextVal });
   };
 
   const handleDuplicate = async (section: any) => {
@@ -136,7 +146,7 @@ export default function HomepageBuilderPage() {
     await addDoc(collection(db, 'homepage_sections'), {
       ...data,
       title: `${data.title} (Copy)`,
-      order: (sections?.length || 0),
+      order: (localSections?.length || 0),
       createdAt: new Date().toISOString()
     });
     toast({ title: "Section Duplicated" });
@@ -144,6 +154,8 @@ export default function HomepageBuilderPage() {
 
   const handleDelete = async (id: string) => {
     if (!db || !confirm("Remove this section from home?")) return;
+    // Update local state first
+    setLocalSections(prev => prev.filter(s => s.id !== id));
     await deleteDoc(doc(db, 'homepage_sections', id));
     toast({ title: "Section Removed" });
   };
@@ -155,7 +167,7 @@ export default function HomepageBuilderPage() {
       type,
       title: typeInfo?.label || 'New Section',
       isActive: true,
-      order: (sections?.length || 0),
+      order: (localSections?.length || 0),
       config: {
         layout: 'grid',
         itemsPerRow: 4,
@@ -183,7 +195,7 @@ export default function HomepageBuilderPage() {
     }
   };
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
+  if (isLoading && localSections.length === 0) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   const groupedTypes = SECTION_TYPES.reduce((acc: any, curr) => {
     if (!acc[curr.category]) acc[curr.category] = [];
@@ -209,7 +221,7 @@ export default function HomepageBuilderPage() {
       </div>
 
       <div className="max-w-4xl mx-auto space-y-4">
-        {sections?.map((section, index) => {
+        {localSections.map((section, index) => {
           const Icon = SECTION_TYPES.find(t => t.id === section.type)?.icon || Layout;
           return (
             <Card 
