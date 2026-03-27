@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -14,7 +15,8 @@ import {
   Loader2,
   ShieldCheck,
   Globe,
-  HardHat
+  HardHat,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,6 +68,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   const NAV_ITEMS = [
     { name: 'Dashboard', href: '/account/dashboard', icon: LayoutDashboard },
+    { name: 'Custom Requests', href: '/account/custom-requests', icon: Zap },
     { name: 'History', href: '/account/history', icon: History },
     { name: 'Profile Settings', href: '/account/profile', icon: User },
     { name: 'Affiliate Program', href: '/account/affiliate', icon: Share2 },

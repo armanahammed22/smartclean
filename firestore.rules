@@ -48,6 +48,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Custom Requests Rules
+    match /custom_requests/{id} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
     match /employee_profiles/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn() && request.auth.uid == id; }
     match /staff_earnings/{id} { allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin()); allow write: if isAdmin(); }

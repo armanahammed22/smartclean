@@ -63,7 +63,8 @@ import {
   ImageIcon,
   Bot,
   Sparkles,
-  MapPin
+  MapPin,
+  ClipboardList
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -219,6 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
+          { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },

@@ -215,3 +215,24 @@ export interface TrackingConfig {
   trackingInterval: number; // in seconds
   isTrackingEnabled: boolean;
 }
+
+export interface CustomRequest {
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  services: string[]; // List of services requested
+  details: string;
+  requestedDate: string;
+  requestedTime: string;
+  staffCount: number;
+  isQuotationRequested: boolean;
+  status: 'Pending' | 'Quoted' | 'Approved' | 'Assigned' | 'Completed' | 'Rejected';
+  price?: number;
+  assignedEmployees?: AssignedEmployee[];
+  teamLeaderId?: string;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
