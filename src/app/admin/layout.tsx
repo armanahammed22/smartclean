@@ -63,6 +63,7 @@ import {
   Bot,
   Sparkles
 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
@@ -89,6 +90,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -108,6 +110,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  // Load global settings for Logo
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   // Load persistence state
   useEffect(() => {
@@ -329,12 +336,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         "flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all",
         collapsed ? "justify-center px-0" : "px-6"
       )}>
-        <div className="w-10 h-10 bg-gradient-to-br from-primary to-emerald-400 rounded-xl text-white shadow-lg border border-white/10 flex items-center justify-center shrink-0">
-          <ShieldCheck size={20} />
+        <div className="w-10 h-10 bg-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+          {displayLogo ? (
+            <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" unoptimized />
+          ) : (
+            <ShieldCheck size={20} className="text-primary" />
+          )}
         </div>
         {!collapsed && (
           <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
-            <h1 className="font-black text-sm uppercase leading-none">Smart Clean</h1>
+            <h1 className="font-black text-sm uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
         )}
@@ -472,8 +483,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-[10px] font-black uppercase text-gray-900 leading-none">{user?.displayName || 'Administrator'}</p>
                 <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60 mt-1">System Root</p>
               </div>
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-md">
-                {user?.email?.[0].toUpperCase()}
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white flex items-center justify-center overflow-hidden border-2 border-primary/10 shadow-md relative">
+                {displayLogo ? (
+                  <Image src={displayLogo} alt="Admin" fill className="object-contain p-1" unoptimized />
+                ) : (
+                  <span className="font-black text-primary">{user?.email?.[0].toUpperCase()}</span>
+                )}
               </div>
             </div>
           </div>
