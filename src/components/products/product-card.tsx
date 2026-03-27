@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -12,7 +13,7 @@ interface ProductCardProps {
 }
 
 /**
- * Standard Product Card with increased size and clear information.
+ * Standard Product Card with optimized typography for tablet/desktop.
  */
 export function ProductCard({ product, isDark = false }: ProductCardProps) {
   const discountPercent = product.regularPrice && product.regularPrice > product.price
@@ -39,7 +40,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
                 unoptimized
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-100 bg-gray-100">
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-100">
                 <Package size={40} />
               </div>
             )}
@@ -47,7 +48,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
             {/* Custom Admin Badge */}
             {product.badgeText ? (
               <div className="absolute top-3 left-3">
-                <div className="bg-primary text-white text-[9px] md:text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg">
+                <div className="bg-primary text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg">
                   {product.badgeText}
                 </div>
               </div>
@@ -62,7 +63,7 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
 
             {/* Discount Badge */}
             {discountPercent && (
-              <div className="absolute top-3 right-3 bg-[#f85606] text-white text-[9px] md:text-[11px] font-black px-2 py-1 rounded-full shadow-md uppercase">
+              <div className="absolute top-3 right-3 bg-[#f85606] text-white text-[9px] md:text-[10px] font-black px-2 py-1 rounded-full shadow-md uppercase">
                 -{discountPercent}%
               </div>
             )}
@@ -79,10 +80,10 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
           
           <div className="flex items-center gap-3">
             <p className={cn(
-              "text-lg md:text-3xl font-black tracking-tighter leading-none",
+              "text-lg md:text-2xl font-black tracking-tighter leading-none",
               isDark ? "text-amber-400" : "text-[#f85606]"
             )}>
-              <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
+              <span className="text-[10px] md:text-xs font-bold mr-0.5">৳</span>
               {product.price.toLocaleString()}
             </p>
             {product.regularPrice && product.regularPrice > product.price && (
@@ -93,15 +94,15 @@ export function ProductCard({ product, isDark = false }: ProductCardProps) {
           </div>
           
           <div className={cn(
-            "flex items-center justify-between gap-1 text-xs md:text-sm font-bold",
+            "flex items-center justify-between gap-1 text-[10px] md:text-xs font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
             <div className="flex items-center gap-1.5 text-amber-400">
-              <Star size={16} fill="currentColor" />
+              <Star size={14} fill="currentColor" />
               <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
               <span className="opacity-50">({reviewCount})</span>
             </div>
-            <span className="uppercase tracking-widest text-[9px] md:text-[11px] font-black">{soldCount} Sold</span>
+            <span className="uppercase tracking-widest text-[9px] font-black">{soldCount} Sold</span>
           </div>
         </div>
       </div>

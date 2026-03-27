@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Highly optimized Responsive Bottom Navigation for Mobile & Tablet.
- * Features: Auto-rotating middle offer, slide-up animations, and safe-area compatibility.
+ * Updated: Full width on tablets, fluid scaling.
  */
 export function BottomNav() {
   const { itemCount } = useCart();
@@ -56,11 +56,11 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] h-[70px] md:h-[80px] w-full md:max-w-[600px] md:mx-auto md:left-1/2 md:-translate-x-1/2 md:rounded-t-[30px] flex items-center justify-around px-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] h-[70px] md:h-[80px] w-full flex items-center justify-around px-2 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
       {/* Dynamic Glassmorphism Background */}
-      <div className="absolute inset-0 bg-white/95 backdrop-blur-2xl border-t border-black/5 md:rounded-t-[30px]" />
+      <div className="absolute inset-0 bg-white/95 backdrop-blur-2xl border-t border-black/5" />
 
-      <div className="relative flex w-full items-center justify-between z-10 px-2 sm:px-4">
+      <div className="relative flex w-full max-w-4xl mx-auto items-center justify-between z-10 px-2 sm:px-6">
         {NAV_ITEMS.map((item, idx) => {
           const isActive = (item.href !== '#' && pathname === item.href) || (item.label === 'মেসেজ' && isSupportOpen);
           const Icon = item.icon;

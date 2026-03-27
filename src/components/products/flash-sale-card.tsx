@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -11,7 +12,7 @@ interface FlashSaleCardProps {
 }
 
 /**
- * Highly optimized Flash Sale card with larger text and clear pricing.
+ * Flash Sale card with refined typography for better balance on tablet/desktop.
  */
 export function FlashSaleCard({ product }: FlashSaleCardProps) {
   const discountPercent = product.regularPrice && product.regularPrice > product.price
@@ -53,13 +54,13 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
 
         {/* Info Section */}
         <div className="p-4 md:p-5 flex flex-col flex-1 gap-2 pt-0">
-          <h3 className="text-xs md:text-base font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
+          <h3 className="text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           
           <div className="mt-auto space-y-2">
             <div className="flex flex-col">
-              <p className="text-xl md:text-3xl font-black text-primary tracking-tighter leading-none">
+              <p className="text-lg md:text-2xl font-black text-primary tracking-tighter leading-none">
                 ৳{product.price.toLocaleString()}
               </p>
               {product.regularPrice && product.regularPrice > product.price && (
@@ -69,12 +70,12 @@ export function FlashSaleCard({ product }: FlashSaleCardProps) {
               )}
             </div>
             
-            <div className="flex items-center justify-between text-xs md:text-sm font-bold">
-              <div className="flex items-center gap-1.5 text-amber-400">
-                <Star size={16} fill="currentColor" />
-                <span className="text-xs font-black text-gray-600">{rating}</span>
+            <div className="flex items-center justify-between text-[10px] md:text-xs font-bold">
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={14} fill="currentColor" />
+                <span className="font-black text-gray-600">{rating}</span>
               </div>
-              <span className="uppercase tracking-widest text-[9px] md:text-[11px] font-black text-gray-400">{soldCount} Sold</span>
+              <span className="uppercase tracking-widest text-[9px] font-black text-gray-400">{soldCount} Sold</span>
             </div>
           </div>
         </div>

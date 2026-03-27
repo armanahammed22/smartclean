@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -431,24 +432,24 @@ function ServiceGridItem({ s }: { s: any }) {
           
           <div className="mt-auto space-y-3">
             <div className="flex items-center gap-3">
-              <p className="text-xl md:text-3xl font-black text-primary tracking-tighter leading-none">
+              <p className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">
                 <span className="text-[10px] md:text-sm font-bold mr-0.5">৳</span>
                 {(s.basePrice || 0).toLocaleString()}
               </p>
               {discountPercent && (
-                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[10px] md:text-[11px] px-2 py-0.5 h-auto">
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-none font-black text-[10px] px-2 py-0.5 h-auto">
                   -{discountPercent}%
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-xs md:text-sm font-bold">
+            <div className="flex items-center justify-between text-[10px] md:text-sm font-bold">
               <div className="flex items-center gap-1.5 text-amber-400">
-                <Star size={16} fill="currentColor" />
+                <Star size={14} fill="currentColor" />
                 <span className="text-gray-600">{s.rating || '4.8'}</span>
                 <span className="text-gray-300 opacity-50">({Math.floor(Math.random() * 50) + 5})</span>
               </div>
-              <span className="text-gray-400 uppercase tracking-widest text-[9px] md:text-[11px] font-black">{bookCount} Book</span>
+              <span className="text-gray-400 uppercase tracking-widest text-[9px] font-black">{bookCount} Book</span>
             </div>
 
             <Button size="sm" className="w-full rounded-xl font-black text-lg md:text-xl uppercase shadow-xl h-12 md:h-14 tracking-tighter transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white border-none mt-1">
