@@ -151,3 +151,53 @@ export interface CartItem {
   itemType: 'product' | 'service';
   selectedAddOns?: any[];
 }
+
+export interface InvoiceItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  type: 'product' | 'service' | 'addon' | 'package';
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  orderId?: string;
+  bookingId?: string;
+  customerInfo: {
+    name: string;
+    phone: string;
+    email?: string | null;
+    address: string;
+  };
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  deliveryCharge: number;
+  total: number;
+  paymentStatus: 'Unpaid' | 'Paid' | 'Partial';
+  paymentMethod?: string;
+  paidAmount: number;
+  dueAmount: number;
+  transactionId?: string;
+  createdAt: string;
+  dueDate: string;
+  publicLink?: string;
+}
+
+export interface InvoiceRequest {
+  id: string;
+  invoiceId: string;
+  staffId: string;
+  staffName: string;
+  changes: {
+    type: 'add' | 'remove' | 'update';
+    item?: any;
+    price?: number;
+  }[];
+  note: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+}

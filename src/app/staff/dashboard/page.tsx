@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, orderBy, updateDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, updateDoc, doc, setDoc, serverTimestamp, addDoc, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,13 +21,20 @@ import {
   Phone,
   LayoutDashboard,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Loader2,
+  FileEdit
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { getOrCreateInvoice } from '@/lib/invoice-utils';
 
 const STATUS_ORDER = ['Assigned', 'On The Way', 'Service Started', 'Completed'];
 
@@ -35,6 +42,11 @@ export default function StaffDashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedBookingForRequest, setSelectedBookingForRequest] = useState<any>(null);
+  const [requestNote, setRequestNote] = useState('');
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   const myBookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -72,7 +84,6 @@ export default function StaffDashboard() {
         updatedAt: serverTimestamp()
       });
 
-      // If completing, free the technician
       if (nextStatus === 'Completed') {
         await updateDoc(doc(db!, 'staff_availability', user!.uid), {
           status: 'Available',
@@ -82,19 +93,41 @@ export default function StaffDashboard() {
 
       toast({ title: `Job ${nextStatus}`, description: "Status updated successfully." });
     } catch (e) {
-      toast({ variant: "destructive", title: "Update Failed", description: "Insufficient permissions." });
+      toast({ variant: "destructive", title: "Update Failed" });
     }
   };
 
-  const updateWorkStatus = async (status: string) => {
-    if (!availabilityRef) return;
-    await setDoc(availabilityRef, {
-      status,
-      isOnline: status !== 'Offline',
-      uid: user?.uid,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    toast({ title: "Status Updated", description: `You are now ${status}` });
+  const handleRequestInvoiceUpdate = async (booking: any) => {
+    if (!db) return;
+    setSelectedBookingForRequest(booking);
+    setIsRequestModalOpen(true);
+  };
+
+  const submitUpdateRequest = async () => {
+    if (!db || !user || !selectedBookingForRequest) return;
+    setIsSubmittingRequest(true);
+    try {
+      // 1. Ensure invoice exists
+      const invId = await getOrCreateInvoice(db, selectedBookingForRequest.id, 'booking', selectedBookingForRequest);
+      
+      // 2. Add request
+      await addDoc(collection(db, 'invoiceRequests'), {
+        invoiceId: invId,
+        staffId: user.uid,
+        staffName: profile?.name || user.displayName || 'Technician',
+        note: requestNote,
+        status: 'Pending',
+        createdAt: new Date().toISOString()
+      });
+
+      toast({ title: "Request Sent", description: "Admin will review your price/service update." });
+      setIsRequestModalOpen(false);
+      setRequestNote('');
+    } catch (e) {
+      toast({ variant: "destructive", title: "Request Failed" });
+    } finally {
+      setIsSubmittingRequest(false);
+    }
   };
 
   if (!user) return <div className="p-8 text-center">Please login to view your portal.</div>;
@@ -107,12 +140,8 @@ export default function StaffDashboard() {
           <p className="text-muted-foreground text-sm font-medium">Field Operations & Performance</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Select value={availability?.status || 'Offline'} onValueChange={updateWorkStatus}>
-            <SelectTrigger className={cn(
-              "h-12 w-full md:w-[180px] rounded-xl font-bold border-none shadow-lg transition-all",
-              availability?.status === 'Available' ? "bg-green-600 text-white" : 
-              availability?.status === 'Busy' ? "bg-amber-500 text-white" : "bg-gray-400 text-white"
-            )}>
+          <Select value={availability?.status || 'Offline'} onValueChange={(val) => setDoc(availabilityRef!, { status: val, isOnline: val !== 'Offline', updatedAt: serverTimestamp() }, { merge: true })}>
+            <SelectTrigger className="h-12 w-full md:w-[180px] rounded-xl font-bold bg-green-600 text-white border-none shadow-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
@@ -121,17 +150,13 @@ export default function StaffDashboard() {
               <SelectItem value="Offline">Offline</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="h-12 w-12 rounded-xl bg-white shadow-sm border-none" asChild>
-            <Link href="/staff/availability"><Calendar size={20} /></Link>
-          </Button>
         </div>
       </header>
 
-      {/* KPI Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Today's Jobs", val: bookings?.filter(b => b.status !== 'Completed').length || 0, icon: Clock, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Total Earnings", val: `৳${totalEarned}`, icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Earnings", val: `৳${totalEarned}`, icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
           { label: "Career Jobs", val: earnings?.length || 0, icon: CheckCircle2, color: "text-indigo-600", bg: "bg-indigo-50" },
           { label: "Rating", val: profile?.rating?.toFixed(1) || "5.0", icon: Star, color: "text-amber-600", bg: "bg-amber-50" }
         ].map((stat, i) => (
@@ -147,128 +172,85 @@ export default function StaffDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Active Jobs List */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold flex items-center gap-2 uppercase tracking-tight"><Activity className="text-primary" size={20} /> Your Active Schedule</h2>
-            <Badge variant="outline" className="font-bold border-primary/20 text-primary uppercase text-[9px]">{bookings?.length || 0} Total</Badge>
-          </div>
-
+          <h2 className="text-lg font-bold flex items-center gap-2 uppercase tracking-tight"><Activity className="text-primary" size={20} /> Active Schedule</h2>
           <div className="grid grid-cols-1 gap-4">
-            {isLoading ? (
-              <div className="p-20 text-center flex flex-col items-center gap-3">
-                <Loader2 className="animate-spin text-primary" size={32} />
-                <span className="text-muted-foreground font-bold">Syncing Jobs...</span>
-              </div>
-            ) : bookings?.length ? (
-              bookings.map((booking) => (
-                <Card key={booking.id} className="border-none shadow-sm overflow-hidden bg-white rounded-3xl group hover:shadow-md transition-all border-l-4 border-l-primary">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col gap-6">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <h3 className="text-lg font-black text-gray-900 uppercase leading-none">{booking.serviceTitle || 'General Service'}</h3>
-                          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                            <Clock size={14} className="text-primary" /> 
-                            {booking.dateTime ? format(new Date(booking.dateTime), 'hh:mm a') : 'N/A'}
-                            <span className="opacity-30">•</span>
-                            <Badge variant="secondary" className="text-[9px] font-black px-2 uppercase tracking-widest">{booking.status}</Badge>
-                          </div>
+            {bookings?.map((booking) => (
+              <Card key={booking.id} className="border-none shadow-sm overflow-hidden bg-white rounded-3xl group hover:shadow-md transition-all border-l-4 border-l-primary">
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-black text-gray-900 uppercase leading-none">{booking.serviceTitle || 'General Service'}</h3>
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                          <Clock size={14} className="text-primary" /> {booking.dateTime ? format(new Date(booking.dateTime), 'hh:mm a') : 'N/A'}
+                          <Badge variant="secondary" className="text-[9px] font-black px-2 uppercase tracking-widest ml-2">{booking.status}</Badge>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 bg-primary/5 text-primary rounded-full group-hover:bg-primary group-hover:text-white transition-all">
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 bg-blue-50 text-blue-600 rounded-full" onClick={() => handleRequestInvoiceUpdate(booking)}>
+                          <FileEdit size={18} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 bg-primary/5 text-primary rounded-full">
                           <Navigation size={18} />
                         </Button>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-50">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                            <div className="p-1.5 bg-gray-100 rounded-lg"><User size={14} /></div>
-                            {booking.customerName}
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground pl-1">
-                            <MapPin size={14} className="text-primary" />
-                            {booking.address}
-                          </div>
-                        </div>
-                        <div className="flex items-end justify-end">
-                          {booking.status !== 'Completed' ? (
-                            <Button 
-                              onClick={() => updateJobStatus(booking.id, booking.status)}
-                              className="w-full md:w-auto h-11 px-8 rounded-xl font-black text-xs uppercase shadow-lg shadow-primary/20 gap-2"
-                            >
-                              {booking.status === 'Assigned' && <><Navigation size={14} /> Mark "On The Way"</>}
-                              {booking.status === 'On The Way' && <><PlayCircle size={14} /> Start Service</>}
-                              {booking.status === 'Service Started' && <><CheckCircle2 size={14} /> Complete Job</>}
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-2 text-green-600 font-black text-xs uppercase tracking-widest bg-green-50 px-4 py-2 rounded-xl border border-green-100">
-                              <CheckCircle2 size={16} /> Job Completed
-                            </div>
-                          )}
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-gray-700"><User size={14} /> {booking.customerName}</div>
+                        <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground pl-1"><MapPin size={14} className="text-primary" /> {booking.address}</div>
+                      </div>
+                      <div className="flex items-end justify-end">
+                        {booking.status !== 'Completed' && (
+                          <Button onClick={() => updateJobStatus(booking.id, booking.status)} className="w-full md:w-auto h-11 px-8 rounded-xl font-black text-xs uppercase shadow-lg shadow-primary/20">
+                            {booking.status === 'Assigned' && "On The Way"}
+                            {booking.status === 'On The Way' && "Start Service"}
+                            {booking.status === 'Service Started' && "Complete Job"}
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed flex flex-col items-center gap-4">
-                <div className="p-6 bg-gray-50 rounded-full text-muted-foreground/30"><Calendar size={64} /></div>
-                <div>
-                  <p className="text-lg font-black text-gray-900 uppercase">No Jobs Today</p>
-                  <p className="text-muted-foreground text-sm font-medium">Take some rest or update your availability.</p>
-                </div>
-              </div>
-            )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-
-        {/* Sidebar Performance */}
-        <div className="space-y-8">
-          <Card className="border-none shadow-2xl bg-[#081621] text-white rounded-[2rem] overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12"><Wallet size={120} /></div>
-            <CardHeader className="relative z-10 p-8 pb-0">
-              <CardTitle className="text-base font-black uppercase tracking-widest text-primary">Live Wallet</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 relative z-10 space-y-6">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-white/40">Total Commissions</p>
-                <h3 className="text-4xl font-black tracking-tighter">৳{totalEarned.toLocaleString()}</h3>
-              </div>
-              <div className="pt-6 border-t border-white/10 space-y-4">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold opacity-60 uppercase">Recent Payout</span>
-                  <span className="font-black text-green-400">৳0.00</span>
-                </div>
-                <Button className="w-full bg-primary text-white hover:bg-primary/90 font-black h-12 rounded-xl shadow-xl uppercase tracking-widest text-xs">Withdraw Now</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="p-6 border-b bg-gray-50/30">
-              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><ShieldCheck size={16} className="text-primary" /> Verified Expertise</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {profile?.skills?.map((sId: string) => (
-                  <Badge key={sId} variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[9px] font-black uppercase px-2 py-1">
-                    Certification Active
-                  </Badge>
-                ))}
-                {(!profile?.skills || profile.skills.length === 0) && (
-                  <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold">
-                    <AlertCircle size={14} /> No active certifications.
-                  </div>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground font-medium italic">Contact admin to add more skills to your profile.</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
+
+      <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black uppercase flex items-center gap-2">
+              <FileEdit className="text-primary" /> Request Billing Change
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-1">
+              <p className="text-[10px] font-black uppercase text-blue-900">Assigned Job</p>
+              <p className="text-sm font-bold">{selectedBookingForRequest?.serviceTitle}</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase ml-1">Reason for Update</Label>
+              <Textarea 
+                value={requestNote} 
+                onChange={(e) => setRequestNote(e.target.value)} 
+                placeholder="e.g. Added extra sofa for cleaning (+500 BDT)" 
+                className="min-h-[120px] bg-gray-50 border-none rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsRequestModalOpen(false)}>Cancel</Button>
+            <Button onClick={submitUpdateRequest} disabled={isSubmittingRequest || !requestNote.trim()} className="font-black px-8">
+              {isSubmittingRequest ? <Loader2 className="animate-spin h-4 w-4" /> : "Send to Admin"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
