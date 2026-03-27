@@ -70,9 +70,18 @@ service cloud.firestore {
     match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
     match /employee_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    // Order Landing Page Rules
+    // Order & Invoice Rules
     match /orders_products/{id} { allow create: if true; allow read, write: if isAdmin(); }
     match /orders_services/{id} { allow create: if true; allow read, write: if isAdmin(); }
+    match /invoices/{id} { 
+      allow get: if true; 
+      allow list: if isAdmin(); 
+      allow write: if isAdmin(); 
+    }
+    match /invoiceRequests/{id} { 
+      allow create: if isSignedIn(); 
+      allow read, update, delete: if isAdmin(); 
+    }
 
     // Protected User Collections
     match /users/{uid} {

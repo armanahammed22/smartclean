@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -20,12 +21,13 @@ export interface UseDocResult<T> {
 }
 
 const PUBLIC_DOCS = [
-  'products', 'services', 'campaigns', 'hero_banners', 'site_settings', 
+  'products', 'services', 'sub_services', 'campaigns', 'hero_banners', 'site_settings', 
   'pages_management', 'quick_links', 'quick_actions', 'brands',
   'marketing_offers', 'reusable_features', 'reusable_specs', 'variant_types',
   'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
   'delivery_options', 'offers', 'categories', 'subcategories', 
-  'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna'
+  'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna',
+  'invoices', 'invoiceRequests'
 ];
 
 /**
