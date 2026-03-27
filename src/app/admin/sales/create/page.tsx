@@ -59,7 +59,7 @@ function CreateSalesContent() {
 
     const calculateTotals = () => {
         const subtotal = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const serviceCharge = currentMode === 'order' ? 80 : 0;
+        const serviceCharge = currentMode === 'order' ? 80 : 80; // Keeping 80 as per user HTML
         const total = subtotal + serviceCharge - discount;
         return { subtotal, serviceCharge, total };
     };
@@ -91,8 +91,12 @@ function CreateSalesContent() {
 
     const handleSubmit = async () => {
         if (!db) return;
-        if (selectedItems.length === 0) return alert('আইটেম যোগ করুন!');
-        if (!customer.name || !customer.phone || !customer.address) return alert('প্রয়োজনীয় তথ্য দিন!');
+        if (selectedItems.length === 0) return alert('⚠️ অনুগ্রহ করে কমপক্ষে একটি আইটেম যোগ করুন!');
+        if (!customer.name || !customer.phone || !customer.address) return alert('⚠️ অনুগ্রহ করে সমস্ত প্রয়োজনীয় তথ্য পূরণ করুন!');
+
+        if (currentMode === 'booking' && (!bookingDetails.date || !bookingDetails.time)) {
+            return alert('⚠️ অনুগ্রহ করে বুকিং তারিখ এবং সময় নির্বাচন করুন!');
+        }
 
         setIsLoading(true);
         try {
@@ -125,10 +129,10 @@ function CreateSalesContent() {
             // Auto-generate Invoice
             await getOrCreateInvoice(db, docRef.id, currentMode === 'order' ? 'order' : 'booking', data);
 
-            toast({ title: "Success", description: currentMode === 'order' ? "অর্ডার তৈরি হয়েছে!" : "বুকিং তৈরি হয়েছে!" });
+            toast({ title: "Success", description: currentMode === 'order' ? "অর্ডার সফলভাবে তৈরি হয়েছে!" : "বুকিং সফলভাবে তৈরি হয়েছে!" });
             router.push(currentMode === 'order' ? '/admin/orders' : '/admin/bookings');
         } catch (e) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to save." });
+            toast({ variant: "destructive", title: "Error", description: "সিস্টেম এরর। আবার চেষ্টা করুন।" });
         } finally {
             setIsLoading(false);
         }
@@ -139,12 +143,94 @@ function CreateSalesContent() {
         return num.toString().split('').map(digit => bengaliDigits[parseInt(digit)] || digit).join('');
     };
 
+    const formatNumber = (num: number) => num.toLocaleString('en-IN');
+
     return (
         <div className="dashboard-container">
             <style dangerouslySetInnerHTML={{ __html: `
+                :root {
+                    --primary: #4F46E5;
+                    --primary-light: #6366F1;
+                    --primary-dark: #4338CA;
+                    --secondary: #EC4899;
+                    --success: #10B981;
+                    --warning: #F59E0B;
+                    --danger: #EF4444;
+                    --bg-main: #F8FAFC;
+                    --bg-card: #FFFFFF;
+                    --bg-elevated: #FEFEFE;
+                    --text-primary: #0F172A;
+                    --text-secondary: #475569;
+                    --text-muted: #94A3B8;
+                    --border: #E2E8F0;
+                    --border-light: #F1F5F9;
+                    --order-accent: #3B82F6;
+                    --booking-accent: #8B5CF6;
+                    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+                    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+                    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+                    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                }
+
+                .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; position: relative; z-index: 1; }
+                .dashboard-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border-light); }
+                .header-left { display: flex; align-items: center; gap: 1rem; }
+                .back-button { width: 44px; height: 44px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-size: 1.25rem; }
+                .back-button:hover { background: var(--primary); color: white; transform: translateX(-4px); box-shadow: var(--shadow-md); }
+                .dashboard-header h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+                .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: 50px; font-size: 0.875rem; font-weight: 600; box-shadow: var(--shadow-md); }
+                .tab-container { background: var(--bg-card); border-radius: 16px; padding: 0.5rem; display: inline-flex; gap: 0.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+                .tab-button { padding: 0.875rem 2rem; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: 1rem; border-radius: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 0.5rem; position: relative; overflow: hidden; }
+                .tab-button.active { color: white; box-shadow: var(--shadow-md); }
+                .tab-button::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); opacity: 0; transition: opacity 0.3s ease; z-index: -1; }
+                .tab-button.active::before { opacity: 1; }
+                .tab-button.active.booking-tab::before { background: linear-gradient(135deg, var(--booking-accent) 0%, #A78BFA 100%); }
+                .main-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+                @media (min-width: 1024px) { .main-grid { grid-template-columns: 1.5fr 1fr; } }
+                .card { background: var(--bg-card); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all 0.3s ease; margin-bottom: 2rem; }
+                .card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border-light); }
+                .card-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; }
+                .card-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 600; color: var(--text-primary); margin: 0; }
+                .search-container { position: relative; margin-bottom: 1.5rem; }
+                .search-input-wrapper { position: relative; }
+                .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.25rem; }
+                .search-input { width: 100%; padding: 1rem 1rem 1rem 3rem; border: 2px solid var(--border); border-radius: 14px; font-size: 1rem; background: var(--bg-main); }
+                .search-results { position: absolute; top: calc(100% + 0.5rem); left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-xl); max-height: 300px; overflow-y: auto; z-index: 10; display: none; }
                 .search-results.active { display: block; }
+                .search-result-item { padding: 1rem; border-bottom: 1px solid var(--border-light); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+                .search-result-item:hover { background: var(--bg-main); }
+                .result-tag { display: inline-block; padding: 0.25rem 0.75rem; background: var(--order-accent); color: white; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+                .result-tag.service { background: var(--booking-accent); }
+                .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+                .items-count { background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.875rem; font-weight: 600; }
+                .item-card { background: var(--bg-main); border: 2px solid var(--border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; position: relative; }
+                .item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+                .remove-item { color: var(--danger); cursor: pointer; font-size: 1.5rem; background: none; border: none; }
+                .item-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+                .quantity-control { display: flex; align-items: center; gap: 0.5rem; }
+                .quantity-btn { width: 36px; height: 36px; border: 2px solid var(--border); background: var(--bg-card); border-radius: 8px; cursor: pointer; font-weight: 600; }
+                .item-total { text-align: right; }
+                .item-total-value { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+                .form-group { margin-bottom: 1.5rem; }
+                .form-row { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+                @media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; } }
+                label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
+                input, select, textarea { width: 100%; padding: 0.875rem 1rem; border: 2px solid var(--border); border-radius: 12px; font-size: 1rem; background: var(--bg-main); }
+                .booking-fields { display: none; }
                 .booking-fields.active { display: block; }
-                .loading { pointer-events: none; opacity: 0.7; }
+                .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 0; border-bottom: 1px solid var(--border-light); }
+                .summary-row:last-child { border-bottom: none; margin-top: 0.75rem; padding-top: 1.25rem; border-top: 2px solid var(--border); }
+                .summary-row:last-child .summary-value { font-size: 1.5rem; color: var(--primary); font-weight: 700; }
+                .payment-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 1rem; }
+                .payment-option label { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: var(--bg-main); min-height: 90px; }
+                .payment-option input[type="radio"]:checked + label { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+                .payment-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+                .btn { padding: 1.125rem 2rem; border-radius: 14px; font-weight: 600; font-size: 1rem; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; }
+                .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 2px solid var(--border); }
+                .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; }
+                .btn-primary.booking-mode { background: linear-gradient(135deg, var(--booking-accent) 0%, #A78BFA 100%); }
+                .empty-state { text-align: center; padding: 3rem 2rem; color: var(--text-muted); }
+                .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
                 .loading::after { content: ''; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-left: 10px; }
                 @keyframes spin { to { transform: rotate(360deg); } }
             `}} />
@@ -152,7 +238,7 @@ function CreateSalesContent() {
             <div className="dashboard-header">
                 <div className="header-left">
                     <button className="back-button" onClick={() => router.back()}>←</button>
-                    <h1>ম্যানুয়াল {currentMode === 'order' ? 'অর্ডার' : 'বুকিং'} তৈরি করুন</h1>
+                    <h1>ম্যানুয়াল অর্ডার/বুকিং তৈরি করুন</h1>
                 </div>
                 <div className="header-badge">⚡ Admin Panel</div>
             </div>
@@ -265,29 +351,27 @@ function CreateSalesContent() {
                             <textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="বাড়ি নং, রোড, এলাকা, শহর" required></textarea>
                         </div>
 
-                        {currentMode === 'booking' && (
-                            <div className="booking-fields active">
-                                <div className="form-row datetime-row">
-                                    <div className="form-group">
-                                        <label>বুকিং তারিখ *</label>
-                                        <input type="date" value={bookingDetails.date} onChange={e => setBookingDetails({...bookingDetails, date: e.target.value})} required />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>সময় *</label>
-                                        <input type="time" value={bookingDetails.time} onChange={e => setBookingDetails({...bookingDetails, time: e.target.value})} required />
-                                    </div>
+                        <div className={cn("booking-fields", currentMode === 'booking' && "active")}>
+                            <div className="form-row datetime-row">
+                                <div className="form-group">
+                                    <label>বুকিং তারিখ *</label>
+                                    <input type="date" value={bookingDetails.date} onChange={e => setBookingDetails({...bookingDetails, date: e.target.value})} required />
                                 </div>
                                 <div className="form-group">
-                                    <label>সেবার সময়কাল</label>
-                                    <select value={bookingDetails.duration} onChange={e => setBookingDetails({...bookingDetails, duration: e.target.value})}>
-                                        <option value="">নির্বাচন করুন</option>
-                                        <option value="30">৩০ মিনিট</option>
-                                        <option value="60">১ ঘন্টা</option>
-                                        <option value="120">২ ঘন্টা</option>
-                                    </select>
+                                    <label>সময় *</label>
+                                    <input type="time" value={bookingDetails.time} onChange={e => setBookingDetails({...bookingDetails, time: e.target.value})} required />
                                 </div>
                             </div>
-                        )}
+                            <div className="form-group">
+                                <label>সেবার সময়কাল</label>
+                                <select value={bookingDetails.duration} onChange={e => setBookingDetails({...bookingDetails, duration: e.target.value})}>
+                                    <option value="">নির্বাচন করুন</option>
+                                    <option value="30">৩০ মিনিট</option>
+                                    <option value="60">১ ঘন্টা</option>
+                                    <option value="120">২ ঘন্টা</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -299,7 +383,7 @@ function CreateSalesContent() {
                         </div>
                         <div className="summary-row">
                             <span className="summary-label">সাবটোটাল</span>
-                            <span className="summary-value">৳ {subtotal.toLocaleString()}</span>
+                            <span className="summary-value">৳ {formatNumber(subtotal)}</span>
                         </div>
                         <div className="summary-row">
                             <span className="summary-label">{currentMode === 'order' ? 'ডেলিভারি চার্জ' : 'সার্ভিস চার্জ'}</span>
@@ -313,7 +397,7 @@ function CreateSalesContent() {
                         </div>
                         <div className="summary-row">
                             <span className="summary-label">মোট পরিমাণ</span>
-                            <span className="summary-value">৳ {total.toLocaleString()}</span>
+                            <span className="summary-value">৳ {formatNumber(total)}</span>
                         </div>
                     </div>
 
