@@ -194,7 +194,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-white rounded-xl text-red-600 shadow-sm"><Box size={24} /></div>
                     <div className="space-y-1">
-                      <Label className="text-sm font-black text-red-900 uppercase">Product Features</include>
+                      <Label className="text-sm font-black text-red-900 uppercase">Product Features</Label>
                       <p className="text-[10px] text-red-700/70 font-bold uppercase leading-tight">E-commerce, Orders, Inventory</p>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Wrench size={24} /></div>
                     <div className="space-y-1">
-                      <Label className="text-sm font-black text-blue-900 uppercase">Service Features</include>
+                      <Label className="text-sm font-black text-blue-900 uppercase">Service Features</Label>
                       <p className="text-[10px] text-blue-700/70 font-bold uppercase leading-tight">Bookings, Technicians, Schedule</p>
                     </div>
                   </div>
