@@ -88,6 +88,19 @@ export default function OrdersManagementPage() {
     }
   };
 
+  const handleDownloadInvoice = async (order: any) => {
+    if (!db) return;
+    setIsProcessingInvoice(order.id);
+    try {
+      const invId = await getOrCreateInvoice(db, order.id, 'order', order);
+      router.push(`/admin/invoices/${invId}?download=true`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Download Error" });
+    } finally {
+      setIsProcessingInvoice(null);
+    }
+  };
+
   const filteredOrders = orders?.filter(o => 
     o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.id?.includes(searchTerm)
@@ -178,6 +191,7 @@ export default function OrdersManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl">
                           <DropdownMenuItem className="text-xs font-bold" onClick={() => handleOpenInvoice(order)}>View Invoice</DropdownMenuItem>
+                          <DropdownMenuItem className="text-xs font-bold" onClick={() => handleDownloadInvoice(order)}>Download PDF</DropdownMenuItem>
                           <DropdownMenuItem className="text-xs font-bold text-destructive">Delete Order</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

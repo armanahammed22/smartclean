@@ -9,11 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileText, Search, Download, Trash2, Eye, Loader2, Filter, ReceiptText, Wallet, Calendar } from 'lucide-react';
+import { FileText, Search, Download, Trash2, Eye, Loader2, Filter, ReceiptText, Wallet, Calendar, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { downloadInvoicePDF } from '@/lib/invoice-utils';
 
 export default function InvoicesListPage() {
   const db = useFirestore();
@@ -76,74 +75,71 @@ export default function InvoicesListPage() {
 
       <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
             placeholder="Search Invoice # or Customer..." 
-            className="pl-10 h-11"
+            className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 gap-2"><Filter size={18} /> Filters</Button>
+        <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader className="bg-gray-50/50">
               <TableRow>
-                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px]">Invoice #</TableHead>
-                <TableHead className="font-bold uppercase text-[10px]">Client</TableHead>
-                <TableHead className="font-bold uppercase text-[10px]">Amount</TableHead>
-                <TableHead className="font-bold uppercase text-[10px]">Payment</TableHead>
-                <TableHead className="font-bold uppercase text-[10px]">Date</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px]">Actions</TableHead>
+                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Invoice #</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Client</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Amount</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Payment</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Date</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
               ) : filtered?.map((inv) => (
-                <TableRow key={inv.id} className="hover:bg-gray-50/50 transition-colors">
+                <TableRow key={inv.id} className="hover:bg-gray-50/50 transition-colors group">
                   <TableCell className="py-5 pl-8 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
                   <TableCell>
-                    <div className="text-xs font-bold">{inv.customerInfo?.name}</div>
-                    <div className="text-[10px] text-muted-foreground">{inv.customerInfo?.phone}</div>
+                    <div className="text-xs font-bold text-gray-900">{inv.customerInfo?.name}</div>
+                    <div className="text-[9px] text-muted-foreground font-medium">{inv.customerInfo?.phone}</div>
                   </TableCell>
-                  <TableCell className="font-black text-xs">৳{inv.total?.toLocaleString()}</TableCell>
+                  <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={cn(
-                      "text-[8px] font-black uppercase border-none px-2",
+                      "text-[8px] font-black uppercase border-none px-2 py-0.5 rounded-md",
                       inv.paymentStatus === 'Paid' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
                     )}>
                       {inv.paymentStatus}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-[10px] font-bold text-gray-400">
-                    {format(new Date(inv.createdAt), 'MMM dd, yyyy')}
+                    {inv.createdAt ? format(new Date(inv.createdAt), 'MMM dd, yyyy') : 'N/A'}
                   </TableCell>
                   <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild>
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-xl" asChild>
                         <Link href={`/admin/invoices/${inv.id}`}><Eye size={16} /></Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(inv.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(inv.id)}>
                         <Trash2 size={16} />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {!filtered?.length && !isLoading && (
+                <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium">No invoices found in the system.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function AlertCircle({ className, size }: { className?: string, size?: number }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
   );
 }

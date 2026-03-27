@@ -22,7 +22,8 @@ import {
   Zap,
   MoreVertical,
   MessageCircle,
-  FileEdit
+  FileEdit,
+  Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -43,19 +44,30 @@ export default function AdminInvoiceDetailPage() {
   const requestsQuery = useMemoFirebase(() => (db && id) ? query(collection(db, 'invoiceRequests'), where('invoiceId', '==', id), where('status', '==', 'Pending')) : null, [db, id]);
   const { data: pendingRequests } = useCollection(requestsQuery);
 
+  // Auto-download if triggered from list
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('download') === 'true' && invoice && !isDownloading) {
+      const timer = setTimeout(() => {
+        setIsDownloading(true);
+        downloadInvoicePDF('invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [invoice, isDownloading]);
+
   const handleUpdateStatus = async (status: string) => {
     if (!invoiceRef) return;
     await updateDoc(invoiceRef, { 
       paymentStatus: status,
-      paidAmount: status === 'Paid' ? invoice?.total : invoice?.paidAmount,
-      dueAmount: status === 'Paid' ? 0 : invoice?.total
+      paidAmount: status === 'Paid' ? (invoice?.total || 0) : 0,
+      dueAmount: status === 'Paid' ? 0 : (invoice?.total || 0)
     });
     toast({ title: "Invoice Updated" });
   };
 
   const handleApproveRequest = async (request: any) => {
     if (!db || !invoiceRef) return;
-    // Logic to merge changes into invoice...
     await updateDoc(doc(db, 'invoiceRequests', request.id), { status: 'Approved' });
     toast({ title: "Request Approved" });
   };
@@ -78,7 +90,7 @@ export default function AdminInvoiceDetailPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">{invoice.invoiceNumber}</h1>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1">Invoice Control Center</p>
+            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1">Internal Billing Control</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -98,22 +110,22 @@ export default function AdminInvoiceDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Main Invoice Preview */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-2xl bg-white rounded-[2.5rem] overflow-hidden" id="invoice-render">
+          <Card className="border-none shadow-2xl bg-white rounded-[2rem] md:rounded-[3rem] overflow-hidden" id="invoice-render">
             <div className="p-10 md:p-16 space-y-12">
               {/* Header */}
               <div className="flex justify-between items-start">
                 <div className="space-y-4">
-                  <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-2xl">SC</div>
+                  <div className="w-16 h-16 bg-[#081621] rounded-2xl flex items-center justify-center text-white font-black text-2xl border-4 border-primary/20">SC</div>
                   <div>
                     <h2 className="text-2xl font-black uppercase tracking-tighter text-[#081621]">Smart Clean BD</h2>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase">Wireless Gate, Mohakhali, Dhaka</p>
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Premium Service Provider</p>
                   </div>
                 </div>
                 <div className="text-right space-y-2">
-                  <h3 className="text-4xl font-black uppercase tracking-tighter text-primary">INVOICE</h3>
-                  <div className="text-[10px] font-black uppercase text-muted-foreground">
-                    <p>Serial: {invoice.invoiceNumber}</p>
-                    <p>Date: {format(new Date(invoice.createdAt), 'PP')}</p>
+                  <h3 className="text-4xl font-black uppercase tracking-tighter text-primary italic">INVOICE</h3>
+                  <div className="text-[10px] font-black uppercase text-muted-foreground space-y-0.5">
+                    <p>SERIAL: {invoice.invoiceNumber}</p>
+                    <p>DATE: {format(new Date(invoice.createdAt), 'PP')}</p>
                   </div>
                 </div>
               </div>
@@ -123,14 +135,14 @@ export default function AdminInvoiceDetailPage() {
                 <div className="space-y-4">
                   <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Bill To</p>
                   <div className="space-y-1">
-                    <p className="font-black text-lg text-[#081621] uppercase">{invoice.customerInfo.name}</p>
-                    <p className="text-xs text-muted-foreground font-medium">{invoice.customerInfo.phone}</p>
-                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">{invoice.customerInfo.address}</p>
+                    <p className="font-black text-lg text-[#081621] uppercase leading-none">{invoice.customerInfo.name}</p>
+                    <p className="text-xs text-muted-foreground font-bold">{invoice.customerInfo.phone}</p>
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed max-w-[200px]">{invoice.customerInfo.address}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-4">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Quick Access</p>
-                  <div className="p-2 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Public Link</p>
+                  <div className="p-2 bg-white rounded-xl border-2 border-gray-50 shadow-inner">
                     <QRCodeSVG value={invoice.publicLink || ''} size={80} />
                   </div>
                 </div>
@@ -139,18 +151,18 @@ export default function AdminInvoiceDetailPage() {
               {/* Items Table */}
               <div className="space-y-6">
                 <div className="grid grid-cols-12 pb-4 border-b-2 border-[#081621] text-[10px] font-black uppercase tracking-widest text-[#081621]">
-                  <div className="col-span-7">Description</div>
+                  <div className="col-span-7">Service / Item Description</div>
                   <div className="col-span-2 text-center">Qty</div>
                   <div className="col-span-3 text-right">Amount</div>
                 </div>
                 <div className="space-y-4">
                   {invoice.items.map((item: any, i: number) => (
-                    <div key={i} className="grid grid-cols-12 text-sm">
+                    <div key={i} className="grid grid-cols-12 text-sm items-center">
                       <div className="col-span-7 space-y-0.5">
                         <p className="font-black text-[#081621] uppercase text-xs">{item.name}</p>
                         <Badge className="bg-gray-100 text-[8px] font-bold text-gray-500 border-none uppercase h-4 px-1.5">{item.type}</Badge>
                       </div>
-                      <div className="col-span-2 text-center font-bold text-gray-500">{item.quantity}</div>
+                      <div className="col-span-2 text-center font-bold text-gray-400">{item.quantity}</div>
                       <div className="col-span-3 text-right font-black text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</div>
                     </div>
                   ))}
@@ -159,37 +171,40 @@ export default function AdminInvoiceDetailPage() {
 
               {/* Summary */}
               <div className="flex justify-end pt-10 border-t-2 border-dashed border-gray-100">
-                <div className="w-full max-w-[250px] space-y-3">
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
+                <div className="w-full max-w-[280px] space-y-3">
+                  <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
                     <span>Subtotal</span>
-                    <span>৳{invoice.subtotal.toLocaleString()}</span>
+                    <span className="text-gray-900">৳{invoice.subtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
+                  <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
                     <span>Tax (VAT 8%)</span>
-                    <span>৳{invoice.tax.toLocaleString()}</span>
+                    <span className="text-gray-900">৳{invoice.tax.toLocaleString()}</span>
                   </div>
                   {invoice.deliveryCharge > 0 && (
-                    <div className="flex justify-between text-xs font-bold text-blue-600 uppercase">
+                    <div className="flex justify-between text-xs font-bold text-blue-600 uppercase tracking-widest">
                       <span>Charges</span>
                       <span>৳{invoice.deliveryCharge.toLocaleString()}</span>
                     </div>
                   )}
                   {invoice.discount > 0 && (
-                    <div className="flex justify-between text-xs font-bold text-green-600 uppercase">
+                    <div className="flex justify-between text-xs font-bold text-green-600 uppercase tracking-widest">
                       <span>Discount</span>
                       <span>-৳{invoice.discount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="pt-4 border-t-4 border-[#081621] flex justify-between items-end">
-                    <span className="text-[10px] font-black uppercase text-primary">Grand Total</span>
-                    <span className="text-3xl font-black text-primary tracking-tighter">৳{invoice.total.toLocaleString()}</span>
+                  <div className="pt-6 border-t-4 border-[#081621] flex justify-between items-end">
+                    <span className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Grand Total</span>
+                    <span className="text-4xl font-black text-primary tracking-tighter">৳{invoice.total.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="pt-10 flex justify-between items-center opacity-40">
-                <p className="text-[8px] font-black uppercase tracking-widest">Authorized Signature</p>
+              <div className="pt-16 flex justify-between items-center border-t border-gray-50 opacity-40">
+                <div className="space-y-1">
+                  <div className="w-32 h-px bg-gray-900" />
+                  <p className="text-[8px] font-black uppercase tracking-widest">Authorized Signature</p>
+                </div>
                 <p className="text-[8px] font-black uppercase tracking-widest">© 2026 Smart Clean Bangladesh</p>
               </div>
             </div>
@@ -202,12 +217,12 @@ export default function AdminInvoiceDetailPage() {
           <Card className="border-none shadow-sm bg-[#081621] text-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-white/5 border-b border-white/5 p-6">
               <CardTitle className="text-base font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Wallet size={18} /> Payment Protocol
+                <Wallet size={18} /> Payment Status
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase opacity-40">Status</p>
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase opacity-40">Current Status</p>
                 <div className="flex items-center gap-3">
                   <Badge className={cn(
                     "h-10 px-4 text-xs font-black uppercase border-none",
@@ -216,35 +231,38 @@ export default function AdminInvoiceDetailPage() {
                     {invoice.paymentStatus}
                   </Badge>
                   {invoice.paymentStatus !== 'Paid' && (
-                    <Button size="sm" onClick={() => handleUpdateStatus('Paid')} className="bg-white text-black hover:bg-gray-100 font-black h-10 px-4 rounded-xl">
+                    <Button size="sm" onClick={() => handleUpdateStatus('Paid')} className="bg-white text-[#081621] hover:bg-gray-100 font-black h-10 px-4 rounded-xl uppercase text-[10px]">
                       Mark Paid
                     </Button>
                   )}
                 </div>
               </div>
               <div className="pt-4 border-t border-white/5 space-y-2">
-                <p className="text-[10px] font-black uppercase opacity-40">Payment Method</p>
-                <p className="text-sm font-bold uppercase">{invoice.paymentMethod || 'Not Specified'}</p>
+                <p className="text-[10px] font-black uppercase opacity-40">Payment Gateway</p>
+                <p className="text-sm font-black uppercase tracking-tight">{invoice.paymentMethod || 'Not Specified'}</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Pending Requests */}
           {pendingRequests && pendingRequests.length > 0 && (
-            <Card className="border-none shadow-lg bg-amber-50 border border-amber-100 rounded-3xl overflow-hidden animate-pulse">
+            <Card className="border-none shadow-lg bg-amber-50 border border-amber-100 rounded-3xl overflow-hidden animate-in fade-in">
               <CardHeader className="p-6 pb-2">
                 <CardTitle className="text-sm font-black uppercase tracking-widest text-amber-700 flex items-center gap-2">
-                  <Clock size={16} /> Staff Edit Request
+                  <FileEdit size={16} /> Staff Edit Request
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
                 {pendingRequests.map(req => (
-                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-amber-200 space-y-3">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase">From: {req.staffName}</p>
-                    <p className="text-xs italic">"{req.note}"</p>
+                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-amber-200 space-y-3 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-black text-amber-700">{req.staffName?.[0]}</div>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase">{req.staffName}</p>
+                    </div>
+                    <p className="text-xs italic text-gray-600 font-medium">"{req.note}"</p>
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleApproveRequest(req)} className="flex-1 bg-amber-600 font-bold text-[10px] h-8 rounded-lg">Approve</Button>
-                      <Button size="sm" variant="ghost" className="flex-1 text-amber-700 font-bold text-[10px] h-8 rounded-lg">Ignore</Button>
+                      <Button size="sm" onClick={() => handleApproveRequest(req)} className="flex-1 bg-amber-600 font-black text-[9px] h-8 rounded-lg uppercase">Approve</Button>
+                      <Button size="sm" variant="ghost" className="flex-1 text-amber-700 font-bold text-[9px] h-8 rounded-lg uppercase">Ignore</Button>
                     </div>
                   </div>
                 ))}
@@ -253,12 +271,12 @@ export default function AdminInvoiceDetailPage() {
           )}
 
           {/* Integration Links */}
-          <div className="p-6 bg-gray-100 rounded-3xl space-y-4 border border-gray-200">
-            <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Source Document</h4>
+          <div className="p-6 bg-white rounded-3xl space-y-4 border border-gray-100 shadow-sm">
+            <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Source Context</h4>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-700">{invoice.orderId ? 'Product Order' : 'Service Booking'}</span>
-              <Button variant="ghost" size="sm" className="h-8 text-primary font-black uppercase text-[9px]" asChild>
-                <Link href={invoice.orderId ? '/admin/orders' : '/admin/bookings'}>Open Original</Link>
+              <Badge className="bg-gray-100 text-gray-600 border-none font-bold text-[9px] uppercase">{invoice.orderId ? 'E-commerce Order' : 'Booking'}</Badge>
+              <Button variant="link" size="sm" className="h-8 text-primary font-black uppercase text-[9px] px-0" asChild>
+                <Link href={invoice.orderId ? '/admin/orders' : '/admin/bookings'}>View Original <ArrowRight size={10} className="ml-1" /></Link>
               </Button>
             </div>
           </div>

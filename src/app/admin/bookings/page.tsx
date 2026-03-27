@@ -62,6 +62,19 @@ export default function BookingsPage() {
     }
   };
 
+  const handleDownloadInvoice = async (booking: any) => {
+    if (!db) return;
+    setIsProcessingInvoice(booking.id);
+    try {
+      const invId = await getOrCreateInvoice(db, booking.id, 'booking', booking);
+      router.push(`/admin/invoices/${invId}?download=true`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Download Error" });
+    } finally {
+      setIsProcessingInvoice(null);
+    }
+  };
+
   const STATUS_CONFIG: Record<string, string> = {
     'New': 'bg-blue-50 text-blue-700',
     'Assigned': 'bg-indigo-50 text-indigo-700',
@@ -130,6 +143,7 @@ export default function BookingsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-xl">
                           <DropdownMenuItem className="text-xs font-bold" onClick={() => handleOpenInvoice(booking)}>View Invoice</DropdownMenuItem>
+                          <DropdownMenuItem className="text-xs font-bold" onClick={() => handleDownloadInvoice(booking)}>Download PDF</DropdownMenuItem>
                           <DropdownMenuItem className="text-xs font-bold text-destructive">Delete Booking</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -46,8 +46,8 @@ export default function PublicInvoiceViewPage() {
         {/* Actions Bar */}
         <div className="flex justify-between items-center mb-8 px-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">SC</div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#081621]">Secure Portal</span>
+            <div className="w-8 h-8 bg-[#081621] rounded-lg flex items-center justify-center text-white font-black text-xs">SC</div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#081621]">Public Portal</span>
           </div>
           <Button 
             variant="outline" 
@@ -64,14 +64,14 @@ export default function PublicInvoiceViewPage() {
           {/* Header Banner */}
           <div className="bg-[#081621] p-8 md:p-12 text-white flex flex-col md:flex-row justify-between gap-8">
             <div className="space-y-4">
-              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic">Official Invoice</h1>
+              <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic">Digital Invoice</h1>
               <div className="flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full border border-white/5">
                 <CheckCircle2 size={14} className="text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Verified Digital Document</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Verified Merchant Document</span>
               </div>
             </div>
             <div className="text-left md:text-right space-y-1">
-              <p className="text-[10px] font-black uppercase opacity-40">Invoice Reference</p>
+              <p className="text-[10px] font-black uppercase opacity-40">Serial No</p>
               <p className="text-2xl font-black tracking-tight">{invoice.invoiceNumber}</p>
               <p className="text-[10px] font-bold text-primary uppercase mt-2">Issued: {format(new Date(invoice.createdAt), 'PP')}</p>
             </div>
@@ -95,7 +95,7 @@ export default function PublicInvoiceViewPage() {
                 </div>
               </div>
               <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 flex flex-col justify-center items-center text-center gap-2">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Amount Due</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Grand Total</p>
                 <p className="text-5xl font-black text-[#081621] tracking-tighter">৳{invoice.total.toLocaleString()}</p>
                 <Badge className={cn(
                   "mt-2 px-4 py-1 font-black uppercase border-none text-[10px]",
@@ -109,14 +109,14 @@ export default function PublicInvoiceViewPage() {
             {/* Items */}
             <div className="space-y-6">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-4 flex items-center gap-2">
-                <Zap size={14} fill="currentColor" /> Service & Product Breakdown
+                <Zap size={14} fill="currentColor" /> Service & Itemization
               </h4>
               <div className="space-y-4">
                 {invoice.items.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between items-center group py-2">
                     <div className="space-y-1">
                       <p className="font-black text-[#081621] uppercase text-sm group-hover:text-primary transition-colors">{item.name}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">Category: {item.type}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase">{item.type}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</p>
@@ -139,7 +139,7 @@ export default function PublicInvoiceViewPage() {
                   <span>৳{invoice.tax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-lg font-black text-[#081621] uppercase tracking-tighter pt-3 border-t">
-                  <span>Total</span>
+                  <span>Payable</span>
                   <span className="text-primary">৳{invoice.total.toLocaleString()}</span>
                 </div>
               </div>
@@ -151,20 +151,20 @@ export default function PublicInvoiceViewPage() {
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-white/20 rounded-2xl"><Wallet size={24} /></div>
                   <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight">Ready to Pay?</h3>
-                    <p className="text-white/60 text-xs font-medium">Complete your payment securely via our automated gateways.</p>
+                    <h3 className="text-xl font-black uppercase tracking-tight">Payment Required</h3>
+                    <p className="text-white/60 text-xs font-medium">Please complete your settlement via Cash or Mobile Banking.</p>
                   </div>
                 </div>
                 <Button className="w-full h-16 rounded-2xl bg-white text-blue-600 hover:bg-gray-100 font-black text-lg uppercase tracking-tight gap-2 shadow-xl">
-                  Proceed to Payment <ArrowRight size={20} />
+                  Pay Now <ArrowRight size={20} />
                 </Button>
               </div>
             )}
 
             {/* Support Notice */}
             <div className="pt-12 text-center space-y-2 opacity-40">
-              <p className="text-[9px] font-black uppercase tracking-widest">Electronic Transaction ID: {invoice.id}</p>
-              <p className="text-[10px] font-bold">For any billing issues, please contact Smart Clean BD Support.</p>
+              <p className="text-[9px] font-black uppercase tracking-widest">Electronic ID: {invoice.id}</p>
+              <p className="text-[10px] font-bold">Smart Clean BD - Standard Billing Terms Apply.</p>
             </div>
           </div>
         </div>
