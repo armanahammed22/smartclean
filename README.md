@@ -2,6 +2,23 @@
 
 A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15, Tailwind CSS, and Firebase.
 
+## 🖼️ Image Dimension Guide (ইমেজ সাইজ গাইড)
+
+অ্যাপের ডিজাইন সুন্দর রাখতে নিচের মাপ অনুযায়ী ইমেজ আপলোড করুন:
+
+| সেকশন (Section) | ডাইমেনশন (Dimension) | রেশিও (Aspect Ratio) |
+| :--- | :--- | :--- |
+| **Hero Main Slide** | 982 x 500 px | 21:11 |
+| **Hero Side Banner** | 600 x 600 px | 1:1 (Square) |
+| **Product Image** | 800 x 800 px | 1:1 (Square) |
+| **Service Thumbnail** | 800 x 600 px | 4:3 |
+| **Landing Page Hero** | 1200 x 400 px | 3:1 |
+| **Navbar/Bottom Offer** | 200 x 200 px | 1:1 (Circle) |
+| **Section Banner** | 1200 x 400 px | 21:7 |
+| **Brand Logo** | 400 x 200 px | 2:1 |
+| **Website Logo** | 512 x 512 px | 1:1 (PNG) |
+| **Favicon** | 32 x 32 px | 1:1 |
+
 ## 🚀 Accessing the Admin Dashboard
 
 The CRM portal is located at `/admin/dashboard`. To log in with your credentials (`smartclean422@gmail.com` / `admin123`), you MUST complete these steps in the Firebase Console:
@@ -35,4 +52,3 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 - **Service CRM**: Leads, real-time booking, and staff scheduling.
 - **AI Agents**: Genkit-powered agents for Sales, Booking, and Support.
 - **Analytics**: Revenue, profit/loss charts, and customer segmentation.
-test update from firebase
