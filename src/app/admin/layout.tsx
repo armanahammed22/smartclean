@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -116,6 +115,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
+
   useEffect(() => {
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState !== null) {
@@ -147,172 +149,179 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: newVendors } = useCollection(newVendorsQuery);
   const { data: pendingProducts } = useCollection(pendingProductsQuery);
 
-  const NAV_GROUPS = useMemo(() => [
-    {
-      id: 'dashboard',
-      title: "DASHBOARD",
-      icon: LayoutDashboard,
-      color: "text-indigo-400",
-      items: [
-        { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
-      ]
-    },
-    {
-      id: 'sales',
-      title: "SALES TERMINAL",
-      icon: ShoppingCart,
-      color: "text-rose-400",
-      items: [
-        { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
-        { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
-      ]
-    },
-    {
-      id: 'ai_agents',
-      title: "AI AGENTS (STAFF)",
-      icon: Bot,
-      color: "text-blue-400",
-      items: [
-        { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
-        { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
-      ]
-    },
-    {
-      id: 'orders',
-      title: "ORDER & BOOKING",
-      icon: ShoppingCart,
-      color: "text-emerald-400",
-      items: [
-        { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 },
-        { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
-        { name: "Invoices", href: '/admin/invoices', icon: FileText },
-        { name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck },
-      ]
-    },
-    {
-      id: 'inventory',
-      title: "INVENTORY",
-      icon: Box,
-      color: "text-amber-400",
-      items: [
-        { name: "All Products", href: '/admin/products', icon: Box },
-        { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
-        { name: "Categories", href: '/admin/products/categories', icon: Tags },
-        { name: "Brands", href: '/admin/attributes/brands', icon: Award },
-        { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
-      ]
-    },
-    {
-      id: 'services',
-      title: "SERVICES",
-      icon: Wrench,
-      color: "text-sky-400",
-      items: [
-        { name: "Service List", href: '/admin/services', icon: Wrench },
-        { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
-        { name: "Service Areas", href: '/admin/areas', icon: Globe },
-        { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
-      ]
-    },
-    {
-      id: 'marketing',
-      title: "MARKETING",
-      icon: Target,
-      color: "text-rose-400",
-      items: [
-        { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
-        { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-        { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
-        { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
-        { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
-      ]
-    },
-    {
-      id: 'offers',
-      title: "OFFER & COUPONS",
-      icon: TicketPercent,
-      color: "text-pink-400",
-      items: [
-        { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
-        { name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap },
-        { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileText },
-        { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
-      ]
-    },
-    {
-      id: 'crm',
-      title: "CRM & USERS",
-      icon: Users,
-      color: "text-purple-400",
-      items: [
-        { name: "Customer Directory", href: '/admin/customers', icon: Users },
-        { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
-        { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-        { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
-      ]
-    },
-    {
-      id: 'vendor_hub',
-      title: "VENDOR HUB",
-      icon: Store,
-      color: "text-orange-400",
-      items: [
-        { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-        { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
-      ]
-    },
-    {
-      id: 'reports',
-      title: "BUSINESS REPORTS",
-      icon: BarChart3,
-      color: "text-blue-400",
-      items: [
-        { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
-        { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
-      ]
-    },
-    {
-      id: 'customize',
-      title: "SITE CUSTOMIZE",
-      icon: Palette,
-      color: "text-cyan-400",
-      items: [
-        { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
-        { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-        { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-        { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
-        { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
-        { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
-        { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
-        { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
-        { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
-      ]
-    },
-    {
-      id: 'system',
-      title: "SYSTEM",
-      icon: Settings,
-      color: "text-slate-400",
-      items: [
-        { name: "General Settings", href: '/admin/settings', icon: Settings },
-        { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
-        { name: "Localization", href: '/admin/settings/languages', icon: Languages },
-        { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
-        { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
-        { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
-      ]
-    },
-    {
-      id: 'support',
-      title: "SUPPORT",
-      icon: MessageCircle,
-      color: "text-green-400",
-      items: [
-        { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
-        { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
-      ]
-    }
-  ], [newOrders, newVendors, pendingProducts]);
+  const NAV_GROUPS = useMemo(() => {
+    const groups = [
+      {
+        id: 'dashboard',
+        title: "DASHBOARD",
+        icon: LayoutDashboard,
+        color: "text-indigo-400",
+        items: [
+          { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
+        ]
+      },
+      {
+        id: 'sales',
+        title: "SALES TERMINAL",
+        icon: ShoppingCart,
+        color: "text-rose-400",
+        items: [
+          ...(productsEnabled ? [{ name: "New Order", href: '/admin/orders?create=true', icon: Plus }] : []),
+          ...(servicesEnabled ? [{ name: "New Booking", href: '/admin/bookings?create=true', icon: Plus }] : []),
+        ].filter(Boolean)
+      },
+      {
+        id: 'ai_agents',
+        title: "AI AGENTS (STAFF)",
+        icon: Bot,
+        color: "text-blue-400",
+        items: [
+          ...(productsEnabled || servicesEnabled ? [{ name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles }] : []),
+          ...(servicesEnabled ? [{ name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles }] : []),
+        ].filter(Boolean)
+      },
+      {
+        id: 'orders',
+        title: "ORDER & BOOKING",
+        icon: ShoppingCart,
+        color: "text-emerald-400",
+        items: [
+          ...(productsEnabled ? [{ name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 }] : []),
+          ...(servicesEnabled ? [{ name: "Service Bookings", href: '/admin/bookings', icon: Calendar }] : []),
+          { name: "Invoices", href: '/admin/invoices', icon: FileText },
+          ...(productsEnabled ? [{ name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck }] : []),
+        ].filter(Boolean)
+      },
+      {
+        id: 'inventory',
+        title: "INVENTORY",
+        icon: Box,
+        color: "text-amber-400",
+        visible: productsEnabled,
+        items: [
+          { name: "All Products", href: '/admin/products', icon: Box },
+          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+          { name: "Categories", href: '/admin/products/categories', icon: Tags },
+          { name: "Brands", href: '/admin/attributes/brands', icon: Award },
+          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
+        ]
+      },
+      {
+        id: 'services',
+        title: "SERVICES",
+        icon: Wrench,
+        color: "text-sky-400",
+        visible: servicesEnabled,
+        items: [
+          { name: "Service List", href: '/admin/services', icon: Wrench },
+          { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Service Areas", href: '/admin/areas', icon: Globe },
+          { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
+        ]
+      },
+      {
+        id: 'marketing',
+        title: "MARKETING",
+        icon: Target,
+        color: "text-rose-400",
+        items: [
+          { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
+          { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
+          { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
+          ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
+          { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
+        ].filter(Boolean)
+      },
+      {
+        id: 'offers',
+        title: "OFFER & COUPONS",
+        icon: TicketPercent,
+        color: "text-pink-400",
+        items: [
+          { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
+          ...(productsEnabled ? [{ name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap }] : []),
+          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileText },
+          { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
+        ].filter(Boolean)
+      },
+      {
+        id: 'crm',
+        title: "CRM & USERS",
+        icon: Users,
+        color: "text-purple-400",
+        items: [
+          { name: "Customer Directory", href: '/admin/customers', icon: Users },
+          ...(servicesEnabled ? [{ name: "Staff Directory", href: '/admin/employees', icon: HardHat }] : []),
+          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+          { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
+        ].filter(Boolean)
+      },
+      {
+        id: 'vendor_hub',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-orange-400",
+        visible: productsEnabled,
+        items: [
+          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+        ]
+      },
+      {
+        id: 'reports',
+        title: "BUSINESS REPORTS",
+        icon: BarChart3,
+        color: "text-blue-400",
+        items: [
+          { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
+          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
+        ]
+      },
+      {
+        id: 'customize',
+        title: "SITE CUSTOMIZE",
+        icon: Palette,
+        color: "text-cyan-400",
+        items: [
+          { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
+          { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
+          { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
+          { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
+          { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
+          { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
+        ]
+      },
+      {
+        id: 'system',
+        title: "SYSTEM",
+        icon: Settings,
+        color: "text-slate-400",
+        items: [
+          { name: "General Settings", href: '/admin/settings', icon: Settings },
+          ...(productsEnabled ? [{ name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck }] : []),
+          { name: "Localization", href: '/admin/settings/languages', icon: Languages },
+          { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
+          { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
+          { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
+        ].filter(Boolean)
+      },
+      {
+        id: 'support',
+        title: "SUPPORT",
+        icon: MessageCircle,
+        color: "text-green-400",
+        items: [
+          { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
+          { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
+        ]
+      }
+    ];
+
+    return groups.filter(g => g.visible !== false && g.items.length > 0);
+  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {

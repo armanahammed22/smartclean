@@ -29,6 +29,9 @@ export function Footer() {
   const layoutRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
   const { data: layout } = useDoc(layoutRef);
 
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
+
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   const footerStyles = {
@@ -126,13 +129,17 @@ export function Footer() {
           <div>
             <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
             <ul className="space-y-3 md:space-y-4 text-[13px]">
-              {layout?.footer?.serviceLinks?.map((item: any, i: number) => (
-                <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
-              )) || (
+              {layout?.footer?.serviceLinks?.map((item: any, i: number) => {
+                const isProdLink = item.link === '/products';
+                const isServLink = item.link === '/services';
+                if (isProdLink && !productsEnabled) return null;
+                if (isServLink && !servicesEnabled) return null;
+                return <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
+              }) || (
                 <>
-                  <li><Link href="/services" className="hover:text-primary transition-colors">Residential Cleaning</Link></li>
-                  <li><Link href="/services" className="hover:text-primary transition-colors">Office Cleaning</Link></li>
-                  <li><Link href="/services" className="hover:text-primary transition-colors">Deep Cleaning</Link></li>
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Residential Cleaning</Link></li>}
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Office Cleaning</Link></li>}
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Deep Cleaning</Link></li>}
                 </>
               )}
             </ul>

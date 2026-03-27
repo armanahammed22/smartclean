@@ -39,6 +39,9 @@ export function Navbar() {
   const layoutRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
   const { data: layout } = useDoc(layoutRef);
 
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
+
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
 
@@ -53,14 +56,14 @@ export function Navbar() {
     if (!searchQuery.trim() || searchQuery.length < 2) return [];
     
     const combined = [
-      ...(products?.map(p => ({ ...p, type: 'product' })) || []),
-      ...(services?.map(s => ({ ...s, type: 'service' })) || [])
+      ...(productsEnabled ? (products?.map(p => ({ ...p, type: 'product' })) || []) : []),
+      ...(servicesEnabled ? (services?.map(s => ({ ...s, type: 'service' })) || []) : [])
     ];
 
     return combined.filter(item => 
       (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 6);
-  }, [searchQuery, products, services]);
+  }, [searchQuery, products, services, productsEnabled, servicesEnabled]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -140,19 +143,27 @@ export function Navbar() {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-6">
-              {layout?.header?.menuItems?.map((item: any, i: number) => (
-                <Link 
-                  key={i} 
-                  href={item.link} 
-                  className={cn(
-                    "font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-                    layout?.header?.fontSize || 'text-sm'
-                  )}
-                  style={{ color: layout?.header?.textColor || '#081621' }}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {layout?.header?.menuItems?.map((item: any, i: number) => {
+                // Conditional filtering for menu items
+                const isProdLink = item.link === '/products' || item.link === '/cart';
+                const isServLink = item.link === '/services';
+                if (isProdLink && !productsEnabled) return null;
+                if (isServLink && !servicesEnabled) return null;
+
+                return (
+                  <Link 
+                    key={i} 
+                    href={item.link} 
+                    className={cn(
+                      "font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+                      layout?.header?.fontSize || 'text-sm'
+                    )}
+                    style={{ color: layout?.header?.textColor || '#081621' }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
 
@@ -238,14 +249,16 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
-            <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center">
-              <ShoppingCart size={22} />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-in zoom-in">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            {productsEnabled && (
+              <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center">
+                <ShoppingCart size={22} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-in zoom-in">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             <Link 
               href={user ? "/account/dashboard" : "/login"} 

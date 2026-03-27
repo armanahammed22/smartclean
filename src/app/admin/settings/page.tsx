@@ -19,7 +19,10 @@ import {
   Loader2,
   Link as LinkIcon,
   ShieldCheck,
-  Smartphone
+  Layout,
+  Smartphone,
+  Box,
+  Wrench
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -48,7 +51,9 @@ export default function AdminSettingsPage() {
     seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
     seoDescription: 'Expert cleaning services for home and office.',
     footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
-    otpEnabled: false
+    otpEnabled: false,
+    productsEnabled: true,
+    servicesEnabled: true
   });
 
   useEffect(() => {
@@ -56,7 +61,9 @@ export default function AdminSettingsPage() {
       setFormData({
         ...formData,
         ...settings,
-        socialLinks: { ...formData.socialLinks, ...(settings.socialLinks || {}) }
+        socialLinks: { ...formData.socialLinks, ...(settings.socialLinks || {}) },
+        productsEnabled: settings.productsEnabled ?? true,
+        servicesEnabled: settings.servicesEnabled ?? true
       });
     }
   }, [settings]);
@@ -90,7 +97,7 @@ export default function AdminSettingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Global Settings</h1>
           <p className="text-muted-foreground text-sm">Configure website core details and security</p>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 shadow-lg text-primary-foreground bg-primary">
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-bold h-11 px-8 rounded-xl shadow-lg text-primary-foreground bg-primary">
           {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
           Save Changes
         </Button>
@@ -100,6 +107,9 @@ export default function AdminSettingsPage() {
         <TabsList className="bg-white border p-1 h-12 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
           <TabsTrigger value="general" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Globe size={16} /> General
+          </TabsTrigger>
+          <TabsTrigger value="visibility" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Layout size={16} /> Feature Visibility
           </TabsTrigger>
           <TabsTrigger value="contact" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Mail size={16} /> Contact & Social
@@ -166,16 +176,54 @@ export default function AdminSettingsPage() {
                     aspectRatio="aspect-square w-16"
                     onUpload={(url) => setFormData({...formData, faviconUrl: url})}
                   />
-                  <div className="sm:col-span-2">
-                    <ImageUploader 
-                      label="Mobile App Icon"
-                      hint="180 x 180 px (Apple Touch)"
-                      initialUrl={formData.appIconUrl}
-                      aspectRatio="aspect-square w-24"
-                      onUpload={(url) => setFormData({...formData, appIconUrl: url})}
-                    />
-                  </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="visibility">
+          <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-8">
+              <CardTitle className="text-lg font-bold">Feature Visibility Control</CardTitle>
+              <CardDescription>Enable or disable core modules globally across the platform.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center justify-between p-6 bg-red-50/50 rounded-2xl border border-red-100">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-xl text-red-600 shadow-sm"><Box size={24} /></div>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-black text-red-900 uppercase">Product Features</include>
+                      <p className="text-[10px] text-red-700/70 font-bold uppercase leading-tight">E-commerce, Orders, Inventory</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={formData.productsEnabled} 
+                    onCheckedChange={(val) => setFormData({...formData, productsEnabled: val})} 
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Wrench size={24} /></div>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-black text-blue-900 uppercase">Service Features</include>
+                      <p className="text-[10px] text-blue-700/70 font-bold uppercase leading-tight">Bookings, Technicians, Schedule</p>
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={formData.servicesEnabled} 
+                    onCheckedChange={(val) => setFormData({...formData, servicesEnabled: val})} 
+                  />
+                </div>
+              </div>
+              
+              <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+                <Layout className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase">
+                  Disabling a feature will hide it from the homepage, dashboard, and sidebar. Existing data remains safe in the database.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useSupport } from '@/components/providers/support-provider';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -34,8 +34,13 @@ export function BottomNav() {
     return query(collection(db, 'offers'), orderBy('order', 'asc'));
   }, [db]);
 
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const { data: allOffers } = useCollection(offersQuery);
   const offers = useMemo(() => allOffers?.filter(o => o.isActive === true) || [], [allOffers]);
+
+  const productsEnabled = settings?.productsEnabled !== false;
 
   useEffect(() => {
     if (offers.length <= 1) return;
@@ -51,7 +56,7 @@ export function BottomNav() {
     { label: 'হোম', href: '/', icon: Home, color: 'from-blue-500 to-indigo-600' },
     { label: 'মেসেজ', href: '#', icon: MessageCircle, badge: 0, color: 'from-emerald-500 to-teal-600', onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
     { label: 'অফার', href: '#', isMiddle: true },
-    { label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount, color: 'from-orange-500 to-red-600' },
+    ...(productsEnabled ? [{ label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount, color: 'from-orange-500 to-red-600' }] : []),
     { label: 'একাউন্ট', href: '/account/dashboard', icon: User, color: 'from-purple-500 to-pink-600' },
   ];
 

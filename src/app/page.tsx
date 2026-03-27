@@ -81,6 +81,7 @@ export default function SmartCleanHomePage() {
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const brandsRef = useMemoFirebase(() => db ? collection(db, 'brands') : null, [db]);
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
@@ -89,16 +90,33 @@ export default function SmartCleanHomePage() {
   const { data: allServices } = useCollection(servicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: allBrands } = useCollection(brandsRef);
+  const { data: settings } = useDoc(settingsRef);
+
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
 
   // Filter and Sort layout in memory
   const layoutSections = useMemo(() => {
     if (layoutLoading) return [];
-    if (!allSectionsRaw || allSectionsRaw.length === 0) return DEFAULT_LAYOUT;
+    const baseLayout = (!allSectionsRaw || allSectionsRaw.length === 0) ? DEFAULT_LAYOUT : allSectionsRaw;
     
-    return [...allSectionsRaw]
-      .filter(s => s.isActive === true)
+    return [...baseLayout]
+      .filter(s => {
+        if (!s.isActive) return false;
+        
+        // Hide entire sections if core feature is off
+        if (!productsEnabled && (
+          s.type === 'flash_deals' || 
+          s.type.startsWith('products_') || 
+          s.type === 'brands_grid'
+        )) return false;
+
+        if (!servicesEnabled && s.type.startsWith('services_')) return false;
+
+        return true;
+      })
       .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [allSectionsRaw, layoutLoading]);
+  }, [allSectionsRaw, layoutLoading, productsEnabled, servicesEnabled]);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const categories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
@@ -197,7 +215,7 @@ export default function SmartCleanHomePage() {
         );
 
       case 'flash_deals':
-        const isFlashActive = flashSaleConfig?.isActive;
+        const isFlashActive = flashSaleConfig?.isActive && productsEnabled;
         if (!isFlashActive) return null;
         const flashProductIds = flashSaleConfig?.productIds || [];
         const flashProducts = allProducts?.filter(p => flashProductIds.includes(p.id) && p.status === 'Active') || [];
@@ -247,6 +265,7 @@ export default function SmartCleanHomePage() {
       case 'services_trending':
       case 'services_top_rated':
       case 'services_new':
+        if (!servicesEnabled) return null;
         const displayServices = getFilteredServices();
         if (displayServices.length === 0) return null;
         return (
@@ -272,6 +291,7 @@ export default function SmartCleanHomePage() {
       case 'products_featured':
       case 'products_trending':
       case 'products_new':
+        if (!productsEnabled) return null;
         const displayProducts = getFilteredProducts();
         if (displayProducts.length === 0) return null;
         return (
@@ -291,6 +311,7 @@ export default function SmartCleanHomePage() {
         );
 
       case 'brands_grid':
+        if (!productsEnabled) return null;
         const brands = allBrands?.slice(0, 12) || [];
         return (
           <section key={section.id} className="px-4 py-12 bg-white">
@@ -314,8 +335,8 @@ export default function SmartCleanHomePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
                 {[
                   { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-                  { label: "Pro Technicians", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
-                  { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" },
+                  ...(servicesEnabled ? [{ label: "Pro Technicians", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" }] : []),
+                  ...(servicesEnabled ? [{ label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }] : []),
                   { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" }
                 ].map((stat, i) => (
                   <div key={i} className="flex flex-col items-center text-center space-y-3">

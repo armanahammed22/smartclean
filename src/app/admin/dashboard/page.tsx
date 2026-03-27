@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -57,6 +56,12 @@ export default function AdminDashboard() {
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
   const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
 
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
@@ -130,7 +135,14 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
-  const showSeedButton = !servicesLoading && (!dbServices || dbServices.length === 0);
+  const showSeedButton = !servicesLoading && servicesEnabled && (!dbServices || dbServices.length === 0);
+
+  const STATS_CARDS = [
+    { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
+    ...(productsEnabled ? [{ label: "Active Vendors", val: metrics?.activeVendors || 0, icon: Store, color: "text-orange-600", bg: "bg-orange-50" }] : []),
+    ...(productsEnabled ? [{ label: "Pending Approvals", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" }] : []),
+    { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
+  ];
 
   return (
     <div className="space-y-6 md:space-y-8 min-w-0">
@@ -143,12 +155,16 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
-          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10 uppercase">
-            <Link href="/admin/orders?create=true"><Plus size={16} /> New Order</Link>
-          </Button>
-          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-xs h-10 uppercase">
-            <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
-          </Button>
+          {productsEnabled && (
+            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10 uppercase">
+              <Link href="/admin/orders?create=true"><Plus size={16} /> New Order</Link>
+            </Button>
+          )}
+          {servicesEnabled && (
+            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-xs h-10 uppercase">
+              <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
+            </Button>
+          )}
           {showSeedButton && (
             <Button 
               onClick={handleSeedData} 
@@ -164,12 +180,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {[
-          { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Active Vendors", val: metrics?.activeVendors || 0, icon: Store, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Pending Approvals", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
-        ].map((stat, i) => (
+        {STATS_CARDS.map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
             <CardContent className="p-5 md:p-6">
               <div className="flex justify-between items-start mb-4">
@@ -226,9 +237,9 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-4 md:space-y-6">
               {[
-                { label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending').length || 0, icon: Store },
-                { label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box },
-                { label: "Active Services", val: dbServices?.length || 0, icon: Wrench }
+                ...(productsEnabled ? [{ label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending').length || 0, icon: Store }] : []),
+                ...(productsEnabled ? [{ label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box }] : []),
+                ...(servicesEnabled ? [{ label: "Active Services", val: dbServices?.length || 0, icon: Wrench }] : [])
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
                   <div className="space-y-1">
