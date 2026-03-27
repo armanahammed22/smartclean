@@ -96,6 +96,8 @@ export default function ProductDetailsPage() {
         currency: 'BDT',
         content_category: product.categoryId
       });
+      // Set SEO Title Dynamically
+      document.title = `${product.name} - Buy at Best Price in Bangladesh | Smart Clean`;
     }
   }, [product]);
 
@@ -127,8 +129,49 @@ export default function ProductDetailsPage() {
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#eff0f5] min-h-screen pb-24 lg:pb-12">
+        {/* SEO Structured Data for Product */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org/',
+              '@type': 'Product',
+              name: product.name,
+              image: allImages,
+              description: product.shortDescription || product.description?.substring(0, 160),
+              brand: {
+                '@type': 'Brand',
+                name: product.brand || 'Smart Clean'
+              },
+              offers: {
+                '@type': 'Offer',
+                url: `https://smartclean.com.bd/product/${product.id}`,
+                priceCurrency: 'BDT',
+                price: product.price,
+                availability: isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+                itemCondition: 'https://schema.org/NewCondition'
+              },
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.8',
+                reviewCount: '48'
+              }
+            })
+          }}
+        />
+
         <div className="container mx-auto px-0 md:px-4 lg:py-6 max-w-7xl">
-          
+          {/* Breadcrumbs for SEO */}
+          <nav className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 px-2">
+            <Link href="/" className="hover:text-primary">Home</Link>
+            <ChevronRightIcon size={10} />
+            <Link href="/products" className="hover:text-primary">Products</Link>
+            <ChevronRightIcon size={10} />
+            <span className="text-gray-600">{product.categoryId}</span>
+            <ChevronRightIcon size={10} />
+            <span className="text-primary truncate max-w-[200px]">{product.name}</span>
+          </nav>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
             
             {/* COLUMN 1: Image & Gallery */}

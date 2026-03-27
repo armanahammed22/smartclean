@@ -19,21 +19,59 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Smart Clean | Smart Service App',
-  description: 'Professional cleaning and maintenance app for Bangladesh.',
-  manifest: '/manifest.json',
-  icons: {
-    icon: 'https://picsum.photos/seed/smartclean-logo/32/32',
-    apple: 'https://picsum.photos/seed/smartclean-logo/180/180',
+  metadataBase: new URL('https://smartclean.com.bd'), // Update with actual domain
+  title: {
+    default: 'Smart Clean | Best Professional Cleaning Services in Bangladesh',
+    template: '%s | Smart Clean Bangladesh'
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Smart Clean',
-  },
+  description: 'Top-rated home and office cleaning, AC maintenance, and appliance repair services in Dhaka. Professional teams, affordable pricing, and 100% satisfaction guaranteed.',
+  keywords: ['cleaning services dhaka', 'home cleaning bangladesh', 'office cleaning', 'ac repair dhaka', 'deep cleaning service', 'smart clean'],
+  authors: [{ name: 'Smart Clean Team' }],
+  creator: 'Smart Clean',
+  publisher: 'Smart Clean Bangladesh',
   formatDetection: {
+    email: false,
+    address: false,
     telephone: false,
   },
+  openGraph: {
+    type: 'website',
+    locale: 'bn_BD',
+    url: 'https://smartclean.com.bd',
+    siteName: 'Smart Clean',
+    title: 'Smart Clean | Professional Cleaning & Maintenance',
+    description: 'The smartest way to keep your space spotless. Book verified professionals for home and office cleaning.',
+    images: [
+      {
+        url: 'https://picsum.photos/seed/smartclean-og/1200/630',
+        width: 1200,
+        height: 630,
+        alt: 'Smart Clean Bangladesh',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Smart Clean | Professional Cleaning Services',
+    description: 'Expert cleaning and maintenance services in Bangladesh.',
+    images: ['https://picsum.photos/seed/smartclean-og/1200/630'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -42,12 +80,35 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="bn" className="h-full">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-        <link rel="apple-touch-icon" href="https://picsum.photos/seed/smartclean-logo/512/512" />
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Smart Clean Bangladesh',
+              url: 'https://smartclean.com.bd',
+              logo: 'https://picsum.photos/seed/smartclean-logo/512/512',
+              contactPoint: {
+                '@type': 'ContactPoint',
+                telephone: '+8801919640422',
+                contactType: 'customer service',
+                areaServed: 'BD',
+                availableLanguage: ['Bengali', 'English']
+              },
+              sameAs: [
+                'https://www.facebook.com/smartclean',
+                'https://www.instagram.com/smartclean'
+              ]
+            })
+          }}
+        />
       </head>
       <body className="font-body antialiased h-full">
         <GlobalErrorBoundary>

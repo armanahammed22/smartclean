@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -29,6 +30,7 @@ import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export default function ServiceBookingPage() {
@@ -63,7 +65,10 @@ export default function ServiceBookingPage() {
 
   useEffect(() => {
     if (subService) setIsSubServiceMode(true);
-  }, [subService]);
+    if (baseService) {
+      document.title = `${baseService.title || baseService.name} Service in Dhaka | Smart Clean`;
+    }
+  }, [subService, baseService]);
 
   // 4. Fetch related Sub-services for Add-ons
   const mainId = useMemo(() => {
@@ -126,7 +131,54 @@ export default function ServiceBookingPage() {
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#F8FAFC] min-h-screen pb-32 lg:pb-12">
+        {/* SEO Structured Data for Service */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org/',
+              '@type': 'Service',
+              serviceType: baseService.categoryId || 'Cleaning Service',
+              provider: {
+                '@type': 'LocalBusiness',
+                name: 'Smart Clean Bangladesh',
+                image: baseService.imageUrl,
+                telephone: '+8801919640422',
+                address: {
+                  '@type': 'PostalAddress',
+                  streetAddress: 'Wireless Gate, Mohakhali',
+                  addressLocality: 'Dhaka',
+                  addressRegion: 'Dhaka',
+                  postalCode: '1212',
+                  addressCountry: 'BD'
+                }
+              },
+              areaServed: {
+                '@type': 'City',
+                name: 'Dhaka'
+              },
+              name: baseService.title || baseService.name,
+              description: baseService.description?.substring(0, 160),
+              offers: {
+                '@type': 'Offer',
+                price: baseService.basePrice || baseService.price,
+                priceCurrency: 'BDT'
+              }
+            })
+          }}
+        />
+
         <div className="container mx-auto px-4 lg:py-10 max-w-6xl">
+          {/* Breadcrumbs for SEO */}
+          <nav className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+            <Link href="/" className="hover:text-primary">Home</Link>
+            <ChevronRight size={10} />
+            <Link href="/services" className="hover:text-primary">Services</Link>
+            <ChevronRight size={10} />
+            <span className="text-gray-600">{baseService.categoryId}</span>
+            <ChevronRight size={10} />
+            <span className="text-primary">{baseService.title || baseService.name}</span>
+          </nav>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -136,7 +188,7 @@ export default function ServiceBookingPage() {
                 <div className="relative aspect-video w-full">
                   <Image 
                     src={baseService.imageUrl || 'https://picsum.photos/seed/service/800/600'} 
-                    alt="Service" 
+                    alt={baseService.title || baseService.name} 
                     fill 
                     className="object-cover" 
                     unoptimized 
