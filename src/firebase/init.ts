@@ -10,7 +10,7 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V9 - Enhanced ca9/b815 Protection)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V10 - Robust ca9/b815 Protection)
  * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
  * 2. Specifically ignores Turbopack/Next.js internal HMR messages.
  * 3. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
@@ -57,14 +57,13 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       }).join(' ');
 
       if (isAssertionError(msg)) {
-        // Silently log to warning to keep console clean and prevent Next.js UI Overlay
         console.warn('[Firestore Shield] Intercepted SDK assertion:', msg.slice(0, 150) + '...');
         return;
       }
       originalConsoleError.apply(console, args);
     };
 
-    // Filter Window Errors
+    // Filter Window Errors (Main fix for Next.js Overlay)
     window.addEventListener('error', (event) => {
       const msg = event.message || (event.error && event.error.message) || '';
       if (isAssertionError(msg)) {

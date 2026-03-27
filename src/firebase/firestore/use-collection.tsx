@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -98,14 +97,15 @@ export function useCollection<T = any>(
               errorStr.includes('b815') || 
               errorStr.includes('assertion failed') || 
               errorStr.includes('unexpected state') ||
-              errorStr.includes('persistent_stream')
+              errorStr.includes('persistent_stream') ||
+              errorStr.includes('fe":-1')
             ) {
               console.warn(`[Firestore Shield] Recovering from SDK assertion in collection: ${currentPath}.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) setRefreshKey(k => k + 1);
-              }, 1500); // Fast retry for better UX
+              }, 2000); // 2s retry for SDK stabilization
               return;
             }
 
@@ -126,7 +126,7 @@ export function useCollection<T = any>(
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
             if (activeToken.current === token) setRefreshKey(k => k + 1);
-          }, 2000);
+          }, 3000);
         }
       }
     };
