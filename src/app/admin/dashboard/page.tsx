@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -20,7 +21,8 @@ import {
   LayoutDashboard,
   Database,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,7 +77,6 @@ export default function AdminDashboard() {
       const services = getMockServices('en');
       const subServices = getMockSubServices();
 
-      // 1. Seed Main Services
       services.forEach(srv => {
         const sRef = doc(db, 'services', srv.id);
         batch.set(sRef, {
@@ -85,7 +86,6 @@ export default function AdminDashboard() {
         });
       });
 
-      // 2. Seed Sub Services
       subServices.forEach((sub, idx) => {
         const subId = `sub_srv_${idx + 1}`;
         const subRef = doc(db, 'sub_services', subId);
@@ -130,7 +130,6 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
-  // Show seed button only if database is empty of services
   const showSeedButton = !servicesLoading && (!dbServices || dbServices.length === 0);
 
   return (
@@ -144,6 +143,12 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
+          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10 uppercase">
+            <Link href="/admin/orders/create"><Plus size={16} /> New Order</Link>
+          </Button>
+          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-xs h-10 uppercase">
+            <Link href="/admin/bookings/create"><Plus size={16} /> New Booking</Link>
+          </Button>
           {showSeedButton && (
             <Button 
               onClick={handleSeedData} 
@@ -155,9 +160,6 @@ export default function AdminDashboard() {
               Seed ERP Data
             </Button>
           )}
-          <Button asChild className="flex-1 sm:flex-none rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg gap-2 text-xs h-10">
-            <Link href="/admin/orders"><ShoppingCart size={16} /> Manage Orders</Link>
-          </Button>
         </div>
       </div>
 
