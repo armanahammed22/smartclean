@@ -8,147 +8,156 @@ import { usePathname } from 'next/navigation';
 import { 
   Home, 
   ShoppingCart, 
-  TicketPercent, 
+  Sparkles, 
   MessageCircle, 
   User 
 } from 'lucide-react';
-import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useSupport } from '@/components/providers/support-provider';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
-/**
- * Animated Logo/Offer Slider for Bottom Nav
- */
-function LogoSlider() {
-  const db = useFirestore();
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const offersQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    // Removed 'where' to avoid missing index errors, filtering in memory instead
-    return query(
-      collection(db, 'offers'),
-      orderBy('order', 'asc')
-    );
-  }, [db]);
-
-  const { data: allOffers } = useCollection(offersQuery);
-
-  // Filter active offers in memory
-  const offers = useMemo(() => {
-    return allOffers?.filter(o => o.isActive === true) || [];
-  }, [allOffers]);
-
-  useEffect(() => {
-    if (!offers || offers.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % offers.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [offers]);
-
-  if (!offers || offers.length === 0) {
-    return (
-      <div className="bg-primary p-3 rounded-full shadow-xl shadow-primary/30">
-        <TicketPercent size={26} className="text-white" />
-      </div>
-    );
-  }
-
-  const current = offers[currentIndex];
-
-  return (
-    <div className="relative w-14 h-14 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white animate-in zoom-in-90 duration-500">
-      <Link href={current.link || '/#offers'} className="block w-full h-full relative">
-        <Image 
-          key={current.id}
-          src={current.image} 
-          alt="Offer" 
-          fill 
-          className="object-cover transition-all duration-700" 
-          unoptimized
-        />
-      </Link>
-    </div>
-  );
-}
-
 export function BottomNav() {
   const { itemCount } = useCart();
   const { toggleSupport, isSupportOpen } = useSupport();
   const pathname = usePathname();
+  const db = useFirestore();
+  const [currentOffer, setCurrentOffer] = useState(0);
+
+  // Fetch dynamic offers for the middle button
+  const offersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'offers'), orderBy('order', 'asc'));
+  }, [db]);
+
+  const { data: allOffers } = useCollection(offersQuery);
+  const offers = useMemo(() => allOffers?.filter(o => o.isActive === true) || [], [allOffers]);
+
+  // Auto-rotate offers every 3 seconds
+  useEffect(() => {
+    if (offers.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentOffer((prev) => (prev + 1) % offers.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [offers]);
 
   const NAV_ITEMS = [
-    { label: 'Home', href: '/', icon: Home },
-    { label: 'Message', href: '#', icon: MessageCircle, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
-    { label: 'OFFER', href: '/#offers', icon: TicketPercent, isMiddle: true },
-    { label: 'Cart', href: '/cart', icon: ShoppingCart, badge: itemCount },
-    { label: 'Account', href: '/account/dashboard', icon: User },
+    { label: 'হোম', href: '/', icon: Home },
+    { label: 'মেসেজ', href: '#', icon: MessageCircle, badge: 0, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
+    { label: 'অফার', href: '/#offers', isMiddle: true },
+    { label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount },
+    { label: 'একাউন্ট', href: '/account/dashboard', icon: User },
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl z-[150] border-t border-gray-100 h-[calc(4.5rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-      <div className="flex items-center justify-around h-16 px-2 relative">
-        {NAV_ITEMS.map((item) => {
-          const isActive = (item.href !== '#' && pathname === item.href) || (item.label === 'Message' && isSupportOpen);
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] h-[75px] md:max-w-[600px] md:mx-auto md:left-1/2 md:-translate-x-1/2 md:rounded-t-[25px] flex items-center justify-between px-4 pb-safe-offset-0">
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 bg-white/95 backdrop-blur-2xl border-t border-black/5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:rounded-t-[25px]" />
+
+      <div className="relative flex w-full items-center justify-between z-10">
+        {NAV_ITEMS.map((item, idx) => {
+          const isActive = (item.href !== '#' && pathname === item.href) || (item.label === 'মেসেজ' && isSupportOpen);
           const Icon = item.icon;
-          
+
           if (item.isMiddle) {
             return (
-              <div key={item.label} className="relative -translate-y-4">
-                <LogoSlider />
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-black text-primary uppercase tracking-widest whitespace-nowrap">Special Offer</span>
+              <div key="middle-offer" className="relative -mt-10 px-2 animate-in slide-in-from-bottom-5 duration-500 delay-150">
+                <Link href={offers[currentOffer]?.link || "/#offers"} className="flex flex-col items-center gap-1.5 group">
+                  <div className="relative w-[60px] h-[60px] flex items-center justify-center">
+                    {/* Glow Effect */}
+                    <div className="absolute inset-[-5px] rounded-full opacity-30 blur-xl animate-pulse bg-primary" />
+                    
+                    {/* Image Container */}
+                    <div className="relative w-full h-full rounded-full bg-white border-[3px] border-white shadow-xl overflow-hidden">
+                      {offers.length > 0 ? (
+                        <div className="relative w-full h-full">
+                          {offers.map((offer, i) => (
+                            <div
+                              key={offer.id}
+                              className={cn(
+                                "absolute inset-0 transition-transform duration-700 ease-in-out",
+                                i === currentOffer ? "translate-y-0" : i < currentOffer ? "-translate-y-full" : "translate-y-full"
+                              )}
+                            >
+                              <Image src={offer.image} alt="Offer" fill className="object-cover" unoptimized />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-primary flex items-center justify-center text-white">
+                          <Sparkles size={24} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sparkle Decoration */}
+                    <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full w-6 h-6 flex items-center justify-center text-white shadow-lg animate-spin [animation-duration:4s]">
+                      <Sparkles size={14} />
+                    </div>
+
+                    {/* Dots Indicator */}
+                    {offers.length > 1 && (
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                        {offers.map((_, i) => (
+                          <div key={i} className={cn(
+                            "h-1 rounded-full transition-all duration-300",
+                            i === currentOffer ? "w-3 bg-primary" : "w-1 bg-primary/30"
+                          )} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">অফার</span>
+                </Link>
               </div>
             );
           }
 
-          const Content = (
-            <>
-              <div className="relative">
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={cn(isActive && "scale-110 transition-transform")} />
+          const NavContent = (
+            <div className="flex flex-col items-center gap-1">
+              <div className={cn(
+                "relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300",
+                isActive ? "bg-primary text-white shadow-lg scale-105" : "text-gray-400 bg-black/5"
+              )}>
+                {Icon && <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />}
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 bg-primary text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
-                    {item.badge}
-                  </span>
+                  <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black h-4.5 min-w-4.5 flex items-center justify-center rounded-full border-2 border-white shadow-sm px-1 animate-bounce">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </div>
                 )}
               </div>
-              <span className="text-[9px] font-black uppercase tracking-tighter mt-1">
+              <span className={cn(
+                "text-[9px] font-bold uppercase tracking-tighter transition-colors",
+                isActive ? "text-primary" : "text-gray-500"
+              )}>
                 {item.label}
               </span>
-              {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-b-full shadow-[0_2px_10px_rgba(30,95,122,0.3)]" />
-              )}
-            </>
+            </div>
           );
 
           if (item.onClick) {
             return (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-300 relative app-button",
-                  isActive ? "text-primary" : "text-gray-400"
-                )}
+              <button 
+                key={item.label} 
+                onClick={item.onClick} 
+                className="flex-1 app-button animate-in slide-in-from-bottom-5 duration-500"
+                style={{ animationDelay: `${idx * 50}ms` }}
               >
-                {Content}
+                {NavContent}
               </button>
             );
           }
 
           return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-300 relative app-button",
-                isActive ? "text-primary" : "text-gray-400"
-              )}
+            <Link 
+              key={item.label} 
+              href={item.href} 
+              className="flex-1 app-button animate-in slide-in-from-bottom-5 duration-500"
+              style={{ animationDelay: `${idx * 50}ms` }}
             >
-              {Content}
+              {NavContent}
             </Link>
           );
         })}
