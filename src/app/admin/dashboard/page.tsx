@@ -144,10 +144,10 @@ export default function AdminDashboard() {
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
           <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10 uppercase">
-            <Link href="/admin/orders/create"><Plus size={16} /> New Order</Link>
+            <Link href="/admin/sales/create?mode=order"><Plus size={16} /> New Order</Link>
           </Button>
           <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-xs h-10 uppercase">
-            <Link href="/admin/bookings/create"><Plus size={16} /> New Booking</Link>
+            <Link href="/admin/sales/create?mode=booking"><Plus size={16} /> New Booking</Link>
           </Button>
           {showSeedButton && (
             <Button 

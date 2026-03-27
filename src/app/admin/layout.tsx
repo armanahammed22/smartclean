@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales_manual: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -112,12 +112,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  // Load global settings for Logo
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
-  // Load persistence state
   useEffect(() => {
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState !== null) {
@@ -141,7 +139,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  // Dynamic Badges
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
   const pendingProductsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), where('approvalStatus', '==', 'Pending')) : null, [db, isAuthorized]);
@@ -158,6 +155,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       color: "text-indigo-400",
       items: [
         { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
+      ]
+    },
+    {
+      id: 'sales_manual',
+      title: "SALES",
+      icon: ShoppingCart,
+      color: "text-rose-400",
+      items: [
+        { name: "New Order", href: '/admin/sales/create?mode=order', icon: Plus },
+        { name: "New Booking", href: '/admin/sales/create?mode=booking', icon: Plus },
       ]
     },
     {
@@ -433,14 +440,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      {/* 🚀 DESKTOP SIDEBAR */}
       <aside className={cn(
         "hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 ease-in-out relative border-r border-white/5 shrink-0 z-50",
         isCollapsed ? "w-20" : "w-72"
       )}>
         <SidebarContent collapsed={isCollapsed} />
         
-        {/* Floating Toggle Button */}
         <button 
           onClick={handleToggleCollapse}
           className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
@@ -450,7 +455,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        {/* 🚀 FIXED HEADER */}
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -496,7 +500,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        {/* 🚀 MAIN CONTENT SPA AREA */}
         <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
           <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">
             {children}
@@ -506,7 +509,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminBottomNav />
       </div>
 
-      {/* Logout Confirmation */}
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
         <AlertDialogContent className="rounded-[2rem] max-sm border-none shadow-2xl">
           <AlertDialogHeader>
