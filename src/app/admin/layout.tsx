@@ -227,11 +227,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       marketing: {
         id: 'marketing',
-        title: "MARKETING",
+        title: "MARKETING & PROMOTIONS",
         icon: Target,
         color: "text-rose-400",
         items: [
           { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
+          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
           ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
@@ -240,7 +241,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       offers: {
         id: 'offers',
-        title: "OFFER & COUPONS",
+        title: "OFFER & CAMPAIGN",
         icon: TicketPercent,
         color: "text-pink-400",
         items: [
