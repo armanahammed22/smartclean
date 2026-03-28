@@ -75,8 +75,9 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     }));
   }, [pathname]);
 
+  const DEFAULT_CUSTOM_REQ_ICON = 'https://picsum.photos/seed/clean-bucket/100/100';
   const customReqTitle = layout?.header?.customRequestTitle;
-  const customReqIcon = layout?.header?.customRequestIconUrl;
+  const customReqIcon = layout?.header?.customRequestIconUrl || DEFAULT_CUSTOM_REQ_ICON;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] relative">
@@ -124,13 +125,9 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
               )}
               onClick={() => router.push('/account/custom-requests')}
             >
-              {customReqIcon ? (
-                <div className="relative w-5 h-5 shrink-0">
-                  <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
-                </div>
-              ) : (
-                <Zap size={20} fill="currentColor" />
-              )}
+              <div className="relative w-5 h-5 shrink-0">
+                <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
+              </div>
               {customReqTitle && <span className="text-[10px] font-black uppercase whitespace-nowrap">{customReqTitle}</span>}
             </Button>
           )}

@@ -42,7 +42,7 @@ const DEFAULT_THEME = {
     topBarBg: '#f9fafb',
     topBarText: '#6b7280',
     customRequestTitle: 'কাস্টম রিকোয়েস্ট',
-    customRequestIconUrl: '',
+    customRequestIconUrl: 'https://picsum.photos/seed/clean-bucket/100/100',
     menuItems: [
       { label: 'Home', link: '/' },
       { label: 'Services', link: '/services' },

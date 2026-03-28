@@ -101,7 +101,9 @@ export function Navbar() {
     color: layout?.header?.topBarText || '#6b7280'
   };
 
-  const customReqIcon = layout?.header?.customRequestIconUrl || 'https://lh3.googleusercontent.com/d/16999999999999999999999999999999'; // Generic cleaning bucket fallback
+  // Fixed Default Icon URL
+  const DEFAULT_CUSTOM_REQ_ICON = 'https://picsum.photos/seed/clean-bucket/100/100';
+  const customReqIcon = layout?.header?.customRequestIconUrl || DEFAULT_CUSTOM_REQ_ICON;
   const customReqTitle = layout?.header?.customRequestTitle;
 
   return (
@@ -261,13 +263,9 @@ export function Navbar() {
                   layout?.header?.fontSize || 'text-[11px]'
                 )}
               >
-                {layout?.header?.customRequestIconUrl ? (
-                  <div className="relative w-5 h-5 shrink-0">
-                    <Image src={layout.header.customRequestIconUrl} alt="Icon" fill className="object-contain" unoptimized />
-                  </div>
-                ) : (
-                  <Zap size={14} fill="currentColor" />
-                )}
+                <div className="relative w-5 h-5 shrink-0">
+                  <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
+                </div>
                 {customReqTitle || ''}
               </Link>
             )}
