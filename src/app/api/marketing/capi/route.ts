@@ -1,28 +1,22 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase/init';
-import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebaseAdmin';
 import crypto from 'crypto';
 
 /**
- * Facebook Conversion API (CAPI) Proxy
- * Secures the Access Token and hashes user data server-side.
+ * Facebook Conversion API (CAPI) Proxy (Server-Side)
+ * Uses Firebase Admin SDK for secure data logging and token retrieval.
  */
 export async function POST(req: NextRequest) {
   try {
     const { eventName, eventId, payload } = await req.json();
-    const { firestore } = initializeFirebase();
 
-    if (!firestore) {
-      return NextResponse.json({ status: 'Firestore Unavailable' }, { status: 500 });
-    }
-
-    // 1. Fetch Marketing Settings
-    const settingsSnap = await getDoc(doc(firestore, 'site_settings', 'marketing'));
+    // 1. Fetch Marketing Settings using Admin SDK
+    const settingsSnap = await db.collection('site_settings').doc('marketing').get();
     const config = settingsSnap.data();
 
     if (!config?.trackingEnabled || !config?.pixelId || !config?.accessToken) {
-      return NextResponse.json({ status: 'Tracking Disabled' });
+      return NextResponse.json({ status: 'Tracking Disabled or Config Missing' });
     }
 
     // 2. Prepare User Data (Hashed)
@@ -72,8 +66,8 @@ export async function POST(req: NextRequest) {
 
     const result = await fbResponse.json();
 
-    // 5. Log Event to Firestore
-    await addDoc(collection(firestore, 'tracking_logs'), {
+    // 5. Log Event to Firestore using Admin SDK
+    await db.collection('tracking_logs').add({
       eventName,
       eventId,
       platform: 'Facebook',

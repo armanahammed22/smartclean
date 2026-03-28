@@ -1,11 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase/init';
-import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebaseAdmin';
 
 /**
- * Scalable Courier API Handler
- * Dynamically maps order data to courier-specific APIs based on Firestore config.
+ * Scalable Courier API Handler (Server-Side)
+ * Uses Firebase Admin SDK for secure Firestore access.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -15,22 +14,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing Order ID or Courier ID' }, { status: 400 });
     }
 
-    const { firestore } = initializeFirebase();
-    
-    if (!firestore) {
-      return NextResponse.json({ error: 'Firestore services unavailable' }, { status: 500 });
-    }
-
-    // 1. Fetch Courier Config
-    const courierDoc = await getDoc(doc(firestore, 'couriers', courierId));
-    if (!courierDoc.exists()) {
+    // 1. Fetch Courier Config using Admin SDK
+    const courierDoc = await db.collection('couriers').doc(courierId).get();
+    if (!courierDoc.exists) {
       return NextResponse.json({ error: 'Courier configuration not found' }, { status: 404 });
     }
     
     const config = courierDoc.data();
+    if (!config) return NextResponse.json({ error: 'Invalid config' }, { status: 500 });
     
     // 2. Parse Dynamic Field Mapping
-    // Format: {"api_customer_name": "customerName", "api_address": "address"}
     let mapping = {};
     try {
       mapping = JSON.parse(config.fieldMapping || '{}');
@@ -45,12 +38,9 @@ export async function POST(req: NextRequest) {
       payload[apiKey] = orderData[internalKey] || '';
     });
 
-    // If mapping is empty, use raw order data as fallback
     const finalPayload = Object.keys(payload).length > 0 ? payload : orderData;
 
     // 4. Execute API Call
-    console.log(`Forwarding Order ${orderId} to ${config.name} at ${config.apiEndpoint}`);
-    
     const response = await fetch(config.apiEndpoint, {
       method: 'POST',
       headers: {

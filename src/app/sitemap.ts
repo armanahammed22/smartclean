@@ -1,15 +1,13 @@
 
 import { MetadataRoute } from 'next';
-import { initializeFirebase } from '@/firebase/init';
-import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebaseAdmin';
 
 /**
- * Dynamic Sitemap Generator
- * Fetches products, services, and dynamic pages from Firestore to include in sitemap.
+ * Dynamic Sitemap Generator (Server-Side)
+ * Uses Firebase Admin SDK to fetch data during the build or request.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://smartclean.com.bd';
-  const { firestore } = initializeFirebase();
 
   // Static Routes
   const staticRoutes = [
@@ -25,11 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : 0.8,
   }));
 
-  if (!firestore) return staticRoutes;
-
   try {
-    // Dynamic Product Routes
-    const productSnap = await getDocs(collection(firestore, 'products'));
+    // 1. Dynamic Product Routes
+    const productSnap = await db.collection('products').get();
     const productRoutes = productSnap.docs.map((doc) => ({
       url: `${baseUrl}/product/${doc.id}`,
       lastModified: new Date(),
@@ -37,8 +33,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    // Dynamic Service Routes
-    const serviceSnap = await getDocs(collection(firestore, 'services'));
+    // 2. Dynamic Service Routes
+    const serviceSnap = await db.collection('services').get();
     const serviceRoutes = serviceSnap.docs.map((doc) => ({
       url: `${baseUrl}/service/${doc.id}`,
       lastModified: new Date(),
@@ -46,8 +42,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    // Dynamic Landing Pages
-    const landingSnap = await getDocs(collection(firestore, 'landing_pages'));
+    // 3. Dynamic Landing Pages
+    const landingSnap = await db.collection('landing_pages').get();
     const landingRoutes = landingSnap.docs.map((doc) => ({
       url: `${baseUrl}/${doc.data().slug}`,
       lastModified: new Date(),
@@ -55,8 +51,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    // Dynamic Info Pages
-    const pageSnap = await getDocs(collection(firestore, 'pages_management'));
+    // 4. Dynamic Info Pages
+    const pageSnap = await db.collection('pages_management').get();
     const pageRoutes = pageSnap.docs.map((doc) => ({
       url: `${baseUrl}/page/${doc.data().slug}`,
       lastModified: new Date(),
@@ -66,6 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticRoutes, ...productRoutes, ...serviceRoutes, ...landingRoutes, ...pageRoutes];
   } catch (e) {
+    console.error('Sitemap Generation Error:', e);
     return staticRoutes;
   }
 }
