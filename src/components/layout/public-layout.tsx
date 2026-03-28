@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Navbar } from './navbar';
 import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
 import { WhatsAppContact } from './whatsapp-contact';
 import { CheckoutModal } from '@/components/checkout/checkout-modal';
-import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ChevronRight, Zap, X } from 'lucide-react';
+import { ArrowLeft, Zap, Search, ChevronRight } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -29,7 +29,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLanguage();
-  const { itemCount } = useCart();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -37,12 +36,18 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     setMounted(true);
   }, []);
 
+  // Fix for navigation: Reset scroll position on every route change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [pathname]);
+
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
   const isHome = pathname === '/';
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
-  const companyName = settings?.websiteName || 'Smart Clean';
   const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
@@ -58,7 +63,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     }
   };
 
-  // Generate breadcrumb items from path
   const breadcrumbs = useMemo(() => {
     const parts = pathname.split('/').filter(Boolean);
     return parts.map((part, i) => ({
@@ -68,9 +72,10 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   }, [pathname]);
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC] relative">
       <link rel="canonical" href={`https://smartclean.com.bd${pathname}`} />
       
+      {/* MOBILE HEADER */}
       <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center shrink-0">
           {!isHome ? (
@@ -116,19 +121,20 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       </header>
 
+      {/* DESKTOP HEADER */}
       <div className="hidden lg:block">
         <Navbar />
       </div>
 
+      {/* MAIN CONTENT */}
       <main className={cn(
-        "flex-1 overflow-y-auto custom-scrollbar h-full",
+        "flex-1 w-full",
         !isHome && !minimalMobile && "pb-24 lg:pb-0"
       )}>
         <div className={cn(
           "mx-auto",
           isHome ? "max-w-none" : "max-w-7xl px-0 md:px-4"
         )}>
-          {/* Internal Breadcrumbs for SEO and Navigation */}
           {!isHome && !minimalMobile && breadcrumbs.length > 0 && (
             <nav className="container mx-auto px-4 py-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
               <Link href="/" className="hover:text-primary transition-colors">Home</Link>

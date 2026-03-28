@@ -10,10 +10,10 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V10 - Robust ca9/b815 Protection)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11 - Navigation Optimized)
  * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
  * 2. Specifically ignores Turbopack/Next.js internal HMR messages.
- * 3. Blocks window-level errors to prevent Next.js Runtime Overlay from appearing for SDK bugs.
+ * 3. Prevents overlays for technical SDK bugs while allowing routing events to pass.
  * 4. Enforces Long Polling to bypass proxy/workstation streaming failures.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
@@ -27,8 +27,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
-      // EXCLUDE: Do not intercept dev-tool or Turbopack specific messages
-      if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr')) {
+      // EXCLUDE: Standard router messages and navigation events
+      if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr') || lowMsg.includes('router')) {
         return false;
       }
 
@@ -40,7 +40,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
-        lowMsg.includes('cc') ||
         lowMsg.includes('fe":-1')
       );
     };
@@ -99,7 +98,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       try {
-        // Enforce Long Polling and Memory Cache for maximum stability in cloud environments
         firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),
@@ -113,9 +111,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         }
       }
     }
-  } catch (error) {
-    // Silent catch during initialization
-  }
+  } catch (error) {}
 
   return { firebaseApp, auth, firestore };
 }

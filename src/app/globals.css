@@ -34,17 +34,13 @@
   }
   
   html, body {
-    @apply h-full overflow-x-hidden select-none;
-    overscroll-behavior-y: none;
+    @apply min-h-screen bg-[#F8FAFC];
   }
 
   body {
-    @apply bg-[#F8FAFC] text-foreground font-body antialiased;
-    width: 100vw;
-    position: fixed;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    @apply text-foreground font-body antialiased;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 }
 

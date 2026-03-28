@@ -70,7 +70,6 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     apple: '/apple-icon.png',
   },
-  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -84,13 +83,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-        
-        {/* Dynamic Favicon & Icons will be handled via Client Component injection if needed, 
-            but for now we keep standard paths which should be mapped in public folder */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
 
-        {/* Organization Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -115,14 +110,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-body antialiased h-full">
+      <body className="font-body antialiased min-h-screen">
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
             <LanguageProvider>
               <SupportProvider>
                 <CartProvider>
                   <TrackingProvider>
-                    <main className="flex-1 flex flex-col h-full overflow-hidden">
+                    <main className="flex flex-col min-h-screen">
                       {children}
                     </main>
                     <Toaster />
