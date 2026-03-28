@@ -12,6 +12,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
+        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
         request.auth.token.email == 'smartclean422@gmail.com' ||
         exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
@@ -26,6 +27,7 @@ service cloud.firestore {
     match /{allPaths=**} {
       allow read, write: if isSignedIn() && (
         request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
+        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
         request.auth.token.email == 'smartclean422@gmail.com'
       );
     }

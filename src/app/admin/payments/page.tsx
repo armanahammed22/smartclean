@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 
-const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 
 export default function PaymentManagementPage() {
   const { user } = useUser();
@@ -45,7 +45,7 @@ export default function PaymentManagementPage() {
     return doc(db, 'roles_admins', user.uid);
   }, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+  const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid));
 
   const methodsQuery = useMemoFirebase(() => 
     (db && user && isAuthorized) ? query(collection(db, 'payment_methods'), orderBy('name', 'asc')) : null, [db, user, isAuthorized]);

@@ -14,7 +14,7 @@ import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRi
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function SecureAdminLoginPage() {
@@ -34,7 +34,7 @@ export default function SecureAdminLoginPage() {
   
   const isAdmin = useMemo(() => {
     if (!user) return false;
-    const isBootstrap = user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL || user.uid === BOOTSTRAP_ADMIN_UID;
+    const isBootstrap = user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(user.uid);
     return isBootstrap || !!adminRole;
   }, [adminRole, user]);
 
@@ -70,7 +70,7 @@ export default function SecureAdminLoginPage() {
       toast({ title: "Authorized", description: "Admin terminal loading..." });
       
       // Immediate redirect for bootstrap admin
-      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(credentials.user.uid)) {
         router.push('/admin/dashboard');
       }
     } catch (error: any) {

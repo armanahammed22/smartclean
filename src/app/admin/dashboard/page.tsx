@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -40,7 +41,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { getMockServices, getMockSubServices } from '@/lib/data';
 
-const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 
 export default function AdminDashboard() {
   const { user } = useUser();
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID;
+  const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid));
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);

@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, updateDoc, query, orderBy, where } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { firebaseConfig } from '@/firebase/config';
@@ -31,7 +31,8 @@ import {
   Mail,
   Zap,
   MoreVertical,
-  Plus
+  Plus,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -46,13 +47,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Switch } from '@/components/ui/switch';
+
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 
 const PERMISSION_LIST = [
   { id: 'dashboard.view', label: 'View Dashboard', group: 'General' },
@@ -250,7 +247,6 @@ export default function AccessControlPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* TAB: ROLES */}
         <TabsContent value="roles" className="space-y-6">
           <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
             <div className="relative flex-1">
@@ -294,7 +290,6 @@ export default function AccessControlPage() {
           </div>
         </TabsContent>
 
-        {/* TAB: USERS */}
         <TabsContent value="users">
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
             <CardContent className="p-0 overflow-x-auto">
@@ -442,8 +437,4 @@ export default function AccessControlPage() {
       </Dialog>
     </div>
   );
-}
-
-function where(arg0: string, arg1: string, arg2: string) {
-  return (db: any) => {}; // Placeholder for the actual where function
 }

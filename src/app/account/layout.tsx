@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -24,7 +25,7 @@ import { signOut } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
-const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +42,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   // Auth Guards for role-based internal portal links
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+  const isAdmin = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
 
   const staffRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRoleRef);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -94,7 +95,7 @@ import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const BOOTSTRAP_ADMIN_UID = '6YTKdslETkVXcftvhSY5x9sjOgT2';
+const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
@@ -144,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
 
-  const isAuthorized = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
+  const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
