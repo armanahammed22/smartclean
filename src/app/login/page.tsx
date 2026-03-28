@@ -69,50 +69,27 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // PROTOTYPING MODE: If Firebase is missing, allow the bootstrap login to work locally
     if (!isFirebaseConfigured) {
       const trimmedEmail = email.trim().toLowerCase();
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL && password === 'admin123') {
-        toast({ 
-          title: "Prototyping Mode Activated", 
-          description: "Firebase keys missing. Entering via Secure Mock Auth." 
-        });
         setIsLoading(true);
         setTimeout(() => router.replace('/admin/dashboard'), 800);
         return;
-      } else {
-        toast({ 
-          variant: "destructive", 
-          title: "Configuration Error", 
-          description: "Firebase is not configured. Use the bootstrap admin email/password to enter prototyping mode." 
-        });
-        return;
       }
-    }
-
-    if (!auth || !db) {
-      toast({ 
-        variant: "destructive", 
-        title: "Service Error", 
-        description: "Firebase services are initializing. Please wait a moment." 
-      });
+      toast({ variant: "destructive", title: "Configuration Error", description: "Firebase is not connected." });
       return;
     }
+
+    if (!auth || !db) return;
     
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
-      console.log("[Auth] Attempting login for:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
-      console.log("[Auth] Login success, UID:", uid);
-
-      const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
-
-      if (isBootstrapAdmin) {
-        console.log("[Auth] Bootstrap admin detected, syncing profile...");
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid)) {
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -122,28 +99,19 @@ export default function LoginPage() {
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await setDoc(doc(db, 'roles_admins', uid), {
-          uid,
-          assignedAt: serverTimestamp()
-        }, { merge: true });
-
-        toast({ title: "Welcome Admin", description: "Terminal accessed successfully." });
+        await setDoc(doc(db, 'roles_admins', uid), { uid, assignedAt: serverTimestamp() }, { merge: true });
         router.replace('/admin/dashboard');
         return;
       }
 
-      console.log("[Auth] Fetching user profile from Firestore...");
       const userSnap = await getDoc(doc(db, 'users', uid));
-      
       if (!userSnap.exists()) {
-        toast({ variant: "destructive", title: "Profile Error", description: "No profile found for this account." });
+        toast({ variant: "destructive", title: "Access Denied", description: "User profile not found." });
         setIsLoading(false);
         return;
       }
 
       const role = userSnap.data()?.role?.toLowerCase();
-      console.log("[Auth] User role identified:", role);
-
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
         router.replace('/admin/dashboard');
       } else if (['staff', 'technician'].includes(role)) {
@@ -153,11 +121,8 @@ export default function LoginPage() {
       }
 
     } catch (error: any) {
-      console.error("[Auth] Login Error:", error.code, error.message);
-      let msg = "Invalid email or password.";
-      if (error.code === 'auth/network-request-failed') msg = "Network error. Check your connection.";
-      if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Account locked temporarily.";
-      
+      let msg = "Invalid credentials. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') msg = "Invalid email or password.";
       toast({ variant: "destructive", title: "Login Failed", description: msg });
       setIsLoading(false);
     }
@@ -167,7 +132,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Security Handshake...</p>
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Synchronizing...</p>
       </div>
     );
   }
@@ -181,32 +146,32 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10 max-w-lg space-y-8">
           <div className="space-y-4">
-            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Global Terminal</Badge>
+            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Enterprise Access</Badge>
             <h2 className="text-5xl font-black text-white leading-tight uppercase tracking-tighter italic font-headline">
               Marketplace <br /><span className="text-primary">Terminal.</span>
             </h2>
-            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure access to Smart Clean services, inventory, and customer portal.</p>
+            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure production environment for Smart Clean operations.</p>
           </div>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
-        <div className="w-full max-md space-y-8">
+        <div className="w-full max-w-md space-y-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest mb-4">
-            <ArrowLeft size={16} /> Exit Terminal
+            <ArrowLeft size={16} /> Exit to Site
           </Link>
 
           {!isFirebaseConfigured && (
-            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3 mb-4">
               <Info className="text-amber-600 shrink-0" size={20} />
               <div className="space-y-1">
-                <p className="text-xs font-black text-amber-900 uppercase">Prototyping Mode Active</p>
-                <p className="text-[10px] text-amber-700 leading-relaxed">Firebase keys are missing in .env. You can still login using the default admin credentials to test the UI.</p>
+                <p className="text-xs font-black text-amber-900 uppercase">Sandbox Mode</p>
+                <p className="text-[10px] text-amber-700 leading-relaxed">Firebase keys missing. Authenticate with bootstrap admin credentials.</p>
               </div>
             </div>
           )}
 
-          <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white animate-in fade-in duration-500">
+          <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
             <div className="h-2 bg-primary w-full" />
             <CardHeader className="space-y-4 text-center pt-10 px-8">
               <div className="flex justify-center">
@@ -215,25 +180,25 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Authentication</CardTitle>
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Enter credentials to synchronize</CardDescription>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Terminal Login</CardTitle>
+                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Authorized Access Required</CardDescription>
               </div>
             </CardHeader>
             
             <CardContent className="px-8 pb-6 pt-4">
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Work Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="email" placeholder="user@example.com" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <Input type="email" placeholder="email@company.com" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key</Label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                   </div>
                 </div>
@@ -242,13 +207,13 @@ export default function LoginPage() {
                   className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" 
                   disabled={isLoading}
                 >
-                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Terminal</>}
+                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Authenticate</>}
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t text-center">
+            <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
               <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center justify-center gap-2">
-                <ShieldCheck size={14} /> Master Portal Access
+                <ShieldCheck size={14} /> Master Portal
               </Link>
             </CardFooter>
           </Card>
