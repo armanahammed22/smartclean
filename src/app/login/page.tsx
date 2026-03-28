@@ -159,7 +159,7 @@ export default function LoginPage() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       type="email" 
-                      placeholder="name@example.com" 
+                      placeholder="smartclean422@gmail.com" 
                       className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold text-base" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 

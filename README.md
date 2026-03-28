@@ -21,7 +21,7 @@ A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15
 
 ## 🚀 Accessing the Admin Dashboard
 
-The CRM portal is located at `/admin/dashboard`. To log in with your credentials (`smartclean422@gmail.com` / `admin123`), you MUST complete these steps in the Firebase Console:
+The CRM portal is located at `/admin/dashboard`. To log in with your credentials (`smartclean422@gmail.com` / `@arman@2211@`), you MUST complete these steps in the Firebase Console:
 
 ### 1. Enable Authentication & Whitelist Domain
 - Go to [Firebase Console](https://console.firebase.com/).
@@ -33,7 +33,7 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 ### 2. Create your User account
 - In the **Authentication > Users** tab, click **Add user**.
 - Email: `smartclean422@gmail.com`
-- Password: `admin123`
+- Password: `@arman@2211@`
 - Click **Add user**.
 - **IMPORTANT**: If you get `auth/invalid-credential`, it means this step was skipped or the password/email doesn't match exactly.
 
