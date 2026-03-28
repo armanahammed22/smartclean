@@ -52,7 +52,7 @@ export default function LoginPage() {
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
-  // Auto-redirect on auth state change
+  // Persistence Redirect
   useEffect(() => {
     if (!user || isUserLoading) return;
 
@@ -74,17 +74,20 @@ export default function LoginPage() {
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
+    console.log("[Auth] Starting login for:", trimmedEmail);
+    
     try {
-      console.log("[Auth] Attempting login for:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
+      console.log("[Auth] Success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[Auth] Bootstrap Admin Detected. Forcing Admin Profile Sync.");
-        // Ensure Firestore has the profile
-        await setDoc(doc(db, 'users', uid), {
+        console.log("[Auth] Bootstrap Admin Detected. Forcing Redirect.");
+        
+        // Sync Firestore in background
+        setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
           email: trimmedEmail,
@@ -93,40 +96,44 @@ export default function LoginPage() {
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await setDoc(doc(db, 'roles_admins', uid), {
+        setDoc(doc(db, 'roles_admins', uid), {
           uid,
           assignedAt: serverTimestamp()
         }, { merge: true });
 
         toast({ title: "Authorized", description: "Admin terminal accessed." });
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
         return;
       }
 
-      // Standard Role Check
+      // Standard User Flow
+      console.log("[Auth] Fetching role for standard user...");
       const userSnap = await getDoc(doc(db, 'users', uid));
+      
       if (!userSnap.exists()) {
-        toast({ variant: "destructive", title: "Profile Error", description: "Account profile not found in database." });
+        toast({ variant: "destructive", title: "Profile Error", description: "User record not found." });
         setIsLoading(false);
         return;
       }
 
       const role = userSnap.data()?.role;
+      console.log("[Auth] Role found:", role);
+
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
       } else if (['staff', 'technician'].includes(role)) {
-        router.replace('/staff/dashboard');
+        router.push('/staff/dashboard');
       } else {
-        router.replace('/account/dashboard');
+        router.push('/account/dashboard');
       }
 
     } catch (error: any) {
       console.error("[Login] Auth Error:", error.code, error.message);
-      let message = "Invalid email or password.";
-      if (error.code === 'auth/network-request-failed') message = "Network error. Please check your internet.";
-      if (error.code === 'auth/user-disabled') message = "This account has been disabled.";
+      let msg = "Invalid email or password.";
+      if (error.code === 'auth/network-request-failed') msg = "Network connection failed.";
+      if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Try later.";
       
-      toast({ variant: "destructive", title: "Login Failed", description: message });
+      toast({ variant: "destructive", title: "Login Failed", description: msg });
       setIsLoading(false);
     }
   };

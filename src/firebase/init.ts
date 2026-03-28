@@ -24,7 +24,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
-      // Do NOT shield Auth errors so users can see feedback
+      // CRITICAL: DO NOT shield Auth errors so users can see login feedback
       if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email') || lowMsg.includes('credential')) {
         return false;
       }

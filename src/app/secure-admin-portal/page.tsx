@@ -52,16 +52,20 @@ export default function SecureAdminLoginPage() {
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
+    console.log("[Portal] Attempting login for:", trimmedEmail);
+
     try {
-      console.log("[AdminPortal] Authenticating:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
+      console.log("[Portal] Auth Success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[AdminPortal] Bootstrap Admin Success. Syncing...");
-        await setDoc(doc(db, 'users', uid), {
+        console.log("[Portal] Admin Identified. Directing to Terminal.");
+        
+        // Background sync
+        setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
           email: trimmedEmail,
@@ -70,33 +74,34 @@ export default function SecureAdminLoginPage() {
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        await setDoc(doc(db, 'roles_admins', uid), {
+        setDoc(doc(db, 'roles_admins', uid), {
           uid,
           assignedAt: serverTimestamp()
         }, { merge: true });
 
         toast({ title: "Authorized", description: "Admin terminal accessed." });
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
         return;
       }
 
+      // Check standard admin role
       const userSnap = await getDoc(doc(db, 'users', uid));
       const role = userSnap.data()?.role;
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
       } else {
-        toast({ variant: "destructive", title: "Access Denied", description: "You do not have administrative privileges." });
+        toast({ variant: "destructive", title: "Access Denied", description: "Account is not authorized for administration." });
         setIsLoading(false);
       }
 
     } catch (error: any) {
-      console.error("[AdminPortal] Login Error:", error.code, error.message);
+      console.error("[Portal] Login Error:", error.code, error.message);
       let message = "Invalid email or access key.";
-      if (error.code === 'auth/wrong-password') message = "Incorrect password.";
-      if (error.code === 'auth/network-request-failed') message = "Network timeout. Try again.";
+      if (error.code === 'auth/wrong-password') message = "Incorrect security key.";
+      if (error.code === 'auth/user-not-found') message = "Identity not found.";
       
-      toast({ variant: "destructive", title: "Authentication Failed", description: message });
+      toast({ variant: "destructive", title: "Access Denied", description: message });
       setIsLoading(false);
     }
   };
