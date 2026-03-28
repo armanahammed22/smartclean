@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -42,7 +41,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   // Auth Guards for role-based internal portal links
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole } = useDoc(adminRoleRef);
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
 
   const staffRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole } = useDoc(staffRoleRef);
@@ -169,7 +168,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 pb-20">
+        <main className="flex-1 min-0 pb-20">
           {children}
         </main>
       </div>

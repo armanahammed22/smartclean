@@ -39,7 +39,7 @@ export default function LoginPage() {
   const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole, isLoading: staffRoleLoading } = useDoc(staffRef);
 
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email === BOOTSTRAP_ADMIN_EMAIL;
+  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
   const isStaff = !!staffRole;
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
@@ -64,6 +64,7 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
+      // Trim email to prevent issues with accidental spaces
       await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
       toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
     } catch (error: any) {
@@ -159,7 +160,7 @@ export default function LoginPage() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       type="email" 
-                      placeholder="smartclean422@gmail.com" 
+                      placeholder="admin@smartclean.bd" 
                       className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold text-base" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 

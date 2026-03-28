@@ -95,7 +95,7 @@ export default function SecureAdminLoginPage() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type="email" 
-                  placeholder="smartclean422@gmail.com" 
+                  placeholder="admin@smartclean.bd" 
                   className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
