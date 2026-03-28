@@ -39,7 +39,10 @@ export default function LoginPage() {
   const staffRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole, isLoading: staffRoleLoading } = useDoc(staffRef);
 
-  const isAdmin = !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+  const isAdmin = useMemo(() => {
+    return !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+  }, [adminRole, user]);
+
   const isStaff = !!staffRole;
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
@@ -47,6 +50,12 @@ export default function LoginPage() {
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   useEffect(() => {
+    // If we already know the user is a bootstrap admin by email, redirect immediately
+    if (user && user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
+      router.replace('/admin/dashboard');
+      return;
+    }
+
     if (user && !roleLoading && !staffRoleLoading) {
       if (isAdmin) {
         router.replace('/admin/dashboard');
@@ -64,10 +73,17 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      // Trim email to prevent issues with accidental spaces
-      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      const trimmedEmail = email.trim().toLowerCase();
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      
       toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
+      
+      // Direct jump for bootstrap admin
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
+        router.replace('/admin/dashboard');
+      }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({ 
         variant: "destructive", 
         title: "Login Failed", 
@@ -77,7 +93,8 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || (user && (roleLoading || staffRoleLoading))) {
+  // Only show the global loading screen if we are actually waiting for initial auth
+  if (isUserLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />

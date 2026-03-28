@@ -34,6 +34,12 @@ export default function SecureAdminLoginPage() {
   const isAdmin = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   useEffect(() => {
+    // If already logged in as bootstrap admin, go to dashboard
+    if (user && user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
+      router.replace('/admin/dashboard');
+      return;
+    }
+
     if (user && !roleLoading) {
       if (isAdmin) {
         router.replace('/admin/dashboard');
@@ -53,9 +59,16 @@ export default function SecureAdminLoginPage() {
 
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      const trimmedEmail = email.trim().toLowerCase();
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
       toast({ title: "Authorized", description: "Admin terminal loading..." });
+      
+      // Explicit redirect if email matches
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
+        router.replace('/admin/dashboard');
+      }
     } catch (error: any) {
+      console.error("Secure login error:", error);
       toast({ 
         variant: "destructive", 
         title: "Auth Failed", 
@@ -65,7 +78,10 @@ export default function SecureAdminLoginPage() {
     }
   };
 
-  if (isUserLoading || (user && roleLoading)) {
+  // Improved loading logic: don't block if we already have a user who is likely admin
+  const isSyncing = isUserLoading || (user && roleLoading && user.email?.toLowerCase() !== BOOTSTRAP_ADMIN_EMAIL);
+
+  if (isSyncing) {
     return (
       <div className="min-h-screen bg-[#081621] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
