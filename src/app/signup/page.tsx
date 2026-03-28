@@ -42,7 +42,6 @@ export default function SignupPage() {
       const snap = await getDocs(q);
       return !snap.empty;
     } catch (e) {
-      // If permission fails, we assume we can't check publicly and proceed to let Firebase Auth handle uniqueness
       return false;
     }
   };
@@ -67,7 +66,6 @@ export default function SignupPage() {
       setGeneratedOtp(mock);
       setIsOtpSent(true);
       setIsLoading(false);
-      console.log("Signup OTP (MOCK):", mock);
       toast({ title: t('otp_sent'), description: `Code: ${mock}` });
     }, 1000);
   };
@@ -107,7 +105,6 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      // Robust email generation for Firebase Auth
       const emailToUse = formData.email?.trim().toLowerCase() || `${cleanPhone}@smartclean.local`;
 
       if (!auth) throw new Error("Authentication service is unavailable.");
@@ -131,16 +128,7 @@ export default function SignupPage() {
       toast({ title: "Account Created!" });
       router.push('/account/dashboard');
     } catch (error: any) {
-      console.error("Signup error:", error);
-      let message = error.message;
-      if (error.code === 'auth/email-already-in-use') {
-        message = "This email or phone is already registered.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Invalid email format.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
-      }
-      toast({ variant: "destructive", title: "Signup Failed", description: message });
+      toast({ variant: "destructive", title: "Signup Failed", description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -152,24 +140,24 @@ export default function SignupPage() {
         <div className="h-2 bg-primary w-full" />
         <CardHeader className="space-y-2 text-center pt-10 px-10">
           <div className="flex justify-center mb-4"><div className="p-4 bg-primary/10 rounded-2xl text-primary"><UserPlus size={40} /></div></div>
-          <CardTitle className="text-3xl font-black uppercase font-headline tracking-tighter">Create Account</CardTitle>
-          <CardDescription className="text-sm font-medium text-muted-foreground">Join the Smart Clean network today</CardDescription>
+          <CardTitle className="text-3xl font-black uppercase font-headline tracking-tighter">Join Smart Clean</CardTitle>
+          <CardDescription className="text-sm font-medium text-muted-foreground">Create your professional account today</CardDescription>
         </CardHeader>
         <CardContent className="px-10 pb-10">
           <form onSubmit={handleSignup} className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('full_name')}</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Your Full Name</Label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="John Doe" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="Enter Your Full Name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('phone_number')}</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mobile Number</Label>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="01XXXXXXXXX" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} required disabled={isVerified} />
+                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" placeholder="Enter Your Mobile Number" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} required disabled={isVerified} />
               </div>
             </div>
 
@@ -188,39 +176,39 @@ export default function SignupPage() {
               </div>
             )}
 
-            {isVerified && <div className="flex items-center gap-2 text-green-600 font-bold bg-green-50 p-3 rounded-xl border border-green-100"><CheckCircle2 size={18} /> Verified Phone</div>}
+            {isVerified && <div className="flex items-center gap-2 text-green-600 font-bold bg-green-50 p-3 rounded-xl border border-green-100"><CheckCircle2 size={18} /> Phone Verified</div>}
 
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('email_optional')}</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" type="email" placeholder="john@example.com (optional)" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <Input className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" type="email" placeholder="Enter Your Email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
-                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required />
+                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" type="password" placeholder="Enter Your Password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} required />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Confirm</Label>
-                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} required />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Confirm Password</Label>
+                <Input className="h-12 rounded-xl bg-gray-50 border-gray-100" type="password" placeholder="Enter Your Password" value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} required />
               </div>
             </div>
 
             <div className="flex items-start space-x-3 px-1 pt-2">
               <Checkbox id="terms" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} className="rounded-md border-gray-300 mt-0.5" />
-              <label htmlFor="terms" className="text-[11px] leading-tight text-gray-600 font-bold cursor-pointer">Agree to terms & conditions</label>
+              <label htmlFor="terms" className="text-[11px] leading-tight text-gray-600 font-bold cursor-pointer">I agree to the Terms & Privacy Policy</label>
             </div>
 
             <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight active:scale-95 transition-transform" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : "Sign Up"}
+              {isLoading ? <Loader2 className="animate-spin" /> : "রেজিস্ট্রেশন / Registration"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center bg-gray-50/50 border-t py-6">
-          <p className="text-xs font-bold text-muted-foreground">Already have an account? <Link href="/login" className="text-primary font-black hover:underline">Login</Link></p>
+          <p className="text-xs font-bold text-muted-foreground">Already member? <Link href="/login" className="text-primary font-black hover:underline">Login Now</Link></p>
         </CardFooter>
       </Card>
     </div>

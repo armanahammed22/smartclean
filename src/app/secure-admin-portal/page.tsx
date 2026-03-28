@@ -116,16 +116,6 @@ export default function SecureAdminLoginPage() {
   return (
     <div className="min-h-screen bg-[#081621] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {!isFirebaseConfigured && (
-          <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3">
-            <Info className="text-amber-500 shrink-0" size={20} />
-            <div className="space-y-1">
-              <p className="text-xs font-black text-amber-200 uppercase">Internal Sandbox</p>
-              <p className="text-[10px] text-amber-200/60 leading-relaxed">System disconnected from live Firebase. Enter with bootstrap keys.</p>
-            </div>
-          </div>
-        )}
-
         <Card className="w-full rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white animate-in zoom-in-95 duration-500">
           <div className="h-2 bg-primary w-full" />
           <CardHeader className="space-y-2 text-center pt-10 px-8">
@@ -134,8 +124,8 @@ export default function SecureAdminLoginPage() {
                 <ShieldCheck size={40} />
               </div>
             </div>
-            <CardTitle className="text-2xl font-black uppercase tracking-tight">System Guard</CardTitle>
-            <CardDescription className="text-sm font-medium text-muted-foreground">Production Terminal Access</CardDescription>
+            <CardTitle className="text-2xl font-black uppercase tracking-tight">Admin Terminal</CardTitle>
+            <CardDescription className="text-sm font-medium text-muted-foreground">Authorized Management Access</CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8 pt-4">
             <form onSubmit={handleLogin} className="space-y-5">
@@ -143,19 +133,19 @@ export default function SecureAdminLoginPage() {
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Identity (Email)</Label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder="admin@smartclean.bd" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input type="email" placeholder="Enter Your Email" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key (Password)</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key</Label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <Input type={showPassword ? "text" : "password"} placeholder="Enter Your Password" className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2"><Eye size={18} /></button>
                 </div>
               </div>
               <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight bg-primary active:scale-95 flex items-center justify-center gap-2" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> Open Terminal</>}
+                {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> প্রবেশ করুন / Login</>}
               </Button>
             </form>
           </CardContent>

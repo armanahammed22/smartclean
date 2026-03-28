@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck, AlertCircle, Info } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -146,11 +146,11 @@ export default function LoginPage() {
         </div>
         <div className="relative z-10 max-w-lg space-y-8">
           <div className="space-y-4">
-            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Enterprise Access</Badge>
+            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Client Portal</Badge>
             <h2 className="text-5xl font-black text-white leading-tight uppercase tracking-tighter italic font-headline">
-              Marketplace <br /><span className="text-primary">Terminal.</span>
+              Welcome <br /><span className="text-primary">Back.</span>
             </h2>
-            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure production environment for Smart Clean operations.</p>
+            <p className="text-white/60 text-lg font-medium leading-relaxed">Login to access your dashboard and bookings.</p>
           </div>
         </div>
       </div>
@@ -158,18 +158,8 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
         <div className="w-full max-w-md space-y-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest mb-4">
-            <ArrowLeft size={16} /> Exit to Site
+            <ArrowLeft size={16} /> Back to Site
           </Link>
-
-          {!isFirebaseConfigured && (
-            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3 mb-4">
-              <Info className="text-amber-600 shrink-0" size={20} />
-              <div className="space-y-1">
-                <p className="text-xs font-black text-amber-900 uppercase">Sandbox Mode</p>
-                <p className="text-[10px] text-amber-700 leading-relaxed">Firebase keys missing. Authenticate with bootstrap admin credentials.</p>
-              </div>
-            </div>
-          )}
 
           <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
             <div className="h-2 bg-primary w-full" />
@@ -180,25 +170,25 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Terminal Login</CardTitle>
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Authorized Access Required</CardDescription>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Account Login</CardTitle>
+                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Please provide your details</CardDescription>
               </div>
             </CardHeader>
             
             <CardContent className="px-8 pb-10 pt-4">
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Work Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="email" placeholder="email@company.com" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <Input type="email" placeholder="Enter Your Email" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <Input type={showPassword ? "text" : "password"} placeholder="Enter Your Password" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                   </div>
                 </div>
@@ -207,10 +197,13 @@ export default function LoginPage() {
                   className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" 
                   disabled={isLoading}
                 >
-                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Authenticate</>}
+                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> লগইন করুন / Login</>}
                 </Button>
               </form>
             </CardContent>
+            <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
+              <p className="text-xs font-bold text-muted-foreground">New here? <Link href="/signup" className="text-primary font-black hover:underline">Create Account</Link></p>
+            </CardFooter>
           </Card>
         </div>
       </div>

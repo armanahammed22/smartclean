@@ -235,19 +235,19 @@ export default function CustomersPage() {
               <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                  <Input name="name" defaultValue={editingCustomer?.name} required placeholder="Client Name" className="h-11 bg-gray-50 border-none rounded-xl" />
+                  <Input name="name" defaultValue={editingCustomer?.name} required placeholder="Enter Your Full Name" className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</Label>
-                  <Input name="phone" defaultValue={editingCustomer?.phone} required placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none rounded-xl" />
+                  <Input name="phone" defaultValue={editingCustomer?.phone} required placeholder="Enter Your Mobile Number" className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address</Label>
-                  <Input name="email" defaultValue={editingCustomer?.email} type="email" required placeholder="client@example.com" className="h-11 bg-gray-50 border-none rounded-xl" />
+                  <Input name="email" defaultValue={editingCustomer?.email} type="email" required placeholder="Enter Your Email" className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Address</Label>
-                  <Input name="address" defaultValue={editingCustomer?.address} placeholder="Location / Area" className="h-11 bg-gray-50 border-none rounded-xl" />
+                  <Input name="address" defaultValue={editingCustomer?.address} placeholder="Enter Your Full Address" className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
               </div>
               <DialogFooter className="p-6 bg-gray-50 border-t flex-col sm:flex-row gap-2">
@@ -272,7 +272,7 @@ export default function CustomersPage() {
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
               <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={20} /></div>
@@ -285,7 +285,7 @@ export default function CustomersPage() {
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
-            placeholder="Search by name, phone, email or UID..." 
+            placeholder="Search by name, phone or email..." 
             className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -293,17 +293,6 @@ export default function CustomersPage() {
         </div>
         <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200 w-full md:w-auto"><Filter size={18} /> Filters</Button>
       </div>
-
-      {selectedIds.length > 0 && (
-        <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs font-black uppercase tracking-widest">{selectedIds.length} ACCOUNTS SELECTED</span>
-          </div>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
-            <Trash2 size={14} className="mr-2" /> Delete Profiles
-          </Button>
-        </div>
-      )}
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
@@ -386,7 +375,7 @@ export default function CustomersPage() {
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium">No matching profiles found in the registry.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium">No matching profiles found.</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>

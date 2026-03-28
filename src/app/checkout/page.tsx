@@ -237,14 +237,14 @@ function CheckoutContent() {
                         <FormField control={form.control} name="name" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('full_name')}</FormLabel>
-                            <FormControl><Input placeholder="Full Name" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                            <FormControl><Input placeholder="Enter Your Full Name" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="phone" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
-                            <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
+                            <FormControl><Input placeholder="Enter Your Mobile Number" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -256,7 +256,7 @@ function CheckoutContent() {
                           </FormLabel>
                           <div className="relative">
                             <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                            <FormControl><Textarea placeholder="House, Street, Area" className="min-h-[100px] md:min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
+                            <FormControl><Textarea placeholder="Enter Your Full Address" className="min-h-[100px] md:min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -325,7 +325,7 @@ function CheckoutContent() {
                   </Card>
 
                   <Button type="submit" className="w-full hidden md:flex h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
-                    {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
+                    {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'অর্ডার সম্পন্ন করুন / Place Order'} <Zap size={24} fill="currentColor" /></>}
                   </Button>
                 </div>
 
@@ -378,7 +378,7 @@ function CheckoutContent() {
                   disabled={isSubmitting || items.length === 0}
                 >
                   {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                    <>{hasServices ? 'Place Booking' : 'Place Order'} <ArrowRight size={18} className="ml-2" /></>
+                    <>{hasServices ? 'Place Booking' : 'অর্ডার করুন / Order'} <ArrowRight size={18} className="ml-2" /></>
                   )}
                 </Button>
               </div>

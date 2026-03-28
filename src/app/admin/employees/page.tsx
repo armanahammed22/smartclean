@@ -26,7 +26,6 @@ export default function EmployeesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // Data Queries (Auth Guarded)
   const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db, user]);
   const bookingsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'bookings')) : null, [db, user]);
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
@@ -88,7 +87,7 @@ export default function EmployeesPage() {
 
   const toggleSkill = (serviceId: string) => {
     setSelectedSkills(prev => 
-      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, id]
     );
   };
 
@@ -113,15 +112,15 @@ export default function EmployeesPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                    <Input name="name" defaultValue={editingStaff?.name} required placeholder="Employee Name" className="h-11 bg-gray-50 border-none" />
+                    <Input name="name" defaultValue={editingStaff?.name} required placeholder="Enter Your Full Name" className="h-11 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone</Label>
-                    <Input name="phone" defaultValue={editingStaff?.phone} required placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none" />
+                    <Input name="phone" defaultValue={editingStaff?.phone} required placeholder="Enter Your Mobile Number" className="h-11 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
-                    <Input name="email" type="email" defaultValue={editingStaff?.email} required placeholder="staff@smartclean.com" className="h-11 bg-gray-50 border-none" />
+                    <Input name="email" type="email" defaultValue={editingStaff?.email} required placeholder="Enter Your Email" className="h-11 bg-gray-50 border-none" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Assigned Role</Label>
@@ -167,14 +166,13 @@ export default function EmployeesPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-[9px] text-muted-foreground italic px-2">Select services this technician is qualified to perform. This enables smart auto-assignment.</p>
                 </div>
               </div>
               
               <DialogFooter className="pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-8">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} />}
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={16} className="mr-2" />}
                   Save Profile
                 </Button>
               </DialogFooter>
@@ -239,7 +237,6 @@ export default function EmployeesPage() {
                       <TableCell className="py-5 pl-8">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border-2 border-gray-100 shadow-xs">
-                            <AvatarImage src={`https://picsum.photos/seed/${staff.id}/100`} />
                             <AvatarFallback className="bg-primary/10 text-primary font-bold">{staff.name?.[0]}</AvatarFallback>
                           </Avatar>
                           <div className="space-y-0.5">
@@ -257,7 +254,6 @@ export default function EmployeesPage() {
                                 {services?.find(s => s.id === sId)?.title?.split(' ')[0] || 'Skill'}
                               </Badge>
                             ))}
-                            {staff.skills?.length > 3 && <span className="text-[8px] font-bold text-muted-foreground">+{staff.skills.length - 3}</span>}
                           </div>
                         </div>
                       </TableCell>
