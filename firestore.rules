@@ -38,9 +38,30 @@ service cloud.firestore {
 
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    // Public Collections
+    // Public Collections & Marketing Data
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /smart_pricing_rules/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /campaigns/{id} { 
+      allow read: if true; allow write: if isAdmin(); 
+      match /products/{pId} { allow read: if true; allow write: if isAdmin(); }
+    }
+    
+    // UI & Layout
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
+
     match /bookings/{id} { 
       allow create: if true; 
       allow read: if isSignedIn(); 
@@ -50,8 +71,8 @@ service cloud.firestore {
 
     // Custom Requests Rules
     match /custom_requests/{id} {
-      allow create: if isSignedIn();
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow create: if true;
+      allow read: if (isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin())) || isAdmin();
       allow update, delete: if isAdmin();
     }
 

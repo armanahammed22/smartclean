@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -27,7 +28,7 @@ const PUBLIC_COLLECTIONS = [
   'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
   'delivery_options', 'offers', 'categories', 'subcategories', 
   'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna',
-  'invoices', 'invoiceRequests'
+  'invoices', 'invoiceRequests', 'smart_pricing_rules'
 ];
 
 function extractPath(target: any): string {
