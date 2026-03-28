@@ -54,15 +54,14 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
 
-    if (user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
+    // Check isAdmin first (covers bootstrap admin immediately without waiting for Firestore roles)
+    if (isAdmin) {
       router.replace('/admin/dashboard');
       return;
     }
 
     if (!roleLoading && !staffRoleLoading) {
-      if (isAdmin) {
-        router.replace('/admin/dashboard');
-      } else if (isStaff) {
+      if (isStaff) {
         router.replace('/staff/dashboard');
       } else {
         router.replace('/account/dashboard');
@@ -78,8 +77,11 @@ export default function LoginPage() {
     try {
       const trimmedEmail = email.trim().toLowerCase();
       await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
+      
+      // Feedback toast
       toast({ title: "Login Successful", description: "Authenticating session..." });
       
+      // If navigation doesn't trigger immediately via useEffect, try direct navigation for bootstrap
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
         router.replace('/admin/dashboard');
       }

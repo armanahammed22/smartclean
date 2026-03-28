@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -31,25 +31,23 @@ export default function SecureAdminLoginPage() {
   const adminRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRef);
   
-  const isAdmin = !!adminRole || (user?.uid === BOOTSTRAP_ADMIN_UID) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    const isBootstrap = user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL || user.uid === BOOTSTRAP_ADMIN_UID;
+    return isBootstrap || !!adminRole;
+  }, [adminRole, user]);
 
   useEffect(() => {
-    // If already logged in as bootstrap admin, go to dashboard
-    if (user && user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
-      router.replace('/admin/dashboard');
-      return;
-    }
+    if (!user || isUserLoading) return;
 
-    if (user && !roleLoading) {
-      if (isAdmin) {
-        router.replace('/admin/dashboard');
-      } else if (!isUserLoading) {
-        toast({ 
-          variant: "destructive", 
-          title: "Insufficient Privileges", 
-          description: "This account does not have administrative access." 
-        });
-      }
+    if (isAdmin) {
+      router.replace('/admin/dashboard');
+    } else if (!roleLoading) {
+      toast({ 
+        variant: "destructive", 
+        title: "Insufficient Privileges", 
+        description: "This account does not have administrative access." 
+      });
     }
   }, [user, isAdmin, roleLoading, isUserLoading, router, toast]);
 
@@ -61,9 +59,10 @@ export default function SecureAdminLoginPage() {
     try {
       const trimmedEmail = email.trim().toLowerCase();
       await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      
       toast({ title: "Authorized", description: "Admin terminal loading..." });
       
-      // Explicit redirect if email matches
+      // Explicit redirect if email matches bootstrap
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
         router.replace('/admin/dashboard');
       }
