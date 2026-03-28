@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -12,8 +11,7 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Zap, Search, ChevronRight } from 'lucide-react';
-import { useCart } from '@/components/providers/cart-provider';
+import { ArrowLeft, Search, ChevronRight } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
@@ -37,7 +35,6 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     setMounted(true);
   }, []);
 
-  // Fix for navigation: Reset scroll position on every route change
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -76,8 +73,8 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   }, [pathname]);
 
   const DEFAULT_CUSTOM_REQ_ICON = 'https://picsum.photos/seed/clean-bucket/100/100';
-  const customReqTitle = layout?.header?.customRequestTitle;
   const customReqIcon = layout?.header?.customRequestIconUrl || DEFAULT_CUSTOM_REQ_ICON;
+  const mobileTitle = layout?.header?.customRequestMobileTitle;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] relative">
@@ -121,7 +118,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
               variant="ghost" 
               className={cn(
                 "h-10 active:scale-90 transition-transform rounded-full border border-gray-100 gap-2 shadow-sm",
-                customReqTitle ? "px-4 w-auto" : "w-10 px-0",
+                mobileTitle ? "px-4 w-auto" : "w-10 px-0",
                 layout?.header?.customRequestMobileFontSize || "text-[10px]"
               )}
               style={{ 
@@ -133,7 +130,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
               <div className="relative w-5 h-5 shrink-0">
                 <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
               </div>
-              {customReqTitle && <span className="font-black uppercase whitespace-nowrap">{customReqTitle}</span>}
+              {mobileTitle && <span className="font-black uppercase whitespace-nowrap">{mobileTitle}</span>}
             </Button>
           )}
         </div>

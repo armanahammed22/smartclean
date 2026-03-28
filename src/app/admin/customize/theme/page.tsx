@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -16,20 +15,14 @@ import {
   Save, 
   Loader2, 
   Layout, 
-  Type, 
-  MousePointer2, 
-  Eye,
-  Plus,
-  Trash2,
-  List,
-  Facebook,
-  Instagram,
-  MessageCircle,
-  Link as LinkIcon,
-  Zap,
-  ImageIcon,
-  Smartphone,
-  Monitor
+  List, 
+  Trash2, 
+  Plus, 
+  Zap, 
+  Monitor, 
+  Smartphone, 
+  Eye, 
+  X 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -44,9 +37,9 @@ const DEFAULT_THEME = {
     showTopBar: true,
     topBarBg: '#f9fafb',
     topBarText: '#6b7280',
-    customRequestTitle: 'কাস্টম রিকোয়েস্ট',
+    customRequestDesktopTitle: 'কাস্টম রিকোয়েস্ট',
+    customRequestMobileTitle: 'রিকোয়েস্ট',
     customRequestIconUrl: 'https://picsum.photos/seed/clean-bucket/100/100',
-    // New Styles for Custom Request
     customRequestDesktopBg: '#1E5F7A',
     customRequestDesktopTextColor: '#ffffff',
     customRequestDesktopFontSize: 'text-[11px]',
@@ -156,7 +149,6 @@ export default function LayoutThemePage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* HEADER EDITOR */}
         <TabsContent value="header" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 space-y-6">
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
@@ -204,18 +196,25 @@ export default function LayoutThemePage() {
                 <CardDescription>Customize the appearance of the 'Custom Request' button.</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-10">
-                {/* Title and Icon */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Title</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Desktop Title</Label>
                       <Input 
-                        value={formData.header.customRequestTitle} 
-                        onChange={e => setFormData({...formData, header: {...formData.header, customRequestTitle: e.target.value}})}
+                        value={formData.header.customRequestDesktopTitle} 
+                        onChange={e => setFormData({...formData, header: {...formData.header, customRequestDesktopTitle: e.target.value}})}
                         placeholder="e.g. কাস্টম রিকোয়েস্ট"
                         className="h-12 bg-gray-50 border-none rounded-xl font-bold"
                       />
-                      <p className="text-[9px] text-muted-foreground italic">Leave empty to show only the icon.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Mobile Title</Label>
+                      <Input 
+                        value={formData.header.customRequestMobileTitle} 
+                        onChange={e => setFormData({...formData, header: {...formData.header, customRequestMobileTitle: e.target.value}})}
+                        placeholder="e.g. রিকোয়েস্ট"
+                        className="h-12 bg-gray-50 border-none rounded-xl font-bold"
+                      />
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -229,7 +228,6 @@ export default function LayoutThemePage() {
                   </div>
                 </div>
 
-                {/* Desktop Styles */}
                 <div className="space-y-6 pt-6 border-t">
                   <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
                     <Monitor size={16} /> Desktop View Styling
@@ -256,7 +254,6 @@ export default function LayoutThemePage() {
                   </div>
                 </div>
 
-                {/* Mobile Styles */}
                 <div className="space-y-6 pt-6 border-t">
                   <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
                     <Smartphone size={16} /> Mobile View Styling
@@ -330,8 +327,8 @@ export default function LayoutThemePage() {
                       color: formData.header.customRequestDesktopTextColor
                     }}
                   >
-                    <Image src={formData.header.customRequestIconUrl || DEFAULT_THEME.header.customRequestIconUrl} alt="Icon" width={16} height={16} className="object-contain" />
-                    {formData.header.customRequestTitle}
+                    <Image src={formData.header.customRequestIconUrl || DEFAULT_THEME.header.customRequestIconUrl} alt="Icon" width={16} height={16} className="object-contain" unoptimized />
+                    {formData.header.customRequestDesktopTitle}
                   </div>
                   <p className="text-gray-300 italic text-[10px] uppercase">Desktop Button Preview</p>
                 </div>
@@ -340,7 +337,6 @@ export default function LayoutThemePage() {
           </div>
         </TabsContent>
 
-        {/* FOOTER EDITOR */}
         <TabsContent value="footer" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-7 space-y-6">
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
@@ -432,9 +428,9 @@ export default function LayoutThemePage() {
                   <div className="space-y-4">
                     <div className="font-black text-xs uppercase" style={{ color: formData.footer.headingColor }}>Social</div>
                     <div className="flex gap-3">
-                      <Facebook size={14} />
-                      <Instagram size={14} />
-                      <MessageCircle size={14} />
+                      <div className="w-4 h-4 rounded bg-white/20" />
+                      <div className="w-4 h-4 rounded bg-white/20" />
+                      <div className="w-4 h-4 rounded bg-white/20" />
                     </div>
                   </div>
                 </div>
@@ -445,11 +441,5 @@ export default function LayoutThemePage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-function X({ size, className }: { size?: number, className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
   );
 }

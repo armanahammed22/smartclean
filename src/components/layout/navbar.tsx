@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -101,10 +100,9 @@ export function Navbar() {
     color: layout?.header?.topBarText || '#6b7280'
   };
 
-  // Fixed Default Icon URL
   const DEFAULT_CUSTOM_REQ_ICON = 'https://picsum.photos/seed/clean-bucket/100/100';
   const customReqIcon = layout?.header?.customRequestIconUrl || DEFAULT_CUSTOM_REQ_ICON;
-  const customReqTitle = layout?.header?.customRequestTitle;
+  const desktopTitle = layout?.header?.customRequestDesktopTitle;
 
   return (
     <header className="w-full z-[160] sticky top-0 shadow-sm transition-colors duration-500" style={navStyles}>
@@ -270,7 +268,7 @@ export function Navbar() {
                 <div className="relative w-5 h-5 shrink-0">
                   <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
                 </div>
-                {customReqTitle || ''}
+                {desktopTitle || ''}
               </Link>
             )}
 
