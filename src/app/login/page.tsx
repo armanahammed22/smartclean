@@ -3,15 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldAlert, UserPlus, CheckCircle2, Zap, Sparkles } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, CheckCircle2, Zap, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,9 +24,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [accessDenied, setAccessDenied] = useState(false);
   
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -51,33 +48,29 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user && !roleLoading && !staffRoleLoading) {
-      if (isAdmin || isStaff) {
-        setAccessDenied(true);
-        toast({ 
-          variant: "destructive", 
-          title: "Restricted Access", 
-          description: "This portal is for customers only. Please use the designated staff or admin login." 
-        });
-        if (auth) signOut(auth);
+      if (isAdmin) {
+        router.replace('/admin/dashboard');
+      } else if (isStaff) {
+        router.replace('/staff/dashboard');
       } else {
         router.replace('/account/dashboard');
       }
     }
-  }, [user, isAdmin, isStaff, roleLoading, staffRoleLoading, router, auth, toast]);
+  }, [user, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setIsLoading(true);
-    setAccessDenied(false);
     
     try {
       await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
         title: "Login Failed", 
-        description: error.message || "Invalid credentials." 
+        description: "Invalid email or password. Please try again." 
       });
       setIsLoading(false);
     }
@@ -121,7 +114,7 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-6">
             {[
               { label: "Verified Pros", icon: CheckCircle2 },
-              { label: "Secure Payment", icon: ShieldCheck },
+              { label: "Secure Payment", icon: CheckCircle2 },
               { label: "Modern Tech", icon: Zap },
               { label: "Instant Booking", icon: Sparkles }
             ].map((feature, i) => (
@@ -159,15 +152,6 @@ export default function LoginPage() {
             </CardHeader>
             
             <CardContent className="px-8 pb-6 pt-4">
-              {accessDenied && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
-                  <ShieldAlert className="text-red-600 shrink-0" size={20} />
-                  <p className="text-[11px] font-bold text-red-700 leading-tight">
-                    ACCESS DENIED: Please use your professional portal for management access.
-                  </p>
-                </div>
-              )}
-
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>

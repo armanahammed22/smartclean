@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,29 +20,28 @@ export default function SecureStaffLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const auth = useAuth();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
-  const staffRef = useMemoFirebase(() => user ? doc(db, 'roles_employees', user.uid) : null, [db, user]);
+  const staffRef = useMemoFirebase(() => user ? doc(db!, 'roles_employees', user.uid) : null, [db, user]);
   const { data: staffRole, isLoading: roleLoading } = useDoc(staffRef);
   const isStaff = !!staffRole;
 
   useEffect(() => {
     if (user && !roleLoading) {
       if (isStaff) {
-        router.push('/staff/dashboard');
-      } else {
+        router.replace('/staff/dashboard');
+      } else if (!isUserLoading) {
         toast({ 
           variant: "destructive", 
-          title: "Unauthorized", 
-          description: "Staff access only. Redirecting..." 
+          title: "Access Denied", 
+          description: "You are not authorized as field staff." 
         });
-        if (auth) signOut(auth).then(() => router.push('/'));
       }
     }
-  }, [user, isStaff, roleLoading, router, auth, toast]);
+  }, [user, isStaff, roleLoading, isUserLoading, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,15 +50,25 @@ export default function SecureStaffLoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
+      toast({ title: "Authorized", description: "Loading job queue..." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Access Denied", description: "Invalid staff credentials." });
       setIsLoading(false);
     }
   };
 
+  if (isUserLoading || (user && roleLoading)) {
+    return (
+      <div className="min-h-screen bg-[#F2F4F8] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-amber-600" size={48} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Verifying Credentials...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F2F4F8] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white">
+      <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white animate-in zoom-in-95 duration-500">
         <div className="h-2 bg-amber-500 w-full" />
         <CardHeader className="space-y-2 text-center pt-10 px-8">
           <div className="flex justify-center mb-4">
@@ -80,7 +88,7 @@ export default function SecureStaffLoginPage() {
                 <Input 
                   type="email" 
                   placeholder="technician@smartclean.com" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
@@ -94,17 +102,17 @@ export default function SecureStaffLoginPage() {
                 <Input 
                   type={showPassword ? "text" : "password"} 
                   placeholder="••••••••" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight bg-amber-600 hover:bg-amber-700 text-white" disabled={isLoading}>
+            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight bg-amber-600 hover:bg-amber-700 text-white transition-all active:scale-95" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin mr-2" /> : <Wrench className="mr-2" size={20} />}
               Authorize Shift
             </Button>

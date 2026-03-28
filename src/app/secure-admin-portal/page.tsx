@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +23,7 @@ export default function SecureAdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   const auth = useAuth();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -37,17 +36,16 @@ export default function SecureAdminLoginPage() {
   useEffect(() => {
     if (user && !roleLoading) {
       if (isAdmin) {
-        router.push('/admin/dashboard');
-      } else {
+        router.replace('/admin/dashboard');
+      } else if (!isUserLoading) {
         toast({ 
           variant: "destructive", 
-          title: "Unauthorized", 
-          description: "Access denied. Redirecting..." 
+          title: "Insufficient Privileges", 
+          description: "This account does not have administrative access." 
         });
-        if (auth) signOut(auth).then(() => router.push('/'));
       }
     }
-  }, [user, isAdmin, roleLoading, router, auth, toast]);
+  }, [user, isAdmin, roleLoading, isUserLoading, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +54,7 @@ export default function SecureAdminLoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      toast({ title: "Authorized", description: "Admin terminal loading..." });
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
@@ -66,9 +65,18 @@ export default function SecureAdminLoginPage() {
     }
   };
 
+  if (isUserLoading || (user && roleLoading)) {
+    return (
+      <div className="min-h-screen bg-[#081621] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-primary" size={48} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Terminal Synchronizing...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#081621] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white">
+      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white animate-in zoom-in-95 duration-500">
         <div className="h-2 bg-primary w-full" />
         <CardHeader className="space-y-2 text-center pt-10 px-8">
           <div className="flex justify-center mb-4">
@@ -88,7 +96,7 @@ export default function SecureAdminLoginPage() {
                 <Input 
                   type="email" 
                   placeholder="admin@smartclean.com" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
@@ -102,17 +110,17 @@ export default function SecureAdminLoginPage() {
                 <Input 
                   type={showPassword ? "text" : "password"} 
                   placeholder="••••••••" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight" disabled={isLoading}>
+            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin mr-2" /> : <LayoutDashboard className="mr-2" size={20} />}
               Authenticate
             </Button>
