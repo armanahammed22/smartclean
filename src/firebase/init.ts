@@ -29,6 +29,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         return false;
       }
 
+      // DO NOT shield specific Next.js/Turbopack errors needed for development
       if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr') || lowMsg.includes('router')) {
         return false;
       }
@@ -101,6 +102,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       try {
+        // Use Long Polling + Memory Cache for maximum stability in dev/prototype environments
         firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),

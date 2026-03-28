@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -60,7 +59,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { BookingAssignDialog } from '@/components/admin/BookingAssignDialog';
 
-export default function BookingsPage() {
+function BookingsListContent() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -475,5 +474,13 @@ export default function BookingsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function BookingsManagementPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>}>
+      <BookingsListContent />
+    </Suspense>
   );
 }

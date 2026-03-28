@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc, where } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -60,7 +59,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 
-export default function OrdersManagementPage() {
+function OrdersListContent() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -300,7 +299,6 @@ export default function OrdersManagementPage() {
         </CardContent>
       </Card>
 
-      {/* CREATE ORDER DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-5xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
           <div className="flex flex-col h-[85vh]">
@@ -453,5 +451,13 @@ export default function OrdersManagementPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function OrdersManagementPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>}>
+      <OrdersListContent />
+    </Suspense>
   );
 }
