@@ -47,6 +47,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PERMISSION_LIST = [
   { id: 'dashboard.view', label: 'View Dashboard', group: 'General' },
