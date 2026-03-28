@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Navbar } from './navbar';
 import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
@@ -11,11 +11,13 @@ import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Search, ChevronRight, Zap } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Search, ChevronRight, Zap, X } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/components/providers/language-provider';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -26,8 +28,10 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const db = useFirestore();
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
   const { itemCount } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -47,6 +51,13 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     }
   }, [settings]);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/services?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   // Generate breadcrumb items from path
   const breadcrumbs = useMemo(() => {
     const parts = pathname.split('/').filter(Boolean);
@@ -60,48 +71,48 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     <div className="flex flex-col h-full bg-[#F8FAFC] relative overflow-hidden">
       <link rel="canonical" href={`https://smartclean.com.bd${pathname}`} />
       
-      <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center shrink-0">
           {!isHome ? (
             <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
               <ArrowLeft size={20} />
             </Button>
           ) : (
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-white shadow-sm">
+              <div className="relative h-10 w-10 rounded-lg overflow-hidden border border-gray-100 bg-white shadow-sm">
                 {displayLogo ? (
                   <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-primary rounded-lg flex items-center justify-center text-white font-black text-xs">S</div>
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-black text-[#081621] uppercase tracking-tight leading-none truncate max-w-[120px]">{companyName}</span>
-                <span className="text-[7px] font-bold text-primary uppercase tracking-widest leading-none mt-0.5">Professional</span>
-              </div>
             </Link>
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex-1 max-w-sm">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary" size={16} strokeWidth={3} />
+            <Input 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('search_placeholder')}
+              className="h-10 pl-10 pr-4 bg-gray-100 border-none rounded-full text-xs font-bold focus:bg-white shadow-inner"
+            />
+          </form>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
           {servicesEnabled && (
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-10 w-10 text-primary active:scale-90 transition-transform rounded-full"
+              className="h-10 w-10 text-primary active:scale-90 transition-transform rounded-full bg-primary/5 border border-primary/10"
               onClick={() => router.push('/account/custom-requests')}
             >
               <Zap size={20} fill="currentColor" />
             </Button>
           )}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-10 w-10 text-gray-500 active:scale-90 transition-transform rounded-full"
-            onClick={() => router.push('/services')}
-          >
-            <Search size={20} />
-          </Button>
         </div>
       </header>
 

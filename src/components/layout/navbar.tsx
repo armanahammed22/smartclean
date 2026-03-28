@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -164,17 +165,6 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              {servicesEnabled && (
-                <Link 
-                  href="/account/custom-requests" 
-                  className={cn(
-                    "font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5 text-primary",
-                    layout?.header?.fontSize || 'text-sm'
-                  )}
-                >
-                  <Zap size={14} fill="currentColor" /> কাস্টম রিকোয়েস্ট
-                </Link>
-              )}
             </nav>
           </div>
 
@@ -228,8 +218,8 @@ export function Navbar() {
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className={cn(
                               "text-[8px] font-black uppercase px-1.5 h-4 border-none",
-                              item.type === 'service' ? "bg-blue-600 text-white" : "bg-emerald-600 text-white"
-                            )}>
+                              item.type === 'service' ? "text-blue-600" : "text-green-600")}
+                            >
                               {item.type === 'service' ? t('service') : t('product')}
                             </Badge>
                             <span className="text-[11px] font-black text-primary">৳{(item.price || item.basePrice)?.toLocaleString()}</span>
@@ -260,6 +250,18 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
+            {servicesEnabled && (
+              <Link 
+                href="/account/custom-requests" 
+                className={cn(
+                  "hidden lg:flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-xl shadow-primary/20 hover:scale-105 active:scale-95",
+                  layout?.header?.fontSize || 'text-[11px]'
+                )}
+              >
+                <Zap size={14} fill="currentColor" /> কাস্টম রিকোয়েস্ট
+              </Link>
+            )}
+
             {productsEnabled && (
               <Link href="/cart" className="relative p-2.5 text-gray-600 hover:text-primary transition-all group bg-gray-50 rounded-full hover:bg-primary/5 active:scale-90 border border-gray-100 shadow-sm flex items-center justify-center">
                 <ShoppingCart size={22} />
