@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -44,49 +44,54 @@ export default function SecureAdminLoginPage() {
     if (isAdmin) {
       router.replace('/admin/dashboard');
     } else if (!roleLoading) {
+      // If user is logged in but not admin, they should use the standard login
       toast({ 
         variant: "destructive", 
-        title: "Insufficient Privileges", 
-        description: "This account does not have administrative access." 
+        title: "Admin Only", 
+        description: "Please use the standard login for customer access." 
       });
     }
   }, [user, isAdmin, roleLoading, isUserLoading, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
-      toast({ variant: "destructive", title: "Error", description: "Auth not initialized." });
-      return;
-    }
+    if (!auth || !db) return;
 
     setIsLoading(true);
-    console.log("[Secure-Admin] Starting login for:", email);
-
+    
     try {
       const trimmedEmail = email.trim().toLowerCase();
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
-      console.log("[Secure-Admin] Auth Success:", credentials.user.email);
-      
-      toast({ title: "Authorized", description: "Admin terminal loading..." });
-      
-      // Immediate redirect for bootstrap admin
-      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(credentials.user.uid)) {
-        router.push('/admin/dashboard');
+      const uid = credentials.user.uid;
+
+      // Check role in users collection
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      const role = userSnap.data()?.role;
+
+      const isAuthorized = 
+        trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || 
+        BOOTSTRAP_ADMIN_UIDS.includes(uid) || 
+        ['admin', 'manager', 'accounts', 'order_manager'].includes(role || '');
+
+      if (!isAuthorized) {
+        throw new Error("Insufficient privileges for Admin Terminal.");
       }
+
+      toast({ title: "Authorized", description: "Loading terminal..." });
+      router.push('/admin/dashboard');
+
     } catch (error: any) {
       console.error("[Secure-Admin] Auth Error:", error);
       toast({ 
         variant: "destructive", 
         title: "Auth Failed", 
-        description: "Invalid secure credentials."
+        description: error.message || "Invalid secure credentials."
       });
       setIsLoading(false);
     }
   };
 
-  const isSyncing = isUserLoading || (user && roleLoading && user.email?.toLowerCase() !== BOOTSTRAP_ADMIN_EMAIL);
-
-  if (isSyncing) {
+  if (isUserLoading || (user && roleLoading && user.email?.toLowerCase() !== BOOTSTRAP_ADMIN_EMAIL)) {
     return (
       <div className="min-h-screen bg-[#081621] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />

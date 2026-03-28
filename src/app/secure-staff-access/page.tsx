@@ -1,10 +1,11 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -45,14 +46,29 @@ export default function SecureStaffLoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth || !db) return;
 
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const credentials = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const uid = credentials.user.uid;
+
+      // Verify role
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      const role = userSnap.data()?.role;
+
+      if (!['staff', 'technician'].includes(role || '')) {
+        // Fallback check for roles_employees collection
+        const roleSnap = await getDoc(doc(db, 'roles_employees', uid));
+        if (!roleSnap.exists()) {
+          throw new Error("You do not have a technician assignment.");
+        }
+      }
+
       toast({ title: "Authorized", description: "Loading job queue..." });
+      router.push('/staff/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Access Denied", description: "Invalid staff credentials." });
+      toast({ variant: "destructive", title: "Access Denied", description: error.message || "Invalid staff credentials." });
       setIsLoading(false);
     }
   };

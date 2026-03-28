@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -55,6 +55,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
 
+    // Default redirect logic for existing session
     if (isAdmin) {
       router.replace('/admin/dashboard');
     } else if (!roleLoading && !staffRoleLoading) {
@@ -68,33 +69,61 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
+    if (!auth || !db) {
       toast({ variant: "destructive", title: "System Error", description: "Auth is not initialized." });
       return;
     }
     
     setIsLoading(true);
-    console.log("[Auth] Starting login process...");
     
     try {
       const trimmedEmail = email.trim().toLowerCase();
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
-      console.log("[Auth] Login successful for:", credentials.user.email);
+      const uid = credentials.user.uid;
+
+      // 1. Fetch User Data from Firestore
+      const userSnap = await getDoc(doc(db, 'users', uid));
       
-      toast({ title: "Login Successful", description: "Authenticating session..." });
-      
-      // Force direct navigation for bootstrap admin to bypass role loading delay
-      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(credentials.user.uid)) {
-        router.push('/admin/dashboard');
+      if (!userSnap.exists()) {
+        // Special case for Bootstrap Admin if not in 'users' collection yet
+        if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid)) {
+          toast({ title: "Authorized", description: "Bootstrap Admin detected." });
+          router.push('/admin/dashboard');
+          return;
+        }
+        throw new Error("User profile not found in system.");
       }
+
+      const userData = userSnap.data();
+      const role = userData.role || 'customer';
+
+      toast({ title: "Success", description: `Authenticated as ${role.toUpperCase()}` });
+
+      // 2. Role-Based Redirection Logic
+      switch(role) {
+        case 'admin':
+        case 'manager':
+        case 'accounts':
+        case 'order_manager':
+          router.push('/admin/dashboard');
+          break;
+        case 'staff':
+        case 'technician':
+          router.push('/staff/dashboard');
+          break;
+        case 'customer':
+          router.push('/account/dashboard');
+          break;
+        default:
+          router.push('/account/dashboard');
+      }
+
     } catch (error: any) {
       console.error("[Auth] Login error:", error);
       let message = "Invalid email or password.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = "Incorrect email or password.";
-      } else if (error.code === 'auth/network-request-failed') {
-        message = "Network error. Please check your connection.";
-      }
+      if (error.code === 'auth/invalid-credential') message = "Incorrect email or password.";
+      else if (error.message) message = error.message;
+      
       toast({ variant: "destructive", title: "Login Failed", description: message });
       setIsLoading(false);
     }
@@ -171,7 +200,7 @@ export default function LoginPage() {
               </div>
               <div className="space-y-1">
                 <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Welcome Back</CardTitle>
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Customer Secure Login</CardDescription>
+                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Secure Terminal Access</CardDescription>
               </div>
             </CardHeader>
             
@@ -217,9 +246,9 @@ export default function LoginPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t">
-              <p className="text-xs font-bold text-muted-foreground">New to Smart Clean? <Link href="/signup" className="text-primary font-black hover:underline">Signup</Link></p>
+              <p className="text-xs font-bold text-muted-foreground">Don't have an account? <Link href="/signup" className="text-primary font-black hover:underline">Register</Link></p>
               <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center gap-2">
-                <ShieldCheck size={14} /> Admin Access
+                <ShieldCheck size={14} /> Admin Portal
               </Link>
             </CardFooter>
           </Card>
