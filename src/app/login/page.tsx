@@ -185,7 +185,7 @@ export default function LoginPage() {
               </div>
             </CardHeader>
             
-            <CardContent className="px-8 pb-6 pt-4">
+            <CardContent className="px-8 pb-10 pt-4">
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Work Email</Label>
@@ -211,11 +211,6 @@ export default function LoginPage() {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
-              <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center justify-center gap-2">
-                <ShieldCheck size={14} /> Master Portal
-              </Link>
-            </CardFooter>
           </Card>
         </div>
       </div>
