@@ -41,7 +41,7 @@ export default function SecureAdminLoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
     if (isAdmin) {
-      router.push('/admin/dashboard');
+      router.replace('/admin/dashboard');
     }
   }, [user, isAdmin, isUserLoading, router]);
 
@@ -60,7 +60,7 @@ export default function SecureAdminLoginPage() {
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        // Auto-verify/heal Firestore records
+        console.log("[AdminPortal] Bootstrap Admin Success. Syncing...");
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -75,18 +75,16 @@ export default function SecureAdminLoginPage() {
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        toast({ title: "Welcome Admin", description: "Authorization successful." });
-        router.push('/admin/dashboard');
+        toast({ title: "Authorized", description: "Admin terminal accessed." });
+        router.replace('/admin/dashboard');
         return;
       }
 
-      // Check standard admin role
       const userSnap = await getDoc(doc(db, 'users', uid));
       const role = userSnap.data()?.role;
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
-        toast({ title: "Authorized", description: "Redirecting to terminal..." });
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
       } else {
         toast({ variant: "destructive", title: "Access Denied", description: "You do not have administrative privileges." });
         setIsLoading(false);
@@ -96,8 +94,7 @@ export default function SecureAdminLoginPage() {
       console.error("[AdminPortal] Login Error:", error.code, error.message);
       let message = "Invalid email or access key.";
       if (error.code === 'auth/wrong-password') message = "Incorrect password.";
-      if (error.code === 'auth/user-not-found') message = "Admin account not found.";
-      if (error.code === 'auth/invalid-credential') message = "Invalid authentication credentials.";
+      if (error.code === 'auth/network-request-failed') message = "Network timeout. Try again.";
       
       toast({ variant: "destructive", title: "Authentication Failed", description: message });
       setIsLoading(false);

@@ -52,16 +52,17 @@ export default function LoginPage() {
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
+  // Auto-redirect on auth state change
   useEffect(() => {
     if (!user || isUserLoading) return;
 
     if (isAdmin) {
-      router.push('/admin/dashboard');
+      router.replace('/admin/dashboard');
     } else if (!roleLoading && !staffRoleLoading) {
       if (isStaff) {
-        router.push('/staff/dashboard');
+        router.replace('/staff/dashboard');
       } else {
-        router.push('/account/dashboard');
+        router.replace('/account/dashboard');
       }
     }
   }, [user, isUserLoading, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
@@ -74,12 +75,15 @@ export default function LoginPage() {
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
+      console.log("[Auth] Attempting login for:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
+        console.log("[Auth] Bootstrap Admin Detected. Forcing Admin Profile Sync.");
+        // Ensure Firestore has the profile
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -95,25 +99,34 @@ export default function LoginPage() {
         }, { merge: true });
 
         toast({ title: "Authorized", description: "Admin terminal accessed." });
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
         return;
       }
 
+      // Standard Role Check
       const userSnap = await getDoc(doc(db, 'users', uid));
-      if (!userSnap.exists()) throw new Error("Account profile not initialized.");
+      if (!userSnap.exists()) {
+        toast({ variant: "destructive", title: "Profile Error", description: "Account profile not found in database." });
+        setIsLoading(false);
+        return;
+      }
 
       const role = userSnap.data()?.role;
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
       } else if (['staff', 'technician'].includes(role)) {
-        router.push('/staff/dashboard');
+        router.replace('/staff/dashboard');
       } else {
-        router.push('/account/dashboard');
+        router.replace('/account/dashboard');
       }
 
     } catch (error: any) {
-      console.error("[Login] Auth Error:", error.code);
-      toast({ variant: "destructive", title: "Login Failed", description: error.message || "Invalid credentials." });
+      console.error("[Login] Auth Error:", error.code, error.message);
+      let message = "Invalid email or password.";
+      if (error.code === 'auth/network-request-failed') message = "Network error. Please check your internet.";
+      if (error.code === 'auth/user-disabled') message = "This account has been disabled.";
+      
+      toast({ variant: "destructive", title: "Login Failed", description: message });
       setIsLoading(false);
     }
   };
