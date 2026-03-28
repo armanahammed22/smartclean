@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -55,7 +54,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
 
-    // Default redirect logic for existing session
     if (isAdmin) {
       router.replace('/admin/dashboard');
     } else if (!roleLoading && !staffRoleLoading) {
@@ -69,10 +67,7 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) {
-      toast({ variant: "destructive", title: "System Error", description: "Auth is not initialized." });
-      return;
-    }
+    if (!auth || !db) return;
     
     setIsLoading(true);
     
@@ -81,49 +76,53 @@ export default function LoginPage() {
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
       const uid = credentials.user.uid;
 
-      // 1. Fetch User Data from Firestore
+      // 🛡️ Bootstrap Admin Healing Logic
+      // If this is the specific admin, ensure they are verified in the DB instantly
+      const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
+
+      if (isBootstrapAdmin) {
+        // Force create/update admin record in 'users' and 'roles_admins'
+        await setDoc(doc(db, 'users', uid), {
+          uid,
+          name: credentials.user.displayName || 'Root Admin',
+          email: trimmedEmail,
+          role: 'admin',
+          status: 'active',
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        await setDoc(doc(db, 'roles_admins', uid), {
+          uid,
+          assignedAt: serverTimestamp()
+        }, { merge: true });
+
+        toast({ title: "Admin Access Granted", description: "Terminal session initialized." });
+        router.push('/admin/dashboard');
+        return;
+      }
+
+      // Standard User Check
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
-        // Special case for Bootstrap Admin if not in 'users' collection yet
-        if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid)) {
-          toast({ title: "Authorized", description: "Bootstrap Admin detected." });
-          router.push('/admin/dashboard');
-          return;
-        }
-        throw new Error("User profile not found in system.");
+        throw new Error("Account found but profile not initialized. Please contact support.");
       }
 
       const userData = userSnap.data();
       const role = userData.role || 'customer';
 
-      toast({ title: "Success", description: `Authenticated as ${role.toUpperCase()}` });
-
-      // 2. Role-Based Redirection Logic
-      switch(role) {
-        case 'admin':
-        case 'manager':
-        case 'accounts':
-        case 'order_manager':
-          router.push('/admin/dashboard');
-          break;
-        case 'staff':
-        case 'technician':
-          router.push('/staff/dashboard');
-          break;
-        case 'customer':
-          router.push('/account/dashboard');
-          break;
-        default:
-          router.push('/account/dashboard');
+      // Redirection based on standard roles
+      if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
+        router.push('/admin/dashboard');
+      } else if (['staff', 'technician'].includes(role)) {
+        router.push('/staff/dashboard');
+      } else {
+        router.push('/account/dashboard');
       }
 
     } catch (error: any) {
-      console.error("[Auth] Login error:", error);
       let message = "Invalid email or password.";
-      if (error.code === 'auth/invalid-credential') message = "Incorrect email or password.";
-      else if (error.message) message = error.message;
-      
+      if (error.code === 'auth/invalid-credential') message = "Incorrect credentials.";
       toast({ variant: "destructive", title: "Login Failed", description: message });
       setIsLoading(false);
     }
@@ -133,7 +132,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Verifying Identity...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Security Handshake...</p>
       </div>
     );
   }
@@ -154,28 +153,14 @@ export default function LoginPage() {
         
         <div className="relative z-10 max-w-lg space-y-8">
           <div className="space-y-4">
-            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Premium Care</Badge>
+            <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Global Terminal</Badge>
             <h2 className="text-5xl font-black text-white leading-tight uppercase tracking-tighter italic font-headline">
-              Your Space, <br />
-              <span className="text-primary">Our Passion.</span>
+              Admin <br />
+              <span className="text-primary">Control Center.</span>
             </h2>
             <p className="text-white/60 text-lg font-medium leading-relaxed">
-              Experience the smartest cleaning services in Bangladesh. Professional, reliable, and just a click away.
+              Professional cleaning management suite. Verify jobs, track technicians, and manage your catalog.
             </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              { label: "Verified Pros", icon: CheckCircle2 },
-              { label: "Secure Payment", icon: CheckCircle2 },
-              { label: "Modern Tech", icon: Zap },
-              { label: "Instant Booking", icon: Sparkles }
-            ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-3 text-white/80">
-                <feature.icon className="text-primary" size={20} />
-                <span className="text-xs font-bold uppercase tracking-widest">{feature.label}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -183,10 +168,10 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
         <div className="w-full max-w-md space-y-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest mb-4">
-            <ArrowLeft size={16} /> Back to Site
+            <ArrowLeft size={16} /> Exit Terminal
           </Link>
 
-          <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white animate-in fade-in slide-in-from-right-4 duration-500">
+          <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white animate-in fade-in duration-500">
             <div className="h-2 bg-primary w-full" />
             <CardHeader className="space-y-4 text-center pt-10 px-8">
               <div className="flex justify-center">
@@ -199,15 +184,15 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Welcome Back</CardTitle>
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Secure Terminal Access</CardDescription>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Admin Access</CardTitle>
+                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Credential Verification Required</CardDescription>
               </div>
             </CardHeader>
             
             <CardContent className="px-8 pb-6 pt-4">
               <form onSubmit={handleEmailLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
@@ -246,9 +231,8 @@ export default function LoginPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t">
-              <p className="text-xs font-bold text-muted-foreground">Don't have an account? <Link href="/signup" className="text-primary font-black hover:underline">Register</Link></p>
               <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center gap-2">
-                <ShieldCheck size={14} /> Admin Portal
+                <ShieldCheck size={14} /> Master Portal Access
               </Link>
             </CardFooter>
           </Card>

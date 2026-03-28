@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -43,15 +42,8 @@ export default function SecureAdminLoginPage() {
 
     if (isAdmin) {
       router.replace('/admin/dashboard');
-    } else if (!roleLoading) {
-      // If user is logged in but not admin, they should use the standard login
-      toast({ 
-        variant: "destructive", 
-        title: "Admin Only", 
-        description: "Please use the standard login for customer access." 
-      });
     }
-  }, [user, isAdmin, roleLoading, isUserLoading, router, toast]);
+  }, [user, isAdmin, isUserLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,17 +56,36 @@ export default function SecureAdminLoginPage() {
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
-      // Check role in users collection
+      // 🛡️ BOOTSTRAP ADMIN HEALING
+      const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
+
+      if (isBootstrapAdmin) {
+        // Auto-verify in collections
+        await setDoc(doc(db, 'users', uid), {
+          uid,
+          name: credentials.user.displayName || 'Root Admin',
+          email: trimmedEmail,
+          role: 'admin',
+          status: 'active',
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        await setDoc(doc(db, 'roles_admins', uid), {
+          uid,
+          assignedAt: serverTimestamp()
+        }, { merge: true });
+
+        toast({ title: "Authorized", description: "Admin identity verified in database." });
+        router.push('/admin/dashboard');
+        return;
+      }
+
+      // Standard Admin Check
       const userSnap = await getDoc(doc(db, 'users', uid));
       const role = userSnap.data()?.role;
 
-      const isAuthorized = 
-        trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || 
-        BOOTSTRAP_ADMIN_UIDS.includes(uid) || 
-        ['admin', 'manager', 'accounts', 'order_manager'].includes(role || '');
-
-      if (!isAuthorized) {
-        throw new Error("Insufficient privileges for Admin Terminal.");
+      if (!['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
+        throw new Error("Unauthorized: Access denied for standard users.");
       }
 
       toast({ title: "Authorized", description: "Loading terminal..." });
@@ -91,11 +102,11 @@ export default function SecureAdminLoginPage() {
     }
   };
 
-  if (isUserLoading || (user && roleLoading && user.email?.toLowerCase() !== BOOTSTRAP_ADMIN_EMAIL)) {
+  if (isUserLoading) {
     return (
       <div className="min-h-screen bg-[#081621] flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Terminal Synchronizing...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Terminal Authentication...</p>
       </div>
     );
   }
