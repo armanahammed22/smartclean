@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -49,8 +48,6 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from '@/components/ui/switch';
 
-const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
-
 const PERMISSION_LIST = [
   { id: 'dashboard.view', label: 'View Dashboard', group: 'General' },
   { id: 'orders.view', label: 'View Orders', group: 'Sales' },
@@ -94,9 +91,9 @@ export default function AccessControlPage() {
   const stats = useMemo(() => {
     if (!staffUsers || !roles) return { admin: 0, manager: 0, technician: 0, activeRoles: 0, inactiveRoles: 0 };
     return {
-      admin: staffUsers.filter(u => u.role === 'admin' || u.role === 'admins').length,
-      manager: staffUsers.filter(u => u.role === 'manager' || u.role === 'managers').length,
-      technician: staffUsers.filter(u => u.role === 'staff' || u.role === 'employees').length,
+      admin: staffUsers.filter(u => ['admin', 'admins'].includes(u.role)).length,
+      manager: staffUsers.filter(u => ['manager', 'managers'].includes(u.role)).length,
+      technician: staffUsers.filter(u => ['staff', 'technician', 'employees'].includes(u.role)).length,
       activeRoles: roles.filter(r => r.status === 'Active').length,
       inactiveRoles: roles.filter(r => r.status === 'Inactive').length
     };
@@ -113,12 +110,12 @@ export default function AccessControlPage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
-      toast({ title: "Role Configuration Sync", description: "Permissions updated across the platform." });
+      toast({ title: "Role Updated", description: "Permissions updated across the platform." });
       setIsRoleDialogOpen(false);
       setEditingRole(null);
       setRoleForm({ name: '', permissions: [], status: 'Active' });
     } catch (e) {
-      toast({ variant: "destructive", title: "Sync Failed" });
+      toast({ variant: "destructive", title: "Operation Failed" });
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +128,7 @@ export default function AccessControlPage() {
 
     try {
       if (editingUser) {
-        // Update Firestore Only
+        // Update Firestore Profile
         await updateDoc(doc(db, 'users', editingUser.id), {
           name: userForm.name,
           role: userForm.roleId,
@@ -140,7 +137,7 @@ export default function AccessControlPage() {
         });
         toast({ title: "User Profile Updated" });
       } else {
-        // Create in Auth & Firestore (Secondary App Trick)
+        // Secure enrollment: Use secondary app to prevent admin logout
         const secondaryAppName = 'StaffCreationApp';
         const secondaryApp = getApps().find(app => app.name === secondaryAppName) 
           || initializeApp(firebaseConfig, secondaryAppName);
@@ -160,8 +157,8 @@ export default function AccessControlPage() {
           totalEarnings: 0
         });
 
-        // Also add to specific roles collection for Rules compatibility
-        await setDoc(doc(db, `roles_${userForm.roleId}`, newUser.uid), {
+        // Add to legacy role-specific path for Rule backward compatibility
+        await setDoc(doc(db, `roles_${userForm.roleId === 'admin' ? 'admins' : 'employees'}`, newUser.uid), {
           uid: newUser.uid,
           assignedAt: new Date().toISOString()
         });
@@ -178,6 +175,15 @@ export default function AccessControlPage() {
     }
   };
 
+  const togglePermission = (id: string) => {
+    setRoleForm(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(id) 
+        ? prev.permissions.filter(p => p !== id) 
+        : [...prev.permissions, id]
+    }));
+  };
+
   const exportCSV = () => {
     const data = staffUsers?.map(u => ({ Name: u.name, Email: u.email, Role: u.role, Status: u.status })) || [];
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -188,15 +194,6 @@ export default function AccessControlPage() {
     link.setAttribute("download", `staff_directory_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
-  };
-
-  const togglePermission = (id: string) => {
-    setRoleForm(prev => ({
-      ...prev,
-      permissions: prev.permissions.includes(id) 
-        ? prev.permissions.filter(p => p !== id) 
-        : [...prev.permissions, id]
-    }));
   };
 
   return (
@@ -210,13 +207,13 @@ export default function AccessControlPage() {
           <Button variant="outline" onClick={exportCSV} className="rounded-xl font-bold h-11 border-gray-200 gap-2">
             <Download size={16} /> Export CSV
           </Button>
-          <Button onClick={() => setIsUserDialogOpen(true)} className="rounded-xl font-black h-11 px-6 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest">
+          <Button onClick={() => { setEditingUser(null); setUserForm({ name: '', email: '', password: '', roleId: 'staff', status: 'active' }); setIsUserDialogOpen(true); }} className="rounded-xl font-black h-11 px-6 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest">
             <UserPlus size={18} /> Enroll Staff
           </Button>
         </div>
       </div>
 
-      {/* KPI CARDS */}
+      {/* Scoped KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: "Admins", val: stats.admin, icon: ShieldCheck, color: "text-red-600", bg: "bg-red-50" },
@@ -294,7 +291,7 @@ export default function AccessControlPage() {
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
             <CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader className="bg-gray-50/30">
+                <TableHeader className="bg-gray-50/50">
                   <TableRow>
                     <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Personnel</TableHead>
                     <TableHead className="font-bold uppercase text-[10px] tracking-widest">Auth Email</TableHead>

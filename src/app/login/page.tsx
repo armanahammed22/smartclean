@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -74,18 +73,13 @@ export default function LoginPage() {
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
-    console.log("[Auth] Starting login for:", trimmedEmail);
-    
     try {
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
-      console.log("[Auth] Success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[Auth] Bootstrap Admin Detected. Forcing Redirect.");
-        
         // Sync Firestore in background
         setDoc(doc(db, 'users', uid), {
           uid,
@@ -107,7 +101,6 @@ export default function LoginPage() {
       }
 
       // Standard User Flow
-      console.log("[Auth] Fetching role for standard user...");
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
@@ -117,7 +110,6 @@ export default function LoginPage() {
       }
 
       const role = userSnap.data()?.role;
-      console.log("[Auth] Role found:", role);
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
         router.push('/admin/dashboard');

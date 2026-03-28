@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -52,18 +51,13 @@ export default function SecureAdminLoginPage() {
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
-    console.log("[Portal] Attempting login for:", trimmedEmail);
-
     try {
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
-      console.log("[Portal] Auth Success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[Portal] Admin Identified. Directing to Terminal.");
-        
         // Background sync
         setDoc(doc(db, 'users', uid), {
           uid,
