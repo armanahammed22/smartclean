@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRight, AlertCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRight, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { isFirebaseConfigured } from '@/firebase/config';
@@ -48,20 +48,22 @@ export default function SecureAdminLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // PROTOTYPING MODE
     if (!isFirebaseConfigured) {
-      toast({ 
-        variant: "destructive", 
-        title: "Configuration Missing", 
-        description: "Firebase setup is required. Please check your environment variables." 
-      });
-      return;
+      const trimmedEmail = email.trim().toLowerCase();
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL && password === 'admin123') {
+        toast({ title: "Prototyping Mode", description: "Bypassing Firebase connection..." });
+        setIsLoading(true);
+        setTimeout(() => router.replace('/admin/dashboard'), 800);
+        return;
+      }
     }
 
     if (!auth || !db) {
       toast({ 
         variant: "destructive", 
         title: "System Not Ready", 
-        description: "Connecting to secure services. Please try again in 2 seconds." 
+        description: "Firebase service is not initialized." 
       });
       return;
     }
@@ -70,6 +72,7 @@ export default function SecureAdminLoginPage() {
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
+      console.log("[AdminAuth] Login start...");
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
@@ -113,10 +116,10 @@ export default function SecureAdminLoginPage() {
       }
 
     } catch (error: any) {
+      console.error("[AdminAuth] Error:", error.code);
       let message = "Invalid email or access key.";
       if (error.code === 'auth/wrong-password') message = "Incorrect security key.";
       if (error.code === 'auth/user-not-found') message = "Identity not found.";
-      if (error.code === 'auth/network-request-failed') message = "Network connection failed. Check your internet.";
       
       toast({ variant: "destructive", title: "Authentication Failed", description: message });
       setIsLoading(false);
@@ -136,11 +139,11 @@ export default function SecureAdminLoginPage() {
     <div className="min-h-screen bg-[#081621] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {!isFirebaseConfigured && (
-          <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="text-red-500 shrink-0" size={20} />
+          <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <Info className="text-amber-500 shrink-0" size={20} />
             <div className="space-y-1">
-              <p className="text-xs font-black text-red-200 uppercase tracking-widest">Configuration Error</p>
-              <p className="text-[10px] text-red-200/60 leading-relaxed">Administrative portal requires active Firebase credentials. Check your <strong>.env</strong> file settings.</p>
+              <p className="text-xs font-black text-amber-200 uppercase tracking-widest">Demo Mode Active</p>
+              <p className="text-[10px] text-amber-200/60 leading-relaxed">System is disconnected from Firebase. Login with bootstrap admin details to proceed.</p>
             </div>
           </div>
         )}
@@ -192,7 +195,7 @@ export default function SecureAdminLoginPage() {
               <Button 
                 type="submit" 
                 className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95 flex items-center justify-center gap-2" 
-                disabled={isLoading || !isFirebaseConfigured || !auth}
+                disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> Authenticate</>}
               </Button>

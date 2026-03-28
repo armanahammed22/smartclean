@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -69,13 +69,25 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // PROTOTYPING MODE: If Firebase is missing, allow the bootstrap login to work locally
     if (!isFirebaseConfigured) {
-      toast({ 
-        variant: "destructive", 
-        title: "Configuration Missing", 
-        description: "Firebase API Key is not set in environment variables." 
-      });
-      return;
+      const trimmedEmail = email.trim().toLowerCase();
+      if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL && password === 'admin123') {
+        toast({ 
+          title: "Prototyping Mode Activated", 
+          description: "Firebase keys missing. Entering via Secure Mock Auth." 
+        });
+        setIsLoading(true);
+        setTimeout(() => router.replace('/admin/dashboard'), 800);
+        return;
+      } else {
+        toast({ 
+          variant: "destructive", 
+          title: "Configuration Error", 
+          description: "Firebase is not configured. Use the bootstrap admin email/password to enter prototyping mode." 
+        });
+        return;
+      }
     }
 
     if (!auth || !db) {
@@ -91,12 +103,16 @@ export default function LoginPage() {
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
+      console.log("[Auth] Attempting login for:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
+
+      console.log("[Auth] Login success, UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
+        console.log("[Auth] Bootstrap admin detected, syncing profile...");
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -116,6 +132,7 @@ export default function LoginPage() {
         return;
       }
 
+      console.log("[Auth] Fetching user profile from Firestore...");
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
@@ -125,6 +142,7 @@ export default function LoginPage() {
       }
 
       const role = userSnap.data()?.role?.toLowerCase();
+      console.log("[Auth] User role identified:", role);
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
         router.replace('/admin/dashboard');
@@ -135,6 +153,7 @@ export default function LoginPage() {
       }
 
     } catch (error: any) {
+      console.error("[Auth] Login Error:", error.code, error.message);
       let msg = "Invalid email or password.";
       if (error.code === 'auth/network-request-failed') msg = "Network error. Check your connection.";
       if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Account locked temporarily.";
@@ -172,17 +191,17 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#F8FAFC]">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-md space-y-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-primary transition-colors font-black uppercase text-[10px] tracking-widest mb-4">
             <ArrowLeft size={16} /> Exit Terminal
           </Link>
 
           {!isFirebaseConfigured && (
-            <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
-              <AlertCircle className="text-red-600 shrink-0" size={20} />
+            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-start gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+              <Info className="text-amber-600 shrink-0" size={20} />
               <div className="space-y-1">
-                <p className="text-xs font-black text-red-900 uppercase">Configuration Missing</p>
-                <p className="text-[10px] text-red-700 leading-relaxed">The application cannot connect to Firebase. Ensure <strong>NEXT_PUBLIC_FIREBASE_API_KEY</strong> is set in your environment variables.</p>
+                <p className="text-xs font-black text-amber-900 uppercase">Prototyping Mode Active</p>
+                <p className="text-[10px] text-amber-700 leading-relaxed">Firebase keys are missing in .env. You can still login using the default admin credentials to test the UI.</p>
               </div>
             </div>
           )}
@@ -221,7 +240,7 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" 
-                  disabled={isLoading || !isFirebaseConfigured || !auth}
+                  disabled={isLoading}
                 >
                   {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Terminal</>}
                 </Button>

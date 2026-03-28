@@ -10,7 +10,8 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11 - Optimized)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11)
+ * Suppresses internal SDK errors to prevent Next.js error overlays.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -87,7 +88,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
   try {
     if (!firebaseApp) {
       if (!isFirebaseConfigured) {
-        console.warn("[Firebase Init] Configuration missing.");
+        console.warn("[Firebase Init] Missing API Key. App will run in Prototyping Mode.");
         return { firebaseApp: null, auth: null, firestore: null };
       }
 

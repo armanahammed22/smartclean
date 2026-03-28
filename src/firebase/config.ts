@@ -15,6 +15,7 @@ export const firebaseConfig = {
 };
 
 /**
- * Validation flag to prevent execution if API KEY is missing.
+ * Validation flag to check if Firebase is fully configured.
+ * Prototyping mode is active if this is false.
  */
-export const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+export const isFirebaseConfigured = typeof process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'string' && process.env.NEXT_PUBLIC_FIREBASE_API_KEY.length > 10;
