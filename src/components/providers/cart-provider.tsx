@@ -1,11 +1,12 @@
-
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { CartItem, Product, Service } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
 import { trackEvent } from '@/lib/tracking';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 interface CartContextType {
   items: CartItem[];
@@ -15,6 +16,7 @@ interface CartContextType {
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  smartSubtotal: number;
   isCheckoutOpen: boolean;
   setCheckoutOpen: (open: boolean) => void;
 }
@@ -26,6 +28,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const db = useFirestore();
+
+  // Smart Pricing Logic
+  const rulesQuery = useMemoFirebase(() => db ? query(collection(db, 'smart_pricing_rules'), where('isActive', '==', true)) : null, [db]);
+  const { data: activeRules } = useCollection(rulesQuery);
+
+  const smartDiscount = useMemo(() => {
+    if (!activeRules?.length) return 0;
+    const now = new Date();
+    const day = now.getDay(); // 5 = Fri, 6 = Sat
+    const hour = now.getHours();
+
+    let discount = 0;
+    const sorted = [...activeRules].sort((a, b) => b.priority - a.priority);
+
+    for (const rule of sorted) {
+      if (rule.type === 'weekend' && (day === 5 || day === 6)) {
+        discount = rule.discountPercent;
+        break;
+      }
+      if (rule.type === 'off_peak' && (hour >= 22 || hour < 6)) {
+        discount = rule.discountPercent;
+        break;
+      }
+    }
+    return discount;
+  }, [activeRules]);
 
   const addToCart = useCallback((item: Product | Service, quantity = 1, showToast = true) => {
     const isService = 'basePrice' in item;
@@ -36,7 +65,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const category = isService ? t('services_title') : (item as Product).category;
     const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
 
-    // RULE: Cannot mix products and services
     if (items.length > 0) {
       const existingType = items[0].itemType;
       if (existingType !== itemType) {
@@ -51,7 +79,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // TRACK: AddToCart
     trackEvent('AddToCart', {
       content_name: name,
       content_ids: [item.id],
@@ -110,6 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const smartSubtotal = subtotal * (1 - smartDiscount / 100);
 
   return (
     <CartContext.Provider
@@ -121,6 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         subtotal,
+        smartSubtotal,
         isCheckoutOpen,
         setCheckoutOpen
       }}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -104,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, offers: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -245,9 +244,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: TicketPercent,
         color: "text-pink-400",
         items: [
-          { name: "Coupon Codes", href: '/admin/offers/coupons', icon: TicketPercent },
-          ...(productsEnabled ? [{ name: "Flash Sales", href: '/admin/marketing/flash-sales', icon: Zap }] : []),
-          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: FileText },
+          { name: "General & Analytics", href: '/admin/offers/analytics', icon: Activity },
+          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap },
+          { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
+          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
           { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
         ].filter(Boolean)
       },
@@ -342,7 +342,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .filter(g => g && g.visible !== false && g.items.length > 0);
   }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
 
-  // Rest of layout logic remains same...
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.replace('/login');

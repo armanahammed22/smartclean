@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight, TicketPercent, X } from 'lucide-react';
+import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight, TicketPercent, X, TrendingDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy, limit } from 'firebase/firestore';
@@ -46,7 +46,7 @@ const formSchema = z.object({
 });
 
 export function CheckoutModal() {
-  const { items, subtotal, clearCart, isCheckoutOpen, setCheckoutOpen } = useCart();
+  const { items, subtotal, smartSubtotal, clearCart, isCheckoutOpen, setCheckoutOpen } = useCart();
   const { t } = useLanguage();
   const { user } = useUser();
   const auth = useAuth();
@@ -120,16 +120,18 @@ export function CheckoutModal() {
     }, 0);
   }, [items]);
 
+  const smartSavings = subtotal - smartSubtotal;
+
   const couponDiscount = useMemo(() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.discountType === 'percent') {
-      return (subtotal * appliedCoupon.value) / 100;
+      return (smartSubtotal * appliedCoupon.value) / 100;
     }
     return appliedCoupon.value;
-  }, [appliedCoupon, subtotal]);
+  }, [appliedCoupon, smartSubtotal]);
 
-  const tax = Number((subtotal * 0.08).toFixed(2));
-  const finalTotal = Number((subtotal + tax + deliveryCharge - couponDiscount).toFixed(2));
+  const tax = Number((smartSubtotal * 0.08).toFixed(2));
+  const finalTotal = Number((smartSubtotal + tax + deliveryCharge - couponDiscount).toFixed(2));
 
   const handleApplyCoupon = async () => {
     if (!db || !couponInput.trim()) return;
@@ -154,7 +156,7 @@ export function CheckoutModal() {
           return;
         }
         setAppliedCoupon(couponData);
-        toast({ title: "Coupon Applied!", description: `Discount of ${couponData.discountType === 'percent' ? couponData.value + '%' : '৳' + couponData.value} added.` });
+        toast({ title: "Coupon Applied!", description: `Discount added.` });
       }
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "Failed to verify coupon." });
@@ -175,7 +177,7 @@ export function CheckoutModal() {
       setGeneratedOtp(mockOtp);
       setIsOtpSent(true);
       setIsVerifying(false);
-      toast({ title: t('otp_sent'), description: `Verification code: ${mockOtp}` });
+      toast({ title: t('otp_sent'), description: `Code: ${mockOtp}` });
     }, 1200);
   };
 
@@ -257,6 +259,7 @@ export function CheckoutModal() {
         tax: tax,
         deliveryCharge: deliveryCharge,
         couponDiscount: couponDiscount,
+        smartDiscount: smartSavings,
         couponCode: appliedCoupon?.code || null,
         totalPrice: finalTotal,
         paymentMethod: finalPaymentName,
@@ -300,9 +303,6 @@ export function CheckoutModal() {
                       <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase bg-gray-50 px-1.5 py-0.5 rounded">Qty: {item.quantity}</span>
-                        {item.regularPrice && item.regularPrice > item.price && (
-                          <span className="text-[9px] font-bold text-gray-400 line-through">৳{item.regularPrice.toLocaleString()}</span>
-                        )}
                         <span className="text-[9px] font-bold text-primary uppercase">৳{item.price.toLocaleString()}</span>
                       </div>
                     </div>
@@ -310,6 +310,7 @@ export function CheckoutModal() {
                   </div>
                 ))}
               </div>
+              
               <div className="mb-8 p-4 bg-white rounded-2xl border border-dashed border-primary/30 space-y-3">
                 <div className="flex items-center gap-2 text-[#081621]">
                   <TicketPercent size={16} className="text-primary" />
@@ -332,8 +333,15 @@ export function CheckoutModal() {
                   </div>
                 )}
               </div>
+
               <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
+                {smartSavings > 0 && (
+                  <div className="flex justify-between text-[10px] font-black uppercase text-blue-600 animate-in zoom-in-95">
+                    <span className="flex items-center gap-1"><TrendingDown size={12}/> Smart Pricing</span>
+                    <span>-৳{smartSavings.toLocaleString()}</span>
+                  </div>
+                )}
                 {productSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-green-600"><span>Product Savings</span><span>-৳{productSavings.toLocaleString()}</span></div>}
                 {appliedCoupon && <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95"><span>Coupon Discount ({appliedCoupon.code})</span><span>-৳{couponDiscount.toLocaleString()}</span></div>}
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Tax (8%)</span><span>৳{tax.toLocaleString()}</span></div>
