@@ -329,7 +329,7 @@ function BookingsListContent() {
                 <div className="p-2 bg-primary rounded-xl"><Calendar size={24} /></div>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন বুকিং</DialogTitle>
               </div>
-              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">

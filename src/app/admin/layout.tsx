@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -64,7 +63,8 @@ import {
   Bot,
   Sparkles,
   MapPin,
-  ClipboardList
+  ClipboardList,
+  ArrowLeft
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -470,6 +470,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const isNotDashboard = pathname !== '/admin/dashboard';
+
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside className={cn(
@@ -501,11 +503,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <SidebarContent collapsed={false} />
               </SheetContent>
             </Sheet>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Management Terminal</span>
-              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">
-                Server Status: Online <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              </span>
+            <div className="flex items-center gap-3">
+              {isNotDashboard && (
+                <Button variant="ghost" size="icon" className="h-10 w-10 bg-gray-50 rounded-xl" onClick={() => router.back()}>
+                  <ArrowLeft size={20} />
+                </Button>
+              )}
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Management Terminal</span>
+                <span className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                  Server Status: Online <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                </span>
+              </div>
             </div>
           </div>
           

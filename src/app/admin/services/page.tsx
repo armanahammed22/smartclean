@@ -221,7 +221,7 @@ export default function ServicesManagementPage() {
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto">
           <div className="min-w-full">
-            <Table className="min-w-[900px]">
+            <Table>
               <TableHeader className="bg-gray-50/50">
                 <TableRow>
                   <TableHead className="w-12 pl-6">
@@ -289,11 +289,103 @@ export default function ServicesManagementPage() {
         </CardContent>
       </Card>
 
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] rounded-t-[2rem] md:rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+          <div className="flex flex-col h-[85vh]">
+            <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary rounded-xl"><Wrench size={24} /></div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন সার্ভিস যুক্ত করুন</DialogTitle>
+              </div>
+              <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Service Title</Label>
+                    <Input 
+                      value={newServiceData.title} 
+                      onChange={e => setNewServiceData({...newServiceData, title: e.target.value})} 
+                      required 
+                      className="h-12 bg-gray-50 border-none rounded-xl font-bold" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Base Price (৳)</Label>
+                      <Input 
+                        type="number" 
+                        value={newServiceData.basePrice} 
+                        onChange={e => setNewServiceData({...newServiceData, basePrice: e.target.value})} 
+                        required 
+                        className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+                      <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {['Cleaning', 'Maintenance', 'Repair'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
+                    <Textarea 
+                      value={newServiceData.description} 
+                      onChange={e => setNewServiceData({...newServiceData, description: e.target.value})} 
+                      className="bg-gray-50 border-none rounded-2xl min-h-[150px] p-6 leading-relaxed" 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <ImageUploader 
+                    label="Service Thumbnail" 
+                    hint="800 x 600 px"
+                    initialUrl={mainImageUrl} 
+                    onUpload={setMainImageUrl} 
+                    aspectRatio="aspect-[4/3]"
+                  />
+                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-black uppercase">Most Popular</Label>
+                      <p className="text-[9px] text-muted-foreground">SHOW BADGE ON HOMEPAGE</p>
+                    </div>
+                    <Switch checked={newServiceData.isPopular} onCheckedChange={val => setNewServiceData({...newServiceData, isPopular: val})} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border w-full sm:w-auto justify-between">
+                <Label className="text-[10px] font-black uppercase">Publish Immediately</Label>
+                <Switch defaultChecked={true} onCheckedChange={v => setNewServiceData({...newServiceData, status: v ? 'Active' : 'Inactive'})} />
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none rounded-xl font-bold uppercase text-[10px] tracking-widest px-8">Discard</Button>
+                <Button onClick={handleSaveFull} disabled={isSubmitting} className="flex-1 sm:flex-none rounded-xl font-black px-12 h-12 bg-primary shadow-xl uppercase tracking-tighter">
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Create Service</>}
+                </Button>
+              </div>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!viewingService} onOpenChange={() => setViewingService(null)}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
           <DialogHeader className="p-8 bg-[#081621] text-white flex flex-row items-center justify-between">
             <DialogTitle className="text-xl font-black uppercase tracking-tight leading-none">{viewingService?.title}</DialogTitle>
-            <Badge className="bg-primary text-white border-none uppercase text-[10px] font-black">{viewingService?.status}</Badge>
+            <button onClick={() => setViewingService(null)} className="text-white/60 hover:text-white transition-colors">
+              <X size={24} />
+            </button>
           </DialogHeader>
           <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="relative aspect-video md:aspect-square rounded-2xl overflow-hidden bg-gray-50 border">

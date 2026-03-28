@@ -210,7 +210,7 @@ function OrdersListContent() {
 
   return (
     <div className="space-y-8 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">অর্ডার ম্যানেজমেন্ট</h1>
           <p className="text-muted-foreground text-sm font-medium">পণ্য বিক্রয় এবং ডেলিভারি ট্র্যাকিং</p>
@@ -307,7 +307,7 @@ function OrdersListContent() {
                 <div className="p-2 bg-primary rounded-xl"><ShoppingCart size={24} /></div>
                 <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন অর্ডার</DialogTitle>
               </div>
-              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={20}/></button>
+              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
