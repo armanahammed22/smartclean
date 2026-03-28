@@ -17,7 +17,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
+const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function LoginPage() {
@@ -51,7 +51,6 @@ export default function LoginPage() {
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
-  // Persistence Redirect
   useEffect(() => {
     if (!user || isUserLoading) return;
 
@@ -68,20 +67,27 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
+    console.log("[Login] Starting sequence...");
+    
+    if (!auth || !db) {
+      console.error("[Login] Auth/DB not ready");
+      return;
+    }
     
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
+      console.log("[Login] Calling Firebase Auth...");
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
+      console.log("[Login] Auth success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        // Sync Firestore in background
-        setDoc(doc(db, 'users', uid), {
+        console.log("[Login] Admin detected. Updating store...");
+        await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
           email: trimmedEmail,
@@ -90,40 +96,42 @@ export default function LoginPage() {
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        setDoc(doc(db, 'roles_admins', uid), {
+        await setDoc(doc(db, 'roles_admins', uid), {
           uid,
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        toast({ title: "Authorized", description: "Admin terminal accessed." });
-        router.push('/admin/dashboard');
+        toast({ title: "Welcome Admin", description: "Terminal accessed successfully." });
+        router.replace('/admin/dashboard');
         return;
       }
 
-      // Standard User Flow
+      console.log("[Login] Fetching user profile...");
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
-        toast({ variant: "destructive", title: "Profile Error", description: "User record not found." });
+        console.warn("[Login] No Firestore profile");
+        toast({ variant: "destructive", title: "Profile Error", description: "No profile found for this account." });
         setIsLoading(false);
         return;
       }
 
-      const role = userSnap.data()?.role;
+      const role = userSnap.data()?.role?.toLowerCase();
+      console.log("[Login] User role:", role);
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
-        router.push('/admin/dashboard');
+        router.replace('/admin/dashboard');
       } else if (['staff', 'technician'].includes(role)) {
-        router.push('/staff/dashboard');
+        router.replace('/staff/dashboard');
       } else {
-        router.push('/account/dashboard');
+        router.replace('/account/dashboard');
       }
 
     } catch (error: any) {
-      console.error("[Login] Auth Error:", error.code, error.message);
+      console.error("[Login] Error:", error.code, error.message);
       let msg = "Invalid email or password.";
-      if (error.code === 'auth/network-request-failed') msg = "Network connection failed.";
-      if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Try later.";
+      if (error.code === 'auth/network-request-failed') msg = "Network error. Check your connection.";
+      if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Account locked temporarily.";
       
       toast({ variant: "destructive", title: "Login Failed", description: msg });
       setIsLoading(false);
@@ -150,9 +158,9 @@ export default function LoginPage() {
           <div className="space-y-4">
             <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Global Terminal</Badge>
             <h2 className="text-5xl font-black text-white leading-tight uppercase tracking-tighter italic font-headline">
-              Management <br /><span className="text-primary">Protocol.</span>
+              Marketplace <br /><span className="text-primary">Terminal.</span>
             </h2>
-            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure access to Smart Clean operations, inventory, and staff coordination.</p>
+            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure access to Smart Clean services, inventory, and customer portal.</p>
           </div>
         </div>
       </div>
@@ -172,7 +180,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">System Access</CardTitle>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Authentication</CardTitle>
                 <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Enter credentials to synchronize</CardDescription>
               </div>
             </CardHeader>
@@ -183,7 +191,7 @@ export default function LoginPage() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="email" placeholder="admin@smartclean.bd" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    <Input type="email" placeholder="user@example.com" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
                 <div className="space-y-2">

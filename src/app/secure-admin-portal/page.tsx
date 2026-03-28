@@ -13,7 +13,7 @@ import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRi
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
-const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
+const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function SecureAdminLoginPage() {
@@ -40,26 +40,36 @@ export default function SecureAdminLoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
     if (isAdmin) {
+      console.log("[Portal] User already authenticated as admin. Redirecting...");
       router.replace('/admin/dashboard');
     }
   }, [user, isAdmin, isUserLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
+    console.log("[Portal] Login sequence started...");
+    
+    if (!auth || !db) {
+      console.error("[Portal] Firebase services not initialized.");
+      toast({ variant: "destructive", title: "System Error", description: "Firebase services are unavailable." });
+      return;
+    }
 
     setIsLoading(true);
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
+      console.log("[Portal] Attempting Firebase Auth with:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
+      console.log("[Portal] Auth successful. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        // Background sync
-        setDoc(doc(db, 'users', uid), {
+        console.log("[Portal] Bootstrap admin detected. Syncing profile...");
+        // Ensure profile exists
+        await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
           email: trimmedEmail,
@@ -68,34 +78,48 @@ export default function SecureAdminLoginPage() {
           updatedAt: serverTimestamp()
         }, { merge: true });
 
-        setDoc(doc(db, 'roles_admins', uid), {
+        await setDoc(doc(db, 'roles_admins', uid), {
           uid,
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        toast({ title: "Authorized", description: "Admin terminal accessed." });
-        router.push('/admin/dashboard');
+        console.log("[Portal] Redirecting to admin dashboard...");
+        router.replace('/admin/dashboard');
         return;
       }
 
-      // Check standard admin role
+      // Check standard admin role in Firestore
+      console.log("[Portal] Checking role in Firestore 'users' collection...");
       const userSnap = await getDoc(doc(db, 'users', uid));
-      const role = userSnap.data()?.role;
+      
+      if (!userSnap.exists()) {
+        console.warn("[Portal] No user profile found in Firestore.");
+        toast({ variant: "destructive", title: "Access Denied", description: "User profile not found in system." });
+        setIsLoading(false);
+        return;
+      }
 
-      if (['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
-        router.push('/admin/dashboard');
+      const role = userSnap.data()?.role?.toLowerCase();
+      console.log("[Portal] User role found:", role);
+
+      const adminRoles = ['admin', 'manager', 'accounts', 'order_manager'];
+      if (adminRoles.includes(role || '')) {
+        console.log("[Portal] Authorized role detected. Redirecting...");
+        router.replace('/admin/dashboard');
       } else {
-        toast({ variant: "destructive", title: "Access Denied", description: "Account is not authorized for administration." });
+        console.warn("[Portal] Unauthorized role:", role);
+        toast({ variant: "destructive", title: "Access Denied", description: "You do not have administrative privileges." });
         setIsLoading(false);
       }
 
     } catch (error: any) {
-      console.error("[Portal] Login Error:", error.code, error.message);
+      console.error("[Portal] Login Exception:", error.code, error.message);
       let message = "Invalid email or access key.";
       if (error.code === 'auth/wrong-password') message = "Incorrect security key.";
       if (error.code === 'auth/user-not-found') message = "Identity not found.";
+      if (error.code === 'auth/network-request-failed') message = "Network connection failed. Check your internet.";
       
-      toast({ variant: "destructive", title: "Access Denied", description: message });
+      toast({ variant: "destructive", title: "Authentication Failed", description: message });
       setIsLoading(false);
     }
   };
