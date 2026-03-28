@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -10,11 +11,10 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11 - Navigation Optimized)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11 - Optimized)
  * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
- * 2. Specifically ignores Turbopack/Next.js internal HMR messages.
- * 3. Prevents overlays for technical SDK bugs while allowing routing events to pass.
- * 4. Enforces Long Polling to bypass proxy/workstation streaming failures.
+ * 2. Does NOT suppress Auth errors or Routing events.
+ * 3. Prevents overlays for technical SDK bugs while allowing legitimate logic to flow.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -27,6 +27,11 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
+      // EXCLUDE: Authentication and standard network errors should be visible
+      if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email')) {
+        return false;
+      }
+
       // EXCLUDE: Standard router messages and navigation events
       if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr') || lowMsg.includes('router')) {
         return false;
@@ -62,7 +67,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       originalConsoleError.apply(console, args);
     };
 
-    // Filter Window Errors (Main fix for Next.js Overlay)
+    // Filter Window Errors (Fix for Next.js Overlay)
     window.addEventListener('error', (event) => {
       const msg = event.message || (event.error && event.error.message) || '';
       if (isAssertionError(msg)) {
@@ -111,7 +116,9 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         }
       }
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("[Firebase Init] Core failure:", error);
+  }
 
   return { firebaseApp, auth, firestore };
 }

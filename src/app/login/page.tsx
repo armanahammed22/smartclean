@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -54,13 +55,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
 
-    // Check isAdmin first (covers bootstrap admin immediately without waiting for Firestore roles)
     if (isAdmin) {
       router.replace('/admin/dashboard');
-      return;
-    }
-
-    if (!roleLoading && !staffRoleLoading) {
+    } else if (!roleLoading && !staffRoleLoading) {
       if (isStaff) {
         router.replace('/staff/dashboard');
       } else {
@@ -71,25 +68,32 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth) {
+      toast({ variant: "destructive", title: "System Error", description: "Auth is not initialized." });
+      return;
+    }
+    
     setIsLoading(true);
+    console.log("[Auth] Starting login process...");
     
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
+      const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
+      console.log("[Auth] Login successful for:", credentials.user.email);
       
-      // Feedback toast
       toast({ title: "Login Successful", description: "Authenticating session..." });
       
-      // If navigation doesn't trigger immediately via useEffect, try direct navigation for bootstrap
+      // Force direct navigation for bootstrap admin to bypass role loading delay
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
       }
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("[Auth] Login error:", error);
       let message = "Invalid email or password.";
-      if (error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         message = "Incorrect email or password.";
+      } else if (error.code === 'auth/network-request-failed') {
+        message = "Network error. Please check your connection.";
       }
       toast({ variant: "destructive", title: "Login Failed", description: message });
       setIsLoading(false);

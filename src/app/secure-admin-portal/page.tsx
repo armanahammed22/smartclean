@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -53,21 +54,27 @@ export default function SecureAdminLoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth) {
+      toast({ variant: "destructive", title: "Error", description: "Auth not initialized." });
+      return;
+    }
 
     setIsLoading(true);
+    console.log("[Secure-Admin] Starting login for:", email);
+
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      console.log("[Secure-Admin] Auth Success:", credentials.user.email);
       
       toast({ title: "Authorized", description: "Admin terminal loading..." });
       
-      // Explicit redirect if email matches bootstrap
+      // Immediate redirect for bootstrap admin
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
-        router.replace('/admin/dashboard');
+        router.push('/admin/dashboard');
       }
     } catch (error: any) {
-      console.error("Secure login error:", error);
+      console.error("[Secure-Admin] Auth Error:", error);
       toast({ 
         variant: "destructive", 
         title: "Auth Failed", 
@@ -77,7 +84,6 @@ export default function SecureAdminLoginPage() {
     }
   };
 
-  // Improved loading logic: don't block if we already have a user who is likely admin
   const isSyncing = isUserLoading || (user && roleLoading && user.email?.toLowerCase() !== BOOTSTRAP_ADMIN_EMAIL);
 
   if (isSyncing) {
