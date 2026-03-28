@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -22,7 +21,9 @@ import {
   Database,
   ShieldCheck,
   RefreshCw,
-  Plus
+  Plus,
+  ClipboardList,
+  Tags
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,11 +69,19 @@ export default function AdminDashboard() {
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
   const vendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
   const servicesQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
+  const usersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'users') : null, [db, isAuthorized]);
+  const leadsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'leads') : null, [db, isAuthorized]);
+  const requestsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'custom_requests') : null, [db, isAuthorized]);
+  const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'bookings') : null, [db, isAuthorized]);
   
   const { data: orders } = useCollection(ordersQuery);
   const { data: products } = useCollection(productsQuery);
   const { data: vendors } = useCollection(vendorsQuery);
   const { data: dbServices, isLoading: servicesLoading } = useCollection(servicesQuery);
+  const { data: dbUsers } = useCollection(usersQuery);
+  const { data: dbLeads } = useCollection(leadsQuery);
+  const { data: dbRequests } = useCollection(requestsQuery);
+  const { data: dbBookings } = useCollection(bookingsQuery);
 
   const handleSeedData = async () => {
     if (!db) return;
@@ -145,6 +154,15 @@ export default function AdminDashboard() {
     { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
+  const REGISTRY_STATS = [
+    { label: "Users", count: dbUsers?.length || 0, icon: Users, color: "text-blue-500" },
+    { label: "Leads", count: dbLeads?.length || 0, icon: TrendingUp, color: "text-purple-500" },
+    { label: "Requests", count: dbRequests?.length || 0, icon: ClipboardList, color: "text-orange-500" },
+    { label: "Bookings", count: dbBookings?.length || 0, icon: Calendar, color: "text-emerald-500" },
+    { label: "Products", count: products?.length || 0, icon: Box, color: "text-amber-500" },
+    { label: "Services", count: dbServices?.length || 0, icon: Wrench, color: "text-sky-500" },
+  ];
+
   return (
     <div className="space-y-6 md:space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -197,7 +215,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        <div className="lg:col-span-8 min-w-0">
+        <div className="lg:col-span-8 min-w-0 space-y-6 md:space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -226,6 +244,30 @@ export default function AdminDashboard() {
                   </AreaChart>
                 </ResponsiveContainer>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8">
+              <CardTitle className="text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
+                <Database className="text-primary" size={20} /> Firestore Registry Check
+              </CardTitle>
+              <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Live counts across core collection nodes</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 md:p-10">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                {REGISTRY_STATS.map((reg, i) => (
+                  <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center text-center gap-2 group hover:bg-white hover:shadow-xl transition-all">
+                    <div className={cn("p-2 rounded-xl bg-white shadow-sm transition-transform group-hover:scale-110", reg.color)}>
+                      <reg.icon size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[18px] font-black text-gray-900 leading-none">{reg.count}</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">{reg.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>

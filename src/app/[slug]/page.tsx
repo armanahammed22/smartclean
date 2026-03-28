@@ -146,18 +146,22 @@ export default function DynamicLandingPage() {
       discount: calculations.discount,
       totalPrice: calculations.total,
       status: 'New',
+      source: `landing_${slug}`,
       createdAt: new Date().toISOString()
     };
 
-    const targetCol = page.type === 'product' ? 'orders_products' : 'orders_services';
+    const targetCol = page.type === 'product' ? 'orders' : 'bookings';
     const finalData = page.type === 'product' ? {
       ...orderData,
-      items: [{ id: mainProduct?.id, name: mainProduct?.name, price: mainProduct?.price, quantity }],
+      items: [{ id: mainProduct?.id, name: mainProduct?.name, price: mainProduct?.price, quantity, itemType: 'product' }],
       deliveryCharge: calculations.delivery
     } : {
       ...orderData,
-      package: page.packages?.find((p: any) => p.id === selectedPkgId),
-      selectedAddOns: page.addOns?.filter((a: any) => selectedAddOnIds.includes(a.id)),
+      serviceTitle: page.title,
+      items: [
+        { id: selectedPkgId, name: `Package: ${page.packages?.find((p: any) => p.id === selectedPkgId)?.name}`, price: page.packages?.find((p: any) => p.id === selectedPkgId)?.price, quantity: 1, itemType: 'service' },
+        ...page.addOns?.filter((a: any) => selectedAddOnIds.includes(a.id)).map((a: any) => ({ id: a.id, name: a.name, price: a.price, quantity: 1, itemType: 'service' }))
+      ],
       additionalCharge: calculations.additional
     };
 
