@@ -23,6 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : 0.8,
   }));
 
+  if (!db) {
+    console.warn('Sitemap warning: Database not connected. Returning static routes only.');
+    return staticRoutes;
+  }
+
   try {
     // 1. Dynamic Product Routes
     const productSnap = await db.collection('products').get();

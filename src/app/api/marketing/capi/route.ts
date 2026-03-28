@@ -9,6 +9,10 @@ import crypto from 'crypto';
  */
 export async function POST(req: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json({ status: 'Internal Error: DB Connection Missing' }, { status: 500 });
+    }
+
     const { eventName, eventId, payload } = await req.json();
 
     // 1. Fetch Marketing Settings using Admin SDK

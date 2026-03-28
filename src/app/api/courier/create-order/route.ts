@@ -8,6 +8,10 @@ import { db } from '@/lib/firebaseAdmin';
  */
 export async function POST(req: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json({ error: 'Internal Server Error: Database connection missing' }, { status: 500 });
+    }
+
     const { orderId, courierId, orderData } = await req.json();
     
     if (!orderId || !courierId) {
