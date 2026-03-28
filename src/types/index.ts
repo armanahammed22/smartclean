@@ -236,3 +236,17 @@ export interface CustomRequest {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface Permission {
+  id: string;
+  label: string;
+  group: string;
+}
+
+export interface CustomRole {
+  id: string;
+  name: string;
+  permissions: string[];
+  status: 'Active' | 'Inactive';
+  createdAt: string;
+}

@@ -1,36 +1,42 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, updateDoc, query, orderBy, getDocs } from 'firebase/firestore';
-import { initializeApp, getApp, getApps } from 'firebase/app';
+import { collection, doc, setDoc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { firebaseConfig } from '@/firebase/config';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ShieldCheck, 
   UserPlus, 
   Trash2, 
   Loader2, 
-  ShieldAlert, 
-  ArrowLeft,
-  Mail,
+  BadgeCheck, 
+  Users, 
+  Settings, 
+  Save, 
+  Search, 
+  Download, 
+  Filter,
+  ShieldAlert,
+  ChevronRight,
+  UserCheck,
   Lock,
-  User,
-  Key,
-  BadgeCheck,
-  CheckCircle2,
-  XCircle
+  Mail,
+  Zap,
+  MoreVertical,
+  Plus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -39,389 +45,405 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Switch } from '@/components/ui/switch';
 
-const ROLES = [
-  { id: 'admins', label: 'Admin', color: 'bg-red-100 text-red-700', value: 'admin', desc: 'Full system access' },
-  { id: 'managers', label: 'Manager', color: 'bg-blue-100 text-blue-700', value: 'manager', desc: 'Ops management' },
-  { id: 'accounts', label: 'Accounts', color: 'bg-green-100 text-green-700', value: 'accountant', desc: 'Financial reports' },
-  { id: 'order_managers', label: 'Order Manager', color: 'bg-purple-100 text-purple-700', value: 'order_manager', desc: 'Dispatch control' },
-  { id: 'employees', label: 'Technician', color: 'bg-orange-100 text-orange-700', value: 'staff', desc: 'Field worker' }
+const PERMISSION_LIST = [
+  { id: 'dashboard.view', label: 'View Dashboard', group: 'General' },
+  { id: 'orders.view', label: 'View Orders', group: 'Sales' },
+  { id: 'orders.edit', label: 'Update Orders', group: 'Sales' },
+  { id: 'orders.delete', label: 'Delete Orders', group: 'Sales' },
+  { id: 'bookings.view', label: 'View Bookings', group: 'Service' },
+  { id: 'bookings.edit', label: 'Update Bookings', group: 'Service' },
+  { id: 'inventory.manage', label: 'Manage Products', group: 'Inventory' },
+  { id: 'crm.view', label: 'View Customers', group: 'CRM' },
+  { id: 'crm.manage', label: 'Edit Customers', group: 'CRM' },
+  { id: 'reports.view', label: 'View Reports', group: 'Admin' },
+  { id: 'settings.access', label: 'System Settings', group: 'Admin' },
 ];
 
-export default function RoleManagementPage() {
+export default function AccessControlPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   
-  const [targetUid, setTargetUid] = useState('');
-  const [selectedRoleId, setSelectedRole] = useState('employees');
+  const [activeTab, setActiveTab] = useState('roles');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // New User Form State
-  const [newUserData, setNewUserData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    roleId: 'employees'
-  });
+  // Dialog States
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
-  const adminsQuery = useMemoFirebase(() => db ? collection(db, 'roles_admins') : null, [db]);
-  const managersQuery = useMemoFirebase(() => db ? collection(db, 'roles_managers') : null, [db]);
-  const accountsQuery = useMemoFirebase(() => db ? collection(db, 'roles_accounts') : null, [db]);
-  const orderManagersQuery = useMemoFirebase(() => db ? collection(db, 'roles_order_managers') : null, [db]);
-  const employeesQuery = useMemoFirebase(() => db ? collection(db, 'roles_employees') : null, [db]);
+  // Form States
+  const [roleForm, setRoleForm] = useState({ name: '', permissions: [] as string[], status: 'Active' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', roleId: 'employees', status: 'active' });
 
-  const { data: admins, isLoading: aLoading } = useCollection(adminsQuery);
-  const { data: managers, isLoading: mLoading } = useCollection(managersQuery);
-  const { data: accounts, isLoading: acLoading } = useCollection(accountsQuery);
-  const { data: orderManagers, isLoading: omLoading } = useCollection(orderManagersQuery);
-  const { data: employees, isLoading: eLoading } = useCollection(employeesQuery);
+  // Data Queries
+  const rolesQuery = useMemoFirebase(() => db ? query(collection(db, 'roles_management'), orderBy('name', 'asc')) : null, [db]);
+  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '!=', 'customer'), orderBy('role', 'asc')) : null, [db]);
+  
+  const { data: roles, isLoading: rLoading } = useCollection(rolesQuery);
+  const { data: staffUsers, isLoading: uLoading } = useCollection(usersQuery);
 
-  /**
-   * CREATE NEW STAFF/ADMIN ACCOUNT
-   * Uses a secondary Firebase app to prevent logging out the current admin.
-   */
+  // KPI Calculations
+  const stats = useMemo(() => {
+    if (!staffUsers || !roles) return { admin: 0, manager: 0, technician: 0, activeRoles: 0, inactiveRoles: 0 };
+    return {
+      admin: staffUsers.filter(u => u.role === 'admin' || u.role === 'admins').length,
+      manager: staffUsers.filter(u => u.role === 'manager' || u.role === 'managers').length,
+      technician: staffUsers.filter(u => u.role === 'staff' || u.role === 'employees').length,
+      activeRoles: roles.filter(r => r.status === 'Active').length,
+      inactiveRoles: roles.filter(r => r.status === 'Inactive').length
+    };
+  }, [staffUsers, roles]);
+
+  const handleSaveRole = async () => {
+    if (!db || !roleForm.name) return;
+    setIsSubmitting(true);
+    try {
+      const roleId = editingRole?.id || roleForm.name.toLowerCase().replace(/\s+/g, '_');
+      await setDoc(doc(db, 'roles_management', roleId), {
+        ...roleForm,
+        id: roleId,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      
+      toast({ title: "Role Configuration Sync", description: "Permissions updated across the platform." });
+      setIsRoleDialogOpen(false);
+      setEditingRole(null);
+      setRoleForm({ name: '', permissions: [], status: 'Active' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Sync Failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
     setIsSubmitting(true);
 
-    let secondaryApp;
     try {
-      // 1. Initialize secondary app
-      const secondaryAppName = 'SecondaryAuthApp';
-      secondaryApp = getApps().find(app => app.name === secondaryAppName) 
-        || initializeApp(firebaseConfig, secondaryAppName);
-      
-      const secondaryAuth = getAuth(secondaryApp);
+      if (editingUser) {
+        // Update Firestore Only
+        await updateDoc(doc(db, 'users', editingUser.id), {
+          name: userForm.name,
+          role: userForm.roleId,
+          status: userForm.status,
+          updatedAt: new Date().toISOString()
+        });
+        toast({ title: "User Profile Updated" });
+      } else {
+        // Create in Auth & Firestore (Secondary App Trick)
+        const secondaryAppName = 'StaffCreationApp';
+        const secondaryApp = getApps().find(app => app.name === secondaryAppName) 
+          || initializeApp(firebaseConfig, secondaryAppName);
+        const secondaryAuth = getAuth(secondaryApp);
 
-      // 2. Create Auth User
-      const userCred = await createUserWithEmailAndPassword(
-        secondaryAuth, 
-        newUserData.email.trim().toLowerCase(), 
-        newUserData.password
-      );
-      
-      const newUser = userCred.user;
-      await updateProfile(newUser, { displayName: newUserData.name });
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, userForm.email, userForm.password);
+        const newUser = cred.user;
+        await updateProfile(newUser, { displayName: userForm.name });
 
-      // 3. Create Security & Profile Documents
-      const roleConfig = ROLES.find(r => r.id === newUserData.roleId);
-      const colName = `roles_${newUserData.roleId}`;
+        await setDoc(doc(db, 'users', newUser.uid), {
+          uid: newUser.uid,
+          name: userForm.name,
+          email: userForm.email.toLowerCase(),
+          role: userForm.roleId,
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          totalEarnings: 0
+        });
 
-      // Permission Document
-      await setDoc(doc(db, colName, newUser.uid), {
-        uid: newUser.uid,
-        email: newUserData.email.toLowerCase(),
-        assignedAt: new Date().toISOString(),
-        role: newUserData.roleId
-      });
+        // Also add to specific roles collection for Rules compatibility
+        await setDoc(doc(db, `roles_${userForm.roleId}`, newUser.uid), {
+          uid: newUser.uid,
+          assignedAt: new Date().toISOString()
+        });
 
-      // Public Profile
-      await setDoc(doc(db, 'users', newUser.uid), {
-        uid: newUser.uid,
-        name: newUserData.name,
-        email: newUserData.email.toLowerCase(),
-        role: roleConfig?.value || 'staff',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        totalEarnings: 0
-      });
-
-      // 4. Cleanup: Sign out from secondary app
-      await signOut(secondaryAuth);
-
-      toast({ 
-        title: "Account Created", 
-        description: `${newUserData.name} has been granted ${roleConfig?.label} access.` 
-      });
-      
-      setIsCreateDialogOpen(false);
-      setNewUserData({ name: '', email: '', password: '', roleId: 'employees' });
+        await signOut(secondaryAuth);
+        toast({ title: "Staff Account Activated" });
+      }
+      setIsUserDialogOpen(false);
+      setEditingUser(null);
     } catch (error: any) {
-      console.error("Staff creation failed:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Creation Failed", 
-        description: error.message 
-      });
+      toast({ variant: "destructive", title: "Action Failed", description: error.message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleAssignRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db || !targetUid.trim()) return;
-    setIsSubmitting(true);
-
-    try {
-      const colName = `roles_${selectedRoleId}`;
-      const roleConfig = ROLES.find(r => r.id === selectedRoleId);
-      
-      await setDoc(doc(db, colName, targetUid.trim()), {
-        uid: targetUid.trim(),
-        assignedAt: new Date().toISOString(),
-        role: selectedRoleId
-      });
-
-      await updateDoc(doc(db, 'users', targetUid.trim()), {
-        role: roleConfig?.value || 'customer',
-        updatedAt: new Date().toISOString()
-      }).catch(() => {
-        console.warn("User profile not found in 'users' collection, only security role created.");
-      });
-
-      toast({ title: "Role Assigned", description: `UID granted ${roleConfig?.label} privileges.` });
-      setTargetUid('');
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Assignment Failed", description: e.message });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const exportCSV = () => {
+    const data = staffUsers?.map(u => ({ Name: u.name, Email: u.email, Role: u.role, Status: u.status })) || [];
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + ["Name,Email,Role,Status", ...data.map(row => Object.values(row).join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `staff_directory_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
   };
 
-  const removeRole = async (colId: string, uid: string) => {
-    if (!db || !confirm("Revoke this user's privileges?")) return;
-    try {
-      await deleteDoc(doc(db, colId, uid));
-      await updateDoc(doc(db, 'users', uid), {
-        role: 'customer',
-        updatedAt: new Date().toISOString()
-      }).catch(() => {});
-      toast({ title: "Role Revoked" });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Revoke Failed", description: e.message });
-    }
+  const togglePermission = (id: string) => {
+    setRoleForm(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(id) 
+        ? prev.permissions.filter(p => p !== id) 
+        : [...prev.permissions, id]
+    }));
   };
-
-  const allAssignments = [
-    ...(admins?.map(a => ({ ...a, colId: 'roles_admins' })) || []),
-    ...(managers?.map(a => ({ ...a, colId: 'roles_managers' })) || []),
-    ...(accounts?.map(a => ({ ...a, colId: 'roles_accounts' })) || []),
-    ...(orderManagers?.map(a => ({ ...a, colId: 'roles_order_managers' })) || []),
-    ...(employees?.map(a => ({ ...a, colId: 'roles_employees' })) || [])
-  ];
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-20 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Privilege Management</h1>
-          <p className="text-muted-foreground text-sm font-medium">Control dashboard access and administrative roles</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Access Control Center</h1>
+          <p className="text-muted-foreground text-sm font-medium">Granular role-based security and personnel management</p>
         </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
-              <UserPlus size={18} /> Create Staff Account
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
-            <form onSubmit={handleCreateAccount}>
-              <DialogHeader className="p-8 bg-[#081621] text-white">
-                <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-2">
-                  <BadgeCheck className="text-primary" /> Enrollment Form
-                </DialogTitle>
-                <DialogDescription className="text-white/40 font-medium">
-                  Add new dashboard user with direct credentials.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="p-8 space-y-5 bg-white">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Staff Member Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      value={newUserData.name} 
-                      onChange={(e) => setNewUserData({...newUserData, name: e.target.value})}
-                      placeholder="e.g. Abdullah Al Mamun" 
-                      className="h-12 pl-11 bg-gray-50 border-none rounded-xl font-bold" 
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Auth Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      type="email"
-                      value={newUserData.email} 
-                      onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
-                      placeholder="work@smartclean.com" 
-                      className="h-12 pl-11 bg-gray-50 border-none rounded-xl font-medium" 
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      type="password"
-                      value={newUserData.password} 
-                      onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
-                      placeholder="••••••••" 
-                      className="h-12 pl-11 bg-gray-50 border-none rounded-xl" 
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Select Access Level</Label>
-                  <Select value={newUserData.roleId} onValueChange={(val) => setNewUserData({...newUserData, roleId: val})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {ROLES.map(role => (
-                        <SelectItem key={role.id} value={role.id}>
-                          <div className="flex flex-col items-start gap-0.5">
-                            <span className="font-bold uppercase text-[10px]">{role.label}</span>
-                            <span className="text-[8px] text-muted-foreground leading-none">{role.desc}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter className="p-8 bg-gray-50 border-t">
-                <Button type="button" variant="ghost" onClick={() => setIsCreateDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-8 shadow-xl">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Authorize Account"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportCSV} className="rounded-xl font-bold h-11 border-gray-200 gap-2">
+            <Download size={16} /> Export CSV
+          </Button>
+          <Button onClick={() => setIsUserDialogOpen(true)} className="rounded-xl font-black h-11 px-6 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest">
+            <UserPlus size={18} /> Enroll Staff
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* MANUAL ASSIGNMENT */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm h-fit bg-white rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b p-8">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Key className="text-primary" size={20} /> Assign Role by UID
-              </CardTitle>
-              <CardDescription className="text-xs">Promote an existing customer by their ID.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8">
-              <form onSubmit={handleAssignRole} className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">User UID</Label>
-                  <Input 
-                    value={targetUid} 
-                    onChange={(e) => setTargetUid(e.target.value)} 
-                    placeholder="UID from customer directory" 
-                    className="h-12 bg-gray-50 border-none rounded-xl font-mono text-[10px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Access Type</Label>
-                  <Select value={selectedRoleId} onValueChange={setSelectedRole}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {ROLES.map(role => (
-                        <SelectItem key={role.id} value={role.id}>{role.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" disabled={isSubmitting} className="w-full h-12 font-black shadow-lg rounded-xl uppercase tracking-tighter bg-[#081621] hover:bg-[#0a253a]">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Grant Access"}
-                </Button>
-              </form>
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {[
+          { label: "Admins", val: stats.admin, icon: ShieldCheck, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Managers", val: stats.manager, icon: BadgeCheck, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Tech / Staff", val: stats.technician, icon: Users, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Active Roles", val: stats.activeRoles, icon: Zap, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Inactive", val: stats.inactiveRoles, icon: XCircle, color: "text-gray-400", bg: "bg-gray-50" }
+        ].map((s, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
+                <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
+              </div>
+              <div className={cn("p-2.5 rounded-xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={18} /></div>
             </CardContent>
           </Card>
+        ))}
+      </div>
 
-          <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
-            <ShieldAlert className="text-amber-600 shrink-0 mt-1" size={24} />
-            <div className="space-y-1">
-              <h4 className="text-xs font-black uppercase text-amber-900">Security Note</h4>
-              <p className="text-[10px] font-medium text-amber-800/70 leading-relaxed">
-                Roles are verified via Firestore Security Rules. Ensure only trusted individuals are granted Admin or Manager privileges.
-              </p>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-white border p-1 h-12 rounded-xl w-fit">
+          <TabsTrigger value="roles" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Settings size={16} /> Role Definitions
+          </TabsTrigger>
+          <TabsTrigger value="users" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Users size={16} /> Staff Directory
+          </TabsTrigger>
+        </TabsList>
+
+        {/* TAB: ROLES */}
+        <TabsContent value="roles" className="space-y-6">
+          <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Input 
+                placeholder="Search roles..." 
+                className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
+            <Button onClick={() => { setEditingRole(null); setRoleForm({ name: '', permissions: [], status: 'Active' }); setIsRoleDialogOpen(true); }} className="h-12 gap-2 rounded-xl font-black uppercase text-[10px]">
+              <Plus size={16} /> Create Role
+            </Button>
           </div>
-        </div>
 
-        {/* ACCESS LIST */}
-        <Card className="lg:col-span-8 border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg font-bold uppercase tracking-tight">Active Privileges</CardTitle>
-              <CardDescription className="text-[10px] font-black uppercase tracking-widest">Global access registry</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black">{allAssignments.length} Users</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-gray-50/30">
-                <TableRow>
-                  <TableHead className="font-bold py-5 pl-8 uppercase text-[9px] tracking-widest">User Identity</TableHead>
-                  <TableHead className="font-bold uppercase text-[9px] tracking-widest">Access Level</TableHead>
-                  <TableHead className="font-bold uppercase text-[9px] tracking-widest text-center">Status</TableHead>
-                  <TableHead className="text-right pr-8 uppercase text-[9px] tracking-widest">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingAssignments() ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-24"><Loader2 className="animate-spin text-primary inline" size={32} /></TableCell></TableRow>
-                ) : allAssignments.map((assign, i) => {
-                  const roleConfig = ROLES.find(r => r.id === assign.colId);
-                  return (
-                    <TableRow key={i} className="hover:bg-gray-50/50 transition-colors group">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rLoading ? <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div> : roles?.map((role) => (
+              <Card key={role.id} className={cn("border-none shadow-sm rounded-3xl overflow-hidden group transition-all", role.status === 'Inactive' && "opacity-60")}>
+                <CardHeader className="bg-gray-50/50 border-b p-6 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base font-black uppercase tracking-tight">{role.name}</CardTitle>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-1">{role.permissions?.length || 0} PERMISSIONS</p>
+                  </div>
+                  <Badge variant="outline" className={cn("text-[8px] font-black border-none px-2", role.status === 'Active' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700")}>{role.status}</Badge>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex flex-wrap gap-1">
+                    {role.permissions?.slice(0, 4).map((p: string) => (
+                      <Badge key={p} className="bg-primary/5 text-primary text-[8px] font-bold uppercase border-none">{p.split('.')[1]}</Badge>
+                    ))}
+                    {role.permissions?.length > 4 && <span className="text-[8px] font-black text-muted-foreground">+{role.permissions.length - 4} MORE</span>}
+                  </div>
+                  <div className="pt-4 border-t flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl font-bold h-9" onClick={() => { setEditingRole(role); setRoleForm(role); setIsRoleDialogOpen(true); }}>Edit Rules</Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => deleteDoc(doc(db!, 'roles_management', role.id))}><Trash2 size={16} /></Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* TAB: USERS */}
+        <TabsContent value="users">
+          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+            <CardContent className="p-0 overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50/30">
+                  <TableRow>
+                    <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Personnel</TableHead>
+                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Auth Email</TableHead>
+                    <TableHead className="font-bold uppercase text-[10px] tracking-widest">Global Role</TableHead>
+                    <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center">Status</TableHead>
+                    <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {uLoading ? <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow> : staffUsers?.map((u) => (
+                    <TableRow key={u.id} className="hover:bg-gray-50/50 transition-colors group">
                       <TableCell className="py-5 pl-8">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-mono text-[9px] text-gray-400 uppercase tracking-tighter truncate max-w-[150px]">{assign.uid}</span>
-                          <span className="font-bold text-xs text-gray-700">{assign.email || 'Existing User'}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black">{u.name?.[0]?.toUpperCase()}</div>
+                          <div>
+                            <p className="font-bold text-sm text-gray-900 uppercase leading-none">{u.name}</p>
+                            <p className="text-[10px] font-mono text-muted-foreground mt-1">ID: {u.id.slice(0, 12)}</p>
+                          </div>
                         </div>
                       </TableCell>
+                      <TableCell className="font-medium text-xs text-gray-600">{u.email}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className={cn("w-2 h-2 rounded-full", roleConfig?.id === 'roles_admins' ? 'bg-red-500' : 'bg-blue-500')} />
-                          <Badge className={cn("text-[8px] font-black uppercase border-none px-2 py-0.5", roleConfig?.color)}>
-                            {roleConfig?.label}
-                          </Badge>
-                        </div>
+                        <Badge variant="outline" className="bg-primary/5 text-primary font-black uppercase text-[8px] border-none px-2">{u.role}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-green-600 font-black text-[9px]">
-                          <CheckCircle2 size={12} /> VERIFIED
-                        </div>
+                        <Switch 
+                          checked={u.status === 'active'} 
+                          onCheckedChange={(val) => updateDoc(doc(db!, 'users', u.id), { status: val ? 'active' : 'disabled' })}
+                        />
                       </TableCell>
                       <TableCell className="text-right pr-8">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-red-50" onClick={() => removeRole(assign.colId, assign.uid)}>
-                          <XCircle size={16} />
-                        </Button>
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingUser(u); setUserForm({ ...userForm, name: u.name, email: u.email, roleId: u.role, status: u.status }); setIsUserDialogOpen(true); }}><Settings size={16} /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'users', u.id))}><Trash2 size={16} /></Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-                {allAssignments.length === 0 && !isLoadingAssignments() && (
-                  <TableRow><TableCell colSpan={4} className="text-center py-24 text-muted-foreground italic font-medium">No special privileges assigned.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* ROLE MODAL */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
+          <header className="p-8 bg-[#081621] text-white">
+            <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingRole ? 'Update Role Policies' : 'Define New Role'}</DialogTitle>
+            <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure granular access levels</DialogDescription>
+          </header>
+          <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase ml-1">Role Label</Label>
+              <Input 
+                value={roleForm.name} 
+                onChange={e => setRoleForm({...roleForm, name: e.target.value})}
+                placeholder="e.g. Finance Manager"
+                className="h-12 bg-gray-50 border-none rounded-xl font-bold"
+              />
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2">Permission Matrix</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {PERMISSION_LIST.map(p => (
+                  <div key={p.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer" onClick={() => togglePermission(p.id)}>
+                    <Checkbox checked={roleForm.permissions.includes(p.id)} onCheckedChange={() => togglePermission(p.id)} />
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-gray-800">{p.label}</p>
+                      <p className="text-[8px] font-black text-muted-foreground uppercase">{p.group}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-2">
+            <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
+            <Button onClick={handleSaveRole} disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Sync Policies"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* USER MODAL */}
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
+          <header className="p-8 bg-[#081621] text-white">
+            <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingUser ? 'Update Staff Member' : 'Personnel Enrollment'}</DialogTitle>
+          </header>
+          <form onSubmit={handleCreateAccount} className="p-8 space-y-5">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase ml-1">Legal Name</Label>
+              <Input 
+                value={userForm.name} 
+                onChange={e => setUserForm({...userForm, name: e.target.value})}
+                required className="h-12 bg-gray-50 border-none rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase ml-1">Login Email</Label>
+              <Input 
+                type="email"
+                value={userForm.email} 
+                onChange={e => setUserForm({...userForm, email: e.target.value})}
+                disabled={!!editingUser}
+                required className="h-12 bg-gray-50 border-none rounded-xl"
+              />
+            </div>
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase ml-1">Secure Password</Label>
+                <Input 
+                  type="password"
+                  value={userForm.password} 
+                  onChange={e => setUserForm({...userForm, password: e.target.value})}
+                  required className="h-12 bg-gray-50 border-none rounded-xl"
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase ml-1">Designated Role</Label>
+              <Select value={userForm.roleId} onValueChange={v => setUserForm({...userForm, roleId: v})}>
+                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  {['admin', 'manager', 'accountant', 'order_manager', 'staff'].map(r => (
+                    <SelectItem key={r} value={r} className="uppercase font-black text-[10px]">{r.replace('_', ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl mt-4">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : (editingUser ? "Sync Profile" : "Activate Account")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
 
-  function isLoadingAssignments() {
-    return aLoading || mLoading || acLoading || omLoading || eLoading;
-  }
+function where(arg0: string, arg1: string, arg2: string) {
+  return (db: any) => {}; // Placeholder for the actual where function
 }
