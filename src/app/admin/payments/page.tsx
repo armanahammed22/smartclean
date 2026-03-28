@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 
-const BOOTSTRAP_ADMIN_UIDS = ['6YTKdslETkVXcftvhSY5x9sjOgT2', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
+const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
 
 export default function PaymentManagementPage() {
   const { user } = useUser();

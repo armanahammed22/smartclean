@@ -11,8 +11,7 @@ service cloud.firestore {
     // Comprehensive Admin Check
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
-        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
+        request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
         request.auth.token.email == 'smartclean422@gmail.com' ||
         exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
@@ -26,8 +25,7 @@ service cloud.firestore {
     // 🛡️ GLOBAL ADMIN OVERRIDE
     match /{allPaths=**} {
       allow read, write: if isSignedIn() && (
-        request.auth.uid == '6YTKdslETkVXcftvhSY5x9sjOgT2' ||
-        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
+        request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
         request.auth.token.email == 'smartclean422@gmail.com'
       );
     }

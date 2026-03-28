@@ -1,3 +1,4 @@
+
 # Smart Clean SaaS CRM Setup Guide
 
 A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15, Tailwind CSS, and Firebase.
@@ -25,7 +26,7 @@ A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15
 অ্যাডমিন হিসেবে লগইন করতে সরাসরি নিচের লিঙ্কে যান:
 **URL:** `/secure-admin-portal`
 - **Email:** `smartclean422@gmail.com`
-- **Password:** `@arman@2211@`
+- **Password:** `admin123`
 
 ### 2. Standard User/Staff Login
 সাধারণ ইউজার বা মেম্বার হিসেবে লগইন করতে:
@@ -45,11 +46,11 @@ The CRM portal is located at `/admin/dashboard`. To log in with your credentials
 ### 2. Create your User account
 - In the **Authentication > Users** tab, click **Add user**.
 - Email: `smartclean422@gmail.com`
-- Password: `@arman@2211@`
+- Password: `admin123`
 - Click **Add user**.
 
 ### 3. Verification
-- Your UID is `6YTKdslETkVXcftvhSY5x9sjOgT2`. 
+- Your current UID is `Q8QpZP1GzzWf2f2K6WTe476PcD92`. 
 - The application is hardcoded to grant this specific UID full "Bootstrap Admin" privileges instantly once you log in.
 
 ## Features
