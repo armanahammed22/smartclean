@@ -1,11 +1,14 @@
 "use client";
 
 /**
- * Firebase Configuration
- * Pure configuration object. Initialization is handled in init.ts
+ * Firebase Client Configuration
+ * Uses NEXT_PUBLIC_ variables for safe browser-side access.
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyA2LPcx8rgQNwzgerxh1PoXynBkvOcrHE0",
-  authDomain: "studio-5425564660-b1f7f.firebaseapp.com",
-  projectId: "studio-5425564660-b1f7f",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
