@@ -101,6 +101,9 @@ export function Navbar() {
     color: layout?.header?.topBarText || '#6b7280'
   };
 
+  const customReqIcon = layout?.header?.customRequestIconUrl || 'https://lh3.googleusercontent.com/d/16999999999999999999999999999999'; // Generic cleaning bucket fallback
+  const customReqTitle = layout?.header?.customRequestTitle;
+
   return (
     <header className="w-full z-[160] sticky top-0 shadow-sm transition-colors duration-500" style={navStyles}>
       {(layout?.header?.showTopBar !== false) && (
@@ -254,11 +257,18 @@ export function Navbar() {
               <Link 
                 href="/account/custom-requests" 
                 className={cn(
-                  "hidden lg:flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-xl shadow-primary/20 hover:scale-105 active:scale-95",
+                  "hidden lg:flex items-center gap-3 bg-primary text-white px-5 py-2.5 rounded-full font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-xl shadow-primary/20 hover:scale-105 active:scale-95",
                   layout?.header?.fontSize || 'text-[11px]'
                 )}
               >
-                <Zap size={14} fill="currentColor" /> কাস্টম রিকোয়েস্ট
+                {layout?.header?.customRequestIconUrl ? (
+                  <div className="relative w-5 h-5 shrink-0">
+                    <Image src={layout.header.customRequestIconUrl} alt="Icon" fill className="object-contain" unoptimized />
+                  </div>
+                ) : (
+                  <Zap size={14} fill="currentColor" />
+                )}
+                {customReqTitle || ''}
               </Link>
             )}
 

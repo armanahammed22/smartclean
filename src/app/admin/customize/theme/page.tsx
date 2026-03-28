@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -24,9 +25,12 @@ import {
   Facebook,
   Instagram,
   MessageCircle,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Zap,
+  ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ImageUploader } from '@/components/ui/image-uploader';
 
 const DEFAULT_THEME = {
   header: {
@@ -37,6 +41,8 @@ const DEFAULT_THEME = {
     showTopBar: true,
     topBarBg: '#f9fafb',
     topBarText: '#6b7280',
+    customRequestTitle: 'কাস্টম রিকোয়েস্ট',
+    customRequestIconUrl: '',
     menuItems: [
       { label: 'Home', link: '/' },
       { label: 'Services', link: '/services' },
@@ -164,10 +170,10 @@ export default function LayoutThemePage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Font Scale</Label>
                     <select className="w-full h-12 bg-gray-50 rounded-xl px-4 text-sm font-bold border-none" value={formData.header.fontSize} onChange={e => setFormData({...formData, header: {...formData.header, fontSize: e.target.value}})}>
-                      <SelectItem value="text-[10px]">Tiny</SelectItem>
-                      <SelectItem value="text-xs">Small</SelectItem>
-                      <SelectItem value="text-sm">Standard</SelectItem>
-                      <SelectItem value="text-base">Large</SelectItem>
+                      <option value="text-[10px]">Tiny</option>
+                      <option value="text-xs">Small</option>
+                      <option value="text-sm">Standard</option>
+                      <option value="text-base">Large</option>
                     </select>
                   </div>
                 </div>
@@ -178,6 +184,38 @@ export default function LayoutThemePage() {
                     <p className="text-[9px] text-muted-foreground">SHOW LOGIN/LANGUAGE BAR ON DESKTOP</p>
                   </div>
                   <Switch checked={formData.header.showTopBar} onCheckedChange={val => setFormData({...formData, header: {...formData.header, showTopBar: val}})} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50 p-8 border-b">
+                <CardTitle className="text-lg font-bold flex items-center gap-2"><Zap className="text-primary" size={20} /> Custom Request Branding</CardTitle>
+                <CardDescription>Customize the 'Custom Request' button identity in the header.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Title</Label>
+                      <Input 
+                        value={formData.header.customRequestTitle} 
+                        onChange={e => setFormData({...formData, header: {...formData.header, customRequestTitle: e.target.value}})}
+                        placeholder="e.g. কাস্টম রিকোয়েস্ট"
+                        className="h-12 bg-gray-50 border-none rounded-xl font-bold"
+                      />
+                      <p className="text-[9px] text-muted-foreground italic">Leave empty to show only the icon.</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <ImageUploader 
+                      label="Custom Icon Image"
+                      hint="100 x 100 px (PNG recommended)"
+                      initialUrl={formData.header.customRequestIconUrl}
+                      aspectRatio="aspect-square w-24"
+                      onUpload={(url) => setFormData({...formData, header: {...formData.header, customRequestIconUrl: url}})}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -262,7 +300,6 @@ export default function LayoutThemePage() {
               </CardContent>
             </Card>
 
-            {/* Service & Company Links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gray-50 p-6 border-b flex flex-row items-center justify-between">
@@ -335,8 +372,4 @@ function X({ size, className }: { size?: number, className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
   );
-}
-
-function SelectItem({ children, value }: { children: React.ReactNode, value: string }) {
-  return <option value={value}>{children}</option>;
 }

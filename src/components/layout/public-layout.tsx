@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -46,6 +47,9 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  const layoutRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
+  const { data: layout } = useDoc(layoutRef);
+
   const isHome = pathname === '/';
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -70,6 +74,9 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       href: '/' + parts.slice(0, i + 1).join('/')
     }));
   }, [pathname]);
+
+  const customReqTitle = layout?.header?.customRequestTitle;
+  const customReqIcon = layout?.header?.customRequestIconUrl;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] relative">
@@ -111,11 +118,20 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
           {servicesEnabled && (
             <Button 
               variant="ghost" 
-              size="icon" 
-              className="h-10 w-10 text-primary active:scale-90 transition-transform rounded-full bg-primary/5 border border-primary/10"
+              className={cn(
+                "h-10 text-primary active:scale-90 transition-transform rounded-full bg-primary/5 border border-primary/10 gap-2",
+                customReqTitle ? "px-4 w-auto" : "w-10 px-0"
+              )}
               onClick={() => router.push('/account/custom-requests')}
             >
-              <Zap size={20} fill="currentColor" />
+              {customReqIcon ? (
+                <div className="relative w-5 h-5 shrink-0">
+                  <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
+                </div>
+              ) : (
+                <Zap size={20} fill="currentColor" />
+              )}
+              {customReqTitle && <span className="text-[10px] font-black uppercase whitespace-nowrap">{customReqTitle}</span>}
             </Button>
           )}
         </div>
