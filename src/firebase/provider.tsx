@@ -6,6 +6,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { isFirebaseConfigured } from './config';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -60,7 +61,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
-    isUserLoading: true,
+    isUserLoading: isFirebaseConfigured, // Only load if configured
     userError: null,
   });
 
@@ -85,7 +86,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   const contextValue = useMemo((): FirebaseContextState => {
     return {
-      areServicesAvailable: !!firebaseApp && !!firestore && !!auth,
+      areServicesAvailable: isFirebaseConfigured && !!firebaseApp && !!firestore && !!auth,
       firebaseApp: firebaseApp,
       firestore: firestore,
       auth: auth, 

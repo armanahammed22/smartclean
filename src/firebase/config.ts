@@ -1,9 +1,10 @@
+
 "use client";
 
 /**
  * Firebase Client Configuration
  * Uses NEXT_PUBLIC_ variables for safe browser-side access.
- * If variables are missing, it defaults to empty strings to prevent SDK crash during init.
+ * Provides fallback values to prevent SDK initialization crashes.
  */
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
@@ -13,3 +14,5 @@ export const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
+
+export const isFirebaseConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;

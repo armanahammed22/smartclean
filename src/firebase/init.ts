@@ -1,9 +1,10 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
-import { firebaseConfig } from './config';
+import { firebaseConfig, isFirebaseConfigured } from './config';
 
 let firebaseApp: FirebaseApp | null = null;
 let auth: Auth | null = null;
@@ -85,9 +86,9 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
 
   try {
     if (!firebaseApp) {
-      // 🛡️ API Key Validation: Prevent crash if env vars are missing
-      if (!firebaseConfig.apiKey) {
-        console.error("[Firebase Init] CRITICAL: NEXT_PUBLIC_FIREBASE_API_KEY is missing. Check your .env file.");
+      // 🛡️ API Key Validation: Gracefully handle missing config without crashing UI
+      if (!isFirebaseConfigured) {
+        console.warn("[Firebase Init] Configuration missing. App will run in offline/placeholder mode.");
         return { firebaseApp: null, auth: null, firestore: null };
       }
 
@@ -114,7 +115,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       }
     }
   } catch (error) {
-    console.error("[Firebase Init] Core failure:", error);
+    console.warn("[Firebase Init] Handled initialization failure:", error);
   }
 
   return { firebaseApp, auth, firestore };
