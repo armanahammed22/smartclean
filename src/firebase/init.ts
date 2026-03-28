@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -12,9 +11,6 @@ let firestore: Firestore | null = null;
 
 /**
  * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11 - Optimized)
- * 1. Targeted suppression of SDK internal assertion noise (ca9 / b815).
- * 2. Does NOT suppress Auth errors or Routing events.
- * 3. Prevents overlays for technical SDK bugs while allowing legitimate logic to flow.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -27,12 +23,10 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
-      // EXCLUDE: Authentication and standard network errors should be visible
       if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email')) {
         return false;
       }
 
-      // EXCLUDE: Standard router messages and navigation events
       if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr') || lowMsg.includes('router')) {
         return false;
       }
@@ -49,7 +43,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       );
     };
 
-    // Filter Console Errors
     const originalConsoleError = console.error;
     console.error = (...args: any[]) => {
       const msg = args.map(arg => {
@@ -67,7 +60,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       originalConsoleError.apply(console, args);
     };
 
-    // Filter Window Errors (Fix for Next.js Overlay)
     window.addEventListener('error', (event) => {
       const msg = event.message || (event.error && event.error.message) || '';
       if (isAssertionError(msg)) {
@@ -78,7 +70,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       }
     }, true);
 
-    // Filter Unhandled Rejections
     window.addEventListener('unhandledrejection', (event) => {
       const msg = String(event.reason?.message || event.reason || '');
       if (isAssertionError(msg)) {
@@ -94,6 +85,12 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
 
   try {
     if (!firebaseApp) {
+      // 🛡️ API Key Validation: Prevent crash if env vars are missing
+      if (!firebaseConfig.apiKey) {
+        console.error("[Firebase Init] CRITICAL: NEXT_PUBLIC_FIREBASE_API_KEY is missing. Check your .env file.");
+        return { firebaseApp: null, auth: null, firestore: null };
+      }
+
       if (getApps().length > 0) {
         firebaseApp = getApp();
       } else {
