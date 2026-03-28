@@ -10,12 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { isFirebaseConfigured } from '@/firebase/config';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -67,10 +68,22 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[Login] Starting sequence...");
     
+    if (!isFirebaseConfigured) {
+      toast({ 
+        variant: "destructive", 
+        title: "Configuration Missing", 
+        description: "Firebase API Key is not set in environment variables." 
+      });
+      return;
+    }
+
     if (!auth || !db) {
-      console.error("[Login] Auth/DB not ready");
+      toast({ 
+        variant: "destructive", 
+        title: "Service Error", 
+        description: "Firebase services are initializing. Please wait a moment." 
+      });
       return;
     }
     
@@ -78,15 +91,12 @@ export default function LoginPage() {
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
-      console.log("[Login] Calling Firebase Auth...");
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
-      console.log("[Login] Auth success. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[Login] Admin detected. Updating store...");
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -106,18 +116,15 @@ export default function LoginPage() {
         return;
       }
 
-      console.log("[Login] Fetching user profile...");
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
-        console.warn("[Login] No Firestore profile");
         toast({ variant: "destructive", title: "Profile Error", description: "No profile found for this account." });
         setIsLoading(false);
         return;
       }
 
       const role = userSnap.data()?.role?.toLowerCase();
-      console.log("[Login] User role:", role);
 
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
         router.replace('/admin/dashboard');
@@ -128,7 +135,6 @@ export default function LoginPage() {
       }
 
     } catch (error: any) {
-      console.error("[Login] Error:", error.code, error.message);
       let msg = "Invalid email or password.";
       if (error.code === 'auth/network-request-failed') msg = "Network error. Check your connection.";
       if (error.code === 'auth/too-many-requests') msg = "Too many attempts. Account locked temporarily.";
@@ -171,6 +177,16 @@ export default function LoginPage() {
             <ArrowLeft size={16} /> Exit Terminal
           </Link>
 
+          {!isFirebaseConfigured && (
+            <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-start gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="text-red-600 shrink-0" size={20} />
+              <div className="space-y-1">
+                <p className="text-xs font-black text-red-900 uppercase">Configuration Missing</p>
+                <p className="text-[10px] text-red-700 leading-relaxed">The application cannot connect to Firebase. Ensure <strong>NEXT_PUBLIC_FIREBASE_API_KEY</strong> is set in your environment variables.</p>
+              </div>
+            </div>
+          )}
+
           <Card className="rounded-[2.5rem] shadow-2xl border-none overflow-hidden bg-white animate-in fade-in duration-500">
             <div className="h-2 bg-primary w-full" />
             <CardHeader className="space-y-4 text-center pt-10 px-8">
@@ -202,7 +218,11 @@ export default function LoginPage() {
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" 
+                  disabled={isLoading || !isFirebaseConfigured || !auth}
+                >
                   {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Terminal</>}
                 </Button>
               </form>

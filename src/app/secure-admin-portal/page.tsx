@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff, LayoutDashboard, ArrowRight, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { isFirebaseConfigured } from '@/firebase/config';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -40,18 +41,28 @@ export default function SecureAdminLoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
     if (isAdmin) {
-      console.log("[Portal] User already authenticated as admin. Redirecting...");
       router.replace('/admin/dashboard');
     }
   }, [user, isAdmin, isUserLoading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[Portal] Login sequence started...");
     
+    if (!isFirebaseConfigured) {
+      toast({ 
+        variant: "destructive", 
+        title: "Configuration Missing", 
+        description: "Firebase setup is required. Please check your environment variables." 
+      });
+      return;
+    }
+
     if (!auth || !db) {
-      console.error("[Portal] Firebase services not initialized.");
-      toast({ variant: "destructive", title: "System Error", description: "Firebase services are unavailable." });
+      toast({ 
+        variant: "destructive", 
+        title: "System Not Ready", 
+        description: "Connecting to secure services. Please try again in 2 seconds." 
+      });
       return;
     }
 
@@ -59,16 +70,12 @@ export default function SecureAdminLoginPage() {
     const trimmedEmail = email.trim().toLowerCase();
     
     try {
-      console.log("[Portal] Attempting Firebase Auth with:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
-      console.log("[Portal] Auth successful. UID:", uid);
 
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        console.log("[Portal] Bootstrap admin detected. Syncing profile...");
-        // Ensure profile exists
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -83,37 +90,29 @@ export default function SecureAdminLoginPage() {
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        console.log("[Portal] Redirecting to admin dashboard...");
         router.replace('/admin/dashboard');
         return;
       }
 
-      // Check standard admin role in Firestore
-      console.log("[Portal] Checking role in Firestore 'users' collection...");
       const userSnap = await getDoc(doc(db, 'users', uid));
       
       if (!userSnap.exists()) {
-        console.warn("[Portal] No user profile found in Firestore.");
         toast({ variant: "destructive", title: "Access Denied", description: "User profile not found in system." });
         setIsLoading(false);
         return;
       }
 
       const role = userSnap.data()?.role?.toLowerCase();
-      console.log("[Portal] User role found:", role);
-
       const adminRoles = ['admin', 'manager', 'accounts', 'order_manager'];
+      
       if (adminRoles.includes(role || '')) {
-        console.log("[Portal] Authorized role detected. Redirecting...");
         router.replace('/admin/dashboard');
       } else {
-        console.warn("[Portal] Unauthorized role:", role);
         toast({ variant: "destructive", title: "Access Denied", description: "You do not have administrative privileges." });
         setIsLoading(false);
       }
 
     } catch (error: any) {
-      console.error("[Portal] Login Exception:", error.code, error.message);
       let message = "Invalid email or access key.";
       if (error.code === 'auth/wrong-password') message = "Incorrect security key.";
       if (error.code === 'auth/user-not-found') message = "Identity not found.";
@@ -135,61 +134,77 @@ export default function SecureAdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-[#081621] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white animate-in zoom-in-95 duration-500">
-        <div className="h-2 bg-primary w-full" />
-        <CardHeader className="space-y-2 text-center pt-10 px-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-4 bg-primary/10 rounded-2xl text-primary">
-              <ShieldCheck size={40} />
+      <div className="w-full max-w-md space-y-6">
+        {!isFirebaseConfigured && (
+          <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="text-red-500 shrink-0" size={20} />
+            <div className="space-y-1">
+              <p className="text-xs font-black text-red-200 uppercase tracking-widest">Configuration Error</p>
+              <p className="text-[10px] text-red-200/60 leading-relaxed">Administrative portal requires active Firebase credentials. Check your <strong>.env</strong> file settings.</p>
             </div>
           </div>
-          <CardTitle className="text-2xl font-black uppercase tracking-tight">Secure Admin Portal</CardTitle>
-          <CardDescription className="text-sm font-medium text-muted-foreground">Internal Management Access Required</CardDescription>
-        </CardHeader>
-        <CardContent className="px-8 pb-8 pt-4">
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Identity (Email)</Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  type="email" 
-                  placeholder="admin@smartclean.bd" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                />
+        )}
+
+        <Card className="w-full rounded-[2rem] shadow-2xl border-none overflow-hidden bg-white animate-in zoom-in-95 duration-500">
+          <div className="h-2 bg-primary w-full" />
+          <CardHeader className="space-y-2 text-center pt-10 px-8">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-primary/10 rounded-2xl text-primary">
+                <ShieldCheck size={40} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key (Password)</Label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            <CardTitle className="text-2xl font-black uppercase tracking-tight">Secure Admin Portal</CardTitle>
+            <CardDescription className="text-sm font-medium text-muted-foreground">Internal Management Access Required</CardDescription>
+          </CardHeader>
+          <CardContent className="px-8 pb-8 pt-4">
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Identity (Email)</Label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type="email" 
+                    placeholder="admin@smartclean.bd" 
+                    className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                  />
+                </div>
               </div>
-            </div>
-            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95 flex items-center justify-center gap-2" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> Authenticate</>}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
-          <Link href="/" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-primary transition-colors flex items-center gap-2">
-            Exit to Public Site <ArrowRight size={12} />
-          </Link>
-        </CardFooter>
-      </Card>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key (Password)</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95 flex items-center justify-center gap-2" 
+                disabled={isLoading || !isFirebaseConfigured || !auth}
+              >
+                {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> Authenticate</>}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
+            <Link href="/" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-primary transition-colors flex items-center gap-2">
+              Exit to Public Site <ArrowRight size={12} />
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
