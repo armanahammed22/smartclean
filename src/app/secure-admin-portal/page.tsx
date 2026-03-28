@@ -39,9 +39,8 @@ export default function SecureAdminLoginPage() {
 
   useEffect(() => {
     if (!user || isUserLoading) return;
-
     if (isAdmin) {
-      router.replace('/admin/dashboard');
+      router.push('/admin/dashboard');
     }
   }, [user, isAdmin, isUserLoading, router]);
 
@@ -50,17 +49,17 @@ export default function SecureAdminLoginPage() {
     if (!auth || !db) return;
 
     setIsLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
     
     try {
-      const trimmedEmail = email.trim().toLowerCase();
+      console.log("[AdminPortal] Authenticating:", trimmedEmail);
       const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
-      // 🛡️ BOOTSTRAP ADMIN HEALING
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        // Auto-verify in collections
+        // Auto-verify/heal Firestore records
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -75,29 +74,31 @@ export default function SecureAdminLoginPage() {
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        toast({ title: "Authorized", description: "Admin identity verified in database." });
+        toast({ title: "Welcome Admin", description: "Authorization successful." });
         router.push('/admin/dashboard');
         return;
       }
 
-      // Standard Admin Check
+      // Check standard admin role
       const userSnap = await getDoc(doc(db, 'users', uid));
       const role = userSnap.data()?.role;
 
-      if (!['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
-        throw new Error("Unauthorized: Access denied for standard users.");
+      if (['admin', 'manager', 'accounts', 'order_manager'].includes(role || '')) {
+        toast({ title: "Authorized", description: "Redirecting to terminal..." });
+        router.push('/admin/dashboard');
+      } else {
+        toast({ variant: "destructive", title: "Access Denied", description: "You do not have administrative privileges." });
+        setIsLoading(false);
       }
 
-      toast({ title: "Authorized", description: "Loading terminal..." });
-      router.push('/admin/dashboard');
-
     } catch (error: any) {
-      console.error("[Secure-Admin] Auth Error:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Auth Failed", 
-        description: error.message || "Invalid secure credentials."
-      });
+      console.error("[AdminPortal] Login Error:", error.code, error.message);
+      let message = "Invalid email or access key.";
+      if (error.code === 'auth/wrong-password') message = "Incorrect password.";
+      if (error.code === 'auth/user-not-found') message = "Admin account not found.";
+      if (error.code === 'auth/invalid-credential') message = "Invalid authentication credentials.";
+      
+      toast({ variant: "destructive", title: "Authentication Failed", description: message });
       setIsLoading(false);
     }
   };
@@ -122,18 +123,18 @@ export default function SecureAdminLoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-black uppercase tracking-tight">Secure Admin Portal</CardTitle>
-          <CardDescription className="text-sm font-medium">Internal Management Access Only</CardDescription>
+          <CardDescription className="text-sm font-medium text-muted-foreground">Internal Management Access Required</CardDescription>
         </CardHeader>
         <CardContent className="px-8 pb-8 pt-4">
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Identity</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Identity (Email)</Label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type="email" 
                   placeholder="admin@smartclean.bd" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
@@ -141,13 +142,13 @@ export default function SecureAdminLoginPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Access Key (Password)</Label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type={showPassword ? "text" : "password"} 
                   placeholder="••••••••" 
-                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white" 
+                  className="h-12 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
@@ -157,15 +158,14 @@ export default function SecureAdminLoginPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin mr-2" /> : <LayoutDashboard className="mr-2" size={20} />}
-              Authenticate
+            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight transition-all active:scale-95 flex items-center justify-center gap-2" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : <><LayoutDashboard size={20} /> Authenticate</>}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
           <Link href="/" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-primary transition-colors flex items-center gap-2">
-            Exit to Site <ArrowRight size={12} />
+            Exit to Public Site <ArrowRight size={12} />
           </Link>
         </CardFooter>
       </Card>

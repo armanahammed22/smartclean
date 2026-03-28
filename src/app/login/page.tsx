@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, CheckCircle2, Zap, Sparkles, ShieldCheck } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -55,12 +55,12 @@ export default function LoginPage() {
     if (!user || isUserLoading) return;
 
     if (isAdmin) {
-      router.replace('/admin/dashboard');
+      router.push('/admin/dashboard');
     } else if (!roleLoading && !staffRoleLoading) {
       if (isStaff) {
-        router.replace('/staff/dashboard');
+        router.push('/staff/dashboard');
       } else {
-        router.replace('/account/dashboard');
+        router.push('/account/dashboard');
       }
     }
   }, [user, isUserLoading, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
@@ -70,18 +70,15 @@ export default function LoginPage() {
     if (!auth || !db) return;
     
     setIsLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
     
     try {
-      const trimmedEmail = email.trim().toLowerCase();
-      const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
+      const credentials = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const uid = credentials.user.uid;
 
-      // 🛡️ Bootstrap Admin Healing Logic
-      // If this is the specific admin, ensure they are verified in the DB instantly
       const isBootstrapAdmin = trimmedEmail === BOOTSTRAP_ADMIN_EMAIL || BOOTSTRAP_ADMIN_UIDS.includes(uid);
 
       if (isBootstrapAdmin) {
-        // Force create/update admin record in 'users' and 'roles_admins'
         await setDoc(doc(db, 'users', uid), {
           uid,
           name: credentials.user.displayName || 'Root Admin',
@@ -96,22 +93,15 @@ export default function LoginPage() {
           assignedAt: serverTimestamp()
         }, { merge: true });
 
-        toast({ title: "Admin Access Granted", description: "Terminal session initialized." });
+        toast({ title: "Authorized", description: "Admin terminal accessed." });
         router.push('/admin/dashboard');
         return;
       }
 
-      // Standard User Check
       const userSnap = await getDoc(doc(db, 'users', uid));
-      
-      if (!userSnap.exists()) {
-        throw new Error("Account found but profile not initialized. Please contact support.");
-      }
+      if (!userSnap.exists()) throw new Error("Account profile not initialized.");
 
-      const userData = userSnap.data();
-      const role = userData.role || 'customer';
-
-      // Redirection based on standard roles
+      const role = userSnap.data()?.role;
       if (['admin', 'manager', 'accounts', 'order_manager'].includes(role)) {
         router.push('/admin/dashboard');
       } else if (['staff', 'technician'].includes(role)) {
@@ -121,9 +111,8 @@ export default function LoginPage() {
       }
 
     } catch (error: any) {
-      let message = "Invalid email or password.";
-      if (error.code === 'auth/invalid-credential') message = "Incorrect credentials.";
-      toast({ variant: "destructive", title: "Login Failed", description: message });
+      console.error("[Login] Auth Error:", error.code);
+      toast({ variant: "destructive", title: "Login Failed", description: error.message || "Invalid credentials." });
       setIsLoading(false);
     }
   };
@@ -141,26 +130,16 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white flex flex-col lg:flex-row">
       <div className="hidden lg:flex lg:w-1/2 bg-[#081621] relative overflow-hidden items-center justify-center p-12">
         <div className="absolute top-0 left-0 w-full h-full opacity-20">
-          <Image 
-            src="https://picsum.photos/seed/cleanlogin/1200/1200" 
-            alt="Background" 
-            fill 
-            className="object-cover" 
-            unoptimized 
-          />
+          <Image src="https://picsum.photos/seed/cleanlogin/1200/1200" alt="Background" fill className="object-cover" unoptimized />
           <div className="absolute inset-0 bg-gradient-to-br from-[#081621] via-[#081621]/80 to-transparent" />
         </div>
-        
         <div className="relative z-10 max-w-lg space-y-8">
           <div className="space-y-4">
             <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Global Terminal</Badge>
             <h2 className="text-5xl font-black text-white leading-tight uppercase tracking-tighter italic font-headline">
-              Admin <br />
-              <span className="text-primary">Control Center.</span>
+              Management <br /><span className="text-primary">Protocol.</span>
             </h2>
-            <p className="text-white/60 text-lg font-medium leading-relaxed">
-              Professional cleaning management suite. Verify jobs, track technicians, and manage your catalog.
-            </p>
+            <p className="text-white/60 text-lg font-medium leading-relaxed">Secure access to Smart Clean operations, inventory, and staff coordination.</p>
           </div>
         </div>
       </div>
@@ -176,16 +155,12 @@ export default function LoginPage() {
             <CardHeader className="space-y-4 text-center pt-10 px-8">
               <div className="flex justify-center">
                 <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-md">
-                  {displayLogo ? (
-                    <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized />
-                  ) : (
-                    <div className="w-full h-full bg-primary flex items-center justify-center text-white font-black text-xl">S</div>
-                  )}
+                  {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized /> : <div className="w-full h-full bg-primary flex items-center justify-center text-white font-black text-xl">S</div>}
                 </div>
               </div>
               <div className="space-y-1">
-                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">Admin Access</CardTitle>
-                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Credential Verification Required</CardDescription>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter uppercase font-headline text-[#081621]">System Access</CardTitle>
+                <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Enter credentials to synchronize</CardDescription>
               </div>
             </CardHeader>
             
@@ -195,43 +170,24 @@ export default function LoginPage() {
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      type="email" 
-                      placeholder="admin@smartclean.bd" 
-                      className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold text-base" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      required 
-                    />
+                    <Input type="email" placeholder="admin@smartclean.bd" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold text-base" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      required 
-                    />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                    <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="h-12 md:h-14 pl-11 rounded-xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-bold" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                   </div>
                 </div>
-
                 <Button type="submit" className="w-full h-14 md:h-16 font-black text-lg rounded-2xl shadow-xl mt-2 uppercase tracking-tight bg-primary hover:bg-primary/90 transition-all active:scale-95 gap-3" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Now</>}
+                  {isLoading ? <Loader2 className="animate-spin" /> : <><LogIn size={20} /> Login Terminal</>}
                 </Button>
               </form>
             </CardContent>
-
-            <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t">
-              <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center gap-2">
+            <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t text-center">
+              <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center justify-center gap-2">
                 <ShieldCheck size={14} /> Master Portal Access
               </Link>
             </CardFooter>

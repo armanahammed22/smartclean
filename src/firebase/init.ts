@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -24,7 +23,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
-      if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email')) {
+      // Do NOT shield Auth errors so users can see feedback
+      if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email') || lowMsg.includes('credential')) {
         return false;
       }
 
@@ -86,9 +86,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
 
   try {
     if (!firebaseApp) {
-      // 🛡️ API Key Validation: Gracefully handle missing config without crashing UI
       if (!isFirebaseConfigured) {
-        console.warn("[Firebase Init] Configuration missing. App will run in offline/placeholder mode.");
+        console.warn("[Firebase Init] Configuration missing.");
         return { firebaseApp: null, auth: null, firestore: null };
       }
 
