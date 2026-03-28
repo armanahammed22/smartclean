@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, CheckCircle2, Zap, Sparkles } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, LogIn, ArrowLeft, CheckCircle2, Zap, Sparkles, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -54,13 +54,11 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user || isUserLoading) return;
 
-    // Direct jump for bootstrap admin
     if (user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
       router.replace('/admin/dashboard');
       return;
     }
 
-    // Wait for roles to finish loading before redirecting regular staff/admins
     if (!roleLoading && !staffRoleLoading) {
       if (isAdmin) {
         router.replace('/admin/dashboard');
@@ -79,26 +77,19 @@ export default function LoginPage() {
     
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      const trimmedPassword = password.trim();
-      
-      await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+      await signInWithEmailAndPassword(auth, trimmedEmail, password.trim());
       toast({ title: "Login Successful", description: "Authenticating session..." });
       
-      // If bootstrap admin, we can jump immediately
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
         router.replace('/admin/dashboard');
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      let message = "Invalid email or password. Please try again.";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "Incorrect credentials. Please check and try again.";
+      let message = "Invalid email or password.";
+      if (error.code === 'auth/invalid-credential') {
+        message = "Incorrect email or password.";
       }
-      toast({ 
-        variant: "destructive", 
-        title: "Login Failed", 
-        description: message 
-      });
+      toast({ variant: "destructive", title: "Login Failed", description: message });
       setIsLoading(false);
     }
   };
@@ -219,8 +210,11 @@ export default function LoginPage() {
               </form>
             </CardContent>
 
-            <CardFooter className="flex justify-center bg-gray-50/50 py-6 border-t">
+            <CardFooter className="flex flex-col gap-4 bg-gray-50/50 py-6 border-t">
               <p className="text-xs font-bold text-muted-foreground">New to Smart Clean? <Link href="/signup" className="text-primary font-black hover:underline">Signup</Link></p>
+              <Link href="/secure-admin-portal" className="text-[10px] font-black uppercase text-primary/60 hover:text-primary flex items-center gap-2">
+                <ShieldCheck size={14} /> Admin Access
+              </Link>
             </CardFooter>
           </Card>
         </div>
