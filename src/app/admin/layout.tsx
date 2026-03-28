@@ -94,6 +94,7 @@ import {
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -113,6 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -342,7 +344,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => g && g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
+  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -507,7 +509,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           
-          <div className="flex items-center gap-4 h-full">
+          <div className="flex items-center gap-2 md:gap-4 h-full">
+            {/* 🌐 Modern Language Switcher */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+              className="h-10 px-3 gap-2 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-100 hover:bg-gray-50 text-gray-600 transition-all active:scale-95 group"
+            >
+              <div className="p-1 bg-primary/10 rounded-md text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <Languages size={14} />
+              </div>
+              <span className="hidden sm:inline">{language === 'bn' ? "English" : "বাংলা"}</span>
+              <span className="sm:hidden">{language === 'bn' ? "EN" : "BN"}</span>
+            </Button>
+
             <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
               <Link href="/">
                 <Globe size={18} className="text-primary" />
