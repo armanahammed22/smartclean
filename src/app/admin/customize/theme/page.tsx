@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
+import Image from 'next/image';
 
 const DEFAULT_THEME = {
   header: {

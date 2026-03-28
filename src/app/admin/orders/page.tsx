@@ -420,7 +420,7 @@ export default function OrdersManagementPage() {
 
                     {paymentCategory === 'online' && (
                       <div className="space-y-3 pt-2 animate-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">সিলেক্ট গেটওয়ে</Label>
+                        <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">সিলেক্ট গেটওয়ে</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {activeGateways?.filter(g => g.type !== 'cod' && g.type !== 'cash').map(gateway => (
                             <div 
