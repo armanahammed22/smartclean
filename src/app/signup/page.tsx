@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDocs, collection, query, where, limit } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -38,19 +37,25 @@ export default function SignupPage() {
 
   const checkExistingUser = async (phone: string) => {
     if (!db) return false;
-    const q = query(collection(db, 'users'), where('phone', '==', phone));
-    const snap = await getDocs(q);
-    return !snap.empty;
+    try {
+      const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
+      const snap = await getDocs(q);
+      return !snap.empty;
+    } catch (e) {
+      // If permission fails, we assume we can't check publicly and proceed to let Firebase Auth handle uniqueness
+      return false;
+    }
   };
 
   const handleSendOtp = async () => {
-    if (!formData.phone || formData.phone.length < 10) {
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
       toast({ variant: "destructive", title: "Invalid Phone" });
       return;
     }
     
     setIsLoading(true);
-    const exists = await checkExistingUser(formData.phone);
+    const exists = await checkExistingUser(cleanPhone);
     if (exists) {
       toast({ variant: "destructive", title: t('phone_exists_error') });
       setIsLoading(false);
@@ -79,7 +84,8 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.phone) {
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (!cleanPhone) {
       toast({ variant: "destructive", title: "Phone number is required." });
       return;
     }
@@ -101,10 +107,10 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      // Use phone number as part of the email if email is not provided to satisfy Firebase Auth requirement
-      // OR if email is provided, use it normally. 
-      // For this implementation, we will encourage email but allow it to be optional.
-      const emailToUse = formData.email || `${formData.phone}@smartclean.local`;
+      // Robust email generation for Firebase Auth
+      const emailToUse = formData.email?.trim().toLowerCase() || `${cleanPhone}@smartclean.local`;
+
+      if (!auth) throw new Error("Authentication service is unavailable.");
 
       const { user } = await createUserWithEmailAndPassword(auth, emailToUse, formData.password);
       await updateProfile(user, { displayName: formData.name });
@@ -113,8 +119,8 @@ export default function SignupPage() {
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           name: formData.name,
-          email: formData.email.toLowerCase() || null,
-          phone: formData.phone,
+          email: formData.email?.toLowerCase() || null,
+          phone: cleanPhone,
           totalEarnings: 0,
           createdAt: new Date().toISOString(),
           role: 'customer',
@@ -125,7 +131,16 @@ export default function SignupPage() {
       toast({ title: "Account Created!" });
       router.push('/account/dashboard');
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Signup Failed", description: error.message });
+      console.error("Signup error:", error);
+      let message = error.message;
+      if (error.code === 'auth/email-already-in-use') {
+        message = "This email or phone is already registered.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Invalid email format.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Password should be at least 6 characters.";
+      }
+      toast({ variant: "destructive", title: "Signup Failed", description: message });
     } finally {
       setIsLoading(false);
     }
@@ -166,7 +181,7 @@ export default function SignupPage() {
                   </Button>
                 ) : (
                   <div className="flex gap-2">
-                    <Input placeholder="6-digit code" className="bg-white rounded-xl h-11" value={formData.otp} onChange={(e) => setFormData({...formData, otp: e.target.value})} />
+                    <Input placeholder="6-digit code" className="bg-white rounded-xl h-11 text-center font-black tracking-widest" value={formData.otp} onChange={(e) => setFormData({...formData, otp: e.target.value})} />
                     <Button type="button" onClick={handleVerifyOtp} className="h-11 px-6 rounded-xl font-black">VERIFY</Button>
                   </div>
                 )}
@@ -196,10 +211,10 @@ export default function SignupPage() {
 
             <div className="flex items-start space-x-3 px-1 pt-2">
               <Checkbox id="terms" checked={agreed} onCheckedChange={(val) => setAgreed(!!val)} className="rounded-md border-gray-300 mt-0.5" />
-              <label htmlFor="terms" className="text-[11px] leading-tight text-gray-600 font-bold">Agree to terms & conditions</label>
+              <label htmlFor="terms" className="text-[11px] leading-tight text-gray-600 font-bold cursor-pointer">Agree to terms & conditions</label>
             </div>
 
-            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight" disabled={isLoading}>
+            <Button type="submit" className="w-full h-14 font-black text-lg rounded-2xl shadow-xl mt-4 uppercase tracking-tight active:scale-95 transition-transform" disabled={isLoading}>
               {isLoading ? <Loader2 className="animate-spin" /> : "Sign Up"}
             </Button>
           </form>

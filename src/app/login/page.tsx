@@ -40,7 +40,9 @@ export default function LoginPage() {
   const { data: staffRole, isLoading: staffRoleLoading } = useDoc(staffRef);
 
   const isAdmin = useMemo(() => {
-    return !!adminRole || user?.uid === BOOTSTRAP_ADMIN_UID || user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+    if (!user) return false;
+    const isBootstrap = user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL || user.uid === BOOTSTRAP_ADMIN_UID;
+    return isBootstrap || !!adminRole;
   }, [adminRole, user]);
 
   const isStaff = !!staffRole;
@@ -50,13 +52,16 @@ export default function LoginPage() {
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   useEffect(() => {
-    // If we already know the user is a bootstrap admin by email, redirect immediately
-    if (user && user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
+    if (!user || isUserLoading) return;
+
+    // Direct jump for bootstrap admin
+    if (user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL) {
       router.replace('/admin/dashboard');
       return;
     }
 
-    if (user && !roleLoading && !staffRoleLoading) {
+    // Wait for roles to finish loading before redirecting regular staff/admins
+    if (!roleLoading && !staffRoleLoading) {
       if (isAdmin) {
         router.replace('/admin/dashboard');
       } else if (isStaff) {
@@ -65,7 +70,7 @@ export default function LoginPage() {
         router.replace('/account/dashboard');
       }
     }
-  }, [user, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
+  }, [user, isUserLoading, isAdmin, isStaff, roleLoading, staffRoleLoading, router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,26 +79,30 @@ export default function LoginPage() {
     
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      const trimmedPassword = password.trim();
       
-      toast({ title: "Login Successful", description: "Redirecting to your dashboard..." });
+      await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+      toast({ title: "Login Successful", description: "Authenticating session..." });
       
-      // Direct jump for bootstrap admin
+      // If bootstrap admin, we can jump immediately
       if (trimmedEmail === BOOTSTRAP_ADMIN_EMAIL) {
         router.replace('/admin/dashboard');
       }
     } catch (error: any) {
       console.error("Login error:", error);
+      let message = "Invalid email or password. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = "Incorrect credentials. Please check and try again.";
+      }
       toast({ 
         variant: "destructive", 
         title: "Login Failed", 
-        description: "Invalid email or password. Please try again." 
+        description: message 
       });
       setIsLoading(false);
     }
   };
 
-  // Only show the global loading screen if we are actually waiting for initial auth
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">

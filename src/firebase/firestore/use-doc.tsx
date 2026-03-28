@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -44,6 +43,13 @@ export function useDoc<T = any>(
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Sync isLoading state when ref changes to prevent stale reads
+  useEffect(() => {
+    if (memoizedDocRef) {
+      setIsLoading(true);
+    }
+  }, [memoizedDocRef]);
+
   useEffect(() => {
     if (!memoizedDocRef) {
       setData(null);
@@ -55,7 +61,6 @@ export function useDoc<T = any>(
     const currentPath = memoizedDocRef.path;
     const token = Math.random().toString(36);
     activeToken.current = token;
-    setIsLoading(true);
 
     let unsubscribe: (() => void) | null = null;
 
@@ -84,7 +89,6 @@ export function useDoc<T = any>(
 
             const errorStr = (err.message || String(err)).toLowerCase();
             
-            // 🛡️ SDK Resilience Shield: Identification of SDK-internal assertion errors
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
