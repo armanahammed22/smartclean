@@ -103,7 +103,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
           )}
         </div>
 
-        <div className="flex-1 max-w-sm">
+        <div className="flex-1 max-sm">
           <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary" size={16} strokeWidth={3} />
             <Input 
@@ -120,15 +120,20 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
             <Button 
               variant="ghost" 
               className={cn(
-                "h-10 text-primary active:scale-90 transition-transform rounded-full bg-primary/5 border border-primary/10 gap-2",
-                customReqTitle ? "px-4 w-auto" : "w-10 px-0"
+                "h-10 active:scale-90 transition-transform rounded-full border border-gray-100 gap-2 shadow-sm",
+                customReqTitle ? "px-4 w-auto" : "w-10 px-0",
+                layout?.header?.customRequestMobileFontSize || "text-[10px]"
               )}
+              style={{ 
+                backgroundColor: layout?.header?.customRequestMobileBg || '#f1f5f9',
+                color: layout?.header?.customRequestMobileTextColor || '#1E5F7A'
+              }}
               onClick={() => router.push('/account/custom-requests')}
             >
               <div className="relative w-5 h-5 shrink-0">
                 <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
               </div>
-              {customReqTitle && <span className="text-[10px] font-black uppercase whitespace-nowrap">{customReqTitle}</span>}
+              {customReqTitle && <span className="font-black uppercase whitespace-nowrap">{customReqTitle}</span>}
             </Button>
           )}
         </div>

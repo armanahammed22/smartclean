@@ -27,7 +27,9 @@ import {
   MessageCircle,
   Link as LinkIcon,
   Zap,
-  ImageIcon
+  ImageIcon,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -43,6 +45,13 @@ const DEFAULT_THEME = {
     topBarText: '#6b7280',
     customRequestTitle: 'কাস্টম রিকোয়েস্ট',
     customRequestIconUrl: 'https://picsum.photos/seed/clean-bucket/100/100',
+    // New Styles for Custom Request
+    customRequestDesktopBg: '#1E5F7A',
+    customRequestDesktopTextColor: '#ffffff',
+    customRequestDesktopFontSize: 'text-[11px]',
+    customRequestMobileBg: '#f1f5f9',
+    customRequestMobileTextColor: '#1E5F7A',
+    customRequestMobileFontSize: 'text-[10px]',
     menuItems: [
       { label: 'Home', link: '/' },
       { label: 'Services', link: '/services' },
@@ -191,9 +200,10 @@ export default function LayoutThemePage() {
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
               <CardHeader className="bg-gray-50 p-8 border-b">
                 <CardTitle className="text-lg font-bold flex items-center gap-2"><Zap className="text-primary" size={20} /> Custom Request Branding</CardTitle>
-                <CardDescription>Customize the 'Custom Request' button identity in the header.</CardDescription>
+                <CardDescription>Customize the appearance of the 'Custom Request' button.</CardDescription>
               </CardHeader>
-              <CardContent className="p-8 space-y-6">
+              <CardContent className="p-8 space-y-10">
+                {/* Title and Icon */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -215,6 +225,60 @@ export default function LayoutThemePage() {
                       aspectRatio="aspect-square w-24"
                       onUpload={(url) => setFormData({...formData, header: {...formData.header, customRequestIconUrl: url}})}
                     />
+                  </div>
+                </div>
+
+                {/* Desktop Styles */}
+                <div className="space-y-6 pt-6 border-t">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Monitor size={16} /> Desktop View Styling
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Background Color</Label>
+                      <Input type="color" value={formData.header.customRequestDesktopBg} onChange={e => setFormData({...formData, header: {...formData.header, customRequestDesktopBg: e.target.value}})} className="h-12 p-1" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Text Color</Label>
+                      <Input type="color" value={formData.header.customRequestDesktopTextColor} onChange={e => setFormData({...formData, header: {...formData.header, customRequestDesktopTextColor: e.target.value}})} className="h-12 p-1" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Font Size</Label>
+                      <select className="w-full h-12 bg-gray-50 rounded-xl px-4 text-sm font-bold border-none" value={formData.header.customRequestDesktopFontSize} onChange={e => setFormData({...formData, header: {...formData.header, customRequestDesktopFontSize: e.target.value}})}>
+                        <option value="text-[9px]">9px</option>
+                        <option value="text-[10px]">10px</option>
+                        <option value="text-[11px]">11px</option>
+                        <option value="text-xs">12px</option>
+                        <option value="text-sm">14px</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Styles */}
+                <div className="space-y-6 pt-6 border-t">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <Smartphone size={16} /> Mobile View Styling
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Background Color</Label>
+                      <Input type="color" value={formData.header.customRequestMobileBg} onChange={e => setFormData({...formData, header: {...formData.header, customRequestMobileBg: e.target.value}})} className="h-12 p-1" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Text Color</Label>
+                      <Input type="color" value={formData.header.customRequestMobileTextColor} onChange={e => setFormData({...formData, header: {...formData.header, customRequestMobileTextColor: e.target.value}})} className="h-12 p-1" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Font Size</Label>
+                      <select className="w-full h-12 bg-gray-50 rounded-xl px-4 text-sm font-bold border-none" value={formData.header.customRequestMobileFontSize} onChange={e => setFormData({...formData, header: {...formData.header, customRequestMobileFontSize: e.target.value}})}>
+                        <option value="text-[8px]">8px</option>
+                        <option value="text-[9px]">9px</option>
+                        <option value="text-[10px]">10px</option>
+                        <option value="text-[11px]">11px</option>
+                        <option value="text-xs">12px</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -254,7 +318,22 @@ export default function LayoutThemePage() {
                     ))}
                   </div>
                 </div>
-                <div className="p-10 text-center text-gray-300 italic text-xs">Navigation Content Area</div>
+                <div className="p-10 text-center flex flex-col items-center gap-4">
+                  <div 
+                    className={cn(
+                      "px-4 py-2 rounded-full font-black uppercase tracking-widest flex items-center gap-2",
+                      formData.header.customRequestDesktopFontSize
+                    )}
+                    style={{ 
+                      backgroundColor: formData.header.customRequestDesktopBg,
+                      color: formData.header.customRequestDesktopTextColor
+                    }}
+                  >
+                    <Image src={formData.header.customRequestIconUrl || DEFAULT_THEME.header.customRequestIconUrl} alt="Icon" width={16} height={16} className="object-contain" />
+                    {formData.header.customRequestTitle}
+                  </div>
+                  <p className="text-gray-300 italic text-[10px] uppercase">Desktop Button Preview</p>
+                </div>
               </div>
             </Card>
           </div>

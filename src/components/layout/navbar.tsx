@@ -259,9 +259,13 @@ export function Navbar() {
               <Link 
                 href="/account/custom-requests" 
                 className={cn(
-                  "hidden lg:flex items-center gap-3 bg-primary text-white px-5 py-2.5 rounded-full font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-xl shadow-primary/20 hover:scale-105 active:scale-95",
-                  layout?.header?.fontSize || 'text-[11px]'
+                  "hidden lg:flex items-center gap-3 px-5 py-2.5 rounded-full font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-xl hover:scale-105 active:scale-95",
+                  layout?.header?.customRequestDesktopFontSize || 'text-[11px]'
                 )}
+                style={{ 
+                  backgroundColor: layout?.header?.customRequestDesktopBg || '#1E5F7A',
+                  color: layout?.header?.customRequestDesktopTextColor || '#ffffff'
+                }}
               >
                 <div className="relative w-5 h-5 shrink-0">
                   <Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized />
