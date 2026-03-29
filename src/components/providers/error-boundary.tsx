@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -42,7 +43,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               <AlertCircle size={40} />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Something went wrong</h1>
+              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Oops! Something went wrong</h1>
               <p className="text-gray-500 font-medium">
                 The application encountered an unexpected error. Please refresh the page to continue.
               </p>
@@ -51,7 +52,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               onClick={() => window.location.reload()} 
               className="rounded-full px-10 h-12 font-black uppercase tracking-widest gap-2 shadow-xl"
             >
-              <RefreshCcw size={18} /> Reload App
+              <RefreshCcw size={18} /> Reload Page
             </Button>
           </div>
         </div>

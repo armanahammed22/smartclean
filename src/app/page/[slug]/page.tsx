@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -5,14 +6,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
-import { Loader2, ArrowLeft, Calendar, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function DynamicContentPage() {
   const { slug } = useParams();
   const router = useRouter();
   const db = useFirestore();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -30,16 +33,24 @@ export default function DynamicContentPage() {
   if (!mounted || isLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
       <Loader2 className="animate-spin text-primary" size={48} />
-      <p className="text-xs font-black uppercase tracking-widest text-gray-400">Syncing Page Content...</p>
+      <p className="text-xs font-black uppercase tracking-widest text-gray-400">{t('loading_content')}</p>
     </div>
   );
 
   if (!page || !page.isPublished) return (
     <PublicLayout>
       <div className="container mx-auto px-4 py-32 text-center space-y-6">
-        <h1 className="text-6xl font-black text-gray-200 uppercase tracking-tighter">404</h1>
-        <p className="text-muted-foreground font-bold uppercase tracking-widest">Content Not Found or Unpublished.</p>
-        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-10 h-12 font-black uppercase text-xs">Return to Home</Button>
+        <div className="mx-auto w-24 h-24 bg-red-50 text-red-400 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle size={48} />
+        </div>
+        <h1 className="text-4xl md:text-6xl font-black text-gray-200 uppercase tracking-tighter">{t('error_404_title')}</h1>
+        <div className="space-y-2">
+          <p className="text-muted-foreground font-bold uppercase tracking-widest">{t('error_404_desc')}</p>
+          <p className="text-muted-foreground text-sm">{t('error_404_removed')}</p>
+        </div>
+        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full px-10 h-12 font-black uppercase text-xs">
+          {t('go_home')}
+        </Button>
       </div>
     </PublicLayout>
   );
