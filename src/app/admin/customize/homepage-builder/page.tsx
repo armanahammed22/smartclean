@@ -222,7 +222,6 @@ export default function HomepageBuilderPage() {
         })}
       </div>
 
-      {/* EDIT MODAL - Optimized for Mobile */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-t-[2rem] md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <Tabs defaultValue="content" className="flex flex-col h-full">
@@ -246,34 +245,27 @@ export default function HomepageBuilderPage() {
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Section Title</Label>
                     <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
-                  {editingSection?.type.includes('featured') ? (
-                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                      <p className="text-[10px] font-black text-primary uppercase">Filtering: Featured Items Only</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Items Limit</Label>
+                      <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none" />
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Items Limit</Label>
-                        <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Source</Label>
-                        <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            <SelectItem value="all">All Items</SelectItem>
-                            <SelectItem value="popular">Popular Only</SelectItem>
-                            <SelectItem value="latest">New Arrivals</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Source</Label>
+                      <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="all">All Items</SelectItem>
+                          <SelectItem value="popular">Popular Only</SelectItem>
+                          <SelectItem value="latest">New Arrivals</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
+                  </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="styles" className="mt-0 space-y-12 pb-10">
-                {/* Global Section UI */}
                 <div className="space-y-8">
                   <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Container & Text</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -308,7 +300,6 @@ export default function HomepageBuilderPage() {
                   </div>
                 </div>
 
-                {/* Card Design */}
                 <div className="space-y-8">
                   <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Maximize size={14}/> Card Styling</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -335,7 +326,6 @@ export default function HomepageBuilderPage() {
                   </div>
                 </div>
 
-                {/* Button UI */}
                 <div className="space-y-8">
                   <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Button Actions</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -373,7 +363,6 @@ export default function HomepageBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ADD BLOCK DIALOG - Optimized for Mobile */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-t-[2rem] md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <DialogHeader className="p-6 md:p-10 bg-[#081621] text-white shrink-0 relative">
