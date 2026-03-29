@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -53,7 +54,9 @@ import {
   Sparkles,
   MapPin,
   ClipboardList,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard,
+  Search
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
