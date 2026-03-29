@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -23,7 +24,8 @@ export interface UseCollectionResult<T> {
 const PROTECTED_COLLECTIONS = [
   'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
   'employee_profiles', 'staff_earnings', 'staff_availability',
-  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees'
+  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees',
+  'delivery_options'
 ];
 
 function extractPath(target: any): string {
@@ -86,6 +88,7 @@ export function useCollection<T = any>(
             if (activeToken.current !== token) return;
 
             const errorStr = (err.message || String(err)).toLowerCase();
+            const errorCode = err.code;
             
             // 🛡️ SDK Resilience Shield: Detection of internal assertion IDs
             if (
@@ -105,17 +108,24 @@ export function useCollection<T = any>(
               return;
             }
 
-            const isProtected = PROTECTED_COLLECTIONS.some(pc => currentPath.includes(pc));
-            const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
-            
-            setError(contextualError);
-            setIsLoading(false);
-            
-            // We only emit to the global listener (which triggers the error overlay)
-            // for collections that are NOT explicitly protected.
-            if (!isProtected) {
-              errorEmitter.emit('permission-error', contextualError);
+            if (errorCode === 'permission-denied') {
+              const isProtected = PROTECTED_COLLECTIONS.some(pc => currentPath.includes(pc));
+              const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
+              
+              setError(contextualError);
+              
+              // We only emit to the global listener (which triggers the error overlay)
+              // for collections that are NOT explicitly protected.
+              if (!isProtected) {
+                errorEmitter.emit('permission-error', contextualError);
+              }
+            } else {
+              // Surface the actual error (e.g. missing index) to the console
+              console.error(`[Firestore Error] ${currentPath}:`, err);
+              setError(err);
             }
+            
+            setIsLoading(false);
           }
         );
       } catch (setupError: any) {

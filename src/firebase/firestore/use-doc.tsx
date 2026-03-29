@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -22,7 +23,8 @@ export interface UseDocResult<T> {
 const PROTECTED_DOCS = [
   'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
   'employee_profiles', 'staff_earnings', 'staff_availability',
-  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees'
+  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees',
+  'delivery_options'
 ];
 
 /**
@@ -84,6 +86,7 @@ export function useDoc<T = any>(
             if (activeToken.current !== token) return;
 
             const errorStr = (err.message || String(err)).toLowerCase();
+            const errorCode = err.code;
             
             if (
               errorStr.includes('ca9') || 
@@ -102,18 +105,24 @@ export function useDoc<T = any>(
               return;
             }
 
-            const isProtected = PROTECTED_DOCS.some(pd => currentPath.includes(pd));
-            const contextualError = new FirestorePermissionError({
-              operation: 'get',
-              path: currentPath,
-            });
+            if (errorCode === 'permission-denied') {
+              const isProtected = PROTECTED_DOCS.some(pd => currentPath.includes(pd));
+              const contextualError = new FirestorePermissionError({
+                operation: 'get',
+                path: currentPath,
+              });
 
-            setError(contextualError);
-            setIsLoading(false);
+              setError(contextualError);
 
-            if (!isProtected) {
-              errorEmitter.emit('permission-error', contextualError);
+              if (!isProtected) {
+                errorEmitter.emit('permission-error', contextualError);
+              }
+            } else {
+              console.error(`[Firestore Error] ${currentPath}:`, err);
+              setError(err);
             }
+            
+            setIsLoading(false);
           }
         );
       } catch (setupError: any) {
