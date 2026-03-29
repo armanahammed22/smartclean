@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -57,13 +58,14 @@ export default function ServiceBookingPage() {
   const { t } = useLanguage();
   const { user } = useUser();
   const { toast } = useToast();
-  const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
+  const { addToCart, setCheckoutOpen } = useCart();
   const db = useFirestore();
 
   const [mounted, setMounted] = useState(false);
+  const [mainQuantity, setMainQuantity] = useState(1);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [addOnsQty, setAddOnsQty] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState('');
-  const [beforeAfterTab, setBeforeAfterTab] = useState('all');
   
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
@@ -91,15 +93,19 @@ export default function ServiceBookingPage() {
     return idService || subService || null;
   }, [slugServices, idService, subService]);
 
-  const isLoading = slugLoading && idLoading && subLoading;
-
   const mainId = useMemo(() => baseService?.id || null, [baseService]);
   
-  const relatedSubsQuery = useMemoFirebase(() => {
+  const packagesQuery = useMemoFirebase(() => {
+    if (!db || !mainId) return null;
+    return query(collection(db, 'services', mainId as string, 'packages'), orderBy('price', 'asc'));
+  }, [db, mainId]);
+  const { data: packages } = useCollection(packagesQuery);
+
+  const addOnsQuery = useMemoFirebase(() => {
     if (!db || !mainId) return null;
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', mainId), where('status', '==', 'Active'));
   }, [db, mainId]);
-  const { data: relatedSubs } = useCollection(relatedSubsQuery);
+  const { data: relatedSubs } = useCollection(addOnsQuery);
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!db || !mainId) return null;
@@ -107,12 +113,25 @@ export default function ServiceBookingPage() {
   }, [db, mainId]);
   const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsQuery);
 
+  useEffect(() => {
+    if (packages?.length) {
+      const def = packages.find(p => p.isRecommended) || packages[0];
+      setSelectedPackageId(def.id);
+    }
+  }, [packages]);
+
   const addOnOptions = useMemo(() => {
     if (!relatedSubs) return [];
     return relatedSubs.filter(sub => sub.id !== mainId && sub.isAddOnEnabled);
   }, [relatedSubs, mainId]);
 
-  const basePrice = baseService?.basePrice || baseService?.price || 0;
+  const pricingLogic = baseService?.pricingType || 'quantity';
+  
+  const activePackage = packages?.find(p => p.id === selectedPackageId);
+  const basePrice = pricingLogic === 'sqft' 
+    ? (activePackage?.price || 0) 
+    : (baseService?.basePrice || baseService?.price || 0) * mainQuantity;
+
   const addOnsTotal = addOnOptions.reduce((acc, a) => acc + (a.price * (addOnsQty[a.id] || 0)), 0);
   const platformFee = 50;
   const totalPrice = basePrice + addOnsTotal + platformFee;
@@ -142,14 +161,18 @@ export default function ServiceBookingPage() {
         quantity: addOnsQty[a.id]
       }));
 
-    addToCart({
+    const cartItem = {
       ...baseService,
       title: baseService.title || baseService.name,
       basePrice: totalPrice,
       imageUrl: baseService.imageUrl || '',
       type: 'service',
-      selectedAddOns: selectedAddOns
-    } as any, 1, false);
+      selectedAddOns: selectedAddOns,
+      notes: notes,
+      slab: pricingLogic === 'sqft' ? activePackage?.name : null
+    };
+
+    addToCart(cartItem as any, 1, false);
     setCheckoutOpen(true);
   };
 
@@ -170,15 +193,15 @@ export default function ServiceBookingPage() {
       });
       setReviewText('');
       setReviewRating(5);
-      toast({ title: "Review Posted", description: "Thank you for your feedback!" });
+      toast({ title: "Review Posted" });
     } catch (e) {
-      toast({ variant: "destructive", title: "Failed to post review" });
+      toast({ variant: "destructive", title: "Error" });
     } finally {
       setIsSubmittingReview(false);
     }
   };
 
-  if (!mounted || isLoading) return (
+  if (!mounted || (slugLoading && idLoading && subLoading)) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Loader2 className="animate-spin text-primary" size={40} />
     </div>
@@ -188,63 +211,88 @@ export default function ServiceBookingPage() {
 
   return (
     <PublicLayout minimalMobile={true}>
-      <div className="bg-[#F2F4F7] min-h-screen">
+      <div className="bg-white min-h-screen">
         
-        {/* Breadcrumbs */}
-        <div className="bg-white border-b border-gray-100 py-2 hidden md:block">
-          <div className="container mx-auto px-4 max-w-7xl">
-            <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-              <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-              <ChevronRight size={10} />
-              <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
-              <ChevronRight size={10} />
-              <span className="text-primary truncate max-w-[200px]">{baseService.title || baseService.name}</span>
-            </nav>
-          </div>
-        </div>
-
-        {/* Unified Booking Interface */}
-        <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
-          <div className="bg-white lg:rounded-xl shadow-lg border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative overflow-hidden">
+        {/* Unified Booking Interface (Single Block) */}
+        <section className="container mx-auto px-0 md:px-4 py-0 md:py-6 max-w-7xl">
+          <div className="bg-white border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative overflow-visible shadow-sm lg:rounded-2xl">
             
-            {/* COLUMN 1: Main Service Content */}
+            {/* COLUMN 1: Main Service Identity (Widened) */}
             <div className="lg:col-span-5 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
-              <div className="relative aspect-[16/9] md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner group">
+              <div className="relative aspect-video md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner">
                 {baseService.imageUrl ? (
-                  <Image src={baseService.imageUrl} alt="Service" fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                  <Image src={baseService.imageUrl} alt="Service" fill className="object-cover" unoptimized />
                 ) : (
                   <Wrench size={48} className="text-gray-200" />
                 )}
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-[#022C22] text-[#D4AF37] border-none text-[9px] font-black uppercase px-3 py-1 rounded-sm shadow-xl">Top Rated Service</Badge>
+                  <Badge className="bg-[#022C22] text-[#D4AF37] border-none text-[9px] font-black uppercase px-3 py-1 rounded-sm shadow-xl">Premium</Badge>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="space-y-3">
-                  <h1 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tight font-headline leading-none">
+                <div className="space-y-4">
+                  <h1 className="text-2xl md:text-4xl font-black text-[#081621] uppercase tracking-tight font-headline leading-none">
                     {baseService.title || baseService.name}
                   </h1>
                   
-                  <div className="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar py-1">
-                    <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-3 py-1.5 rounded-full border border-amber-100 whitespace-nowrap">
-                      <Star size={14} fill="currentColor" />
-                      <span className="text-[10px] font-black">{baseService.rating || '5.0'}</span>
+                  <div className="flex items-center gap-4 py-1">
+                    <div className="flex items-center gap-1.5 text-amber-500">
+                      <Star size={16} fill="currentColor" />
+                      <span className="text-xs font-black">{baseService.rating || '5.0'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full border border-blue-100 whitespace-nowrap">
-                      <Clock size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-tighter">{baseService.duration || 'Flexible'}</span>
+                    <div className="w-px h-4 bg-gray-200" />
+                    <div className="flex items-center gap-1.5 text-blue-600">
+                      <Clock size={16} />
+                      <span className="text-[10px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full border border-emerald-100 whitespace-nowrap">
-                      <Users size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-tighter">{baseService.teamSize || 'Pros'}</span>
+                    <div className="w-px h-4 bg-gray-200" />
+                    <div className="flex items-center gap-1.5 text-emerald-600">
+                      <Users size={16} />
+                      <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Pros'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black text-[#022C22]">৳{basePrice.toLocaleString()}</span>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Base Rate</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{pricingLogic === 'sqft' ? 'থেকে শুরু / Start From' : 'Base Rate'}</span>
+                </div>
+
+                {/* PRICING LOGIC SELECTORS */}
+                <div className="space-y-6 pt-6 border-t border-gray-100">
+                  {pricingLogic === 'sqft' ? (
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Select Area Size (Square Feet)</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {packages?.map((pkg) => (
+                          <div 
+                            key={pkg.id}
+                            onClick={() => setSelectedPackageId(pkg.id)}
+                            className={cn(
+                              "p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col gap-1",
+                              selectedPackageId === pkg.id ? "border-[#D4AF37] bg-[#D4AF37]/5 shadow-md" : "border-gray-100 hover:border-gray-200"
+                            )}
+                          >
+                            <span className="text-xs font-black uppercase text-gray-900">{pkg.name}</span>
+                            <span className="text-[10px] font-bold text-[#D4AF37]">৳{pkg.price.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <div className="space-y-0.5">
+                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Select Quantity</Label>
+                        <p className="text-[11px] font-bold text-gray-900 uppercase">Numbers of Items/Work</p>
+                      </div>
+                      <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="p-3 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={16} /></button>
+                        <span className="px-6 font-black text-sm text-gray-900 min-w-[50px] text-center">{mainQuantity}</span>
+                        <button onClick={() => setMainQuantity(mainQuantity + 1)} className="p-3 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={16} /></button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
@@ -255,17 +303,17 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 2: Add-on Selection */}
+            {/* COLUMN 2: Add-on Selection (Narrower) */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 bg-gray-50/20 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="space-y-1">
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Enhance Service</h3>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase">Select multiple units if required</p>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Optional additions</p>
                 </div>
                 <Badge className="bg-[#D4AF37]/10 text-[#D4AF37] border-none font-black text-[8px] uppercase">Optional</Badge>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                 {addOnOptions.map((addon) => {
                   const qty = addOnsQty[addon.id] || 0;
                   return (
@@ -277,46 +325,26 @@ export default function ServiceBookingPage() {
                       )}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50">
-                          {addon.imageUrl ? (
-                            <Image src={addon.imageUrl} alt="Addon" fill className="object-cover" unoptimized />
-                          ) : (
-                            <Zap size={20} className="m-auto text-gray-300" />
-                          )}
+                        <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-gray-100 bg-gray-50 flex items-center justify-center">
+                          {addon.imageUrl ? <Image src={addon.imageUrl} alt="Addon" fill className="object-cover" unoptimized /> : <Zap size={20} className="text-gray-300" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h5 className="text-xs font-black text-gray-900 uppercase truncate tracking-tight leading-none mb-1">{addon.name}</h5>
+                          <h5 className="text-xs font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
                           <p className="text-[11px] font-black text-[#D4AF37]">৳{addon.price}</p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
-                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Quantity</span>
-                        <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                          <button 
-                            onClick={() => updateAddOnQty(addon.id, -1)}
-                            className="p-2 hover:bg-red-50 text-red-500 transition-colors border-r"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-10 text-center text-xs font-black text-gray-900">{qty}</span>
-                          <button 
-                            onClick={() => updateAddOnQty(addon.id, 1)}
-                            className="p-2 hover:bg-green-50 text-emerald-600 transition-colors border-l"
-                          >
-                            <Plus size={14} />
-                          </button>
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Qty</span>
+                        <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm h-9">
+                          <button onClick={() => updateAddOnQty(addon.id, -1)} className="px-2 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={14} /></button>
+                          <span className="w-8 text-center text-[11px] font-black text-gray-900">{qty}</span>
+                          <button onClick={() => updateAddOnQty(addon.id, 1)} className="px-2 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={14} /></button>
                         </div>
                       </div>
                     </div>
                   );
                 })}
-                {addOnOptions.length === 0 && (
-                  <div className="p-16 text-center border-2 border-dashed rounded-3xl opacity-20 flex flex-col items-center gap-2">
-                    <LayoutGrid size={40} />
-                    <p className="font-bold uppercase text-[10px] tracking-widest">No extra options</p>
-                  </div>
-                )}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
@@ -326,55 +354,55 @@ export default function ServiceBookingPage() {
                 <Textarea 
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Special instructions or concerns..."
+                  placeholder="Special instructions..."
                   className="min-h-[100px] bg-white border-gray-200 rounded-2xl p-4 text-xs font-medium focus:ring-4 focus:ring-[#D4AF37]/10 transition-all border-none shadow-inner"
                 />
               </div>
             </div>
 
-            {/* COLUMN 3: Sticky Summary */}
+            {/* COLUMN 3: Sticky Summary (Desktop Only) */}
             <div className="lg:col-span-3 hidden lg:block">
-              <div className="p-8 flex flex-col bg-white sticky top-24 h-fit">
-                <div className="space-y-8">
+              <div className="p-8 flex flex-col bg-white sticky top-24 h-full min-h-[600px]">
+                <div className="space-y-8 h-full flex flex-col">
                   <div className="pb-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#022C22]">Live Summary</h3>
                     <ShoppingCart size={16} className="text-[#D4AF37]" />
                   </div>
 
                   <div className="space-y-5">
-                    <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                      <span>Base Rate</span>
+                    <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
+                      <span>Base Rate {pricingLogic === 'quantity' && `(x${mainQuantity})`}</span>
                       <span className="text-gray-900 font-black">৳{basePrice.toLocaleString()}</span>
                     </div>
                     {addOnsTotal > 0 && (
-                      <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase">
+                      <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase animate-in slide-in-from-top-1">
                         <span>Extras Selected</span>
                         <span className="font-black">+৳{addOnsTotal.toLocaleString()}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                    <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
                       <span>Service Fee</span>
                       <span className="text-gray-900 font-black">৳{platformFee}</span>
                     </div>
                   </div>
 
-                  <div className="pt-8 border-t-2 border-dashed border-gray-100 flex flex-col gap-1">
+                  <div className="mt-auto pt-8 border-t-2 border-dashed border-gray-100 flex flex-col gap-1">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">Total Balance</span>
                     <span className="text-4xl font-black text-[#022C22] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
                   </div>
 
-                  <Button onClick={handleContinue} className="w-full h-16 rounded-2xl bg-[#022C22] hover:bg-[#064E3B] text-[#D4AF37] font-black uppercase text-xs tracking-widest shadow-2xl shadow-emerald-950/20 gap-2 active:scale-95 transition-all group">
-                    Confirm Booking <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  <Button onClick={handleContinue} className="w-full h-16 rounded-2xl bg-[#022C22] hover:bg-[#064E3B] text-[#D4AF37] font-black uppercase text-xs tracking-widest shadow-2xl shadow-emerald-950/20 gap-2 transition-all mt-6">
+                    Confirm Booking <ArrowRight size={18} />
                   </Button>
 
-                  <div className="pt-10 border-t border-gray-100 space-y-4">
-                    <div className="flex items-center gap-3">
+                  <div className="pt-8 space-y-4">
+                    <div className="flex items-center gap-3 opacity-60">
                       <ShieldCheck size={16} className="text-emerald-600" />
-                      <span className="text-[9px] font-black uppercase text-gray-500">Certified Specialists</span>
+                      <span className="text-[9px] font-black uppercase text-gray-500">Secure Settlement</span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 opacity-60">
                       <BadgeCheck size={16} className="text-amber-600" />
-                      <span className="text-[9px] font-black uppercase text-gray-500">Full Price Protection</span>
+                      <span className="text-[9px] font-black uppercase text-gray-500">Price Match Promise</span>
                     </div>
                   </div>
                 </div>
@@ -385,32 +413,18 @@ export default function ServiceBookingPage() {
         </section>
 
         {/* RESULTS GALLERY */}
-        <section className="container mx-auto px-0 md:px-4 py-8 max-w-7xl">
-          <div className="bg-white lg:rounded-xl shadow-sm border border-gray-100 p-6 md:p-10 space-y-10">
+        <section className="container mx-auto px-4 py-12 max-w-7xl">
+          <div className="bg-white p-6 md:p-10 space-y-10 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
               <div>
                 <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">Operational Results</h2>
                 <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Real proof of our cleaning standards</p>
               </div>
-              <div className="flex gap-2 p-1 bg-gray-50 rounded-full w-fit border border-gray-100">
-                {['all', 'before', 'after'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setBeforeAfterTab(tab)}
-                    className={cn(
-                      "px-6 py-2 rounded-full text-[9px] font-black uppercase transition-all",
-                      beforeAfterTab === tab ? "bg-[#022C22] text-[#D4AF37] shadow-lg" : "text-gray-400 hover:text-gray-900"
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 relative aspect-video rounded-2xl overflow-hidden bg-gray-50 border shadow-inner group">
-                <Image src="https://picsum.photos/seed/service-result/1200/800" alt="Work Sample" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized />
+              <div className="lg:col-span-8 relative aspect-video rounded-2xl overflow-hidden bg-gray-50 border shadow-inner">
+                <Image src="https://picsum.photos/seed/service-result/1200/800" alt="Work Sample" fill className="object-cover" unoptimized />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="absolute bottom-6 left-6">
                   <Badge className="bg-white/20 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">
@@ -418,7 +432,7 @@ export default function ServiceBookingPage() {
                   </Badge>
                 </div>
               </div>
-              <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4 overflow-y-auto max-h-[450px] no-scrollbar pr-1">
+              <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-transparent hover:border-[#D4AF37] cursor-pointer transition-all shadow-sm group">
                     <Image src={`https://picsum.photos/seed/case${i}/400/300`} alt="Thumbnail" fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
@@ -433,14 +447,13 @@ export default function ServiceBookingPage() {
         </section>
 
         {/* REVIEWS SECTION */}
-        <section className="container mx-auto px-0 md:px-4 py-8 max-w-7xl">
-          <div className="bg-white lg:rounded-xl shadow-sm border border-gray-100 p-6 md:p-10">
+        <section className="container mx-auto px-4 py-8 max-w-7xl mb-24 lg:mb-12">
+          <div className="bg-white lg:rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              
               <div className="lg:col-span-4 space-y-8">
                 <div className="space-y-3">
                   <Badge className="bg-[#022C22]/10 text-[#022C22] border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">Verified Experience</Badge>
-                  <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">Customer <br/><span className="text-[#D4AF37]">Satisfaction</span></h2>
+                  <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">Customer <span className="text-[#D4AF37]">Satisfaction</span></h2>
                 </div>
 
                 <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center space-y-3">
@@ -452,110 +465,68 @@ export default function ServiceBookingPage() {
                 </div>
 
                 {user ? (
-                  <Card className="border-none shadow-xl bg-[#081621] text-white rounded-2xl overflow-hidden">
-                    <CardContent className="p-6 space-y-6">
-                      <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                        <div className="p-2 bg-[#D4AF37]/20 rounded-lg text-[#D4AF37]"><MessageSquare size={18} /></div>
-                        <h4 className="text-xs font-black uppercase tracking-widest">Rate Service</h4>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-black uppercase text-white/40 tracking-widest">Quality Rating</p>
-                        <div className="flex gap-2">
-                          {[1,2,3,4,5].map(star => (
-                            <button key={star} onClick={() => setReviewRating(star)} className="transition-transform active:scale-90">
-                              <Star size={20} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-white/20"} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-white/40 tracking-widest">Share Feedback</Label>
-                        <Textarea 
-                          value={reviewText}
-                          onChange={e => setReviewText(e.target.value)}
-                          placeholder="Your professional opinion..."
-                          className="bg-white/5 border-white/10 text-white min-h-[80px] rounded-lg focus:bg-white/10 text-xs"
-                        />
-                      </div>
-                      <Button 
-                        onClick={handleSubmitReview}
-                        disabled={isSubmittingReview || !reviewText.trim()}
-                        className="w-full h-11 bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px] tracking-widest rounded-lg shadow-lg gap-2"
-                      >
-                        {isSubmittingReview ? <Loader2 className="animate-spin" size={14} /> : <><Send size={14} /> Submit Review</>}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col items-center text-center gap-4">
-                    <div className="p-3 bg-white rounded-xl shadow-sm text-blue-600"><LogIn size={24} /></div>
-                    <div className="space-y-1">
-                      <h4 className="font-black uppercase text-xs text-blue-900">Sign in to Review</h4>
-                      <p className="text-[10px] text-blue-700/60 font-medium">Authentication required to post feedback.</p>
+                  <div className="p-6 bg-[#081621] text-white rounded-2xl space-y-6">
+                    <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2"><MessageSquare size={18} /> Write a Review</h4>
+                    <div className="flex gap-2">
+                      {[1,2,3,4,5].map(star => (
+                        <button key={star} onClick={() => setReviewRating(star)}>
+                          <Star size={20} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-white/20"} />
+                        </button>
+                      ))}
                     </div>
-                    <Button asChild variant="outline" className="w-full h-10 rounded-lg font-black uppercase text-[9px] tracking-widest border-blue-200 text-blue-600 bg-white">
-                      <Link href="/login">Log In</Link>
+                    <Textarea 
+                      value={reviewText}
+                      onChange={e => setReviewText(e.target.value)}
+                      placeholder="Your feedback..."
+                      className="bg-white/5 border-white/10 text-white min-h-[80px]"
+                    />
+                    <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px]">
+                      Submit Feedback
                     </Button>
+                  </div>
+                ) : (
+                  <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center space-y-4">
+                    <LogIn size={24} className="mx-auto text-blue-600" />
+                    <p className="text-[10px] font-black uppercase text-blue-900">Sign in to share your experience</p>
+                    <Button asChild variant="outline" className="w-full h-10 text-[10px] uppercase font-black"><Link href="/login">Login Now</Link></Button>
                   </div>
                 )}
               </div>
 
               <div className="lg:col-span-8 space-y-6">
-                {reviewsLoading ? (
-                  <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[#022C22]" size={32} /></div>
-                ) : reviews?.length ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {reviews.map((rev) => (
-                      <div key={rev.id} className="p-6 md:p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-[#022C22] border shadow-inner uppercase text-xs">
-                              {rev.userName?.[0]}
-                            </div>
-                            <div>
-                              <h5 className="font-black text-gray-900 uppercase text-xs tracking-tight">{rev.userName}</h5>
-                              <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Verified Client</p>
-                            </div>
-                          </div>
-                          <div className="flex text-[#D4AF37] gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} size={12} fill={i < rev.rating ? "currentColor" : "none"} className={i >= rev.rating ? "text-gray-200" : ""} />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-600 font-medium leading-relaxed italic border-l-2 border-[#D4AF37]/20 pl-4 py-1">
-                          "{rev.text}"
-                        </p>
-                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-                          <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                            <Calendar size={10} /> {mounted && rev.createdAt ? format(new Date(rev.createdAt), 'PP') : '...'}
-                          </span>
-                          <div className="flex items-center gap-1.5 text-[8px] font-black text-[#022C22] uppercase bg-[#022C22]/5 px-2.5 py-1 rounded-full">
-                            <CheckCircle2 size={10} /> Certified Standard Results
-                          </div>
+                {reviewsLoading ? <Loader2 className="animate-spin text-primary mx-auto" /> : reviews?.map((rev) => (
+                  <div key={rev.id} className="p-6 md:p-8 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-[#022C22] border shadow-inner uppercase text-xs">{rev.userName?.[0]}</div>
+                        <div>
+                          <h5 className="font-black text-gray-900 uppercase text-xs">{rev.userName}</h5>
+                          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Verified Client</p>
                         </div>
                       </div>
-                    ))}
+                      <div className="flex text-[#D4AF37] gap-0.5">
+                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 font-medium leading-relaxed italic border-l-2 border-[#D4AF37]/20 pl-4">"{rev.text}"</p>
+                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <span className="text-[8px] font-black text-gray-300 uppercase flex items-center gap-2"><Calendar size={10} /> {mounted && rev.createdAt ? format(new Date(rev.createdAt), 'PP') : '...'}</span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="p-20 text-center border-2 border-dashed rounded-3xl opacity-30 flex flex-col items-center gap-4">
-                    <MessageSquare size={48} />
-                    <p className="font-black uppercase tracking-widest text-[10px]">No reviews yet for this service</p>
-                  </div>
-                )}
+                ))}
               </div>
-
             </div>
           </div>
         </section>
 
         {/* MOBILE STICKY FOOTER */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-center shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-          <Button 
-            onClick={handleContinue}
-            className="w-full h-16 rounded-2xl bg-[#022C22] text-[#D4AF37] font-black text-lg uppercase tracking-tight shadow-2xl shadow-emerald-950/30 gap-3 active:scale-95 transition-all"
-          >
-            Confirm ৳{totalPrice.toLocaleString()} <ArrowRight size={24} />
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>
+            <span className="text-2xl font-black text-[#022C22] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+          </div>
+          <Button onClick={handleContinue} className="flex-1 h-16 rounded-2xl bg-[#022C22] text-[#D4AF37] font-black text-sm uppercase tracking-tight shadow-2xl gap-2">
+            Confirm Booking <ArrowRight size={20} />
           </Button>
         </div>
 

@@ -123,6 +123,7 @@ export interface Service {
   teamSize?: string;
   rating?: number;
   badgeText?: string;
+  pricingType?: 'quantity' | 'sqft';
   createdAt?: string;
   updatedAt?: string;
 }

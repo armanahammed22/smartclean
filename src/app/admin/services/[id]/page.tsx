@@ -133,6 +133,20 @@ export default function ServiceDetailedEditor() {
                     <Input value={mainData.title || ''} onChange={e => setMainData({...mainData, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Pricing Logic</Label>
+                    <Select value={mainData.pricingType || 'quantity'} onValueChange={v => setMainData({...mainData, pricingType: v})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="quantity">By Quantity (1, 2, 3...)</SelectItem>
+                        <SelectItem value="sqft">By Area (Square Feet Slabs)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Base Price (৳)</Label>
+                    <Input type="number" value={mainData.basePrice || 0} onChange={e => setMainData({...mainData, basePrice: parseFloat(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                  </div>
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase ml-1">Display Rating</Label>
                     <Input type="number" step="0.1" value={mainData.rating || 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value) || 5.0})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
@@ -163,18 +177,23 @@ export default function ServiceDetailedEditor() {
           <div className="space-y-6">
             <Card className="border-none shadow-sm rounded-3xl bg-white p-8">
               <ImageUploader label="Service Gallery" initialUrl={mainData.imageUrl} onUpload={url => setMainData({...mainData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
-              <p className="text-[10px] text-muted-foreground mt-4 italic">Note: Multiple images can be added here in future updates. Currently using primary listing photo.</p>
+              <p className="text-[10px] text-muted-foreground mt-4 italic">Note: Currently using primary listing photo. Update here to sync with marketplace thumbnail.</p>
             </Card>
           </div>
         </TabsContent>
 
         {/* TAB: PACKAGES */}
         <TabsContent value="packages" className="space-y-6">
-          <div className="flex justify-between items-center px-4">
-            <h2 className="text-lg font-black uppercase tracking-tighter">Pricing Tiers</h2>
-            <Button onClick={() => handleAddSub('packages', { name: 'Small Home', areaSize: '1000sqft', price: 2000, isRecommended: false })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
-              <Plus size={14} /> Create Package
-            </Button>
+          <div className="flex flex-col gap-2 px-4 mb-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-black uppercase tracking-tighter">Pricing Tiers / Area Slabs</h2>
+              <Button onClick={() => handleAddSub('packages', { name: '800 - 1200 Sqft', price: 2000, isRecommended: false })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
+                <Plus size={14} /> Create Slab
+              </Button>
+            </div>
+            <p className="text-[10px] font-bold text-primary bg-primary/5 p-3 rounded-lg border border-primary/10 uppercase tracking-widest">
+              {mainData.pricingType === 'sqft' ? "✓ Area Slab Mode Active: These will appear as selection buttons on the booking page." : "⚠ Quantity Mode Active: Packages won't be shown as main selectors."}
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {packages?.map((pkg) => (
@@ -187,15 +206,11 @@ export default function ServiceDetailedEditor() {
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Tier Name</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Label (e.g. 800 - 1200 Sqft)</Label>
                     <Input defaultValue={pkg.name} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { name: e.target.value })} className="h-9 bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Coverage / Size</Label>
-                    <Input defaultValue={pkg.areaSize} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { areaSize: e.target.value })} className="h-9 bg-gray-50 border-none font-bold" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Package Price (৳)</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Tier Price (৳)</Label>
                     <Input type="number" defaultValue={pkg.price ?? 0} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { price: parseFloat(e.target.value) || 0 })} className="h-11 bg-primary/5 border-none font-black text-primary text-lg" />
                   </div>
                   <div className="flex items-center justify-between pt-2">
@@ -274,7 +289,7 @@ export default function ServiceDetailedEditor() {
                       <div>
                         <Input defaultValue={review.name} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'reviews', review.id), { name: e.target.value })} className="h-6 border-none font-bold text-sm p-0" />
                         <div className="flex gap-1 mt-1">
-                          {[1,2,3,4,5].map(i => <Star key={i} size={10} fill={i <= review.rating ? "currentColor" : "none"} className="text-amber-400" />)}
+                          {[1,2,3,4,5].map(i => <Star key={i} size={10} fill={i <= review.rating ? "currentColor" : "none"} className={i > 4 ? "opacity-30" : ""} />)}
                         </div>
                       </div>
                     </div>

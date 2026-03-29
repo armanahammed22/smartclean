@@ -40,6 +40,8 @@ import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { useLanguage } from '@/components/providers/language-provider';
 
 export default function ServicesManagementPage() {
@@ -65,7 +67,8 @@ export default function ServicesManagementPage() {
     description: '',
     status: 'Active',
     isPopular: false,
-    rating: 5.0
+    rating: 5.0,
+    pricingType: 'quantity' as 'quantity' | 'sqft'
   });
 
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
@@ -122,7 +125,8 @@ export default function ServicesManagementPage() {
       description: '',
       status: 'Active',
       isPopular: false,
-      rating: 5.0
+      rating: 5.0,
+      pricingType: 'quantity'
     });
     setMainImageUrl('');
   }, []);
@@ -191,7 +195,7 @@ export default function ServicesManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table>
@@ -204,6 +208,7 @@ export default function ServicesManagementPage() {
                     />
                   </TableHead>
                   <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest">Service Details</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price Type</TableHead>
                   <TableHead className="font-bold uppercase text-[10px] tracking-widest">Starts From</TableHead>
                   <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
                   <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center">Performance</TableHead>
@@ -212,7 +217,7 @@ export default function ServicesManagementPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
                 ) : services?.map((service) => (
                   <TableRow key={service.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(service.id) && "bg-primary/5")}>
                     <TableCell className="pl-6">
@@ -231,6 +236,11 @@ export default function ServicesManagementPage() {
                           <div className="text-[10px] text-muted-foreground font-bold mt-0.5 uppercase">SLUG: {service.slug || 'N/A'}</div>
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase">
+                        {service.pricingType === 'sqft' ? 'Square Feet' : 'Quantity'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-black text-primary text-sm">৳{service.basePrice?.toLocaleString()}</TableCell>
                     <TableCell>
@@ -299,6 +309,18 @@ export default function ServicesManagementPage() {
                       />
                     </div>
                     <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Pricing Logic</Label>
+                      <Select value={newServiceData.pricingType} onValueChange={v => setNewServiceData({...newServiceData, pricingType: v as any})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="quantity">By Quantity (1, 2, 3...)</SelectItem>
+                          <SelectItem value="sqft">By Area (Square Feet Slabs)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
                       <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
                         <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
@@ -306,6 +328,10 @@ export default function ServicesManagementPage() {
                           {['Cleaning', 'Maintenance', 'Repair'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Badge Text (Optional)</Label>
+                      <Input name="badgeText" value={newServiceData.badgeText} onChange={e => setNewServiceData({...newServiceData, badgeText: e.target.value})} placeholder="e.g. HOT" className="h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-red-600" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -325,6 +351,16 @@ export default function ServicesManagementPage() {
                     onUpload={setMainImageUrl} 
                     aspectRatio="aspect-[4/3]"
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Team Size</Label>
+                      <Input value={newServiceData.teamSize} onChange={e => setNewServiceData({...newServiceData, teamSize: e.target.value})} placeholder="2-4 Persons" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Avg Duration</Label>
+                      <Input value={newServiceData.duration} onChange={e => setNewServiceData({...newServiceData, duration: e.target.value})} placeholder="3-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                  </div>
                   <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <div className="space-y-1">
                       <Label className="text-xs font-black uppercase">Most Popular</Label>
