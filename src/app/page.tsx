@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -206,7 +207,9 @@ export default function SmartCleanHomePage() {
                     </CarouselContent>
                   </Carousel>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20"><Package size={60} /></div>
+                  <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20">
+                    <span className="text-xs font-black uppercase tracking-widest">{t('hero_placeholder')}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -256,7 +259,7 @@ export default function SmartCleanHomePage() {
                     </div>
                   </div>
                   <Link href="/products" className="flex items-center gap-1 text-[10px] md:text-xs font-black text-primary uppercase tracking-widest hover:underline" style={{ color: style.btnBg }}>
-                    {t('cat_all').toUpperCase()} <ChevronRight size={14} />
+                    {t('view_all').toUpperCase()} <ChevronRight size={14} />
                   </Link>
                 </div>
                 <div className="p-3 md:p-6 flex gap-2 md:gap-4 overflow-x-auto no-scrollbar">
@@ -307,7 +310,7 @@ export default function SmartCleanHomePage() {
                           </div>
                           {s.isAddOn && (
                             <Badge className="absolute top-3 right-3 bg-amber-600 text-white border-none font-black text-[7px] uppercase px-2 py-0.5 rounded-full shadow-lg">
-                              Add-on
+                              {t('service')}
                             </Badge>
                           )}
                         </div>
@@ -317,7 +320,7 @@ export default function SmartCleanHomePage() {
                           <div className="mt-auto">
                             <div className="flex items-baseline justify-between mb-1">
                               <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                              {s.pricingType === 'sqft' && <span className="text-[7px] font-black uppercase text-gray-400">Start</span>}
+                              {s.pricingType === 'sqft' && <span className="text-[7px] font-black uppercase text-gray-400">{t('price_from')}</span>}
                             </div>
                             
                             {(showRating || showSalesCount) && (
@@ -329,7 +332,7 @@ export default function SmartCleanHomePage() {
                                   </div>
                                 )}
                                 {showSalesCount && (
-                                  <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('book')}ed</span>
+                                  <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
                                 )}
                               </div>
                             )}
@@ -378,10 +381,10 @@ export default function SmartCleanHomePage() {
           <section key={section.id} style={sectionStyles} className="px-4 bg-white">
             <div className="container mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
-                { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-                { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
-                { label: "Verified Pros", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
-                { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
+                { label: t('happy_clients'), val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                { label: t('trust_score'), val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
+                { label: t('verified_pros'), val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
+                { label: t('service_hours'), val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
               ].map((stat, i) => (
                 <div key={i} className="flex flex-col items-center text-center space-y-3">
                   <div className={cn("p-4 md:p-6 rounded-2xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)} style={{ borderRadius: `${style.cardRadius || 24}px` }}>
@@ -410,7 +413,7 @@ export default function SmartCleanHomePage() {
         {layoutLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-32 gap-4">
             <Loader2 className="animate-spin text-primary" size={48} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Marketplace...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('fetching_data')}</p>
           </div>
         ) : layoutSections.map(renderSection)}
       </div>

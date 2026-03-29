@@ -21,7 +21,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     : null;
 
   const rating = 4.8;
-  const reviewCount = Math.floor((parseInt(product.id.slice(0, 2), 16) || 10) % 250);
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
   const cardStyle = {
@@ -69,7 +68,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               <div className="absolute bottom-2 left-2">
                 <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
                   <Truck size={8} fill="white" className="shrink-0" />
-                  {t('free').toUpperCase()}
+                  {t('shipping_free').toUpperCase()}
                 </div>
               </div>
             )}

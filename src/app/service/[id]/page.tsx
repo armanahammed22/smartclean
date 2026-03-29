@@ -75,7 +75,6 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Service Lookup (Supports Main or Sub service)
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -96,7 +95,6 @@ export default function ServiceBookingPage() {
   const targetId = useMemo(() => baseService?.id || null, [baseService]);
   const isMain = useMemo(() => !!(slugServices?.length || idService), [slugServices, idService]);
 
-  // 2. Fetch Packages (Slabs)
   const packagesQuery = useMemoFirebase(() => {
     if (!db || !targetId) return null;
     const collPath = isMain ? `services/${targetId}/packages` : `sub_services/${targetId}/packages`;
@@ -104,14 +102,12 @@ export default function ServiceBookingPage() {
   }, [db, targetId, isMain]);
   const { data: packages } = useCollection(packagesQuery);
 
-  // 3. Fetch Add-ons
   const addOnsQuery = useMemoFirebase(() => {
     if (!db || !targetId || !isMain) return null;
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'));
   }, [db, targetId, isMain]);
   const { data: relatedSubs } = useCollection(addOnsQuery);
 
-  // 4. Fetch Reviews
   const reviewsQuery = useMemoFirebase(() => {
     if (!db || !targetId) return null;
     const collPath = isMain ? `services/${targetId}/reviews` : `sub_services/${targetId}/reviews`;
@@ -187,9 +183,9 @@ export default function ServiceBookingPage() {
       });
       setReviewText('');
       setReviewRating(5);
-      toast({ title: "Review Posted" });
+      toast({ title: t('op_success') });
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: t('something_wrong') });
     } finally {
       setIsSubmittingReview(false);
     }
@@ -201,17 +197,16 @@ export default function ServiceBookingPage() {
     </div>
   );
 
-  if (!baseService) return <div className="p-20 text-center uppercase font-black text-gray-300">Service Not Found</div>;
+  if (!baseService) return <div className="p-20 text-center uppercase font-black text-gray-300">{t('no_data_found')}</div>;
+
+  const bookingCount = Math.floor((parseInt(baseService.id.slice(-2), 16) || 10) % 500) + 100;
 
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-white min-h-screen">
-        
-        {/* Unified Booking Block */}
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-6 max-w-7xl">
           <div className="bg-white border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative overflow-visible shadow-sm lg:rounded-2xl">
             
-            {/* COLUMN 1: Identity & Selection */}
             <div className="lg:col-span-5 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="relative aspect-video md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner">
                 {baseService.imageUrl ? (
@@ -220,7 +215,7 @@ export default function ServiceBookingPage() {
                   <Wrench size={48} className="text-gray-200" />
                 )}
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-[#022C22] text-[#D4AF37] border-none text-[9px] font-black uppercase px-3 py-1 rounded-sm shadow-xl">Premium</Badge>
+                  <Badge className="bg-[#022C22] text-[#D4AF37] border-none text-[9px] font-black uppercase px-3 py-1 rounded-sm shadow-xl">{t('premium_badge')}</Badge>
                 </div>
               </div>
 
@@ -250,7 +245,7 @@ export default function ServiceBookingPage() {
 
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black text-[#022C22]">৳{basePrice.toLocaleString()}</span>
-                  {pricingLogic === 'sqft' && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">থেকে শুরু / Start From</span>}
+                  {pricingLogic === 'sqft' && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('price_from')}</span>}
                 </div>
 
                 <div className="space-y-6 pt-6 border-t border-gray-100">
@@ -276,8 +271,8 @@ export default function ServiceBookingPage() {
                   ) : (
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                       <div className="space-y-0.5">
-                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Select Quantity</Label>
-                        <p className="text-[11px] font-bold text-gray-900 uppercase">Numbers of Items/Work</p>
+                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('quantity')}</Label>
+                        <p className="text-[9px] font-bold text-gray-400 uppercase">Unit Control</p>
                       </div>
                       <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                         <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="p-3 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={16} /></button>
@@ -290,7 +285,6 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 2: Add-ons */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 bg-gray-50/20 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
@@ -340,7 +334,6 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: Desktop Summary */}
             <div className="lg:col-span-3 hidden lg:block">
               <div className="p-8 flex flex-col bg-white sticky top-24 h-full min-h-[600px]">
                 <div className="space-y-8 h-full flex flex-col">
@@ -372,7 +365,7 @@ export default function ServiceBookingPage() {
                   </div>
 
                   <Button onClick={handleContinue} className="w-full h-16 rounded-2xl bg-[#022C22] hover:bg-[#064E3B] text-[#D4AF37] font-black uppercase text-xs tracking-widest shadow-2xl shadow-emerald-950/20 gap-2 transition-all mt-6">
-                    Confirm Booking <ArrowRight size={18} />
+                    {t('proceed_to_checkout')} <ArrowRight size={18} />
                   </Button>
                 </div>
               </div>
@@ -381,11 +374,10 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* RESULTS GALLERY */}
         <section className="container mx-auto px-4 py-12 max-w-7xl">
           <div className="bg-white p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm space-y-10">
             <div>
-              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">Operational Results</h2>
+              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">{t('results_gallery')}</h2>
               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Proof of our professional standards</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -404,19 +396,18 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* REVIEWS SECTION */}
         <section className="container mx-auto px-4 py-8 max-w-7xl mb-24 lg:mb-12">
           <div className="bg-white lg:rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div className="lg:col-span-4 space-y-8">
-              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">Customer <span className="text-[#D4AF37]">Feedback</span></h2>
+              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">{t('ratings')}</h2>
               <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center space-y-3">
                 <p className="text-5xl font-black text-[#022C22] tracking-tighter">4.9</p>
                 <div className="flex justify-center text-[#D4AF37] gap-1">{[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}</div>
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{reviews?.length || 0} Reviews</p>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{reviews?.length || 0} {t('reviews_count')}</p>
               </div>
               {user ? (
                 <div className="p-6 bg-[#081621] text-white rounded-2xl space-y-6">
-                  <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2"><MessageSquare size={18} /> Write Review</h4>
+                  <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2"><MessageSquare size={18} /> {t('write_review')}</h4>
                   <div className="flex gap-2">
                     {[1,2,3,4,5].map(star => (
                       <button key={star} onClick={() => setReviewRating(star)}>
@@ -425,13 +416,13 @@ export default function ServiceBookingPage() {
                     ))}
                   </div>
                   <Textarea value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Your experience..." className="bg-white/5 border-white/10 text-white min-h-[80px]" />
-                  <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px]">Submit Review</Button>
+                  <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px]">{t('submit_review')}</Button>
                 </div>
               ) : (
                 <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center space-y-4">
                   <LogIn size={24} className="mx-auto text-blue-600" />
-                  <p className="text-[10px] font-black uppercase text-blue-900">Sign in to review</p>
-                  <Button asChild variant="outline" className="w-full h-10 text-[10px] uppercase font-black"><Link href="/login">Login Now</Link></Button>
+                  <p className="text-[10px] font-black uppercase text-blue-900">{t('sign_in_to_review')}</p>
+                  <Button asChild variant="outline" className="w-full h-10 text-[10px] uppercase font-black"><Link href="/login">{t('login_btn')}</Link></Button>
                 </div>
               )}
             </div>
@@ -455,14 +446,13 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* MOBILE STICKY BAR */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>
             <span className="text-2xl font-black text-[#022C22] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
           </div>
           <Button onClick={handleContinue} className="flex-1 h-16 rounded-2xl bg-[#022C22] text-[#D4AF37] font-black text-sm uppercase tracking-tight shadow-2xl gap-2">
-            Confirm Booking <ArrowRight size={20} />
+            {t('book_now')} <ArrowRight size={20} />
           </Button>
         </div>
 
