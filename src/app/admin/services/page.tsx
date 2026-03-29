@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -136,9 +137,12 @@ export default function ServicesManagementPage() {
     if (!db) return;
     setIsSubmitting(true);
 
+    const slug = newServiceData.title.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
     try {
       const serviceDoc = {
         ...newServiceData,
+        slug: slug,
         basePrice: parseFloat(newServiceData.basePrice as string) || 0,
         imageUrl: mainImageUrl,
         createdAt: new Date().toISOString(),
@@ -224,7 +228,7 @@ export default function ServicesManagementPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[200px] leading-tight">{service.title}</div>
-                          <div className="text-[10px] text-muted-foreground font-bold mt-0.5 uppercase">{service.categoryId}</div>
+                          <div className="text-[10px] text-muted-foreground font-bold mt-0.5 uppercase">SLUG: {service.slug || 'N/A'}</div>
                         </div>
                       </div>
                     </TableCell>

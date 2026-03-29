@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -39,7 +40,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, addDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -50,7 +51,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ServiceBookingPage() {
-  const { id } = useParams();
+  const { id: slugOrId } = useParams();
   const router = useRouter();
   const { t } = useLanguage();
   const { user } = useUser();
@@ -72,15 +73,28 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  const mainServiceRef = useMemoFirebase(() => db ? doc(db, 'services', id as string) : null, [db, id]);
-  const { data: mainService, isLoading: mainLoading } = useDoc(mainServiceRef);
+  // 🛡️ Slug-based lookup with fallback to ID
+  const serviceQuery = useMemoFirebase(() => {
+    if (!db || !slugOrId) return null;
+    return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
+  }, [db, slugOrId]);
+  
+  const { data: slugServices, isLoading: slugLoading } = useCollection(serviceQuery);
 
-  const subServiceRef = useMemoFirebase(() => db ? doc(db, 'sub_services', id as string) : null, [db, id]);
+  const mainServiceRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'services', slugOrId as string) : null, [db, slugOrId]);
+  const { data: idService, isLoading: idLoading } = useDoc(mainServiceRef);
+
+  const subServiceRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'sub_services', slugOrId as string) : null, [db, slugOrId]);
   const { data: subService, isLoading: subLoading } = useDoc(subServiceRef);
 
-  const baseService = useMemo(() => mainService || subService || null, [mainService, subService]);
+  const baseService = useMemo(() => {
+    if (slugServices && slugServices.length > 0) return slugServices[0];
+    return idService || subService || null;
+  }, [slugServices, idService, subService]);
 
-  const mainId = useMemo(() => mainService?.id || subService?.mainServiceId || null, [mainService, subService]);
+  const isLoading = slugLoading && idLoading && subLoading;
+
+  const mainId = useMemo(() => baseService?.id || null, [baseService]);
   
   const relatedSubsQuery = useMemoFirebase(() => {
     if (!db || !mainId) return null;
@@ -90,15 +104,15 @@ export default function ServiceBookingPage() {
 
   // Reviews Fetching
   const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !id) return null;
-    return query(collection(db, 'services', id as string, 'reviews'), orderBy('createdAt', 'desc'));
-  }, [db, id]);
+    if (!db || !mainId) return null;
+    return query(collection(db, 'services', mainId as string, 'reviews'), orderBy('createdAt', 'desc'));
+  }, [db, mainId]);
   const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsQuery);
 
   const addOnOptions = useMemo(() => {
     if (!relatedSubs) return [];
-    return relatedSubs.filter(sub => sub.id !== id && sub.isAddOnEnabled);
-  }, [relatedSubs, id]);
+    return relatedSubs.filter(sub => sub.id !== mainId && sub.isAddOnEnabled);
+  }, [relatedSubs, mainId]);
 
   const basePrice = baseService?.basePrice || baseService?.price || 0;
   const addOnsTotal = addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).reduce((acc, a) => acc + (a.price || 0), 0);
@@ -123,12 +137,12 @@ export default function ServiceBookingPage() {
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !user || !id) return;
+    if (!db || !user || !mainId) return;
     if (!reviewText.trim()) return;
 
     setIsSubmittingReview(true);
     try {
-      await addDoc(collection(db, 'services', id as string, 'reviews'), {
+      await addDoc(collection(db, 'services', mainId as string, 'reviews'), {
         userId: user.uid,
         userName: user.displayName || 'Anonymous User',
         rating: reviewRating,
@@ -146,7 +160,7 @@ export default function ServiceBookingPage() {
     }
   };
 
-  if (!mounted || mainLoading || subLoading) return (
+  if (!mounted || isLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Loader2 className="animate-spin text-primary" size={40} />
     </div>

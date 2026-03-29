@@ -43,7 +43,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function ProductDetailsPage() {
-  const { id } = useParams();
+  const { id: slugOrId } = useParams();
   const router = useRouter();
   const db = useFirestore();
   const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
@@ -57,8 +57,23 @@ export default function ProductDetailsPage() {
     setMounted(true);
   }, []);
 
-  const productRef = useMemoFirebase(() => (db && id) ? doc(db, 'products', id as string) : null, [db, id]);
-  const { data: product, isLoading } = useDoc(productRef);
+  // 🛡️ Slug-based lookup with fallback to ID
+  const productQuery = useMemoFirebase(() => {
+    if (!db || !slugOrId) return null;
+    return query(collection(db, 'products'), where('slug', '==', slugOrId), limit(1));
+  }, [db, slugOrId]);
+  
+  const { data: slugProducts, isLoading: slugLoading } = useCollection(productQuery);
+  
+  const productByIdRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'products', slugOrId as string) : null, [db, slugOrId]);
+  const { data: idProduct, isLoading: idLoading } = useDoc(productByIdRef);
+
+  const product = useMemo(() => {
+    if (slugProducts && slugProducts.length > 0) return slugProducts[0];
+    return idProduct;
+  }, [slugProducts, idProduct]);
+
+  const isLoading = slugLoading && idLoading;
 
   const relatedQuery = useMemoFirebase(() => {
     if (!db || !product?.categoryId) return null;
@@ -67,9 +82,9 @@ export default function ProductDetailsPage() {
   const { data: relatedProducts } = useCollection(relatedQuery);
 
   const qnaQuery = useMemoFirebase(() => {
-    if (!db || !id) return null;
-    return query(collection(db, 'product_qna'), where('productId', '==', id), where('status', '==', 'Approved'), orderBy('createdAt', 'desc'));
-  }, [db, id]);
+    if (!db || !product?.id) return null;
+    return query(collection(db, 'product_qna'), where('productId', '==', product.id), where('status', '==', 'Approved'), orderBy('createdAt', 'desc'));
+  }, [db, product?.id]);
   const { data: qnaList } = useCollection(qnaQuery);
 
   const allImages = useMemo(() => {
@@ -145,7 +160,7 @@ export default function ProductDetailsPage() {
               },
               offers: {
                 '@type': 'Offer',
-                url: `https://smartclean.com.bd/product/${product.id}`,
+                url: `https://smartclean.com.bd/product/${product.slug || product.id}`,
                 priceCurrency: 'BDT',
                 price: product.price,
                 availability: isOutOfStock ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',

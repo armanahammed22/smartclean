@@ -271,7 +271,7 @@ export default function SmartCleanHomePage() {
                       className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
                       style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
                     >
-                      <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+                      <Link href={`/service/${s.slug || s.id}`} className="block h-full flex flex-col">
                         <div className="p-1">
                           <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
                             {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}

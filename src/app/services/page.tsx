@@ -151,7 +151,7 @@ function ServicesContent() {
             {filteredOfferings.map((item) => (
               item.itemType === 'service' ? (
                 <div key={item.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
-                  <Link href={`/service/${item.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
+                  <Link href={`/service/${item.slug || item.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
                     {item.imageUrl ? (
                       <Image 
                         src={item.imageUrl} 
@@ -176,7 +176,7 @@ function ServicesContent() {
                   </Link>
                   <div className="p-3 flex flex-col flex-1 gap-2">
                     <div className="space-y-0.5">
-                      <Link href={`/service/${item.id}`} className="hover:text-primary transition-colors block">
+                      <Link href={`/service/${item.slug || item.id}`} className="hover:text-primary transition-colors block">
                         <h3 className="text-[13px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">
                           {item.title}
                         </h3>
@@ -189,7 +189,7 @@ function ServicesContent() {
                       </div>
                     </div>
                     <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
-                      <Link href={`/service/${item.id}`}>{t('book_now')}</Link>
+                      <Link href={`/service/${item.slug || item.id}`}>{t('book_now')}</Link>
                     </Button>
                   </div>
                 </div>

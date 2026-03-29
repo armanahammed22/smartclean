@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -101,8 +102,12 @@ export default function ProductsManagementPage() {
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const slug = name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
     const productData = {
-      name: formData.get('name') as string,
+      name: name,
+      slug: slug,
       price: parseFloat(formData.get('price') as string),
       regularPrice: parseFloat(formData.get('regularPrice') as string) || 0,
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
@@ -221,7 +226,7 @@ export default function ProductsManagementPage() {
                         </div>
                         <div className="min-w-0">
                           <span className="font-black text-gray-900 uppercase text-xs truncate max-w-[200px] block leading-none mb-1">{product.name}</span>
-                          <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest">SKU: {product.id.slice(0, 8).toUpperCase()}</span>
+                          <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest">SLUG: {product.slug || 'N/A'}</span>
                         </div>
                       </div>
                     </TableCell>

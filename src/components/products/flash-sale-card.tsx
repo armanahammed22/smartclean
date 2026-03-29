@@ -29,7 +29,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.97] transition-all">
+    <Link href={`/product/${product.slug || product.id}`} className="block h-full group active:scale-[0.97] transition-all">
       <div 
         className={cn(
           "overflow-hidden flex flex-col h-full shadow-md border border-gray-100 group-hover:shadow-xl transition-all hover:-translate-y-1",

@@ -2,6 +2,7 @@
 export interface Product {
   id: string;
   name: string;
+  slug?: string;
   price: number;
   regularPrice?: number;
   description: string;
@@ -108,6 +109,7 @@ export interface LandingPage {
 export interface Service {
   id: string;
   title: string;
+  slug?: string;
   categoryId: string;
   description: string;
   shortDescription?: string;

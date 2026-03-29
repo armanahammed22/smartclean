@@ -35,7 +35,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const showSalesCount = customStyle?.showSalesCount !== false;
 
   return (
-    <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.98] transition-all">
+    <Link href={`/product/${product.slug || product.id}`} className="block h-full group active:scale-[0.98] transition-all">
       <div 
         className={cn(
           "flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden",
