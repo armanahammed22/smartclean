@@ -131,8 +131,8 @@ export default function SmartCleanHomePage() {
 
     const sectionStyles = {
       backgroundColor: style.sectionBg || 'transparent',
-      paddingTop: '40px',
-      paddingBottom: '40px',
+      paddingTop: '24px',
+      paddingBottom: '24px',
     };
 
     const titleStyles = {
@@ -153,7 +153,7 @@ export default function SmartCleanHomePage() {
     switch (sectionType) {
       case 'hero':
         return (
-          <section key={section.id} className="bg-white pb-4 lg:bg-transparent lg:mt-4">
+          <section key={section.id} className="bg-white pb-2 lg:bg-transparent lg:mt-4">
             <div className="container mx-auto px-0 lg:px-4">
               <div className="relative aspect-[21/11] md:aspect-[982/400] w-full lg:rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
                 {mainBanners.length > 0 ? (
@@ -188,16 +188,16 @@ export default function SmartCleanHomePage() {
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
               <div className="bg-white p-4 md:p-6 shadow-sm border border-gray-100 overflow-hidden" style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius || 24}px` }}>
-                <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
+                <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
                   {topCategories.map((cat) => {
                     const catStyle = getCategoryStyles(cat.name);
                     const DisplayIcon = catStyle.icon;
                     return (
-                      <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-0.75rem)] sm:basis-[calc(16.66%-1rem)] md:basis-[calc(12.5%-1.2rem)] snap-start">
-                        <div className={cn("w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110", catStyle.bg, catStyle.color)}>
-                          {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <DisplayIcon size={28} />}
+                      <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-2 group shrink-0 basis-[calc(25%-0.5rem)] sm:basis-[calc(16.66%-0.75rem)] md:basis-[calc(12.5%-1rem)] snap-start">
+                        <div className={cn("w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center p-3 border shadow-sm transition-all duration-300 group-hover:scale-110", catStyle.bg, catStyle.color)}>
+                          {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <DisplayIcon size={24} />}
                         </div>
-                        <span className="text-[9px] md:text-[10px] lg:text-[11px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
+                        <span className="text-[8px] md:text-[10px] font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">
                           {cat.name}
                         </span>
                       </Link>
@@ -214,10 +214,10 @@ export default function SmartCleanHomePage() {
         const flashProducts = allProducts?.filter(p => flashSaleConfig.productIds?.includes(p.id) && p.status === 'Active') || [];
         if (flashProducts.length === 0) return null;
         return (
-          <section key={section.id} style={sectionStyles} className="w-full px-3 md:px-4">
+          <section key={section.id} style={sectionStyles} className="w-full px-2 md:px-4">
             <div className={cn("bg-white overflow-hidden shadow-md border border-gray-100", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius || 24}px` }}>
               <div className="container mx-auto max-w-7xl">
-                <div className="p-4 md:p-6 flex items-center justify-between border-b">
+                <div className="p-3 md:p-6 flex items-center justify-between border-b">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
@@ -229,8 +229,8 @@ export default function SmartCleanHomePage() {
                     {t('cat_all').toUpperCase()} <ChevronRight size={14} />
                   </Link>
                 </div>
-                <div className="p-4 md:p-6 flex gap-3 md:gap-6 overflow-x-auto no-scrollbar">
-                  {flashProducts.map(p => <div key={p.id} className="w-[165px] md:w-[220px] shrink-0"><FlashSaleCard product={p} customStyle={style} /></div>)}
+                <div className="p-3 md:p-6 flex gap-2 md:gap-4 overflow-x-auto no-scrollbar">
+                  {flashProducts.map(p => <div key={p.id} className="w-[155px] md:w-[220px] shrink-0"><FlashSaleCard product={p} customStyle={style} /></div>)}
                 </div>
               </div>
             </div>
@@ -245,23 +245,23 @@ export default function SmartCleanHomePage() {
         const displayServices = getFilteredServices();
         if (displayServices.length === 0) return null;
         return (
-          <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
+              <div className={cn("flex items-center justify-between mb-6 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
                 <h2 
                   className={cn("font-black uppercase tracking-tighter")}
                   style={{ 
                     ...titleStyles, 
-                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '24px' 
+                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
                   }}
                 >
                   {section.title}
                 </h2>
-                <Link href="/services" className="text-[10px] md:text-sm font-black uppercase px-5 py-2.5 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
+                <Link href="/services" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
                   {t('view_all').toUpperCase()}
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
                 {displayServices.map(s => {
                   const bookingCount = Math.floor((parseInt(s.id.slice(-2), 16) || 10) % 500) + 100;
                   return (
@@ -271,13 +271,13 @@ export default function SmartCleanHomePage() {
                       style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
                     >
                       <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
-                        <div className="p-2 md:p-3 shrink-0">
+                        <div className="p-1.5 md:p-2.5 shrink-0">
                           <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
                             {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
                           </div>
                         </div>
-                        <div className="p-3 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
-                          <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
+                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
+                          <h3 className="text-[11px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                           
                           <div className="mt-auto">
                             <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none mb-1">৳{(s.basePrice || 0).toLocaleString()}</p>
@@ -296,8 +296,8 @@ export default function SmartCleanHomePage() {
                               </div>
                             )}
 
-                            <div className="mt-1.5">
-                              <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
+                            <div className="mt-1">
+                              <Button size="sm" className="w-full font-black uppercase shadow-xl h-8 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
                                 {t('book_now')}
                               </Button>
                             </div>
@@ -317,18 +317,18 @@ export default function SmartCleanHomePage() {
         const displayProducts = getFilteredProducts();
         if (displayProducts.length === 0) return null;
         return (
-          <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
               <h2 
-                className={cn("mb-8 px-2 font-black uppercase tracking-tighter")}
+                className={cn("mb-6 px-2 font-black uppercase tracking-tighter")}
                 style={{ 
                   ...titleStyles, 
-                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '24px' 
+                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
                 }}
               >
                 {section.title}
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
@@ -338,20 +338,20 @@ export default function SmartCleanHomePage() {
       case 'trust_stats':
         return (
           <section key={section.id} style={sectionStyles} className="px-4 bg-white">
-            <div className="container mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="container mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
                 { label: "Happy Clients", val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
                 { label: "Trust Score", val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
                 { label: "Verified Pros", val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
                 { label: "Service Hours", val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
               ].map((stat, i) => (
-                <div key={i} className="flex flex-col items-center text-center space-y-4">
+                <div key={i} className="flex flex-col items-center text-center space-y-3">
                   <div className={cn("p-4 md:p-6 rounded-2xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)} style={{ borderRadius: `${style.cardRadius || 24}px` }}>
-                    <stat.icon size={32} strokeWidth={2.5} />
+                    <stat.icon size={28} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h4 className="text-2xl md:text-4xl font-black text-[#081621] tracking-tighter" style={{ color: style.titleColor }}>{stat.val}</h4>
-                    <p className="text-[9px] md:xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                    <h4 className="text-xl md:text-3xl font-black text-[#081621] tracking-tighter" style={{ color: style.titleColor }}>{stat.val}</h4>
+                    <p className="text-[8px] md:xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
                   </div>
                 </div>
               ))}
