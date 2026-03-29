@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -42,7 +43,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         )}
         style={cardStyle}
       >
-        <div className="p-2 md:p-3">
+        <div className="p-1 md:p-1.5">
           <div className="relative aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
             {product.imageUrl ? (
               <Image
@@ -106,8 +107,9 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </div>
             
             <div className={cn(
-              "flex items-center justify-between gap-1 text-[8px] md:text-[9px] font-bold mt-0.5",
-              isDark ? "text-white/40" : "text-gray-400"
+              "flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-0.5",
+              isDark ? "text-white/40" : "text-gray-400",
+              customStyle?.textAlign === 'center' ? 'justify-center gap-4' : ''
             )}>
               {showRating && (
                 <div className="flex items-center gap-1 text-amber-400">

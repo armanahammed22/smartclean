@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -36,7 +37,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
         )}
         style={cardStyle}
       >
-        <div className="p-2 md:p-3">
+        <div className="p-1 md:p-1.5">
           <div className="relative aspect-square w-full rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
             {product.imageUrl ? (
               <Image
@@ -77,12 +78,15 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               )}
             </div>
             
-            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1">
+            <div className={cn(
+              "flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1",
+              customStyle?.textAlign === 'center' ? 'justify-center gap-4' : ''
+            )}>
               <div className="flex items-center gap-1 text-amber-400">
                 <Star size={10} fill="currentColor" />
                 <span className="font-black text-gray-600">{rating}</span>
               </div>
-              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400">{soldCount} {t('sold')}</span>
+              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400 ml-auto">{soldCount} {t('sold')}</span>
             </div>
           </div>
         </div>
