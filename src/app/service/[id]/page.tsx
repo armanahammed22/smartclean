@@ -20,7 +20,12 @@ import {
   Minus,
   Check,
   Info,
-  Calendar
+  Calendar,
+  Sparkles,
+  Crown,
+  Trophy,
+  Gem,
+  CheckSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -66,7 +71,7 @@ export default function ServiceBookingPage() {
   useEffect(() => {
     if (subService) setIsSubServiceMode(true);
     if (baseService) {
-      document.title = `${baseService.title || baseService.name} Service in Dhaka | Smart Clean`;
+      document.title = `${baseService.title || baseService.name} - Premium Booking | Smart Clean`;
     }
   }, [subService, baseService]);
 
@@ -95,14 +100,18 @@ export default function ServiceBookingPage() {
   }, [relatedSubs, id]);
 
   // Pricing Logic
-  const totalPrice = useMemo(() => {
+  const subtotal = useMemo(() => {
     if (!baseService) return 0;
-    const basePrice = baseService.basePrice || baseService.price || 0;
-    const addOnPrice = addOnOptions
+    return baseService.basePrice || baseService.price || 0;
+  }, [baseService]);
+
+  const addOnsTotal = useMemo(() => {
+    return addOnOptions
       .filter(a => selectedAddOnIds.includes(a.id))
       .reduce((acc, a) => acc + (a.price || 0), 0);
-    return basePrice + addOnPrice;
-  }, [baseService, addOnOptions, selectedAddOnIds]);
+  }, [addOnOptions, selectedAddOnIds]);
+
+  const totalPrice = subtotal + addOnsTotal;
 
   const toggleAddOn = (subId: string) => {
     setSelectedAddOnIds(prev => 
@@ -125,203 +134,241 @@ export default function ServiceBookingPage() {
     setCheckoutOpen(true);
   };
 
-  if (!mounted || mainLoading || subLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  if (!mounted || mainLoading || subLoading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#022C22]">
+      <Loader2 className="animate-spin text-[#D4AF37]" size={48} />
+      <p className="mt-4 text-[#D4AF37] font-black uppercase tracking-widest text-[10px]">Refining Experience...</p>
+    </div>
+  );
+
   if (!baseService) return <div className="p-20 text-center font-black uppercase text-gray-300">Service Not Found</div>;
 
   return (
     <PublicLayout minimalMobile={true}>
-      <div className="bg-[#F8FAFC] min-h-screen pb-32 lg:pb-12">
-        {/* SEO Structured Data for Service */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org/',
-              '@type': 'Service',
-              serviceType: baseService.categoryId || 'Cleaning Service',
-              provider: {
-                '@type': 'LocalBusiness',
-                name: 'Smart Clean Bangladesh',
-                image: baseService.imageUrl,
-                telephone: '+8801919640422',
-                address: {
-                  '@type': 'PostalAddress',
-                  streetAddress: 'Wireless Gate, Mohakhali',
-                  addressLocality: 'Dhaka',
-                  addressRegion: 'Dhaka',
-                  postalCode: '1212',
-                  addressCountry: 'BD'
-                }
-              },
-              areaServed: {
-                '@type': 'City',
-                name: 'Dhaka'
-              },
-              name: baseService.title || baseService.name,
-              description: baseService.description?.substring(0, 160),
-              offers: {
-                '@type': 'Offer',
-                price: baseService.basePrice || baseService.price,
-                priceCurrency: 'BDT'
-              }
-            })
-          }}
-        />
-
-        <div className="container mx-auto px-4 lg:py-10 max-w-6xl">
-          {/* Breadcrumbs for SEO */}
-          <nav className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-            <Link href="/" className="hover:text-primary">Home</Link>
-            <ChevronRight size={10} />
-            <Link href="/services" className="hover:text-primary">Services</Link>
-            <ChevronRight size={10} />
-            <span className="text-gray-600">{baseService.categoryId}</span>
-            <ChevronRight size={10} />
-            <span className="text-primary">{baseService.title || baseService.name}</span>
-          </nav>
+      <div className="bg-[#FDFDFD] min-h-screen pb-32 lg:pb-20 animate-in fade-in duration-1000">
+        
+        {/* LUXURY HERO HEADER */}
+        <section className="bg-[#022C22] text-white py-12 md:py-20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37] opacity-5 blur-[120px] -mr-48 -mt-48" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#D4AF37] opacity-5 blur-[100px] -ml-32 -mb-32" />
           
+          <div className="container mx-auto px-4 max-w-7xl relative z-10">
+            <div className="flex flex-col items-center text-center space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="h-px w-8 bg-[#D4AF37]" />
+                <Badge className="bg-[#D4AF37] text-[#022C22] border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-[0.2em] shadow-xl">
+                  <Crown size={12} className="mr-2" /> Elite Standard
+                </Badge>
+                <div className="h-px w-8 bg-[#D4AF37]" />
+              </div>
+              <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter uppercase leading-[0.9] italic">
+                {baseService.title || baseService.name}
+              </h1>
+              <p className="text-[#D4AF37]/80 text-sm md:text-xl max-w-2xl font-medium leading-relaxed italic">
+                {baseService.description?.substring(0, 120)}...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 3-COLUMN CONTENT ENGINE */}
+        <div className="container mx-auto px-4 -mt-10 md:-mt-16 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left Column: Image & Details */}
-            <div className="lg:col-span-7 space-y-8">
-              <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
-                <div className="relative aspect-video w-full">
-                  <Image 
-                    src={baseService.imageUrl || 'https://picsum.photos/seed/service/800/600'} 
-                    alt={baseService.title || baseService.name} 
-                    fill 
-                    className="object-cover" 
-                    unoptimized 
-                  />
-                  <div className="absolute top-6 left-6">
-                    <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl">
-                      {isSubServiceMode ? 'Direct Selection' : 'Full Service'}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <h1 className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter uppercase leading-tight">
-                      {baseService.title || baseService.name}
-                    </h1>
-                    <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
-                      <div className="flex items-center gap-1.5 text-amber-500">
-                        <Star size={14} fill="currentColor" /> {baseService.rating || '5.0'}
-                      </div>
-                      <span className="opacity-20">|</span>
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={14} className="text-primary" /> {baseService.duration || '2-4 Hours'}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-500 leading-relaxed font-medium">
-                    {baseService.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Add-ons Selection */}
-              {addOnOptions.length > 0 && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 px-2">
-                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={20} fill="currentColor" /></div>
-                    <h2 className="text-xl font-black uppercase tracking-tight text-[#081621]">অ্যাড-অন সার্ভিস (ঐচ্ছিক)</h2>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {addOnOptions.map((addon) => (
-                      <div 
-                        key={addon.id} 
-                        onClick={() => toggleAddOn(addon.id)}
-                        className={cn(
-                          "p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group",
-                          selectedAddOnIds.includes(addon.id) ? "border-primary bg-primary/5 shadow-inner" : "border-white bg-white hover:border-gray-200"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-50 shrink-0">
-                            <Image src={addon.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={addon.name} fill className="object-cover" unoptimized />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-black text-gray-900 uppercase text-[11px] truncate leading-tight">{addon.name}</p>
-                            <p className="font-black text-primary text-xs mt-1">+৳{addon.price}</p>
-                          </div>
-                        </div>
-                        <div className={cn(
-                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0",
-                          selectedAddOnIds.includes(addon.id) ? "bg-primary border-primary text-white" : "border-gray-200 text-transparent"
-                        )}>
-                          <Check size={14} strokeWidth={4} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Pricing & Sticky CTA */}
-            <div className="lg:col-span-5 lg:sticky lg:top-24">
-              <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-primary">
+            {/* COLUMN 1: LIVE PRICE SUMMARY (LEFT) */}
+            <div className="lg:col-span-3 lg:sticky lg:top-24 order-3 lg:order-1">
+              <Card className="rounded-[2.5rem] border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden bg-white border-t-8 border-[#D4AF37]">
                 <CardContent className="p-8 space-y-8">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-black uppercase tracking-widest text-[#081621] pb-4 border-b">বুকিং সামারি</h3>
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#022C22] pb-4 border-b border-gray-100 flex items-center gap-2">
+                      <Trophy size={18} className="text-[#D4AF37]" /> Booking Insight
+                    </h3>
                     
-                    <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
-                      <span>বেস সার্ভিস ({isSubServiceMode ? 'সাব' : 'মেইন'})</span>
-                      <span className="text-[#081621] font-black">৳{(baseService.basePrice || baseService.price)?.toLocaleString()}</span>
-                    </div>
-
-                    {selectedAddOnIds.length > 0 && (
-                      <div className="space-y-3 pt-2">
-                        {addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).map(addon => (
-                          <div key={addon.id} className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase">
-                            <span>+ {addon.name}</span>
-                            <span className="text-primary font-black">৳{addon.price}</span>
-                          </div>
-                        ))}
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-gray-400">Master Service</span>
+                        <span className="text-sm font-black text-[#022C22]">৳{subtotal.toLocaleString()}</span>
                       </div>
-                    )}
 
-                    <div className="pt-6 border-t-4 border-dashed border-gray-100 flex flex-col gap-1">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">মোট প্রদেয়</p>
-                      <p className="text-5xl font-black text-primary tracking-tighter">৳{totalPrice.toLocaleString()}</p>
+                      {selectedAddOnIds.length > 0 && (
+                        <div className="space-y-3 pt-2 animate-in zoom-in-95">
+                          <p className="text-[9px] font-black uppercase text-[#D4AF37]">Selected Enhancements</p>
+                          {addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).map(addon => (
+                            <div key={addon.id} className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase">
+                              <span>{addon.name}</span>
+                              <span className="text-[#022C22]">৳{addon.price}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-6 border-t-2 border-dashed border-gray-100 space-y-4">
+                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                          <span>Subtotal</span>
+                          <span>৳{totalPrice.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                          <span>VAT (0%)</span>
+                          <span>৳0</span>
+                        </div>
+                        <div className="pt-4 flex flex-col gap-1">
+                          <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.3em]">Total Investment</p>
+                          <p className="text-5xl font-black text-[#022C22] tracking-tighter">৳{totalPrice.toLocaleString()}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
-                      <ShieldCheck size={20} className="text-primary mt-0.5" />
-                      <p className="text-[10px] font-bold text-blue-800 leading-relaxed uppercase">
-                        ১০০% স্যাটিসফ্যাকশন গ্যারান্টি। আমাদের টিম অভিজ্ঞ এবং ভেরিফাইড।
+                    <div className="p-4 bg-[#022C22]/5 rounded-2xl border border-[#022C22]/10 flex items-start gap-3">
+                      <ShieldCheck size={20} className="text-[#022C22] mt-0.5" />
+                      <p className="text-[9px] font-bold text-[#022C22] leading-relaxed uppercase">
+                        100% Satisfaction Guaranteed. Verified Elite Professionals only.
                       </p>
                     </div>
                     
                     <Button 
                       onClick={handleContinue}
-                      className="w-full h-16 md:h-20 rounded-2xl font-black text-2xl md:text-4xl bg-primary hover:bg-primary/90 text-white uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 group transition-all active:scale-95 px-4"
+                      className="w-full h-16 rounded-2xl font-black text-xl bg-[#022C22] hover:bg-[#064E3B] text-white uppercase tracking-tighter shadow-2xl shadow-[#022C22]/20 gap-3 group transition-all active:scale-95"
                     >
-                      {t('book_now')} <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform shrink-0" />
+                      Complete Booking <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* COLUMN 2: MAIN SERVICE (CENTER) */}
+            <div className="lg:col-span-6 space-y-8 order-1 lg:order-2">
+              <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-50">
+                <div className="relative aspect-[16/10] w-full group">
+                  <Image 
+                    src={baseService.imageUrl || 'https://picsum.photos/seed/luxury/800/600'} 
+                    alt={baseService.title || baseService.name} 
+                    fill 
+                    className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+                    unoptimized 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#022C22]/80 via-transparent to-transparent" />
+                  <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
+                    <div className="space-y-1">
+                      <Badge className="bg-[#D4AF37] text-[#022C22] font-black uppercase text-[8px] tracking-widest px-3">Featured</Badge>
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">Signature Treatment</h2>
+                    </div>
+                    <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white flex flex-col items-center">
+                      <Star size={20} fill="#D4AF37" className="text-[#D4AF37] mb-1" />
+                      <span className="text-sm font-black">{baseService.rating || '5.0'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8 md:p-12 space-y-10">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {[
+                      { icon: Clock, label: "Duration", val: baseService.duration || "2-4 Hrs" },
+                      { icon: Users, label: "Team", val: baseService.teamSize || "2 Pros" },
+                      { icon: Gem, label: "Tools", val: "Elite Kit" },
+                      { icon: Trophy, label: "Support", val: "24/7 VIP" }
+                    ].map((feat, i) => (
+                      <div key={i} className="flex flex-col items-center text-center gap-2">
+                        <div className="p-3 bg-gray-50 rounded-xl text-[#022C22] border border-gray-100"><feat.icon size={20} /></div>
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{feat.label}</p>
+                          <p className="text-[10px] font-bold text-gray-900 uppercase">{feat.val}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#022C22] flex items-center gap-3">
+                      <div className="h-px w-6 bg-[#D4AF37]" /> Excellence in Every Detail
+                    </h3>
+                    <p className="text-gray-500 text-sm md:text-base leading-loose font-medium italic">
+                      {baseService.description || "Experience our signature high-precision cleaning methodology designed for the most discerning clients."}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      "Hospital Grade Sanitization",
+                      "Eco-Friendly Signature Scents",
+                      "Multi-Surface Specialized Care",
+                      "Post-Service Detail Inspection"
+                    ].map((point, i) => (
+                      <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-[#D4AF37]/30 transition-colors">
+                        <div className="h-6 w-6 rounded-full bg-[#022C22] flex items-center justify-center text-[#D4AF37]"><Check size={14} strokeWidth={4} /></div>
+                        <span className="text-[10px] md:text-xs font-black uppercase text-gray-700">{point}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 3: ENHANCEMENTS (RIGHT) */}
+            <div className="lg:col-span-3 space-y-6 order-2 lg:order-3">
+              <div className="flex items-center gap-3 px-2">
+                <div className="p-2 bg-[#D4AF37]/10 rounded-xl text-[#D4AF37]"><Sparkles size={20} fill="currentColor" /></div>
+                <h2 className="text-lg font-black uppercase tracking-tight text-[#022C22]">Curated Add-ons</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {addOnOptions.length > 0 ? addOnOptions.map((addon) => (
+                  <div 
+                    key={addon.id} 
+                    onClick={() => toggleAddOn(addon.id)}
+                    className={cn(
+                      "p-5 rounded-[2rem] border-2 transition-all cursor-pointer flex flex-col gap-4 relative group",
+                      selectedAddOnIds.includes(addon.id) 
+                        ? "border-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_10px_30px_rgba(212,175,55,0.1)]" 
+                        : "border-gray-100 bg-white hover:border-[#D4AF37]/30 shadow-sm"
+                    )}
+                  >
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-50">
+                      <Image src={addon.imageUrl || 'https://picsum.photos/seed/addon/200/200'} alt={addon.name} fill className="object-cover" unoptimized />
+                      {selectedAddOnIds.includes(addon.id) && (
+                        <div className="absolute inset-0 bg-[#022C22]/20 backdrop-blur-[1px] flex items-center justify-center">
+                          <div className="bg-[#D4AF37] text-[#022C22] p-2 rounded-full shadow-2xl animate-in zoom-in">
+                            <CheckSquare size={24} strokeWidth={3} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-black text-[#022C22] uppercase text-xs leading-tight flex-1">{addon.name}</h4>
+                        <span className="font-black text-[#D4AF37] text-sm ml-2">৳{addon.price}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                        <span className="flex items-center gap-1"><Clock size={10} /> {addon.duration || '30m'}</span>
+                        <span className="text-[#D4AF37]">Premium Care</span>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="p-10 text-center border-2 border-dashed rounded-[2.5rem] opacity-20 flex flex-col items-center gap-3">
+                    <Zap size={32} />
+                    <p className="text-[10px] font-black uppercase tracking-widest">No Add-ons Available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* Mobile Sticky Bar */}
+        {/* MOBILE STICKY LUXURY BAR */}
         {!isCheckoutOpen && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 z-[110] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-10">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Due</span>
-              <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+              <span className="text-[8px] font-black text-[#D4AF37] uppercase tracking-[0.3em] leading-none mb-1">Total Payable</span>
+              <span className="text-2xl font-black text-[#022C22] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
             </div>
             <Button 
               onClick={handleContinue}
-              className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-xl uppercase tracking-widest shadow-xl shadow-primary/20 gap-2 px-2"
+              className="flex-1 h-14 rounded-2xl bg-[#022C22] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-[#022C22]/20 gap-2"
             >
-              {t('book_now')} <ChevronRight size={20} className="ml-1 shrink-0" />
+              Continue Booking <ChevronRight size={18} className="ml-1" />
             </Button>
           </div>
         )}
