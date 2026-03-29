@@ -29,7 +29,8 @@ import {
   Clock,
   Users,
   Settings2,
-  Maximize
+  Maximize,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -227,7 +228,7 @@ export default function ServiceDetailedEditor() {
                 <CardContent className="p-5 flex flex-col gap-4">
                   <div className="flex justify-between">
                     <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Zap size={16} /></div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSub('addOns', item.id)} className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100"><Trash2 size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100" onClick={() => handleDeleteSub('addOns', item.id)}><Trash2 size={12} /></Button>
                   </div>
                   <Input defaultValue={item.name} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'addOns', item.id), { name: e.target.value })} className="h-8 border-none font-bold text-xs p-0" />
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
@@ -255,7 +256,7 @@ export default function ServiceDetailedEditor() {
                   <CheckCircle2 size={16} className="text-primary" />
                   <Input defaultValue={item.title} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'includedItems', item.id), { title: e.target.value })} className="h-8 border-none text-xs font-medium p-0 w-[300px]" />
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteSub('includedItems', item.id)} className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100"><Trash2 size={14} /></Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100" onClick={() => handleDeleteSub('includedItems', item.id)}><Trash2 size={14} /></Button>
               </div>
             ))}
           </div>
@@ -283,7 +284,7 @@ export default function ServiceDetailedEditor() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSub('reviews', review.id)} className="text-destructive opacity-0 group-hover:opacity-100"><Trash2 size={14} /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive opacity-0 group-hover:opacity-100" onClick={() => handleDeleteSub('reviews', review.id)}><Trash2 size={14} /></Button>
                   </div>
                   <Textarea defaultValue={review.text} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'reviews', review.id), { text: e.target.value })} className="bg-gray-50 border-none text-xs leading-relaxed" />
                 </CardContent>
