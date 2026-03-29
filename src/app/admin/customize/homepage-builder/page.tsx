@@ -31,7 +31,8 @@ import {
   AlignLeft,
   AlignCenter,
   TicketPercent,
-  CheckCircle2
+  CheckCircle2,
+  Filter
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -70,7 +71,7 @@ export default function HomepageBuilderPage() {
 
   // Global Theme Hook
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
-  const { data: globalTheme, isLoading: themeLoading } = useDoc(themeRef);
+  const { data: globalTheme } = useDoc(themeRef);
 
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
@@ -135,7 +136,7 @@ export default function HomepageBuilderPage() {
       title: typeInfo?.label || 'New Section',
       isActive: true,
       order: localSections.length,
-      config: { limit: 8, dataSource: 'all' },
+      config: { limit: 8, dataSource: 'all', category: 'All' },
       styleConfig: { useGlobal: true },
       createdAt: new Date().toISOString()
     });
@@ -165,7 +166,7 @@ export default function HomepageBuilderPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">UI Engine</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-2">Manage global theme and section logic</p>
+          <p className="text-muted-foreground text-sm font-medium mt-2">Manage global theme and dynamic homepage blocks</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Button onClick={() => setIsAddOpen(true)} className="flex-1 md:flex-none gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
@@ -208,7 +209,12 @@ export default function HomepageBuilderPage() {
                     <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}><Icon size={20} /></div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
-                      <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">{section.type.replace(/_/g, ' ')}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">{section.type.replace(/_/g, ' ')}</Badge>
+                        {section.config?.category && section.config.category !== 'All' && (
+                          <Badge className="bg-blue-50 text-blue-600 border-none text-[7px] font-black h-4 px-1.5">{section.config.category}</Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
@@ -245,7 +251,6 @@ export default function HomepageBuilderPage() {
             </CardHeader>
             <CardContent className="p-8 space-y-12">
               
-              {/* SECTION 1: TYPOGRAPHY */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <Type size={14} /> Typography & Backgrounds
@@ -270,7 +275,6 @@ export default function HomepageBuilderPage() {
                 </div>
               </div>
 
-              {/* SECTION 2: CARD GEOMETRY */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <Maximize size={14} /> Card & Element Geometry
@@ -306,7 +310,6 @@ export default function HomepageBuilderPage() {
                 </div>
               </div>
 
-              {/* SECTION 3: BUTTONS */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <MousePointer2 size={14} /> Global Buttons
@@ -331,7 +334,6 @@ export default function HomepageBuilderPage() {
                 </div>
               </div>
 
-              {/* SECTION 4: CARD FEATURES (Rating, Discount, Sales) */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <Zap size={14} /> Card Dynamic Features
@@ -375,7 +377,6 @@ export default function HomepageBuilderPage() {
         </TabsContent>
       </Tabs>
 
-      {/* INDIVIDUAL BLOCK EDITOR MODAL */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-t-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <Tabs defaultValue="content" className="flex flex-col h-full">
@@ -401,7 +402,7 @@ export default function HomepageBuilderPage() {
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Section Title</Label>
                     <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Items Limit</Label>
                       <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
@@ -414,6 +415,19 @@ export default function HomepageBuilderPage() {
                           <SelectItem value="all">All Items</SelectItem>
                           <SelectItem value="popular">Popular Only</SelectItem>
                           <SelectItem value="latest">New Arrivals</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><Filter size={12}/> Category Focus</Label>
+                      <Select value={editingSection?.config?.category || 'All'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, category: v}})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="All">All Categories</SelectItem>
+                          <SelectItem value="Cleaning">Cleaning</SelectItem>
+                          <SelectItem value="Maintenance">Maintenance</SelectItem>
+                          <SelectItem value="Repair">Repair</SelectItem>
+                          <SelectItem value="Tools">Tools</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

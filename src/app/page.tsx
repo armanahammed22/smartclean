@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -120,6 +119,9 @@ export default function SmartCleanHomePage() {
     
     const getFilteredProducts = () => {
       let feed = allProducts?.filter(p => p.status === 'Active') || [];
+      if (config.category && config.category !== 'All') {
+        feed = feed.filter(p => p.categoryId === config.category);
+      }
       if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
       if (sectionType === 'products_new' || config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       return feed.slice(0, config.limit || 10);
@@ -138,12 +140,20 @@ export default function SmartCleanHomePage() {
 
       let combined = [...mainFeed, ...subFeed];
 
-      if (sectionType === 'services_featured') {
+      if (config.category && config.category !== 'All') {
+        combined = combined.filter(s => s.categoryId === config.category);
+      }
+
+      if (sectionType === 'services_featured' || config.dataSource === 'popular') {
         combined = combined.filter(s => s.isPopular || s.isDefaultAddOn);
       }
       
-      if (sectionType === 'services_popular') {
+      if (sectionType === 'services_popular' || config.dataSource === 'popular') {
         combined = [...combined].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      if (config.dataSource === 'latest') {
+        combined = [...combined].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       }
 
       return combined.slice(0, config.limit || 12);
