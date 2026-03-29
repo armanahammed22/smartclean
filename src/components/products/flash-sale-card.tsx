@@ -78,10 +78,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               )}
             </div>
             
-            <div className={cn(
-              "flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1",
-              customStyle?.textAlign === 'center' ? 'justify-center gap-4' : ''
-            )}>
+            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1 w-full">
               <div className="flex items-center gap-1 text-amber-400">
                 <Star size={10} fill="currentColor" />
                 <span className="font-black text-gray-600">{rating}/5</span>

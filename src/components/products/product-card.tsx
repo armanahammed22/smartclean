@@ -107,9 +107,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </div>
             
             <div className={cn(
-              "flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-0.5",
-              isDark ? "text-white/40" : "text-gray-400",
-              customStyle?.textAlign === 'center' ? 'justify-center gap-4' : ''
+              "flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-0.5 w-full",
+              isDark ? "text-white/40" : "text-gray-400"
             )}>
               {showRating && (
                 <div className="flex items-center gap-1 text-amber-400">

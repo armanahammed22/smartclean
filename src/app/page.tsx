@@ -284,7 +284,7 @@ export default function SmartCleanHomePage() {
                             <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none mb-1">৳{(s.basePrice || 0).toLocaleString()}</p>
                             
                             {(showRating || showSalesCount) && (
-                              <div className={cn("flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-2", style.textAlign === 'center' ? 'justify-center gap-4' : '')}>
+                              <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-2 w-full">
                                 {showRating && (
                                   <div className="flex items-center gap-1 text-amber-400">
                                     <Star size={10} fill="currentColor" />
