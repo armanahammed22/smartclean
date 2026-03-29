@@ -24,6 +24,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
   const cardStyle = {
     backgroundColor: customStyle?.cardBg || '#ffffff',
     borderRadius: `${customStyle?.cardRadius || 24}px`,
+    textAlign: (customStyle?.textAlign || 'left') as any
   };
 
   return (
@@ -65,7 +66,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
           </h3>
           
           <div className="mt-auto space-y-1.5">
-            <div className="flex flex-col">
+            <div className={cn("flex flex-col", customStyle?.textAlign === 'center' ? 'items-center' : '')}>
               <p className="text-base md:text-lg font-black text-primary tracking-tighter leading-none">
                 ৳{product.price.toLocaleString()}
               </p>

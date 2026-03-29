@@ -26,8 +26,7 @@ import {
   Clock,
   Users,
   TrendingUp,
-  Package,
-  ShoppingBag
+  Package
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -98,7 +97,7 @@ export default function SmartCleanHomePage() {
     return [...baseLayout]
       .filter(s => {
         if (!s.isActive) return false;
-        if (!productsEnabled && (s.type === 'flash_deals' || s.type.startsWith('products_') || s.type === 'brands_grid')) return false;
+        if (!productsEnabled && (s.type === 'flash_deals' || s.type.startsWith('products_'))) return false;
         if (!servicesEnabled && s.type.startsWith('services_')) return false;
         return true;
       })
@@ -110,7 +109,6 @@ export default function SmartCleanHomePage() {
 
   const renderSection = (section: any) => {
     const config = section.config || {};
-    // Merge Individual styles with Global Theme fallback
     const style = (section.styleConfig?.useGlobal !== false && globalTheme) 
       ? { ...globalTheme, ...section.styleConfig } 
       : (section.styleConfig || globalTheme || {});
@@ -133,8 +131,8 @@ export default function SmartCleanHomePage() {
 
     const sectionStyles = {
       backgroundColor: style.sectionBg || 'transparent',
-      paddingTop: `${style.paddingTop || 40}px`,
-      paddingBottom: `${style.paddingBottom || 40}px`,
+      paddingTop: '40px',
+      paddingBottom: '40px',
     };
 
     const titleStyles = {
@@ -254,7 +252,30 @@ export default function SmartCleanHomePage() {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
-                {displayServices.map(s => <ServiceGridItem key={s.id} s={s} customStyle={style} />)}
+                {displayServices.map(s => (
+                  <div 
+                    key={s.id}
+                    className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
+                    style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
+                  >
+                    <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+                      <div className="p-2 md:p-3 shrink-0">
+                        <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
+                          {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
+                        </div>
+                      </div>
+                      <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+                        <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
+                        <div className="mt-auto space-y-2">
+                          <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                          <Button size="sm" className="w-full font-black text-[10px] md:text-xs uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnText || '#ffffff', borderRadius: `${style.btnRadius || 12}px` }}>
+                            {t('book_now')}
+                          </Button>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -325,32 +346,5 @@ export default function SmartCleanHomePage() {
         ) : layoutSections.map(renderSection)}
       </div>
     </PublicLayout>
-  );
-}
-
-function ServiceGridItem({ s, customStyle }: { s: any, customStyle?: any }) {
-  const { t } = useLanguage();
-  return (
-    <div 
-      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", customStyle?.cardShadow)}
-      style={{ backgroundColor: customStyle?.cardBg || '#ffffff', borderRadius: `${customStyle?.cardRadius || 24}px` }}
-    >
-      <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
-        <div className="p-2 md:p-3 shrink-0">
-          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
-            {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
-          </div>
-        </div>
-        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
-          <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
-          <div className="mt-auto space-y-2">
-            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-            <Button size="sm" className="w-full font-black text-[10px] md:text-xs uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: customStyle?.btnBg || '#1E5F7A', color: customStyle?.btnText || '#ffffff', borderRadius: `${customStyle?.btnRadius || 12}px` }}>
-              {t('book_now')}
-            </Button>
-          </div>
-        </div>
-      </Link>
-    </div>
   );
 }

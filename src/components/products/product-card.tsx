@@ -26,6 +26,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const cardStyle = {
     backgroundColor: customStyle?.cardBg || (isDark ? 'transparent' : '#ffffff'),
     borderRadius: `${customStyle?.cardRadius || 24}px`,
+    textAlign: (customStyle?.textAlign || 'left') as any
   };
 
   return (
@@ -84,7 +85,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-2 mt-auto">
+          <div className={cn("flex items-center gap-2 mt-auto", customStyle?.textAlign === 'center' ? 'justify-center' : '')}>
             <p className={cn(
               "text-base md:text-xl font-black tracking-tighter leading-none",
               isDark ? "text-amber-400" : "text-[#f85606]"
