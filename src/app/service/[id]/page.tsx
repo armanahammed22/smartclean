@@ -171,75 +171,12 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* 3-COLUMN CONTENT ENGINE */}
+        {/* 3-COLUMN CONTENT ENGINE (Updated Order) */}
         <div className="container mx-auto px-4 -mt-10 md:-mt-16 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* COLUMN 1: LIVE PRICE SUMMARY (LEFT) */}
-            <div className="lg:col-span-3 lg:sticky lg:top-24 order-3 lg:order-1">
-              <Card className="rounded-[2.5rem] border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden bg-white border-t-8 border-[#D4AF37]">
-                <CardContent className="p-8 space-y-8">
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-black uppercase tracking-widest text-[#022C22] pb-4 border-b border-gray-100 flex items-center gap-2">
-                      <Trophy size={18} className="text-[#D4AF37]" /> Booking Insight
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-gray-400">Master Service</span>
-                        <span className="text-sm font-black text-[#022C22]">৳{subtotal.toLocaleString()}</span>
-                      </div>
-
-                      {selectedAddOnIds.length > 0 && (
-                        <div className="space-y-3 pt-2 animate-in zoom-in-95">
-                          <p className="text-[9px] font-black uppercase text-[#D4AF37]">Selected Enhancements</p>
-                          {addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).map(addon => (
-                            <div key={addon.id} className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase">
-                              <span>{addon.name}</span>
-                              <span className="text-[#022C22]">৳{addon.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="pt-6 border-t-2 border-dashed border-gray-100 space-y-4">
-                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                          <span>Subtotal</span>
-                          <span>৳{totalPrice.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                          <span>VAT (0%)</span>
-                          <span>৳0</span>
-                        </div>
-                        <div className="pt-4 flex flex-col gap-1">
-                          <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.3em]">Total Investment</p>
-                          <p className="text-5xl font-black text-[#022C22] tracking-tighter">৳{totalPrice.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="p-4 bg-[#022C22]/5 rounded-2xl border border-[#022C22]/10 flex items-start gap-3">
-                      <ShieldCheck size={20} className="text-[#022C22] mt-0.5" />
-                      <p className="text-[9px] font-bold text-[#022C22] leading-relaxed uppercase">
-                        100% Satisfaction Guaranteed. Verified Elite Professionals only.
-                      </p>
-                    </div>
-                    
-                    <Button 
-                      onClick={handleContinue}
-                      className="w-full h-16 rounded-2xl font-black text-xl bg-[#022C22] hover:bg-[#064E3B] text-white uppercase tracking-tighter shadow-2xl shadow-[#022C22]/20 gap-3 group transition-all active:scale-95"
-                    >
-                      Complete Booking <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* COLUMN 2: MAIN SERVICE (CENTER) */}
-            <div className="lg:col-span-6 space-y-8 order-1 lg:order-2">
+            {/* COLUMN 1: MAIN SERVICE (LEFT) */}
+            <div className="lg:col-span-6 space-y-8 order-1">
               <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl border border-gray-50">
                 <div className="relative aspect-[16/10] w-full group">
                   <Image 
@@ -305,8 +242,8 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: ENHANCEMENTS (RIGHT) */}
-            <div className="lg:col-span-3 space-y-6 order-2 lg:order-3">
+            {/* COLUMN 2: ENHANCEMENTS (MIDDLE) */}
+            <div className="lg:col-span-3 space-y-6 order-2">
               <div className="flex items-center gap-3 px-2">
                 <div className="p-2 bg-[#D4AF37]/10 rounded-xl text-[#D4AF37]"><Sparkles size={20} fill="currentColor" /></div>
                 <h2 className="text-lg font-black uppercase tracking-tight text-[#022C22]">Curated Add-ons</h2>
@@ -324,7 +261,7 @@ export default function ServiceBookingPage() {
                         : "border-gray-100 bg-white hover:border-[#D4AF37]/30 shadow-sm"
                     )}
                   >
-                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-50">
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                       <Image src={addon.imageUrl || 'https://picsum.photos/seed/addon/200/200'} alt={addon.name} fill className="object-cover" unoptimized />
                       {selectedAddOnIds.includes(addon.id) && (
                         <div className="absolute inset-0 bg-[#022C22]/20 backdrop-blur-[1px] flex items-center justify-center">
@@ -352,6 +289,69 @@ export default function ServiceBookingPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* COLUMN 3: SUMMARY (RIGHT) */}
+            <div className="lg:col-span-3 lg:sticky lg:top-24 order-3">
+              <Card className="rounded-[2.5rem] border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden bg-white border-t-8 border-[#D4AF37]">
+                <CardContent className="p-8 space-y-8">
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#022C22] pb-4 border-b border-gray-100 flex items-center gap-2">
+                      <Trophy size={18} className="text-[#D4AF37]" /> Booking Summary
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase text-gray-400">Master Service</span>
+                        <span className="text-sm font-black text-[#022C22]">৳{subtotal.toLocaleString()}</span>
+                      </div>
+
+                      {selectedAddOnIds.length > 0 && (
+                        <div className="space-y-3 pt-2 animate-in zoom-in-95">
+                          <p className="text-[9px] font-black uppercase text-[#D4AF37]">Selected Enhancements</p>
+                          {addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).map(addon => (
+                            <div key={addon.id} className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase">
+                              <span>{addon.name}</span>
+                              <span className="text-[#022C22]">৳{addon.price}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-6 border-t-2 border-dashed border-gray-100 space-y-4">
+                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                          <span>Subtotal</span>
+                          <span>৳{totalPrice.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                          <span>VAT (0%)</span>
+                          <span>৳0</span>
+                        </div>
+                        <div className="pt-4 flex flex-col gap-1">
+                          <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.3em]">Total Investment</p>
+                          <p className="text-5xl font-black text-[#022C22] tracking-tighter">৳{totalPrice.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="p-4 bg-[#022C22]/5 rounded-2xl border border-[#022C22]/10 flex items-start gap-3">
+                      <ShieldCheck size={20} className="text-[#022C22] mt-0.5" />
+                      <p className="text-[9px] font-bold text-[#022C22] leading-relaxed uppercase">
+                        100% Satisfaction Guaranteed. Verified Elite Professionals only.
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleContinue}
+                      className="w-full h-16 rounded-2xl font-black text-xl bg-[#022C22] hover:bg-[#064E3B] text-white uppercase tracking-tighter shadow-2xl shadow-[#022C22]/20 gap-3 group transition-all active:scale-95"
+                    >
+                      Complete Booking <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
           </div>
