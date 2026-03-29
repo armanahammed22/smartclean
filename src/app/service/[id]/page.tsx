@@ -1,8 +1,8 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { 
   ArrowLeft, 
@@ -111,24 +111,21 @@ export default function ServiceBookingPage() {
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#F2F4F7] min-h-screen">
         
-        {/* COMPACT BREADCRUMB STYLE HEADER */}
         <div className="bg-white border-b border-gray-100 py-3 hidden md:block">
           <div className="container mx-auto px-4 max-w-7xl">
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-              <Link href="/" className="hover:text-primary">Home</Link>
-              <ChevronRight size={10} />
-              <Link href="/services" className="hover:text-primary">Services</Link>
-              <ChevronRight size={10} />
-              <span className="text-primary">{baseService.title || baseService.name}</span>
+              <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+              <ChevronRight size={10} className="shrink-0" />
+              <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
+              <ChevronRight size={10} className="shrink-0" />
+              <span className="text-primary truncate max-w-[200px]">{baseService.title || baseService.name}</span>
             </nav>
           </div>
         </div>
 
-        {/* UNIFIED SINGLE BLOCK SELECTION AREA */}
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-6 max-w-7xl">
           <div className="bg-white lg:rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col lg:grid lg:grid-cols-12">
             
-            {/* LEFT: MAIN SERVICE CONTENT */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner">
                 {baseService.imageUrl ? (
@@ -169,7 +166,6 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* CENTER: ADD-ONS (The Configuration) */}
             <div className="lg:col-span-5 p-6 md:p-8 space-y-8 bg-gray-50/30 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Extra Treatments</h3>
@@ -219,7 +215,6 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* RIGHT: SUMMARY & FINAL CTA */}
             <div className="lg:col-span-3 p-6 md:p-8 flex flex-col bg-white">
               <div className="space-y-6 flex-1">
                 <div className="pb-4 border-b">
@@ -271,7 +266,6 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* EXTRA CONTENT: BEFORE/AFTER GALLERY */}
         <section className="container mx-auto px-0 md:px-4 py-8 md:py-12 max-w-7xl">
           <div className="bg-white lg:rounded-xl overflow-hidden shadow-sm border border-gray-100 p-6 md:p-10 space-y-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
@@ -315,7 +309,6 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* MOBILE STICKY FOOTER */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
