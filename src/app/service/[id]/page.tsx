@@ -31,6 +31,7 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -84,7 +85,7 @@ export default function ServiceBookingPage() {
   const totalPrice = basePrice + addOnsTotal + platformFee;
 
   const toggleAddOn = (subId: string) => {
-    setSelectedAddOnIds(prev => prev.includes(subId) ? prev.filter(i => i !== subId) : [...prev, id === subId ? '' : subId].filter(Boolean));
+    setSelectedAddOnIds(prev => prev.includes(subId) ? prev.filter(i => i !== subId) : [...prev, subId]);
   };
 
   const handleContinue = () => {
@@ -114,10 +115,10 @@ export default function ServiceBookingPage() {
         <div className="bg-white border-b border-gray-100 py-3 hidden md:block">
           <div className="container mx-auto px-4 max-w-7xl">
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-              <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-              <ChevronRight size={10} className="shrink-0" />
-              <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
-              <ChevronRight size={10} className="shrink-0" />
+              <Link href="/" className="hover:text-primary">Home</Link>
+              <ChevronRight size={10} />
+              <Link href="/services" className="hover:text-primary">Services</Link>
+              <ChevronRight size={10} />
               <span className="text-primary truncate max-w-[200px]">{baseService.title || baseService.name}</span>
             </nav>
           </div>
