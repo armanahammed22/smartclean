@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,13 +17,11 @@ import {
   Users, 
   Clock, 
   CheckCircle2, 
-  Image as ImageIcon, 
   X, 
   Settings2, 
   XCircle, 
   Eye, 
   Star,
-  ListChecks,
   Zap,
   Layout,
   Package
@@ -41,12 +39,13 @@ import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function ServicesManagementPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,10 +66,6 @@ export default function ServicesManagementPage() {
     isPopular: false,
     rating: 5.0
   });
-
-  const [newPackages, setNewPackages] = useState<any[]>([]);
-  const [newAddOns, setNewAddOns] = useState<any[]>([]);
-  const [newScope, setNewScope] = useState<any[]>([]);
 
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
   const subServicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'sub_services')) : null, [db, user]);
@@ -115,7 +110,7 @@ export default function ServicesManagementPage() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNewServiceData({
       title: '',
       basePrice: '',
@@ -129,9 +124,11 @@ export default function ServicesManagementPage() {
       rating: 5.0
     });
     setMainImageUrl('');
-    setNewPackages([]);
-    setNewAddOns([]);
-    setNewScope([]);
+  }, []);
+
+  const handleOpenAddModal = () => {
+    resetForm();
+    setIsDialogOpen(true);
   };
 
   const handleSaveFull = async (e: React.FormEvent) => {
@@ -148,24 +145,7 @@ export default function ServicesManagementPage() {
         updatedAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'services'), serviceDoc);
-      const serviceId = docRef.id;
-
-      const batch = writeBatch(db);
-      newPackages.forEach(pkg => {
-        const pRef = doc(collection(db, 'services', serviceId, 'packages'));
-        batch.set(pRef, { ...pkg, createdAt: new Date().toISOString() });
-      });
-      newAddOns.forEach(addon => {
-        const aRef = doc(collection(db, 'services', serviceId, 'addOns'));
-        batch.set(aRef, { ...addon, createdAt: new Date().toISOString() });
-      });
-      newScope.forEach(item => {
-        const sRef = doc(collection(db, 'services', serviceId, 'includedItems'));
-        batch.set(sRef, { ...item, createdAt: new Date().toISOString() });
-      });
-      await batch.commit();
-
+      await addDoc(collection(db, 'services'), serviceDoc);
       toast({ title: "Service Created" });
       setIsDialogOpen(false);
       resetForm();
@@ -183,8 +163,8 @@ export default function ServicesManagementPage() {
           <h1 className="text-2xl font-bold text-gray-900 uppercase">Service Catalog</h1>
           <p className="text-muted-foreground text-sm">Professional service definitions and pricing</p>
         </div>
-        <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-6 rounded-xl bg-primary hover:bg-primary/90" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
-          <Plus size={18} /> Add New Service
+        <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-6 rounded-xl bg-primary hover:bg-primary/90" onClick={handleOpenAddModal}>
+          <Plus size={18} /> {t('new_service')}
         </Button>
       </div>
 
@@ -195,7 +175,7 @@ export default function ServicesManagementPage() {
           { label: "Published", val: stats.active, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
           { label: "Offline", val: stats.inactive, icon: XCircle, bg: "bg-amber-50", color: "text-amber-600" }
         ].map((s, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
@@ -207,19 +187,8 @@ export default function ServicesManagementPage() {
         ))}
       </div>
 
-      {selectedIds.length > 0 && (
-        <div className="bg-primary text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs font-black uppercase">{selectedIds.length} SERVICES SELECTED</span>
-          </div>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
-            <Trash2 size={14} className="mr-2" /> Bulk Delete
-          </Button>
-        </div>
-      )}
-
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table>
               <TableHeader className="bg-gray-50/50">
@@ -295,7 +264,7 @@ export default function ServicesManagementPage() {
             <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary rounded-xl"><Wrench size={24} /></div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন সার্ভিস যুক্ত করুন</DialogTitle>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">{t('new_service')}</DialogTitle>
               </div>
               <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                 <X size={24} />
@@ -328,7 +297,7 @@ export default function ServicesManagementPage() {
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
                       <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           {['Cleaning', 'Maintenance', 'Repair'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
@@ -355,7 +324,7 @@ export default function ServicesManagementPage() {
                   <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <div className="space-y-1">
                       <Label className="text-xs font-black uppercase">Most Popular</Label>
-                      <p className="text-[9px] text-muted-foreground">SHOW BADGE ON HOMEPAGE</p>
+                      <p className="text-[9px] text-muted-foreground uppercase font-bold">SHOW BADGE ON HOMEPAGE</p>
                     </div>
                     <Switch checked={newServiceData.isPopular} onCheckedChange={val => setNewServiceData({...newServiceData, isPopular: val})} />
                   </div>

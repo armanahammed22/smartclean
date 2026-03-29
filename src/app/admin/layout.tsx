@@ -9,7 +9,6 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
-  ChevronLeft,
   ShieldCheck,
   Loader2,
   BarChart3,
@@ -22,7 +21,6 @@ import {
   Globe,
   Headphones,
   Layout,
-  Link as LinkIcon,
   FileText,
   Plus,
   Palette,
@@ -42,18 +40,9 @@ import {
   CheckCircle,
   Wrench,
   Smartphone,
-  ShieldAlert,
   Code,
   Calendar,
-  FileSpreadsheet,
-  Mail,
-  Bell,
-  Facebook,
-  Search,
-  Tag,
-  CreditCard,
   Languages,
-  Shield,
   Activity,
   History,
   Navigation,
@@ -89,7 +78,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -114,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -484,7 +472,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           onClick={handleToggleCollapse}
           className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
         >
-          {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ChevronLeft size={14} strokeWidth={3} />}
+          {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ArrowLeft size={14} strokeWidth={3} />}
         </button>
       </aside>
 
@@ -510,9 +498,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Button>
               )}
               <div className="flex flex-col">
-                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Management Terminal</span>
+                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{t('management_terminal')}</span>
                 <span className="text-xs font-bold text-gray-900 flex items-center gap-2">
-                  Server Status: Online <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  {t('server_status')}: {t('online')} <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 </span>
               </div>
             </div>
@@ -536,7 +524,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
               <Link href="/">
                 <Globe size={18} className="text-primary" />
-                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Live Site</span>
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">{t('live_site')}</span>
               </Link>
             </Button>
             <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">

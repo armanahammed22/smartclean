@@ -22,16 +22,10 @@ import {
   Save, 
   Search, 
   Download, 
-  Filter,
-  ShieldAlert,
-  ChevronRight,
-  UserCheck,
-  Lock,
-  Mail,
   Zap,
-  MoreVertical,
   Plus,
-  XCircle
+  XCircle,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -347,9 +341,14 @@ export default function AccessControlPage() {
       {/* ROLE MODAL */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
-          <header className="p-8 bg-[#081621] text-white">
-            <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingRole ? 'Update Role Policies' : 'Define New Role'}</DialogTitle>
-            <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure granular access levels</DialogDescription>
+          <header className="p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div>
+              <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingRole ? 'Update Role Policies' : 'Define New Role'}</DialogTitle>
+              <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure granular access levels</DialogDescription>
+            </div>
+            <button onClick={() => setIsRoleDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <X size={24} />
+            </button>
           </header>
           <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
             <div className="space-y-2">
@@ -389,8 +388,11 @@ export default function AccessControlPage() {
       {/* USER MODAL */}
       <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
-          <header className="p-8 bg-[#081621] text-white">
+          <header className="p-8 bg-[#081621] text-white flex justify-between items-center">
             <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingUser ? 'Update Staff Member' : 'Personnel Enrollment'}</DialogTitle>
+            <button onClick={() => setIsUserDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <X size={24} />
+            </button>
           </header>
           <form onSubmit={handleCreateAccount} className="p-8 space-y-5">
             <div className="space-y-2">

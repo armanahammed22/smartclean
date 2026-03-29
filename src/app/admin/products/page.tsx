@@ -17,15 +17,12 @@ import {
   X, 
   AlertCircle, 
   XCircle,
-  Star,
   Eye,
-  Settings2,
-  FileText,
-  Download
+  Settings2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,14 +32,15 @@ import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useLanguage } from '@/components/providers/language-provider';
 
 export default function ProductsManagementPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -52,9 +50,7 @@ export default function ProductsManagementPage() {
   
   const [activeTab, setActiveTab] = useState('identity');
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
-  const [variants, setVariants] = useState<{ name: string; options: string[] }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
@@ -115,10 +111,8 @@ export default function ProductsManagementPage() {
       badgeText: formData.get('badgeText') as string || '',
       description: formData.get('description') as string,
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
-      galleryImages: galleryImages,
       specifications: specifications,
-      variants: variants,
-      status: formData.get('status') as string || 'Active',
+      status: formData.get('status') === 'on' ? 'Active' : 'Inactive',
       isPopular: formData.get('isPopular') === 'on',
       updatedAt: new Date().toISOString()
     };
@@ -146,9 +140,7 @@ export default function ProductsManagementPage() {
   const resetForm = () => {
     setEditingProduct(null);
     setUploadedImageUrl('');
-    setGalleryImages([]);
     setSpecifications([]);
-    setVariants([]);
     setSelectedCategory('');
     setActiveTab('identity');
   };
@@ -156,9 +148,7 @@ export default function ProductsManagementPage() {
   const handleOpenEdit = (product: any) => {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
-    setGalleryImages(product.galleryImages || []);
     setSpecifications(product.specifications || []);
-    setVariants(product.variants || []);
     setSelectedCategory(product.categoryId || '');
     setIsDialogOpen(true);
   };
@@ -171,7 +161,7 @@ export default function ProductsManagementPage() {
           <p className="text-muted-foreground text-sm">Full SKU and inventory control center</p>
         </div>
         <Button className="w-full md:w-auto gap-2 font-black shadow-lg h-11 px-8 rounded-xl bg-primary" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
-          <Plus size={18} /> Add New SKU
+          <Plus size={18} /> {t('new_sku')}
         </Button>
       </div>
 
@@ -193,17 +183,6 @@ export default function ProductsManagementPage() {
           </Card>
         ))}
       </div>
-
-      {selectedIds.length > 0 && (
-        <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-xs font-black uppercase">{selectedIds.length} SKUS SELECTED</span>
-          </div>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[10px] h-8">
-            <Trash2 size={14} className="mr-2" /> Delete Catalog Items
-          </Button>
-        </div>
-      )}
 
       <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
@@ -281,12 +260,17 @@ export default function ProductsManagementPage() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
                   <Package className="text-primary" /> {editingProduct ? 'Update SKU' : 'Catalog New Item'}
                 </DialogTitle>
-                <div className="flex bg-white/10 p-1 rounded-xl">
-                  {['identity', 'media', 'specs'].map(tab => (
-                    <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("px-3 md:px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all", activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white")}>
-                      {tab}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-4">
+                  <div className="flex bg-white/10 p-1 rounded-xl">
+                    {['identity', 'media', 'specs'].map(tab => (
+                      <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("px-3 md:px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all", activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white")}>
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <X size={24} />
+                  </button>
                 </div>
               </div>
             </DialogHeader>
@@ -322,7 +306,9 @@ export default function ProductsManagementPage() {
                           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                             <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>) || (
+                                ['Cleaning', 'Maintenance', 'Tools'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
