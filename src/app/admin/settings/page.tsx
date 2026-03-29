@@ -27,7 +27,8 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
-  List
+  List,
+  Download
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -70,7 +71,9 @@ export default function AdminSettingsPage() {
     footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
     otpEnabled: false,
     productsEnabled: true,
-    servicesEnabled: true
+    servicesEnabled: true,
+    playStoreLink: '',
+    apkDownloadLink: ''
   });
 
   const [menuOrder, setMenuOrder] = useState<string[]>(DEFAULT_MENU_KEYS);
@@ -235,6 +238,36 @@ export default function AdminSettingsPage() {
                     aspectRatio="aspect-square w-16"
                     onUpload={(url) => setFormData({...formData, faviconUrl: url})}
                   />
+                </div>
+              </div>
+
+              <div className="pt-8 border-t space-y-6">
+                <h3 className="text-lg font-bold flex items-center gap-2"><Smartphone size={20} className="text-primary" /> App Download Links</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Play Store Link</Label>
+                    <div className="relative">
+                      <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        value={formData.playStoreLink} 
+                        onChange={(e) => setFormData({...formData, playStoreLink: e.target.value})}
+                        placeholder="https://play.google.com/store/apps/details?id=..."
+                        className="h-11 pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest">APK Direct Download Link</Label>
+                    <div className="relative">
+                      <Download className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        value={formData.apkDownloadLink} 
+                        onChange={(e) => setFormData({...formData, apkDownloadLink: e.target.value})}
+                        placeholder="https://yourdomain.com/app.apk"
+                        className="h-11 pl-10"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

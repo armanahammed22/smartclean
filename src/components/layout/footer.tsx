@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -80,33 +81,49 @@ export function Footer() {
               {(layout?.footer?.showSocial !== false) && (
                 <div className="flex gap-2">
                   {settings?.socialLinks?.facebook && (
-                    <Link href={settings.socialLinks.facebook} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
                       <Facebook size={14} />
-                    </Link>
+                    </a>
                   )}
                   {settings?.socialLinks?.instagram && (
-                    <Link href={settings.socialLinks.instagram} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
                       <Instagram size={14} />
-                    </Link>
+                    </a>
                   )}
                   {settings?.socialLinks?.whatsapp && (
-                    <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                    <a href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
                       <MessageCircle size={14} />
-                    </Link>
+                    </a>
                   )}
                 </div>
               )}
 
               {(layout?.footer?.showDownload !== false) && (
                 <div className="flex gap-2">
-                  <Link href="#" className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all">
+                  <a 
+                    href={settings?.playStoreLink || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className={cn(
+                      "flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all",
+                      !settings?.playStoreLink && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
                     <Smartphone size={14} className="text-primary" />
-                    <span className="text-[8px] font-black text-white uppercase">Android</span>
-                  </Link>
-                  <Link href="#" className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all">
+                    <span className="text-[8px] font-black text-white uppercase">Play Store</span>
+                  </a>
+                  <a 
+                    href={settings?.apkDownloadLink || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className={cn(
+                      "flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all",
+                      !settings?.apkDownloadLink && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
                     <Download size={14} className="text-primary" />
-                    <span className="text-[8px] font-black text-white uppercase">iOS</span>
-                  </Link>
+                    <span className="text-[8px] font-black text-white uppercase">Direct APK</span>
+                  </a>
                 </div>
               )}
             </div>
