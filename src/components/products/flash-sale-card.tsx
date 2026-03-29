@@ -60,12 +60,12 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
           </div>
         </div>
 
-        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+        <div className="p-3 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
           <h3 className="text-[11px] md:text-xs font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           
-          <div className="mt-auto space-y-1.5">
+          <div className="mt-auto">
             <div className={cn("flex flex-col", customStyle?.textAlign === 'center' ? 'items-center' : '')}>
               <p className="text-base md:text-lg font-black text-primary tracking-tighter leading-none">
                 ৳{product.price.toLocaleString()}
@@ -77,7 +77,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               )}
             </div>
             
-            <div className="flex items-center justify-between text-[8px] md:text-[10px] font-bold">
+            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1">
               <div className="flex items-center gap-1 text-amber-400">
                 <Star size={10} fill="currentColor" />
                 <span className="font-black text-gray-600">{rating}</span>

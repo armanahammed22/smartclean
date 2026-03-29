@@ -276,28 +276,31 @@ export default function SmartCleanHomePage() {
                             {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
                           </div>
                         </div>
-                        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+                        <div className="p-3 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
                           <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                           
-                          {(showRating || showSalesCount) && (
-                            <div className={cn("flex items-center justify-between text-[8px] md:text-[10px] font-bold mb-2", style.textAlign === 'center' ? 'justify-center gap-4' : '')}>
-                              {showRating && (
-                                <div className="flex items-center gap-1 text-amber-400">
-                                  <Star size={10} fill="currentColor" />
-                                  <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}</span>
-                                </div>
-                              )}
-                              {showSalesCount && (
-                                <span className="uppercase tracking-widest text-gray-400">{bookingCount} {t('book')}ed</span>
-                              )}
-                            </div>
-                          )}
+                          <div className="mt-auto">
+                            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none mb-1">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            
+                            {(showRating || showSalesCount) && (
+                              <div className={cn("flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-2", style.textAlign === 'center' ? 'justify-center gap-4' : '')}>
+                                {showRating && (
+                                  <div className="flex items-center gap-1 text-amber-400">
+                                    <Star size={10} fill="currentColor" />
+                                    <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}</span>
+                                  </div>
+                                )}
+                                {showSalesCount && (
+                                  <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('book')}ed</span>
+                                )}
+                              </div>
+                            )}
 
-                          <div className="mt-auto space-y-2">
-                            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                            <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
-                              {t('book_now')}
-                            </Button>
+                            <div className="mt-1.5">
+                              <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
+                                {t('book_now')}
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </Link>
