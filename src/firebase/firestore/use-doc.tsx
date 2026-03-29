@@ -19,14 +19,10 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null;
 }
 
-const PUBLIC_DOCS = [
-  'products', 'services', 'sub_services', 'campaigns', 'hero_banners', 'site_settings', 
-  'pages_management', 'quick_links', 'quick_actions', 'brands',
-  'marketing_offers', 'reusable_features', 'reusable_specs', 'variant_types',
-  'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
-  'delivery_options', 'offers', 'categories', 'subcategories', 
-  'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna',
-  'invoices', 'invoiceRequests', 'smart_pricing_rules'
+const PROTECTED_DOCS = [
+  'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
+  'employee_profiles', 'staff_earnings', 'staff_availability',
+  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees'
 ];
 
 /**
@@ -106,7 +102,7 @@ export function useDoc<T = any>(
               return;
             }
 
-            const isPublic = PUBLIC_DOCS.some(pd => currentPath.includes(pd));
+            const isProtected = PROTECTED_DOCS.some(pd => currentPath.includes(pd));
             const contextualError = new FirestorePermissionError({
               operation: 'get',
               path: currentPath,
@@ -115,7 +111,7 @@ export function useDoc<T = any>(
             setError(contextualError);
             setIsLoading(false);
 
-            if (!isPublic) {
+            if (!isProtected) {
               errorEmitter.emit('permission-error', contextualError);
             }
           }

@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -64,9 +63,20 @@ service cloud.firestore {
 
     match /bookings/{id} { 
       allow create: if true; 
-      allow read: if isSignedIn(); 
+      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin()); 
       allow update: if isAdmin() || (isSignedIn() && resource.data.teamLeaderId == request.auth.uid);
       allow delete: if isAdmin();
+    }
+
+    match /orders/{id} {
+      allow create: if true;
+      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    match /leads/{id} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
 
     // Custom Requests Rules
@@ -80,7 +90,7 @@ service cloud.firestore {
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn() && request.auth.uid == id; }
     match /staff_earnings/{id} { allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin()); allow write: if isAdmin(); }
     
-    match /invoices/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /invoices/{id} { allow read: if isSignedIn() && (resource.data.customerInfo.email == request.auth.token.email || isAdmin()); allow write: if isAdmin(); }
     match /invoiceRequests/{id} { allow create: if isSignedIn(); allow read, write: if isAdmin(); }
     
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -21,14 +20,10 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null;
 }
 
-const PUBLIC_COLLECTIONS = [
-  'products', 'services', 'sub_services', 'campaigns', 'hero_banners', 'site_settings', 
-  'pages_management', 'quick_links', 'quick_actions', 'brands',
-  'marketing_offers', 'reusable_features', 'reusable_specs', 'variant_types',
-  'homepage_sections', 'payment_methods', 'coupons', 'service_areas',
-  'delivery_options', 'offers', 'categories', 'subcategories', 
-  'childcategories', 'top_nav_categories', 'landing_pages', 'product_qna',
-  'invoices', 'invoiceRequests', 'smart_pricing_rules'
+const PROTECTED_COLLECTIONS = [
+  'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
+  'employee_profiles', 'staff_earnings', 'staff_availability',
+  'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees'
 ];
 
 function extractPath(target: any): string {
@@ -110,13 +105,15 @@ export function useCollection<T = any>(
               return;
             }
 
-            const isPublic = PUBLIC_COLLECTIONS.some(pc => currentPath.includes(pc));
+            const isProtected = PROTECTED_COLLECTIONS.some(pc => currentPath.includes(pc));
             const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
             
             setError(contextualError);
             setIsLoading(false);
             
-            if (!isPublic) {
+            // We only emit to the global listener (which triggers the error overlay)
+            // for collections that are NOT explicitly protected.
+            if (!isProtected) {
               errorEmitter.emit('permission-error', contextualError);
             }
           }
