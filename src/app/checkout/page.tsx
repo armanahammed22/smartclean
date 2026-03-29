@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -78,8 +79,14 @@ function CheckoutContent() {
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods } = useCollection(methodsQuery);
 
-  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), where('isEnabled', '==', true), orderBy('amount', 'asc')) : null, [db]);
-  const { data: deliveryOptions } = useCollection(deliveryQuery);
+  // Use only orderBy to avoid composite index requirement for where + orderBy
+  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), orderBy('amount', 'asc')) : null, [db]);
+  const { data: allDeliveryOptions } = useCollection(deliveryQuery);
+  
+  // Filter enabled options in-memory
+  const deliveryOptions = React.useMemo(() => {
+    return allDeliveryOptions?.filter(opt => opt.isEnabled === true) || [];
+  }, [allDeliveryOptions]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
