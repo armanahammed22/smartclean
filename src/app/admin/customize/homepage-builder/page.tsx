@@ -34,7 +34,8 @@ import {
   X,
   Monitor,
   Smartphone,
-  Grid
+  Grid,
+  Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -204,7 +205,7 @@ export default function HomepageBuilderPage() {
                   className={cn(
                     "border-none shadow-sm transition-all duration-300 group overflow-hidden bg-white rounded-3xl",
                     !section.isActive && "opacity-50 grayscale",
-                    draggedItem === index ? "ring-4 ring-primary/20 scale-[1.02] shadow-2xl z-50" : "hover:shadow-md border border-gray-50"
+                    draggedItem === index ? "ring-4 ring-primary/20 scale-[1.02] shadow-2xl z-50" : "hover:shadow-md border border-gray-100"
                   )}
                 >
                   <CardContent className="p-4 md:p-5 flex items-center gap-4">
@@ -379,7 +380,7 @@ export default function HomepageBuilderPage() {
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Source</Label>
                       <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           <SelectItem value="all">All Items</SelectItem>
                           <SelectItem value="popular">Popular Only</SelectItem>
