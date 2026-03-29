@@ -29,6 +29,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     textAlign: (customStyle?.textAlign || 'left') as any
   };
 
+  const showRating = customStyle?.showRating !== false;
+  const showDiscount = customStyle?.showDiscount !== false;
+  const showSalesCount = customStyle?.showSalesCount !== false;
+
   return (
     <Link href={`/product/${product.id}`} className="block h-full group active:scale-[0.98] transition-all">
       <div 
@@ -69,7 +73,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               </div>
             )}
 
-            {discountPercent && (
+            {showDiscount && discountPercent && (
               <div className="absolute top-2 right-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-md uppercase">
                 -{discountPercent}%
               </div>
@@ -104,12 +108,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             "flex items-center justify-between gap-1 text-[8px] md:text-[10px] font-bold",
             isDark ? "text-white/40" : "text-gray-400"
           )}>
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star size={10} fill="currentColor" />
-              <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
-              <span className="opacity-50 text-[7px] md:text-[9px]">({reviewCount})</span>
-            </div>
-            <span className="uppercase tracking-widest font-black">{soldCount} {t('sold')}</span>
+            {showRating && (
+              <div className="flex items-center gap-1 text-amber-400">
+                <Star size={10} fill="currentColor" />
+                <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
+                <span className="opacity-50 text-[7px] md:text-[9px]">({reviewCount})</span>
+              </div>
+            )}
+            {showSalesCount && (
+              <span className="uppercase tracking-widest font-black ml-auto">{soldCount} {t('sold')}</span>
+            )}
           </div>
         </div>
       </div>

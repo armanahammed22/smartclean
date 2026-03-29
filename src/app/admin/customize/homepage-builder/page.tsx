@@ -29,7 +29,9 @@ import {
   Package,
   X,
   AlignLeft,
-  AlignCenter
+  AlignCenter,
+  TicketPercent,
+  CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -243,7 +245,7 @@ export default function HomepageBuilderPage() {
             </CardHeader>
             <CardContent className="p-8 space-y-12">
               
-              {/* SECTION 1: SECTIONS & FONTS */}
+              {/* SECTION 1: TYPOGRAPHY */}
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <Type size={14} /> Typography & Backgrounds
@@ -326,9 +328,44 @@ export default function HomepageBuilderPage() {
                     <Label className="text-[9px] font-black uppercase flex items-center justify-between">Btn Font Size Mobile <span>{globalTheme?.btnFontSizeMobile || 10}px</span></Label>
                     <Slider value={[parseInt(globalTheme?.btnFontSizeMobile || '10')]} min={8} max={20} onValueChange={val => saveGlobalTheme({...globalTheme, btnFontSizeMobile: val[0].toString()})} />
                   </div>
-                  <div className="space-y-4">
-                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Btn Font Size Desktop <span>{globalTheme?.btnFontSizeDesktop || 12}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.btnFontSizeDesktop || '12')]} min={10} max={24} onValueChange={val => saveGlobalTheme({...globalTheme, btnFontSizeDesktop: val[0].toString()})} />
+                </div>
+              </div>
+
+              {/* SECTION 4: CARD FEATURES (Rating, Discount, Sales) */}
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                  <Zap size={14} /> Card Dynamic Features
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-lg text-amber-500 shadow-sm"><Star size={16} fill="currentColor" /></div>
+                      <Label className="text-[10px] font-black uppercase">Show Review Rating</Label>
+                    </div>
+                    <Switch 
+                      checked={globalTheme?.showRating !== false} 
+                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showRating: val})} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-lg text-red-500 shadow-sm"><TicketPercent size={16} /></div>
+                      <Label className="text-[10px] font-black uppercase">Show Discount Badge</Label>
+                    </div>
+                    <Switch 
+                      checked={globalTheme?.showDiscount !== false} 
+                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showDiscount: val})} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm"><TrendingUp size={16} /></div>
+                      <Label className="text-[10px] font-black uppercase">Show Sales/Book Count</Label>
+                    </div>
+                    <Switch 
+                      checked={globalTheme?.showSalesCount !== false} 
+                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showSalesCount: val})} 
+                    />
                   </div>
                 </div>
               </div>
@@ -433,27 +470,6 @@ export default function HomepageBuilderPage() {
                                 <SelectItem value="shadow-xl">Deep</SelectItem>
                               </SelectContent>
                             </Select>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-6 md:col-span-2">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Button Logic</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black uppercase">Btn BG</Label>
-                            <Input type="color" value={editingSection?.styleConfig?.btnBg || '#1E5F7A'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnBg: e.target.value}})} className="h-10 p-1" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black uppercase">Btn Text</Label>
-                            <Input type="color" value={editingSection?.styleConfig?.btnText || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnText: e.target.value}})} className="h-10 p-1" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black uppercase">Btn Size Mob (px)</Label>
-                            <Input type="number" value={editingSection?.styleConfig?.btnFontSizeMobile || 10} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnFontSizeMobile: e.target.value}})} className="h-10" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[9px] font-black uppercase">Btn Size Desk (px)</Label>
-                            <Input type="number" value={editingSection?.styleConfig?.btnFontSizeDesktop || 12} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnFontSizeDesktop: e.target.value}})} className="h-10" />
                           </div>
                         </div>
                       </div>

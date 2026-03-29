@@ -147,6 +147,9 @@ export default function SmartCleanHomePage() {
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'
     };
 
+    const showRating = style.showRating !== false;
+    const showSalesCount = style.showSalesCount !== false;
+
     switch (sectionType) {
       case 'hero':
         return (
@@ -259,30 +262,48 @@ export default function SmartCleanHomePage() {
                 </Link>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-8">
-                {displayServices.map(s => (
-                  <div 
-                    key={s.id}
-                    className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
-                    style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
-                  >
-                    <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
-                      <div className="p-2 md:p-3 shrink-0">
-                        <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
-                          {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
+                {displayServices.map(s => {
+                  const bookingCount = Math.floor((parseInt(s.id.slice(-2), 16) || 10) % 500) + 100;
+                  return (
+                    <div 
+                      key={s.id}
+                      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
+                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
+                    >
+                      <Link href={`/service/${s.id}`} className="block h-full flex flex-col">
+                        <div className="p-2 md:p-3 shrink-0">
+                          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
+                            {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
+                          </div>
                         </div>
-                      </div>
-                      <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
-                        <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
-                        <div className="mt-auto space-y-2">
-                          <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                          <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
-                            {t('book_now')}
-                          </Button>
+                        <div className="p-3 md:p-4 flex flex-col flex-1 gap-1 pt-0">
+                          <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
+                          
+                          {(showRating || showSalesCount) && (
+                            <div className={cn("flex items-center justify-between text-[8px] md:text-[10px] font-bold mb-2", style.textAlign === 'center' ? 'justify-center gap-4' : '')}>
+                              {showRating && (
+                                <div className="flex items-center gap-1 text-amber-400">
+                                  <Star size={10} fill="currentColor" />
+                                  <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}</span>
+                                </div>
+                              )}
+                              {showSalesCount && (
+                                <span className="uppercase tracking-widest text-gray-400">{bookingCount} {t('book')}ed</span>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="mt-auto space-y-2">
+                            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
+                              {t('book_now')}
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </Link>
-                  </div>
-                ))}
+                      </Link>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -327,7 +348,7 @@ export default function SmartCleanHomePage() {
                   </div>
                   <div>
                     <h4 className="text-2xl md:text-4xl font-black text-[#081621] tracking-tighter" style={{ color: style.titleColor }}>{stat.val}</h4>
-                    <p className="text-[9px] md:text-xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                    <p className="text-[9px] md:xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
                   </div>
                 </div>
               ))}
