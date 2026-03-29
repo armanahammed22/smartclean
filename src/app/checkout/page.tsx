@@ -79,11 +79,9 @@ function CheckoutContent() {
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods } = useCollection(methodsQuery);
 
-  // Use only orderBy to avoid composite index requirement for where + orderBy
   const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), orderBy('amount', 'asc')) : null, [db]);
   const { data: allDeliveryOptions } = useCollection(deliveryQuery);
   
-  // Filter enabled options in-memory
   const deliveryOptions = React.useMemo(() => {
     return allDeliveryOptions?.filter(opt => opt.isEnabled === true) || [];
   }, [allDeliveryOptions]);
@@ -228,14 +226,15 @@ function CheckoutContent() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 md:gap-10 items-start">
+              <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 md:gap-10 items-start">
+                {/* COLUMN 1: Customer Information */}
                 <div className="lg:col-span-7 w-full space-y-6 md:space-y-8">
                   <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
                     <CardHeader className="bg-blue-600 text-white p-6 md:p-8">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
                         <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">
-                          {t('delivery_info')}
+                          {hasServices ? 'Customer Information' : t('delivery_info')}
                         </CardTitle>
                       </div>
                     </CardHeader>
@@ -336,11 +335,14 @@ function CheckoutContent() {
                   </Button>
                 </div>
 
+                {/* COLUMN 2: Order/Booking Summary */}
                 <div className="lg:col-span-5 w-full space-y-6 md:space-y-8 lg:sticky lg:top-24">
                   <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
                     <CardHeader className="p-6 md:p-8 border-b border-gray-50">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-widest text-[#081621]">{t('order_summary')}</CardTitle>
+                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-widest text-[#081621]">
+                          {hasServices ? 'Booking Summary' : t('order_summary')}
+                        </CardTitle>
                         <ShoppingCart size={20} className="text-green-600" />
                       </div>
                     </CardHeader>

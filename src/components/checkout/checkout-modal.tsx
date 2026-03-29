@@ -80,7 +80,6 @@ export function CheckoutModal() {
   const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   const { data: availableMethods } = useCollection(methodsQuery);
 
-  // Avoid composite index by only using orderBy and filtering in-memory
   const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), orderBy('amount', 'asc')) : null, [db]);
   const { data: allDeliveryOptions } = useCollection(deliveryQuery);
   
@@ -295,84 +294,16 @@ export function CheckoutModal() {
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC]">
         <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5">
-            <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col order-first lg:order-last">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-                <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621] flex items-center gap-2">
-                  <ShoppingCart size={20} className="text-primary" /> {t('order_summary')}
-                </h3>
-                <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black">{items.length} {items.length > 1 ? 'Items' : 'Item'}</Badge>
-              </div>
-              <div className="space-y-3 mb-8">
-                {items.map(item => (
-                  <div key={item.id} className="flex justify-between items-start gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase bg-gray-50 px-1.5 py-0.5 rounded">Qty: {item.quantity}</span>
-                        <span className="text-[9px] font-bold text-primary uppercase">৳{item.price.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-gray-900 shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mb-8 p-4 bg-white rounded-2xl border border-dashed border-primary/30 space-y-3">
-                <div className="flex items-center gap-2 text-[#081621]">
-                  <TicketPercent size={16} className="text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Apply Promo Code</span>
-                </div>
-                {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/20">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-primary uppercase">{appliedCoupon.code}</span>
-                      <span className="text-[8px] font-bold text-gray-500">PROMO APPLIED</span>
-                    </div>
-                    <button onClick={() => setAppliedCoupon(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors"><X size={14} /></button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <Input placeholder="ENTER CODE" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-black placeholder:font-normal" />
-                    <Button onClick={handleApplyCoupon} disabled={isVerifyingCoupon || !couponInput} className="h-10 px-4 rounded-xl font-black text-[10px] uppercase shadow-sm">
-                      {isVerifyingCoupon ? <Loader2 className="animate-spin" size={14} /> : 'APPLY'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
-                {smartSavings > 0 && (
-                  <div className="flex justify-between text-[10px] font-black uppercase text-blue-600 animate-in zoom-in-95">
-                    <span className="flex items-center gap-1"><TrendingDown size={12}/> Smart Pricing</span>
-                    <span>-৳{smartSavings.toLocaleString()}</span>
-                  </div>
-                )}
-                {productSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-green-600"><span>Product Savings</span><span>-৳{productSavings.toLocaleString()}</span></div>}
-                {appliedCoupon && <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95"><span>Coupon Discount ({appliedCoupon.code})</span><span>-৳{couponDiscount.toLocaleString()}</span></div>}
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Tax (8%)</span><span>৳{tax.toLocaleString()}</span></div>
-                {!hasServices && <div className="flex justify-between text-[10px] font-black uppercase text-blue-600"><span>Delivery Charge</span><span>৳{deliveryCharge.toLocaleString()}</span></div>}
-                <div className="pt-4 flex justify-between items-end">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
-                    <span className="text-3xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
-                </div>
-              </div>
-              <div className="hidden lg:block mt-8">
-                <Button onClick={form.handleSubmit(onSubmit)} className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
-                </Button>
-              </div>
-            </div>
+            {/* COLUMN 1: Customer Form */}
             <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white">
               <DialogHeader className="mb-8 text-left hidden lg:block">
                 <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full mb-4">
                   <ShieldCheck size={14} />
                   <span className="text-[10px] font-black uppercase tracking-widest">{hasServices ? 'Secure Booking' : 'Secure Order'}</span>
                 </div>
-                <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">{hasServices ? 'Booking Details' : 'Order Details'}</DialogTitle>
+                <DialogTitle className="text-3xl font-black uppercase tracking-tight text-[#081621]">
+                  {hasServices ? 'Booking Details' : 'Order Details'}
+                </DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -520,7 +451,81 @@ export function CheckoutModal() {
                 </form>
               </Form>
             </div>
+
+            {/* COLUMN 2: Summary */}
+            <div className="lg:col-span-2 bg-[#F9FAFB] p-6 md:p-10 border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col order-last">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-[#081621] flex items-center gap-2">
+                  <ShoppingCart size={20} className="text-primary" /> {hasServices ? 'Booking Summary' : t('order_summary')}
+                </h3>
+                <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black">{items.length} {items.length > 1 ? 'Items' : 'Item'}</Badge>
+              </div>
+              <div className="space-y-3 mb-8">
+                {items.map(item => (
+                  <div key={item.id} className="flex justify-between items-start gap-4 bg-white p-3 rounded-xl border border-gray-50 shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-black uppercase text-[#081621] truncate leading-tight">{item.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase bg-gray-50 px-1.5 py-0.5 rounded">Qty: {item.quantity}</span>
+                        <span className="text-[9px] font-bold text-primary uppercase">৳{item.price.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-gray-900 shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mb-8 p-4 bg-white rounded-2xl border border-dashed border-primary/30 space-y-3">
+                <div className="flex items-center gap-2 text-[#081621]">
+                  <TicketPercent size={16} className="text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Apply Promo Code</span>
+                </div>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-primary/5 p-3 rounded-xl border border-primary/20">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-primary uppercase">{appliedCoupon.code}</span>
+                      <span className="text-[8px] font-bold text-gray-500">PROMO APPLIED</span>
+                    </div>
+                    <button onClick={() => setAppliedCoupon(null)} className="p-1 hover:bg-red-50 text-red-500 rounded-lg transition-colors"><X size={14} /></button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input placeholder="ENTER CODE" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-black placeholder:font-normal" />
+                    <Button onClick={handleApplyCoupon} disabled={isVerifyingCoupon || !couponInput} className="h-10 px-4 rounded-xl font-black text-[10px] uppercase shadow-sm">
+                      {isVerifyingCoupon ? <Loader2 className="animate-spin" size={14} /> : 'APPLY'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
+                {smartSavings > 0 && (
+                  <div className="flex justify-between text-[10px] font-black uppercase text-blue-600 animate-in zoom-in-95">
+                    <span className="flex items-center gap-1"><TrendingDown size={12}/> Smart Pricing</span>
+                    <span>-৳{smartSavings.toLocaleString()}</span>
+                  </div>
+                )}
+                {productSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-green-600"><span>Product Savings</span><span>-৳{productSavings.toLocaleString()}</span></div>}
+                {appliedCoupon && <div className="flex justify-between text-[10px] font-black uppercase text-primary animate-in zoom-in-95"><span>Coupon Discount ({appliedCoupon.code})</span><span>-৳{couponDiscount.toLocaleString()}</span></div>}
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground"><span>Tax (8%)</span><span>৳{tax.toLocaleString()}</span></div>
+                {!hasServices && <div className="flex justify-between text-[10px] font-black uppercase text-blue-600"><span>Delivery Charge</span><span>৳{deliveryCharge.toLocaleString()}</span></div>}
+                <div className="pt-4 flex justify-between items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
+                    <span className="text-3xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
+                </div>
+              </div>
+              <div className="hidden lg:block mt-8">
+                <Button onClick={form.handleSubmit(onSubmit)} className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
+                </Button>
+              </div>
+            </div>
           </div>
+          {/* MOBILE ACTION BAR */}
           <div className="lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-20">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Total Due</span>
