@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -32,7 +31,8 @@ import {
   LayoutGrid,
   Send,
   User as UserIcon,
-  LogIn
+  LogIn,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -106,7 +106,7 @@ export default function ServiceBookingPage() {
   const totalPrice = basePrice + addOnsTotal + platformFee;
 
   const toggleAddOn = (subId: string) => {
-    setSelectedAddOnIds(prev => prev.includes(subId) ? prev.filter(i => i !== subId) : [...prev, id]);
+    setSelectedAddOnIds(prev => prev.includes(subId) ? prev.filter(i => i !== subId) : [...prev, subId]);
   };
 
   const handleContinue = () => {
@@ -198,7 +198,6 @@ export default function ServiceBookingPage() {
 
                 <div className="text-3xl font-black text-[#D60000] tracking-tighter">৳{basePrice.toLocaleString()}</div>
                 
-                {/* ℹ️ NEW: SINGLE COLUMN INFO LIST WITH COLORFUL ICONS */}
                 <div className="space-y-4 pt-4 border-t border-gray-50">
                   <div className="flex items-center gap-4 p-3 bg-amber-50/50 rounded-2xl border border-amber-100/50 group hover:bg-amber-50 transition-colors">
                     <div className="p-2.5 bg-amber-100 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
@@ -395,7 +394,6 @@ export default function ServiceBookingPage() {
           <div className="bg-white lg:rounded-xl shadow-sm border border-gray-100 p-6 md:p-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
               
-              {/* Review Statistics */}
               <div className="lg:col-span-4 space-y-10">
                 <div className="space-y-4">
                   <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-widest px-4 py-1">Community Feedback</Badge>
@@ -410,7 +408,6 @@ export default function ServiceBookingPage() {
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Based on {reviews?.length || 0} Professional Reviews</p>
                 </div>
 
-                {/* Write Review Form - Logged In Only */}
                 {user ? (
                   <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2rem] overflow-hidden animate-in fade-in zoom-in-95">
                     <CardContent className="p-8 space-y-6">
@@ -463,7 +460,6 @@ export default function ServiceBookingPage() {
                 )}
               </div>
 
-              {/* Reviews List */}
               <div className="lg:col-span-8 space-y-8">
                 {reviewsLoading ? (
                   <div className="flex justify-center p-20"><Loader2 className="animate-spin text-primary" size={32} /></div>
@@ -513,7 +509,6 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* MOBILE STICKY BAR */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
