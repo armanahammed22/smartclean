@@ -17,7 +17,8 @@ import {
   Globe,
   TicketPercent,
   History,
-  Activity
+  Activity,
+  Megaphone
 } from 'lucide-react';
 import { 
   BarChart, 
