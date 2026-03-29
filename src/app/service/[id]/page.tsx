@@ -34,7 +34,9 @@ import {
   User as UserIcon,
   LogIn,
   Eye,
-  ShoppingCart
+  ShoppingCart,
+  HelpCircle,
+  PlayCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -48,9 +50,28 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import Autoplay from "embla-carousel-autoplay";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem 
+} from '@/components/ui/carousel';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function ServiceBookingPage() {
   const { id: slugOrId } = useParams();
@@ -104,7 +125,7 @@ export default function ServiceBookingPage() {
 
   const addOnsQuery = useMemoFirebase(() => {
     if (!db || !targetId || !isMain) return null;
-    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'));
+    return query(collection(db, targetId ? (isMain ? 'sub_services' : 'sub_services') : 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'));
   }, [db, targetId, isMain]);
   const { data: relatedSubs } = useCollection(addOnsQuery);
 
@@ -199,7 +220,13 @@ export default function ServiceBookingPage() {
 
   if (!baseService) return <div className="p-20 text-center uppercase font-black text-gray-300">{t('no_data_found')}</div>;
 
-  const bookingCount = Math.floor((parseInt(baseService.id.slice(-2), 16) || 10) % 500) + 100;
+  const workProofImages = baseService.workProofImages || [
+    "https://picsum.photos/seed/wp1/800/600",
+    "https://picsum.photos/seed/wp2/800/600",
+    "https://picsum.photos/seed/wp3/800/600",
+    "https://picsum.photos/seed/wp4/800/600",
+    "https://picsum.photos/seed/wp5/800/600"
+  ];
 
   return (
     <PublicLayout minimalMobile={true}>
@@ -243,42 +270,37 @@ export default function ServiceBookingPage() {
                   </div>
                 </div>
 
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-[#022C22]">৳{basePrice.toLocaleString()}</span>
-                  {pricingLogic === 'sqft' && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('price_from')}</span>}
+                <div className="flex items-center justify-between bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-4xl font-black text-[#022C22]">৳{basePrice.toLocaleString()}</span>
+                    {pricingLogic === 'sqft' && <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('price_from')}</span>}
+                  </div>
+                  
+                  {pricingLogic === 'quantity' && (
+                    <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm h-12">
+                      <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={16} /></button>
+                      <span className="px-6 font-black text-sm text-gray-900 min-w-[50px] text-center">{mainQuantity}</span>
+                      <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={16} /></button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-6 pt-6 border-t border-gray-100">
-                  {pricingLogic === 'sqft' ? (
+                <div className="space-y-6 pt-2">
+                  {pricingLogic === 'sqft' && (
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Select Area Size</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {packages?.map((pkg) => (
-                          <div 
-                            key={pkg.id}
-                            onClick={() => setSelectedPackageId(pkg.id)}
-                            className={cn(
-                              "p-4 rounded-xl border-2 cursor-pointer transition-all flex flex-col gap-1",
-                              selectedPackageId === pkg.id ? "border-[#D4AF37] bg-[#D4AF37]/5 shadow-md" : "border-gray-100 hover:border-gray-200"
-                            )}
-                          >
-                            <span className="text-xs font-black uppercase text-gray-900">{pkg.name}</span>
-                            <span className="text-[10px] font-bold text-[#D4AF37]">৳{pkg.price.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                      <div className="space-y-0.5">
-                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{t('quantity')}</Label>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase">Unit Control</p>
-                      </div>
-                      <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                        <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="p-3 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={16} /></button>
-                        <span className="px-6 font-black text-sm text-gray-900 min-w-[50px] text-center">{mainQuantity}</span>
-                        <button onClick={() => setMainQuantity(mainQuantity + 1)} className="p-3 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={16} /></button>
-                      </div>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Select Area size (Sqft)</Label>
+                      <Select value={selectedPackageId || ''} onValueChange={setSelectedPackageId}>
+                        <SelectTrigger className="h-14 bg-gray-50 border-2 border-gray-100 rounded-xl font-bold focus:ring-[#D4AF37] focus:border-[#D4AF37]">
+                          <SelectValue placeholder="Choose your area slab" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {packages?.map((pkg) => (
+                            <SelectItem key={pkg.id} value={pkg.id} className="font-bold uppercase text-[10px]">
+                              {pkg.name} — ৳{pkg.price.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                 </div>
@@ -374,25 +396,107 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
+        {/* WORK PROOF & FAQ SECTION */}
         <section className="container mx-auto px-4 py-12 max-w-7xl">
-          <div className="bg-white p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm space-y-10">
-            <div>
-              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">{t('results_gallery')}</h2>
-              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Proof of our professional standards</p>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-8 relative aspect-video rounded-2xl overflow-hidden bg-gray-50 border shadow-inner">
-                <Image src="https://picsum.photos/seed/results/1200/800" alt="Work" fill className="object-cover" unoptimized />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+            
+            {/* LEFT: WORK PROOF GALLERY */}
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic flex items-center gap-3">
+                  <Camera className="text-primary" size={24} /> {t('results_gallery')}
+                </h2>
+                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Certified quality results from recent jobs</p>
               </div>
-              <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-transparent hover:border-[#D4AF37] transition-all group">
-                    <Image src={`https://picsum.photos/seed/case${i}/400/300`} alt="T" fill className="object-cover" unoptimized />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Eye size={20} className="text-white" /></div>
+              
+              <div className="space-y-4">
+                <div className="relative aspect-video rounded-[2.5rem] overflow-hidden bg-gray-50 border shadow-inner">
+                  <Image src={workProofImages[0]} alt="Featured Result" fill className="object-cover" unoptimized />
+                  <div className="absolute bottom-6 left-6 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Main Result</span>
                   </div>
-                ))}
+                </div>
+
+                <Carousel 
+                  opts={{ align: "start", loop: true }} 
+                  plugins={[Autoplay({ delay: 3000 })]}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-4">
+                    {workProofImages.slice(1).map((img, i) => (
+                      <CarouselItem key={i} className="pl-4 basis-1/2 md:basis-1/3">
+                        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary transition-all group">
+                          <Image src={img} alt={`Result ${i+1}`} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Eye size={20} className="text-white" />
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
               </div>
             </div>
+
+            {/* RIGHT: FAQ OR HOW TO BOOK */}
+            <div className="bg-gray-50/50 p-8 md:p-12 rounded-[3rem] border border-gray-100 flex flex-col justify-center">
+              {baseService.showFaq ? (
+                <div className="space-y-8">
+                  <div className="space-y-2">
+                    <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase tracking-widest">Support Intel</Badge>
+                    <h2 className="text-3xl font-black text-[#081621] uppercase tracking-tight">Smarter FAQ</h2>
+                  </div>
+                  <Accordion type="single" collapsible className="w-full space-y-3">
+                    {(baseService.faqList || [
+                      { q: "How long does deep cleaning take?", a: "Standard deep cleaning usually takes 4-6 hours depending on the size of your space." },
+                      { q: "Do I need to provide cleaning supplies?", a: "No, our professionals bring all necessary industrial-grade equipment and eco-friendly supplies." },
+                      { q: "Is the price fixed?", a: "The base price is fixed, but it may vary if you select additional add-ons or larger area slabs." }
+                    ]).map((faq, i) => (
+                      <AccordionItem key={i} value={`item-${i}`} className="border-none bg-white rounded-2xl px-6 shadow-sm overflow-hidden">
+                        <AccordionTrigger className="hover:no-underline py-5 text-sm font-black uppercase tracking-tight text-[#081621]">
+                          {faq.q}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-xs text-gray-500 font-medium leading-relaxed pb-6">
+                          {faq.a}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </div>
+              ) : (
+                <div className="space-y-10">
+                  <div className="space-y-2 text-center lg:text-left">
+                    <Badge className="bg-blue-50 text-blue-600 border-none text-[9px] font-black uppercase tracking-widest">Process Flow</Badge>
+                    <h2 className="text-3xl font-black text-[#081621] uppercase tracking-tight">How to Book?</h2>
+                  </div>
+                  <div className="space-y-8">
+                    {(baseService.howToBook || [
+                      "Select your preferred service and area slab above.",
+                      "Click on 'Proceed to Checkout' to review your items.",
+                      "Enter your address and preferred schedule date.",
+                      "Confirm your booking and our team will contact you instantly."
+                    ]).map((step, i) => (
+                      <div key={i} className="flex gap-6 group">
+                        <div className="flex flex-col items-center shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-white border-2 border-primary text-primary flex items-center justify-center font-black text-sm shadow-sm group-hover:bg-primary group-hover:text-white transition-all">
+                            {i + 1}
+                          </div>
+                          {i < 3 && <div className="w-0.5 h-full bg-gray-100 my-2" />}
+                        </div>
+                        <div className="pt-1 space-y-1">
+                          <p className="text-sm font-bold text-gray-800 leading-snug">{step}</p>
+                          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Action Step</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full h-14 rounded-2xl bg-[#081621] text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-xl mt-4">
+                    Ready to Start? <ArrowRight size={16} className="ml-2" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
           </div>
         </section>
 

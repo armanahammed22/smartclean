@@ -124,6 +124,10 @@ export interface Service {
   rating?: number;
   badgeText?: string;
   pricingType?: 'quantity' | 'sqft';
+  showFaq?: boolean;
+  faqList?: { q: string; a: string }[];
+  howToBook?: string[];
+  workProofImages?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
