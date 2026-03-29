@@ -44,12 +44,12 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/10 pt-12 md:pt-16 pb-8 mt-auto transition-colors duration-500" style={footerStyles}>
+    <footer className="border-t border-white/10 pt-6 md:pt-8 pb-4 mt-auto transition-colors duration-500" style={footerStyles}>
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="relative h-10 md:h-12 w-auto min-w-[100px] md:min-w-[120px] max-w-[200px] flex items-center justify-start overflow-hidden">
+              <div className="relative h-8 md:h-10 w-auto min-w-[80px] md:min-w-[100px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 
@@ -60,75 +60,61 @@ export function Footer() {
                     unoptimized
                   />
                 ) : (
-                  <div className="bg-primary p-2 rounded-lg">
-                    <span className="text-white font-bold text-xl">S</span>
+                  <div className="bg-primary p-1.5 rounded-lg">
+                    <span className="text-white font-bold text-lg">S</span>
                   </div>
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-lg md:text-xl font-black tracking-tighter font-headline uppercase leading-none" style={headingStyles}>
+                <span className="text-base md:text-lg font-black tracking-tighter font-headline uppercase leading-none" style={headingStyles}>
                   {settings?.websiteName || 'SMART CLEAN'}
                 </span>
-                <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em] mt-1">Reliable Cleaning</span>
+                <span className="text-[6px] font-black text-primary uppercase tracking-[0.2em] mt-0.5">Reliable Cleaning</span>
               </div>
             </div>
-            <p className="text-sm leading-relaxed max-w-xs opacity-80">
+            <p className="text-xs leading-relaxed max-w-xs opacity-80">
               {settings?.seoDescription || "Expert cleaning services for your home and office in Bangladesh."}
             </p>
             
-            <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-4">
               {(layout?.footer?.showSocial !== false) && (
-                <div className="flex gap-4 pt-2">
+                <div className="flex gap-2">
                   {settings?.socialLinks?.facebook && (
-                    <Link href={settings.socialLinks.facebook} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <Facebook size={18} />
+                    <Link href={settings.socialLinks.facebook} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                      <Facebook size={14} />
                     </Link>
                   )}
                   {settings?.socialLinks?.instagram && (
-                    <Link href={settings.socialLinks.instagram} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <Instagram size={18} />
+                    <Link href={settings.socialLinks.instagram} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                      <Instagram size={14} />
                     </Link>
                   )}
                   {settings?.socialLinks?.whatsapp && (
-                    <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-2 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <MessageCircle size={18} />
+                    <Link href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
+                      <MessageCircle size={14} />
                     </Link>
                   )}
                 </div>
               )}
 
-              {/* 📱 Customer App Download Section */}
               {(layout?.footer?.showDownload !== false) && (
-                <div className="pt-2">
-                  <h4 className="text-[10px] md:text-xs font-black mb-4 text-primary uppercase tracking-[0.2em]">Download App</h4>
-                  <div className="flex flex-col gap-2">
-                    <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group max-w-[180px]">
-                      <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
-                        <Smartphone size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
-                        <p className="text-[10px] font-black text-white uppercase mt-1">Get on Android</p>
-                      </div>
-                    </Link>
-                    <Link href="#" className="flex items-center gap-3 bg-white/5 p-2.5 rounded-xl border border-white/5 hover:bg-white/10 transition-all group max-w-[180px]">
-                      <div className="p-1.5 bg-white/10 rounded-lg text-primary group-hover:scale-110 transition-transform">
-                        <Download size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[7px] font-bold text-gray-500 uppercase leading-none">Customer App</p>
-                        <p className="text-[10px] font-black text-white uppercase mt-1">Get on iOS</p>
-                      </div>
-                    </Link>
-                  </div>
+                <div className="flex gap-2">
+                  <Link href="#" className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all">
+                    <Smartphone size={14} className="text-primary" />
+                    <span className="text-[8px] font-black text-white uppercase">Android</span>
+                  </Link>
+                  <Link href="#" className="flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all">
+                    <Download size={14} className="text-primary" />
+                    <span className="text-[8px] font-black text-white uppercase">iOS</span>
+                  </Link>
                 </div>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
-            <ul className="space-y-3 md:space-y-4 text-[13px]">
+            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
+            <ul className="space-y-2 text-[11px]">
               {layout?.footer?.serviceLinks?.map((item: any, i: number) => {
                 const isProdLink = item.link === '/products';
                 const isServLink = item.link === '/services';
@@ -145,48 +131,42 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="space-y-8">
-            <div>
-              <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_company')}</h4>
-              <ul className="space-y-3 md:space-y-4 text-[13px]">
-                {layout?.footer?.companyLinks?.map((item: any, i: number) => (
-                  <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
-                )) || (
-                  <>
-                    <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
-                    <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
-                    <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
-                  </>
-                )}
-              </ul>
-            </div>
+          <div>
+            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_company')}</h4>
+            <ul className="space-y-2 text-[11px]">
+              {layout?.footer?.companyLinks?.map((item: any, i: number) => (
+                <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
+              )) || (
+                <>
+                  <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
+                  <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
+                  <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
+                </>
+              )}
+            </ul>
           </div>
 
-          <div className="space-y-6">
-            <h4 className="text-[10px] md:text-xs font-black mb-6 md:mb-8 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_contact')}</h4>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 text-[13px]">
-                <MapPin size={18} className="text-primary shrink-0 mt-0.5" />
-                <span>{settings?.address || "Wireless Gate, Mohakhali, Dhaka-1212"}</span>
+          <div>
+            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_contact')}</h4>
+            <div className="space-y-2 text-[11px]">
+              <div className="flex items-start gap-2">
+                <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
+                <span className="line-clamp-2">{settings?.address || "Wireless Gate, Mohakhali, Dhaka-1212"}</span>
               </div>
-              <div className="flex items-center gap-3 text-[13px]">
-                <Phone size={18} className="text-primary shrink-0" />
+              <div className="flex items-center gap-2">
+                <Phone size={14} className="text-primary shrink-0" />
                 <span>{settings?.contactPhone || '+8801919640422'}</span>
               </div>
-              <div className="flex items-center gap-3 text-[13px]">
-                <Mail size={18} className="text-primary shrink-0" />
-                <span>{settings?.contactEmail || 'smartclean422@gmail.com'}</span>
-              </div>
-              <div className="flex items-start gap-3 text-[13px]">
-                <Clock size={18} className="text-primary shrink-0 mt-0.5" />
-                <span>Sat-Thu, 8AM - 8PM</span>
+              <div className="flex items-center gap-2">
+                <Mail size={14} className="text-primary shrink-0" />
+                <span className="truncate">{settings?.contactEmail || 'smartclean422@gmail.com'}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-white/5 text-center">
-          <p className="text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-medium opacity-50">
+        <div className="pt-4 border-t border-white/5 text-center">
+          <p className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] font-medium opacity-50">
             {settings?.footerContent || "© 2026 Smart Clean Bangladesh. All rights reserved."}
           </p>
         </div>
