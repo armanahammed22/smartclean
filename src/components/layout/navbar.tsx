@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -105,7 +106,7 @@ export function Navbar() {
   const desktopTitle = layout?.header?.customRequestDesktopTitle;
 
   return (
-    <header className="w-full z-[160] sticky top-0 shadow-sm transition-colors duration-500" style={navStyles}>
+    <header className="hidden lg:block w-full z-[160] sticky top-0 shadow-md transition-colors duration-500" style={navStyles}>
       {(layout?.header?.showTopBar !== false) && (
         <div className="hidden lg:block border-b py-1 transition-colors duration-500" style={topBarStyles}>
           <div className="container mx-auto px-4 flex justify-end gap-6 h-8 items-center">
@@ -118,7 +119,7 @@ export function Navbar() {
         </div>
       )}
 
-      <div className="py-2 md:py-4 px-3 md:px-4 border-b border-gray-100">
+      <div className="py-2 md:py-4 px-3 md:px-4">
         <div className="container mx-auto flex items-center justify-between gap-4 md:gap-8">
           
           <div className="flex items-center gap-4 md:gap-8 shrink-0">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -125,8 +126,9 @@ export default function ServiceBookingPage() {
         </div>
 
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-6 max-w-7xl">
-          <div className="bg-white lg:rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col lg:grid lg:grid-cols-12">
+          <div className="bg-white lg:rounded-xl shadow-sm border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative">
             
+            {/* COLUMN 1: Main Service Identity */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner">
                 {baseService.imageUrl ? (
@@ -167,6 +169,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
+            {/* COLUMN 2: Add-ons & Extra Logic */}
             <div className="lg:col-span-5 p-6 md:p-8 space-y-8 bg-gray-50/30 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select Extra Treatments</h3>
@@ -216,50 +219,53 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-3 p-6 md:p-8 flex flex-col bg-white">
-              <div className="space-y-6 flex-1">
-                <div className="pb-4 border-b">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Live Summary</h3>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
-                    <span>Base Charge</span>
-                    <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
+            {/* COLUMN 3: Sticky Order Summary */}
+            <div className="lg:col-span-3">
+              <div className="p-6 md:p-8 flex flex-col bg-white lg:sticky lg:top-24 h-fit">
+                <div className="space-y-6 flex-1">
+                  <div className="pb-4 border-b">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Live Summary</h3>
                   </div>
-                  {selectedAddOnIds.length > 0 && (
-                    <div className="flex justify-between text-xs font-bold text-blue-600 uppercase animate-in slide-in-from-top-1">
-                      <span>Add-ons Total</span>
-                      <span>+৳{addOnsTotal.toLocaleString()}</span>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
+                      <span>Base Charge</span>
+                      <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
-                    <span>Service Fee</span>
-                    <span className="text-gray-900">৳{platformFee}</span>
+                    {selectedAddOnIds.length > 0 && (
+                      <div className="flex justify-between text-xs font-bold text-blue-600 uppercase animate-in slide-in-from-top-1">
+                        <span>Add-ons Total</span>
+                        <span>+৳{addOnsTotal.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs font-bold text-gray-500 uppercase">
+                      <span>Service Fee</span>
+                      <span className="text-gray-900">৳{platformFee}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t-2 border-dashed border-gray-100 flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Grand Total</span>
+                    <span className="text-4xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                  </div>
+
+                  <div className="space-y-3 pt-4">
+                    <Button onClick={handleContinue} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
+                      Book Service Now <ArrowRight size={18} />
+                    </Button>
+                    <p className="text-[8px] text-center text-muted-foreground font-black uppercase tracking-[0.2em]">Satisfaction Guaranteed</p>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t-2 border-dashed border-gray-100 flex flex-col gap-1">
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Grand Total</span>
-                  <span className="text-4xl font-black text-[#081621] tracking-tighter">৳{totalPrice.toLocaleString()}</span>
-                </div>
-
-                <div className="space-y-3 pt-4">
-                  <Button onClick={handleContinue} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
-                    Book Service Now <ArrowRight size={18} />
-                  </Button>
-                  <p className="text-[8px] text-center text-muted-foreground font-black uppercase tracking-[0.2em]">Satisfaction Guaranteed</p>
-                </div>
-              </div>
-
-              <div className="pt-8 mt-8 border-t space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 text-green-600 rounded-lg"><Shield size={16} /></div>
-                  <span className="text-[10px] font-black uppercase text-gray-600">Verified Technicians</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><BadgeCheck size={16} /></div>
-                  <span className="text-[10px] font-black uppercase text-gray-600">Cash After Service</span>
+                <div className="pt-8 mt-8 border-t space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 text-green-600 rounded-lg"><Shield size={16} /></div>
+                    <span className="text-[10px] font-black uppercase text-gray-600">Verified Technicians</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><BadgeCheck size={16} /></div>
+                    <span className="text-[10px] font-black uppercase text-gray-600">Cash After Service</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -268,7 +274,7 @@ export default function ServiceBookingPage() {
         </section>
 
         <section className="container mx-auto px-0 md:px-4 py-8 md:py-12 max-w-7xl">
-          <div className="bg-white lg:rounded-xl overflow-hidden shadow-sm border border-gray-100 p-6 md:p-10 space-y-10">
+          <div className="bg-white lg:rounded-xl shadow-sm border border-gray-100 p-6 md:p-10 space-y-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
               <div>
                 <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">Results Gallery</h2>

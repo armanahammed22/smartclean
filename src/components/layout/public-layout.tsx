@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
@@ -81,7 +82,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       <link rel="canonical" href={`https://smartclean.com.bd${pathname}`} />
       
       {/* MOBILE HEADER */}
-      <header className="lg:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between gap-4 shadow-sm">
+      <header className="lg:hidden sticky top-0 z-[160] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center shrink-0">
           {!isHome ? (
             <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
@@ -136,10 +137,8 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         </div>
       </header>
 
-      {/* DESKTOP HEADER */}
-      <div className="hidden lg:block">
-        <Navbar />
-      </div>
+      {/* DESKTOP HEADER - Sticky logic handled inside Navbar */}
+      <Navbar />
 
       {/* MAIN CONTENT */}
       <main className={cn(
