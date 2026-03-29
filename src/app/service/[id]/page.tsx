@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -33,7 +32,8 @@ import {
   Send,
   User as UserIcon,
   LogIn,
-  Eye
+  Eye,
+  ShoppingCart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -133,7 +133,6 @@ export default function ServiceBookingPage() {
   const handleContinue = () => {
     if (!baseService) return;
     
-    // Construct selected items for cart
     const selectedAddOns = addOnOptions
       .filter(a => (addOnsQty[a.id] || 0) > 0)
       .map(a => ({
@@ -208,7 +207,7 @@ export default function ServiceBookingPage() {
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
           <div className="bg-white lg:rounded-xl shadow-lg border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative overflow-hidden">
             
-            {/* COLUMN 1: Main Service Content (Widened) */}
+            {/* COLUMN 1: Main Service Content */}
             <div className="lg:col-span-5 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="relative aspect-[16/9] md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner group">
                 {baseService.imageUrl ? (
@@ -227,7 +226,6 @@ export default function ServiceBookingPage() {
                     {baseService.title || baseService.name}
                   </h1>
                   
-                  {/* Single Line Info Bar for all devices */}
                   <div className="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar py-1">
                     <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-3 py-1.5 rounded-full border border-amber-100 whitespace-nowrap">
                       <Star size={14} fill="currentColor" />
@@ -257,7 +255,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 2: Add-on Selection (Narrower) */}
+            {/* COLUMN 2: Add-on Selection */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 bg-gray-50/20 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="space-y-1">
@@ -334,7 +332,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: Sticky Summary (Desktop Only) */}
+            {/* COLUMN 3: Sticky Summary */}
             <div className="lg:col-span-3 hidden lg:block">
               <div className="p-8 flex flex-col bg-white sticky top-24 h-fit">
                 <div className="space-y-8">
@@ -551,7 +549,7 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* MOBILE STICKY FOOTER (No Summary Page, Calculated in Button) */}
+        {/* MOBILE STICKY FOOTER */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-center shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
           <Button 
             onClick={handleContinue}
