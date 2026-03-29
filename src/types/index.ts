@@ -139,6 +139,8 @@ export interface SubService {
   isDefaultAddOn: boolean;
   status: 'Active' | 'Inactive';
   duration?: string;
+  pricingType?: 'quantity' | 'sqft';
+  rating?: number;
   createdAt?: string;
   updatedAt?: string;
 }

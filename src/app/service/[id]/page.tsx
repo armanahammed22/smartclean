@@ -75,42 +75,48 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
+  // 1. Service Lookup (Supports Main or Sub service)
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
   }, [db, slugOrId]);
-  
   const { data: slugServices, isLoading: slugLoading } = useCollection(serviceQuery);
 
   const mainServiceRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'services', slugOrId as string) : null, [db, slugOrId]);
   const { data: idService, isLoading: idLoading } = useDoc(mainServiceRef);
 
   const subServiceRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'sub_services', slugOrId as string) : null, [db, slugOrId]);
-  const { data: subService, isLoading: subLoading } = useDoc(subServiceRef);
+  const { data: idSubService, isLoading: subLoading } = useDoc(subServiceRef);
 
   const baseService = useMemo(() => {
     if (slugServices && slugServices.length > 0) return slugServices[0];
-    return idService || subService || null;
-  }, [slugServices, idService, subService]);
+    return idService || idSubService || null;
+  }, [slugServices, idService, idSubService]);
 
-  const mainId = useMemo(() => baseService?.id || null, [baseService]);
-  
+  const targetId = useMemo(() => baseService?.id || null, [baseService]);
+  const isMain = useMemo(() => !!(slugServices?.length || idService), [slugServices, idService]);
+
+  // 2. Fetch Packages (Slabs)
   const packagesQuery = useMemoFirebase(() => {
-    if (!db || !mainId) return null;
-    return query(collection(db, 'services', mainId as string, 'packages'), orderBy('price', 'asc'));
-  }, [db, mainId]);
+    if (!db || !targetId) return null;
+    const collPath = isMain ? `services/${targetId}/packages` : `sub_services/${targetId}/packages`;
+    return query(collection(db, collPath), orderBy('price', 'asc'));
+  }, [db, targetId, isMain]);
   const { data: packages } = useCollection(packagesQuery);
 
+  // 3. Fetch Add-ons
   const addOnsQuery = useMemoFirebase(() => {
-    if (!db || !mainId) return null;
-    return query(collection(db, 'sub_services'), where('mainServiceId', '==', mainId), where('status', '==', 'Active'));
-  }, [db, mainId]);
+    if (!db || !targetId || !isMain) return null;
+    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'));
+  }, [db, targetId, isMain]);
   const { data: relatedSubs } = useCollection(addOnsQuery);
 
+  // 4. Fetch Reviews
   const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !mainId) return null;
-    return query(collection(db, 'services', mainId as string, 'reviews'), orderBy('createdAt', 'desc'));
-  }, [db, mainId]);
+    if (!db || !targetId) return null;
+    const collPath = isMain ? `services/${targetId}/reviews` : `sub_services/${targetId}/reviews`;
+    return query(collection(db, collPath), orderBy('createdAt', 'desc'));
+  }, [db, targetId, isMain]);
   const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsQuery);
 
   useEffect(() => {
@@ -122,12 +128,12 @@ export default function ServiceBookingPage() {
 
   const addOnOptions = useMemo(() => {
     if (!relatedSubs) return [];
-    return relatedSubs.filter(sub => sub.id !== mainId && sub.isAddOnEnabled);
-  }, [relatedSubs, mainId]);
+    return relatedSubs.filter(sub => sub.isAddOnEnabled);
+  }, [relatedSubs]);
 
   const pricingLogic = baseService?.pricingType || 'quantity';
-  
   const activePackage = packages?.find(p => p.id === selectedPackageId);
+  
   const basePrice = pricingLogic === 'sqft' 
     ? (activePackage?.price || 0) 
     : (baseService?.basePrice || baseService?.price || 0) * mainQuantity;
@@ -135,19 +141,6 @@ export default function ServiceBookingPage() {
   const addOnsTotal = addOnOptions.reduce((acc, a) => acc + (a.price * (addOnsQty[a.id] || 0)), 0);
   const platformFee = 50;
   const totalPrice = basePrice + addOnsTotal + platformFee;
-
-  const updateAddOnQty = (subId: string, delta: number) => {
-    setAddOnsQty(prev => {
-      const current = prev[subId] || 0;
-      const next = Math.max(0, current + delta);
-      if (next === 0) {
-        const newState = { ...prev };
-        delete newState[subId];
-        return newState;
-      }
-      return { ...prev, [subId]: next };
-    });
-  };
 
   const handleContinue = () => {
     if (!baseService) return;
@@ -178,12 +171,13 @@ export default function ServiceBookingPage() {
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !user || !mainId) return;
+    if (!db || !user || !targetId) return;
     if (!reviewText.trim()) return;
 
     setIsSubmittingReview(true);
     try {
-      await addDoc(collection(db, 'services', mainId as string, 'reviews'), {
+      const collPath = isMain ? `services/${targetId}/reviews` : `sub_services/${targetId}/reviews`;
+      await addDoc(collection(db, collPath), {
         userId: user.uid,
         userName: user.displayName || 'Anonymous User',
         rating: reviewRating,
@@ -213,11 +207,11 @@ export default function ServiceBookingPage() {
     <PublicLayout minimalMobile={true}>
       <div className="bg-white min-h-screen">
         
-        {/* Unified Booking Interface (Single Block) */}
+        {/* Unified Booking Block */}
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-6 max-w-7xl">
           <div className="bg-white border border-gray-100 flex flex-col lg:grid lg:grid-cols-12 relative overflow-visible shadow-sm lg:rounded-2xl">
             
-            {/* COLUMN 1: Main Service Identity (Widened) */}
+            {/* COLUMN 1: Identity & Selection */}
             <div className="lg:col-span-5 p-6 md:p-10 space-y-8 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="relative aspect-video md:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center border shadow-inner">
                 {baseService.imageUrl ? (
@@ -249,21 +243,20 @@ export default function ServiceBookingPage() {
                     <div className="w-px h-4 bg-gray-200" />
                     <div className="flex items-center gap-1.5 text-emerald-600">
                       <Users size={16} />
-                      <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Pros'}</span>
+                      <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black text-[#022C22]">৳{basePrice.toLocaleString()}</span>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{pricingLogic === 'sqft' ? 'থেকে শুরু / Start From' : 'Base Rate'}</span>
+                  {pricingLogic === 'sqft' && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">থেকে শুরু / Start From</span>}
                 </div>
 
-                {/* PRICING LOGIC SELECTORS */}
                 <div className="space-y-6 pt-6 border-t border-gray-100">
                   {pricingLogic === 'sqft' ? (
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Select Area Size (Square Feet)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] ml-1">Select Area Size</Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {packages?.map((pkg) => (
                           <div 
@@ -294,19 +287,13 @@ export default function ServiceBookingPage() {
                     </div>
                   )}
                 </div>
-
-                <div className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
-                  <p className="text-sm text-gray-600 font-medium leading-relaxed italic">
-                    "{baseService.description || "Expert level professional treatment for discerning clients."}"
-                  </p>
-                </div>
               </div>
             </div>
 
-            {/* COLUMN 2: Add-on Selection (Narrower) */}
+            {/* COLUMN 2: Add-ons */}
             <div className="lg:col-span-4 p-6 md:p-8 space-y-8 bg-gray-50/20 border-b lg:border-b-0 lg:border-r border-gray-100">
               <div className="flex items-center justify-between border-b pb-4">
-                <div className="space-y-1">
+                <div>
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Enhance Service</h3>
                   <p className="text-[9px] font-bold text-gray-400 uppercase">Optional additions</p>
                 </div>
@@ -337,9 +324,9 @@ export default function ServiceBookingPage() {
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100/50">
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Qty</span>
                         <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm h-9">
-                          <button onClick={() => updateAddOnQty(addon.id, -1)} className="px-2 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={14} /></button>
+                          <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="px-2 hover:bg-red-50 text-red-500 transition-colors border-r"><Minus size={14} /></button>
                           <span className="w-8 text-center text-[11px] font-black text-gray-900">{qty}</span>
-                          <button onClick={() => updateAddOnQty(addon.id, 1)} className="px-2 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={14} /></button>
+                          <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="px-2 hover:bg-green-50 text-emerald-600 transition-colors border-l"><Plus size={14} /></button>
                         </div>
                       </div>
                     </div>
@@ -348,19 +335,12 @@ export default function ServiceBookingPage() {
               </div>
 
               <div className="space-y-3 pt-4 border-t border-gray-100">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">
-                  <ClipboardList size={14} /> Technician Note
-                </Label>
-                <Textarea 
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Special instructions..."
-                  className="min-h-[100px] bg-white border-gray-200 rounded-2xl p-4 text-xs font-medium focus:ring-4 focus:ring-[#D4AF37]/10 transition-all border-none shadow-inner"
-                />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><ClipboardList size={14} /> Technician Note</Label>
+                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Special instructions..." className="min-h-[100px] bg-white border-gray-200 rounded-2xl p-4 text-xs font-medium" />
               </div>
             </div>
 
-            {/* COLUMN 3: Sticky Summary (Desktop Only) */}
+            {/* COLUMN 3: Desktop Summary */}
             <div className="lg:col-span-3 hidden lg:block">
               <div className="p-8 flex flex-col bg-white sticky top-24 h-full min-h-[600px]">
                 <div className="space-y-8 h-full flex flex-col">
@@ -371,12 +351,12 @@ export default function ServiceBookingPage() {
 
                   <div className="space-y-5">
                     <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
-                      <span>Base Rate {pricingLogic === 'quantity' && `(x${mainQuantity})`}</span>
+                      <span>Base Rate</span>
                       <span className="text-gray-900 font-black">৳{basePrice.toLocaleString()}</span>
                     </div>
                     {addOnsTotal > 0 && (
-                      <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase animate-in slide-in-from-top-1">
-                        <span>Extras Selected</span>
+                      <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase">
+                        <span>Extras</span>
                         <span className="font-black">+৳{addOnsTotal.toLocaleString()}</span>
                       </div>
                     )}
@@ -394,17 +374,6 @@ export default function ServiceBookingPage() {
                   <Button onClick={handleContinue} className="w-full h-16 rounded-2xl bg-[#022C22] hover:bg-[#064E3B] text-[#D4AF37] font-black uppercase text-xs tracking-widest shadow-2xl shadow-emerald-950/20 gap-2 transition-all mt-6">
                     Confirm Booking <ArrowRight size={18} />
                   </Button>
-
-                  <div className="pt-8 space-y-4">
-                    <div className="flex items-center gap-3 opacity-60">
-                      <ShieldCheck size={16} className="text-emerald-600" />
-                      <span className="text-[9px] font-black uppercase text-gray-500">Secure Settlement</span>
-                    </div>
-                    <div className="flex items-center gap-3 opacity-60">
-                      <BadgeCheck size={16} className="text-amber-600" />
-                      <span className="text-[9px] font-black uppercase text-gray-500">Price Match Promise</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -414,31 +383,20 @@ export default function ServiceBookingPage() {
 
         {/* RESULTS GALLERY */}
         <section className="container mx-auto px-4 py-12 max-w-7xl">
-          <div className="bg-white p-6 md:p-10 space-y-10 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-6">
-              <div>
-                <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">Operational Results</h2>
-                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Real proof of our cleaning standards</p>
-              </div>
+          <div className="bg-white p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm space-y-10">
+            <div>
+              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter italic">Operational Results</h2>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Proof of our professional standards</p>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-8 relative aspect-video rounded-2xl overflow-hidden bg-gray-50 border shadow-inner">
-                <Image src="https://picsum.photos/seed/service-result/1200/800" alt="Work Sample" fill className="object-cover" unoptimized />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <div className="absolute bottom-6 left-6">
-                  <Badge className="bg-white/20 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-widest">
-                    <Camera size={12} className="mr-2 text-[#D4AF37] inline" /> Live Execution
-                  </Badge>
-                </div>
+                <Image src="https://picsum.photos/seed/results/1200/800" alt="Work" fill className="object-cover" unoptimized />
               </div>
               <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-transparent hover:border-[#D4AF37] cursor-pointer transition-all shadow-sm group">
-                    <Image src={`https://picsum.photos/seed/case${i}/400/300`} alt="Thumbnail" fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Eye size={24} className="text-white" />
-                    </div>
+                  <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-transparent hover:border-[#D4AF37] transition-all group">
+                    <Image src={`https://picsum.photos/seed/case${i}/400/300`} alt="T" fill className="object-cover" unoptimized />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Eye size={20} className="text-white" /></div>
                   </div>
                 ))}
               </div>
@@ -448,78 +406,56 @@ export default function ServiceBookingPage() {
 
         {/* REVIEWS SECTION */}
         <section className="container mx-auto px-4 py-8 max-w-7xl mb-24 lg:mb-12">
-          <div className="bg-white lg:rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              <div className="lg:col-span-4 space-y-8">
-                <div className="space-y-3">
-                  <Badge className="bg-[#022C22]/10 text-[#022C22] border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">Verified Experience</Badge>
-                  <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">Customer <span className="text-[#D4AF37]">Satisfaction</span></h2>
-                </div>
-
-                <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center space-y-3">
-                  <p className="text-5xl font-black text-[#022C22] tracking-tighter">4.9</p>
-                  <div className="flex justify-center text-[#D4AF37] gap-1">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}
-                  </div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{reviews?.length || 0} Professional Reviews</p>
-                </div>
-
-                {user ? (
-                  <div className="p-6 bg-[#081621] text-white rounded-2xl space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2"><MessageSquare size={18} /> Write a Review</h4>
-                    <div className="flex gap-2">
-                      {[1,2,3,4,5].map(star => (
-                        <button key={star} onClick={() => setReviewRating(star)}>
-                          <Star size={20} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-white/20"} />
-                        </button>
-                      ))}
-                    </div>
-                    <Textarea 
-                      value={reviewText}
-                      onChange={e => setReviewText(e.target.value)}
-                      placeholder="Your feedback..."
-                      className="bg-white/5 border-white/10 text-white min-h-[80px]"
-                    />
-                    <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px]">
-                      Submit Feedback
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center space-y-4">
-                    <LogIn size={24} className="mx-auto text-blue-600" />
-                    <p className="text-[10px] font-black uppercase text-blue-900">Sign in to share your experience</p>
-                    <Button asChild variant="outline" className="w-full h-10 text-[10px] uppercase font-black"><Link href="/login">Login Now</Link></Button>
-                  </div>
-                )}
+          <div className="bg-white lg:rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-4 space-y-8">
+              <h2 className="text-2xl font-black text-[#081621] uppercase tracking-tighter leading-none">Customer <span className="text-[#D4AF37]">Feedback</span></h2>
+              <div className="p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center space-y-3">
+                <p className="text-5xl font-black text-[#022C22] tracking-tighter">4.9</p>
+                <div className="flex justify-center text-[#D4AF37] gap-1">{[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}</div>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{reviews?.length || 0} Reviews</p>
               </div>
-
-              <div className="lg:col-span-8 space-y-6">
-                {reviewsLoading ? <Loader2 className="animate-spin text-primary mx-auto" /> : reviews?.map((rev) => (
-                  <div key={rev.id} className="p-6 md:p-8 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-[#022C22] border shadow-inner uppercase text-xs">{rev.userName?.[0]}</div>
-                        <div>
-                          <h5 className="font-black text-gray-900 uppercase text-xs">{rev.userName}</h5>
-                          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Verified Client</p>
-                        </div>
-                      </div>
-                      <div className="flex text-[#D4AF37] gap-0.5">
-                        {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+              {user ? (
+                <div className="p-6 bg-[#081621] text-white rounded-2xl space-y-6">
+                  <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2"><MessageSquare size={18} /> Write Review</h4>
+                  <div className="flex gap-2">
+                    {[1,2,3,4,5].map(star => (
+                      <button key={star} onClick={() => setReviewRating(star)}>
+                        <Star size={20} fill={star <= reviewRating ? "#D4AF37" : "none"} className={star <= reviewRating ? "text-[#D4AF37]" : "text-white/20"} />
+                      </button>
+                    ))}
+                  </div>
+                  <Textarea value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Your experience..." className="bg-white/5 border-white/10 text-white min-h-[80px]" />
+                  <Button onClick={handleSubmitReview} disabled={isSubmittingReview} className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#022C22] font-black uppercase text-[10px]">Submit Review</Button>
+                </div>
+              ) : (
+                <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center space-y-4">
+                  <LogIn size={24} className="mx-auto text-blue-600" />
+                  <p className="text-[10px] font-black uppercase text-blue-900">Sign in to review</p>
+                  <Button asChild variant="outline" className="w-full h-10 text-[10px] uppercase font-black"><Link href="/login">Login Now</Link></Button>
+                </div>
+              )}
+            </div>
+            <div className="lg:col-span-8 space-y-6">
+              {reviewsLoading ? <Loader2 className="animate-spin text-primary mx-auto" /> : reviews?.map((rev) => (
+                <div key={rev.id} className="p-6 md:p-8 bg-white rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-[#022C22] border shadow-inner uppercase text-xs">{rev.userName?.[0]}</div>
+                      <div>
+                        <h5 className="font-black text-gray-900 uppercase text-xs">{rev.userName}</h5>
+                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{mounted && rev.createdAt ? format(new Date(rev.createdAt), 'PP') : '...'}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-600 font-medium leading-relaxed italic border-l-2 border-[#D4AF37]/20 pl-4">"{rev.text}"</p>
-                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                      <span className="text-[8px] font-black text-gray-300 uppercase flex items-center gap-2"><Calendar size={10} /> {mounted && rev.createdAt ? format(new Date(rev.createdAt), 'PP') : '...'}</span>
-                    </div>
+                    <div className="flex text-[#D4AF37] gap-0.5">{[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}</div>
                   </div>
-                ))}
-              </div>
+                  <p className="text-xs text-gray-600 font-medium leading-relaxed italic border-l-2 border-[#D4AF37]/20 pl-4">"{rev.text}"</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* MOBILE STICKY FOOTER */}
+        {/* MOBILE STICKY BAR */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Payable</span>
