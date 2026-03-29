@@ -28,7 +28,8 @@ import {
   CheckCircle2,
   Clock,
   Users,
-  Settings2
+  Settings2,
+  Maximize
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -113,7 +114,7 @@ export default function ServiceDetailedEditor() {
       <Tabs defaultValue="identity" className="space-y-8">
         <TabsList className="bg-white border p-1 h-12 w-full max-w-2xl rounded-xl overflow-x-auto no-scrollbar">
           <TabsTrigger value="identity" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><Layout size={14} /> Identity</TabsTrigger>
-          <TabsTrigger value="packages" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><Package size={14} /> Packages</TabsTrigger>
+          <TabsTrigger value="packages" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><Maximize size={14} /> Pricing Slabs</TabsTrigger>
           <TabsTrigger value="addons" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><Zap size={14} /> Add-ons</TabsTrigger>
           <TabsTrigger value="scope" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><ListChecks size={14} /> Scope</TabsTrigger>
           <TabsTrigger value="reviews" className="rounded-lg gap-2 flex-1 font-bold text-[10px] uppercase"><Star size={14} /> Reviews</TabsTrigger>
@@ -150,22 +151,10 @@ export default function ServiceDetailedEditor() {
                     <Label className="text-[10px] font-black uppercase ml-1">Display Rating</Label>
                     <Input type="number" step="0.1" value={mainData.rating || 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value) || 5.0})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Team Size</Label>
-                    <Input value={mainData.teamSize || ''} onChange={e => setMainData({...mainData, teamSize: e.target.value})} placeholder="e.g. 2-4 Members" className="h-12 bg-gray-50 border-none rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Avg Duration</Label>
-                    <Input value={mainData.duration || ''} onChange={e => setMainData({...mainData, duration: e.target.value})} placeholder="e.g. 4-6 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
-                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase ml-1">Rich Description</Label>
                   <Textarea value={mainData.description || ''} onChange={e => setMainData({...mainData, description: e.target.value})} className="min-h-[200px] bg-gray-50 border-none rounded-xl" />
-                </div>
-                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                  <Label className="text-xs font-black uppercase">Highlight as Most Popular</Label>
-                  <Switch checked={!!mainData.isPopular} onCheckedChange={val => setMainData({...mainData, isPopular: val})} />
                 </div>
                 <Button onClick={handleUpdateMain} disabled={isSaving} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl">
                   {isSaving ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
@@ -176,24 +165,25 @@ export default function ServiceDetailedEditor() {
           </div>
           <div className="space-y-6">
             <Card className="border-none shadow-sm rounded-3xl bg-white p-8">
-              <ImageUploader label="Service Gallery" initialUrl={mainData.imageUrl} onUpload={url => setMainData({...mainData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
-              <p className="text-[10px] text-muted-foreground mt-4 italic">Note: Currently using primary listing photo. Update here to sync with marketplace thumbnail.</p>
+              <ImageUploader label="Primary Listing Photo" initialUrl={mainData.imageUrl} onUpload={url => setMainData({...mainData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
             </Card>
           </div>
         </TabsContent>
 
-        {/* TAB: PACKAGES */}
+        {/* TAB: PRICING SLABS (PACKAGES) */}
         <TabsContent value="packages" className="space-y-6">
           <div className="flex flex-col gap-2 px-4 mb-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-black uppercase tracking-tighter">Pricing Tiers / Area Slabs</h2>
-              <Button onClick={() => handleAddSub('packages', { name: '800 - 1200 Sqft', price: 2000, isRecommended: false })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
-                <Plus size={14} /> Create Slab
+              <Button onClick={() => handleAddSub('packages', { name: 'New Slab', price: 1000, isRecommended: false })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
+                <Plus size={14} /> Add New Slab
               </Button>
             </div>
-            <p className="text-[10px] font-bold text-primary bg-primary/5 p-3 rounded-lg border border-primary/10 uppercase tracking-widest">
-              {mainData.pricingType === 'sqft' ? "✓ Area Slab Mode Active: These will appear as selection buttons on the booking page." : "⚠ Quantity Mode Active: Packages won't be shown as main selectors."}
-            </p>
+            {mainData.pricingType !== 'sqft' && (
+              <p className="text-[10px] font-bold text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100 uppercase tracking-widest flex items-center gap-2">
+                <AlertTriangle size={14} /> Warning: Logic is set to "Quantity". These slabs may not show as primary selectors.
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {packages?.map((pkg) => (
@@ -206,7 +196,7 @@ export default function ServiceDetailedEditor() {
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase opacity-40">Label (e.g. 800 - 1200 Sqft)</Label>
+                    <Label className="text-[9px] font-black uppercase opacity-40">Label (e.g. 1000-1200 Sqft)</Label>
                     <Input defaultValue={pkg.name} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { name: e.target.value })} className="h-9 bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-2">
@@ -214,7 +204,7 @@ export default function ServiceDetailedEditor() {
                     <Input type="number" defaultValue={pkg.price ?? 0} onBlur={e => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { price: parseFloat(e.target.value) || 0 })} className="h-11 bg-primary/5 border-none font-black text-primary text-lg" />
                   </div>
                   <div className="flex items-center justify-between pt-2">
-                    <span className="text-[9px] font-black uppercase">Active Promotion</span>
+                    <span className="text-[9px] font-black uppercase">Most Recommended</span>
                     <Switch checked={pkg.isRecommended} onCheckedChange={val => updateDoc(doc(db!, 'services', id as string, 'packages', pkg.id), { isRecommended: val })} />
                   </div>
                 </CardContent>
@@ -227,7 +217,7 @@ export default function ServiceDetailedEditor() {
         <TabsContent value="addons" className="space-y-6">
           <div className="flex justify-between items-center px-4">
             <h2 className="text-lg font-black uppercase tracking-tighter">Optional Add-ons</h2>
-            <Button onClick={() => handleAddSub('addOns', { name: 'Kitchen Cabinet', price: 500 })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
+            <Button onClick={() => handleAddSub('addOns', { name: 'Extra Item', price: 500 })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
               <Plus size={14} /> Add Task
             </Button>
           </div>
@@ -254,7 +244,7 @@ export default function ServiceDetailedEditor() {
         <TabsContent value="scope" className="space-y-6">
           <div className="flex justify-between items-center px-4">
             <h2 className="text-lg font-black uppercase tracking-widest">Service Scope Checklist</h2>
-            <Button onClick={() => handleAddSub('includedItems', { title: 'Deep dusting of all rooms' })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
+            <Button onClick={() => handleAddSub('includedItems', { title: 'Standard Checklist Item' })} size="sm" className="rounded-xl gap-2 font-black uppercase text-[10px]">
               <Plus size={14} /> Add Item
             </Button>
           </div>

@@ -76,6 +76,7 @@ export default function SmartCleanHomePage() {
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
@@ -85,6 +86,7 @@ export default function SmartCleanHomePage() {
   const { data: allTopNav } = useCollection(topNavRef);
   const { data: allProducts } = useCollection(productsRef);
   const { data: allServices } = useCollection(servicesRef);
+  const { data: allSubServices } = useCollection(subServicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
   const { data: globalTheme } = useDoc(themeRef);
@@ -124,10 +126,27 @@ export default function SmartCleanHomePage() {
     };
 
     const getFilteredServices = () => {
-      let feed = allServices?.filter(s => s.status === 'Active') || [];
-      if (sectionType === 'services_featured') feed = feed.filter(s => s.isPopular);
-      if (sectionType === 'services_popular') feed = [...feed].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      return feed.slice(0, config.limit || 12);
+      let mainFeed = allServices?.filter(s => s.status === 'Active') || [];
+      let subFeed = allSubServices?.filter(sub => sub.status === 'Active')
+        .map(sub => ({ 
+          ...sub, 
+          title: sub.name, 
+          basePrice: sub.price, 
+          itemType: 'service', 
+          isAddOn: true 
+        })) || [];
+
+      let combined = [...mainFeed, ...subFeed];
+
+      if (sectionType === 'services_featured') {
+        combined = combined.filter(s => s.isPopular || s.isDefaultAddOn);
+      }
+      
+      if (sectionType === 'services_popular') {
+        combined = [...combined].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      return combined.slice(0, config.limit || 12);
     };
 
     const sectionStyles = {
@@ -272,16 +291,24 @@ export default function SmartCleanHomePage() {
                       style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
                     >
                       <Link href={`/service/${s.slug || s.id}`} className="block h-full flex flex-col">
-                        <div className="p-1">
+                        <div className="p-1 relative">
                           <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
                             {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
                           </div>
+                          {s.isAddOn && (
+                            <Badge className="absolute top-3 right-3 bg-amber-600 text-white border-none font-black text-[7px] uppercase px-2 py-0.5 rounded-full shadow-lg">
+                              Add-on
+                            </Badge>
+                          )}
                         </div>
                         <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
                           <h3 className="text-[11px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                           
                           <div className="mt-auto">
-                            <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none mb-1">৳{(s.basePrice || 0).toLocaleString()}</p>
+                            <div className="flex items-baseline justify-between mb-1">
+                              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
+                              {s.pricingType === 'sqft' && <span className="text-[7px] font-black uppercase text-gray-400">Start</span>}
+                            </div>
                             
                             {(showRating || showSalesCount) && (
                               <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-2 w-full">

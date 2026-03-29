@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,9 +35,11 @@ function ServicesContent() {
   // Fetch collections
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
+  const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
 
   const { data: services, isLoading: sLoading } = useCollection(servicesRef);
   const { data: products, isLoading: pLoading } = useCollection(productsRef);
+  const { data: subServices, isLoading: subLoading } = useCollection(subServicesRef);
 
   // Unified Categories
   const CATEGORIES = [
@@ -48,7 +50,7 @@ function ServicesContent() {
     { id: 'Tools', label: t('cat_tools') }
   ];
 
-  // In-Memory Filtering Logic for both Products and Services
+  // In-Memory Filtering Logic for both Products, Services, and Sub-Services
   const filteredOfferings = useMemo(() => {
     let combined: any[] = [];
     if (services) {
@@ -63,20 +65,32 @@ function ServicesContent() {
         .map(p => ({ ...p, itemType: 'product' }))
       ];
     }
+    if (subServices) {
+      combined = [...combined, ...subServices
+        .filter(sub => sub.status === 'Active')
+        .map(sub => ({ 
+          ...sub, 
+          title: sub.name, 
+          basePrice: sub.price, 
+          itemType: 'service',
+          isAddOn: true 
+        }))
+      ];
+    }
 
     return combined.filter(item => {
       const nameMatch = (item.title || item.name || '').toLowerCase();
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = nameMatch.includes(query);
+      const queryText = searchQuery.toLowerCase();
+      const matchesSearch = nameMatch.includes(queryText);
       
       const matchesCategory = activeCategory === 'All' || 
         (activeCategory === 'Tools' ? item.itemType === 'product' : item.categoryId === activeCategory);
       
       return matchesSearch && matchesCategory;
     });
-  }, [services, products, searchQuery, activeCategory]);
+  }, [services, products, subServices, searchQuery, activeCategory]);
 
-  const isLoading = sLoading || pLoading;
+  const isLoading = sLoading || pLoading || subLoading;
 
   if (!mounted) return null;
 
@@ -169,8 +183,11 @@ function ServicesContent() {
                       <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full w-fit">
                         {item.categoryId || 'General'}
                       </Badge>
-                      <Badge className="bg-blue-600 text-white border-none shadow-md font-black text-[7px] uppercase px-2 py-0.5 rounded-full w-fit">
-                        Service
+                      <Badge className={cn(
+                        "text-white border-none shadow-md font-black text-[7px] uppercase px-2 py-0.5 rounded-full w-fit",
+                        item.isAddOn ? "bg-amber-600" : "bg-blue-600"
+                      )}>
+                        {item.isAddOn ? 'Add-on' : 'Service'}
                       </Badge>
                     </div>
                   </Link>
@@ -185,7 +202,9 @@ function ServicesContent() {
                         <span className="text-lg font-black text-primary tracking-tighter">
                           ৳{(item.basePrice || 0).toLocaleString()}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-gray-400">{t('price_from')}</span>
+                        <span className="text-[9px] font-black uppercase text-gray-400">
+                          {item.pricingType === 'sqft' ? 'Start From' : 'Price'}
+                        </span>
                       </div>
                     </div>
                     <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
