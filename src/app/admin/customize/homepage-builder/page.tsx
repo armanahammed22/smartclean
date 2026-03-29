@@ -322,6 +322,14 @@ export default function HomepageBuilderPage() {
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Radius (px)</Label>
                     <Input type="number" value={globalTheme?.btnRadius || 12} onChange={e => saveGlobalTheme({...globalTheme, btnRadius: e.target.value})} className="h-10 bg-gray-50 border-none font-bold" />
                   </div>
+                  <div className="space-y-4">
+                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Btn Font Size Mobile <span>{globalTheme?.btnFontSizeMobile || 10}px</span></Label>
+                    <Slider value={[parseInt(globalTheme?.btnFontSizeMobile || '10')]} min={8} max={20} onValueChange={val => saveGlobalTheme({...globalTheme, btnFontSizeMobile: val[0].toString()})} />
+                  </div>
+                  <div className="space-y-4">
+                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Btn Font Size Desktop <span>{globalTheme?.btnFontSizeDesktop || 12}px</span></Label>
+                    <Slider value={[parseInt(globalTheme?.btnFontSizeDesktop || '12')]} min={10} max={24} onValueChange={val => saveGlobalTheme({...globalTheme, btnFontSizeDesktop: val[0].toString()})} />
+                  </div>
                 </div>
               </div>
 
@@ -425,6 +433,27 @@ export default function HomepageBuilderPage() {
                                 <SelectItem value="shadow-xl">Deep</SelectItem>
                               </SelectContent>
                             </Select>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-6 md:col-span-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Button Logic</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Btn BG</Label>
+                            <Input type="color" value={editingSection?.styleConfig?.btnBg || '#1E5F7A'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnBg: e.target.value}})} className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Btn Text</Label>
+                            <Input type="color" value={editingSection?.styleConfig?.btnText || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnText: e.target.value}})} className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Btn Size Mob (px)</Label>
+                            <Input type="number" value={editingSection?.styleConfig?.btnFontSizeMobile || 10} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnFontSizeMobile: e.target.value}})} className="h-10" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Btn Size Desk (px)</Label>
+                            <Input type="number" value={editingSection?.styleConfig?.btnFontSizeDesktop || 12} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnFontSizeDesktop: e.target.value}})} className="h-10" />
                           </div>
                         </div>
                       </div>

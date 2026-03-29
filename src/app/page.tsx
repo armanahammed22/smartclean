@@ -140,6 +140,13 @@ export default function SmartCleanHomePage() {
       textAlign: (style.textAlign || 'left') as any,
     };
 
+    const buttonStyles = {
+      backgroundColor: style.btnBg || '#1E5F7A',
+      color: style.btnText || '#ffffff',
+      borderRadius: `${style.btnRadius || 12}px`,
+      fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'
+    };
+
     switch (sectionType) {
       case 'hero':
         return (
@@ -268,7 +275,7 @@ export default function SmartCleanHomePage() {
                         <h3 className="text-[12px] md:text-sm font-black group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                         <div className="mt-auto space-y-2">
                           <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                          <Button size="sm" className="w-full font-black text-[10px] md:text-xs uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnText || '#ffffff', borderRadius: `${style.btnRadius || 12}px` }}>
+                          <Button size="sm" className="w-full font-black uppercase shadow-xl h-9 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
                             {t('book_now')}
                           </Button>
                         </div>
