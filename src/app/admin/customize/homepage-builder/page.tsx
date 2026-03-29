@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,10 @@ import {
   ShieldCheck,
   Award,
   Package,
-  X
+  X,
+  Monitor,
+  Smartphone,
+  Grid
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -69,6 +72,10 @@ export default function HomepageBuilderPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [localSections, setLocalSections] = useState<any[]>([]);
 
+  // Global Theme Hook
+  const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
+  const { data: globalTheme, isLoading: themeLoading } = useDoc(themeRef);
+
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
@@ -99,11 +106,21 @@ export default function HomepageBuilderPage() {
         batch.update(doc(db, 'homepage_sections', s.id), { order: idx });
       });
       await batch.commit();
-      toast({ title: "Layout Saved" });
+      toast({ title: "Layout Sequence Saved" });
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: "Order Save Failed" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const saveGlobalTheme = async (newData: any) => {
+    if (!db) return;
+    try {
+      await setDoc(doc(db, 'site_settings', 'homepage_theme'), newData, { merge: true });
+      toast({ title: "Master Styles Updated", description: "All sections adjusted successfully." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Theme Update Failed" });
     }
   };
 
@@ -123,25 +140,11 @@ export default function HomepageBuilderPage() {
       isActive: true,
       order: localSections.length,
       config: { limit: 8, dataSource: 'all' },
-      styleConfig: {
-        sectionBg: '#ffffff',
-        titleColor: '#081621',
-        titleSizeMobile: '24',
-        titleSizeDesktop: '40',
-        cardBg: '#ffffff',
-        cardRadius: '24',
-        cardShadow: 'shadow-sm',
-        btnBg: '#1E5F7A',
-        btnText: '#ffffff',
-        btnRadius: '12',
-        paddingTop: '40',
-        paddingBottom: '40',
-        textAlign: 'left'
-      },
+      styleConfig: { useGlobal: true }, // Use global by default
       createdAt: new Date().toISOString()
     });
     setIsAddOpen(false);
-    toast({ title: "Section Added" });
+    toast({ title: "New Block Added" });
   };
 
   const handleUpdateSection = async (e: React.FormEvent) => {
@@ -151,7 +154,7 @@ export default function HomepageBuilderPage() {
     try {
       await updateDoc(doc(db, 'homepage_sections', editingSection.id), editingSection);
       setIsEditOpen(false);
-      toast({ title: "Settings Updated" });
+      toast({ title: "Block Settings Updated" });
     } catch (e) {
       toast({ variant: "destructive", title: "Update Failed" });
     } finally {
@@ -159,75 +162,198 @@ export default function HomepageBuilderPage() {
     }
   };
 
-  const updateStyle = (key: string, val: any) => {
-    setEditingSection({
-      ...editingSection,
-      styleConfig: { ...editingSection.styleConfig, [key]: val }
-    });
-  };
-
   if (isLoading && localSections.length === 0) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
-    <div className="space-y-8 pb-24">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-10 pb-24">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">Visual Homepage Builder</h1>
-          <p className="text-muted-foreground text-sm font-medium">Customize section content and deep design styles</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none">Marketplace UI Engine</h1>
+          <p className="text-muted-foreground text-sm font-medium mt-2">Manage global theme and individual section logic</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Button onClick={() => setIsAddOpen(true)} className="flex-1 md:flex-none gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
-            <Plus size={18} /> Add Block
+          <Button onClick={() => setIsAddOpen(true)} className="flex-1 md:flex-none gap-2 font-black h-12 px-8 rounded-2xl shadow-xl bg-primary">
+            <Plus size={20} /> Add New Block
           </Button>
-          <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="flex-1 md:flex-none gap-2 font-black h-11 px-6 rounded-xl border-primary/20 text-primary">
-            <Save size={18} /> Save Order
+          <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="flex-1 md:flex-none gap-2 font-black h-12 px-8 rounded-2xl border-primary/20 text-primary bg-white shadow-sm">
+            <Save size={20} /> Save Sequence
           </Button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-4 px-1 md:px-0">
-        {localSections.map((section, index) => {
-          const Icon = SECTION_TYPES.find(t => t.id === section.type)?.icon || Layout;
-          return (
-            <Card 
-              key={section.id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              className={cn(
-                "border-none shadow-sm transition-all duration-300 group overflow-hidden",
-                !section.isActive && "opacity-50 grayscale",
-                draggedItem === index ? "ring-2 ring-primary ring-offset-2 scale-[1.02] shadow-xl" : "hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
-                <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-400" /></div>
-                <div className={cn("p-2 md:p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}><Icon size={20} /></div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs tracking-tight truncate">{section.title}</h4>
-                  <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{section.type.replace(/_/g, ' ')}</p>
+      <Tabs defaultValue="builder" className="space-y-8">
+        <TabsList className="bg-white border p-1.5 h-14 rounded-2xl w-full max-w-md shadow-sm">
+          <TabsTrigger value="builder" className="flex-1 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+            <Grid size={16} /> Layout Builder
+          </TabsTrigger>
+          <TabsTrigger value="master" className="flex-1 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+            <Palette size={16} /> Master Theme
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="builder" className="mt-0">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {localSections.map((section, index) => {
+              const Icon = SECTION_TYPES.find(t => t.id === section.type)?.icon || Layout;
+              return (
+                <Card 
+                  key={section.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  className={cn(
+                    "border-none shadow-sm transition-all duration-300 group overflow-hidden bg-white rounded-3xl",
+                    !section.isActive && "opacity-50 grayscale",
+                    draggedItem === index ? "ring-4 ring-primary/20 scale-[1.02] shadow-2xl z-50" : "hover:shadow-md border border-gray-50"
+                  )}
+                >
+                  <CardContent className="p-4 md:p-5 flex items-center gap-4">
+                    <div className="cursor-grab active:cursor-grabbing p-3 hover:bg-gray-100 rounded-xl shrink-0"><GripVertical size={24} className="text-gray-300" /></div>
+                    <div className={cn("p-3 rounded-2xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}><Icon size={24} /></div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-gray-900 uppercase text-xs md:text-sm tracking-tight truncate">{section.title}</h4>
+                      <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">{section.type.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                        <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
+                        <Switch checked={section.isActive} onCheckedChange={() => handleToggle(section.id, section.isActive)} className="scale-75" />
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 md:h-11 md:w-11 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
+                        <Settings2 size={20} />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 md:h-11 md:w-11 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Permanently remove this block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
+                        <Trash2 size={20} />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="master" className="mt-0">
+          <div className="grid grid-cols-1 gap-8">
+            <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="bg-[#081621] text-white p-8 md:p-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary rounded-2xl"><Palette size={28} /></div>
+                    <div>
+                      <CardTitle className="text-xl md:text-2xl font-black uppercase tracking-widest leading-none">Global Style Manager</CardTitle>
+                      <CardDescription className="text-white/40 mt-2 font-bold uppercase text-[10px]">Modify once to adjust every section on your site</CardDescription>
+                    </div>
+                  </div>
+                  <Button onClick={() => saveGlobalTheme(globalTheme)} className="w-full md:w-auto h-12 px-10 rounded-xl font-black bg-primary">Sync All Changes</Button>
                 </div>
-                <div className="flex items-center gap-1 md:gap-2">
-                  <Switch checked={section.isActive} onCheckedChange={() => handleToggle(section.id, section.isActive)} className="scale-75 md:scale-100" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9 text-blue-600" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
-                    <Edit size={16} />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9 text-destructive" onClick={() => { if(confirm("Remove?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
-                    <Trash2 size={16} />
-                  </Button>
+              </CardHeader>
+              <CardContent className="p-8 md:p-12 space-y-12">
+                
+                {/* 4 GRID TYPE: COLORS & TEXT */}
+                <div className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Colors & Typography
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Section Background</Label>
+                      <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, sectionBg: e.target.value})} className="h-12 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Main Title Color</Label>
+                      <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => saveGlobalTheme({...globalTheme, titleColor: e.target.value})} className="h-12 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Background</Label>
+                      <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, cardBg: e.target.value})} className="h-12 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Primary</Label>
+                      <Input type="color" value={globalTheme?.btnBg || '#1E5F7A'} onChange={e => saveGlobalTheme({...globalTheme, btnBg: e.target.value})} className="h-12 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                  </div>
                 </div>
+
+                {/* 4 GRID TYPE: SIZING */}
+                <div className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Global Sizing
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+                    <div className="space-y-4">
+                      <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Mobile <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
+                      <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => saveGlobalTheme({...globalTheme, titleSizeMobile: val[0].toString()})} />
+                    </div>
+                    <div className="space-y-4">
+                      <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Desktop <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
+                      <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => saveGlobalTheme({...globalTheme, titleSizeDesktop: val[0].toString()})} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Card Radius (px)</Label>
+                      <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => saveGlobalTheme({...globalTheme, cardRadius: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Button Radius (px)</Label>
+                      <Input type="number" value={globalTheme?.btnRadius || 12} onChange={e => saveGlobalTheme({...globalTheme, btnRadius: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 GRID TYPE: BEHAVIOR */}
+                <div className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" /> Global Behavior
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Global Alignment</Label>
+                      <Select value={globalTheme?.textAlign || 'left'} onValueChange={v => saveGlobalTheme({...globalTheme, textAlign: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="left">Left Aligned</SelectItem>
+                          <SelectItem value="center">Center Aligned</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Shadow Depth</Label>
+                      <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => saveGlobalTheme({...globalTheme, cardShadow: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="shadow-none">No Shadow</SelectItem>
+                          <SelectItem value="shadow-sm">Small Lift</SelectItem>
+                          <SelectItem value="shadow-md">Medium Float</SelectItem>
+                          <SelectItem value="shadow-xl">Deep Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Button Text Color</Label>
+                      <Input type="color" value={globalTheme?.btnText || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, btnText: e.target.value})} className="h-12 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                      <Label className="text-[9px] font-black uppercase">Overlay Fix</Label>
+                      <Switch checked={globalTheme?.overlayEnabled} onCheckedChange={v => saveGlobalTheme({...globalTheme, overlayEnabled: v})} />
+                    </div>
+                  </div>
+                </div>
+
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
+      {/* INDIVIDUAL BLOCK EDITOR MODAL */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-t-[2rem] md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-t-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <Tabs defaultValue="content" className="flex flex-col h-full">
             <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">Configure Section</DialogTitle>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <Settings2 className="text-primary" /> Block Intelligence
+                </DialogTitle>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                   <TabsList className="bg-white/10 rounded-xl p-1 h-10 flex-1 sm:flex-none">
                     <TabsTrigger value="content" className="flex-1 sm:flex-none text-[10px] font-black uppercase rounded-lg px-4">Content</TabsTrigger>
@@ -238,7 +364,7 @@ export default function HomepageBuilderPage() {
               </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white custom-scrollbar">
               <TabsContent value="content" className="mt-0 space-y-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -248,12 +374,12 @@ export default function HomepageBuilderPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Items Limit</Label>
-                      <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none" />
+                      <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Source</Label>
                       <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           <SelectItem value="all">All Items</SelectItem>
                           <SelectItem value="popular">Popular Only</SelectItem>
@@ -265,98 +391,69 @@ export default function HomepageBuilderPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="styles" className="mt-0 space-y-12 pb-10">
-                <div className="space-y-8">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Container & Text</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Section Background</Label>
-                      <Input type="color" value={editingSection?.styleConfig?.sectionBg || '#ffffff'} onChange={e => updateStyle('sectionBg', e.target.value)} className="h-10 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Heading Color</Label>
-                      <Input type="color" value={editingSection?.styleConfig?.titleColor || '#081621'} onChange={e => updateStyle('titleColor', e.target.value)} className="h-10 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Alignment</Label>
-                      <Select value={editingSection?.styleConfig?.textAlign || 'left'} onValueChange={v => updateStyle('textAlign', v)}>
-                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="left">Left</SelectItem>
-                          <SelectItem value="center">Center</SelectItem>
-                        </SelectContent>
-                      </Select>
+              <TabsContent value="styles" className="mt-0 space-y-10">
+                <div className="flex items-center justify-between p-6 bg-blue-50 rounded-2xl border border-blue-100 mb-8">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><ShieldCheck size={24} /></div>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-black text-blue-900 uppercase">Use Master Theme Settings</Label>
+                      <p className="text-[10px] text-blue-700/70 font-bold uppercase leading-tight">Sync style with the global marketplace look</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-4">
-                      <Label className="text-[9px] font-black uppercase">Font Size Mobile ({editingSection?.styleConfig?.titleSizeMobile || 24}px)</Label>
-                      <Slider value={[parseInt(editingSection?.styleConfig?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => updateStyle('titleSizeMobile', val[0].toString())} />
-                    </div>
-                    <div className="space-y-4">
-                      <Label className="text-[9px] font-black uppercase">Font Size Desktop ({editingSection?.styleConfig?.titleSizeDesktop || 40}px)</Label>
-                      <Slider value={[parseInt(editingSection?.styleConfig?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => updateStyle('titleSizeDesktop', val[0].toString())} />
-                    </div>
-                  </div>
+                  <Switch 
+                    checked={!!editingSection?.styleConfig?.useGlobal} 
+                    onCheckedChange={(val) => setEditingSection({...editingSection, styleConfig: {...(editingSection.styleConfig || {}), useGlobal: val}})} 
+                  />
                 </div>
 
-                <div className="space-y-8">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Maximize size={14}/> Card Styling</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Card Background</Label>
-                      <Input type="color" value={editingSection?.styleConfig?.cardBg || '#ffffff'} onChange={e => updateStyle('cardBg', e.target.value)} className="h-10 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Corner Radius (px)</Label>
-                      <Input type="number" value={editingSection?.styleConfig?.cardRadius || 24} onChange={e => updateStyle('cardRadius', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Shadow Depth</Label>
-                      <Select value={editingSection?.styleConfig?.cardShadow || 'shadow-sm'} onValueChange={v => updateStyle('cardShadow', v)}>
-                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="shadow-none">None</SelectItem>
-                          <SelectItem value="shadow-sm">Small</SelectItem>
-                          <SelectItem value="shadow-md">Medium</SelectItem>
-                          <SelectItem value="shadow-xl">Deep</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-8">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Button Actions</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Button BG Color</Label>
-                      <Input type="color" value={editingSection?.styleConfig?.btnBg || '#1E5F7A'} onChange={e => updateStyle('btnBg', e.target.value)} className="h-10 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Button Text Color</Label>
-                      <Input type="color" value={editingSection?.styleConfig?.btnText || '#ffffff'} onChange={e => updateStyle('btnText', e.target.value)} className="h-10 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Button Shape</Label>
-                      <Select value={editingSection?.styleConfig?.btnRadius || '12'} onValueChange={v => updateStyle('btnRadius', v)}>
-                        <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="0">Square</SelectItem>
-                          <SelectItem value="12">Rounded</SelectItem>
-                          <SelectItem value="999">Pill</SelectItem>
-                        </SelectContent>
-                      </Select>
+                {!editingSection?.styleConfig?.useGlobal && (
+                  <div className="space-y-12 animate-in fade-in zoom-in-95 duration-300">
+                    {/* INDIVIDUAL CONTROLS (GRID TYPE) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Design Override</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">BG Color</Label>
+                            <Input type="color" value={editingSection?.styleConfig?.sectionBg || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, sectionBg: e.target.value}})} className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Title Color</Label>
+                            <Input type="color" value={editingSection?.styleConfig?.titleColor || '#081621'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleColor: e.target.value}})} className="h-10 p-1" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Maximize size={14}/> Card Override</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Radius</Label>
+                            <Input type="number" value={editingSection?.styleConfig?.cardRadius || 24} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, cardRadius: e.target.value}})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] font-black uppercase">Shadow</Label>
+                            <Select value={editingSection?.styleConfig?.cardShadow || 'shadow-sm'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, cardShadow: v}})}>
+                              <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                <SelectItem value="shadow-none">None</SelectItem>
+                                <SelectItem value="shadow-sm">Small</SelectItem>
+                                <SelectItem value="shadow-md">Medium</SelectItem>
+                                <SelectItem value="shadow-xl">Deep</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </TabsContent>
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto h-12 rounded-xl">Discard</Button>
-              <Button onClick={handleUpdateSection} disabled={isSubmitting} className="w-full sm:w-auto flex-1 rounded-xl font-black px-10 h-12 shadow-xl">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply Design'}
+              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto h-12 rounded-xl font-bold uppercase text-[10px]">Discard Changes</Button>
+              <Button onClick={handleUpdateSection} disabled={isSubmitting} className="w-full sm:w-auto flex-1 rounded-xl font-black px-10 h-12 shadow-xl uppercase text-xs tracking-widest">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply Block Rules'}
               </Button>
             </DialogFooter>
           </Tabs>
@@ -364,29 +461,29 @@ export default function HomepageBuilderPage() {
       </Dialog>
 
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-t-[2rem] md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-t-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <DialogHeader className="p-6 md:p-10 bg-[#081621] text-white shrink-0 relative">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Add Layout Block</DialogTitle>
-            <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest mt-1">Select a specialized section for your homepage</DialogDescription>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Deploy Interface Block</DialogTitle>
+            <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest mt-1">Select a module to append to your homepage layout</DialogDescription>
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 bg-white custom-scrollbar">
             {['Main', 'Marketing', 'Services', 'Products', 'UI'].map(category => (
               <div key={category} className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" /> {category}
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary" /> {category} Modules
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                   {SECTION_TYPES.filter(t => t.category === category).map((type: any) => (
                     <button 
                       key={type.id} 
                       onClick={() => handleAddSection(type.id)} 
-                      className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-gray-50 hover:border-primary hover:bg-primary/5 transition-all group relative active:scale-95"
+                      className="flex flex-col items-center gap-3 p-5 rounded-3xl border-2 border-gray-50 hover:border-primary hover:bg-primary/5 transition-all group relative active:scale-95 shadow-sm hover:shadow-lg"
                     >
-                      <div className="p-3 bg-gray-50 rounded-2xl group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                        <type.icon size={28} />
+                      <div className="p-4 bg-gray-50 rounded-2xl group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        <type.icon size={32} />
                       </div>
-                      <span className="text-[9px] md:text-[10px] font-black uppercase text-center text-gray-600 group-hover:text-primary tracking-tight leading-tight px-1">
+                      <span className="text-[10px] font-black uppercase text-center text-gray-600 group-hover:text-primary tracking-tighter leading-tight px-1">
                         {type.label}
                       </span>
                     </button>
@@ -394,9 +491,6 @@ export default function HomepageBuilderPage() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="p-4 bg-gray-50 border-t md:hidden">
-            <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="w-full h-12 font-bold uppercase text-xs">Close Selector</Button>
           </div>
         </DialogContent>
       </Dialog>

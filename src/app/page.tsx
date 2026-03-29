@@ -78,6 +78,7 @@ export default function SmartCleanHomePage() {
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
@@ -86,6 +87,7 @@ export default function SmartCleanHomePage() {
   const { data: allServices } = useCollection(servicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
+  const { data: globalTheme } = useDoc(themeRef);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -108,7 +110,11 @@ export default function SmartCleanHomePage() {
 
   const renderSection = (section: any) => {
     const config = section.config || {};
-    const style = section.styleConfig || {};
+    // Merge Individual styles with Global Theme fallback
+    const style = (section.styleConfig?.useGlobal !== false && globalTheme) 
+      ? { ...globalTheme, ...section.styleConfig } 
+      : (section.styleConfig || globalTheme || {});
+      
     const sectionType = section.type;
     
     const getFilteredProducts = () => {
@@ -135,9 +141,6 @@ export default function SmartCleanHomePage() {
       color: style.titleColor || '#081621',
       textAlign: (style.textAlign || 'left') as any,
     };
-
-    // Responsive Title Font Size Logic
-    const titleSizeClass = mounted ? "" : "text-2xl md:text-4xl"; // Default for SSR
 
     switch (sectionType) {
       case 'hero':
@@ -238,10 +241,10 @@ export default function SmartCleanHomePage() {
             <div className="container mx-auto max-w-7xl">
               <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
                 <h2 
-                  className={cn("font-black uppercase tracking-tighter", titleSizeClass)}
+                  className={cn("font-black uppercase tracking-tighter")}
                   style={{ 
                     ...titleStyles, 
-                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : undefined 
+                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '24px' 
                   }}
                 >
                   {section.title}
@@ -265,10 +268,10 @@ export default function SmartCleanHomePage() {
           <section key={section.id} style={sectionStyles} className="px-3 md:px-4">
             <div className="container mx-auto max-w-7xl">
               <h2 
-                className={cn("mb-8 px-2 font-black uppercase tracking-tighter", titleSizeClass)}
+                className={cn("mb-8 px-2 font-black uppercase tracking-tighter")}
                 style={{ 
                   ...titleStyles, 
-                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : undefined 
+                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '24px' 
                 }}
               >
                 {section.title}
