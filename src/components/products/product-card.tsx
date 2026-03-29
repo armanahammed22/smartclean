@@ -43,7 +43,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         )}
         style={cardStyle}
       >
-        <div className="p-1 md:p-1.5">
+        <div className="p-1">
           <div className="relative aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
             {product.imageUrl ? (
               <Image
@@ -114,11 +114,11 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               {showRating && (
                 <div className="flex items-center gap-1 text-amber-400">
                   <Star size={10} fill="currentColor" />
-                  <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}</span>
+                  <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}/5</span>
                 </div>
               )}
               {showSalesCount && (
-                <span className="uppercase tracking-widest font-black ml-auto">{soldCount} {t('sold')}</span>
+                <span className="uppercase tracking-widest font-black text-right">{soldCount} {t('sold')}</span>
               )}
             </div>
           </div>
