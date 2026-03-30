@@ -311,7 +311,7 @@ export default function ServicesManagementPage() {
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 custom-scrollbar bg-white">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -422,7 +422,7 @@ export default function ServicesManagementPage() {
               <X size={24} />
             </button>
           </DialogHeader>
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
             <div className="relative aspect-video md:aspect-square rounded-2xl overflow-hidden bg-gray-50 border">
               {viewingService?.imageUrl ? (
                 <Image src={viewingService.imageUrl} alt="Preview" fill className="object-cover" unoptimized />
