@@ -22,7 +22,9 @@ import {
   Monitor, 
   Smartphone, 
   Eye, 
-  X 
+  X,
+  Type,
+  MousePointer2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -327,7 +329,9 @@ export default function LayoutThemePage() {
                       color: formData.header.customRequestDesktopTextColor
                     }}
                   >
-                    <Image src={formData.header.customRequestIconUrl || DEFAULT_THEME.header.customRequestIconUrl} alt="Icon" width={16} height={16} className="object-contain" unoptimized />
+                    <div className="relative w-4 h-4 shrink-0">
+                      <Image src={formData.header.customRequestIconUrl || DEFAULT_THEME.header.customRequestIconUrl} alt="Icon" fill className="object-contain" unoptimized />
+                    </div>
                     {formData.header.customRequestDesktopTitle}
                   </div>
                   <p className="text-gray-300 italic text-[10px] uppercase">Desktop Button Preview</p>

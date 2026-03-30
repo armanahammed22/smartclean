@@ -30,12 +30,8 @@ import {
   X,
   AlignLeft,
   AlignCenter,
-  TicketPercent,
-  CheckCircle2,
-  Filter,
   Info,
-  Badge as BadgeIcon,
-  Search
+  Filter
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';

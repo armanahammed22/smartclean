@@ -372,7 +372,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
-          const isGroupActive = group.items.some(item => pathname === item.href);
+          const isGroupActive = group.items.some((item: any) => pathname === item.href);
           return (
             <div key={group.id} className="space-y-1">
               <button
@@ -549,8 +549,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Logout
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
