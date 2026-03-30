@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -538,7 +539,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl">
+        <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
               <LogOut size={20} /> Logout Admin?

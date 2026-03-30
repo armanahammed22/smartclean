@@ -224,6 +224,8 @@ export interface SubscriptionPlan {
   name: string;
   price: string;
   period: string;
+  frequency?: string; // e.g. "Weekly", "Once a month"
+  targetAudience?: string; // e.g. "For small office", "Large families"
   features: string[];
   color: string;
   icon: string;
