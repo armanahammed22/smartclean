@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -19,23 +20,13 @@ import {
   Plus,
   Minus,
   Check,
-  Info,
+  X,
   Calendar,
   Sparkles,
-  ClipboardList,
-  Shield,
-  BadgeCheck,
-  RefreshCcw,
-  Camera,
-  MessageSquare,
   LayoutGrid,
   Send,
-  User as UserIcon,
-  LogIn,
-  Eye,
+  MessageSquare,
   ShoppingCart,
-  HelpCircle,
-  PlayCircle,
   XCircle,
   Quote
 } from 'lucide-react';
@@ -44,29 +35,21 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, serverTimestamp, limit } from 'firebase/firestore';
+import { doc, collection, query, where, addDoc, limit } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import Autoplay from "embla-carousel-autoplay";
 import { 
   Carousel, 
   CarouselContent, 
   CarouselItem 
 } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 export default function ServiceBookingPage() {
   const { id: slugOrId } = useParams();
@@ -90,6 +73,7 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
+  // 1. Fetch main service
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -106,13 +90,16 @@ export default function ServiceBookingPage() {
 
   const targetId = baseService?.id || null;
 
-  // Review System Guards - Simplified query to avoid index requirements
+  // 2. Fetch add-ons (MUST be declared before addOnsTotal calculation)
+  const addOnsQuery = useMemoFirebase(() => {
+    if (!db || !targetId) return null;
+    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'), where('isAddOnEnabled', '==', true));
+  }, [db, targetId]);
+  const { data: addOnOptions } = useCollection(addOnsQuery);
+
+  // 3. Review System Data
   const userBookingsQuery = useMemoFirebase(() => 
-    (db && user) ? query(
-      collection(db, 'bookings'),
-      where('customerId', '==', user.uid)
-    ) : null, [db, user]);
-  
+    (db && user) ? query(collection(db, 'bookings'), where('customerId', '==', user.uid)) : null, [db, user]);
   const { data: userBookings } = useCollection(userBookingsQuery);
   
   const canSubmitReview = useMemo(() => {
@@ -120,12 +107,10 @@ export default function ServiceBookingPage() {
     return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
   }, [userBookings, targetId]);
 
-  // Simplified query: Fetch all reviews for this service and filter/sort in memory to avoid index error
   const reviewsRef = useMemoFirebase(() => {
     if (!db || !targetId) return null;
     return collection(db, 'services', targetId, 'reviews');
   }, [db, targetId]);
-  
   const { data: allReviewsRaw } = useCollection(reviewsRef);
   
   const reviews = useMemo(() => {
@@ -141,6 +126,7 @@ export default function ServiceBookingPage() {
     }
   }, [baseService]);
 
+  // 4. Pricing Calculations
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = pricingLogic === 'sqft' && selectedSqftId !== null ? baseService?.sqftOptions?.[parseInt(selectedSqftId)] : null;
   
@@ -155,12 +141,6 @@ export default function ServiceBookingPage() {
     if (!addOnOptions) return 0;
     return addOnOptions.reduce((acc, a) => acc + (a.price * (addOnsQty[a.id] || 0)), 0);
   }, [addOnOptions, addOnsQty]);
-
-  const addOnsQuery = useMemoFirebase(() => {
-    if (!db || !targetId) return null;
-    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'), where('isAddOnEnabled', '==', true));
-  }, [db, targetId]);
-  const { data: addOnOptions } = useCollection(addOnsQuery);
 
   const platformFee = 50;
   const totalPrice = basePrice + addOnsTotal + platformFee;
@@ -224,8 +204,6 @@ export default function ServiceBookingPage() {
 
   if (!baseService) return <div className="p-20 text-center uppercase font-black text-gray-300">Service Not Found</div>;
 
-  const beforeAfterImages = baseService.beforeAfterImages || [];
-
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#F9FAFB] min-h-screen pb-24">
@@ -233,7 +211,7 @@ export default function ServiceBookingPage() {
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-8 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            {/* COLUMN 1: LEFT - Media & Proofs */}
+            {/* LEFT: Media */}
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-white group">
@@ -248,7 +226,7 @@ export default function ServiceBookingPage() {
                 </div>
               </Card>
 
-              {beforeAfterImages.length > 0 && (
+              {baseService.beforeAfterImages?.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#081621]">Real Job Proofs</h3>
@@ -256,7 +234,7 @@ export default function ServiceBookingPage() {
                   </div>
                   <Carousel opts={{ align: "start", loop: true }} className="w-full">
                     <CarouselContent className="-ml-4">
-                      {beforeAfterImages.map((img: any, i: number) => (
+                      {baseService.beforeAfterImages.map((img: any, i: number) => (
                         <CarouselItem key={i} className="pl-4 basis-1/2 md:basis-full">
                           <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white shadow-md">
                             <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
@@ -272,7 +250,7 @@ export default function ServiceBookingPage() {
               )}
             </div>
 
-            {/* COLUMN 2: MIDDLE - Primary Info */}
+            {/* MIDDLE: Booking */}
             <div className="lg:col-span-5 space-y-6">
               <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white p-8 md:p-10 space-y-8">
                 <div className="space-y-4">
@@ -365,7 +343,7 @@ export default function ServiceBookingPage() {
                 </div>
               </Card>
 
-              {/* DESCRIPTION & CHECKLISTS */}
+              {/* Description & Features */}
               <div className="space-y-6">
                 <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
                   <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] border-b pb-2">Full Description</h3>
@@ -403,7 +381,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: RIGHT - Add-ons */}
+            {/* RIGHT: Add-ons */}
             <div className="lg:col-span-3 space-y-6">
               <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white p-8 space-y-8 sticky top-24">
                 <div className="border-b pb-4 flex justify-between items-center">
@@ -454,28 +432,7 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* WHY CHOOSE US - 4 CARDS */}
-        {baseService.features?.length > 0 && (
-          <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <div className="text-center space-y-2 mb-12">
-              <Badge className="bg-primary text-white border-none text-[9px] font-black uppercase px-4 py-1 rounded-full">Trust Metrics</Badge>
-              <h2 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter">Why Choose Smart Clean?</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {baseService.features.map((f: any, i: number) => (
-                <div key={i} className="p-8 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 space-y-4 group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                  <div className="p-4 bg-primary/10 text-primary w-fit rounded-2xl group-hover:scale-110 group-hover:rotate-12 transition-transform">
-                    <Zap size={24} fill="currentColor" />
-                  </div>
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{f.title}</h4>
-                  <p className="text-sm text-gray-500 font-medium leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* REVIEWS AUTO SLIDER */}
+        {/* REVIEWS */}
         {baseService.reviewsEnabled && (
           <section className="container mx-auto px-4 py-16 max-w-7xl">
             <div className="bg-[#081621] rounded-[3rem] p-10 md:p-20 overflow-hidden relative group">
@@ -530,7 +487,6 @@ export default function ServiceBookingPage() {
                 </div>
               )}
 
-              {/* REVIEW FORM SUBMISSION */}
               {user && (
                 <div className="mt-20 max-w-2xl mx-auto bg-white rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in slide-in-from-bottom-10">
                   {canSubmitReview ? (
@@ -575,17 +531,6 @@ export default function ServiceBookingPage() {
             </div>
           </section>
         )}
-
-        {/* MOBILE STICKY BAR */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[110] bg-white border-t p-4 pb-safe-offset-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Estimated Total</span>
-            <span className="text-2xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
-          </div>
-          <Button onClick={handleContinue} disabled={!baseService.isBookingEnabled} className="flex-1 h-14 rounded-2xl bg-[#081621] text-white font-black text-xs uppercase tracking-widest shadow-xl">
-            {baseService.bookingButtonText || 'Book Now'}
-          </Button>
-        </div>
 
       </div>
     </PublicLayout>
