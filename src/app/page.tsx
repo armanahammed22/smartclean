@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -131,7 +130,6 @@ export default function SmartCleanHomePage() {
     const getFilteredServices = () => {
       let mainFeed = allServices?.filter(s => s.status === 'Active') || [];
       
-      // Sub services mapping with category inheritance
       let subFeed = allSubServices?.filter(sub => sub.status === 'Active')
         .map(sub => {
           const parent = allServices?.find(s => s.id === sub.mainServiceId);
@@ -141,7 +139,7 @@ export default function SmartCleanHomePage() {
             basePrice: sub.price, 
             itemType: 'service', 
             isAddOn: true,
-            categoryId: parent?.categoryId || 'General' // Inherit category
+            categoryId: parent?.categoryId || 'General' 
           };
         }) || [];
 
@@ -178,7 +176,7 @@ export default function SmartCleanHomePage() {
     };
 
     const buttonStyles = {
-      backgroundColor: style.btnBg || '#22C55E', // Default Green
+      backgroundColor: style.btnBg || '#22C55E', 
       color: style.btnText || '#ffffff',
       borderRadius: `${style.btnRadius || 12}px`,
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'

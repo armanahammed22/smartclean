@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, CreditCard, Zap, Shield, TrendingUp, Plus, Trash2, Edit, Save, Loader2, RefreshCw } from 'lucide-react';
@@ -14,13 +13,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function SubscriptionPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPlan, setEditingRole] = useState<any>(null);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
 
   const plansQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'subscription_plans'), orderBy('createdAt', 'asc')) : null, [db]);
@@ -56,7 +56,7 @@ export default function SubscriptionPage() {
         toast({ title: "Plan Created" });
       }
       setIsDialogOpen(false);
-      setEditingRole(null);
+      setEditingPlan(null);
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
     } finally {
@@ -102,7 +102,7 @@ export default function SubscriptionPage() {
           <Button variant="outline" onClick={handleSeedDefaults} disabled={isSubmitting} className="rounded-xl h-11 gap-2 font-bold border-primary/20 text-primary">
             <RefreshCw size={16} /> Initialize Defaults
           </Button>
-          <Button onClick={() => { setEditingRole(null); setIsDialogOpen(true); }} className="rounded-xl h-11 px-6 font-black uppercase text-xs shadow-xl gap-2">
+          <Button onClick={() => { setEditingPlan(null); setIsDialogOpen(true); }} className="rounded-xl h-11 px-6 font-black uppercase text-xs shadow-xl gap-2">
             <Plus size={18} /> New Tier
           </Button>
         </div>
@@ -119,7 +119,7 @@ export default function SubscriptionPage() {
               <div className="flex justify-between items-start">
                 <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingRole(plan); setFormData({ ...plan, features: plan.features.join(', ') }); setIsDialogOpen(true); }}><Edit size={14}/></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => { setEditingPlan(plan); setFormData({ ...plan, features: plan.features.join(', ') }); setIsDialogOpen(true); }}><Edit size={14}/></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deletePlan(plan.id)}><Trash2 size={14}/></Button>
                 </div>
               </div>
