@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -97,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, customize: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -284,9 +283,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Palette,
         color: "text-cyan-400",
         items: [
-          { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
+          { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
+          { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
+          { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: Navigation },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
@@ -526,7 +529,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
-          <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">
+          <div className="max-w-full lg:max-w-[1400px] mx-auto min-0">
             {children}
           </div>
         </main>
