@@ -200,15 +200,15 @@ export default function ServiceBookingPage() {
 
   return (
     <PublicLayout minimalMobile={true}>
-      <div className="bg-[#F9FAFB] min-h-screen pb-24">
+      <div className="bg-[#F9FAFB] min-h-screen pb-24 lg:pb-12">
         
-        <section className="container mx-auto px-0 md:px-4 py-0 md:py-8 max-w-7xl">
-          {/* UNIFIED SINGLE BACKGROUND CONTAINER WITH HIGH SHADOW */}
+        <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
+          {/* UNIFIED SINGLE BACKGROUND CONTAINER */}
           <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3.5rem] overflow-hidden bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
               {/* LEFT: Media Gallery */}
-              <div className="lg:col-span-4 p-6 md:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-8">
+              <div className="lg:col-span-4 p-4 md:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-6">
                 <div className="space-y-6">
                   <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-3xl overflow-hidden group border border-gray-100">
                     {baseService.imageUrl ? (
@@ -216,21 +216,21 @@ export default function ServiceBookingPage() {
                     ) : (
                       <Wrench size={80} className="text-gray-200" />
                     )}
-                    <div className="absolute top-6 left-6">
-                      <Badge className="bg-[#081621] text-primary border-none text-[9px] font-black uppercase px-4 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-[#081621] text-primary border-none text-[8px] font-black uppercase px-3 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
                     </div>
                   </div>
 
                   {baseService.beforeAfterImages?.length > 0 && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#081621]">Real Job Proofs</h3>
-                        <Badge variant="outline" className="text-[8px] font-bold border-gray-200">Before & After</Badge>
+                        <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-[#081621]">Work Proofs</h3>
+                        <Badge variant="outline" className="text-[7px] font-bold border-gray-200">B&A Gallery</Badge>
                       </div>
                       <Carousel opts={{ align: "start", loop: true }} className="w-full">
-                        <CarouselContent className="-ml-4">
+                        <CarouselContent className="-ml-3">
                           {baseService.beforeAfterImages.map((img: any, i: number) => (
-                            <CarouselItem key={i} className="pl-4 basis-1/2">
+                            <CarouselItem key={i} className="pl-3 basis-1/2">
                               <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white shadow-md">
                                 <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
                                 <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
@@ -247,85 +247,84 @@ export default function ServiceBookingPage() {
               </div>
 
               {/* MIDDLE: Service Info & Booking */}
-              <div className="lg:col-span-5 p-6 md:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-10">
+              <div className="lg:col-span-5 p-4 md:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-8">
                 <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h1 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter leading-[0.9] font-headline">
+                  <div className="space-y-3">
+                    <h1 className="text-2xl md:text-4xl font-black text-[#081621] uppercase tracking-tighter leading-[1] font-headline">
                       {baseService.title}
                     </h1>
                     
-                    <div className="flex flex-wrap items-center gap-4 py-2 border-y border-gray-50">
+                    <div className="flex flex-wrap items-center gap-3 py-2 border-y border-gray-50">
                       <div className="flex items-center gap-1.5 text-amber-500">
-                        <Star size={16} fill="currentColor" />
-                        <span className="text-xs font-black">{baseService.rating || '5.0'}</span>
+                        <Star size={14} fill="currentColor" />
+                        <span className="text-[10px] font-black">{baseService.rating || '5.0'}</span>
                       </div>
-                      <div className="w-px h-4 bg-gray-200" />
+                      <div className="w-px h-3 bg-gray-200" />
                       <div className="flex items-center gap-1.5 text-blue-600">
-                        <Clock size={16} />
-                        <span className="text-[10px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
+                        <Clock size={14} />
+                        <span className="text-[9px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
                       </div>
-                      <div className="w-px h-4 bg-gray-200" />
+                      <div className="w-px h-3 bg-gray-200" />
                       <div className="flex items-center gap-1.5 text-emerald-600">
-                        <Users size={16} />
-                        <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
+                        <Users size={14} />
+                        <span className="text-[9px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    {/* UPDATED PRICE AREA: REMOVED BLACK BG */}
-                    <div className="bg-white border-2 border-gray-50 p-8 rounded-3xl flex items-center justify-between shadow-sm relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={80} /></div>
+                    <div className="bg-white border-2 border-gray-50 p-6 md:p-8 rounded-3xl flex items-center justify-between shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={60} /></div>
                       <div className="space-y-1 relative z-10">
-                        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Total Payable</p>
+                        <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Total Payable</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-black text-[#081621]">৳{totalPrice.toLocaleString()}</span>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase">VAT INC</span>
+                          <span className="text-3xl md:text-4xl font-black text-[#081621]">৳{totalPrice.toLocaleString()}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase">VAT INC</span>
                         </div>
                       </div>
                       {pricingLogic === 'quantity' && (
-                        <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden h-12 relative z-10 border border-gray-200 shadow-inner">
-                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={16} /></button>
-                          <span className="px-4 font-black text-sm text-[#081621] min-w-[40px] text-center">{mainQuantity}</span>
-                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={16} /></button>
+                        <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden h-10 relative z-10 border border-gray-200 shadow-inner">
+                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={14} /></button>
+                          <span className="px-3 font-black text-xs text-[#081621] min-w-[30px] text-center">{mainQuantity}</span>
+                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={14} /></button>
                         </div>
                       )}
                     </div>
 
                     {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-[#081621] tracking-[0.2em] ml-1">Area Size (Square Feet)</Label>
+                      <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                        <Label className="text-[9px] font-black uppercase text-[#081621] tracking-[0.2em] ml-1">Area Size (Square Feet)</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {baseService.sqftOptions.map((opt: any, idx: number) => (
                             <div 
                               key={idx}
                               onClick={() => setSelectedSqftId(idx.toString())}
                               className={cn(
-                                "p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
+                                "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
                                 selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-md" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
                               )}
                             >
-                              <span className="text-xs font-bold uppercase tracking-tight">{opt.label}</span>
-                              <span className="text-sm font-black text-primary">৳{opt.price.toLocaleString()}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-tight">{opt.label}</span>
+                              <span className="text-xs font-black text-primary">৳{opt.price.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="pt-4 border-t border-gray-50 space-y-4">
-                      <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                        <span>Service Base</span>
+                    <div className="pt-4 border-t border-gray-50 space-y-3">
+                      <div className="flex justify-between text-[9px] font-black uppercase text-gray-400">
+                        <span>Base Rate</span>
                         <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
                       </div>
                       {addOnsTotal > 0 && (
-                        <div className="flex justify-between text-[10px] font-black uppercase text-blue-600">
-                          <span>Extras & Add-ons</span>
+                        <div className="flex justify-between text-[9px] font-black uppercase text-blue-600">
+                          <span>Add-ons</span>
                           <span>+৳{addOnsTotal.toLocaleString()}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                        <span>Service Charge</span>
+                      <div className="flex justify-between text-[9px] font-black uppercase text-gray-400">
+                        <span>Platform Fee</span>
                         <span>৳{platformFee}</span>
                       </div>
                     </div>
@@ -333,56 +332,56 @@ export default function ServiceBookingPage() {
                     <Button 
                       onClick={handleContinue} 
                       disabled={!baseService.isBookingEnabled}
-                      className="w-full h-16 md:h-20 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
+                      className="w-full h-14 md:h-16 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
                     >
-                      {baseService.bookingButtonText || 'Proceed to Checkout'} <ArrowRight size={18} />
+                      {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={16} />
                     </Button>
                   </div>
                 </div>
               </div>
 
-              {/* RIGHT: Optimized Add-on services */}
-              <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 flex flex-col gap-8 bg-gray-50/20">
-                <div className="space-y-8">
-                  <div className="border-b pb-4 flex justify-between items-center">
+              {/* RIGHT: Add-ons */}
+              <div className="lg:col-span-3 p-4 md:p-8 lg:p-10 flex flex-col gap-6 bg-gray-50/20">
+                <div className="space-y-6">
+                  <div className="border-b pb-3 flex justify-between items-center">
                     <div>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Extra Boost</h3>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">Optional Add-ons</p>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-[#081621]">Enhancements</h3>
+                      <p className="text-[8px] font-bold text-gray-400 uppercase">Optional Services</p>
                     </div>
-                    <Zap size={18} className="text-primary" fill="currentColor" />
+                    <Zap size={16} className="text-primary" fill="currentColor" />
                   </div>
 
-                  <div className="space-y-3 max-h-[650px] overflow-y-auto no-scrollbar">
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto no-scrollbar">
                     {addOnOptions?.length ? addOnOptions.map((addon) => {
                       const qty = addOnsQty[addon.id] || 0;
                       return (
                         <div 
                           key={addon.id}
                           className={cn(
-                            "p-3 rounded-xl border transition-all group flex items-center justify-between bg-white",
+                            "p-2.5 rounded-xl border transition-all group flex items-center justify-between bg-white",
                             qty > 0 ? "border-primary shadow-md" : "border-gray-100 hover:border-gray-200"
                           )}
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="relative w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-gray-50">
-                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={12} className="m-auto text-gray-300" />}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative w-7 h-7 rounded-lg overflow-hidden border shrink-0 bg-gray-50">
+                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={10} className="m-auto text-gray-300" />}
                             </div>
                             <div className="min-w-0">
-                              <h5 className="text-[10px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
-                              <p className="text-[9px] font-black text-primary">৳{addon.price}</p>
+                              <h5 className="text-[9px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
+                              <p className="text-[8px] font-black text-primary">৳{addon.price}</p>
                             </div>
                           </div>
                           <div className="flex items-center bg-gray-50 rounded-lg px-1 py-0.5 border border-gray-100 shrink-0">
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-all"><Minus size={12}/></button>
-                            <span className="text-[10px] font-black text-gray-900 min-w-[20px] text-center">{qty}</span>
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-emerald-500 transition-all"><Plus size={12}/></button>
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-all"><Minus size={10}/></button>
+                            <span className="text-[9px] font-black text-gray-900 min-w-[18px] text-center">{qty}</span>
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-emerald-500 transition-all"><Plus size={10}/></button>
                           </div>
                         </div>
                       );
                     }) : (
-                      <div className="py-10 text-center space-y-3 opacity-20">
-                        <LayoutGrid size={32} className="mx-auto" />
-                        <p className="text-[9px] font-black uppercase tracking-widest">No Add-ons</p>
+                      <div className="py-8 text-center space-y-2 opacity-20">
+                        <LayoutGrid size={24} className="mx-auto" />
+                        <p className="text-[8px] font-black uppercase tracking-widest">None available</p>
                       </div>
                     )}
                   </div>
@@ -393,41 +392,39 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        {/* BOTTOM: Description, Checklists, Why Choose Us, Reviews */}
-        <section className="container mx-auto px-4 max-w-7xl mt-8 space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-8">
-              {/* FULL DESCRIPTION */}
-              <Card className="border-none shadow-sm rounded-3xl bg-white p-8 md:p-12 space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] border-b pb-4 flex items-center gap-2">
-                  <div className="w-1.5 h-4 bg-primary rounded-full" /> Full Service Details
+        {/* BOTTOM CONTENT */}
+        <section className="container mx-auto px-4 max-w-7xl mt-4 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-8 space-y-6">
+              <Card className="border-none shadow-sm rounded-3xl bg-white p-6 md:p-10 space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[#081621] border-b pb-3 flex items-center gap-2">
+                  <div className="w-1 h-3 bg-primary rounded-full" /> Summary
                 </h3>
-                <p className="text-sm md:text-base text-gray-600 leading-loose font-medium">
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">
                   {baseService.description}
                 </p>
               </Card>
 
-              {/* INCLUDED / NOT INCLUDED */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {baseService.included?.length > 0 && (
-                  <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={16}/> What's Included</h4>
-                    <div className="space-y-3">
+                  <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={14}/> Included</h4>
+                    <div className="space-y-2">
                       {baseService.included.map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600">
-                          <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
+                        <div key={i} className="flex items-start gap-2.5 text-[11px] font-bold text-gray-600">
+                          <Check size={12} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
                         </div>
                       ))}
                     </div>
                   </Card>
                 )}
                 {baseService.notIncluded?.length > 0 && (
-                  <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={16}/> What's Not Included</h4>
-                    <div className="space-y-3">
+                  <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={14}/> Excluded</h4>
+                    <div className="space-y-2">
                       {baseService.notIncluded.map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-400">
-                          <X size={14} className="text-red-400 mt-0.5 shrink-0" /> {item}
+                        <div key={i} className="flex items-start gap-2.5 text-[11px] font-bold text-gray-400">
+                          <X size={12} className="text-red-400 mt-0.5 shrink-0" /> {item}
                         </div>
                       ))}
                     </div>
@@ -436,20 +433,19 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* WHY CHOOSE US CARDS */}
-            <div className="lg:col-span-4 space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] px-2 flex items-center gap-2">
-                <Sparkles size={18} className="text-primary" /> Key Features
+            <div className="lg:col-span-4 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] px-2 flex items-center gap-2">
+                <Sparkles size={16} className="text-primary" /> Key Assets
               </h3>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {baseService.features?.map((f: any, i: number) => (
-                  <Card key={i} className="border-none shadow-sm rounded-3xl bg-white p-6 flex gap-4 items-start group hover:shadow-xl transition-all duration-500">
-                    <div className="p-3 bg-primary/5 rounded-2xl text-primary group-hover:scale-110 transition-transform">
-                      <Zap size={24} fill="currentColor" />
+                  <Card key={i} className="border-none shadow-sm rounded-3xl bg-white p-5 flex gap-3 items-start group hover:shadow-lg transition-all duration-500">
+                    <div className="p-2.5 bg-primary/5 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <Zap size={20} fill="currentColor" />
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-black uppercase text-xs text-[#081621]">{f.title}</h4>
-                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">{f.desc}</p>
+                    <div className="space-y-0.5">
+                      <h4 className="font-black uppercase text-[10px] text-[#081621]">{f.title}</h4>
+                      <p className="text-[10px] text-gray-500 leading-snug font-medium">{f.desc}</p>
                     </div>
                   </Card>
                 ))}
@@ -458,47 +454,47 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {/* REVIEWS SECTION */}
+        {/* REVIEWS */}
         {baseService.reviewsEnabled && (
-          <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <div className="bg-[#081621] rounded-[3rem] p-10 md:p-20 overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12 pointer-events-none"><Quote size={300} fill="white" /></div>
+          <section className="container mx-auto px-4 py-12 max-w-7xl">
+            <div className="bg-[#081621] rounded-[2.5rem] p-8 md:p-16 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-10 opacity-5 -rotate-12 pointer-events-none"><Quote size={200} fill="white" /></div>
               
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 relative z-10">
-                <div className="space-y-4">
-                  <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic">Client Voices</h2>
-                  <p className="text-white/40 font-black uppercase tracking-[0.2em] text-xs">Certified satisfaction from completed jobs</p>
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 relative z-10">
+                <div className="space-y-3">
+                  <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic">Client Voices</h2>
+                  <p className="text-white/40 font-black uppercase tracking-[0.2em] text-[10px]">Verified Job Performance</p>
                 </div>
-                <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 flex items-center gap-6">
+                <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex items-center gap-4">
                   <div className="text-center">
-                    <p className="text-3xl font-black text-primary leading-none">4.9</p>
-                    <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mt-1">Average</p>
+                    <p className="text-2xl font-black text-primary leading-none">4.9</p>
+                    <p className="text-[7px] font-black text-white/40 uppercase tracking-widest mt-1">Average</p>
                   </div>
-                  <div className="w-px h-10 bg-white/10" />
+                  <div className="w-px h-8 bg-white/10" />
                   <div className="flex gap-0.5 text-amber-400">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}
+                    {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" />)}
                   </div>
                 </div>
               </div>
 
               {reviews?.length ? (
                 <Carousel opts={{ align: "start", loop: true }} plugins={[Autoplay({ delay: 4000 })]} className="w-full relative z-10">
-                  <CarouselContent className="-ml-6">
+                  <CarouselContent className="-ml-4">
                     {reviews.map((rev) => (
-                      <CarouselItem key={rev.id} className="pl-6 basis-full md:basis-1/2 lg:basis-1/3">
-                        <Card className="border-none bg-white/5 backdrop-blur-sm rounded-[2rem] p-8 h-full border border-white/5 space-y-6">
+                      <CarouselItem key={rev.id} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                        <Card className="border-none bg-white/5 backdrop-blur-sm rounded-3xl p-6 h-full border border-white/5 space-y-4">
                           <div className="flex justify-between items-start">
                             <div className="flex text-amber-400 gap-0.5">
-                              {[...Array(rev.rating)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+                              {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
                             </div>
-                            <span className="text-[10px] font-black text-white/20 uppercase font-mono">{format(new Date(rev.createdAt), 'MMM dd')}</span>
+                            <span className="text-[8px] font-black text-white/20 uppercase">{format(new Date(rev.createdAt), 'MMM dd')}</span>
                           </div>
-                          <p className="text-white/80 text-sm font-medium leading-loose italic">"{rev.text}"</p>
-                          <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center font-black text-white text-xs uppercase">{rev.userName[0]}</div>
+                          <p className="text-white/80 text-xs font-medium leading-relaxed italic">"{rev.text}"</p>
+                          <div className="flex items-center gap-3 pt-3 border-t border-white/5">
+                            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center font-black text-white text-[10px] uppercase">{rev.userName[0]}</div>
                             <div>
-                              <p className="text-xs font-black text-white uppercase tracking-tight">{rev.userName}</p>
-                              <Badge className="bg-green-500/20 text-green-400 border-none text-[7px] font-black uppercase h-4 px-1.5">Verified Booking</Badge>
+                              <p className="text-[10px] font-black text-white uppercase tracking-tight">{rev.userName}</p>
+                              <Badge className="bg-green-500/20 text-green-400 border-none text-[6px] font-black uppercase h-3.5 px-1.5">Verified</Badge>
                             </div>
                           </div>
                         </Card>
@@ -507,56 +503,60 @@ export default function ServiceBookingPage() {
                   </CarouselContent>
                 </Carousel>
               ) : (
-                <div className="py-20 text-center opacity-20 relative z-10">
-                  <MessageSquare size={64} className="mx-auto text-white mb-4" />
-                  <p className="text-white font-black uppercase tracking-widest text-xs">Waiting for first review...</p>
+                <div className="py-16 text-center opacity-20 relative z-10">
+                  <MessageSquare size={48} className="mx-auto text-white mb-3" />
+                  <p className="text-white font-black uppercase tracking-widest text-[10px]">Awaiting feedback</p>
                 </div>
               )}
 
-              {user && (
-                <div className="mt-20 max-w-2xl mx-auto bg-white rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in slide-in-from-bottom-10">
-                  {canSubmitReview ? (
-                    <div className="p-8 md:p-12 space-y-8">
-                      <div className="text-center space-y-2">
-                        <h3 className="text-2xl font-black text-[#081621] uppercase">Rate Your Experience</h3>
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Share feedback about this completed job</p>
-                      </div>
-                      <form onSubmit={handleSubmitReview} className="space-y-6">
-                        <div className="flex justify-center gap-3">
-                          {[1,2,3,4,5].map(star => (
-                            <button key={star} type="button" onClick={() => setReviewRating(star)} className="transition-transform active:scale-90">
-                              <Star size={32} fill={star <= reviewRating ? "#F59E0B" : "none"} className={star <= reviewRating ? "text-[#F59E0B]" : "text-gray-200"} />
-                            </button>
-                          ))}
-                        </div>
-                        <Textarea 
-                          value={reviewText} 
-                          onChange={e => setReviewText(e.target.value)} 
-                          placeholder="How was the cleaning quality?" 
-                          className="min-h-[120px] bg-gray-50 border-none rounded-2xl p-6 font-medium"
-                          required
-                        />
-                        <Button type="submit" disabled={isSubmittingReview} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight gap-2 shadow-xl">
-                          {isSubmittingReview ? <Loader2 className="animate-spin" /> : <Send size={18} />} 
-                          Post My Review
-                        </Button>
-                      </form>
+              {user && canSubmitReview && (
+                <div className="mt-12 max-w-xl mx-auto bg-white rounded-3xl overflow-hidden shadow-2xl relative z-10 animate-in slide-in-from-bottom-5">
+                  <div className="p-6 md:p-10 space-y-6">
+                    <div className="text-center space-y-1">
+                      <h3 className="text-xl font-black text-[#081621] uppercase">Rate This Job</h3>
+                      <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Share your expert opinion</p>
                     </div>
-                  ) : (
-                    <div className="p-12 text-center space-y-6">
-                      <div className="mx-auto w-20 h-20 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center border-4 border-dashed"><Star size={40} /></div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-black uppercase text-gray-900">Review Access Restricted</h3>
-                        <p className="text-sm text-gray-500 font-medium max-w-xs mx-auto leading-relaxed">You can only review services that you have booked and successfully completed.</p>
+                    <form onSubmit={handleSubmitReview} className="space-y-4">
+                      <div className="flex justify-center gap-2">
+                        {[1,2,3,4,5].map(star => (
+                          <button key={star} type="button" onClick={() => setReviewRating(star)} className="transition-transform active:scale-90">
+                            <Star size={24} fill={star <= reviewRating ? "#F59E0B" : "none"} className={star <= reviewRating ? "text-[#F59E0B]" : "text-gray-200"} />
+                          </button>
+                        ))}
                       </div>
-                      <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-primary/20">Certified Review Policy</Badge>
-                    </div>
-                  )}
+                      <Textarea 
+                        value={reviewText} 
+                        onChange={e => setReviewText(e.target.value)} 
+                        placeholder="Write your review..." 
+                        className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4 text-xs font-medium"
+                        required
+                      />
+                      <Button type="submit" disabled={isSubmittingReview} className="w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest gap-2">
+                        {isSubmittingReview ? <Loader2 className="animate-spin" /> : <Send size={14} />} 
+                        Publish Review
+                      </Button>
+                    </form>
+                  </div>
                 </div>
               )}
             </div>
           </section>
         )}
+
+        {/* MOBILE STICKY BAR */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe">
+          <div className="flex flex-col min-w-[100px]">
+            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Due</span>
+            <span className="text-xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+          </div>
+          <Button 
+            onClick={handleContinue} 
+            disabled={!baseService.isBookingEnabled} 
+            className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
+          >
+            {baseService.bookingButtonText || 'Confirm Booking'}
+          </Button>
+        </div>
 
       </div>
     </PublicLayout>
