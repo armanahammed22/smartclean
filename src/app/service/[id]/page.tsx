@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, collection, query, where, addDoc, limit } from 'firebase/firestore';
+import { collection, query, where, addDoc, limit } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -90,7 +90,7 @@ export default function ServiceBookingPage() {
 
   const targetId = baseService?.id || null;
 
-  // 2. Fetch add-ons (MUST be declared before addOnsTotal calculation)
+  // 2. Fetch add-ons
   const addOnsQuery = useMemoFirebase(() => {
     if (!db || !targetId) return null;
     return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'), where('isAddOnEnabled', '==', true));
@@ -209,233 +209,264 @@ export default function ServiceBookingPage() {
       <div className="bg-[#F9FAFB] min-h-screen pb-24">
         
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-8 max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* LEFT: Media */}
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white">
-                <div className="relative aspect-square w-full flex items-center justify-center bg-white group">
-                  {baseService.imageUrl ? (
-                    <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
-                  ) : (
-                    <Wrench size={80} className="text-gray-100" />
-                  )}
-                  <div className="absolute top-6 left-6">
-                    <Badge className="bg-[#081621] text-primary border-none text-[9px] font-black uppercase px-4 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
-                  </div>
-                </div>
-              </Card>
-
-              {baseService.beforeAfterImages?.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#081621]">Real Job Proofs</h3>
-                    <Badge variant="outline" className="text-[8px] font-bold border-gray-200">Before & After</Badge>
-                  </div>
-                  <Carousel opts={{ align: "start", loop: true }} className="w-full">
-                    <CarouselContent className="-ml-4">
-                      {baseService.beforeAfterImages.map((img: any, i: number) => (
-                        <CarouselItem key={i} className="pl-4 basis-1/2 md:basis-full">
-                          <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                            <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
-                            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                              <span className="text-[8px] font-black text-white uppercase tracking-widest">{img.tag}</span>
-                            </div>
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                  </Carousel>
-                </div>
-              )}
-            </div>
-
-            {/* MIDDLE: Booking */}
-            <div className="lg:col-span-5 space-y-6">
-              <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white p-8 md:p-10 space-y-8">
-                <div className="space-y-4">
-                  <h1 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter leading-[0.9] font-headline">
-                    {baseService.title}
-                  </h1>
-                  
-                  <div className="flex flex-wrap items-center gap-4 py-2 border-y border-gray-50">
-                    <div className="flex items-center gap-1.5 text-amber-500">
-                      <Star size={16} fill="currentColor" />
-                      <span className="text-xs font-black">{baseService.rating || '5.0'}</span>
-                    </div>
-                    <div className="w-px h-4 bg-gray-200" />
-                    <div className="flex items-center gap-1.5 text-blue-600">
-                      <Clock size={16} />
-                      <span className="text-[10px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
-                    </div>
-                    <div className="w-px h-4 bg-gray-200" />
-                    <div className="flex items-center gap-1.5 text-emerald-600">
-                      <Users size={16} />
-                      <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
-                    </div>
-                  </div>
-                </div>
-
+          {/* UNIFIED SINGLE BACKGROUND CONTAINER */}
+          <Card className="border-none shadow-2xl rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white">
+            <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+              
+              {/* LEFT: Media Gallery */}
+              <div className="lg:col-span-4 p-6 md:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-8">
                 <div className="space-y-6">
-                  <div className="bg-[#081621] text-white p-8 rounded-3xl flex items-center justify-between shadow-xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={80} /></div>
-                    <div className="space-y-1 relative z-10">
-                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Total Value</p>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-black text-white">৳{totalPrice.toLocaleString()}</span>
-                        <span className="text-[10px] font-bold text-white/40 uppercase">VAT INC</span>
-                      </div>
-                    </div>
-                    {pricingLogic === 'quantity' && (
-                      <div className="flex items-center bg-white/10 backdrop-blur-md rounded-xl overflow-hidden h-12 relative z-10 border border-white/5">
-                        <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-white/10 transition-colors"><Minus size={16} /></button>
-                        <span className="px-4 font-black text-sm text-white min-w-[40px] text-center">{mainQuantity}</span>
-                        <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-white/10 transition-colors"><Plus size={16} /></button>
-                      </div>
+                  <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-3xl overflow-hidden group border border-gray-100">
+                    {baseService.imageUrl ? (
+                      <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                    ) : (
+                      <Wrench size={80} className="text-gray-200" />
                     )}
-                  </div>
-
-                  {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                      <Label className="text-[10px] font-black uppercase text-[#081621] tracking-[0.2em] ml-1">Area Size (Square Feet)</Label>
-                      <div className="grid grid-cols-1 gap-2">
-                        {baseService.sqftOptions.map((opt: any, idx: number) => (
-                          <div 
-                            key={idx}
-                            onClick={() => setSelectedSqftId(idx.toString())}
-                            className={cn(
-                              "p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
-                              selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-md" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
-                            )}
-                          >
-                            <span className="text-xs font-bold uppercase tracking-tight">{opt.label}</span>
-                            <span className="text-sm font-black text-primary">৳{opt.price.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t border-gray-50 space-y-4">
-                    <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                      <span>Service Base</span>
-                      <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
-                    </div>
-                    {addOnsTotal > 0 && (
-                      <div className="flex justify-between text-[10px] font-black uppercase text-blue-600">
-                        <span>Extras & Add-ons</span>
-                        <span>+৳{addOnsTotal.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
-                      <span>Service Charge</span>
-                      <span>৳{platformFee}</span>
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-[#081621] text-primary border-none text-[9px] font-black uppercase px-4 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={handleContinue} 
-                    disabled={!baseService.isBookingEnabled}
-                    className="w-full h-16 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
-                  >
-                    {baseService.bookingButtonText || 'Proceed to Checkout'} <ArrowRight size={18} />
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Description & Features */}
-              <div className="space-y-6">
-                <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] border-b pb-2">Full Description</h3>
-                  <p className="text-sm text-gray-600 leading-loose font-medium">
-                    {baseService.description}
-                  </p>
-                </Card>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {baseService.included?.length > 0 && (
-                    <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={14}/> Included</h4>
-                      <div className="space-y-2">
-                        {baseService.included.map((item: string, i: number) => (
-                          <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600">
-                            <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
-                          </div>
-                        ))}
+                  {baseService.beforeAfterImages?.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between px-2">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#081621]">Real Job Proofs</h3>
+                        <Badge variant="outline" className="text-[8px] font-bold border-gray-200">Before & After</Badge>
                       </div>
-                    </Card>
-                  )}
-                  {baseService.notIncluded?.length > 0 && (
-                    <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={14}/> Not Included</h4>
-                      <div className="space-y-2">
-                        {baseService.notIncluded.map((item: string, i: number) => (
-                          <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-400">
-                            <X size={14} className="text-red-400 mt-0.5 shrink-0" /> {item}
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
+                      <Carousel opts={{ align: "start", loop: true }} className="w-full">
+                        <CarouselContent className="-ml-4">
+                          {baseService.beforeAfterImages.map((img: any, i: number) => (
+                            <CarouselItem key={i} className="pl-4 basis-1/2">
+                              <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white shadow-md">
+                                <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
+                                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
+                                  <span className="text-[7px] font-black text-white uppercase tracking-widest">{img.tag}</span>
+                                </div>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                      </Carousel>
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            {/* RIGHT: Add-ons */}
-            <div className="lg:col-span-3 space-y-6">
-              <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white p-8 space-y-8 sticky top-24">
-                <div className="border-b pb-4 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Boost Service</h3>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase">Optional Customization</p>
+              {/* MIDDLE: Service Info & Booking */}
+              <div className="lg:col-span-5 p-6 md:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-10">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h1 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter leading-[0.9] font-headline">
+                      {baseService.title}
+                    </h1>
+                    
+                    <div className="flex flex-wrap items-center gap-4 py-2 border-y border-gray-50">
+                      <div className="flex items-center gap-1.5 text-amber-500">
+                        <Star size={16} fill="currentColor" />
+                        <span className="text-xs font-black">{baseService.rating || '5.0'}</span>
+                      </div>
+                      <div className="w-px h-4 bg-gray-200" />
+                      <div className="flex items-center gap-1.5 text-blue-600">
+                        <Clock size={16} />
+                        <span className="text-[10px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
+                      </div>
+                      <div className="w-px h-4 bg-gray-200" />
+                      <div className="flex items-center gap-1.5 text-emerald-600">
+                        <Users size={16} />
+                        <span className="text-[10px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <Zap size={18} className="text-primary" fill="currentColor" />
-                </div>
 
-                <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar">
-                  {addOnOptions?.length ? addOnOptions.map((addon) => {
-                    const qty = addOnsQty[addon.id] || 0;
-                    return (
-                      <div 
-                        key={addon.id}
-                        className={cn(
-                          "p-4 rounded-2xl border-2 transition-all group flex flex-col gap-3",
-                          qty > 0 ? "border-primary bg-primary/5" : "border-gray-50 bg-gray-50 hover:border-gray-200"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-10 h-10 rounded-xl overflow-hidden border shrink-0 bg-white">
-                            {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={16} className="m-auto text-gray-300" />}
-                          </div>
-                          <div className="min-w-0">
-                            <h5 className="text-[11px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
-                            <p className="text-[10px] font-black text-primary tracking-tighter">+৳{addon.price}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
-                          <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="text-red-400 hover:text-red-600 transition-colors"><Minus size={14}/></button>
-                          <span className="text-[11px] font-black text-gray-900">{qty}</span>
-                          <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="text-emerald-500 hover:text-emerald-700 transition-colors"><Plus size={14}/></button>
+                  <div className="space-y-6">
+                    <div className="bg-[#081621] text-white p-8 rounded-3xl flex items-center justify-between shadow-xl relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={80} /></div>
+                      <div className="space-y-1 relative z-10">
+                        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Total Value</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-black text-white">৳{totalPrice.toLocaleString()}</span>
+                          <span className="text-[10px] font-bold text-white/40 uppercase">VAT INC</span>
                         </div>
                       </div>
-                    );
-                  }) : (
-                    <div className="py-10 text-center space-y-3 opacity-20">
-                      <LayoutGrid size={32} className="mx-auto" />
-                      <p className="text-[9px] font-black uppercase tracking-widest">No Add-ons</p>
+                      {pricingLogic === 'quantity' && (
+                        <div className="flex items-center bg-white/10 backdrop-blur-md rounded-xl overflow-hidden h-12 relative z-10 border border-white/5">
+                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-white/10 transition-colors"><Minus size={16} /></button>
+                          <span className="px-4 font-black text-sm text-white min-w-[40px] text-center">{mainQuantity}</span>
+                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-white/10 transition-colors"><Plus size={16} /></button>
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <Label className="text-[10px] font-black uppercase text-[#081621] tracking-[0.2em] ml-1">Area Size (Square Feet)</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {baseService.sqftOptions.map((opt: any, idx: number) => (
+                            <div 
+                              key={idx}
+                              onClick={() => setSelectedSqftId(idx.toString())}
+                              className={cn(
+                                "p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
+                                selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-md" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+                              )}
+                            >
+                              <span className="text-xs font-bold uppercase tracking-tight">{opt.label}</span>
+                              <span className="text-sm font-black text-primary">৳{opt.price.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-gray-50 space-y-4">
+                      <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                        <span>Service Base</span>
+                        <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
+                      </div>
+                      {addOnsTotal > 0 && (
+                        <div className="flex justify-between text-[10px] font-black uppercase text-blue-600">
+                          <span>Extras & Add-ons</span>
+                          <span>+৳{addOnsTotal.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-[10px] font-black uppercase text-gray-400">
+                        <span>Service Charge</span>
+                        <span>৳{platformFee}</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleContinue} 
+                      disabled={!baseService.isBookingEnabled}
+                      className="w-full h-16 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
+                    >
+                      {baseService.bookingButtonText || 'Proceed to Checkout'} <ArrowRight size={18} />
+                    </Button>
+                  </div>
                 </div>
+              </div>
+
+              {/* RIGHT: Add-on services */}
+              <div className="lg:col-span-3 p-6 md:p-10 flex flex-col gap-8 bg-gray-50/30">
+                <div className="space-y-8">
+                  <div className="border-b pb-4 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Boost Service</h3>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase">Optional Customization</p>
+                    </div>
+                    <Zap size={18} className="text-primary" fill="currentColor" />
+                  </div>
+
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar">
+                    {addOnOptions?.length ? addOnOptions.map((addon) => {
+                      const qty = addOnsQty[addon.id] || 0;
+                      return (
+                        <div 
+                          key={addon.id}
+                          className={cn(
+                            "p-4 rounded-2xl border-2 transition-all group flex flex-col gap-3",
+                            qty > 0 ? "border-primary bg-white shadow-lg" : "border-transparent bg-white hover:border-gray-200 shadow-sm"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-10 h-10 rounded-xl overflow-hidden border shrink-0 bg-gray-50">
+                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={16} className="m-auto text-gray-300" />}
+                            </div>
+                            <div className="min-w-0">
+                              <h5 className="text-[11px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
+                              <p className="text-[10px] font-black text-primary tracking-tighter">+৳{addon.price}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-red-50 rounded-lg text-red-400 transition-colors"><Minus size={14}/></button>
+                            <span className="text-[11px] font-black text-gray-900">{qty}</span>
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-emerald-50 rounded-lg text-emerald-500 transition-colors"><Plus size={14}/></button>
+                          </div>
+                        </div>
+                      );
+                    }) : (
+                      <div className="py-10 text-center space-y-3 opacity-20">
+                        <LayoutGrid size={32} className="mx-auto" />
+                        <p className="text-[9px] font-black uppercase tracking-widest">No Add-ons</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </Card>
+        </section>
+
+        {/* BOTTOM: Description, Checklists, Why Choose Us, Reviews */}
+        <section className="container mx-auto px-4 max-w-7xl mt-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-8">
+              {/* FULL DESCRIPTION */}
+              <Card className="border-none shadow-sm rounded-3xl bg-white p-8 md:p-12 space-y-6">
+                <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] border-b pb-4 flex items-center gap-2">
+                  <div className="w-1.5 h-4 bg-primary rounded-full" /> Full Service Details
+                </h3>
+                <p className="text-sm md:text-base text-gray-600 leading-loose font-medium">
+                  {baseService.description}
+                </p>
               </Card>
+
+              {/* INCLUDED / NOT INCLUDED */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {baseService.included?.length > 0 && (
+                  <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={16}/> What's Included</h4>
+                    <div className="space-y-3">
+                      {baseService.included.map((item: string, i: number) => (
+                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600">
+                          <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+                {baseService.notIncluded?.length > 0 && (
+                  <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={16}/> What's Not Included</h4>
+                    <div className="space-y-3">
+                      {baseService.notIncluded.map((item: string, i: number) => (
+                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-400">
+                          <X size={14} className="text-red-400 mt-0.5 shrink-0" /> {item}
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </div>
             </div>
 
+            {/* WHY CHOOSE US CARDS */}
+            <div className="lg:col-span-4 space-y-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] px-2 flex items-center gap-2">
+                <Sparkles size={18} className="text-primary" /> Key Features
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                {baseService.features?.map((f: any, i: number) => (
+                  <Card key={i} className="border-none shadow-sm rounded-3xl bg-white p-6 flex gap-4 items-start group hover:shadow-xl transition-all duration-500">
+                    <div className="p-3 bg-primary/5 rounded-2xl text-primary group-hover:scale-110 transition-transform">
+                      <Zap size={24} fill="currentColor" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-black uppercase text-xs text-[#081621]">{f.title}</h4>
+                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">{f.desc}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* REVIEWS */}
+        {/* REVIEWS SECTION */}
         {baseService.reviewsEnabled && (
           <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <div className="bg-[#081621] rounded-[3rem] p-10 md:p-20 overflow-hidden relative group">
+            <div className="bg-[#081621] rounded-[3rem] p-10 md:p-20 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12 pointer-events-none"><Quote size={300} fill="white" /></div>
               
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 relative z-10">
