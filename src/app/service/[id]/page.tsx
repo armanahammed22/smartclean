@@ -68,7 +68,7 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Fetch main service (Hooks Section)
+  // 1. Fetch main service
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -103,7 +103,6 @@ export default function ServiceBookingPage() {
   }, [db, targetId]);
   const { data: allReviewsRaw } = useCollection(reviewsRef);
 
-  // --- Derived State Calculations ---
   const canSubmitReview = useMemo(() => {
     if (!userBookings || !targetId) return false;
     return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
@@ -166,19 +165,6 @@ export default function ServiceBookingPage() {
     setCheckoutOpen(true);
   };
 
-  const handleToggleReview = async (reviewId: string, current: string) => {
-    if (!db || !targetId) return;
-    const newStatus = current === 'Approved' ? 'Pending' : 'Approved';
-    await updateDoc(doc(db, 'services', targetId, 'reviews', reviewId), { status: newStatus });
-    toast({ title: "Review visibility updated" });
-  };
-
-  const handleDeleteReview = async (reviewId: string) => {
-    if (!db || !targetId || !confirm("Delete this review?")) return;
-    await deleteDoc(doc(db, 'services', targetId, 'reviews', reviewId));
-    toast({ title: "Review deleted" });
-  };
-
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !user || !targetId || !canSubmitReview) return;
@@ -217,12 +203,12 @@ export default function ServiceBookingPage() {
       <div className="bg-[#F9FAFB] min-h-screen pb-24">
         
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-8 max-w-7xl">
-          {/* UNIFIED SINGLE BACKGROUND CONTAINER */}
-          <Card className="border-none shadow-2xl rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white">
+          {/* UNIFIED SINGLE BACKGROUND CONTAINER WITH HIGH SHADOW */}
+          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3.5rem] overflow-hidden bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
               {/* LEFT: Media Gallery */}
-              <div className="lg:col-span-4 p-6 md:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-8">
+              <div className="lg:col-span-4 p-6 md:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-8">
                 <div className="space-y-6">
                   <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-3xl overflow-hidden group border border-gray-100">
                     {baseService.imageUrl ? (
@@ -261,7 +247,7 @@ export default function ServiceBookingPage() {
               </div>
 
               {/* MIDDLE: Service Info & Booking */}
-              <div className="lg:col-span-5 p-6 md:p-10 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-10">
+              <div className="lg:col-span-5 p-6 md:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-10">
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <h1 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter leading-[0.9] font-headline">
@@ -287,20 +273,21 @@ export default function ServiceBookingPage() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="bg-[#081621] text-white p-8 rounded-3xl flex items-center justify-between shadow-xl relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={80} /></div>
+                    {/* UPDATED PRICE AREA: REMOVED BLACK BG */}
+                    <div className="bg-white border-2 border-gray-50 p-8 rounded-3xl flex items-center justify-between shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={80} /></div>
                       <div className="space-y-1 relative z-10">
-                        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Total Value</p>
+                        <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Total Payable</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-black text-white">৳{totalPrice.toLocaleString()}</span>
-                          <span className="text-[10px] font-bold text-white/40 uppercase">VAT INC</span>
+                          <span className="text-4xl font-black text-[#081621]">৳{totalPrice.toLocaleString()}</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase">VAT INC</span>
                         </div>
                       </div>
                       {pricingLogic === 'quantity' && (
-                        <div className="flex items-center bg-white/10 backdrop-blur-md rounded-xl overflow-hidden h-12 relative z-10 border border-white/5">
-                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-white/10 transition-colors"><Minus size={16} /></button>
-                          <span className="px-4 font-black text-sm text-white min-w-[40px] text-center">{mainQuantity}</span>
-                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-white/10 transition-colors"><Plus size={16} /></button>
+                        <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden h-12 relative z-10 border border-gray-200 shadow-inner">
+                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={16} /></button>
+                          <span className="px-4 font-black text-sm text-[#081621] min-w-[40px] text-center">{mainQuantity}</span>
+                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={16} /></button>
                         </div>
                       )}
                     </div>
@@ -346,7 +333,7 @@ export default function ServiceBookingPage() {
                     <Button 
                       onClick={handleContinue} 
                       disabled={!baseService.isBookingEnabled}
-                      className="w-full h-16 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
+                      className="w-full h-16 md:h-20 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
                     >
                       {baseService.bookingButtonText || 'Proceed to Checkout'} <ArrowRight size={18} />
                     </Button>
@@ -354,41 +341,41 @@ export default function ServiceBookingPage() {
                 </div>
               </div>
 
-              {/* RIGHT: Add-on services */}
-              <div className="lg:col-span-3 p-6 md:p-10 flex flex-col gap-8 bg-gray-50/30">
+              {/* RIGHT: Optimized Add-on services */}
+              <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 flex flex-col gap-8 bg-gray-50/20">
                 <div className="space-y-8">
                   <div className="border-b pb-4 flex justify-between items-center">
                     <div>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Boost Service</h3>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase">Optional Customization</p>
+                      <h3 className="text-xs font-black uppercase tracking-widest text-[#081621]">Extra Boost</h3>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase">Optional Add-ons</p>
                     </div>
                     <Zap size={18} className="text-primary" fill="currentColor" />
                   </div>
 
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar">
+                  <div className="space-y-3 max-h-[650px] overflow-y-auto no-scrollbar">
                     {addOnOptions?.length ? addOnOptions.map((addon) => {
                       const qty = addOnsQty[addon.id] || 0;
                       return (
                         <div 
                           key={addon.id}
                           className={cn(
-                            "p-4 rounded-2xl border-2 transition-all group flex flex-col gap-3",
-                            qty > 0 ? "border-primary bg-white shadow-lg" : "border-transparent bg-white hover:border-gray-200 shadow-sm"
+                            "p-3 rounded-xl border transition-all group flex items-center justify-between bg-white",
+                            qty > 0 ? "border-primary shadow-md" : "border-gray-100 hover:border-gray-200"
                           )}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 rounded-xl overflow-hidden border shrink-0 bg-gray-50">
-                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={16} className="m-auto text-gray-300" />}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-gray-50">
+                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={12} className="m-auto text-gray-300" />}
                             </div>
                             <div className="min-w-0">
-                              <h5 className="text-[11px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
-                              <p className="text-[10px] font-black text-primary tracking-tighter">+৳{addon.price}</p>
+                              <h5 className="text-[10px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
+                              <p className="text-[9px] font-black text-primary">৳{addon.price}</p>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-gray-100/50">
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-red-50 rounded-lg text-red-400 transition-colors"><Minus size={14}/></button>
-                            <span className="text-[11px] font-black text-gray-900">{qty}</span>
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-emerald-50 rounded-lg text-emerald-500 transition-colors"><Plus size={14}/></button>
+                          <div className="flex items-center bg-gray-50 rounded-lg px-1 py-0.5 border border-gray-100 shrink-0">
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-all"><Minus size={12}/></button>
+                            <span className="text-[10px] font-black text-gray-900 min-w-[20px] text-center">{qty}</span>
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-emerald-500 transition-all"><Plus size={12}/></button>
                           </div>
                         </div>
                       );
