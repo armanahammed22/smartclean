@@ -106,29 +106,34 @@ export default function ServiceBookingPage() {
 
   const targetId = baseService?.id || null;
 
-  // Review System Guards
-  const completedBookingQuery = useMemoFirebase(() => 
-    (db && user && targetId) ? query(
+  // Review System Guards - Simplified query to avoid index requirements
+  const userBookingsQuery = useMemoFirebase(() => 
+    (db && user) ? query(
       collection(db, 'bookings'),
-      where('customerId', '==', user.uid),
-      where('serviceId', '==', targetId),
-      where('status', '==', 'Completed'),
-      limit(1)
-    ) : null, [db, user, targetId]);
-  const { data: userCompletedBookings } = useCollection(completedBookingQuery);
-  const canSubmitReview = !!userCompletedBookings?.length;
+      where('customerId', '==', user.uid)
+    ) : null, [db, user]);
+  
+  const { data: userBookings } = useCollection(userBookingsQuery);
+  
+  const canSubmitReview = useMemo(() => {
+    if (!userBookings || !targetId) return false;
+    return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
+  }, [userBookings, targetId]);
 
-  const addOnsQuery = useMemoFirebase(() => {
+  // Simplified query: Fetch all reviews for this service and filter/sort in memory to avoid index error
+  const reviewsRef = useMemoFirebase(() => {
     if (!db || !targetId) return null;
-    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'), where('isAddOnEnabled', '==', true));
+    return collection(db, 'services', targetId, 'reviews');
   }, [db, targetId]);
-  const { data: addOnOptions } = useCollection(addOnsQuery);
-
-  const reviewsQuery = useMemoFirebase(() => {
-    if (!db || !targetId) return null;
-    return query(collection(db, 'services', targetId, 'reviews'), where('status', '==', 'Approved'), orderBy('createdAt', 'desc'));
-  }, [db, targetId]);
-  const { data: reviews } = useCollection(reviewsQuery);
+  
+  const { data: allReviewsRaw } = useCollection(reviewsRef);
+  
+  const reviews = useMemo(() => {
+    if (!allReviewsRaw) return [];
+    return allReviewsRaw
+      .filter(r => r.status === 'Approved')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allReviewsRaw]);
 
   useEffect(() => {
     if (baseService?.pricingType === 'sqft' && baseService.sqftOptions?.length) {
@@ -150,6 +155,12 @@ export default function ServiceBookingPage() {
     if (!addOnOptions) return 0;
     return addOnOptions.reduce((acc, a) => acc + (a.price * (addOnsQty[a.id] || 0)), 0);
   }, [addOnOptions, addOnsQty]);
+
+  const addOnsQuery = useMemoFirebase(() => {
+    if (!db || !targetId) return null;
+    return query(collection(db, 'sub_services'), where('mainServiceId', '==', targetId), where('status', '==', 'Active'), where('isAddOnEnabled', '==', true));
+  }, [db, targetId]);
+  const { data: addOnOptions } = useCollection(addOnsQuery);
 
   const platformFee = 50;
   const totalPrice = basePrice + addOnsTotal + platformFee;
