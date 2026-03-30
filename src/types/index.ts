@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string;
   name: string;
@@ -32,13 +31,14 @@ export interface Product {
 
 export interface Review {
   id: string;
-  productId: string;
+  serviceId?: string;
+  productId?: string;
   userId: string;
   userName: string;
   rating: number;
-  comment: string;
-  images?: string[];
+  text: string;
   status: 'Pending' | 'Approved';
+  isFeatured?: boolean;
   createdAt: string;
 }
 
@@ -116,6 +116,7 @@ export interface Service {
   basePrice: number;
   imageUrl?: string;
   galleryImages?: string[];
+  beforeAfterImages?: { url: string; tag: 'Before' | 'After' }[];
   type: 'service';
   status: 'Active' | 'Inactive';
   isPopular?: boolean;
@@ -123,11 +124,14 @@ export interface Service {
   teamSize?: string;
   rating?: number;
   badgeText?: string;
-  pricingType?: 'quantity' | 'sqft';
-  showFaq?: boolean;
-  faqList?: { q: string; a: string }[];
-  howToBook?: string[];
-  workProofImages?: string[];
+  pricingType: 'fixed' | 'sqft' | 'quantity';
+  sqftOptions?: { label: string; price: number }[];
+  included?: string[];
+  notIncluded?: string[];
+  features?: { icon: string; title: string; desc: string }[];
+  isBookingEnabled?: boolean;
+  bookingButtonText?: string;
+  reviewsEnabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -204,9 +208,11 @@ export interface AssignedEmployee {
 
 export interface Booking {
   id: string;
+  customerId: string;
   customerName: string;
   customerPhone: string;
   address: string;
+  serviceId?: string;
   serviceTitle: string;
   totalPrice: number;
   status: 'New' | 'Assigned' | 'On The Way' | 'Service Started' | 'Completed' | 'Cancelled';
@@ -219,33 +225,13 @@ export interface Booking {
   createdAt: string;
 }
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  frequency?: string; // e.g. "Weekly", "Once a month"
-  targetAudience?: string; // e.g. "For small office", "Large families"
-  features: string[];
-  color: string;
-  icon: string;
-  featured?: boolean;
-  createdAt: string;
-}
-
-export interface TrackingConfig {
-  googleMapsApiKey: string;
-  trackingInterval: number; // in seconds
-  isTrackingEnabled: boolean;
-}
-
 export interface CustomRequest {
   id: string;
   customerId: string;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
-  services: string[]; // List of services requested
+  services: string[]; 
   details: string;
   requestedDate: string;
   requestedTime: string;
@@ -258,18 +244,4 @@ export interface CustomRequest {
   adminNote?: string;
   createdAt: string;
   updatedAt?: string;
-}
-
-export interface Permission {
-  id: string;
-  label: string;
-  group: string;
-}
-
-export interface CustomRole {
-  id: string;
-  name: string;
-  permissions: string[];
-  status: 'Active' | 'Inactive';
-  createdAt: string;
 }
