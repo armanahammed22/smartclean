@@ -580,7 +580,3 @@ export default function ServiceBookingPage() {
     </PublicLayout>
   );
 }
-
-function Autoplay(arg0: { delay: number; }): import("embla-carousel-react").EmblaPluginType {
-  throw new Error('Function not implemented.');
-}
