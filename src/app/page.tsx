@@ -130,14 +130,20 @@ export default function SmartCleanHomePage() {
 
     const getFilteredServices = () => {
       let mainFeed = allServices?.filter(s => s.status === 'Active') || [];
+      
+      // Sub services mapping with category inheritance
       let subFeed = allSubServices?.filter(sub => sub.status === 'Active')
-        .map(sub => ({ 
-          ...sub, 
-          title: sub.name, 
-          basePrice: sub.price, 
-          itemType: 'service', 
-          isAddOn: true 
-        })) || [];
+        .map(sub => {
+          const parent = allServices?.find(s => s.id === sub.mainServiceId);
+          return { 
+            ...sub, 
+            title: sub.name, 
+            basePrice: sub.price, 
+            itemType: 'service', 
+            isAddOn: true,
+            categoryId: parent?.categoryId || 'General' // Inherit category
+          };
+        }) || [];
 
       let combined = [...mainFeed, ...subFeed];
 
@@ -172,14 +178,11 @@ export default function SmartCleanHomePage() {
     };
 
     const buttonStyles = {
-      backgroundColor: style.btnBg || '#1E5F7A',
+      backgroundColor: style.btnBg || '#22C55E', // Default Green
       color: style.btnText || '#ffffff',
       borderRadius: `${style.btnRadius || 12}px`,
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'
     };
-
-    const showRating = style.showRating !== false;
-    const showSalesCount = style.showSalesCount !== false;
 
     switch (sectionType) {
       case 'hero':
@@ -270,9 +273,6 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'campaign':
-        return <CampaignSection key={section.id} />;
-
       case 'services_featured':
       case 'services_popular':
         const displayServices = getFilteredServices();
@@ -317,25 +317,21 @@ export default function SmartCleanHomePage() {
                         <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
                           <h3 className="text-[11px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                           
-                          <div className="mt-auto">
-                            <div className="flex items-baseline justify-between mb-1">
-                              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none">৳{(s.basePrice || 0).toLocaleString()}</p>
-                              {s.pricingType === 'sqft' && <span className="text-[7px] font-black uppercase text-gray-400">{t('price_from')}</span>}
+                          <div className="mt-auto pt-2">
+                            <div className="flex items-baseline gap-2 mb-1">
+                              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none" style={{ color: style.priceColor || '#1E5F7A' }}>৳{(s.basePrice || 0).toLocaleString()}</p>
+                              {s.regularPrice && s.regularPrice > s.basePrice && (
+                                <span className="text-[8px] md:text-[10px] text-gray-300 line-through">৳{s.regularPrice.toLocaleString()}</span>
+                              )}
                             </div>
                             
-                            {(showRating || showSalesCount) && (
-                              <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-2 w-full">
-                                {showRating && (
-                                  <div className="flex items-center gap-1 text-amber-400">
-                                    <Star size={10} fill="currentColor" />
-                                    <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}/5</span>
-                                  </div>
-                                )}
-                                {showSalesCount && (
-                                  <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
-                                )}
+                            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-3 w-full">
+                              <div className="flex items-center gap-1 text-amber-400">
+                                <Star size={10} fill="currentColor" />
+                                <span className="text-gray-600 font-black">{s.rating?.toFixed(1) || '5.0'}</span>
                               </div>
-                            )}
+                              <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
+                            </div>
 
                             <div className="mt-1">
                               <Button size="sm" className="w-full font-black uppercase shadow-xl h-8 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>

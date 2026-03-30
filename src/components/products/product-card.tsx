@@ -89,12 +89,12 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             {product.name}
           </h3>
           
-          <div className={cn("mt-auto")}>
-            <div className={cn("flex items-center gap-2", customStyle?.textAlign === 'center' ? 'justify-center' : '')}>
+          <div className={cn("mt-auto pt-2")}>
+            <div className={cn("flex items-baseline gap-2 mb-1", customStyle?.textAlign === 'center' ? 'justify-center' : '')}>
               <p className={cn(
-                "text-base md:text-xl font-black tracking-tighter leading-none",
+                "text-lg md:text-xl font-black tracking-tighter leading-none",
                 isDark ? "text-amber-400" : "text-[#f85606]"
-              )}>
+              )} style={{ color: customStyle?.priceColor }}>
                 <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
                 {product.price.toLocaleString()}
               </p>
@@ -112,7 +112,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               {showRating && (
                 <div className="flex items-center gap-1 text-amber-400">
                   <Star size={10} fill="currentColor" />
-                  <span className={cn(isDark ? "text-white/60" : "text-gray-600")}>{rating}/5</span>
+                  <span className={cn("font-black", isDark ? "text-white/60" : "text-gray-600")}>{rating.toFixed(1)}</span>
                 </div>
               )}
               {showSalesCount && (

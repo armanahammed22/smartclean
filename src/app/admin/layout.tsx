@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -96,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, customize: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -538,16 +539,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <AlertDialogContent className="rounded-[2rem] max-sm border-none shadow-2xl">
+        <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2">
               <LogOut size={20} /> Logout Admin?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">
-              Confirm session termination.
+              Confirm session termination. You will be redirected to the login page.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="pt-4 flex gap-2">
+          <AlertDialogFooter className="pt-4 flex gap-3">
             <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
               Logout
