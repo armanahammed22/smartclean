@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -550,7 +551,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialog>
-      </div>
     </div>
   );
 }

@@ -219,6 +219,18 @@ export interface Booking {
   createdAt: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  features: string[];
+  color: string;
+  icon: string;
+  featured?: boolean;
+  createdAt: string;
+}
+
 export interface TrackingConfig {
   googleMapsApiKey: string;
   trackingInterval: number; // in seconds
