@@ -55,7 +55,8 @@ import {
   ClipboardList,
   ArrowLeft,
   CreditCard,
-  Search
+  Search,
+  ChevronDown
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -95,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, offers: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -154,9 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "DASHBOARD",
         icon: LayoutDashboard,
         color: "text-indigo-400",
-        items: [
-          { name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard },
-        ]
+        items: [{ name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard }]
       },
       sales: {
         id: 'sales',
@@ -166,7 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           ...(productsEnabled ? [{ name: "New Order", href: '/admin/orders?create=true', icon: Plus }] : []),
           ...(servicesEnabled ? [{ name: "New Booking", href: '/admin/bookings?create=true', icon: Plus }] : []),
-        ].filter(Boolean)
+        ]
       },
       ai_agents: {
         id: 'ai_agents',
@@ -174,9 +173,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Bot,
         color: "text-blue-400",
         items: [
-          ...(productsEnabled || servicesEnabled ? [{ name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles }] : []),
-          ...(servicesEnabled ? [{ name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles }] : []),
-        ].filter(Boolean)
+          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
+          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
+        ]
       },
       orders: {
         id: 'orders',
@@ -188,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "Service Bookings", href: '/admin/bookings', icon: Calendar }] : []),
           { name: "Invoices", href: '/admin/invoices', icon: FileText },
           ...(productsEnabled ? [{ name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck }] : []),
-        ].filter(Boolean)
+        ]
       },
       inventory: {
         id: 'inventory',
@@ -230,7 +229,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
           ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
           { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
-        ].filter(Boolean)
+        ]
       },
       offers: {
         id: 'offers',
@@ -243,7 +242,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
           { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
           { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
-        ].filter(Boolean)
+        ]
       },
       crm: {
         id: 'crm',
@@ -255,7 +254,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "Staff Directory", href: '/admin/employees', icon: HardHat }] : []),
           { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
           { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
-        ].filter(Boolean)
+        ]
       },
       vendor_hub: {
         id: 'vendor_hub',
@@ -287,10 +286,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: MousePointer2 },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
-          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
-          { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
-          { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: MousePointer2 },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
@@ -302,13 +297,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-slate-400",
         items: [
           { name: "General Settings", href: '/admin/settings', icon: Settings },
-          ...(productsEnabled ? [{ name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck }] : []),
-          { name: "Localization", href: '/admin/settings/languages', icon: Languages },
           { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
           { name: "Fleet Tracking", href: '/admin/settings/tracking', icon: MapPin },
           { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
           { name: "System Logs", href: '/admin/error-logs', icon: AlertCircle },
-        ].filter(Boolean)
+        ]
       },
       support: {
         id: 'support',
@@ -322,7 +315,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     };
 
-    // Apply custom order if exists
     let orderedKeys = Object.keys(baseGroups);
     if (sidebarConfig?.order) {
       const savedOrder = sidebarConfig.order as string[];
@@ -334,7 +326,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => g && g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
+  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -349,10 +341,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/login');
     }
   }, [isAuthorized, isUserLoading, roleLoading, user, router, toast]);
-
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
-  };
 
   const handleLogout = async () => {
     if (auth) {
@@ -388,7 +376,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           return (
             <div key={group.id} className="space-y-1">
               <button
-                onClick={() => toggleGroup(group.id)}
+                onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white group",
                   collapsed ? "justify-center px-0 h-10" : "px-3 py-2",
@@ -405,14 +393,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   )}>
                     <group.icon size={18} className={cn("shrink-0", group.color)} />
                   </div>
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-left animate-in fade-in slide-in-from-left-2">{group.title}</span>}
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap text-left">{group.title}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
 
               {expandedGroups[group.id] && !collapsed && (
                 <div className="mt-1 space-y-1 pl-11 animate-in slide-in-from-top-2 duration-300">
-                  {group.items.map((item) => (
+                  {group.items.map((item: any) => (
                     <Link
                       key={item.name}
                       href={item.href}
@@ -460,8 +448,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const isNotDashboard = pathname !== '/admin/dashboard';
-
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside className={cn(
@@ -469,7 +455,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         isCollapsed ? "w-20" : "w-72"
       )}>
         <SidebarContent collapsed={isCollapsed} />
-        
         <button 
           onClick={handleToggleCollapse}
           className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 active:scale-90 transition-all border-2 border-[#F8FAFC]"
@@ -486,7 +471,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 text-gray-600"><Menu size={22} /></Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
-                <SheetHeader className="p-6 border-b border-white/5 sr-only">
+                <SheetHeader className="sr-only">
                   <SheetTitle>Admin Navigation</SheetTitle>
                   <SheetDescription>Smart Clean Central Control</SheetDescription>
                 </SheetHeader>
@@ -494,7 +479,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-3">
-              {isNotDashboard && (
+              {pathname !== '/admin/dashboard' && (
                 <Button variant="ghost" size="icon" className="h-10 w-10 bg-gray-50 rounded-xl" onClick={() => router.back()}>
                   <ArrowLeft size={20} />
                 </Button>
@@ -509,7 +494,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           
           <div className="flex items-center gap-2 md:gap-4 h-full">
-            {/* 🌐 Modern Language Switcher */}
             <Button 
               variant="ghost" 
               size="sm"
@@ -520,7 +504,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Languages size={14} />
               </div>
               <span className="hidden sm:inline">{language === 'bn' ? "English" : "বাংলা"}</span>
-              <span className="sm:hidden">{language === 'bn' ? "EN" : "BN"}</span>
             </Button>
 
             <Button variant="ghost" className="text-gray-600 gap-2 h-10 px-3 rounded-xl font-bold hover:bg-gray-50" asChild>
@@ -535,11 +518,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-60 mt-1">System Root</p>
               </div>
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white flex items-center justify-center overflow-hidden border-2 border-primary/10 shadow-md relative">
-                {displayLogo ? (
-                  <Image src={displayLogo} alt="Admin" fill className="object-contain p-1" unoptimized />
-                ) : (
-                  <span className="font-black text-primary">{user?.email?.[0].toUpperCase()}</span>
-                )}
+                {displayLogo ? <Image src={displayLogo} alt="Admin" fill className="object-contain p-1" unoptimized /> : <span className="font-black text-primary">{user?.email?.[0].toUpperCase()}</span>}
               </div>
             </div>
           </div>
@@ -561,17 +540,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <LogOut size={20} /> Logout Admin?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">
-              Confirm session termination. You will be redirected to the login page.
+              Confirm session termination.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 flex gap-2">
             <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">
-              Logout Now
+              Logout
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialog>
-      </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

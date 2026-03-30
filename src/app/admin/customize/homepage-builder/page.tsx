@@ -32,8 +32,12 @@ import {
   AlignCenter,
   TicketPercent,
   CheckCircle2,
-  Filter
+  Filter,
+  Info,
+  Badge as BadgeIcon,
+  Search
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -69,7 +73,6 @@ export default function HomepageBuilderPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [localSections, setLocalSections] = useState<any[]>([]);
 
-  // Global Theme Hook
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
   const { data: globalTheme } = useDoc(themeRef);
 
@@ -250,7 +253,16 @@ export default function HomepageBuilderPage() {
               </div>
             </CardHeader>
             <CardContent className="p-8 space-y-12">
-              
+              <div className="p-8 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-6">
+                <div className="p-4 bg-white rounded-2xl shadow-sm text-blue-600 shrink-0"><Info size={32} /></div>
+                <div className="space-y-2">
+                  <h4 className="text-lg font-black uppercase tracking-tight text-blue-900">Styling Priority</h4>
+                  <p className="text-sm text-blue-800/70 leading-relaxed font-medium">
+                    Master styles defined below are applied to all blocks that have **Inherit Master Theme** turned ON. This ensures a consistent look across your marketplace.
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <Type size={14} /> Typography & Backgrounds
@@ -258,19 +270,19 @@ export default function HomepageBuilderPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Section BG</Label>
-                    <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, sectionBg: e.target.value})} className="h-10 p-1" />
+                    <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { sectionBg: e.target.value }, { merge: true })} className="h-10 p-1" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Section Title Color</Label>
-                    <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => saveGlobalTheme({...globalTheme, titleColor: e.target.value})} className="h-10 p-1" />
+                    <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleColor: e.target.value }, { merge: true })} className="h-10 p-1" />
                   </div>
                   <div className="space-y-4">
                     <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Size Mobile <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => saveGlobalTheme({...globalTheme, titleSizeMobile: val[0].toString()})} />
+                    <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleSizeMobile: val[0].toString() }, { merge: true })} />
                   </div>
                   <div className="space-y-4">
                     <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Size Desktop <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => saveGlobalTheme({...globalTheme, titleSizeDesktop: val[0].toString()})} />
+                    <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleSizeDesktop: val[0].toString() }, { merge: true })} />
                   </div>
                 </div>
               </div>
@@ -282,15 +294,15 @@ export default function HomepageBuilderPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Background</Label>
-                    <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, cardBg: e.target.value})} className="h-10 p-1" />
+                    <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardBg: e.target.value }, { merge: true })} className="h-10 p-1" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Radius (px)</Label>
-                    <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => saveGlobalTheme({...globalTheme, cardRadius: e.target.value})} className="h-10 bg-gray-50 border-none font-bold" />
+                    <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardRadius: e.target.value }, { merge: true })} className="h-10 bg-gray-50 border-none font-bold" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground">Shadow Depth</Label>
-                    <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => saveGlobalTheme({...globalTheme, cardShadow: v})}>
+                    <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardShadow: v }, { merge: true })}>
                       <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="shadow-none">No Shadow</SelectItem>
@@ -303,75 +315,12 @@ export default function HomepageBuilderPage() {
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase">Text Alignment</Label>
                     <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                      <button onClick={() => saveGlobalTheme({...globalTheme, textAlign: 'left'})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.textAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
-                      <button onClick={() => saveGlobalTheme({...globalTheme, textAlign: 'center'})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.textAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
+                      <button onClick={() => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { textAlign: 'left' }, { merge: true })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.textAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
+                      <button onClick={() => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { textAlign: 'center' }, { merge: true })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.textAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                  <MousePointer2 size={14} /> Global Buttons
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Primary Button BG</Label>
-                    <Input type="color" value={globalTheme?.btnBg || '#1E5F7A'} onChange={e => saveGlobalTheme({...globalTheme, btnBg: e.target.value})} className="h-10 p-1" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Text Color</Label>
-                    <Input type="color" value={globalTheme?.btnText || '#ffffff'} onChange={e => saveGlobalTheme({...globalTheme, btnText: e.target.value})} className="h-10 p-1" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Radius (px)</Label>
-                    <Input type="number" value={globalTheme?.btnRadius || 12} onChange={e => saveGlobalTheme({...globalTheme, btnRadius: e.target.value})} className="h-10 bg-gray-50 border-none font-bold" />
-                  </div>
-                  <div className="space-y-4">
-                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Btn Font Size Mobile <span>{globalTheme?.btnFontSizeMobile || 10}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.btnFontSizeMobile || '10')]} min={8} max={20} onValueChange={val => saveGlobalTheme({...globalTheme, btnFontSizeMobile: val[0].toString()})} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                  <Zap size={14} /> Card Dynamic Features
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg text-amber-500 shadow-sm"><Star size={16} fill="currentColor" /></div>
-                      <Label className="text-[10px] font-black uppercase">Show Review Rating</Label>
-                    </div>
-                    <Switch 
-                      checked={globalTheme?.showRating !== false} 
-                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showRating: val})} 
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg text-red-500 shadow-sm"><TicketPercent size={16} /></div>
-                      <Label className="text-[10px] font-black uppercase">Show Discount Badge</Label>
-                    </div>
-                    <Switch 
-                      checked={globalTheme?.showDiscount !== false} 
-                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showDiscount: val})} 
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm"><TrendingUp size={16} /></div>
-                      <Label className="text-[10px] font-black uppercase">Show Sales/Book Count</Label>
-                    </div>
-                    <Switch 
-                      checked={globalTheme?.showSalesCount !== false} 
-                      onCheckedChange={val => saveGlobalTheme({...globalTheme, showSalesCount: val})} 
-                    />
-                  </div>
-                </div>
-              </div>
-
             </CardContent>
           </Card>
         </TabsContent>
@@ -529,6 +478,7 @@ export default function HomepageBuilderPage() {
                       <span className="text-[10px] font-black uppercase text-center text-gray-600 group-hover:text-primary tracking-tighter leading-tight">
                         {type.label}
                       </span>
+                      <Badge variant="outline" className="text-[7px] font-bold uppercase border-gray-200 text-gray-400 px-1.5 h-4 group-hover:border-primary/20 group-hover:text-primary/60">{type.category}</Badge>
                     </button>
                   ))}
                 </div>

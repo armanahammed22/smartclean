@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -25,7 +24,8 @@ import {
   Star,
   Zap,
   Layout,
-  Package
+  Package,
+  Search
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -55,6 +55,7 @@ export default function ServicesManagementPage() {
   const [viewingService, setViewingService] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [mainImageUrl, setMainImageUrl] = useState('');
   const [newServiceData, setNewServiceData] = useState({
@@ -87,11 +88,19 @@ export default function ServicesManagementPage() {
     };
   }, [services, subServices]);
 
+  const filteredServices = useMemo(() => {
+    if (!services) return [];
+    return services.filter(s => 
+      s.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.categoryId?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [services, searchTerm]);
+
   const toggleSelectAll = () => {
-    if (selectedIds.length === services?.length) {
+    if (selectedIds.length === filteredServices?.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(services?.map(s => s.id) || []);
+      setSelectedIds(filteredServices?.map(s => s.id) || []);
     }
   };
 
@@ -195,7 +204,23 @@ export default function ServicesManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem]">
+      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+        <div className="p-6 md:p-8 border-b bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="relative w-full md:max-w-md group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
+            <Input 
+              placeholder="Search by registry label..." 
+              className="pl-12 h-12 bg-white border-gray-100 rounded-2xl focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          {selectedIds.length > 0 && (
+            <Button variant="destructive" className="rounded-xl h-12 px-6 font-black uppercase text-xs" onClick={handleBulkDelete} disabled={isBulkProcessing}>
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+        </div>
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table>
@@ -203,7 +228,7 @@ export default function ServicesManagementPage() {
                 <TableRow>
                   <TableHead className="w-12 pl-6">
                     <Checkbox 
-                      checked={services?.length ? selectedIds.length === services.length : false}
+                      checked={filteredServices?.length ? selectedIds.length === filteredServices.length : false}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -218,7 +243,7 @@ export default function ServicesManagementPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={7} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                ) : services?.map((service) => (
+                ) : filteredServices?.map((service) => (
                   <TableRow key={service.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(service.id) && "bg-primary/5")}>
                     <TableCell className="pl-6">
                       <Checkbox 
@@ -274,7 +299,7 @@ export default function ServicesManagementPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-5xl w-[95vw] rounded-t-[2rem] md:rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <div className="flex flex-col h-[85vh]">
+          <form onSubmit={handleSaveFull} className="flex flex-col h-[85vh]">
             <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary rounded-xl"><Wrench size={24} /></div>
@@ -379,12 +404,12 @@ export default function ServicesManagementPage() {
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none rounded-xl font-bold uppercase text-[10px] tracking-widest px-8">Discard</Button>
-                <Button onClick={handleSaveFull} disabled={isSubmitting} className="flex-1 sm:flex-none rounded-xl font-black px-12 h-12 bg-primary shadow-xl uppercase tracking-tighter">
+                <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none rounded-xl font-black px-12 h-12 bg-primary shadow-xl uppercase tracking-tighter">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Create Service</>}
                 </Button>
               </div>
             </DialogFooter>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 
