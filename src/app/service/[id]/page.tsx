@@ -67,6 +67,7 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
+  // 1. Data Fetching
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -111,10 +112,11 @@ export default function ServiceBookingPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [allReviewsRaw]);
 
+  // 2. Calculations
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = pricingLogic === 'sqft' && selectedSqftId !== null ? baseService?.sqftOptions?.[parseInt(selectedSqftId)] : null;
   
-  const basePrice = useMemo(() => {
+  const basePriceValue = useMemo(() => {
     if (!baseService) return 0;
     if (pricingLogic === 'fixed') return baseService.basePrice || 0;
     if (pricingLogic === 'sqft') return selectedSlab?.price || 0;
@@ -127,7 +129,7 @@ export default function ServiceBookingPage() {
   }, [addOnOptions, addOnsQty]);
 
   const platformFee = 50;
-  const totalPrice = basePrice + addOnsTotal + platformFee;
+  const totalPrice = basePriceValue + addOnsTotal + platformFee;
 
   useEffect(() => {
     if (baseService?.pricingType === 'sqft' && baseService.sqftOptions?.length) {
@@ -202,8 +204,8 @@ export default function ServiceBookingPage() {
           <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.2)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
-              {/* Media Gallery - Span 5 */}
-              <div className="lg:col-span-5 p-2 md:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
+              {/* Media Gallery - Span 6 (Expanded) */}
+              <div className="lg:col-span-6 p-2 md:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden group">
                   {baseService.imageUrl ? (
                     <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
@@ -235,26 +237,27 @@ export default function ServiceBookingPage() {
                 )}
               </div>
 
-              {/* Booking Info - Span 3 (Narrower) */}
-              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
+              {/* Booking Info - Span 2 (Ultra Narrow per request) */}
+              <div className="lg:col-span-2 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="space-y-4">
                   <div className="space-y-3">
                     <h1 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
                       {baseService.title}
                     </h1>
                     
-                    <div className="grid grid-cols-1 gap-2 py-3 border-y border-gray-50">
-                      <div className="flex items-center gap-2 text-amber-500 bg-amber-50 p-2 rounded-xl">
+                    {/* Status Info in One Horizontal Row */}
+                    <div className="flex items-center justify-between gap-1 py-3 border-y border-gray-50">
+                      <div className="flex flex-col items-center gap-1 flex-1 text-amber-500 bg-amber-50/50 p-2 rounded-xl border border-amber-100/50">
                         <Star size={14} fill="currentColor" />
-                        <span className="text-[10px] font-black">{baseService.rating || '5.0'} Rating</span>
+                        <span className="text-[8px] font-black">{baseService.rating || '5.0'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded-xl">
+                      <div className="flex flex-col items-center gap-1 flex-1 text-blue-600 bg-blue-50/50 p-2 rounded-xl border border-blue-100/50">
                         <Clock size={14} />
-                        <span className="text-[9px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
+                        <span className="text-[8px] font-black uppercase">{baseService.duration || 'Flex'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded-xl">
+                      <div className="flex flex-col items-center gap-1 flex-1 text-emerald-600 bg-emerald-50/50 p-2 rounded-xl border border-emerald-100/50">
                         <Users size={14} />
-                        <span className="text-[9px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
+                        <span className="text-[8px] font-black uppercase">{baseService.teamSize || 'Pro'}</span>
                       </div>
                     </div>
                   </div>
@@ -262,39 +265,39 @@ export default function ServiceBookingPage() {
                   <div className="space-y-4">
                     <div className="bg-primary/5 border-2 border-primary/10 p-4 rounded-2xl relative overflow-hidden group text-center">
                       <div className="space-y-1 relative z-10">
-                        <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Payable Amount</p>
+                        <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Total Price</p>
                         <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-3xl font-black text-primary">৳{totalPrice.toLocaleString()}</span>
+                          <span className="text-2xl font-black text-primary">৳{totalPrice.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
 
                     {pricingLogic === 'quantity' && (
                       <div className="flex flex-col gap-2">
-                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-1 text-center">Set Quantity</Label>
+                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest text-center">Quantity</Label>
                         <div className="flex items-center justify-center bg-gray-100 rounded-xl overflow-hidden h-10 border border-gray-200">
-                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={14} /></button>
-                          <span className="px-4 font-black text-xs text-[#081621] min-w-[30px] text-center">{mainQuantity}</span>
-                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={14} /></button>
+                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 hover:bg-gray-200 text-gray-500"><Minus size={12} /></button>
+                          <span className="px-2 font-black text-xs text-[#081621] min-w-[25px] text-center">{mainQuantity}</span>
+                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 hover:bg-gray-200 text-gray-500"><Plus size={12} /></button>
                         </div>
                       </div>
                     )}
 
                     {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
                       <div className="space-y-2">
-                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest text-center block">Select Area</Label>
-                        <div className="grid grid-cols-1 gap-1.5">
+                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest text-center block">Slabs</Label>
+                        <div className="grid grid-cols-1 gap-1">
                           {baseService.sqftOptions.map((opt: any, idx: number) => (
                             <div 
                               key={idx}
                               onClick={() => setSelectedSqftId(idx.toString())}
                               className={cn(
-                                "p-2 px-3 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between",
+                                "p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between",
                                 selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-sm" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
                               )}
                             >
-                              <span className="text-[9px] font-bold uppercase">{opt.label}</span>
-                              <span className="text-[10px] font-black text-primary">৳{opt.price}</span>
+                              <span className="text-[8px] font-bold uppercase truncate">{opt.label}</span>
+                              <span className="text-[9px] font-black text-primary">৳{opt.price}</span>
                             </div>
                           ))}
                         </div>
@@ -304,7 +307,7 @@ export default function ServiceBookingPage() {
                     <Button 
                       onClick={handleContinue} 
                       disabled={!baseService.isBookingEnabled}
-                      className="w-full h-12 md:h-14 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 transition-all active:scale-95 bg-primary hover:bg-primary/90"
+                      className="w-full h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 transition-all active:scale-95 bg-primary hover:bg-primary/90"
                     >
                       {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={14} />
                     </Button>
@@ -514,15 +517,16 @@ export default function ServiceBookingPage() {
           </section>
         )}
 
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe">
-          <div className="flex flex-col min-w-[100px]">
+        {/* 📱 Mobile Sticky Action Bar */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
+          <div className="flex flex-col">
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Due</span>
             <span className="text-xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
           </div>
           <Button 
             onClick={handleContinue} 
             disabled={!baseService.isBookingEnabled} 
-            className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95 bg-primary"
+            className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
           >
             {baseService.bookingButtonText || 'Confirm Booking'}
           </Button>
