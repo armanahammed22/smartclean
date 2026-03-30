@@ -553,7 +553,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Logout
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialog>
+        </AlertDialogContent>
       </AlertDialog>
     </div>
   );
