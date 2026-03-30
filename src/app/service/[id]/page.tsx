@@ -35,21 +35,16 @@ import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
 import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, addDoc, limit } from 'firebase/firestore';
+import { collection, query, where, addDoc, limit, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem 
-} from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from "embla-carousel-autoplay";
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ServiceBookingPage() {
   const { id: slugOrId } = useParams();
@@ -73,7 +68,7 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Fetch main service
+  // 1. Fetch main service (Hooks Section)
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -101,18 +96,19 @@ export default function ServiceBookingPage() {
   const userBookingsQuery = useMemoFirebase(() => 
     (db && user) ? query(collection(db, 'bookings'), where('customerId', '==', user.uid)) : null, [db, user]);
   const { data: userBookings } = useCollection(userBookingsQuery);
-  
-  const canSubmitReview = useMemo(() => {
-    if (!userBookings || !targetId) return false;
-    return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
-  }, [userBookings, targetId]);
 
   const reviewsRef = useMemoFirebase(() => {
     if (!db || !targetId) return null;
     return collection(db, 'services', targetId, 'reviews');
   }, [db, targetId]);
   const { data: allReviewsRaw } = useCollection(reviewsRef);
-  
+
+  // --- Derived State Calculations ---
+  const canSubmitReview = useMemo(() => {
+    if (!userBookings || !targetId) return false;
+    return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
+  }, [userBookings, targetId]);
+
   const reviews = useMemo(() => {
     if (!allReviewsRaw) return [];
     return allReviewsRaw
@@ -120,13 +116,6 @@ export default function ServiceBookingPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [allReviewsRaw]);
 
-  useEffect(() => {
-    if (baseService?.pricingType === 'sqft' && baseService.sqftOptions?.length) {
-      setSelectedSqftId('0');
-    }
-  }, [baseService]);
-
-  // 4. Pricing Calculations
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = pricingLogic === 'sqft' && selectedSqftId !== null ? baseService?.sqftOptions?.[parseInt(selectedSqftId)] : null;
   
@@ -144,6 +133,12 @@ export default function ServiceBookingPage() {
 
   const platformFee = 50;
   const totalPrice = basePrice + addOnsTotal + platformFee;
+
+  useEffect(() => {
+    if (baseService?.pricingType === 'sqft' && baseService.sqftOptions?.length) {
+      setSelectedSqftId('0');
+    }
+  }, [baseService]);
 
   const handleContinue = () => {
     if (!baseService || !baseService.isBookingEnabled) return;
@@ -169,6 +164,19 @@ export default function ServiceBookingPage() {
 
     addToCart(cartItem as any, 1, false);
     setCheckoutOpen(true);
+  };
+
+  const handleToggleReview = async (reviewId: string, current: string) => {
+    if (!db || !targetId) return;
+    const newStatus = current === 'Approved' ? 'Pending' : 'Approved';
+    await updateDoc(doc(db, 'services', targetId, 'reviews', reviewId), { status: newStatus });
+    toast({ title: "Review visibility updated" });
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!db || !targetId || !confirm("Delete this review?")) return;
+    await deleteDoc(doc(db, 'services', targetId, 'reviews', reviewId));
+    toast({ title: "Review deleted" });
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
