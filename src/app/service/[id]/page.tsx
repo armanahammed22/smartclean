@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -200,65 +199,60 @@ export default function ServiceBookingPage() {
       <div className="bg-[#F9FAFB] min-h-screen pb-24 lg:pb-12">
         
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
-          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.2)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
-              <div className="lg:col-span-4 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-6">
-                <div className="space-y-6">
-                  <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-3xl overflow-hidden group border border-gray-50">
-                    {baseService.imageUrl ? (
-                      <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
-                    ) : (
-                      <Wrench size={80} className="text-gray-200" />
-                    )}
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-[#081621] text-primary border-none text-[8px] font-black uppercase px-3 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
-                    </div>
-                  </div>
-
-                  {baseService.beforeAfterImages?.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between px-2">
-                        <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-[#081621]">Work Proofs</h3>
-                      </div>
-                      <Carousel opts={{ align: "start", loop: true }} className="w-full">
-                        <CarouselContent className="-ml-3">
-                          {baseService.beforeAfterImages.map((img: any, i: number) => (
-                            <CarouselItem key={i} className="pl-3 basis-1/2">
-                              <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                                <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
-                                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
-                                  <span className="text-[7px] font-black text-white uppercase tracking-widest">{img.tag}</span>
-                                </div>
-                              </div>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                      </Carousel>
-                    </div>
+              {/* Media Gallery - Span 5 */}
+              <div className="lg:col-span-5 p-2 md:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
+                <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden group">
+                  {baseService.imageUrl ? (
+                    <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                  ) : (
+                    <Wrench size={80} className="text-gray-200" />
                   )}
+                  <div className="absolute top-4 left-4">
+                    <Badge className="bg-primary text-white border-none text-[8px] font-black uppercase px-3 py-1 rounded-sm shadow-2xl">Verified Quality</Badge>
+                  </div>
                 </div>
+
+                {baseService.beforeAfterImages?.length > 0 && (
+                  <div className="space-y-3">
+                    <Carousel opts={{ align: "start", loop: true }} className="w-full">
+                      <CarouselContent className="-ml-2">
+                        {baseService.beforeAfterImages.map((img: any, i: number) => (
+                          <CarouselItem key={i} className="pl-2 basis-1/2">
+                            <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-white shadow-md">
+                              <Image src={img.url} alt={`Work ${i}`} fill className="object-cover" unoptimized />
+                              <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
+                                <span className="text-[7px] font-black text-white uppercase tracking-widest">{img.tag}</span>
+                              </div>
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                  </div>
+                )}
               </div>
 
-              <div className="lg:col-span-5 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-6">
+              {/* Booking Info - Span 3 (Narrower) */}
+              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h1 className="text-2xl md:text-3xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
+                  <div className="space-y-3">
+                    <h1 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
                       {baseService.title}
                     </h1>
                     
-                    <div className="flex flex-wrap items-center gap-3 py-2 border-y border-gray-50">
-                      <div className="flex items-center gap-1.5 text-amber-500">
+                    <div className="grid grid-cols-1 gap-2 py-3 border-y border-gray-50">
+                      <div className="flex items-center gap-2 text-amber-500 bg-amber-50 p-2 rounded-xl">
                         <Star size={14} fill="currentColor" />
-                        <span className="text-[10px] font-black">{baseService.rating || '5.0'}</span>
+                        <span className="text-[10px] font-black">{baseService.rating || '5.0'} Rating</span>
                       </div>
-                      <div className="w-px h-3 bg-gray-200" />
-                      <div className="flex items-center gap-1.5 text-blue-600">
+                      <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded-xl">
                         <Clock size={14} />
                         <span className="text-[9px] font-black uppercase">{baseService.duration || 'Flexible'}</span>
                       </div>
-                      <div className="w-px h-3 bg-gray-200" />
-                      <div className="flex items-center gap-1.5 text-emerald-600">
+                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-2 rounded-xl">
                         <Users size={14} />
                         <span className="text-[9px] font-black uppercase">{baseService.teamSize || 'Professional'}</span>
                       </div>
@@ -266,114 +260,100 @@ export default function ServiceBookingPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="bg-white border-2 border-gray-50 p-5 md:p-6 rounded-3xl flex items-center justify-between shadow-sm relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] rotate-12 group-hover:scale-110 transition-transform"><ShoppingCart size={60} /></div>
+                    <div className="bg-primary/5 border-2 border-primary/10 p-4 rounded-2xl relative overflow-hidden group text-center">
                       <div className="space-y-1 relative z-10">
-                        <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Total Payable</p>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-black text-[#081621]">৳{totalPrice.toLocaleString()}</span>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase">VAT INC</span>
+                        <p className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Payable Amount</p>
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-3xl font-black text-primary">৳{totalPrice.toLocaleString()}</span>
                         </div>
                       </div>
-                      {pricingLogic === 'quantity' && (
-                        <div className="flex items-center bg-gray-100 rounded-xl overflow-hidden h-9 relative z-10 border border-gray-200 shadow-inner">
-                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={14} /></button>
-                          <span className="px-3 font-black text-xs text-[#081621] min-w-[25px] text-center">{mainQuantity}</span>
-                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={14} /></button>
-                        </div>
-                      )}
                     </div>
 
+                    {pricingLogic === 'quantity' && (
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-1 text-center">Set Quantity</Label>
+                        <div className="flex items-center justify-center bg-gray-100 rounded-xl overflow-hidden h-10 border border-gray-200">
+                          <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Minus size={14} /></button>
+                          <span className="px-4 font-black text-xs text-[#081621] min-w-[30px] text-center">{mainQuantity}</span>
+                          <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-4 hover:bg-gray-200 transition-colors text-gray-500"><Plus size={14} /></button>
+                        </div>
+                      </div>
+                    )}
+
                     {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                        <Label className="text-[9px] font-black uppercase text-[#081621] tracking-[0.2em] ml-1">Area Size (Square Feet)</Label>
-                        <div className="grid grid-cols-1 gap-2">
+                      <div className="space-y-2">
+                        <Label className="text-[8px] font-black uppercase text-gray-400 tracking-widest text-center block">Select Area</Label>
+                        <div className="grid grid-cols-1 gap-1.5">
                           {baseService.sqftOptions.map((opt: any, idx: number) => (
                             <div 
                               key={idx}
                               onClick={() => setSelectedSqftId(idx.toString())}
                               className={cn(
-                                "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
-                                selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-md" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
+                                "p-2 px-3 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between",
+                                selectedSqftId === idx.toString() ? "border-primary bg-primary/5 shadow-sm" : "border-gray-50 bg-gray-50/50 hover:border-gray-200"
                               )}
                             >
-                              <span className="text-[10px] font-bold uppercase tracking-tight">{opt.label}</span>
-                              <span className="text-xs font-black text-primary">৳{opt.price.toLocaleString()}</span>
+                              <span className="text-[9px] font-bold uppercase">{opt.label}</span>
+                              <span className="text-[10px] font-black text-primary">৳{opt.price}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="pt-4 border-t border-gray-50 space-y-2">
-                      <div className="flex justify-between text-[9px] font-black uppercase text-gray-400">
-                        <span>Base Rate</span>
-                        <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
-                      </div>
-                      {addOnsTotal > 0 && (
-                        <div className="flex justify-between text-[9px] font-black uppercase text-blue-600">
-                          <span>Add-ons</span>
-                          <span>+৳{addOnsTotal.toLocaleString()}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-[9px] font-black uppercase text-gray-400">
-                        <span>Platform Fee</span>
-                        <span>৳{platformFee}</span>
-                      </div>
-                    </div>
-
                     <Button 
                       onClick={handleContinue} 
                       disabled={!baseService.isBookingEnabled}
-                      className="w-full h-14 md:h-16 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-primary/20 gap-2 transition-all active:scale-95"
+                      className="w-full h-12 md:h-14 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 transition-all active:scale-95 bg-primary hover:bg-primary/90"
                     >
-                      {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={16} />
+                      {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={14} />
                     </Button>
                   </div>
                 </div>
               </div>
 
-              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 flex flex-col gap-6 bg-gray-50/20">
-                <div className="space-y-6">
-                  <div className="border-b pb-3 flex justify-between items-center">
+              {/* Add-ons - Span 4 */}
+              <div className="lg:col-span-4 p-4 md:p-6 lg:p-8 flex flex-col gap-4 bg-gray-50/20">
+                <div className="space-y-4">
+                  <div className="border-b pb-2 flex justify-between items-center">
                     <div>
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-[#081621]">Enhancements</h3>
-                      <p className="text-[8px] font-bold text-gray-400 uppercase">Optional Services</p>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Enhancements</h3>
+                      <p className="text-[8px] font-bold text-gray-400 uppercase">One-line optimization</p>
                     </div>
-                    <Zap size={16} className="text-primary" fill="currentColor" />
+                    <div className="p-1.5 bg-primary/10 rounded-lg text-primary"><Zap size={14} fill="currentColor" /></div>
                   </div>
 
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto no-scrollbar">
+                  <div className="space-y-1.5 max-h-[450px] overflow-y-auto no-scrollbar">
                     {addOnOptions?.length ? addOnOptions.map((addon) => {
                       const qty = addOnsQty[addon.id] || 0;
                       return (
                         <div 
                           key={addon.id}
                           className={cn(
-                            "p-2.5 rounded-xl border transition-all group flex items-center justify-between bg-white",
-                            qty > 0 ? "border-primary shadow-md" : "border-gray-100 hover:border-gray-200"
+                            "p-2 rounded-xl border transition-all flex items-center justify-between bg-white",
+                            qty > 0 ? "border-primary shadow-md bg-primary/5" : "border-gray-100"
                           )}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="relative w-7 h-7 rounded-lg overflow-hidden border shrink-0 bg-gray-50">
-                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={10} className="m-auto text-gray-300" />}
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="relative w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-gray-50">
+                              {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={12} className="m-auto text-gray-300" />}
                             </div>
                             <div className="min-w-0">
-                              <h5 className="text-[9px] font-black text-gray-900 uppercase truncate leading-none mb-1">{addon.name}</h5>
-                              <p className="text-[8px] font-black text-primary">৳{addon.price}</p>
+                              <h5 className="text-[9px] font-black text-gray-900 uppercase truncate leading-none">{addon.name}</h5>
+                              <p className="text-[10px] font-black text-primary mt-0.5">৳{addon.price}</p>
                             </div>
                           </div>
-                          <div className="flex items-center bg-gray-50 rounded-lg px-1 py-0.5 border border-gray-100 shrink-0">
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-red-500 transition-all"><Minus size={10}/></button>
-                            <span className="text-[9px] font-black text-gray-900 min-w-[18px] text-center">{qty}</span>
-                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 hover:bg-white rounded text-gray-400 hover:text-emerald-500 transition-all"><Plus size={10}/></button>
+                          <div className="flex items-center bg-gray-100 rounded-lg px-1.5 py-1 border border-gray-200 shrink-0 shadow-inner">
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 text-gray-400 hover:text-red-500 transition-all"><Minus size={12}/></button>
+                            <span className="text-[10px] font-black text-[#081621] min-w-[20px] text-center">{qty}</span>
+                            <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 text-gray-400 hover:text-emerald-500 transition-all"><Plus size={12}/></button>
                           </div>
                         </div>
                       );
                     }) : (
-                      <div className="py-8 text-center space-y-2 opacity-20">
+                      <div className="py-12 text-center space-y-2 opacity-20">
                         <LayoutGrid size={24} className="mx-auto" />
-                        <p className="text-[8px] font-black uppercase tracking-widest">None available</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest">No add-ons</p>
                       </div>
                     )}
                   </div>
@@ -384,12 +364,13 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        <section className="container mx-auto px-4 max-w-7xl mt-4 space-y-6">
+        {/* BOTTOM CONTENT */}
+        <section className="container mx-auto px-4 max-w-7xl mt-6 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-6">
               <Card className="border-none shadow-sm rounded-3xl bg-white p-6 md:p-10 space-y-4">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-[#081621] border-b pb-3 flex items-center gap-2">
-                  <div className="w-1 h-3 bg-primary rounded-full" /> Summary
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-3 flex items-center gap-2">
+                  <div className="w-1 h-3 bg-primary rounded-full" /> Detailed Overview
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed font-medium">
                   {baseService.description}
@@ -399,7 +380,7 @@ export default function ServiceBookingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {baseService.included?.length > 0 && (
                   <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
-                    <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={14}/> Included</h4>
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={14}/> Service Inclusions</h4>
                     <div className="space-y-2">
                       {baseService.included.map((item: string, i: number) => (
                         <div key={i} className="flex items-start gap-2.5 text-[11px] font-bold text-gray-600">
@@ -411,7 +392,7 @@ export default function ServiceBookingPage() {
                 )}
                 {baseService.notIncluded?.length > 0 && (
                   <Card className="border-none shadow-sm rounded-3xl bg-white p-6 space-y-4">
-                    <h4 className="text-[9px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={14}/> Excluded</h4>
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2"><XCircle size={14}/> Exclusions</h4>
                     <div className="space-y-2">
                       {baseService.notIncluded.map((item: string, i: number) => (
                         <div key={i} className="flex items-start gap-2.5 text-[11px] font-bold text-gray-400">
@@ -426,7 +407,7 @@ export default function ServiceBookingPage() {
 
             <div className="lg:col-span-4 space-y-4">
               <h3 className="text-xs font-black uppercase tracking-widest text-[#081621] px-2 flex items-center gap-2">
-                <Sparkles size={16} className="text-primary" /> Key Assets
+                <Sparkles size={16} className="text-primary" /> Service Excellence
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 {baseService.features?.map((f: any, i: number) => (
@@ -435,7 +416,7 @@ export default function ServiceBookingPage() {
                       <Zap size={20} fill="currentColor" />
                     </div>
                     <div className="space-y-0.5">
-                      <h4 className="font-black uppercase text-[10px] text-[#081621]">{f.title}</h4>
+                      <h4 className="font-black uppercase text-[10px] text-primary">{f.title}</h4>
                       <p className="text-[10px] text-gray-500 leading-snug font-medium">{f.desc}</p>
                     </div>
                   </Card>
@@ -447,13 +428,13 @@ export default function ServiceBookingPage() {
 
         {baseService.reviewsEnabled && (
           <section className="container mx-auto px-4 py-12 max-w-7xl">
-            <div className="bg-[#081621] rounded-[2.5rem] p-8 md:p-16 overflow-hidden relative">
+            <div className="bg-[#081621] rounded-[2.5rem] p-8 md:p-16 overflow-hidden relative shadow-2xl">
               <div className="absolute top-0 right-0 p-10 opacity-5 -rotate-12 pointer-events-none"><Quote size={200} fill="white" /></div>
               
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 relative z-10">
                 <div className="space-y-3">
                   <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic">Client Voices</h2>
-                  <p className="text-white/40 font-black uppercase tracking-[0.2em] text-[10px]">Verified Job Performance</p>
+                  <p className="text-primary font-black uppercase tracking-[0.2em] text-[10px]">Verified Service feedback</p>
                 </div>
                 <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex items-center gap-4">
                   <div className="text-center">
@@ -536,12 +517,12 @@ export default function ServiceBookingPage() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-[100] flex items-center h-20 px-4 gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe">
           <div className="flex flex-col min-w-[100px]">
             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Due</span>
-            <span className="text-xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+            <span className="text-xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
           </div>
           <Button 
             onClick={handleContinue} 
             disabled={!baseService.isBookingEnabled} 
-            className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
+            className="flex-1 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95 bg-primary"
           >
             {baseService.bookingButtonText || 'Confirm Booking'}
           </Button>
