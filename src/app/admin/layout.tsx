@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -59,7 +60,8 @@ import {
   ChevronDown,
   BarChart,
   Terminal,
-  Trophy
+  Trophy,
+  Wallet
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -99,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, seo_hub: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -159,6 +161,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: LayoutDashboard,
         color: "text-indigo-400",
         items: [{ name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard }]
+      },
+      finance: {
+        id: 'finance',
+        title: "FINANCIAL HUB",
+        icon: Wallet,
+        color: "text-emerald-400",
+        items: [
+          { name: "Finance Dashboard", href: '/admin/finance', icon: Wallet },
+          { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
+        ]
       },
       sales: {
         id: 'sales',
