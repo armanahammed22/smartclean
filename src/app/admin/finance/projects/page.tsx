@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc, where, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -19,24 +19,33 @@ import {
   Zap,
   Box,
   Wrench,
-  Users
+  Users,
+  Activity,
+  DollarSign,
+  MapPin
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProjectCostingPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
+  // Optimized to avoid index error: fetch all and filter in memory
   const ledgerQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_ledger'), where('category', '==', 'Project Cost'), orderBy('date', 'desc')) : null, [db]);
-  const { data: costs, isLoading } = useCollection(ledgerQuery);
+    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
+  const { data: allLedger, isLoading: lLoading } = useCollection(ledgerQuery);
+
+  const costs = useMemo(() => {
+    return allLedger?.filter(l => l.category === 'Project Cost') || [];
+  }, [allLedger]);
 
   const bookingsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'bookings'), where('status', '==', 'Completed'), limit(20)) : null, [db]);
-  const { data: projects } = useCollection(bookingsQuery);
+  const { data: projects, isLoading: pLoading } = useCollection(bookingsQuery);
 
   const stats = useMemo(() => {
     return {
@@ -91,7 +100,9 @@ export default function ProjectCostingPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {projects?.map((p) => (
+        {pLoading ? (
+          <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>
+        ) : projects?.map((p) => (
           <Card key={p.id} className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all border border-gray-100">
             <CardContent className="p-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -119,7 +130,7 @@ export default function ProjectCostingPage() {
                 {[
                   { label: "Staff Wages", val: "৳1,200", icon: Users, color: "text-blue-600" },
                   { label: "Materials", val: "৳450", icon: Box, color: "text-orange-600" },
-                  { label: "Transport", val: "৳200", icon: TrendingUp, color: "text-purple-600" },
+                  { label: "Transport", val: "৳200", icon: Activity, color: "text-purple-600" },
                   { label: "Commission", val: "৳150", icon: DollarSign, color: "text-emerald-600" }
                 ].map((cost, i) => (
                   <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-primary/20 transition-all">
@@ -134,6 +145,11 @@ export default function ProjectCostingPage() {
             </CardContent>
           </Card>
         ))}
+        {!pLoading && projects?.length === 0 && (
+          <div className="p-20 text-center border-2 border-dashed rounded-[3rem] text-muted-foreground italic font-medium">
+            No completed projects available for analysis.
+          </div>
+        )}
       </div>
     </div>
   );

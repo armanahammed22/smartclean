@@ -20,7 +20,8 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
-  Clock
+  Clock,
+  MoreVertical
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -36,20 +37,20 @@ export default function PartnerCommissionsPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. Fetch Partner-related Ledger Entries
+  // Optimized to avoid index error: fetch all and filter in memory
   const ledgerQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(
-      collection(db, 'finance_ledger'), 
-      where('category', '==', 'Partner Commission'),
-      orderBy('date', 'desc')
-    );
+    return query(collection(db, 'finance_ledger'), orderBy('date', 'desc'));
   }, [db]);
 
   const partnersQuery = useMemoFirebase(() => db ? collection(db, 'partners') : null, [db]);
 
-  const { data: ledger, isLoading } = useCollection(ledgerQuery);
+  const { data: allLedger, isLoading } = useCollection(ledgerQuery);
   const { data: partners } = useCollection(partnersQuery);
+
+  const ledger = useMemo(() => {
+    return allLedger?.filter(l => l.category === 'Partner Commission') || [];
+  }, [allLedger]);
 
   const filtered = useMemo(() => {
     let list = ledger || [];
