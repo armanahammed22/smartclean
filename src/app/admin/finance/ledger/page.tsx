@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -36,6 +36,7 @@ import { createLedgerEntry } from '@/lib/finance-utils';
 
 export default function LedgerManagementPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,8 +53,8 @@ export default function LedgerManagementPage() {
   });
 
   const ledgerQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
-  const accountsQuery = useMemoFirebase(() => db ? collection(db, 'finance_accounts') : null, [db]);
+    (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
+  const accountsQuery = useMemoFirebase(() => (db && user) ? collection(db, 'finance_accounts') : null, [db, user]);
   
   const { data: ledger, isLoading } = useCollection(ledgerQuery);
   const { data: accounts } = useCollection(accountsQuery);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 
 export default function FinancialReportPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const [mounted, setMounted] = useState(false);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
@@ -55,8 +56,10 @@ export default function FinancialReportPage() {
     setMounted(true);
   }, []);
 
-  const ledgerQuery = useMemoFirebase(() => db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
-  const accountsQuery = useMemoFirebase(() => db ? collection(db, 'finance_accounts') : null, [db]);
+  const ledgerQuery = useMemoFirebase(() => 
+    (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
+  const accountsQuery = useMemoFirebase(() => 
+    (db && user) ? collection(db, 'finance_accounts') : null, [db, user]);
   
   const { data: ledger, isLoading: lLoading } = useCollection(ledgerQuery);
   const { data: accounts, isLoading: aLoading } = useCollection(accountsQuery);

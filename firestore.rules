@@ -11,6 +11,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
+        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
         request.auth.token.email == 'smartclean422@gmail.com' ||
         exists(/databases/$(database)/documents/roles_admins/$(request.auth.uid))
       );
@@ -25,19 +26,55 @@ service cloud.firestore {
     match /{allPaths=**} {
       allow read, write: if isSignedIn() && (
         request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
+        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
         request.auth.token.email == 'smartclean422@gmail.com'
       );
     }
 
-    // Tracking Rules
+    // Finance & Accounts
+    match /finance_ledger/{id} { allow read, write: if isAdmin(); }
+    match /finance_accounts/{id} { allow read, write: if isAdmin(); }
+    match /finance_staff_salaries/{id} { allow read, write: if isAdmin(); }
+    match /finance_staff_earnings/{id} { allow read, write: if isAdmin(); }
+    
+    // Partners & B2B
+    match /partners/{id} { allow read, write: if isAdmin(); }
+    match /partner_projects/{id} { allow read, write: if isAdmin(); }
+    
+    // Vendors
+    match /vendor_profiles/{id} { 
+      allow read: if true; 
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && request.auth.uid == id); 
+    }
+    match /blocked_users/{id} { allow read, write: if isAdmin(); }
+
+    // Taxonomy & Attributes
+    match /categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /subcategories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /childcategories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // Support
+    match /support_tickets/{id} { 
+      allow create: if isSignedIn(); 
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Tracking & Marketing
+    match /tracking_logs/{id} { allow read, write: if isAdmin(); }
     match /live_locations/{bookingId} {
       allow read: if true; 
-      allow write: if isTeamLeader(bookingId);
+      allow write: if isTeamLeader(bookingId) || isAdmin();
     }
 
     match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
 
-    // Public Collections & Marketing Data
+    // Public Collections
     match /products/{id} { 
       allow read: if true; 
       allow write: if isAdmin(); 
@@ -91,18 +128,17 @@ service cloud.firestore {
     match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
     match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
 
     match /bookings/{id} { 
       allow create: if true; 
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin()); 
+      allow read: if isAdmin() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.assignedEmployees.exists(e, e.uid == request.auth.uid))); 
       allow update: if isAdmin() || (isSignedIn() && resource.data.teamLeaderId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
     match /orders/{id} {
       allow create: if true;
-      allow read: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
@@ -111,22 +147,22 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // Custom Requests Rules
     match /custom_requests/{id} {
       allow create: if true;
-      allow read: if (isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin())) || isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
     match /employee_profiles/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
-    match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn() && request.auth.uid == id; }
-    match /staff_earnings/{id} { allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin()); allow write: if isAdmin(); }
+    match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn() && (request.auth.uid == id || isAdmin()); }
+    match /staff_earnings/{id} { allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid); allow write: if isAdmin(); }
     
-    match /invoices/{id} { allow read: if isSignedIn() && (resource.data.customerInfo.email == request.auth.token.email || isAdmin()); allow write: if isAdmin(); }
+    match /invoices/{id} { allow read: if true; allow write: if isAdmin(); }
     match /invoiceRequests/{id} { allow create: if isSignedIn(); allow read, write: if isAdmin(); }
     
     match /roles_admins/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /roles_management/{id} { allow read, write: if isAdmin(); }
     match /users/{uid} { allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin()); }
   }
 }
