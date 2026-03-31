@@ -2,9 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, query, orderBy } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, addDoc, query, orderBy, where } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,14 +18,11 @@ import {
   Briefcase, 
   Users, 
   MapPin, 
-  Calendar, 
   Wrench, 
   Zap,
   CheckCircle2,
   Building2,
-  DollarSign,
   Layers,
-  Search,
   Check
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +33,7 @@ import { syncProjectToLedger } from '@/lib/partner-utils';
 export default function NewPartnerProjectPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,18 +49,15 @@ export default function NewPartnerProjectPage() {
   });
 
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
   const [staffAssigned, setStaffAssigned] = useState<any[]>([]);
 
   // Data Fetch
-  const partnersQuery = useMemoFirebase(() => db ? query(collection(db, 'partners'), where('status', '==', 'active')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
-  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active')) : null, [db]);
-  const staffQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles'), where('status', '==', 'Active')) : null, [db]);
+  const partnersQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'partners'), where('status', '==', 'active')) : null, [db, user]);
+  const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db, user]);
+  const staffQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), where('status', '==', 'Active')) : null, [db, user]);
 
   const { data: partners } = useCollection(partnersQuery);
   const { data: services } = useCollection(servicesQuery);
-  const { data: allSubs } = useCollection(subsQuery);
   const { data: employees } = useCollection(staffQuery);
 
   const selectedPartner = useMemo(() => partners?.find(p => p.id === formData.partnerId), [partners, formData.partnerId]);
@@ -115,10 +110,9 @@ export default function NewPartnerProjectPage() {
         commissionAmount,
         commissionDirection: selectedPartner?.commissionDirection || 'TheyGiveMe',
         services: selectedServiceIds,
-        addOns: selectedAddOnIds,
         staffAssigned,
         status: 'Pending',
-        paidStatus: 'Unpaid',
+        paidStatus: 'Unpaid' as const,
         schedule: { startDate: formData.startDate, endDate: formData.endDate },
         createdAt: new Date().toISOString()
       };

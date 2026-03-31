@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -36,11 +36,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function PartnerProjectsListPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
   const projectsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'partner_projects'), orderBy('createdAt', 'desc')) : null, [db]);
+    (db && user) ? query(collection(db, 'partner_projects'), orderBy('createdAt', 'desc')) : null, [db, user]);
   const { data: projects, isLoading } = useCollection(projectsQuery);
 
   const filtered = useMemo(() => {
