@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function GoogleAnalyticsSettingsPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const [isSaving, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
@@ -66,7 +66,7 @@ export default function GoogleAnalyticsSettingsPage() {
                   className="h-14 bg-gray-50 border-none rounded-xl font-mono text-lg focus:bg-white transition-all px-6"
                 />
                 <p className="text-[10px] text-muted-foreground font-medium px-1 flex items-center gap-1">
-                  <Info size={12} /> Found in Google Analytics Admin &gt; Data Streams &gt; Web Stream.
+                  <Info size={12} /> Found in Google Analytics Admin {'>'} Data Streams {'>'} Web Stream.
                 </p>
               </div>
 
