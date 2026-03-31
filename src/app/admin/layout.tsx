@@ -65,7 +65,10 @@ import {
   Crown,
   Handshake,
   Building2,
-  UserCheck 
+  UserCheck,
+  DollarSign,
+  ReceiptText,
+  ShieldAlert
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -107,9 +110,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 
     sales: true, 
+    finance: false,
     orders: true, 
     services: true,
-    marketing: true
+    partners: false,
+    vendors: false,
+    marketing: true,
+    seo: false
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -159,17 +166,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-rose-400",
         items: [
+          { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
           { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
+        ]
+      },
+      {
+        id: 'finance',
+        title: "FINANCIAL HUB",
+        icon: Wallet,
+        color: "text-emerald-400",
+        items: [
+          { name: "Finance Overview", href: '/admin/finance', icon: TrendingUp },
+          { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
+          { name: "Bank & Cash", href: '/admin/finance/accounts', icon: Building2 },
+          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: DollarSign },
         ]
       },
       {
         id: 'orders',
         title: "ORDER & BOOKING",
         icon: ShoppingCart,
-        color: "text-emerald-400",
+        color: "text-blue-400",
         items: [
+          { name: "Product Orders", href: '/admin/orders', icon: Package },
           { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
-          { name: "Invoices", href: '/admin/invoices', icon: FileText },
+          { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
+          { name: "Logistics", href: '/admin/couriers', icon: Truck },
         ]
       },
       {
@@ -186,30 +208,63 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
+        id: 'partners',
+        title: "B2B PARTNERS",
+        icon: Handshake,
+        color: "text-amber-400",
+        items: [
+          { name: "Partner Directory", href: '/admin/partners', icon: Building2 },
+          { name: "Commission Logic", href: '/admin/partners/commissions', icon: DollarSign },
+          { name: "Project Costing", href: '/admin/partners/projects', icon: Briefcase },
+        ]
+      },
+      {
+        id: 'vendors',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-orange-400",
+        items: [
+          { name: "Vendor Directory", href: '/admin/vendors', icon: Users },
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle },
+          { name: "Service Approvals", href: '/admin/services/approvals', icon: CheckCircle },
+          { name: "Settlements", href: '/admin/vendors/commissions', icon: Wallet },
+        ]
+      },
+      {
         id: 'marketing',
         title: "MARKETING & PROMOTIONS",
         icon: Target,
-        color: "text-rose-400",
+        color: "text-pink-400",
         items: [
           { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
           { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
-          { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
-          { name: "SEO Settings", href: '/admin/seo/settings', icon: Search },
+          { name: "Affiliate System", href: '/admin/referrals', icon: Award },
+        ]
+      },
+      {
+        id: 'seo',
+        title: "SEO & TRACKING",
+        icon: Globe,
+        color: "text-cyan-400",
+        items: [
+          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
+          { name: "Meta Pixel", href: '/admin/seo/pixel', icon: Code },
+          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
+          { name: "Event Logs", href: '/admin/seo/logs', icon: History },
         ]
       },
       {
         id: 'offers',
         title: "OFFER & CAMPAIGN",
         icon: TicketPercent,
-        color: "text-pink-400",
+        color: "text-rose-400",
         items: [
-          { name: "General & Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
+          { name: "Offer Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
           { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap },
           { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
           { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity },
-          { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
         ]
       },
       {
@@ -222,6 +277,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
           { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
           { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
+        ]
+      },
+      {
+        id: 'inventory',
+        title: "INVENTORY",
+        icon: Box,
+        color: "text-slate-400",
+        items: [
+          { name: "All Products", href: '/admin/products', icon: Package },
+          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+          { name: "Categories", href: '/admin/products/categories', icon: Tags },
+          { name: "Brands", href: '/admin/products/brands', icon: Award },
+          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
         ]
       },
       {
@@ -238,15 +306,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'customize',
         title: "SITE CUSTOMIZE",
         icon: Palette,
-        color: "text-cyan-400",
+        color: "text-indigo-400",
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Bottom Navbar", href: '/admin/offers/navbar-banners', icon: Smartphone },
           { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: List },
-          { name: "Icon Grid", href: '/admin/quick-links', icon: Grid },
-          { name: "Feature Cards", href: '/admin/quick-actions', icon: Zap },
+          { name: "Quick Grid", href: '/admin/quick-links', icon: Grid },
+          { name: "Action Cards", href: '/admin/quick-actions', icon: Zap },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
@@ -262,7 +330,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
           { name: "Fleet Tracking", href: '/admin/settings/tracking', icon: MapPin },
           { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
-          { name: "System Logs", href: '/admin/error-logs', icon: Terminal },
+          { name: "System Logs", href: '/admin/error-logs', icon: ShieldAlert },
         ]
       },
       {
@@ -286,7 +354,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       }
     ];
-  }, []);
+  }, [t]);
 
   const handleLogout = async () => {
     if (auth) {
