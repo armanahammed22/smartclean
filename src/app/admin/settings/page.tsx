@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,7 @@ const DEFAULT_MENU_KEYS = [
 
 export default function AdminSettingsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
   const [isSavingLayout, setIsSavingLayout] = useState(false);
@@ -80,7 +81,7 @@ export default function AdminSettingsPage() {
     currency: 'BDT',
     defaultLanguage: 'bn',
     seoTitle: 'Smart Clean | Professional Cleaning in Bangladesh',
-    seoDescription: 'Expert cleaning services for home and office.',
+    seoDescription: 'Expert cleaning and maintenance services for your home and office.',
     footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
     otpEnabled: false,
     productsEnabled: true,
@@ -113,9 +114,26 @@ export default function AdminSettingsPage() {
 
   const handleSave = () => {
     if (!db) return;
+    
+    if (!user) {
+      toast({ 
+        variant: "destructive", 
+        title: "Authentication Required", 
+        description: "Your session has expired. Please re-login to save settings." 
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    
+    // Clean data before save
+    const { id, ...dataToSave } = formData;
     const docRef = doc(db, 'site_settings', 'global');
-    setDoc(docRef, formData, { merge: true })
+    
+    setDoc(docRef, {
+      ...dataToSave,
+      updatedAt: new Date().toISOString()
+    }, { merge: true })
       .then(() => {
         toast({ title: "Settings Saved", description: "Global configuration updated successfully. All modules synchronized." });
       })
@@ -123,7 +141,7 @@ export default function AdminSettingsPage() {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
           operation: 'write',
-          requestResourceData: formData
+          requestResourceData: dataToSave
         }));
       })
       .finally(() => {
@@ -140,7 +158,7 @@ export default function AdminSettingsPage() {
   };
 
   const handleSaveSidebarLayout = async () => {
-    if (!db) return;
+    if (!db || !user) return;
     setIsSavingLayout(true);
     try {
       await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {

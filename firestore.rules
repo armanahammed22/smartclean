@@ -24,11 +24,7 @@ service cloud.firestore {
 
     // 🛡️ GLOBAL ADMIN OVERRIDE
     match /{allPaths=**} {
-      allow read, write: if isSignedIn() && (
-        request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
-        request.auth.uid == 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2' ||
-        request.auth.token.email == 'smartclean422@gmail.com'
-      );
+      allow read, write: if isAdmin();
     }
 
     // Finance & Accounts
@@ -122,6 +118,7 @@ service cloud.firestore {
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
+    // Backwards compatibility for quick_actions
     match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
     match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
