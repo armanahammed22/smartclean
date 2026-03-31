@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -466,7 +467,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-[10px] font-black uppercase text-gray-900 leading-none">{user?.displayName || 'Admin'}</p>
                 <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Authorized</p>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-black text-xs shadow-md">
+              <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm shadow-md">
                 {user?.email?.[0]?.toUpperCase()}
               </div>
             </div>
