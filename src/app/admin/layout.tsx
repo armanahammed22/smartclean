@@ -126,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -359,7 +359,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
-      router.replace('/login');
+      router.push('/login');
     }
   };
 
