@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -39,7 +38,7 @@ import { cn } from '@/lib/utils';
 const DEFAULT_MENU_KEYS = [
   'dashboard', 'sales', 'ai_agents', 'orders', 'inventory', 
   'services', 'marketing', 'offers', 'crm', 'vendor_hub', 
-  'reports', 'customize', 'system', 'support'
+  'reports', 'seo_hub', 'customize', 'system', 'support'
 ];
 
 export default function AdminSettingsPage() {

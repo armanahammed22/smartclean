@@ -56,7 +56,10 @@ import {
   ArrowLeft,
   CreditCard,
   Search,
-  ChevronDown
+  ChevronDown,
+  BarChart,
+  Terminal,
+  Trophy
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -228,7 +231,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
           ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
-          { name: "SEO Settings", href: '/admin/marketing/seo', icon: Search },
         ]
       },
       offers: {
@@ -275,6 +277,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
           { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
+        ]
+      },
+      seo_hub: {
+        id: 'seo_hub',
+        title: "SEO HUB",
+        icon: Search,
+        color: "text-yellow-400",
+        items: [
+          { name: "SEO Settings", href: '/admin/seo/settings', icon: Settings },
+          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
+          { name: "Search Console", href: '/admin/seo/search-console', icon: Terminal },
+          { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Trophy },
         ]
       },
       customize: {
