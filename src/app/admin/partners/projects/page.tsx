@@ -36,12 +36,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function PartnerProjectsListPage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // 🛡️ Hardened Auth Guard for Query
   const projectsQuery = useMemoFirebase(() => 
-    (db && user) ? query(collection(db, 'partner_projects'), orderBy('createdAt', 'desc')) : null, [db, user]);
+    (db && !isUserLoading && user) ? query(collection(db, 'partner_projects'), orderBy('createdAt', 'desc')) : null, 
+  [db, user, isUserLoading]);
+  
+  const vendorsQuery = useMemoFirebase(() => 
+    (db && !isUserLoading && user) ? collection(db, 'vendor_profiles') : null, 
+  [db, user, isUserLoading]);
+
   const { data: projects, isLoading } = useCollection(projectsQuery);
 
   const filtered = useMemo(() => {

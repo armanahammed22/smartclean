@@ -10,8 +10,9 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11)
+ * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11+)
  * Suppresses internal SDK errors to prevent Next.js error overlays.
+ * Specifically targets IDs: ca9, b815 and PersistentStream errors.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
@@ -42,6 +43,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
+        lowMsg.includes('persistentlistenstream') ||
         lowMsg.includes('fe":-1')
       );
     };
