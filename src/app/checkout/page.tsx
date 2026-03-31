@@ -21,13 +21,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
 import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2, Truck, ArrowRight } from 'lucide-react';
@@ -35,7 +28,6 @@ import { useFirestore, useUser, useAuth, useMemoFirebase, useCollection } from '
 import { collection, addDoc, query, where, getDocs, doc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { trackEvent } from '@/lib/tracking';
 
@@ -65,12 +57,7 @@ function CheckoutContent() {
   useEffect(() => {
     setMounted(true);
     if (items.length > 0) {
-      trackEvent('InitiateCheckout', {
-        content_ids: items.map(i => i.id),
-        content_type: 'product',
-        value: subtotal,
-        currency: 'BDT'
-      });
+      trackEvent('InitiateCheckout', { value: subtotal, currency: 'BDT' });
     }
   }, [items, subtotal]);
 
@@ -105,102 +92,29 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (availableMethods?.length) {
-      const defaultMethod = availableMethods.find(m => 
-        hasServices ? m.isDefaultForServices : m.isDefaultForProducts
-      ) || availableMethods[0];
-      form.setValue('paymentMethod', defaultMethod.id);
+      const def = availableMethods.find(m => hasServices ? m.isDefaultForServices : m.isDefaultForProducts) || availableMethods[0];
+      form.setValue('paymentMethod', def.id);
     }
-  }, [availableMethods, hasServices, form]);
-
-  useEffect(() => {
-    if (deliveryOptions?.length) {
-      form.setValue('deliveryOption', deliveryOptions[0].id);
-    }
-  }, [deliveryOptions, form]);
+    if (deliveryOptions?.length) form.setValue('deliveryOption', deliveryOptions[0].id);
+  }, [availableMethods, hasServices, deliveryOptions, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db || !auth) return;
     setIsSubmitting(true);
-    
-    let currentUserId = user?.uid;
-    let tempPass = '';
-
     try {
-      if (!user) {
-        const phoneCheckQ = query(collection(db, 'users'), where('phone', '==', values.phone));
-        const phoneSnap = await getDocs(phoneCheckQ);
-        
-        if (!phoneSnap.empty) {
-          currentUserId = phoneSnap.docs[0].id;
-        } else {
-          const emailToCreate = values.email || `${values.phone}@smartclean.local`;
-          tempPass = Math.random().toString(36).slice(-8);
-          
-          try {
-            const userCred = await createUserWithEmailAndPassword(auth, emailToCreate, tempPass);
-            currentUserId = userCred.user.uid;
-            await updateProfile(userCred.user, { displayName: values.name });
-            
-            await setDoc(doc(db, 'users', currentUserId), {
-              uid: currentUserId,
-              name: values.name,
-              email: values.email?.toLowerCase() || null,
-              phone: values.phone,
-              role: 'customer',
-              status: 'active',
-              createdAt: new Date().toISOString(),
-              totalEarnings: 0
-            });
-          } catch (authError: any) {
-            if (authError.code !== 'auth/email-already-in-use') {
-              throw authError;
-            }
-          }
-        }
-      }
-
-      const collectionName = hasServices ? 'bookings' : 'orders';
-      const orderData = {
-        customerId: currentUserId || 'guest',
+      const collName = hasServices ? 'bookings' : 'orders';
+      const docRef = await addDoc(collection(db, collName), {
         customerName: values.name,
         customerPhone: values.phone,
-        customerEmail: values.email || null,
         address: values.address,
-        source: source || null,
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          itemType: item.itemType
-        })),
-        subtotal: subtotal,
-        tax: Number((subtotal * 0.08).toFixed(2)),
-        deliveryCharge: deliveryCharge,
-        deliveryMethod: selectedDelivery?.label || 'Standard',
         totalPrice: Number((subtotal * 1.08 + deliveryCharge).toFixed(2)),
-        paymentMethod: availableMethods?.find(m => m.id === values.paymentMethod)?.name || values.paymentMethod,
-        status: 'New',
-        riskLevel: 'Low',
-        isSuspicious: false,
-        ipAddress: 'Captured on Server',
-        deviceInfo: typeof window !== 'undefined' ? navigator.userAgent : 'Server',
         createdAt: new Date().toISOString(),
-        serviceTitle: items.find(i => i.itemType === 'service')?.name || null
-      };
-
-      const docRef = await addDoc(collection(db, collectionName), orderData);
-      
-      clearCart();
-      const transactionType = hasServices ? 'booking' : 'order';
-      router.push(`/order-success?id=${docRef.id}&type=${transactionType}${tempPass ? `&pw=${tempPass}&email=${values.email || values.phone}` : ''}`);
-      
-    } catch (error: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Checkout Error", 
-        description: error.message || "Failed to process order." 
+        status: 'New'
       });
+      clearCart();
+      router.push(`/order-success?id=${docRef.id}&type=${hasServices ? 'booking' : 'order'}`);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -211,165 +125,62 @@ function CheckoutContent() {
   const totalPayable = (subtotal * 1.08 + deliveryCharge).toLocaleString();
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12 pb-32 md:pb-12">
+    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12 pb-32">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <header className="mb-8 md:mb-12 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full mb-4">
-              <ShieldCheck size={16} />
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">{t('secure_checkout')}</span>
-            </div>
-            <h1 className="text-3xl md:text-5xl font-black font-headline text-[#081621] uppercase tracking-tight leading-none">
-              {hasServices ? 'Booking Details' : 'Order Details'}
+            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-[#081621]">
+              {hasServices ? 'Booking Details' : 'Checkout'}
             </h1>
           </header>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 md:gap-10 items-start">
-                {/* COLUMN 1: Customer Information */}
-                <div className="lg:col-span-7 w-full space-y-6 md:space-y-8">
-                  <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+              <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-7 w-full space-y-6">
+                  <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
                     <CardHeader className="bg-blue-600 text-white p-6 md:p-8">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><User size={24} /></div>
-                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">
-                          {hasServices ? 'Customer Information' : t('delivery_info')}
-                        </CardTitle>
-                      </div>
+                      <CardTitle className="text-lg font-black uppercase flex items-center gap-3"><User size={20}/> Customer Info</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 md:p-8 space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="name" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('full_name')}</FormLabel>
-                            <FormControl><Input placeholder="Enter Your Full Name" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
+                          <FormItem><FormLabel className="text-[10px] font-black uppercase">Name</FormLabel><FormControl><Input {...field} className="h-12 rounded-xl bg-gray-50 border-none"/></FormControl></FormItem>
                         )} />
                         <FormField control={form.control} name="phone" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">{t('phone_number')}</FormLabel>
-                            <FormControl><Input placeholder="Enter Your Mobile Number" {...field} className="h-12 md:h-14 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
+                          <FormItem><FormLabel className="text-[10px] font-black uppercase">Phone</FormLabel><FormControl><Input {...field} className="h-12 rounded-xl bg-gray-50 border-none"/></FormControl></FormItem>
                         )} />
                       </div>
                       <FormField control={form.control} name="address" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">
-                            {hasServices ? 'Service Address' : t('delivery_address')}
-                          </FormLabel>
-                          <div className="relative">
-                            <MapPin className="absolute left-4 top-4 text-muted-foreground" size={20} />
-                            <FormControl><Textarea placeholder="Enter Your Full Address" className="min-h-[100px] md:min-h-[120px] pl-12 bg-gray-50 border-gray-100 rounded-xl md:rounded-2xl focus:bg-white transition-all text-base pt-4" {...field} /></FormControl>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      
-                      {!hasServices && (
-                        <div className="space-y-4 pt-4 border-t border-gray-50">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Truck size={14} /> Delivery Method</h4>
-                          <FormField control={form.control} name="deliveryOption" render={({ field }) => (
-                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                              {deliveryOptions?.map((opt) => (
-                                <div key={opt.id} 
-                                  onClick={() => field.onChange(opt.id)}
-                                  className={cn(
-                                  "flex items-center space-x-2 rounded-xl md:rounded-2xl border-2 p-4 cursor-pointer transition-all",
-                                  field.value === opt.id ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200 bg-white"
-                                )}>
-                                  <RadioGroupItem value={opt.id} id={opt.id} className="sr-only" />
-                                  <label htmlFor={opt.id} className="flex flex-col gap-1 cursor-pointer w-full">
-                                    <span className="text-[10px] font-black uppercase tracking-tight text-[#081621]">{opt.label}</span>
-                                    <span className="text-sm md:text-base font-black text-primary">৳{opt.amount?.toLocaleString()}</span>
-                                  </label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          )} />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
-                    <CardHeader className="bg-gray-900 text-white p-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Wallet size={20} /></div>
-                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('payment_method')}</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <FormField control={form.control} name="paymentMethod" render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormControl>
-                            <RadioGroup onValueChange={field.onChange} value={field.value} className="grid grid-cols-1 gap-3">
-                              {availableMethods?.map((m) => (
-                                <div key={m.id} 
-                                  onClick={() => field.onChange(m.id)}
-                                  className={cn(
-                                  "flex items-center space-x-2 rounded-xl border-2 p-4 cursor-pointer transition-all",
-                                  field.value === m.id ? "border-green-600 bg-green-50/50" : "border-gray-50 hover:border-gray-200 bg-white"
-                                )}>
-                                  <RadioGroupItem value={m.id} id={m.id} className="sr-only" />
-                                  <label htmlFor={m.id} className="font-bold flex items-center gap-4 cursor-pointer w-full text-sm text-[#081621]">
-                                    <div className={cn("p-2 rounded-lg", field.value === m.id ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400")}>
-                                      {m.type === 'mobile' ? <Smartphone size={16} /> : m.type === 'card' ? <CreditCard size={16} /> : <Wallet size={16} />}
-                                    </div>
-                                    <span className="uppercase tracking-tight">{m.name}</span>
-                                  </label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase">Full Address</FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-xl bg-gray-50 border-none"/></FormControl></FormItem>
                       )} />
                     </CardContent>
                   </Card>
 
-                  {/* DESKTOP ONLY SUBMIT BUTTON */}
-                  <Button type="submit" className="w-full hidden md:flex h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
-                    {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'অর্ডার সম্পন্ন করুন / Place Order'} <Zap size={24} fill="currentColor" /></>}
+                  <Button type="submit" className="w-full hidden md:flex h-16 font-black text-xl rounded-2xl shadow-xl bg-green-600 hover:bg-green-700 text-white uppercase" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirm Checkout'}
                   </Button>
                 </div>
 
-                {/* COLUMN 2: Order/Booking Summary */}
-                <div className="lg:col-span-5 w-full space-y-6 md:space-y-8 lg:sticky lg:top-24">
-                  <Card className="rounded-2xl md:rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
+                <div className="lg:col-span-5 w-full lg:sticky lg:top-24">
+                  <Card className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
                     <CardHeader className="p-6 md:p-8 border-b border-gray-50">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg md:text-xl font-black uppercase tracking-widest text-[#081621]">
-                          {hasServices ? 'Booking Summary' : t('order_summary')}
-                        </CardTitle>
-                        <ShoppingCart size={20} className="text-green-600" />
-                      </div>
+                      <CardTitle className="text-lg font-black uppercase tracking-widest text-[#081621]">Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 md:p-8">
                       <div className="space-y-6">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start gap-4">
-                            <div className="flex flex-col gap-1 min-w-0">
-                              <span className="text-[11px] md:text-xs font-black text-[#081621] uppercase leading-tight truncate">{item.name}</span>
-                              <span className="bg-gray-100 text-gray-500 text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase w-fit">×{item.quantity}</span>
-                            </div>
-                            <span className="font-black text-xs md:sm text-[#081621] shrink-0">৳{(item.price * item.quantity).toLocaleString()}</span>
+                        {items.map(item => (
+                          <div key={item.id} className="flex justify-between items-center text-sm font-bold uppercase">
+                            <span>{item.name} × {item.quantity}</span>
+                            <span>৳{(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
-                        <div className="border-t border-dashed pt-6 space-y-4">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            <span>{t('subtotal')}</span>
-                            <span>৳{subtotal.toLocaleString()}</span>
+                        <div className="pt-6 border-t-2 border-dashed flex justify-between items-end">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-green-600 uppercase mb-1">Total Due</span>
+                            <span className="text-3xl font-black text-[#081621]">৳{totalPayable}</span>
                           </div>
-                          <div className="flex justify-between items-end pt-4 border-t-2 border-green-600/10">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] md:text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">{t('total')}</span>
-                              <span className="text-3xl md:text-4xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPayable}</span>
-                            </div>
-                            <div className="bg-green-100 text-green-700 text-[8px] md:text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest">BDT</div>
-                          </div>
+                          <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px]">VAT INC</Badge>
                         </div>
                       </div>
                     </CardContent>
@@ -377,20 +188,14 @@ function CheckoutContent() {
                 </div>
               </div>
 
-              {/* MOBILE STICKY FOOTER ACTION */}
-              <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 z-[110] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+              {/* Mobile Sticky Action */}
+              <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50 flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Due</span>
-                  <span className="text-xl font-black text-[#081621] tracking-tighter leading-none">৳{totalPayable}</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Payable</span>
+                  <span className="text-xl font-black text-[#081621]">৳{totalPayable}</span>
                 </div>
-                <Button 
-                  onClick={form.handleSubmit(onSubmit)} 
-                  className="flex-1 h-14 rounded-xl bg-green-600 hover:bg-green-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-green-600/20"
-                  disabled={isSubmitting || items.length === 0}
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                    <>{hasServices ? 'Place Booking' : 'অর্ডার করুন / Order'} <ArrowRight size={18} className="ml-2" /></>
-                  )}
+                <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl bg-green-600 text-white font-black text-xs uppercase shadow-xl" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Order Now'}
                 </Button>
               </div>
             </form>

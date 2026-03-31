@@ -46,17 +46,13 @@ export default function ServiceBookingPage() {
   const { t } = useLanguage();
   const { user } = useUser();
   const { toast } = useToast();
-  const { addToCart, setCheckoutOpen } = useCart();
+  const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
   const db = useFirestore();
 
   const [mounted, setMounted] = useState(false);
   const [mainQuantity, setMainQuantity] = useState(1);
   const [selectedSqftId, setSelectedSqftId] = useState<string>('0');
   const [addOnsQty, setAddOnsQty] = useState<Record<string, number>>({});
-  
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewText, setReviewText] = useState('');
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -85,28 +81,6 @@ export default function ServiceBookingPage() {
   }, [db, targetId]);
   const { data: addOnOptions } = useCollection(addOnsQuery);
 
-  const userBookingsQuery = useMemoFirebase(() => 
-    (db && user) ? query(collection(db, 'bookings'), where('customerId', '==', user.uid)) : null, [db, user]);
-  const { data: userBookings } = useCollection(userBookingsQuery);
-
-  const reviewsRef = useMemoFirebase(() => {
-    if (!db || !targetId) return null;
-    return collection(db, 'services', targetId, 'reviews');
-  }, [db, targetId]);
-  const { data: allReviewsRaw } = useCollection(reviewsRef);
-
-  const reviews = useMemo(() => {
-    if (!allReviewsRaw) return [];
-    return allReviewsRaw
-      .filter(r => r.status === 'Approved')
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [allReviewsRaw]);
-
-  const canSubmitReview = useMemo(() => {
-    if (!userBookings || !targetId) return false;
-    return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
-  }, [userBookings, targetId]);
-
   // 2. Pricing Logic
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = (pricingLogic === 'sqft' && baseService?.sqftOptions) ? baseService.sqftOptions[parseInt(selectedSqftId)] : null;
@@ -114,8 +88,7 @@ export default function ServiceBookingPage() {
   const basePriceValue = useMemo(() => {
     if (!baseService) return 0;
     if (pricingLogic === 'sqft') return selectedSlab?.price || 0;
-    if (pricingLogic === 'quantity') return (baseService.basePrice || 0) * mainQuantity;
-    return (baseService.basePrice || 0) * mainQuantity; // Allow quantity even for fixed
+    return (baseService.basePrice || 0) * mainQuantity;
   }, [baseService, pricingLogic, selectedSlab, mainQuantity]);
 
   const addOnsTotal = useMemo(() => {
@@ -166,7 +139,7 @@ export default function ServiceBookingPage() {
       <div className="bg-[#F9FAFB] min-h-screen pb-24 lg:pb-12">
         
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
-          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
+          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
               {/* Left Column: Media - 5 Columns */}
@@ -201,7 +174,7 @@ export default function ServiceBookingPage() {
               </div>
 
               {/* Middle Column: Booking Info - 3 Columns */}
-              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-6 bg-white relative z-20">
+              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-4 bg-white relative z-20">
                 <div className="space-y-4">
                   <div className="space-y-3">
                     <h1 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
@@ -226,12 +199,12 @@ export default function ServiceBookingPage() {
 
                   <div className="space-y-6">
                     <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
-                      <div className="text-left">
+                      <div className="text-left flex-1">
                         <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Service Price</p>
-                        <span className="text-2xl md:text-3xl font-black text-primary tracking-tighter">৳{totalPrice.toLocaleString()}</span>
+                        <span className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
                       </div>
                       
-                      <div className="flex items-center">
+                      <div className="flex items-center shrink-0">
                         {pricingLogic === 'sqft' && baseService.sqftOptions?.length ? (
                           <Select value={selectedSqftId} onValueChange={setSelectedSqftId}>
                             <SelectTrigger className="h-10 w-28 bg-white border-2 border-gray-100 rounded-xl text-[9px] font-black uppercase">
@@ -256,7 +229,7 @@ export default function ServiceBookingPage() {
                     <Button 
                       onClick={handleContinue} 
                       disabled={baseService.isBookingEnabled === false}
-                      className="hidden lg:flex w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white"
+                      className="hidden md:flex w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white"
                     >
                       {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={18} />
                     </Button>
@@ -316,81 +289,22 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        {/* Bottom Section: Description & Checklists */}
-        <section className="container mx-auto px-4 max-w-7xl mt-10 space-y-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <div className="lg:col-span-8 space-y-10">
-              <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 md:p-12">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary border-b border-gray-50 pb-5 mb-8 flex items-center gap-2">
-                  <Star size={16} fill="currentColor" /> Service Overview
-                </h3>
-                <p className="text-sm md:text-base text-gray-600 leading-relaxed font-medium">
-                  {baseService.description}
-                </p>
-              </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {baseService.included?.length > 0 && (
-                  <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 border-t-4 border-t-emerald-500">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-6 flex items-center gap-2"><CheckCircle2 size={18}/> Package Includes</h4>
-                    <div className="space-y-4">
-                      {baseService.included.map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600">
-                          <Check size={16} className="text-emerald-500 mt-0.5 shrink-0" strokeWidth={3} /> {item}
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-                {baseService.notIncluded?.length > 0 && (
-                  <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 border-t-4 border-t-red-500">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-6 flex items-center gap-2"><XCircle size={18}/> Exclusions</h4>
-                    <div className="space-y-4">
-                      {baseService.notIncluded.map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 text-xs font-bold text-gray-400">
-                          <X size={16} className="text-red-400 mt-0.5 shrink-0" strokeWidth={3} /> {item}
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-              </div>
-            </div>
-
-            {/* Sidebar: Benefits */}
-            <div className="lg:col-span-4 space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] px-4 flex items-center gap-2">
-                <Sparkles size={20} className="text-primary" /> Key Benefits
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                {baseService.features?.map((f: any, i: number) => (
-                  <Card key={i} className="border-none shadow-lg rounded-[2rem] bg-white p-6 flex gap-4 items-start hover:scale-[1.02] transition-all border border-gray-50">
-                    <div className="p-3 bg-primary/10 rounded-2xl text-primary shrink-0"><Zap size={20} fill="currentColor" /></div>
-                    <div className="space-y-1">
-                      <h4 className="font-black uppercase text-[10px] text-primary tracking-tight">{f.title}</h4>
-                      <p className="text-[11px] text-gray-500 leading-relaxed font-medium">{f.desc}</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Mobile Sticky CTA Bar */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Grand Total</span>
-            <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+        {!isCheckoutOpen && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Grand Total</span>
+              <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
+            </div>
+            <Button 
+              onClick={handleContinue} 
+              disabled={baseService.isBookingEnabled === false} 
+              className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
+            >
+              {baseService.bookingButtonText || 'Confirm Booking'}
+            </Button>
           </div>
-          <Button 
-            onClick={handleContinue} 
-            disabled={baseService.isBookingEnabled === false} 
-            className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
-          >
-            {baseService.bookingButtonText || 'Confirm Booking'}
-          </Button>
-        </div>
+        )}
 
       </div>
     </PublicLayout>
