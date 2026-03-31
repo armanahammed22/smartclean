@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc, where, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -32,11 +32,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function ProjectCostingPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   // Optimized to avoid index error: fetch all and filter in memory
   const ledgerQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
+    (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
   const { data: allLedger, isLoading: lLoading } = useCollection(ledgerQuery);
 
   const costs = useMemo(() => {
@@ -44,7 +45,7 @@ export default function ProjectCostingPage() {
   }, [allLedger]);
 
   const bookingsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'bookings'), where('status', '==', 'Completed'), limit(20)) : null, [db]);
+    (db && user) ? query(collection(db, 'bookings'), where('status', '==', 'Completed'), limit(20)) : null, [db, user]);
   const { data: projects, isLoading: pLoading } = useCollection(bookingsQuery);
 
   const stats = useMemo(() => {

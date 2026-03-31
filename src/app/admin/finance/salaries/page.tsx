@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -32,6 +32,7 @@ import { createLedgerEntry } from '@/lib/finance-utils';
 
 export default function StaffSalariesPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,9 +46,9 @@ export default function StaffSalariesPage() {
     paidStatus: 'Paid' as 'Paid' | 'Unpaid'
   });
 
-  const staffQuery = useMemoFirebase(() => db ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db]);
-  const payrollQuery = useMemoFirebase(() => db ? query(collection(db, 'finance_staff_salaries'), orderBy('date', 'desc')) : null, [db]);
-  const accountsQuery = useMemoFirebase(() => db ? collection(db, 'finance_accounts') : null, [db]);
+  const staffQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db, user]);
+  const payrollQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'finance_staff_salaries'), orderBy('date', 'desc')) : null, [db, user]);
+  const accountsQuery = useMemoFirebase(() => (db && user) ? collection(db, 'finance_accounts') : null, [db, user]);
 
   const { data: staffList } = useCollection(staffQuery);
   const { data: payroll, isLoading } = useCollection(payrollQuery);
