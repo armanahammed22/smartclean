@@ -454,7 +454,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Authorized</p>
               </div>
               <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-black text-xs shadow-md">
-                {user.email?.[0].toUpperCase()}
+                {user?.email?.[0]?.toUpperCase()}
               </div>
             </div>
           </div>
