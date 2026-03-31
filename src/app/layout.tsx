@@ -7,6 +7,7 @@ import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 import {TrackingProvider} from '@/components/providers/tracking-provider';
 import {GlobalErrorBoundary} from '@/components/providers/error-boundary';
+import { db } from '@/lib/firebaseAdmin';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -55,31 +56,44 @@ export const metadata: Metadata = {
     description: 'Expert cleaning and maintenance services in Bangladesh.',
     images: ['https://picsum.photos/seed/smartclean-og/1200/630'],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 };
 
-export default function RootLayout({
+/**
+ * Server-side helper to fetch global settings for script injection
+ */
+async function getGlobalSettings() {
+  try {
+    if (!db) return null;
+    const snap = await db.collection('site_settings').doc('global').get();
+    return snap.exists ? snap.data() : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getGlobalSettings();
+
   return (
     <html lang="bn" className="h-full">
       <head>
+        {/* Google Tag Manager (Head Script) */}
+        {settings?.gtmHeadScript && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: settings.gtmHeadScript.replace(/<script>|<\/script>/g, ''),
+            }}
+          />
+        )}
+        
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
@@ -111,6 +125,15 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen">
+        {/* Google Tag Manager (Body Script) */}
+        {settings?.gtmBodyScript && (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: settings.gtmBodyScript,
+            }}
+          />
+        )}
+
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
             <LanguageProvider>
