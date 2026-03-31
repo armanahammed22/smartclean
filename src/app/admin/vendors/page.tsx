@@ -27,7 +27,9 @@ import {
   Mail,
   Phone,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Package,
+  Wrench
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -72,7 +74,7 @@ export default function VendorManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 leading-tight">Vendor Management</h1>
-          <p className="text-muted-foreground text-sm font-medium">Approve and oversee independent shop owners</p>
+          <p className="text-muted-foreground text-sm font-medium">Approve and oversee independent shop owners and service providers</p>
         </div>
       </div>
 
@@ -80,7 +82,7 @@ export default function VendorManagementPage() {
         {[
           { label: "Total Vendors", val: vendors?.length || 0, icon: Store, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Pending Approvals", val: vendors?.filter(v => v.status === 'Pending').length || 0, icon: AlertTriangle, bg: "bg-orange-50", color: "text-orange-600" },
-          { label: "Active Shops", val: vendors?.filter(v => v.status === 'Approved').length || 0, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: "Active Partners", val: vendors?.filter(v => v.status === 'Approved').length || 0, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
           { label: "Blocked", val: vendors?.filter(v => v.status === 'Blocked').length || 0, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden">
@@ -114,6 +116,7 @@ export default function VendorManagementPage() {
             <TableHeader className="bg-gray-50/50">
               <TableRow>
                 <TableHead className="font-bold py-5 pl-8">Vendor / Shop</TableHead>
+                <TableHead className="font-bold">Type</TableHead>
                 <TableHead className="font-bold">Contact</TableHead>
                 <TableHead className="font-bold">Joined</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
@@ -122,7 +125,7 @@ export default function VendorManagementPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
               ) : filtered?.map((vendor) => (
                 <TableRow key={vendor.id} className="hover:bg-gray-50/50 transition-colors group">
                   <TableCell className="py-5 pl-8">
@@ -134,6 +137,12 @@ export default function VendorManagementPage() {
                         <div className="font-black text-gray-900 text-xs uppercase leading-none mb-1">{vendor.shopName}</div>
                         <div className="text-[10px] text-muted-foreground font-bold">{vendor.ownerName}</div>
                       </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {vendor.providesProducts !== false && <Badge className="bg-blue-50 text-blue-600 border-none p-1" title="Products"><Package size={12} /></Badge>}
+                      {vendor.providesServices !== false && <Badge className="bg-indigo-50 text-indigo-600 border-none p-1" title="Services"><Wrench size={12} /></Badge>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -149,7 +158,7 @@ export default function VendorManagementPage() {
                     <Badge variant="secondary" className={cn(
                       "text-[8px] font-black uppercase border-none px-2 py-0.5 rounded-md",
                       vendor.status === 'Pending' ? "bg-orange-50 text-orange-600" :
-                      vendor.status === 'Approved' ? "bg-green-50 text-green-600" :
+                      vendor.status === 'Approved' ? "bg-green-50 text-green-700" :
                       "bg-red-50 text-red-600"
                     )}>
                       {vendor.status || 'Pending'}

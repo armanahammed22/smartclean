@@ -150,10 +150,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
   const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
   const pendingProductsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), where('approvalStatus', '==', 'Pending')) : null, [db, isAuthorized]);
+  const pendingServicesQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'services'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
 
   const { data: newOrders } = useCollection(newOrdersQuery);
   const { data: newVendors } = useCollection(newVendorsQuery);
   const { data: pendingProducts } = useCollection(pendingProductsQuery);
+  const { data: pendingServices } = useCollection(pendingServicesQuery);
 
   const NAV_GROUPS = useMemo(() => {
     const baseGroups: Record<string, any> = {
@@ -211,10 +213,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "VENDOR HUB",
         icon: Store,
         color: "text-orange-400",
-        visible: productsEnabled,
+        visible: productsEnabled || servicesEnabled,
         items: [
           { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+          ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 }] : []),
+          ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: pendingServices?.length || 0 }] : []),
         ]
       },
       inventory: {
@@ -361,7 +364,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => g && g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
+  }, [newOrders, newVendors, pendingProducts, pendingServices, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
     if (auth) {
