@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
 import { useCart } from '@/components/providers/cart-provider';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
@@ -21,11 +20,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from '@/lib/utils';
-import { Loader2, Wallet, CreditCard, User, MapPin, ShieldCheck, ShoppingCart, Zap, Smartphone, CheckCircle2, Truck, ArrowRight } from 'lucide-react';
+import { Loader2, User, MapPin, CheckCircle2, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useFirestore, useUser, useAuth, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, addDoc, query, where, getDocs, doc, setDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, query, where, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { trackEvent } from '@/lib/tracking';
@@ -33,11 +31,11 @@ import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().min(10, "Phone number must be valid (Required)"),
+  phone: z.string().min(10, "Phone number must be valid"),
   email: z.string().email().optional().or(z.literal('')),
   address: z.string().min(10, "Please provide a complete address"),
-  paymentMethod: z.string().min(1, "Please select a payment method"),
-  deliveryOption: z.string().min(1, "Please select a delivery option"),
+  paymentMethod: z.string().min(1, "Required"),
+  deliveryOption: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -45,32 +43,21 @@ function CheckoutContent() {
   const { items, subtotal, clearCart } = useCart();
   const { t } = useLanguage();
   const { user } = useUser();
-  const auth = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    setMounted(true);
     if (items.length > 0) {
-      trackEvent('InitiateCheckout', { value: subtotal, currency: 'BDT' });
+      // 📊 Track InitiateCheckout
+      trackEvent('InitiateCheckout', { 
+        value: subtotal, 
+        currency: 'BDT',
+        content_ids: items.map(i => i.id)
+      });
     }
   }, [items, subtotal]);
-
-  const hasServices = items.some(i => i.itemType === 'service');
-
-  const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
-  const { data: availableMethods } = useCollection(methodsQuery);
-
-  const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), orderBy('amount', 'asc')) : null, [db]);
-  const { data: allDeliveryOptions } = useCollection(deliveryQuery);
-  
-  const deliveryOptions = React.useMemo(() => {
-    return allDeliveryOptions?.filter(opt => opt.isEnabled === true) || [];
-  }, [allDeliveryOptions]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,39 +66,47 @@ function CheckoutContent() {
       phone: "",
       email: user?.email || "",
       address: "",
-      paymentMethod: "",
+      paymentMethod: "cod",
       deliveryOption: "",
       notes: "",
     },
   });
 
-  const selectedDeliveryId = form.watch('deliveryOption');
-  const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
-  const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
-
-  useEffect(() => {
-    if (availableMethods?.length) {
-      const def = availableMethods.find(m => hasServices ? m.isDefaultForServices : m.isDefaultForProducts) || availableMethods[0];
-      form.setValue('paymentMethod', def.id);
-    }
-    if (deliveryOptions?.length && !form.getValues('deliveryOption')) {
-      form.setValue('deliveryOption', deliveryOptions[0].id);
-    }
-  }, [availableMethods, hasServices, deliveryOptions, form]);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!db || !auth) return;
+    if (!db) return;
     setIsSubmitting(true);
+    
+    const hasServices = items.some(i => i.itemType === 'service');
+    const finalAmount = Number((subtotal * 1.08).toFixed(2));
+
     try {
       const collName = hasServices ? 'bookings' : 'orders';
-      const docRef = await addDoc(collection(db, collName), {
+      const orderData = {
         customerName: values.name,
         customerPhone: values.phone,
+        customerEmail: values.email || null,
         address: values.address,
-        totalPrice: Number((subtotal * 1.08 + deliveryCharge).toFixed(2)),
+        items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        totalPrice: finalAmount,
         createdAt: new Date().toISOString(),
         status: 'New'
+      };
+
+      const docRef = await addDoc(collection(db, collName), orderData);
+
+      // 💰 Track Purchase (Pixel + CAPI)
+      // This is the most important conversion event
+      trackEvent('Purchase', {
+        value: finalAmount,
+        currency: 'BDT',
+        content_ids: items.map(i => i.id),
+        user_data: {
+          email: values.email || undefined,
+          phone: values.phone,
+          external_id: user?.uid
+        }
       });
+
       clearCart();
       router.push(`/order-success?id=${docRef.id}&type=${hasServices ? 'booking' : 'order'}`);
     } catch (e: any) {
@@ -121,99 +116,85 @@ function CheckoutContent() {
     }
   };
 
-  if (!mounted) return null;
-
-  const totalPayable = (subtotal * 1.08 + deliveryCharge).toLocaleString();
-
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-4 md:py-8 pb-32">
-      <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          <header className="mb-4 md:mb-6 text-center md:text-left">
-            <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight text-[#081621]">
-              {hasServices ? 'Finalize Booking' : 'Checkout'}
-            </h1>
-          </header>
+    <div className="bg-[#F8FAFC] min-h-screen py-8 pb-32">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <header className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#081621]">Secure Checkout</h1>
+        </header>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 md:gap-6 items-start">
-                <div className="lg:col-span-7 w-full space-y-4">
-                  <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-sm overflow-hidden bg-white">
-                    <CardHeader className="bg-blue-600 text-white p-4 md:p-6">
-                      <CardTitle className="text-base md:text-lg font-black uppercase flex items-center gap-3"><User size={18}/> Customer Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 md:p-6 space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="name" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Full Name</FormLabel>
-                            <FormControl><Input {...field} className="h-11 rounded-xl bg-gray-50 border-none shadow-inner"/></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={form.control} name="phone" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Phone</FormLabel>
-                            <FormControl><Input {...field} className="h-11 rounded-xl bg-gray-50 border-none shadow-inner"/></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-7 space-y-6">
+              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
+                <CardHeader className="bg-blue-600 text-white p-8">
+                  <CardTitle className="text-xl font-black uppercase flex items-center gap-3"><User size={20}/> Customer Info</CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</FormLabel>
+                        <FormControl><Input placeholder="Enter Name" {...field} className="h-12 rounded-xl bg-gray-50 border-none shadow-inner font-bold"/></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="phone" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</FormLabel>
+                        <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-12 rounded-xl bg-gray-50 border-none shadow-inner font-bold"/></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email (Optional)</FormLabel>
+                      <FormControl><Input type="email" placeholder="email@example.com" {...field} className="h-12 rounded-xl bg-gray-50 border-none shadow-inner"/></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="address" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Address</FormLabel>
+                      <FormControl><Textarea placeholder="House, Road, Block, Area" {...field} className="min-h-[100px] rounded-xl bg-gray-50 border-none shadow-inner p-4 font-medium"/></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </CardContent>
+              </Card>
+
+              <Button type="submit" className="w-full h-16 font-black text-xl rounded-2xl shadow-xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={24} /> Confirm Order</>}
+              </Button>
+            </div>
+
+            <div className="lg:col-span-5 w-full lg:sticky lg:top-24">
+              <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
+                <CardHeader className="p-8 border-b border-gray-50">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-[#081621]">Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="space-y-4">
+                    {items.map(item => (
+                      <div key={item.id} className="flex justify-between items-center text-[11px] font-bold uppercase text-gray-600">
+                        <span className="truncate max-w-[200px]">{item.name} × {item.quantity}</span>
+                        <span className="text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
-                      <FormField control={form.control} name="address" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase text-muted-foreground">Detailed Address</FormLabel>
-                          <FormControl><Textarea {...field} className="min-h-[80px] rounded-xl bg-gray-50 border-none shadow-inner p-4"/></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </CardContent>
-                  </Card>
-
-                  <Button type="submit" className="w-full hidden md:flex h-14 font-black text-lg rounded-2xl shadow-xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-2" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Confirm Order</>}
-                  </Button>
-                </div>
-
-                <div className="lg:col-span-5 w-full lg:sticky lg:top-24">
-                  <Card className="rounded-2xl md:rounded-[2rem] border-none shadow-xl overflow-hidden bg-white border-t-8 border-green-600">
-                    <CardHeader className="p-4 md:p-6 border-b border-gray-50">
-                      <CardTitle className="text-sm font-black uppercase tracking-widest text-[#081621]">Order Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 md:p-6">
-                      <div className="space-y-4">
-                        {items.map(item => (
-                          <div key={item.id} className="flex justify-between items-center text-[11px] font-bold uppercase text-gray-600">
-                            <span className="truncate max-w-[200px]">{item.name} × {item.quantity}</span>
-                            <span className="text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</span>
-                          </div>
-                        ))}
-                        <div className="pt-4 border-t-2 border-dashed flex justify-between items-end">
-                          <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-green-600 uppercase mb-1">Total Payable</span>
-                            <span className="text-2xl font-black text-[#081621]">৳{totalPayable}</span>
-                          </div>
-                          <Badge className="bg-green-100 text-green-700 border-none font-black text-[9px] rounded-md px-2">VAT INCLUDED</Badge>
-                        </div>
+                    ))}
+                    <div className="pt-6 border-t-4 border-dashed flex justify-between items-end">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-green-600 uppercase mb-1">Total Payable</span>
+                        <span className="text-3xl font-black text-[#081621]">৳{(subtotal * 1.08).toLocaleString()}</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Mobile/Tablet Sticky Action Bar */}
-              <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-[170] flex items-center justify-between gap-4 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Due Amount</span>
-                  <span className="text-xl font-black text-[#081621]">৳{totalPayable}</span>
-                </div>
-                <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl bg-green-600 text-white font-black text-xs uppercase shadow-xl tracking-widest" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirm Order'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+                      <Badge className="bg-green-100 text-green-700 border-none font-black text-[9px] px-3 py-1 rounded-md">VAT INC.</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
