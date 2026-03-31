@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, vendor_hub: true, partners: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, reports: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -177,14 +177,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-indigo-400",
         items: [{ name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard }]
       },
+      reports: {
+        id: 'reports',
+        title: "BUSINESS REPORTS",
+        icon: BarChart3,
+        color: "text-blue-400",
+        items: [
+          { name: "Financial Reports", href: '/admin/reports', icon: Wallet },
+          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
+        ]
+      },
       finance: {
         id: 'finance',
         title: "FINANCIAL HUB",
         icon: Wallet,
         color: "text-emerald-400",
         items: [
-          { name: "Finance Dashboard", href: '/admin/finance', icon: Wallet },
-          { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
+          { name: "Finance Hub", href: '/admin/finance', icon: Wallet },
+          { name: "Master Ledger", href: '/admin/finance/ledger', icon: ClipboardList },
+          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: CreditCard },
+          { name: "Bank Accounts", href: '/admin/finance/accounts', icon: Building2 },
         ]
       },
       sales: {
@@ -321,16 +333,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "Staff Directory", href: '/admin/employees', icon: HardHat }] : []),
           { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
           { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
-        ]
-      },
-      reports: {
-        id: 'reports',
-        title: "BUSINESS REPORTS",
-        icon: BarChart3,
-        color: "text-blue-400",
-        items: [
-          { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
-          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
         ]
       },
       customize: {
