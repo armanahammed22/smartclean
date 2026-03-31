@@ -62,7 +62,8 @@ import {
   Trophy,
   Wallet,
   Crown,
-  Handshake
+  Handshake,
+  Building2
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -102,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, vendor_hub: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, vendor_hub: true, partners: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -148,7 +149,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  // 🛡️ SECURITY FIX: Fetch all collections and filter IN MEMORY to avoid missing index errors.
   const ordersRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
   const vendorsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
   const productsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
@@ -238,6 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-cyan-400",
         items: [
           { name: "Partner Profiles", href: '/admin/partners', icon: Building2 },
+          { name: "Active Projects", href: '/admin/partners/projects', icon: Briefcase },
           { name: "Commission Ledger", href: '/admin/partners/commissions', icon: History },
         ]
       },

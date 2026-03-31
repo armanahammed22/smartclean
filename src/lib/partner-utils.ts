@@ -2,7 +2,7 @@
 
 import { Firestore } from 'firebase/firestore';
 import { createLedgerEntry } from './finance-utils';
-import { Partner } from '@/types';
+import { Partner, PartnerProject } from '@/types';
 
 /**
  * Utility to calculate commission for a partner based on order/service value.
@@ -37,5 +37,24 @@ export async function syncPartnerCommissionToLedger(
     date: new Date().toISOString(),
     accountId: 'default_cash', // Assuming default account
     notes: notes || `Commission for ${partner.name} - Source #${sourceId.slice(0,6)}`
+  });
+}
+
+/**
+ * Sync B2B Project to Ledger
+ */
+export async function syncProjectToLedger(db: Firestore, project: PartnerProject) {
+  const type = project.commissionDirection === 'TheyGiveMe' ? 'income' : 'expense';
+  
+  return createLedgerEntry(db, {
+    type,
+    category: 'Partner Project / Commission',
+    sourceId: project.id,
+    partnerId: project.partnerId,
+    amount: project.commissionAmount,
+    paidStatus: project.paidStatus,
+    date: new Date().toISOString(),
+    accountId: 'default_cash',
+    notes: `Project: ${project.title} (${project.partnerName})`
   });
 }

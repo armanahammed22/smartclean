@@ -260,7 +260,8 @@ export interface LedgerEntry {
     | "Marketing"
     | "Transport"
     | "Rent"
-    | "Other";
+    | "Other"
+    | "Partner Project / Commission";
   sourceId?: string; // orderId, serviceId, projectId
   accountId?: string; // bank or cash account id
   partnerId?: string;
@@ -322,4 +323,32 @@ export interface Partner {
   status: "active" | "inactive";
   notes?: string;
   createdAt: string;
+}
+
+export interface PartnerProject {
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  title: string;
+  services: string[]; 
+  addOns: string[];
+  projectAmount: number;
+  staffAssigned: {
+    uid: string;
+    name: string;
+    role: string;
+    salary: number;
+  }[];
+  workLocation: string;
+  schedule: {
+    startDate: string;
+    endDate: string;
+  };
+  commissionDirection: "TheyGiveMe" | "IGiveThem";
+  commissionAmount: number;
+  paidStatus: "Paid" | "Unpaid";
+  status: "Pending" | "In Progress" | "Completed" | "Cancelled";
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
