@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -85,7 +86,7 @@ export function BottomNav() {
             return (
               <div key="middle-offer" className="relative -mt-10 md:-mt-12 px-1 group animate-in slide-in-from-bottom-4 duration-700">
                 <Link href={activeOffer?.link || "/#offers"} className="flex flex-col items-center gap-1">
-                  <div className="relative w-[54px] h-[58px] md:w-[64px] md:h-[68px] flex items-center justify-center">
+                  <div className="relative w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
                     <div className="absolute inset-[-4px] rounded-full opacity-30 blur-xl animate-pulse bg-primary" />
                     <div className="relative w-full h-full rounded-full bg-white border-[3px] border-white shadow-2xl overflow-hidden transition-transform duration-300 group-hover:scale-110">
                       {offers.length > 0 ? (
