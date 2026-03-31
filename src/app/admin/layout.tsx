@@ -105,7 +105,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, reports: true, vendor_hub: true, orders: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 
+    dashboard: true, 
+    sales: true, 
+    finance: true, 
+    orders: true,
+    vendor_hub: true,
+    inventory: true,
+    services: true
+  });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -114,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -122,9 +130,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const sidebarConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
   const { data: sidebarConfig } = useDoc(sidebarConfigRef);
-
-  const productsEnabled = settings?.productsEnabled !== false;
-  const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -200,8 +205,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-rose-400",
         items: [
-          ...(productsEnabled ? [{ name: "New Order", href: '/admin/orders?create=true', icon: Plus }] : []),
-          ...(servicesEnabled ? [{ name: "New Booking", href: '/admin/bookings?create=true', icon: Plus }] : []),
+          { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
+          { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
         ]
       },
       ai_agents: {
@@ -220,10 +225,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-emerald-400",
         items: [
-          ...(productsEnabled ? [{ name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: badgeCounts.newOrders }] : []),
-          ...(servicesEnabled ? [{ name: "Service Bookings", href: '/admin/bookings', icon: Calendar }] : []),
+          { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: badgeCounts.newOrders },
+          { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
           { name: "Invoices", href: '/admin/invoices', icon: FileText },
-          ...(productsEnabled ? [{ name: "Logistics", href: '/admin/couriers', icon: Truck }] : []),
+          { name: "Logistics", href: '/admin/couriers', icon: Truck },
         ]
       },
       vendor_hub: {
@@ -231,13 +236,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "VENDOR HUB",
         icon: Store,
         color: "text-orange-400",
-        visible: productsEnabled || servicesEnabled,
         items: [
           { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: badgeCounts.newVendors },
           { name: "Verification Queue", href: '/admin/vendors/verifications', icon: UserCheck },
           { name: "Vendor Commissions", href: '/admin/vendors/commissions', icon: Wallet },
-          ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts }] : []),
-          ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices }] : []),
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts },
+          { name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices },
         ]
       },
       partners: {
@@ -256,7 +260,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "INVENTORY",
         icon: Box,
         color: "text-amber-400",
-        visible: productsEnabled,
         items: [
           { name: "All Products", href: '/admin/products', icon: Box },
           { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
@@ -270,7 +273,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "SERVICES",
         icon: Wrench,
         color: "text-sky-400",
-        visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
@@ -287,7 +289,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
           { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-          ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
+          { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
         ]
       },
       seo_hub: {
@@ -331,7 +333,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     let orderedKeys = Object.keys(baseGroups);
     
-    // 1. Apply saved order from Firestore
+    // Application of saved order if exists
     if (sidebarConfig?.order) {
       const savedOrder = sidebarConfig.order as string[];
       const validSaved = savedOrder.filter(k => baseGroups[k]);
@@ -339,21 +341,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       orderedKeys = [...validSaved, ...missing];
     }
 
-    // 2. Filter by visibility settings and global feature flags
+    // Returning all features (Removed productEnabled/servicesEnabled hiding logic)
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => {
         if (!g) return false;
-        
-        // Check user-defined visibility from Admin Settings
+        // User-defined visibility check remains for manual control
         if (sidebarConfig?.visibility?.[g.id] === false) return false;
-        
-        // Check global feature flags (Ecommerce vs Services)
-        if (g.visible === false) return false;
-        
         return g.items.length > 0;
       });
-  }, [badgeCounts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
+  }, [badgeCounts, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -459,16 +456,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="sm" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="h-10 px-3 gap-2 rounded-xl font-black text-[10px] uppercase tracking-widest border border-gray-100 hover:bg-gray-50 text-gray-600 transition-all">
-              <Languages size={14} /> <span className="hidden sm:inline">{language === 'bn' ? "English" : "বাংলা"}</span>
-            </Button>
             <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
               <div className="text-right hidden sm:block">
                 <p className="text-[10px] font-black uppercase text-gray-900 leading-none">{user?.displayName || 'Admin'}</p>
                 <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Authorized</p>
               </div>
               <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm shadow-md">
-                {user?.email?.[0]?.toUpperCase()}
+                {user?.email?.[0]?.toUpperCase() || 'A'}
               </div>
             </div>
           </div>
