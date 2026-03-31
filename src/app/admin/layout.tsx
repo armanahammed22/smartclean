@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -68,7 +69,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection } from 'firebase/firestore';
 import {
   Sheet,
   SheetContent,
@@ -147,15 +148,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  const newOrdersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), where('status', '==', 'New')) : null, [db, isAuthorized]);
-  const newVendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'vendor_profiles'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
-  const pendingProductsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), where('approvalStatus', '==', 'Pending')) : null, [db, isAuthorized]);
-  const pendingServicesQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'services'), where('status', '==', 'Pending')) : null, [db, isAuthorized]);
+  // 🛡️ SECURITY FIX: Fetch all collections and filter IN MEMORY to avoid missing index errors.
+  const ordersRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
+  const vendorsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
+  const productsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
+  const servicesRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
 
-  const { data: newOrders } = useCollection(newOrdersQuery);
-  const { data: newVendors } = useCollection(newVendorsQuery);
-  const { data: pendingProducts } = useCollection(pendingProductsQuery);
-  const { data: pendingServices } = useCollection(pendingServicesQuery);
+  const { data: allOrders } = useCollection(ordersRef);
+  const { data: allVendors } = useCollection(vendorsRef);
+  const { data: allProducts } = useCollection(productsRef);
+  const { data: allServices } = useCollection(servicesRef);
+
+  const badgeCounts = useMemo(() => {
+    return {
+      newOrders: allOrders?.filter(o => o.status === 'New').length || 0,
+      newVendors: allVendors?.filter(v => v.status === 'Pending').length || 0,
+      pendingProducts: allProducts?.filter(p => p.approvalStatus === 'Pending').length || 0,
+      pendingServices: allServices?.filter(s => s.status === 'Pending').length || 0,
+    };
+  }, [allOrders, allVendors, allProducts, allServices]);
 
   const NAV_GROUPS = useMemo(() => {
     const baseGroups: Record<string, any> = {
@@ -202,7 +213,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-emerald-400",
         items: [
-          ...(productsEnabled ? [{ name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: newOrders?.length || 0 }] : []),
+          ...(productsEnabled ? [{ name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: badgeCounts.newOrders }] : []),
           ...(servicesEnabled ? [{ name: "Service Bookings", href: '/admin/bookings', icon: Calendar }] : []),
           { name: "Invoices", href: '/admin/invoices', icon: FileText },
           ...(productsEnabled ? [{ name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck }] : []),
@@ -215,9 +226,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-orange-400",
         visible: productsEnabled || servicesEnabled,
         items: [
-          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-          ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 }] : []),
-          ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: pendingServices?.length || 0 }] : []),
+          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: badgeCounts.newVendors },
+          ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts }] : []),
+          ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices }] : []),
         ]
       },
       inventory: {
@@ -364,7 +375,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => g && g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, pendingServices, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
+  }, [badgeCounts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
     if (auth) {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -26,8 +27,7 @@ export default function ServiceApprovalsPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // 🛡️ Fixed Index Error: Removed 'where' clause from query to avoid composite index requirement.
-  // Filtering 'Pending' status in memory instead.
+  // 🛡️ SECURITY FIX: Fetch all and filter in memory to avoid "Missing Index" errors.
   const servicesQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'services'), orderBy('createdAt', 'desc'));
