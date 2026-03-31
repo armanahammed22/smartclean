@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -8,6 +9,7 @@ import {FirebaseClientProvider} from '@/firebase';
 import {TrackingProvider} from '@/components/providers/tracking-provider';
 import {GlobalErrorBoundary} from '@/components/providers/error-boundary';
 import { db } from '@/lib/firebaseAdmin';
+import Script from 'next/script';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -16,50 +18,6 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: '#1E5F7A',
-};
-
-export const metadata: Metadata = {
-  metadataBase: new URL('https://smartclean.com.bd'), // Update with actual domain
-  title: {
-    default: 'Smart Clean | Best Professional Cleaning Services in Bangladesh',
-    template: '%s | Smart Clean Bangladesh'
-  },
-  description: 'Top-rated home and office cleaning, AC maintenance, and appliance repair services in Dhaka. Professional teams, affordable pricing, and 100% satisfaction guaranteed.',
-  keywords: ['cleaning services dhaka', 'home cleaning bangladesh', 'office cleaning', 'ac repair dhaka', 'deep cleaning service', 'smart clean'],
-  authors: [{ name: 'Smart Clean Team' }],
-  creator: 'Smart Clean',
-  publisher: 'Smart Clean Bangladesh',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'bn_BD',
-    url: 'https://smartclean.com.bd',
-    siteName: 'Smart Clean',
-    title: 'Smart Clean | Professional Cleaning & Maintenance',
-    description: 'The smartest way to keep your space spotless. Book verified professionals for home and office cleaning.',
-    images: [
-      {
-        url: 'https://picsum.photos/seed/smartclean-og/1200/630',
-        width: 1200,
-        height: 630,
-        alt: 'Smart Clean Bangladesh',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Smart Clean | Professional Cleaning Services',
-    description: 'Expert cleaning and maintenance services in Bangladesh.',
-    images: ['https://picsum.photos/seed/smartclean-og/1200/630'],
-  },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
-  },
 };
 
 /**
@@ -75,6 +33,52 @@ async function getGlobalSettings() {
   }
 }
 
+/**
+ * Generate Dynamic Metadata for SEO
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getGlobalSettings();
+  const baseUrl = 'https://smartclean.com.bd';
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: settings?.seoTitle || 'Smart Clean | Best Professional Cleaning Services in Bangladesh',
+      template: '%s | Smart Clean Bangladesh'
+    },
+    description: settings?.seoDescription || 'Top-rated home and office cleaning, AC maintenance, and appliance repair services in Dhaka.',
+    keywords: settings?.seoKeywords?.split(',') || ['cleaning services dhaka', 'home cleaning bangladesh'],
+    authors: [{ name: 'Smart Clean Team' }],
+    creator: 'Smart Clean',
+    publisher: 'Smart Clean Bangladesh',
+    verification: {
+      google: settings?.googleSearchConsoleToken,
+    },
+    openGraph: {
+      type: 'website',
+      locale: 'bn_BD',
+      url: baseUrl,
+      siteName: settings?.websiteName || 'Smart Clean',
+      title: settings?.seoTitle || 'Smart Clean | Professional Cleaning & Maintenance',
+      description: settings?.seoDescription,
+      images: [
+        {
+          url: settings?.ogImage || 'https://picsum.photos/seed/smartclean-og/1200/630',
+          width: 1200,
+          height: 630,
+          alt: 'Smart Clean Bangladesh',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: settings?.seoTitle,
+      description: settings?.seoDescription,
+      images: [settings?.ogImage || 'https://picsum.photos/seed/smartclean-og/1200/630'],
+    },
+  };
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -82,56 +86,83 @@ export default async function RootLayout({
 }>) {
   const settings = await getGlobalSettings();
 
+  // Helper to clean scripts for next/script
+  const cleanScript = (script: string) => {
+    return script
+      .replace(/<script[^>]*>/gi, '')
+      .replace(/<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .trim();
+  };
+
   return (
     <html lang="bn" className="h-full">
       <head>
-        {/* Google Tag Manager (Head Script) */}
-        {settings?.gtmHeadScript && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: settings.gtmHeadScript.replace(/<script>|<\/script>/g, ''),
-            }}
-          />
-        )}
-        
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
 
+        {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'Smart Clean Bangladesh',
+              name: settings?.websiteName || 'Smart Clean Bangladesh',
               url: 'https://smartclean.com.bd',
-              logo: 'https://picsum.photos/seed/smartclean-logo/512/512',
+              logo: settings?.logoUrl || 'https://picsum.photos/seed/smartclean-logo/512/512',
               contactPoint: {
                 '@type': 'ContactPoint',
-                telephone: '+8801919640422',
+                telephone: settings?.contactPhone || '+8801919640422',
                 contactType: 'customer service',
                 areaServed: 'BD',
                 availableLanguage: ['Bengali', 'English']
-              },
-              sameAs: [
-                'https://www.facebook.com/smartclean',
-                'https://www.instagram.com/smartclean'
-              ]
+              }
             })
           }}
         />
       </head>
       <body className="font-body antialiased min-h-screen">
-        {/* Google Tag Manager (Body Script) */}
+        {/* Google Tag Manager (Body Script) - Immediate injection */}
         {settings?.gtmBodyScript && (
           <div
+            id="gtm-body-noscript"
             dangerouslySetInnerHTML={{
               __html: settings.gtmBodyScript,
             }}
           />
+        )}
+
+        {/* Google Tag Manager (Head Script) - Optimized loading */}
+        {settings?.gtmHeadScript && (
+          <Script
+            id="gtm-init"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: cleanScript(settings.gtmHeadScript),
+            }}
+          />
+        )}
+
+        {/* Google Analytics (Direct injection if GTM is not used) */}
+        {!settings?.gtmHeadScript && settings?.googleAnalyticsId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${settings.googleAnalyticsId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${settings.googleAnalyticsId}');
+              `}
+            </Script>
+          </>
         )}
 
         <GlobalErrorBoundary>
