@@ -66,7 +66,7 @@ export default function GoogleAnalyticsSettingsPage() {
                   className="h-14 bg-gray-50 border-none rounded-xl font-mono text-lg focus:bg-white transition-all px-6"
                 />
                 <p className="text-[10px] text-muted-foreground font-medium px-1 flex items-center gap-1">
-                  <Info size={12} /> Found in Google Analytics Admin > Data Streams > Web Stream.
+                  <Info size={12} /> Found in Google Analytics Admin &gt; Data Streams &gt; Web Stream.
                 </p>
               </div>
 
@@ -80,8 +80,8 @@ export default function GoogleAnalyticsSettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={handleSave} disabled={isSaving} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl">
-                {isSaving ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
+              <Button onClick={handleSave} disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl">
+                {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
                 Save Analytics Config
               </Button>
             </CardContent>

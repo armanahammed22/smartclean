@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -236,11 +236,4 @@ export default function PageEditor() {
       </form>
     </div>
   );
-}
-
-/**
- * 🔒 Production Memoization Helper
- */
-function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  return React.useMemo(factory, deps);
 }
