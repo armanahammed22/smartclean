@@ -60,7 +60,8 @@ import {
   BarChart,
   Terminal,
   Trophy,
-  Wallet
+  Wallet,
+  Crown
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -91,7 +92,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
 
-const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
+const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
@@ -100,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, vendor_hub: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -122,11 +123,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState !== null) {
-      setIsCollapsed(savedState === 'true');
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState !== null) {
+        setIsCollapsed(savedState === 'true');
+      }
+      setMounted(true);
     }
-    setMounted(true);
   }, []);
 
   const handleToggleCollapse = () => {
@@ -203,6 +206,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(productsEnabled ? [{ name: "Logistics (Couriers)", href: '/admin/couriers', icon: Truck }] : []),
         ]
       },
+      vendor_hub: {
+        id: 'vendor_hub',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-orange-400",
+        visible: productsEnabled,
+        items: [
+          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+        ]
+      },
       inventory: {
         id: 'inventory',
         title: "INVENTORY",
@@ -229,17 +243,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
-        ]
-      },
-      vendor_hub: {
-        id: 'vendor_hub',
-        title: "VENDOR HUB",
-        icon: Store,
-        color: "text-orange-400",
-        visible: productsEnabled,
-        items: [
-          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
         ]
       },
       marketing: {
@@ -358,21 +361,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => g && g.visible !== false && g.items.length > 0);
-  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig]);
-
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    if (isUserLoading || roleLoading) return;
-    if (user && !isAuthorized) {
-      toast({ variant: "destructive", title: "Unauthorized", description: "Admin access only." });
-      router.replace('/login');
-    }
-  }, [isAuthorized, isUserLoading, roleLoading, user, router, toast]);
+  }, [newOrders, newVendors, pendingProducts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
     if (auth) {
