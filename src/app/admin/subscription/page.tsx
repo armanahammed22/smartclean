@@ -192,7 +192,7 @@ export default function SubscriptionPage() {
             </DialogHeader>
             
             <div className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Package Title</Label>
                   <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Home Basic" required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
