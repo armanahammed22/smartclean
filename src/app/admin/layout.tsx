@@ -341,16 +341,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       orderedKeys = [...validSaved, ...missing];
     }
 
-    // Returning all features (Removed productEnabled/servicesEnabled hiding logic)
+    // Dynamic filtering based on visibility settings
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => {
         if (!g) return false;
-        // User-defined visibility check remains for manual control
+        
+        // Skip hidden groups based on visibility config
         if (sidebarConfig?.visibility?.[g.id] === false) return false;
+
+        // Scoping logic: Only hide if specifically disabled in global settings
+        if (settings?.productsEnabled === false && (g.id === 'inventory')) return false;
+        if (settings?.servicesEnabled === false && (g.id === 'services')) return false;
+
         return g.items.length > 0;
       });
-  }, [badgeCounts, sidebarConfig, pathname]);
+  }, [badgeCounts, sidebarConfig, settings, pathname]);
 
   const handleLogout = async () => {
     if (auth) {
