@@ -30,7 +30,8 @@ import {
   FileText,
   Zap,
   Briefcase,
-  Users
+  Users,
+  List
 } from 'lucide-react';
 import { 
   AreaChart, 
