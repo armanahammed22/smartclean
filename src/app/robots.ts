@@ -2,10 +2,10 @@ import { MetadataRoute } from 'next'
 
 /**
  * SEO Robots Configuration
- * Instructs search engines which pages to index and which to ignore.
+ * Pointing to dynamic sitemap URL.
  */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://smartclean.com.bd';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smartclean.com.bd';
 
   return {
     rules: {

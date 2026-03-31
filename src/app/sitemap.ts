@@ -3,11 +3,12 @@ import { db } from '@/lib/firebaseAdmin';
 
 /**
  * Dynamic Sitemap Generator (Server-Side)
- * Generates /sitemap.xml automatically for Google Search Console.
- * Safely handles build-time when DB might not be connected.
+ * Fixed "URL not allowed" by ensuring consistent domain structure.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://smartclean.com.bd';
+  // Use environment variable if available, otherwise fallback to the primary domain.
+  // Note: For Google Search Console, this MUST match your verified property URL.
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smartclean.com.bd';
 
   // 1. Define Static Base Routes
   const staticRoutes = [
@@ -25,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1.0 : 0.8,
   }));
 
-  // Safe check for DB connection (prevents build failure if env vars are missing)
+  // Safe check for DB connection
   if (!db) {
     return staticRoutes;
   }
@@ -67,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-    // 5. Fetch CMS Managed Pages (pages_management)
+    // 5. Fetch CMS Managed Pages
     const cmsSnap = await db.collection('pages_management').where('isPublished', '==', true).get();
     const cmsRoutes = cmsSnap.docs.map((doc: any) => {
       const data = doc.data();
@@ -79,7 +80,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-    // Combine all routes into one master sitemap
     return [
       ...staticRoutes,
       ...productRoutes,
@@ -88,7 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...cmsRoutes
     ];
   } catch (e) {
-    console.error('[Sitemap Generator] Fetch failed, returning static only:', e);
+    console.error('[Sitemap Generator] Fetch failed:', e);
     return staticRoutes;
   }
 }

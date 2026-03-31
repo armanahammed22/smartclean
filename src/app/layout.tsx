@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -38,7 +37,7 @@ async function getGlobalSettings() {
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
-  const baseUrl = 'https://smartclean.com.bd';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smartclean.com.bd';
 
   return {
     metadataBase: new URL(baseUrl),
