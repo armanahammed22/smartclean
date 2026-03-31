@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,7 +26,7 @@ import {
   X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -288,7 +288,7 @@ export default function PartnerManagementPage() {
               <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Contract terms or internal references..." className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4" />
             </div>
 
-            <DialogFooter className="pt-4 border-t gap-2">
+            <DialogFooter className="p-8 bg-gray-50 border-t gap-2">
               <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
               <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl bg-primary text-white uppercase tracking-tighter text-xs">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Profile</>}
