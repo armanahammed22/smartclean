@@ -99,7 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, seo_hub: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -229,8 +229,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
           { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-          { name: "Tracking Hub", href: '/admin/marketing/settings', icon: Code },
           ...(servicesEnabled ? [{ name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award }] : []),
+        ]
+      },
+      seo_hub: {
+        id: 'seo_hub',
+        title: "SEO & TRACKING HUB",
+        icon: Search,
+        color: "text-yellow-400",
+        items: [
+          { name: "SEO Settings", href: '/admin/seo/settings', icon: Settings },
+          { name: "Facebook Pixel", href: '/admin/seo/pixel', icon: Smartphone },
+          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
+          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
+          { name: "Search Console", href: '/admin/seo/search-console', icon: Terminal },
+          { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Trophy },
+          { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: Zap },
+          { name: "Event Logs", href: '/admin/seo/logs', icon: Activity },
         ]
       },
       offers: {
@@ -277,18 +292,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Financial Reports", href: '/admin/reports', icon: BarChart3 },
           { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
-        ]
-      },
-      seo_hub: {
-        id: 'seo_hub',
-        title: "SEO HUB",
-        icon: Search,
-        color: "text-yellow-400",
-        items: [
-          { name: "SEO Settings", href: '/admin/seo/settings', icon: Settings },
-          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
-          { name: "Search Console", href: '/admin/seo/search-console', icon: Terminal },
-          { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Trophy },
         ]
       },
       customize: {
