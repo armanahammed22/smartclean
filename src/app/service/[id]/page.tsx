@@ -28,7 +28,8 @@ import {
   MessageSquare,
   ShoppingCart,
   XCircle,
-  Quote
+  Quote,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -69,7 +70,7 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  // Data Fetching
+  // 1. Data Fetching Queries
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -114,15 +115,15 @@ export default function ServiceBookingPage() {
     return userBookings.some(b => b.serviceId === targetId && b.status === 'Completed');
   }, [userBookings, targetId]);
 
-  // Calculations
+  // 2. Pricing Logic & Calculations
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = (pricingLogic === 'sqft' && selectedSqftId !== null && baseService?.sqftOptions) ? baseService.sqftOptions[parseInt(selectedSqftId)] : null;
   
   const basePriceValue = useMemo(() => {
     if (!baseService) return 0;
-    if (pricingLogic === 'fixed') return baseService.basePrice || 0;
     if (pricingLogic === 'sqft') return selectedSlab?.price || 0;
-    return (baseService.basePrice || 0) * mainQuantity;
+    if (pricingLogic === 'quantity') return (baseService.basePrice || 0) * mainQuantity;
+    return baseService.basePrice || 0; // Fixed
   }, [baseService, pricingLogic, selectedSlab, mainQuantity]);
 
   const addOnsTotal = useMemo(() => {
@@ -139,6 +140,7 @@ export default function ServiceBookingPage() {
     }
   }, [baseService]);
 
+  // 3. Handlers
   const handleContinue = () => {
     if (!baseService || !baseService.isBookingEnabled) return;
     
@@ -158,7 +160,8 @@ export default function ServiceBookingPage() {
       imageUrl: baseService.imageUrl || '',
       itemType: 'service' as const,
       selectedAddOns: selectedAddOns,
-      slab: pricingLogic === 'sqft' ? selectedSlab?.label : null
+      slab: pricingLogic === 'sqft' ? selectedSlab?.label : null,
+      quantity: 1 // We add 1 "service package"
     };
 
     addToCart(cartItem as any, 1, false);
@@ -243,7 +246,7 @@ export default function ServiceBookingPage() {
               <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4 bg-white relative z-20">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <h1 className="text-lg md:text-2xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
+                    <h1 className="text-lg md:text-xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
                       {baseService.title}
                     </h1>
                     
@@ -270,18 +273,18 @@ export default function ServiceBookingPage() {
                         <span className="text-2xl md:text-3xl font-black text-primary tracking-tighter">৳{totalPrice.toLocaleString()}</span>
                       </div>
                       
-                      <div className="flex-1 flex justify-end">
+                      <div className="flex flex-col items-end">
                         {pricingLogic === 'quantity' && (
-                          <div className="flex items-center bg-white rounded-xl overflow-hidden h-10 border-2 border-gray-100 shadow-sm">
-                            <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Minus size={12} /></button>
+                          <div className="flex items-center bg-white rounded-xl overflow-hidden h-9 border-2 border-gray-100 shadow-sm">
+                            <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-2 h-full hover:bg-gray-50 text-gray-400"><Minus size={10} /></button>
                             <span className="px-2 font-black text-xs text-[#081621] min-w-[20px] text-center">{mainQuantity}</span>
-                            <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Plus size={12} /></button>
+                            <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-2 h-full hover:bg-gray-50 text-gray-400"><Plus size={10} /></button>
                           </div>
                         )}
 
                         {pricingLogic === 'sqft' && baseService.sqftOptions?.length && (
                           <Select value={selectedSqftId || '0'} onValueChange={setSelectedSqftId}>
-                            <SelectTrigger className="h-10 w-28 bg-white border-2 border-gray-100 rounded-xl text-[9px] font-black uppercase">
+                            <SelectTrigger className="h-9 w-24 bg-white border-2 border-gray-100 rounded-xl text-[8px] font-black uppercase">
                               <SelectValue placeholder="Size" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
@@ -417,86 +420,7 @@ export default function ServiceBookingPage() {
           </div>
         </section>
 
-        {baseService.reviewsEnabled && (
-          <section className="container mx-auto px-4 py-16 max-w-7xl">
-            <div className="bg-[#081621] rounded-[3rem] p-10 md:p-20 overflow-hidden relative shadow-2xl">
-              <div className="absolute top-0 right-0 p-12 opacity-5 -rotate-12 pointer-events-none"><Quote size={250} fill="white" /></div>
-              
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 relative z-10">
-                <div className="space-y-4">
-                  <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-none">Client Reviews</h2>
-                  <p className="text-primary font-black uppercase tracking-[0.3em] text-xs">Trusted Professional Performance</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 flex items-center gap-6">
-                  <div className="text-center">
-                    <p className="text-4xl font-black text-primary leading-none">4.9</p>
-                    <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mt-2">Overall Score</p>
-                  </div>
-                  <div className="flex gap-1 text-amber-400">
-                    {[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}
-                  </div>
-                </div>
-              </div>
-
-              {reviews?.length ? (
-                <Carousel opts={{ align: "start", loop: true }} plugins={[Autoplay({ delay: 4500 })]} className="w-full relative z-10">
-                  <CarouselContent className="-ml-6">
-                    {reviews.map((rev) => (
-                      <CarouselItem key={rev.id} className="pl-6 basis-full md:basis-1/2 lg:basis-1/3">
-                        <Card className="border-none bg-white/5 backdrop-blur-md rounded-[2.5rem] p-8 h-full border border-white/5 space-y-6">
-                          <div className="flex justify-between items-start">
-                            <div className="flex text-amber-400 gap-0.5">
-                              {[...Array(rev.rating)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-                            </div>
-                            <span className="text-[10px] font-black text-white/30 uppercase">{format(new Date(rev.createdAt), 'MMM dd')}</span>
-                          </div>
-                          <p className="text-white/90 text-sm font-medium italic">"{rev.text}"</p>
-                          <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-                            <div className="w-10 h-10 rounded-2xl bg-primary/20 text-primary flex items-center justify-center font-black">{rev.userName[0]}</div>
-                            <p className="text-xs font-black text-white uppercase">{rev.userName}</p>
-                          </div>
-                        </Card>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              ) : (
-                <div className="py-24 text-center opacity-20 relative z-10">
-                  <MessageSquare size={64} className="mx-auto text-white mb-4" />
-                  <p className="text-white font-black uppercase tracking-widest text-xs">No reviews yet</p>
-                </div>
-              )}
-
-              {user && canSubmitReview && (
-                <div className="mt-16 max-w-2xl mx-auto bg-white rounded-[3rem] p-8 md:p-12 space-y-8 relative z-10">
-                  <h3 className="text-2xl font-black text-[#081621] uppercase text-center">Share Your Experience</h3>
-                  <form onSubmit={handleSubmitReview} className="space-y-6">
-                    <div className="flex justify-center gap-3">
-                      {[1,2,3,4,5].map(star => (
-                        <button key={star} type="button" onClick={() => setReviewRating(star)}>
-                          <Star size={32} fill={star <= reviewRating ? "#F59E0B" : "none"} className={star <= reviewRating ? "text-[#F59E0B]" : "text-gray-200"} />
-                        </button>
-                      ))}
-                    </div>
-                    <Textarea 
-                      value={reviewText} 
-                      onChange={e => setReviewText(e.target.value)} 
-                      placeholder="Write your review here..." 
-                      className="min-h-[120px] bg-gray-50 border-none rounded-2xl p-6"
-                      required
-                    />
-                    <Button type="submit" disabled={isSubmittingReview} className="w-full h-16 rounded-2xl font-black uppercase gap-3 shadow-xl">
-                      {isSubmittingReview ? <Loader2 className="animate-spin h-5 w-5" /> : <Send size={20} />} 
-                      Post Review
-                    </Button>
-                  </form>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* 📱 Mobile Sticky Action Bar */}
+        {/* MOBILE STICKY BAR */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
