@@ -42,6 +42,7 @@ const DEFAULT_MENU_KEYS = [
   'ai_agents', 
   'orders', 
   'vendor_hub',
+  'partners',
   'inventory', 
   'services', 
   'marketing', 

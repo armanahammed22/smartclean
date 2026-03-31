@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -62,7 +61,8 @@ import {
   Terminal,
   Trophy,
   Wallet,
-  Crown
+  Crown,
+  Handshake
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -229,6 +229,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: badgeCounts.newVendors },
           ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts }] : []),
           ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices }] : []),
+        ]
+      },
+      partners: {
+        id: 'partners',
+        title: "B2B PARTNERS",
+        icon: Handshake,
+        color: "text-cyan-400",
+        items: [
+          { name: "Partner Profiles", href: '/admin/partners', icon: Building2 },
+          { name: "Commission Ledger", href: '/admin/partners/commissions', icon: History },
         ]
       },
       inventory: {

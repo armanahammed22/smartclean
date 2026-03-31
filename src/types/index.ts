@@ -246,8 +246,6 @@ export interface CustomRequest {
   updatedAt?: string;
 }
 
-// --- NEW FINANCE INTERFACES ---
-
 export interface LedgerEntry {
   id: string;
   type: "income" | "expense";
@@ -265,6 +263,7 @@ export interface LedgerEntry {
     | "Other";
   sourceId?: string; // orderId, serviceId, projectId
   accountId?: string; // bank or cash account id
+  partnerId?: string;
   partnerVendorId?: string;
   staffId?: string;
   amount: number;
@@ -310,4 +309,17 @@ export interface ProjectCosting {
   netProfit: number;
   status: "In Progress" | "Completed";
   updatedAt: string;
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  commissionDirection: "TheyGiveMe" | "IGiveThem";
+  commissionType: "percentage" | "fixed";
+  commissionRate: number;
+  status: "active" | "inactive";
+  notes?: string;
+  createdAt: string;
 }
