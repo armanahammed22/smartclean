@@ -94,7 +94,9 @@ export function useDoc<T = any>(
               errorStr.includes('assertion failed') || 
               errorStr.includes('unexpected state') ||
               errorStr.includes('persistent_stream') ||
-              errorStr.includes('fe":-1')
+              errorStr.includes('persistentlistenstream') ||
+              errorStr.includes('fe":-1') ||
+              errorStr.includes('fe": -1')
             ) {
               console.warn(`[Firestore Shield] Recovering from SDK assertion in doc: ${currentPath}.`);
               

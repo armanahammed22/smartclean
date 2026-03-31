@@ -1,3 +1,4 @@
+
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -44,7 +45,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
         lowMsg.includes('persistentlistenstream') ||
-        lowMsg.includes('fe":-1')
+        lowMsg.includes('fe":-1') ||
+        lowMsg.includes('fe": -1')
       );
     };
 
@@ -63,6 +65,13 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         return;
       }
       originalConsoleError.apply(console, args);
+    };
+
+    const originalConsoleWarn = console.warn;
+    console.warn = (...args: any[]) => {
+      const msg = String(args[0] || '');
+      if (isAssertionError(msg)) return;
+      originalConsoleWarn.apply(console, args);
     };
 
     window.addEventListener('error', (event) => {
