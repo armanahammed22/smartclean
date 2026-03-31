@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useAuth, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,6 +68,7 @@ import { cn } from '@/lib/utils';
 export default function CustomersPage() {
   const db = useFirestore();
   const auth = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -79,9 +81,9 @@ export default function CustomersPage() {
   const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
   const customersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-  }, [db]);
+  }, [db, user]);
 
   const { data: customers, isLoading } = useCollection(customersQuery);
 

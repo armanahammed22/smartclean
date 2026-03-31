@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ import Link from 'next/link';
 
 export default function PartnerManagementPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,7 +53,7 @@ export default function PartnerManagementPage() {
   });
 
   const partnersQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'partners'), orderBy('createdAt', 'desc')) : null, [db]);
+    (db && user) ? query(collection(db, 'partners'), orderBy('createdAt', 'desc')) : null, [db, user]);
   const { data: partners, isLoading } = useCollection(partnersQuery);
 
   const handleSavePartner = async (e: React.FormEvent) => {

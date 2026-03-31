@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -31,6 +32,7 @@ import { useSearchParams } from 'next/navigation';
 
 export default function PartnerCommissionsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const partnerIdFilter = searchParams.get('partnerId');
@@ -39,11 +41,11 @@ export default function PartnerCommissionsPage() {
 
   // Optimized to avoid index error: fetch all and filter in memory
   const ledgerQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'finance_ledger'), orderBy('date', 'desc'));
-  }, [db]);
+  }, [db, user]);
 
-  const partnersQuery = useMemoFirebase(() => db ? collection(db, 'partners') : null, [db]);
+  const partnersQuery = useMemoFirebase(() => (db && user) ? collection(db, 'partners') : null, [db, user]);
 
   const { data: allLedger, isLoading } = useCollection(ledgerQuery);
   const { data: partners } = useCollection(partnersQuery);

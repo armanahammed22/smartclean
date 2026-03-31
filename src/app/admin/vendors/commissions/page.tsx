@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -30,13 +30,14 @@ import Link from 'next/link';
 
 export default function GlobalVendorCommissionsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fixed Index Error: Fetch all and filter in memory
   const ledgerQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
-  const vendorsQuery = useMemoFirebase(() => db ? collection(db, 'vendor_profiles') : null, [db]);
+    (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
+  const vendorsQuery = useMemoFirebase(() => (db && user) ? collection(db, 'vendor_profiles') : null, [db, user]);
 
   const { data: allLedger, isLoading: lLoading } = useCollection(ledgerQuery);
   const { data: allVendors } = useCollection(vendorsQuery);

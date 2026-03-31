@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -30,12 +31,13 @@ import { Input } from '@/components/ui/input';
 
 export default function VendorVerificationQueuePage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fixed Index Error: Fetch all and filter in memory for prototypes
   const vendorsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'vendor_profiles'), orderBy('createdAt', 'desc')) : null, [db]);
+    (db && user) ? query(collection(db, 'vendor_profiles'), orderBy('createdAt', 'desc')) : null, [db, user]);
   const { data: allVendors, isLoading } = useCollection(vendorsQuery);
 
   const pendingQueue = useMemo(() => {

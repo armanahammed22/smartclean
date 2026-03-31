@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 export default function CouriersPage() {
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -36,9 +37,9 @@ export default function CouriersPage() {
   const [editingCourier, setEditingCourier] = useState<any>(null);
 
   const couriersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'couriers'), orderBy('name', 'asc'));
-  }, [db]);
+  }, [db, user]);
 
   const { data: couriers, isLoading } = useCollection(couriersQuery);
 
