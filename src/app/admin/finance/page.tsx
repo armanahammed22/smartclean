@@ -20,7 +20,8 @@ import {
   Loader2,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 import { 
   XAxis, 
