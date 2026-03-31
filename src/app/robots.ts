@@ -1,4 +1,3 @@
-
 import { MetadataRoute } from 'next'
 
 /**
@@ -6,6 +5,8 @@ import { MetadataRoute } from 'next'
  * Instructs search engines which pages to index and which to ignore.
  */
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = 'https://smartclean.com.bd';
+
   return {
     rules: {
       userAgent: '*',
@@ -19,9 +20,10 @@ export default function robots(): MetadataRoute.Robots {
         '/checkout',
         '/order-success',
         '/secure-admin-portal',
-        '/secure-staff-access'
+        '/secure-staff-access',
+        '/api/'
       ],
     },
-    sitemap: 'https://smartclean.com.bd/sitemap.xml', // Update with actual domain
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }

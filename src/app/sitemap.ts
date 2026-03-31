@@ -3,57 +3,92 @@ import { db } from '@/lib/firebaseAdmin';
 
 /**
  * Dynamic Sitemap Generator (Server-Side)
+ * Generates /sitemap.xml automatically for Google Search Console.
  * Safely handles build-time when DB might not be connected.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://smartclean.com.bd';
 
+  // 1. Define Static Base Routes
   const staticRoutes = [
     '',
     '/services',
     '/products',
     '/support',
     '/deep-cleaning',
+    '/login',
+    '/signup',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
-    priority: route === '' ? 1 : 0.8,
+    priority: route === '' ? 1.0 : 0.8,
   }));
 
-  // Safe check for DB (prevents build failure if env vars are missing)
+  // Safe check for DB connection (prevents build failure if env vars are missing)
   if (!db) {
     return staticRoutes;
   }
 
   try {
+    // 2. Fetch Active Products
     const productSnap = await db.collection('products').where('status', '==', 'Active').get();
-    const productRoutes = productSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/product/${doc.id}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }));
+    const productRoutes = productSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        url: `${baseUrl}/product/${data.slug || doc.id}`,
+        lastModified: new Date(data.updatedAt || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      };
+    });
 
+    // 3. Fetch Active Services
     const serviceSnap = await db.collection('services').where('status', '==', 'Active').get();
-    const serviceRoutes = serviceSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/service/${doc.id}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }));
+    const serviceRoutes = serviceSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        url: `${baseUrl}/service/${data.slug || doc.id}`,
+        lastModified: new Date(data.updatedAt || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      };
+    });
 
+    // 4. Fetch Dynamic Landing Pages
     const landingSnap = await db.collection('landing_pages').where('active', '==', true).get();
-    const landingRoutes = landingSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/${doc.data().slug}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }));
+    const landingRoutes = landingSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        url: `${baseUrl}/${data.slug}`,
+        lastModified: new Date(data.updatedAt || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      };
+    });
 
-    return [...staticRoutes, ...productRoutes, ...serviceRoutes, ...landingRoutes];
+    // 5. Fetch CMS Managed Pages (pages_management)
+    const cmsSnap = await db.collection('pages_management').where('isPublished', '==', true).get();
+    const cmsRoutes = cmsSnap.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        url: `${baseUrl}/page/${data.slug}`,
+        lastModified: new Date(data.updatedAt || new Date()),
+        changeFrequency: 'monthly' as const,
+        priority: 0.5,
+      };
+    });
+
+    // Combine all routes into one master sitemap
+    return [
+      ...staticRoutes,
+      ...productRoutes,
+      ...serviceRoutes,
+      ...landingRoutes,
+      ...cmsRoutes
+    ];
   } catch (e) {
-    console.error('Sitemap fetch failed, returning static only.');
+    console.error('[Sitemap Generator] Fetch failed, returning static only:', e);
     return staticRoutes;
   }
 }
