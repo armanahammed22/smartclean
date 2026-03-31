@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -63,7 +64,8 @@ import {
   Wallet,
   Crown,
   Handshake,
-  Building2
+  Building2,
+  UserCheck
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -103,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, reports: true });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ dashboard: true, sales: true, finance: true, reports: true, vendor_hub: true });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -239,6 +241,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: productsEnabled || servicesEnabled,
         items: [
           { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: badgeCounts.newVendors },
+          { name: "Verification Queue", href: '/admin/vendors/verifications', icon: UserCheck },
+          { name: "Vendor Commissions", href: '/admin/vendors/commissions', icon: Wallet },
           ...(productsEnabled ? [{ name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts }] : []),
           ...(servicesEnabled ? [{ name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices }] : []),
         ]
