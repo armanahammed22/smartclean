@@ -106,13 +106,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 
-    dashboard: true, 
     sales: true, 
-    finance: true, 
-    orders: true,
-    vendor_hub: true,
-    inventory: true,
-    services: true
+    orders: true, 
+    services: true,
+    marketing: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -122,14 +119,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
-
-  const sidebarConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
-  const { data: sidebarConfig } = useDoc(sidebarConfigRef);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -149,126 +143,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  const ordersRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
-  const vendorsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
-  const productsRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
-  const servicesRef = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
-
-  const { data: allOrders } = useCollection(ordersRef);
-  const { data: allVendors } = useCollection(vendorsRef);
-  const { data: allProducts } = useCollection(productsRef);
-  const { data: allServices } = useCollection(servicesRef);
-
-  const badgeCounts = useMemo(() => {
-    return {
-      newOrders: allOrders?.filter(o => o.status === 'New').length || 0,
-      newVendors: allVendors?.filter(v => v.status === 'Pending').length || 0,
-      pendingProducts: allProducts?.filter(p => p.approvalStatus === 'Pending').length || 0,
-      pendingServices: allServices?.filter(s => s.status === 'Pending').length || 0,
-    };
-  }, [allOrders, allVendors, allProducts, allServices]);
-
   const NAV_GROUPS = useMemo(() => {
-    const baseGroups: Record<string, any> = {
-      dashboard: {
-        id: 'dashboard',
+    return [
+      {
+        id: 'dashboard_link',
         title: "DASHBOARD",
+        href: '/admin/dashboard',
         icon: LayoutDashboard,
         color: "text-indigo-400",
-        items: [{ name: "Overview", href: '/admin/dashboard', icon: LayoutDashboard }]
+        items: []
       },
-      reports: {
-        id: 'reports',
-        title: "BUSINESS REPORTS",
-        icon: BarChart3,
-        color: "text-blue-400",
-        items: [
-          { name: "Financial Reports", href: '/admin/reports', icon: Wallet },
-          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
-        ]
-      },
-      finance: {
-        id: 'finance',
-        title: "FINANCIAL HUB",
-        icon: Wallet,
-        color: "text-emerald-400",
-        items: [
-          { name: "Finance Hub", href: '/admin/finance', icon: Wallet },
-          { name: "Master Ledger", href: '/admin/finance/ledger', icon: ClipboardList },
-          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: CreditCard },
-          { name: "Bank Accounts", href: '/admin/finance/accounts', icon: Building2 },
-        ]
-      },
-      sales: {
+      {
         id: 'sales',
         title: "SALES TERMINAL",
         icon: ShoppingCart,
         color: "text-rose-400",
         items: [
-          { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
           { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
         ]
       },
-      ai_agents: {
-        id: 'ai_agents',
-        title: "AI AGENTS (STAFF)",
-        icon: Bot,
-        color: "text-blue-400",
-        items: [
-          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
-          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
-        ]
-      },
-      orders: {
+      {
         id: 'orders',
         title: "ORDER & BOOKING",
         icon: ShoppingCart,
         color: "text-emerald-400",
         items: [
-          { name: "Product Orders", href: '/admin/orders', icon: ShoppingCart, badge: badgeCounts.newOrders },
           { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
           { name: "Invoices", href: '/admin/invoices', icon: FileText },
-          { name: "Logistics", href: '/admin/couriers', icon: Truck },
         ]
       },
-      vendor_hub: {
-        id: 'vendor_hub',
-        title: "VENDOR HUB",
-        icon: Store,
-        color: "text-orange-400",
-        items: [
-          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: badgeCounts.newVendors },
-          { name: "Verification Queue", href: '/admin/vendors/verifications', icon: UserCheck },
-          { name: "Vendor Commissions", href: '/admin/vendors/commissions', icon: Wallet },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: badgeCounts.pendingProducts },
-          { name: "Service Approvals", href: '/admin/services/approvals', icon: Wrench, badge: badgeCounts.pendingServices },
-        ]
-      },
-      partners: {
-        id: 'partners',
-        title: "B2B PARTNERS",
-        icon: Handshake,
-        color: "text-cyan-400",
-        items: [
-          { name: "Partner Profiles", href: '/admin/partners', icon: Building2 },
-          { name: "Active Projects", href: '/admin/partners/projects', icon: Briefcase },
-          { name: "Commission Ledger", href: '/admin/partners/commissions', icon: History },
-        ]
-      },
-      inventory: {
-        id: 'inventory',
-        title: "INVENTORY",
-        icon: Box,
-        color: "text-amber-400",
-        items: [
-          { name: "All Products", href: '/admin/products', icon: Box },
-          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
-          { name: "Categories", href: '/admin/products/categories', icon: Tags },
-          { name: "Brands", href: '/admin/attributes/brands', icon: Award },
-          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
-        ]
-      },
-      services: {
+      {
         id: 'services',
         title: "SERVICES",
         icon: Wrench,
@@ -278,78 +182,111 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
+          { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
         ]
       },
-      marketing: {
+      {
         id: 'marketing',
-        title: "MARKETING",
+        title: "MARKETING & PROMOTIONS",
         icon: Target,
         color: "text-rose-400",
         items: [
           { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
           { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
+          { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
           { name: "Affiliate System", href: '/admin/marketing/affiliate', icon: Award },
+          { name: "SEO Settings", href: '/admin/seo/settings', icon: Search },
         ]
       },
-      seo_hub: {
-        id: 'seo_hub',
-        title: "SEO & TRACKING",
-        icon: Search,
-        color: "text-yellow-400",
+      {
+        id: 'offers',
+        title: "OFFER & CAMPAIGN",
+        icon: TicketPercent,
+        color: "text-pink-400",
         items: [
-          { name: "SEO Settings", href: '/admin/seo/settings', icon: Settings },
-          { name: "Facebook Pixel", href: '/admin/seo/pixel', icon: Smartphone },
-          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
-          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
+          { name: "General & Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
+          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap },
+          { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
+          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity },
+          { name: "Usage Tracking", href: '/admin/offers/tracking', icon: History },
         ]
       },
-      customize: {
+      {
+        id: 'crm',
+        title: "CRM & USERS",
+        icon: Users,
+        color: "text-purple-400",
+        items: [
+          { name: "Customer Directory", href: '/admin/customers', icon: Users },
+          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
+          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
+        ]
+      },
+      {
+        id: 'reports',
+        title: "BUSINESS REPORTS",
+        icon: BarChart3,
+        color: "text-blue-400",
+        items: [
+          { name: "Financial Reports", href: '/admin/reports', icon: FileText },
+          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
+        ]
+      },
+      {
         id: 'customize',
-        title: "SITE BUILDER",
+        title: "SITE CUSTOMIZE",
         icon: Palette,
         color: "text-cyan-400",
         items: [
-          { name: "Homepage Blocks", href: '/admin/customize/homepage-builder', icon: Navigation },
+          { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-          { name: "Feature Grid", href: '/admin/customize/quick-links', icon: Grid },
+          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: List },
+          { name: "Icon Grid", href: '/admin/quick-links', icon: Grid },
+          { name: "Feature Cards", href: '/admin/quick-actions', icon: Zap },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
       },
-      system: {
+      {
         id: 'system',
         title: "SYSTEM",
         icon: Settings,
         color: "text-slate-400",
         items: [
-          { name: "General Config", href: '/admin/settings', icon: Settings },
-          { name: "Pay Gateways", href: '/admin/payments', icon: CreditCard },
+          { name: "General Settings", href: '/admin/settings', icon: Settings },
+          { name: "Localization", href: '/admin/settings/languages', icon: Globe },
+          { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
           { name: "Fleet Tracking", href: '/admin/settings/tracking', icon: MapPin },
-          { name: "API & Logs", href: '/admin/settings/api', icon: Code },
+          { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
+          { name: "System Logs", href: '/admin/error-logs', icon: Terminal },
+        ]
+      },
+      {
+        id: 'ai_agents',
+        title: "AI AGENTS (STAFF)",
+        icon: Bot,
+        color: "text-blue-400",
+        items: [
+          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
+          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
+        ]
+      },
+      {
+        id: 'support',
+        title: "SUPPORT",
+        icon: MessageCircle,
+        color: "text-green-400",
+        items: [
+          { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
+          { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
         ]
       }
-    };
-
-    let orderedKeys = Object.keys(baseGroups);
-    
-    // Application of saved order if exists
-    if (sidebarConfig?.order) {
-      const savedOrder = sidebarConfig.order as string[];
-      const validSaved = savedOrder.filter(k => baseGroups[k]);
-      const missing = orderedKeys.filter(k => !validSaved.includes(k));
-      orderedKeys = [...validSaved, ...missing];
-    }
-
-    // Standard mapping: Hide only if specifically set to false in config
-    return orderedKeys
-      .map(key => baseGroups[key])
-      .filter(g => {
-        if (!g) return false;
-        if (sidebarConfig?.visibility?.[g.id] === false) return false;
-        return g.items.length > 0;
-      });
-  }, [badgeCounts, sidebarConfig, pathname]);
+    ];
+  }, []);
 
   const handleLogout = async () => {
     if (auth) {
@@ -367,13 +304,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {!collapsed && (
           <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
             <h1 className="font-black text-sm uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Terminal Active</p>
+            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
+          if (group.id === 'dashboard_link') {
+            return (
+              <Link
+                key={group.id}
+                href={group.href || '#'}
+                className={cn(
+                  "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white",
+                  collapsed ? "justify-center px-0 h-12" : "px-3 py-3",
+                  pathname === group.href && "bg-white/10 text-white border border-white/5 shadow-xl"
+                )}
+              >
+                <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3 flex-1")}>
+                  <group.icon size={18} className={cn(group.color, pathname === group.href && "text-white")} />
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest">{group.title}</span>}
+                </div>
+                {!collapsed && <ChevronRight size={14} className="opacity-40" />}
+              </Link>
+            );
+          }
+
           const isGroupActive = group.items.some((item: any) => pathname === item.href);
           return (
             <div key={group.id} className="space-y-1">
@@ -400,9 +357,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     >
                       <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
                       <span className="truncate">{item.name}</span>
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="absolute right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black animate-pulse">{item.badge}</span>
-                      )}
                     </Link>
                   ))}
                 </div>
