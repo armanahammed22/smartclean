@@ -106,7 +106,3 @@ export default function SearchConsoleSettingsPage() {
     </div>
   );
 }
-
-function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  return React.useMemo(factory, deps);
-}

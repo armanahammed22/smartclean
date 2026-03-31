@@ -87,7 +87,7 @@ export default function TagManagerSettingsPage() {
 
         <div className="space-y-6">
           <div className="bg-[#081621] rounded-3xl p-8 text-white space-y-6">
-            <h3 className="font-black uppercase text-xs text-primary tracking-widest flex items-center gap-2"><Globe size={16} /> Global Injection</h3>
+            <h3 className="text-base font-black uppercase tracking-widest text-primary">Global Injection</h3>
             <p className="text-[11px] text-white/60 leading-relaxed">
               Tag Manager scripts are automatically injected into the <code>head</code> and <code>body</code> of every page on this site.
             </p>
@@ -99,8 +99,4 @@ export default function TagManagerSettingsPage() {
       </div>
     </div>
   );
-}
-
-function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {
-  return React.useMemo(factory, deps);
 }
