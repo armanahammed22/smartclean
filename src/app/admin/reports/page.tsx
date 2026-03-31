@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   BarChart3, 
   Download, 
@@ -110,7 +111,7 @@ export default function FinancialReportPage() {
     link.click();
   };
 
-  if (lLoading || aLoading || !mounted) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" size={40} /></div>;
+  if (lLoading || aLoading || !mounted) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-20">
