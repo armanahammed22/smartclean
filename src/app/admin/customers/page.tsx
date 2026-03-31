@@ -30,7 +30,8 @@ import {
   MoreVertical,
   XCircle,
   Shield,
-  Clock
+  Clock,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -125,8 +126,10 @@ export default function CustomersPage() {
       selectedIds.forEach(id => batch.delete(doc(db, 'users', id)));
       await batch.commit();
       setSelectedIds([]);
-      toast({ title: "Bulk Profiles Removed" });
-    } catch (e) {} finally {
+      toast({ title: "Bulk Profile Removal Completed" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Bulk Delete Failed" });
+    } finally {
       setIsBulkProcessing(false);
     }
   };
@@ -163,7 +166,7 @@ export default function CustomersPage() {
       setIsDialogOpen(false);
       setEditingCustomer(null);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
+      toast({ variant: "destructive", title: "Error Saving Data" });
     } finally {
       setIsSubmitting(false);
     }
