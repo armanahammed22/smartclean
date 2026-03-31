@@ -1,377 +1,262 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, getDocs, where, writeBatch, limit } from 'firebase/firestore';
+import React, { useMemo, useState } from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { 
   Wallet, 
   TrendingUp, 
   TrendingDown, 
   Plus, 
-  RefreshCw, 
-  Loader2, 
-  Calendar,
-  Filter,
+  BarChart3, 
+  DollarSign, 
+  Users, 
+  ClipboardList,
   ArrowUpRight,
   ArrowDownRight,
-  DollarSign,
-  Receipt,
-  FileText,
-  Search
+  Loader2,
+  Calendar,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
-import { format, startOfDay, startOfWeek, startOfMonth, isAfter, parseISO } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 import { cn } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
+import { format, startOfMonth, startOfDay, isAfter, parseISO } from 'date-fns';
 
-export default function FinanceDashboardPage() {
+export default function FinanceDashboard() {
   const db = useFirestore();
-  const { toast } = useToast();
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [filterRange, setFilterRange] = useState<'today' | 'week' | 'month' | 'all'>('month');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [range, setRange] = useState<'today' | 'month' | 'all'>('month');
 
-  // 1. Fetch Finance Data (New Collections)
-  const incomeQuery = useMemoFirebase(() => db ? query(collection(db, 'finance_income'), orderBy('date', 'desc')) : null, [db]);
-  const expenseQuery = useMemoFirebase(() => db ? query(collection(db, 'finance_expenses'), orderBy('date', 'desc')) : null, [db]);
-  
-  const { data: incomeData, isLoading: iLoading } = useCollection(incomeQuery);
-  const { data: expenseData, isLoading: eLoading } = useCollection(expenseQuery);
+  // Ledger query
+  const ledgerQuery = useMemoFirebase(() => 
+    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
+  const { data: ledger, isLoading: lLoading } = useCollection(ledgerQuery);
 
-  // 2. Fetch Existing Data for Sync (Read Only)
-  const bookingsQuery = useMemoFirebase(() => db ? query(collection(db, 'bookings'), where('status', '==', 'Completed')) : null, [db]);
-  const ordersQuery = useMemoFirebase(() => db ? query(collection(db, 'orders'), where('status', 'in', ['Delivered', 'Completed'])) : null, [db]);
+  // Accounts query
+  const accountsQuery = useMemoFirebase(() => 
+    db ? collection(db, 'finance_accounts') : null, [db]);
+  const { data: accounts } = useCollection(accountsQuery);
 
-  // 3. Auto-Sync Logic (Safe Implementation)
-  const handleSync = async () => {
-    if (!db) return;
-    setIsSyncing(true);
-    try {
-      const bookingsSnap = await getDocs(bookingsQuery!);
-      const ordersSnap = await getDocs(ordersQuery!);
-      const existingIncomeSnap = await getDocs(collection(db, 'finance_income'));
-      
-      const existingRefIds = new Set(existingIncomeSnap.docs.map(d => d.data().referenceId));
-      const batch = writeBatch(db);
-      let newCount = 0;
-
-      // Sync Bookings
-      bookingsSnap.docs.forEach(d => {
-        const data = d.data();
-        if (!existingRefIds.has(d.id)) {
-          const newDoc = doc(collection(db, 'finance_income'));
-          batch.set(newDoc, {
-            referenceId: d.id,
-            source: 'booking',
-            title: `Service: ${data.serviceTitle || 'General'}`,
-            amount: data.totalPrice || 0,
-            status: 'Paid',
-            date: data.updatedAt || data.createdAt || new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          });
-          newCount++;
-        }
-      });
-
-      // Sync Orders
-      ordersSnap.docs.forEach(d => {
-        const data = d.data();
-        if (!existingRefIds.has(d.id)) {
-          const newDoc = doc(collection(db, 'finance_income'));
-          batch.set(newDoc, {
-            referenceId: d.id,
-            source: 'order',
-            title: `Order: #${d.id.slice(0,6).toUpperCase()}`,
-            amount: data.totalPrice || 0,
-            status: 'Paid',
-            date: data.updatedAt || data.createdAt || new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          });
-          newCount++;
-        }
-      });
-
-      if (newCount > 0) {
-        await batch.commit();
-        toast({ title: "Sync Complete", description: `${newCount} new income records added.` });
-      } else {
-        toast({ title: "Already Up-to-date", description: "No new completed transactions found." });
-      }
-    } catch (e) {
-      toast({ variant: "destructive", title: "Sync Failed" });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // 4. Calculations & Filtering
-  const filteredData = useMemo(() => {
+  const metrics = useMemo(() => {
+    if (!ledger) return { income: 0, expense: 0, profit: 0, unpaid: 0, count: 0 };
+    
     const now = new Date();
-    let startDate: Date | null = null;
+    const start = range === 'today' ? startOfDay(now) : range === 'month' ? startOfMonth(now) : null;
 
-    if (filterRange === 'today') startDate = startOfDay(now);
-    if (filterRange === 'week') startDate = startOfWeek(now);
-    if (filterRange === 'month') startDate = startOfMonth(now);
+    const filtered = start ? ledger.filter(l => isAfter(parseISO(l.date), start)) : ledger;
 
-    const filterFn = (item: any) => {
-      const itemDate = parseISO(item.date);
-      const matchesDate = startDate ? isAfter(itemDate, startDate) : true;
-      const matchesSearch = item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.referenceId?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesDate && matchesSearch;
-    };
+    const income = filtered.filter(l => l.type === 'income' && l.paidStatus === 'Paid').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const expense = filtered.filter(l => l.type === 'expense' && l.paidStatus === 'Paid').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const unpaid = filtered.filter(l => l.paidStatus === 'Unpaid').reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
-    const income = incomeData?.filter(filterFn) || [];
-    const expenses = expenseData?.filter(filterFn) || [];
+    return { income, expense, profit: income - expense, unpaid, count: filtered.length };
+  }, [ledger, range]);
 
-    const totalInc = income.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-    const totalExp = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const chartData = [
+    { name: 'Mon', inc: 4000, exp: 2400 },
+    { name: 'Tue', inc: 3000, exp: 1398 },
+    { name: 'Wed', inc: 2000, exp: 9800 },
+    { name: 'Thu', inc: 2780, exp: 3908 },
+    { name: 'Fri', inc: 1890, exp: 4800 },
+    { name: 'Sat', inc: 2390, exp: 3800 },
+    { name: 'Sun', inc: 3490, exp: 4300 },
+  ];
 
-    // Combine for transaction list
-    const combined = [
-      ...income.map(i => ({ ...i, type: 'income' })),
-      ...expenses.map(e => ({ ...e, type: 'expense' }))
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    return { totalInc, totalExp, profit: totalInc - totalExp, transactions: combined };
-  }, [incomeData, expenseData, filterRange, searchTerm]);
+  const totalBalance = accounts?.reduce((acc, a) => acc + (a.balance || 0), 0) || 0;
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Finance Terminal</h1>
-          <p className="text-muted-foreground text-sm font-medium">Income, Expenses & Profit Tracking</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Financial Hub</h1>
+          <p className="text-muted-foreground text-sm font-medium">Real-time business accounts and ledger analytics</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSync} disabled={isSyncing} className="rounded-xl h-11 font-bold gap-2">
-            {isSyncing ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
-            Sync from Sales
-          </Button>
-          <AddManualEntry type="income" onAdd={() => {}} />
-          <AddManualEntry type="expense" onAdd={() => {}} />
+        <div className="flex gap-2 bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+          <Button variant="ghost" size="sm" onClick={() => setRange('today')} className={cn("text-[10px] font-black uppercase rounded-lg px-4", range === 'today' ? "bg-primary text-white" : "text-gray-400")}>Today</Button>
+          <Button variant="ghost" size="sm" onClick={() => setRange('month')} className={cn("text-[10px] font-black uppercase rounded-lg px-4", range === 'month' ? "bg-primary text-white" : "text-gray-400")}>This Month</Button>
+          <Button variant="ghost" size="sm" onClick={() => setRange('all')} className={cn("text-[10px] font-black uppercase rounded-lg px-4", range === 'all' ? "bg-primary text-white" : "text-gray-400")}>All Time</Button>
         </div>
       </div>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Total Income</p>
-              <h3 className="text-2xl font-black text-emerald-600">৳{filteredData.totalInc.toLocaleString()}</h3>
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform"><Wallet size={24} /></div>
+              <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[10px]">REAL TIME</Badge>
             </div>
-            <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform"><ArrowUpRight size={24} /></div>
+            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Balance</p>
+            <h3 className="text-3xl font-black text-gray-900 tracking-tight">৳{totalBalance.toLocaleString()}</h3>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Total Expenses</p>
-              <h3 className="text-2xl font-black text-rose-600">৳{filteredData.totalExp.toLocaleString()}</h3>
+        
+        <Card className="border-none shadow-sm bg-emerald-50 text-emerald-700 rounded-3xl overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white rounded-2xl shadow-sm"><ArrowUpRight size={24} /></div>
             </div>
-            <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform"><ArrowDownRight size={24} /></div>
+            <p className="text-[10px] font-black uppercase text-emerald-700/60 tracking-widest leading-none mb-1">Total Income</p>
+            <h3 className="text-3xl font-black tracking-tight">৳{metrics.income.toLocaleString()}</h3>
           </CardContent>
         </Card>
-        <Card className={cn(
-          "border-none shadow-xl rounded-3xl overflow-hidden group",
-          filteredData.profit >= 0 ? "bg-primary text-white" : "bg-rose-600 text-white"
-        )}>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-1">Net Profit</p>
-              <h3 className="text-2xl font-black">৳{filteredData.profit.toLocaleString()}</h3>
+
+        <Card className="border-none shadow-sm bg-rose-50 text-rose-700 rounded-3xl overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white rounded-2xl shadow-sm"><ArrowDownRight size={24} /></div>
             </div>
-            <div className="p-4 bg-white/10 rounded-2xl group-hover:scale-110 transition-transform"><Wallet size={24} /></div>
+            <p className="text-[10px] font-black uppercase text-rose-700/60 tracking-widest leading-none mb-1">Total Expense</p>
+            <h3 className="text-3xl font-black tracking-tight">৳{metrics.expense.toLocaleString()}</h3>
+          </CardContent>
+        </Card>
+
+        <Card className={cn("border-none shadow-xl rounded-3xl overflow-hidden text-white", metrics.profit >= 0 ? "bg-primary" : "bg-red-600")}>
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-white/10 rounded-2xl"><TrendingUp size={24} /></div>
+            </div>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-widest leading-none mb-1">Net Profit</p>
+            <h3 className="text-3xl font-black tracking-tight">৳{metrics.profit.toLocaleString()}</h3>
           </CardContent>
         </Card>
       </div>
 
-      {/* FILTERS & LIST */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <Input 
-              placeholder="Search transactions..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl"
-            />
-          </div>
-          <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
-            {['today', 'week', 'month', 'all'].map((range) => (
-              <button
-                key={range}
-                onClick={() => setFilterRange(range as any)}
-                className={cn(
-                  "flex-1 md:flex-none px-4 py-2 text-[10px] font-black uppercase rounded-lg transition-all",
-                  filterRange === range ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
-                )}
-              >
-                {range}
-              </button>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">Transaction Trends</CardTitle>
+                <CardDescription className="text-[10px] uppercase font-black tracking-widest text-primary">Income vs Expense flow</CardDescription>
+              </div>
+              <Button variant="ghost" className="text-xs font-black uppercase text-primary gap-2" asChild>
+                <Link href="/admin/finance/ledger">View Ledger <ArrowRight size={14}/></Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-8 h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorInc" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
+                  <Area type="monotone" dataKey="inc" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorInc)" />
+                  <Area type="monotone" dataKey="exp" stroke="#ef4444" strokeWidth={4} fillOpacity={0} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+              <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-base font-bold flex items-center gap-2"><Users size={18} className="text-primary" /> Payroll Status</CardTitle>
+                <Link href="/admin/finance/salaries" className="text-[10px] font-black uppercase text-primary">Manage</Link>
+              </CardHeader>
+              <CardContent className="p-8 pt-0">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground">Unpaid Salaries</p>
+                    <p className="text-2xl font-black text-rose-600">৳{ledger?.filter(l => l.category === 'Staff Salary' && l.paidStatus === 'Unpaid').reduce((a,c) => a + c.amount, 0).toLocaleString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground">Total Paid (This Month)</p>
+                    <p className="text-sm font-bold text-gray-900">৳45,000</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
+              <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-base font-bold flex items-center gap-2"><Layers size={18} className="text-primary" /> Project Costs</CardTitle>
+                <Link href="/admin/finance/projects" className="text-[10px] font-black uppercase text-primary">Details</Link>
+              </CardHeader>
+              <CardContent className="p-8 pt-0">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground">Operating Costs</p>
+                    <p className="text-2xl font-black text-indigo-600">৳{ledger?.filter(l => l.category === 'Project Cost').reduce((a,c) => a + c.amount, 0).toLocaleString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-emerald-50 text-emerald-700 border-none">Healthy Margin</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-          <CardHeader className="bg-gray-50/50 border-b p-6">
-            <CardTitle className="text-base font-black uppercase tracking-widest flex items-center gap-2">
-              <Receipt size={18} className="text-primary" /> Transaction Ledger
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-50/30">
-                <TableRow>
-                  <TableHead className="pl-8 py-5 font-bold uppercase text-[10px] tracking-widest">Date</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Description</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Type</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Amount</TableHead>
-                  <TableHead className="text-right pr-8 font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {iLoading || eLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-                ) : filteredData.transactions.length > 0 ? filteredData.transactions.map((t: any, idx: number) => (
-                  <TableRow key={idx} className="hover:bg-gray-50/50 transition-colors">
-                    <TableCell className="pl-8 py-4">
-                      <div className="text-xs font-bold text-gray-500">{format(new Date(t.date), 'MMM dd, yyyy')}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-black text-gray-900 uppercase tracking-tight">{t.title}</div>
-                      {t.referenceId && <div className="text-[9px] font-mono text-muted-foreground uppercase">REF: {t.referenceId.slice(0,8)}</div>}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn(
-                        "text-[8px] font-black uppercase px-2",
-                        t.type === 'income' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-rose-50 text-rose-700 border-rose-100"
-                      )}>
-                        {t.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className={cn("font-black text-sm", t.type === 'income' ? "text-emerald-600" : "text-rose-600")}>
-                      {t.type === 'income' ? '+' : '-'}৳{t.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <Badge variant="secondary" className="text-[8px] font-black uppercase bg-gray-100">{t.status || 'Settled'}</Badge>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">No transactions found for this period.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="border-none shadow-sm bg-[#081621] text-white rounded-[2rem] overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><DollarSign size={120} /></div>
+            <CardHeader className="relative z-10 p-8 pb-4">
+              <CardTitle className="text-base font-black uppercase tracking-widest text-primary">Accounts Registry</CardTitle>
+            </CardHeader>
+            <CardContent className="relative z-10 p-8 pt-0 space-y-4">
+              {accounts?.map(acc => (
+                <div key={acc.id} className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md flex justify-between items-center group hover:bg-white/10 transition-all">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black uppercase opacity-40">{acc.name}</p>
+                    <p className="text-lg font-black tracking-tight">৳{acc.balance?.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2 bg-primary/20 text-primary rounded-xl group-hover:scale-110 transition-transform"><Wallet size={16}/></div>
+                </div>
+              ))}
+              <Button asChild variant="outline" className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 h-12 rounded-xl uppercase text-[10px] font-black tracking-widest">
+                <Link href="/admin/finance/accounts">Manage Accounts</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden">
+            <CardHeader className="p-8 pb-2">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <ClipboardList size={16} /> Recent Ledger Entries
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 pt-4 space-y-4">
+              {lLoading ? <Loader2 className="animate-spin text-primary mx-auto"/> : ledger?.slice(0, 5).map(item => (
+                <div key={item.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("p-2 rounded-xl", item.type === 'income' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600")}>
+                      {item.type === 'income' ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>}
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase text-gray-900 tracking-tight leading-none mb-1">{item.category}</p>
+                      <p className="text-[9px] text-muted-foreground font-bold">{format(parseISO(item.date), 'MMM dd')}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={cn("text-sm font-black", item.type === 'income' ? "text-emerald-600" : "text-rose-600")}>
+                      {item.type === 'income' ? '+' : '-'}৳{item.amount.toLocaleString()}
+                    </p>
+                    <Badge variant="secondary" className="text-[7px] font-black uppercase p-0 px-1 bg-gray-100">{item.paidStatus}</Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  );
-}
-
-function AddManualEntry({ type, onAdd }: { type: 'income' | 'expense', onAdd: () => void }) {
-  const db = useFirestore();
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const [form, setForm] = useState({
-    title: '',
-    amount: '',
-    category: 'Other',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    notes: '',
-    status: 'Paid'
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db) return;
-    setIsSaving(true);
-    try {
-      const coll = type === 'income' ? 'finance_income' : 'finance_expenses';
-      await addDoc(collection(db, coll), {
-        ...form,
-        amount: parseFloat(form.amount) || 0,
-        source: 'manual',
-        createdAt: new Date().toISOString()
-      });
-      toast({ title: "Entry Recorded", description: `New ${type} has been added.` });
-      setOpen(false);
-      setForm({ title: '', amount: '', category: 'Other', date: format(new Date(), 'yyyy-MM-dd'), notes: '', status: 'Paid' });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Failed to save" });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant={type === 'income' ? 'default' : 'outline'} className={cn("rounded-xl h-11 font-bold gap-2", type === 'expense' && "border-rose-200 text-rose-600 hover:bg-rose-50")}>
-          <Plus size={16} /> Add {type}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
-        <header className={cn("p-8 text-white", type === 'income' ? "bg-emerald-600" : "bg-rose-600")}>
-          <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-2">
-            <DollarSign size={20} /> Manual {type} Entry
-          </DialogTitle>
-        </header>
-        <form onSubmit={handleSubmit} className="p-8 space-y-5 bg-white">
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase ml-1">Title / Description</Label>
-            <Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Amount (৳)</Label>
-              <Input type="number" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-black" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Date</Label>
-              <Input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
-            </div>
-          </div>
-          {type === 'expense' && (
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Category</Label>
-              <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
-                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Salary', 'Equipment', 'Transport', 'Marketing', 'Purchase', 'Rent', 'Other'].map(c => (
-                    <SelectItem key={c} value={c} className="uppercase font-black text-[10px]">{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase ml-1">Payment Status</Label>
-            <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
-              <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="Paid" className="uppercase font-black text-[10px]">Paid / Settled</SelectItem>
-                <SelectItem value="Due" className="uppercase font-black text-[10px]">Due / Pending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" disabled={isSaving} className={cn("w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl mt-4", type === 'income' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700")}>
-            {isSaving ? <Loader2 className="animate-spin" /> : "Save Entry"}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }

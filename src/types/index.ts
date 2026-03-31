@@ -245,3 +245,69 @@ export interface CustomRequest {
   createdAt: string;
   updatedAt?: string;
 }
+
+// --- NEW FINANCE INTERFACES ---
+
+export interface LedgerEntry {
+  id: string;
+  type: "income" | "expense";
+  category: 
+    | "Staff Salary" 
+    | "Material Cost" 
+    | "Vendor Commission" 
+    | "Partner Commission" 
+    | "Service Income" 
+    | "Product Income" 
+    | "Project Cost" 
+    | "Marketing"
+    | "Transport"
+    | "Rent"
+    | "Other";
+  sourceId?: string; // orderId, serviceId, projectId
+  accountId?: string; // bank or cash account id
+  partnerVendorId?: string;
+  staffId?: string;
+  amount: number;
+  paidStatus: "Paid" | "Unpaid";
+  date: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface StaffSalaryRecord {
+  id: string;
+  staffId: string;
+  staffName: string;
+  date: string; // month/year or daily date
+  baseSalary: number;
+  adjustments: number; // bonus or penalty
+  totalAmount: number;
+  paidStatus: "Paid" | "Unpaid";
+  source: "Staff Module" | "Expenses Module";
+  createdAt: string;
+}
+
+export interface FinancialAccount {
+  id: string;
+  name: string; // Bank Name, Cash In Hand
+  type: "Bank" | "Cash" | "Mobile Wallet";
+  accountNumber?: string;
+  balance: number;
+  status: "Active" | "Inactive";
+  createdAt: string;
+}
+
+export interface ProjectCosting {
+  id: string;
+  projectId: string; // usually a bookingId or custom project
+  title: string;
+  income: number;
+  staffCost: number;
+  materialCost: number;
+  commissionCost: number;
+  otherExpenses: number;
+  totalExpense: number;
+  netProfit: number;
+  status: "In Progress" | "Completed";
+  updatedAt: string;
+}
