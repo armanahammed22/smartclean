@@ -5,8 +5,8 @@ import { CartItem, Product, Service } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
 import { trackEvent } from '@/lib/tracking';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 
 interface CartContextType {
   items: CartItem[];
@@ -29,6 +29,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { t } = useLanguage();
   const db = useFirestore();
+
+  // 🛡️ Global Feature Check
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   // Smart Pricing Logic
   const rulesQuery = useMemoFirebase(() => db ? query(collection(db, 'smart_pricing_rules'), where('isActive', '==', true)) : null, [db]);
@@ -59,6 +63,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = useCallback((item: Product | Service, quantity = 1, showToast = true) => {
     const isService = 'basePrice' in item;
     const itemType = isService ? 'service' : 'product';
+    
+    // 🛡️ Block disabled features
+    if (itemType === 'product' && settings?.productsEnabled === false) {
+      toast({ variant: "destructive", title: "Action Blocked", description: "Product sales are currently offline. Please contact support." });
+      return;
+    }
+    if (itemType === 'service' && settings?.servicesEnabled === false) {
+      toast({ variant: "destructive", title: "Action Blocked", description: "Service bookings are currently offline. Please try again later." });
+      return;
+    }
+
     const price = isService ? (item as Service).basePrice : (item as Product).price;
     const regularPrice = isService ? undefined : (item as Product).regularPrice;
     const name = isService ? (item as Service).title : (item as Product).name;
@@ -70,10 +85,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existingType !== itemType) {
         toast({
           variant: "destructive",
-          title: "অ্যাকশন অনুমোদিত নয়",
+          title: "Incompatible Order",
           description: existingType === 'product' 
-            ? "আপনার তালিকায় প্রোডাক্ট রয়েছে। সার্ভিস বুক করতে হলে কার্ট খালি করুন।" 
-            : "আপনার তালিকায় সার্ভিস রয়েছে। প্রোডাক্ট অর্ডার করতে হলে কার্ট খালি করুন।",
+            ? "Your cart contains products. Please clear cart to book a service." 
+            : "Your cart contains services. Please clear cart to order products.",
         });
         return;
       }
@@ -113,7 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         description: `${name} ${t('cart_desc')}`,
       });
     }
-  }, [toast, t, items]);
+  }, [toast, t, items, settings]);
 
   const removeFromCart = useCallback((itemId: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
