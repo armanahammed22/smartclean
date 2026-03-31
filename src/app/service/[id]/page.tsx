@@ -28,19 +28,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useLanguage } from '@/components/providers/language-provider';
 import { useCart } from '@/components/providers/cart-provider';
-import { useDoc, useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, where, addDoc, limit, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ServiceBookingPage() {
   const { id: slugOrId } = useParams();
-  const router = useRouter();
   const { t } = useLanguage();
   const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
   const db = useFirestore();
@@ -285,8 +283,8 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        {/* Mobile Sticky CTA Bar */}
-        {!isCheckoutOpen && (
+        {/* Mobile Sticky CTA Bar - Hidden when Checkout is Open */}
+        {mounted && !isCheckoutOpen && (
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Grand Total</span>

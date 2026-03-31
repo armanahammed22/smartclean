@@ -25,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, User, Clock, Phone, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Loader2, CalendarIcon, User, Clock, Phone, Zap, ArrowRight, CheckCircle2, Wallet, ShoppingCart, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
 import { collection, query, where, getDocs, addDoc, doc, orderBy } from 'firebase/firestore';
@@ -66,9 +66,6 @@ export function CheckoutModal() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: globalSettings } = useDoc(settingsRef);
   const isOtpSystemEnabled = !!globalSettings?.otpEnabled;
-
-  const [isVerified, setIsVerified] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const hasServices = items.some(i => i.itemType === 'service');
   
@@ -151,12 +148,21 @@ export function CheckoutModal() {
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC] z-[200]">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Checkout Process</DialogTitle>
-          <DialogDescription>Complete your order or booking details below.</DialogDescription>
+        <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-row items-center justify-between">
+          <div>
+            <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+              <ShoppingCart className="text-primary" /> {hasServices ? 'Booking Confirmation' : 'Order Checkout'}
+            </DialogTitle>
+            <DialogDescription className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Provide details to finalize your request
+            </DialogDescription>
+          </div>
+          <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
+            <X size={24} />
+          </button>
         </DialogHeader>
         
-        <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
+        <div className="flex flex-col h-[85vh] lg:h-auto lg:max-h-[85vh] relative">
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5 pb-24 md:pb-0">
             {/* Form Column */}
             <div className="lg:col-span-3 p-6 md:p-10 lg:p-12 bg-white">
@@ -262,11 +268,11 @@ export function CheckoutModal() {
             </div>
           </div>
 
-          {/* Mobile Sticky Bar */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4 z-50">
+          {/* 📱 Mobile Sticky Bar - Exclusive to Checkout Modal */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4 z-[210] pb-safe-offset-2">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Payable</span>
-              <span className="text-2xl font-black text-[#081621] tracking-tighter">৳{finalTotal.toLocaleString()}</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Total Payable</span>
+              <span className="text-2xl font-black text-primary tracking-tighter">৳{finalTotal.toLocaleString()}</span>
             </div>
             <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl" disabled={isSubmitting || items.length === 0}>
               {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <>{hasServices ? 'Place Booking' : 'Order Now'} <ArrowRight size={18} /></>}
