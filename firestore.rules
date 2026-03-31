@@ -128,6 +128,8 @@ service cloud.firestore {
     match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
     match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /landing_pages/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /subscription_plans/{id} { allow read: if true; allow write: if isAdmin(); }
 
     match /bookings/{id} { 
       allow create: if true; 
@@ -164,5 +166,7 @@ service cloud.firestore {
     match /roles_employees/{uid} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /roles_management/{id} { allow read, write: if isAdmin(); }
     match /users/{uid} { allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin()); }
+    
+    match /couriers/{id} { allow read, write: if isAdmin(); }
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,16 +37,17 @@ import { format, startOfMonth, startOfDay, isAfter, parseISO } from 'date-fns';
 
 export default function FinanceDashboard() {
   const db = useFirestore();
+  const { user } = useUser();
   const [range, setRange] = useState<'today' | 'month' | 'all'>('month');
 
-  // Ledger query
+  // Ledger query - ensured user check
   const ledgerQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db]);
+    (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
   const { data: ledger, isLoading: lLoading } = useCollection(ledgerQuery);
 
-  // Accounts query
+  // Accounts query - ensured user check
   const accountsQuery = useMemoFirebase(() => 
-    db ? collection(db, 'finance_accounts') : null, [db]);
+    (db && user) ? collection(db, 'finance_accounts') : null, [db, user]);
   const { data: accounts } = useCollection(accountsQuery);
 
   const metrics = useMemo(() => {
@@ -125,9 +126,10 @@ export default function FinanceDashboard() {
         <Card className={cn("border-none shadow-xl rounded-3xl overflow-hidden text-white", metrics.profit >= 0 ? "bg-primary" : "bg-red-600")}>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white/10 rounded-2xl"><TrendingUp size={24} /></div>
+              <div className="p-3 bg-white/10 rounded-2xl group-hover:scale-110 transition-transform"><Zap size={24} fill="currentColor" /></div>
+              <Badge className="bg-white/20 text-white border-none font-black text-[10px]">NET PROFIT</Badge>
             </div>
-            <p className="text-[10px] font-black uppercase opacity-60 tracking-widest leading-none mb-1">Net Profit</p>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-widest leading-none mb-1">Business Margin</p>
             <h3 className="text-3xl font-black tracking-tight">৳{metrics.profit.toLocaleString()}</h3>
           </CardContent>
         </Card>
@@ -175,7 +177,7 @@ export default function FinanceDashboard() {
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-muted-foreground">Unpaid Salaries</p>
-                    <p className="text-2xl font-black text-rose-600">৳{ledger?.filter(l => l.category === 'Staff Salary' && l.paidStatus === 'Unpaid').reduce((a,c) => a + c.amount, 0).toLocaleString()}</p>
+                    <p className="text-2xl font-black text-rose-600">৳{ledger?.filter(l => l.category === 'Staff Salary' && l.paidStatus === 'Unpaid').reduce((a,c) => a + (c.amount || 0), 0).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase text-muted-foreground">Total Paid (This Month)</p>
@@ -194,7 +196,7 @@ export default function FinanceDashboard() {
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-muted-foreground">Operating Costs</p>
-                    <p className="text-2xl font-black text-indigo-600">৳{ledger?.filter(l => l.category === 'Project Cost').reduce((a,c) => a + c.amount, 0).toLocaleString()}</p>
+                    <p className="text-2xl font-black text-indigo-600">৳{ledger?.filter(l => l.category === 'Project Cost').reduce((a,c) => a + (c.amount || 0), 0).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
                     <Badge className="bg-emerald-50 text-emerald-700 border-none">Healthy Margin</Badge>

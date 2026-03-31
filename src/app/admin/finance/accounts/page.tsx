@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -31,6 +31,7 @@ import Link from 'next/link';
 
 export default function FinanceAccountsPage() {
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +44,7 @@ export default function FinanceAccountsPage() {
   });
 
   const accountsQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'finance_accounts'), orderBy('createdAt', 'asc')) : null, [db]);
+    (db && user) ? query(collection(db, 'finance_accounts'), orderBy('createdAt', 'asc')) : null, [db, user]);
   const { data: accounts, isLoading } = useCollection(accountsQuery);
 
   const handleAddAccount = async (e: React.FormEvent) => {
