@@ -3,12 +3,22 @@ import { db } from '@/lib/firebaseAdmin';
 
 /**
  * Dynamic Sitemap Generator (Server-Side)
- * Fixed "URL not allowed" by ensuring consistent domain structure.
+ * Fetches the base URL from Firestore settings to ensure URL validity in Search Console.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Use environment variable if available, otherwise fallback to the primary domain.
-  // Note: For Google Search Console, this MUST match your verified property URL.
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smartclean.com.bd';
+  let baseUrl = 'https://smartclean.com.bd'; // Hardcoded fallback
+
+  try {
+    if (db) {
+      const settingsSnap = await db.collection('site_settings').doc('global').get();
+      const settings = settingsSnap.data();
+      if (settings?.websiteUrl) {
+        baseUrl = settings.websiteUrl.replace(/\/$/, ''); // Remove trailing slash
+      }
+    }
+  } catch (e) {
+    console.warn('[Sitemap] Could not fetch dynamic domain, using fallback.');
+  }
 
   // 1. Define Static Base Routes
   const staticRoutes = [

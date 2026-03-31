@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, Save, Loader2, Globe, ShieldCheck, Zap, ImageIcon } from 'lucide-react';
+import { Search, Save, Loader2, Globe, ShieldCheck, Zap, ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 
@@ -21,6 +21,7 @@ export default function SEOSettingsPage() {
   const { data: settings, isLoading } = useDoc(settingsRef);
 
   const [formData, setFormData] = useState({
+    websiteUrl: '',
     seoTitle: '',
     seoDescription: '',
     seoKeywords: '',
@@ -30,6 +31,7 @@ export default function SEOSettingsPage() {
   useEffect(() => {
     if (settings) {
       setFormData({
+        websiteUrl: settings.websiteUrl || '',
         seoTitle: settings.seoTitle || '',
         seoDescription: settings.seoDescription || '',
         seoKeywords: settings.seoKeywords || '',
@@ -68,6 +70,31 @@ export default function SEOSettingsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-6">
+          {/* Domain Setup */}
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+            <CardHeader className="bg-primary/5 p-8 border-b border-primary/10">
+              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3 text-primary">
+                <Globe size={20} /> Domain Configuration
+              </CardTitle>
+              <CardDescription>This URL is used to generate your dynamic Sitemap and Robots.txt</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Website Production URL</Label>
+                <div className="relative">
+                  <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
+                  <Input 
+                    value={formData.websiteUrl} 
+                    onChange={e => setFormData({...formData, websiteUrl: e.target.value})}
+                    placeholder="https://smartclean.bd"
+                    className="h-14 pl-12 bg-gray-50 border-none rounded-xl font-bold text-primary shadow-inner"
+                  />
+                </div>
+                <p className="text-[9px] text-muted-foreground mt-2 italic px-1">Ensure the URL starts with https:// and has no trailing slash (e.g., https://smartclean.bd)</p>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-[#081621] text-white p-8">
               <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3">
@@ -105,7 +132,7 @@ export default function SEOSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
             <CardHeader className="bg-gray-50 p-8 border-b">
               <CardTitle className="text-lg font-bold flex items-center gap-2"><ImageIcon className="text-primary" size={20} /> Social Sharing (OG Image)</CardTitle>
               <CardDescription>This image appears when you share your link on FB, WhatsApp, or LinkedIn.</CardDescription>
@@ -129,7 +156,7 @@ export default function SEOSettingsPage() {
             </CardTitle>
             <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-2 shadow-sm">
               <p className="text-[#1a0dab] text-xl font-medium leading-none hover:underline cursor-pointer truncate">{formData.seoTitle || 'Smart Clean | Page Title'}</p>
-              <p className="text-[#006621] text-xs leading-none">https://smartclean.com.bd › ...</p>
+              <p className="text-[#006621] text-xs leading-none">{formData.websiteUrl || 'https://smartclean.bd'} › ...</p>
               <p className="text-[#545454] text-xs leading-relaxed line-clamp-3">
                 {formData.seoDescription || 'Provide a high-quality meta description here to improve your organic click-through rate in search engine results.'}
               </p>

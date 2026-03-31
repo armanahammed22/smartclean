@@ -37,13 +37,13 @@ async function getGlobalSettings() {
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smartclean.com.bd';
+  const baseUrl = settings?.websiteUrl ? settings.websiteUrl.replace(/\/$/, '') : 'https://smartclean.com.bd';
 
   return {
     metadataBase: new URL(baseUrl),
     title: {
       default: settings?.seoTitle || 'Smart Clean | Best Professional Cleaning Services in Bangladesh',
-      template: '%s | Smart Clean Bangladesh'
+      template: `%s | ${settings?.websiteName || 'Smart Clean'}`
     },
     description: settings?.seoDescription || 'Top-rated home and office cleaning, AC maintenance, and appliance repair services in Dhaka.',
     keywords: settings?.seoKeywords?.split(',') || ['cleaning services dhaka', 'home cleaning bangladesh'],
@@ -87,6 +87,7 @@ export default async function RootLayout({
 
   // Helper to clean scripts for next/script
   const cleanScript = (script: string) => {
+    if (!script) return '';
     return script
       .replace(/<script[^>]*>/gi, '')
       .replace(/<\/script>/gi, '')
@@ -111,7 +112,7 @@ export default async function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Organization',
               name: settings?.websiteName || 'Smart Clean Bangladesh',
-              url: 'https://smartclean.com.bd',
+              url: settings?.websiteUrl || 'https://smartclean.com.bd',
               logo: settings?.logoUrl || 'https://picsum.photos/seed/smartclean-logo/512/512',
               contactPoint: {
                 '@type': 'ContactPoint',
