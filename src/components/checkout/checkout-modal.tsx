@@ -448,6 +448,11 @@ export function CheckoutModal() {
                       </FormItem>
                     )} />
                   </div>
+                  
+                  {/* DESKTOP SUBMIT BUTTON INSIDE CONTENT */}
+                  <Button type="submit" className="w-full hidden md:flex h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
+                  </Button>
                 </form>
               </Form>
             </div>
@@ -518,13 +523,9 @@ export function CheckoutModal() {
                   <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
                 </div>
               </div>
-              <div className="hidden lg:block mt-8">
-                <Button onClick={form.handleSubmit(onSubmit)} className="w-full h-16 rounded-2xl shadow-xl uppercase tracking-tight bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting || items.length === 0}>
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Place Order'} <Zap size={24} fill="currentColor" /></>}
-                </Button>
-              </div>
             </div>
           </div>
+
           {/* MOBILE ACTION BAR */}
           <div className="lg:hidden p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4 z-20">
             <div className="flex flex-col">

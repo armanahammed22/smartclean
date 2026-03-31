@@ -211,7 +211,7 @@ function CheckoutContent() {
   const totalPayable = (subtotal * 1.08 + deliveryCharge).toLocaleString();
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12 pb-24 md:pb-12">
+    <div className="bg-[#F8FAFC] min-h-screen py-8 md:py-12 pb-32 md:pb-12">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <header className="mb-8 md:mb-12 text-center md:text-left">
@@ -330,6 +330,7 @@ function CheckoutContent() {
                     </CardContent>
                   </Card>
 
+                  {/* DESKTOP ONLY SUBMIT BUTTON */}
                   <Button type="submit" className="w-full hidden md:flex h-16 md:h-20 font-black text-xl md:text-2xl rounded-2xl md:rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
                     {isSubmitting ? <><Loader2 className="mr-2 h-8 w-8 animate-spin" /> {t('processing')}</> : <>{hasServices ? 'Place Booking' : 'অর্ডার সম্পন্ন করুন / Place Order'} <Zap size={24} fill="currentColor" /></>}
                   </Button>
@@ -376,6 +377,7 @@ function CheckoutContent() {
                 </div>
               </div>
 
+              {/* MOBILE STICKY FOOTER ACTION */}
               <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 pb-safe-offset-4 flex items-center justify-between gap-4 z-[110] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Total Due</span>

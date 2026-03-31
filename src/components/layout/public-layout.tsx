@@ -65,6 +65,18 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     }
   };
 
+  /**
+   * Robust Back Button Logic
+   * If there is navigation history, go back. Otherwise go home.
+   */
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
+
   const breadcrumbs = useMemo(() => {
     const parts = pathname.split('/').filter(Boolean);
     return parts.map((part, i) => ({
@@ -85,7 +97,12 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
       <header className="lg:hidden sticky top-0 z-[160] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center shrink-0">
           {!isHome ? (
-            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" onClick={() => router.back()}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full h-10 w-10 bg-gray-50 active:scale-90 transition-transform" 
+              onClick={handleBack}
+            >
               <ArrowLeft size={20} />
             </Button>
           ) : (
