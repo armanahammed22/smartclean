@@ -164,7 +164,7 @@ function CheckoutContent() {
             <div className="lg:col-span-7 space-y-8">
               
               {/* Customer Information */}
-              <Card className="rounded-[2.5rem] border-none shadow-sm bg-white overflow-visible">
+              <Card className="rounded-[2.5rem] border-none shadow-sm bg-white">
                 <CardHeader className="bg-[#081621] text-white p-8 rounded-t-[2.5rem]">
                   <CardTitle className="text-xl font-black uppercase flex items-center gap-3"><User size={20}/> Customer Identity</CardTitle>
                 </CardHeader>
@@ -197,7 +197,7 @@ function CheckoutContent() {
 
               {/* Date & Time Optimization for Services */}
               {hasServices && (
-                <Card className="rounded-[2.5rem] border-none shadow-sm bg-white overflow-visible">
+                <Card className="rounded-[2.5rem] border-none shadow-sm bg-white">
                   <CardHeader className="bg-primary/5 border-b p-8 rounded-t-[2.5rem]">
                     <CardTitle className="text-xl font-black uppercase flex items-center gap-3 text-primary"><Clock size={20}/> Preferred Schedule</CardTitle>
                   </CardHeader>
@@ -215,7 +215,7 @@ function CheckoutContent() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[200]" align="center" side="bottom" collisionPadding={20}>
+                            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[200]" align="start" side="bottom" sideOffset={4} collisionPadding={20}>
                               <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
                             </PopoverContent>
                           </Popover>
@@ -292,7 +292,7 @@ function CheckoutContent() {
                           <span className="text-[10px] font-black text-green-600 uppercase mb-1 tracking-widest">Total Payable</span>
                           <span className="text-4xl font-black text-[#081621] tracking-tighter">৳{finalAmount.toLocaleString()}</span>
                         </div>
-                        <Badge className="bg-green-100 text-green-700 border-none font-black text-[10px] px-4 py-1.5 rounded-lg uppercase">VAT INC.</Badge>
+                        <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-4 py-1.5 rounded-lg uppercase">VAT INC.</Badge>
                       </div>
                     </div>
                   </div>
