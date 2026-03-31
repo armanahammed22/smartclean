@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState } from 'react';
@@ -20,7 +19,8 @@ import {
   User,
   Clock,
   Search,
-  Filter
+  Filter,
+  Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';

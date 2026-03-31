@@ -25,12 +25,14 @@ import {
   ChevronRight,
   MoreVertical,
   CheckCircle2,
-  Clock
+  Clock,
+  Activity
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function PartnerProjectsListPage() {
   const db = useFirestore();
@@ -209,5 +211,3 @@ export default function PartnerProjectsListPage() {
     </div>
   );
 }
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
