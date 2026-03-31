@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
 import crypto from 'crypto';
@@ -31,6 +30,9 @@ export async function POST(req: NextRequest) {
     if (!config?.trackingEnabled || !config?.pixelId || !config?.accessToken) {
       return NextResponse.json({ status: 'Tracking Disabled or Config Missing' });
     }
+
+    // Dynamic API Version from Dashboard
+    const apiVersion = config.apiVersion || 'v18.0';
 
     // 2. Prepare User Data (Server Side Hashing)
     const userData: any = {
@@ -72,9 +74,9 @@ export async function POST(req: NextRequest) {
       }],
     };
 
-    // 4. Send to Meta Graph API
+    // 4. Send to Meta Graph API using Dynamic Version
     const fbResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${config.pixelId}/events?access_token=${config.accessToken}`,
+      `https://graph.facebook.com/${apiVersion}/${config.pixelId}/events?access_token=${config.accessToken}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

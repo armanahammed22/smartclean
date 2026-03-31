@@ -18,7 +18,8 @@ import {
   Globe,
   Info,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Code2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,6 +33,7 @@ export default function CAPISetupPage() {
 
   const [formData, setFormData] = useState({
     accessToken: '',
+    apiVersion: 'v18.0',
     capiEnabled: true,
   });
 
@@ -39,6 +41,7 @@ export default function CAPISetupPage() {
     if (config) {
       setFormData({
         accessToken: config.accessToken || '',
+        apiVersion: config.apiVersion || 'v18.0',
         capiEnabled: config.capiEnabled ?? true,
       });
     }
@@ -72,7 +75,7 @@ export default function CAPISetupPage() {
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
           {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
-          Update Token
+          Update Protocol
         </Button>
       </div>
 
@@ -92,6 +95,20 @@ export default function CAPISetupPage() {
               </div>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2">
+                    <Code2 size={12} className="text-primary"/> Meta API Version
+                  </Label>
+                  <Input 
+                    value={formData.apiVersion} 
+                    onChange={(e) => setFormData({...formData, apiVersion: e.target.value})}
+                    placeholder="e.g. v18.0"
+                    className="h-12 bg-gray-50 border-none rounded-xl font-mono text-sm font-bold"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 tracking-widest flex items-center gap-2">
                   <Lock size={12} className="text-primary"/> System Access Token
@@ -131,19 +148,19 @@ export default function CAPISetupPage() {
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
             <CardHeader className="p-8 pb-4">
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Globe size={18} className="text-primary" /> Why use CAPI?
+                <Globe size={18} className="text-primary" /> API Control
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-4">
               <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                Standard browser tracking is often blocked by ad-blockers and iOS privacy settings. 
+                Facebook updating their platform? No problem.
               </p>
               <ul className="space-y-3">
                 {[
-                  "Bypasses Ad-Blockers",
-                  "Improves Ad Match Quality",
-                  "Tracks iOS 14.5+ users",
-                  "Ensures Purchase accuracy"
+                  "Change API Version without code",
+                  "Enable/Disable CAPI instantly",
+                  "Update tokens securely",
+                  "Real-time logs monitoring"
                 ].map((point, i) => (
                   <li key={i} className="flex items-center gap-2 text-[11px] font-bold text-gray-700">
                     <Zap size={14} className="text-primary" fill="currentColor" /> {point}
