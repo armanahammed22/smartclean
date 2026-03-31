@@ -6,14 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  ArrowLeft, 
-  ArrowRight,
   ShieldCheck, 
   Clock, 
   Loader2, 
   Zap,
   Star,
-  CheckCircle2,
   ChevronRight,
   Wrench,
   Users,
@@ -24,7 +21,8 @@ import {
   LayoutGrid,
   ShoppingCart,
   XCircle,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -44,8 +42,6 @@ export default function ServiceBookingPage() {
   const { id: slugOrId } = useParams();
   const router = useRouter();
   const { t } = useLanguage();
-  const { user } = useUser();
-  const { toast } = useToast();
   const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
   const db = useFirestore();
 
@@ -142,7 +138,7 @@ export default function ServiceBookingPage() {
           <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
-              {/* Left Column: Media - 5 Columns */}
+              {/* Left Column: Media */}
               <div className="lg:col-span-5 p-2 md:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-4">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
                   {baseService.imageUrl ? (
@@ -173,7 +169,7 @@ export default function ServiceBookingPage() {
                 )}
               </div>
 
-              {/* Middle Column: Booking Info - 3 Columns */}
+              {/* Middle Column: Booking Info */}
               <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-4 bg-white relative z-20">
                 <div className="space-y-4">
                   <div className="space-y-3">
@@ -237,7 +233,7 @@ export default function ServiceBookingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Add-ons - 4 Columns */}
+              {/* Right Column: Add-ons */}
               <div className="lg:col-span-4 p-4 md:p-6 lg:p-8 flex flex-col gap-4 bg-gray-50/20">
                 <div className="space-y-4">
                   <div className="border-b border-gray-200 pb-3 flex justify-between items-center">
@@ -260,7 +256,7 @@ export default function ServiceBookingPage() {
                           )}
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-gray-50 shrink-0 bg-gray-50">
+                            <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
                               {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={14} className="m-auto text-gray-300" />}
                             </div>
                             <div className="min-w-0">

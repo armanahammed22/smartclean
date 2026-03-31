@@ -9,20 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Check, 
-  CreditCard, 
-  Zap, 
-  Shield, 
-  TrendingUp, 
   Plus, 
   Trash2, 
   Edit, 
   Save, 
   Loader2, 
   RefreshCw, 
-  Users, 
   Clock, 
-  Target,
-  X
+  Target
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -184,7 +178,7 @@ export default function SubscriptionPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+        <DialogContent className="max-w-xl rounded-[2rem] p-0 border-none shadow-2xl bg-white">
           <form onSubmit={handleSavePlan} className="flex flex-col max-h-[90vh]">
             <DialogHeader className="p-8 bg-[#081621] text-white">
               <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingPlan ? 'Update Package' : 'New Service Package'}</DialogTitle>

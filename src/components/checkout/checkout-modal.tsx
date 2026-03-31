@@ -19,18 +19,16 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Loader2, CalendarIcon, Wallet, CreditCard, Smartphone, ShoppingCart, CheckCircle2, Zap, ShieldCheck, User, MapPin, Clock, Phone, Truck, ChevronDown, ArrowRight, TicketPercent, X, TrendingDown } from 'lucide-react';
+import { Loader2, CalendarIcon, User, Clock, Phone, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useAuth, useDoc } from '@/firebase';
-import { collection, query, where, getDocs, addDoc, doc, setDoc, orderBy, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { collection, query, where, getDocs, addDoc, doc, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -59,9 +57,7 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -71,16 +67,11 @@ export function CheckoutModal() {
   const { data: globalSettings } = useDoc(settingsRef);
   const isOtpSystemEnabled = !!globalSettings?.otpEnabled;
 
-  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
   const hasServices = items.some(i => i.itemType === 'service');
   
-  const methodsQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
-  const { data: availableMethods } = useCollection(methodsQuery);
-
   const deliveryQuery = useMemoFirebase(() => db ? query(collection(db, 'delivery_options'), orderBy('amount', 'asc')) : null, [db]);
   const { data: allDeliveryOptions } = useCollection(deliveryQuery);
   
@@ -112,8 +103,6 @@ export function CheckoutModal() {
     }
   }, [isCheckoutOpen, user, form]);
 
-  const onlineMethods = useMemo(() => availableMethods?.filter(m => m.type !== 'cod') || [], [availableMethods]);
-  
   const selectedDeliveryId = form.watch('deliveryOption');
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
@@ -130,47 +119,6 @@ export function CheckoutModal() {
 
   const tax = Number((smartSubtotal * 0.08).toFixed(2));
   const finalTotal = Number((smartSubtotal + tax + deliveryCharge - couponDiscount).toFixed(2));
-
-  const handleApplyCoupon = async () => {
-    if (!db || !couponInput.trim()) return;
-    setIsVerifyingCoupon(true);
-    try {
-      const q = query(collection(db, 'coupons'), where('code', '==', couponInput.trim().toUpperCase()), where('status', '==', 'Active'));
-      const snap = await getDocs(q);
-      if (snap.empty) {
-        toast({ variant: "destructive", title: "Invalid Code" });
-        setAppliedCoupon(null);
-      } else {
-        const data = snap.docs[0].data();
-        setAppliedCoupon(data);
-        toast({ title: "Coupon Applied" });
-      }
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error" });
-    } finally {
-      setIsVerifyingCoupon(false);
-    }
-  };
-
-  const handleSendOtp = () => {
-    const phoneVal = form.getValues('phone');
-    if (!phoneVal || phoneVal.length < 10) return;
-    setIsVerifying(true);
-    setTimeout(() => {
-      const mock = "123456";
-      setGeneratedOtp(mock);
-      setIsOtpSent(true);
-      setIsVerifying(false);
-      toast({ title: "OTP Sent", description: `Simulated: ${mock}` });
-    }, 1000);
-  };
-
-  const handleVerifyOtp = () => {
-    if (form.getValues('otp') === generatedOtp) {
-      setIsVerified(true);
-      toast({ title: "Verified" });
-    }
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db || !auth) return;
@@ -203,6 +151,11 @@ export function CheckoutModal() {
   return (
     <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
       <DialogContent className="max-w-5xl w-[95vw] p-0 border-none rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl bg-[#F8FAFC] z-[200]">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Checkout Process</DialogTitle>
+          <DialogDescription>Complete your order or booking details below.</DialogDescription>
+        </DialogHeader>
+        
         <div className="flex flex-col h-[90vh] lg:h-auto lg:max-h-[90vh] relative">
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5 pb-24 md:pb-0">
             {/* Form Column */}
@@ -215,19 +168,14 @@ export function CheckoutModal() {
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</FormLabel>
-                          <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white" /></FormControl>
+                          <FormControl><Input placeholder="John Doe" {...field} className="h-12 bg-gray-50 border-none rounded-xl focus:bg-white" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="phone" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</FormLabel>
-                          <div className="flex gap-2">
-                            <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-12 bg-gray-50 border-gray-100 rounded-xl focus:bg-white" /></FormControl>
-                            {isOtpSystemEnabled && !user && !isVerified && (
-                              <Button type="button" onClick={handleSendOtp} disabled={isVerifying} className="h-12 text-[10px] font-black uppercase">OTP</Button>
-                            )}
-                          </div>
+                          <FormControl><Input placeholder="01XXXXXXXXX" {...field} className="h-12 bg-gray-50 border-none rounded-xl focus:bg-white" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -277,7 +225,7 @@ export function CheckoutModal() {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full hidden md:flex h-16 rounded-2xl shadow-xl uppercase bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-transform active:scale-95" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full hidden md:flex h-16 rounded-2xl shadow-xl uppercase bg-primary hover:bg-primary/90 text-white font-black text-xl gap-3 transition-all active:scale-95" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="animate-spin" /> : <>{hasServices ? 'Place Booking' : 'Confirm Order'} <Zap size={20} fill="currentColor" /></>}
                   </Button>
                 </form>
