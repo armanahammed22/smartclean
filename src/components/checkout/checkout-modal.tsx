@@ -57,15 +57,12 @@ export function CheckoutModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: globalSettings } = useDoc(settingsRef);
-  const isOtpSystemEnabled = !!globalSettings?.otpEnabled;
 
   const hasServices = items.some(i => i.itemType === 'service');
   
@@ -105,17 +102,8 @@ export function CheckoutModal() {
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
   const smartSavings = subtotal - smartSubtotal;
-
-  const couponDiscount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    if (appliedCoupon.discountType === 'percent') {
-      return (smartSubtotal * appliedCoupon.value) / 100;
-    }
-    return appliedCoupon.value;
-  }, [appliedCoupon, smartSubtotal]);
-
   const tax = Number((smartSubtotal * 0.08).toFixed(2));
-  const finalTotal = Number((smartSubtotal + tax + deliveryCharge - couponDiscount).toFixed(2));
+  const finalTotal = Number((smartSubtotal + tax + deliveryCharge).toFixed(2));
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db || !auth) return;
@@ -151,10 +139,10 @@ export function CheckoutModal() {
         <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-row items-center justify-between">
           <div>
             <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-              <ShoppingCart className="text-primary" /> {hasServices ? 'Booking Confirmation' : 'Order Checkout'}
+              <ShoppingCart className="text-primary" /> {hasServices ? 'Finalize Booking' : 'Checkout'}
             </DialogTitle>
             <DialogDescription className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
-              Provide details to finalize your request
+              Provide details to confirm your order
             </DialogDescription>
           </div>
           <button onClick={() => setCheckoutOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
@@ -169,7 +157,7 @@ export function CheckoutModal() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><User size={14} className="text-primary" /> Customer Info</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2"><User size={14} className="text-primary" /> Contact Details</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="name" render={({ field }) => (
                         <FormItem>
@@ -257,9 +245,10 @@ export function CheckoutModal() {
                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-400"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                 {smartSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-blue-600"><span>Smart Discount</span><span>-৳{smartSavings.toLocaleString()}</span></div>}
                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-400"><span>Tax (8%)</span><span>৳{tax.toLocaleString()}</span></div>
+                {deliveryCharge > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-primary"><span>Delivery</span><span>৳{deliveryCharge.toLocaleString()}</span></div>}
                 <div className="pt-4 flex justify-between items-end">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Due</span>
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Total Payable</span>
                     <span className="text-3xl font-black text-[#081621] tracking-tighter leading-none">৳{finalTotal.toLocaleString()}</span>
                   </div>
                   <Badge className="bg-green-100 text-green-700 border-none font-black text-[8px] px-2 rounded-full uppercase">VAT INC</Badge>
@@ -268,13 +257,13 @@ export function CheckoutModal() {
             </div>
           </div>
 
-          {/* 📱 Mobile Sticky Bar - Exclusive to Checkout Modal */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4 z-[210] pb-safe-offset-2">
+          {/* 📱 Mobile Sticky Action Bar - Inside Checkout Modal */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[210] pb-safe-offset-2">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Total Payable</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Final Amount</span>
               <span className="text-2xl font-black text-primary tracking-tighter">৳{finalTotal.toLocaleString()}</span>
             </div>
-            <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl" disabled={isSubmitting || items.length === 0}>
+            <Button onClick={form.handleSubmit(onSubmit)} className="flex-1 h-14 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20" disabled={isSubmitting || items.length === 0}>
               {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <>{hasServices ? 'Place Booking' : 'Order Now'} <ArrowRight size={18} /></>}
             </Button>
           </div>

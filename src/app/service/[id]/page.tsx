@@ -136,8 +136,8 @@ export default function ServiceBookingPage() {
           <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
-              {/* Left Column: Media */}
-              <div className="lg:col-span-5 p-2 md:p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-4">
+              {/* Left Column: Media (5 Columns) */}
+              <div className="lg:col-span-5 p-2 md:p-4 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
                   {baseService.imageUrl ? (
                     <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
@@ -167,24 +167,24 @@ export default function ServiceBookingPage() {
                 )}
               </div>
 
-              {/* Middle Column: Booking Info */}
-              <div className="lg:col-span-3 p-4 md:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-50 flex flex-col gap-4 bg-white relative z-20">
+              {/* Middle Column: Booking Info (3 Columns) */}
+              <div className="lg:col-span-3 p-4 md:p-6 flex flex-col gap-6 bg-white relative z-20">
                 <div className="space-y-4">
                   <div className="space-y-3">
                     <h1 className="text-xl md:text-2xl font-black text-[#081621] uppercase tracking-tighter leading-tight font-headline">
                       {baseService.title}
                     </h1>
                     
-                    <div className="flex items-center gap-2 py-3 border-y border-gray-50">
-                      <div className="flex items-center gap-1 text-amber-500 bg-amber-50/50 px-2 py-1 rounded-lg">
+                    <div className="flex items-center gap-2 py-3 border-y border-gray-50 overflow-x-auto no-scrollbar">
+                      <div className="flex items-center gap-1 text-amber-500 bg-amber-50/50 px-2 py-1 rounded-lg shrink-0">
                         <Star size={12} fill="currentColor" />
                         <span className="text-[9px] font-black">{baseService.rating || '5.0'}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-blue-600 bg-blue-50/50 px-2 py-1 rounded-lg">
+                      <div className="flex items-center gap-1 text-blue-600 bg-blue-50/50 px-2 py-1 rounded-lg shrink-0">
                         <Clock size={12} />
                         <span className="text-[9px] font-black uppercase">{baseService.duration || 'Flex'}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50/50 px-2 py-1 rounded-lg">
+                      <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50/50 px-2 py-1 rounded-lg shrink-0">
                         <Users size={12} />
                         <span className="text-[9px] font-black uppercase">{baseService.teamSize || 'Pro'}</span>
                       </div>
@@ -194,7 +194,7 @@ export default function ServiceBookingPage() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
                       <div className="text-left flex-1">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Service Price</p>
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Price</p>
                         <span className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
                       </div>
                       
@@ -231,13 +231,13 @@ export default function ServiceBookingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Add-ons */}
-              <div className="lg:col-span-4 p-4 md:p-6 lg:p-8 flex flex-col gap-4 bg-gray-50/20">
+              {/* Right Column: Add-ons (4 Columns) */}
+              <div className="lg:col-span-4 p-4 md:p-6 bg-gray-50/30 flex flex-col gap-4">
                 <div className="space-y-4">
                   <div className="border-b border-gray-200 pb-3 flex justify-between items-center">
                     <div>
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Extra Services</h3>
-                      <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Syncs instantly with final price</p>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-primary">Add-on Services</h3>
+                      <p className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Customize your plan</p>
                     </div>
                     <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={16} fill="currentColor" /></div>
                   </div>
@@ -262,7 +262,7 @@ export default function ServiceBookingPage() {
                               <p className="text-[11px] font-black text-primary mt-1">৳{addon.price}</p>
                             </div>
                           </div>
-                          <div className="flex items-center bg-gray-100 rounded-lg px-2 py-1 border border-gray-200 shrink-0">
+                          <div className="flex items-center bg-gray-100 rounded-lg px-2 py-1 border border-gray-200 shrink-0 ml-4">
                             <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: Math.max(0, (p[addon.id] || 0) - 1)}))} className="p-1 text-gray-400 hover:text-red-500"><Minus size={14}/></button>
                             <span className="text-[11px] font-black text-[#081621] min-w-[24px] text-center">{qty}</span>
                             <button onClick={() => setAddOnsQty(p => ({...p, [addon.id]: (p[addon.id] || 0) + 1}))} className="p-1 text-gray-400 hover:text-emerald-500"><Plus size={14}/></button>
@@ -287,7 +287,7 @@ export default function ServiceBookingPage() {
         {mounted && !isCheckoutOpen && (
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Grand Total</span>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
               <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
             </div>
             <Button 
