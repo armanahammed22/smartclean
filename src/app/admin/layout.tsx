@@ -329,6 +329,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
 
     let orderedKeys = Object.keys(baseGroups);
+    
+    // 1. Apply saved order from Firestore
     if (sidebarConfig?.order) {
       const savedOrder = sidebarConfig.order as string[];
       const validSaved = savedOrder.filter(k => baseGroups[k]);
@@ -336,9 +338,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       orderedKeys = [...validSaved, ...missing];
     }
 
+    // 2. Filter by visibility settings and global feature flags
     return orderedKeys
       .map(key => baseGroups[key])
-      .filter(g => g && g.visible !== false && g.items.length > 0);
+      .filter(g => {
+        if (!g) return false;
+        
+        // Check user-defined visibility from Admin Settings
+        if (sidebarConfig?.visibility?.[g.id] === false) return false;
+        
+        // Check global feature flags (Ecommerce vs Services)
+        if (g.visible === false) return false;
+        
+        return g.items.length > 0;
+      });
   }, [badgeCounts, productsEnabled, servicesEnabled, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
