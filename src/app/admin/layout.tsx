@@ -65,7 +65,7 @@ import {
   Crown,
   Handshake,
   Building2,
-  UserCheck
+  UserCheck 
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -341,22 +341,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       orderedKeys = [...validSaved, ...missing];
     }
 
-    // Dynamic filtering based on visibility settings
+    // Standard mapping: Hide only if specifically set to false in config
     return orderedKeys
       .map(key => baseGroups[key])
       .filter(g => {
         if (!g) return false;
-        
-        // Skip hidden groups based on visibility config
         if (sidebarConfig?.visibility?.[g.id] === false) return false;
-
-        // Scoping logic: Only hide if specifically disabled in global settings
-        if (settings?.productsEnabled === false && (g.id === 'inventory')) return false;
-        if (settings?.servicesEnabled === false && (g.id === 'services')) return false;
-
         return g.items.length > 0;
       });
-  }, [badgeCounts, sidebarConfig, settings, pathname]);
+  }, [badgeCounts, sidebarConfig, pathname]);
 
   const handleLogout = async () => {
     if (auth) {
