@@ -31,8 +31,11 @@ import {
   Zap,
   Briefcase,
   Users,
-  List
+  List,
+  Package
 } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   AreaChart, 
   Area, 
@@ -45,8 +48,6 @@ import {
   Bar,
   Cell
 } from 'recharts';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 export default function FinancialReportPage() {
   const db = useFirestore();
