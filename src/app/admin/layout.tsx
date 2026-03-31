@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -232,6 +231,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Billing & Plan", href: '/admin/subscription', icon: CreditCard },
         ]
       },
+      vendor_hub: {
+        id: 'vendor_hub',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-orange-400",
+        visible: productsEnabled,
+        items: [
+          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
+        ]
+      },
       marketing: {
         id: 'marketing',
         title: "MARKETING & PROMOTIONS",
@@ -283,17 +293,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ...(servicesEnabled ? [{ name: "Staff Directory", href: '/admin/employees', icon: HardHat }] : []),
           { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
           { name: "Sales Leads", href: '/admin/leads', icon: Briefcase },
-        ]
-      },
-      vendor_hub: {
-        id: 'vendor_hub',
-        title: "VENDOR HUB",
-        icon: Store,
-        color: "text-orange-400",
-        visible: productsEnabled,
-        items: [
-          { name: "Manage Vendors", href: '/admin/vendors', icon: Store, badge: newVendors?.length || 0 },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, badge: pendingProducts?.length || 0 },
         ]
       },
       reports: {

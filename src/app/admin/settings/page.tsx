@@ -34,11 +34,24 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-// Default keys for reference
+// Comprehensive list of all sidebar menu keys
 const DEFAULT_MENU_KEYS = [
-  'dashboard', 'sales', 'ai_agents', 'orders', 'inventory', 
-  'services', 'marketing', 'offers', 'crm', 'vendor_hub', 
-  'reports', 'seo_hub', 'customize', 'system', 'support'
+  'dashboard', 
+  'finance',
+  'sales', 
+  'ai_agents', 
+  'orders', 
+  'inventory', 
+  'services', 
+  'vendor_hub',
+  'marketing', 
+  'seo_hub',
+  'offers', 
+  'crm', 
+  'reports', 
+  'customize', 
+  'system', 
+  'support'
 ];
 
 export default function AdminSettingsPage() {
@@ -91,8 +104,8 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     if (sidebarConfig?.order) {
-      // Merge with default keys to ensure new menus are not lost
       const saved = sidebarConfig.order as string[];
+      // Ensure we don't lose new keys that aren't in the saved order yet
       const missing = DEFAULT_MENU_KEYS.filter(k => !saved.includes(k));
       setMenuOrder([...saved, ...missing]);
     }
