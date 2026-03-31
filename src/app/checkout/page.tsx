@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -33,7 +32,8 @@ import {
   Clock, 
   Zap, 
   CreditCard,
-  Wallet
+  Wallet,
+  ShieldCheck
 } from 'lucide-react';
 import { useFirestore, useUser, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, addDoc, query, orderBy } from 'firebase/firestore';
@@ -164,8 +164,8 @@ function CheckoutContent() {
             <div className="lg:col-span-7 space-y-8">
               
               {/* Customer Information */}
-              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-                <CardHeader className="bg-[#081621] text-white p-8">
+              <Card className="rounded-[2.5rem] border-none shadow-sm bg-white overflow-visible">
+                <CardHeader className="bg-[#081621] text-white p-8 rounded-t-[2.5rem]">
                   <CardTitle className="text-xl font-black uppercase flex items-center gap-3"><User size={20}/> Customer Identity</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
@@ -197,8 +197,8 @@ function CheckoutContent() {
 
               {/* Date & Time Optimization for Services */}
               {hasServices && (
-                <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white">
-                  <CardHeader className="bg-primary/5 border-b p-8">
+                <Card className="rounded-[2.5rem] border-none shadow-sm bg-white overflow-visible">
+                  <CardHeader className="bg-primary/5 border-b p-8 rounded-t-[2.5rem]">
                     <CardTitle className="text-xl font-black uppercase flex items-center gap-3 text-primary"><Clock size={20}/> Preferred Schedule</CardTitle>
                   </CardHeader>
                   <CardContent className="p-8">
@@ -215,7 +215,7 @@ function CheckoutContent() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
+                            <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[200]" align="center" side="bottom" collisionPadding={20}>
                               <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
                             </PopoverContent>
                           </Popover>
@@ -231,7 +231,7 @@ function CheckoutContent() {
                                 <SelectValue placeholder="Select Time" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="rounded-2xl border-none shadow-2xl">
+                            <SelectContent className="rounded-2xl border-none shadow-2xl z-[200]">
                               <SelectItem value="8AM - 12PM" className="py-3 font-bold">Morning (8AM - 12PM)</SelectItem>
                               <SelectItem value="12PM - 4PM" className="py-3 font-bold">Afternoon (12PM - 4PM)</SelectItem>
                               <SelectItem value="4PM - 8PM" className="py-3 font-bold">Evening (4PM - 8PM)</SelectItem>

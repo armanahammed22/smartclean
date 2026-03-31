@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -172,7 +171,7 @@ export function CheckoutModal() {
         <div className="flex flex-col h-[80vh] lg:h-auto lg:max-h-[85vh] relative">
           <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col lg:grid lg:grid-cols-5 pb-24 md:pb-0">
             {/* Form Column */}
-            <div className="lg:col-span-3 p-4 md:p-8 bg-white">
+            <div className="lg:col-span-3 p-4 md:p-8 bg-white overflow-visible">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
                   <div className="space-y-4">
@@ -219,7 +218,7 @@ export function CheckoutModal() {
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl" align="start">
+                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[250]" align="center" side="bottom" collisionPadding={20}>
                                 <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
                               </PopoverContent>
                             </Popover>
@@ -231,11 +230,11 @@ export function CheckoutModal() {
                             <FormLabel className="text-[10px] font-black uppercase text-muted-foreground ml-1">Preferred Time</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none font-bold rounded-2xl shadow-inner px-6">
+                                <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl shadow-inner px-6">
                                   <SelectValue placeholder="Arrival Window" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="rounded-2xl border-none shadow-2xl">
+                              <SelectContent className="rounded-2xl border-none shadow-2xl z-[250]">
                                 <SelectItem value="8AM - 12PM" className="py-3 font-bold">Morning (8AM - 12PM)</SelectItem>
                                 <SelectItem value="12PM - 4PM" className="py-3 font-bold">Afternoon (12PM - 4PM)</SelectItem>
                                 <SelectItem value="4PM - 8PM" className="py-3 font-bold">Evening (4PM - 8PM)</SelectItem>
