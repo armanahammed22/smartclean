@@ -166,8 +166,8 @@ export default function SmartCleanHomePage() {
 
     const sectionStyles = {
       backgroundColor: style.sectionBg || 'transparent',
-      paddingTop: '24px',
-      paddingBottom: '24px',
+      paddingTop: `${style.paddingY !== undefined ? style.paddingY : 40}px`,
+      paddingBottom: `${style.paddingY !== undefined ? style.paddingY : 40}px`,
     };
 
     const titleStyles = {
@@ -181,6 +181,16 @@ export default function SmartCleanHomePage() {
       borderRadius: `${style.btnRadius || 12}px`,
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'
     };
+
+    // Calculate grid columns based on style override
+    const gridCols = style.gridShow || '4';
+    const gridClassName = cn(
+      "grid gap-2 md:gap-4",
+      gridCols === '3' && "grid-cols-2 sm:grid-cols-3",
+      gridCols === '4' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
+      gridCols === '5' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+      gridCols === '6' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+    );
 
     switch (sectionType) {
       case 'hero':
@@ -292,7 +302,7 @@ export default function SmartCleanHomePage() {
                   {t('view_all').toUpperCase()}
                 </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
+              <div className={gridClassName}>
                 {displayServices.map(s => {
                   const bookingCount = Math.floor((parseInt(s.id.slice(-2), 16) || 10) % 500) + 100;
                   return (
@@ -312,11 +322,11 @@ export default function SmartCleanHomePage() {
                             </Badge>
                           )}
                         </div>
-                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
+                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0" style={{ textAlign: style.textAlign || 'left' }}>
                           <h3 className="text-[11px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
                           
                           <div className="mt-auto pt-2">
-                            <div className="flex items-baseline gap-2 mb-1">
+                            <div className={cn("flex items-baseline gap-2 mb-1", style.textAlign === 'center' ? 'justify-center' : '')}>
                               <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none" style={{ color: style.priceColor || '#1E5F7A' }}>৳{(s.basePrice || 0).toLocaleString()}</p>
                               {s.regularPrice && s.regularPrice > s.basePrice && (
                                 <span className="text-[8px] md:text-[10px] text-gray-300 line-through">৳{s.regularPrice.toLocaleString()}</span>
@@ -363,7 +373,7 @@ export default function SmartCleanHomePage() {
               >
                 {section.title}
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
+              <div className={gridClassName}>
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
@@ -393,6 +403,9 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
         );
+
+      case 'campaign':
+        return <CampaignSection key={section.id} />;
 
       default:
         return null;
