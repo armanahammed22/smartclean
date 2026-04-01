@@ -61,6 +61,26 @@ const DEFAULT_MENU_KEYS = [
   'support'
 ];
 
+const MENU_LABELS: Record<string, string> = {
+  dashboard_link: "Dashboard",
+  sales: "Sales Terminal",
+  finance: "Financial Hub",
+  orders: "Order & Booking",
+  services: "Services",
+  partners: "B2B Partners",
+  vendors: "Vendor Hub",
+  marketing: "Marketing & Promotions",
+  seo: "SEO & Tracking",
+  offers: "Offer & Campaign",
+  crm: "CRM & Users",
+  inventory: "Inventory",
+  reports: "Business Reports",
+  customize: "Site Customize",
+  system: "System",
+  ai_agents: "AI Agents",
+  support: "Support"
+};
+
 export default function AdminSettingsPage() {
   const db = useFirestore();
   const { user } = useUser();
@@ -355,7 +375,9 @@ export default function AdminSettingsPage() {
                     )}>
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40"><GripVertical size={16} /></div>
-                        <span className="font-black uppercase text-xs tracking-widest text-gray-700">{key.replace(/_/g, ' ')}</span>
+                        <span className="font-black uppercase text-xs tracking-widest text-gray-700">
+                          {MENU_LABELS[key] || key.replace(/_/g, ' ')}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-1 border-r pr-3 border-gray-100">

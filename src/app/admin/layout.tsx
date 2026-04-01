@@ -162,7 +162,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     let groups = [
       {
         id: 'dashboard_link',
-        title: "DASHBOARD",
+        title: "Dashboard",
         href: '/admin/dashboard',
         icon: LayoutDashboard,
         color: "text-indigo-400",
