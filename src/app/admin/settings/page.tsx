@@ -15,10 +15,7 @@ import {
   Globe, 
   Mail, 
   Save, 
-  Search, 
   Loader2,
-  Link as LinkIcon,
-  ShieldCheck,
   Layout,
   Smartphone,
   Box,
@@ -27,10 +24,16 @@ import {
   ArrowUp,
   ArrowDown,
   List,
-  Download,
   Bell,
   Eye,
-  EyeOff
+  ShieldCheck,
+  Facebook,
+  Instagram,
+  Linkedin,
+  MessageCircle,
+  Download,
+  Info,
+  Link as LinkIcon
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -38,19 +41,23 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_MENU_KEYS = [
-  'dashboard', 
-  'finance',
+  'dashboard_link', 
   'sales', 
-  'ai_agents', 
+  'finance',
   'orders', 
-  'vendor_hub',
-  'partners',
-  'inventory', 
   'services', 
+  'partners',
+  'vendors',
   'marketing', 
-  'seo_hub',
+  'seo',
+  'offers',
+  'crm',
+  'inventory',
+  'reports',
   'customize', 
-  'system'
+  'system',
+  'ai_agents',
+  'support'
 ];
 
 export default function AdminSettingsPage() {
@@ -163,7 +170,7 @@ export default function AdminSettingsPage() {
         visibility: menuVisibility,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      toast({ title: "Sidebar Layout Saved", description: "All menu visibility and order changes are now live." });
+      toast({ title: "Sidebar Layout Saved", description: "Navigation structure updated successfully." });
     } catch (e) {
       toast({ variant: "destructive", title: "Save Failed" });
     } finally {
@@ -202,13 +209,116 @@ export default function AdminSettingsPage() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="general">
+          <div className="space-y-6">
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Brand Identity</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase">Website Name</Label>
+                      <Input value={formData.websiteName} onChange={(e) => setFormData({...formData, websiteName: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <ImageUploader label="Master Logo" hint="512 x 512 px" initialUrl={formData.logoUrl} onUpload={(url) => setFormData({...formData, logoUrl: url})} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">App Assets</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <ImageUploader label="Favicon" hint="32 x 32 px" initialUrl={formData.faviconUrl} onUpload={(url) => setFormData({...formData, faviconUrl: url})} aspectRatio="aspect-square w-24" />
+                  <ImageUploader label="App Touch Icon" hint="180 x 180 px" initialUrl={formData.appIconUrl} onUpload={(url) => setFormData({...formData, appIconUrl: url})} aspectRatio="aspect-square w-24" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Footer Configuration</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase">Footer Copyright Text</Label>
+                  <Input value={formData.footerContent} onChange={(e) => setFormData({...formData, footerContent: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase">Logo Redirect Link</Label>
+                  <Input value={formData.logoLink} onChange={(e) => setFormData({...formData, logoLink: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="visibility">
+          <div className="space-y-6">
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Feature Synchronization</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center justify-between p-6 bg-rose-50/50 rounded-[2rem] border border-rose-100">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-xl text-rose-600 shadow-sm"><Box size={24} /></div>
+                      <div className="space-y-1">
+                        <Label className="text-sm font-black text-rose-900 uppercase">Product E-commerce</Label>
+                        <p className="text-[9px] text-muted-foreground font-bold">TOGGLE PRODUCT MARKETPLACE</p>
+                      </div>
+                    </div>
+                    <Switch checked={formData.productsEnabled} onCheckedChange={(val) => setFormData({...formData, productsEnabled: val})} />
+                  </div>
+                  <div className="flex items-center justify-between p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-white rounded-xl text-indigo-600 shadow-sm"><Wrench size={24} /></div>
+                      <div className="space-y-1">
+                        <Label className="text-sm font-black text-indigo-900 uppercase">Service Booking</Label>
+                        <p className="text-[9px] text-muted-foreground font-bold">TOGGLE SERVICE ENGINE</p>
+                      </div>
+                    </div>
+                    <Switch checked={formData.servicesEnabled} onCheckedChange={(val) => setFormData({...formData, servicesEnabled: val})} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Authentication Logic</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100 max-w-md">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Smartphone size={24} /></div>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-black text-blue-900 uppercase">Phone OTP Login</Label>
+                      <p className="text-[9px] text-muted-foreground font-bold">REQUIRE SMS VERIFICATION</p>
+                    </div>
+                  </div>
+                  <Switch checked={formData.otpEnabled} onCheckedChange={(val) => setFormData({...formData, otpEnabled: val})} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="sidebar">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-[#081621] text-white p-8">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                    <List className="text-primary" size={20} /> Sidebar Management
+                    <List className="text-primary" size={20} /> Navigation Management
                   </CardTitle>
                   <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle Visibility and Order of Menu Groups</CardDescription>
                 </div>
@@ -228,10 +338,7 @@ export default function AdminSettingsPage() {
                     )}>
                       <div className="flex items-center gap-4">
                         <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40"><GripVertical size={16} /></div>
-                        <div>
-                          <span className="font-black uppercase text-xs tracking-widest text-gray-700">{key.replace(/_/g, ' ')}</span>
-                          {isHidden && <span className="ml-2 text-[8px] font-black text-red-500 uppercase tracking-tighter">(Hidden)</span>}
-                        </div>
+                        <span className="font-black uppercase text-xs tracking-widest text-gray-700">{key.replace(/_/g, ' ')}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-1 border-r pr-3 border-gray-100">
@@ -255,55 +362,72 @@ export default function AdminSettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="general">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8">
-              <CardTitle className="text-lg font-bold">Brand Identity</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
+        <TabsContent value="contact">
+          <div className="space-y-6">
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Contact Registry</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase">Website Name</Label>
-                    <Input value={formData.websiteName} onChange={(e) => setFormData({...formData, websiteName: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Official Phone</Label>
+                    <Input value={formData.contactPhone} onChange={(e) => setFormData({...formData, contactPhone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Official Email</Label>
+                    <Input value={formData.contactEmail} onChange={(e) => setFormData({...formData, contactEmail: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <ImageUploader label="Master Logo" hint="512 x 512 px" initialUrl={formData.logoUrl} onUpload={(url) => setFormData({...formData, logoUrl: url})} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Business Address</Label>
+                  <Textarea value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[100px]" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="visibility">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8">
-              <CardTitle className="text-lg font-bold">Feature Synchronization</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-center justify-between p-6 bg-rose-50/50 rounded-[2rem] border border-rose-100">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-white rounded-xl text-rose-600 shadow-sm"><Box size={24} /></div>
-                    <div className="space-y-1">
-                      <Label className="text-sm font-black text-rose-900 uppercase">Product E-commerce</Label>
-                    </div>
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Social Presence</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Facebook size={12} className="text-blue-600"/> Facebook URL</Label>
+                    <Input value={formData.socialLinks.facebook} onChange={(e) => setFormData({...formData, socialLinks: {...formData.socialLinks, facebook: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl" />
                   </div>
-                  <Switch checked={formData.productsEnabled} onCheckedChange={(val) => setFormData({...formData, productsEnabled: val})} />
-                </div>
-                <div className="flex items-center justify-between p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-white rounded-xl text-indigo-600 shadow-sm"><Wrench size={24} /></div>
-                    <div className="space-y-1">
-                      <Label className="text-sm font-black text-indigo-900 uppercase">Service Booking</Label>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Instagram size={12} className="text-pink-600"/> Instagram URL</Label>
+                    <Input value={formData.socialLinks.instagram} onChange={(e) => setFormData({...formData, socialLinks: {...formData.socialLinks, instagram: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl" />
                   </div>
-                  <Switch checked={formData.servicesEnabled} onCheckedChange={(val) => setFormData({...formData, servicesEnabled: val})} />
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Linkedin size={12} className="text-blue-700"/> LinkedIn URL</Label>
+                    <Input value={formData.socialLinks.linkedin} onChange={(e) => setFormData({...formData, socialLinks: {...formData.socialLinks, linkedin: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MessageCircle size={12} className="text-green-600"/> WhatsApp Number</Label>
+                    <Input value={formData.socialLinks.whatsapp} onChange={(e) => setFormData({...formData, socialLinks: {...formData.socialLinks, whatsapp: e.target.value}})} placeholder="+880..." className="h-11 bg-gray-50 border-none rounded-xl" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">App Distribution</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><LinkIcon size={12}/> Play Store Link</Label>
+                  <Input value={formData.playStoreLink} onChange={(e) => setFormData({...formData, playStoreLink: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Download size={12}/> APK Download Link</Label>
+                  <Input value={formData.apkDownloadLink} onChange={(e) => setFormData({...formData, apkDownloadLink: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

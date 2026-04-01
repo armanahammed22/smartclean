@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -131,6 +130,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  const sidebarConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
+  const { data: sidebarConfig } = useDoc(sidebarConfigRef);
+
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   useEffect(() => {
@@ -151,8 +154,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
+
   const NAV_GROUPS = useMemo(() => {
-    return [
+    // 1. Define Master List of Groups
+    let groups = [
       {
         id: 'dashboard_link',
         title: "DASHBOARD",
@@ -167,8 +174,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-rose-400",
         items: [
-          { name: "New Order", href: '/admin/orders?create=true', icon: Plus },
-          { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus },
+          { name: "New Order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
+          { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
         ]
       },
       {
@@ -189,10 +196,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-blue-400",
         items: [
-          { name: "Product Orders", href: '/admin/orders', icon: Package },
-          { name: "Service Bookings", href: '/admin/bookings', icon: Calendar },
+          { name: "Product Orders", href: '/admin/orders', icon: Package, visible: productsEnabled },
+          { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
           { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
-          { name: "Logistics", href: '/admin/couriers', icon: Truck },
+          { name: "Logistics", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
         ]
       },
       {
@@ -200,6 +207,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "SERVICES",
         icon: Wrench,
         color: "text-sky-400",
+        visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
@@ -226,8 +234,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-orange-400",
         items: [
           { name: "Vendor Directory", href: '/admin/vendors', icon: Users },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle },
-          { name: "Service Approvals", href: '/admin/services/approvals', icon: CheckCircle },
+          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, visible: productsEnabled },
+          { name: "Service Approvals", href: '/admin/services/approvals', icon: CheckCircle, visible: servicesEnabled },
           { name: "Settlements", href: '/admin/vendors/commissions', icon: Wallet },
         ]
       },
@@ -241,7 +249,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
-          { name: "Affiliate System", href: '/admin/referrals', icon: Award },
+          { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
         ]
       },
       {
@@ -263,9 +271,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-rose-400",
         items: [
           { name: "Offer Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
-          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap },
+          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap, visible: productsEnabled },
           { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
-          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity },
+          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity, visible: servicesEnabled },
         ]
       },
       {
@@ -285,6 +293,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title: "INVENTORY",
         icon: Box,
         color: "text-slate-400",
+        visible: productsEnabled,
         items: [
           { name: "All Products", href: '/admin/products', icon: Package },
           { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
@@ -355,7 +364,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       }
     ];
-  }, [t]);
+
+    // 2. Filter groups and items based on Global Feature Logic
+    groups = groups.filter(g => g.visible !== false);
+    groups = groups.map(g => ({
+      ...g,
+      items: g.items.filter((i: any) => i.visible !== false)
+    }));
+
+    // 3. Apply Dynamic Layout Logic (Order & Visibility Toggles)
+    if (sidebarConfig) {
+      const order = sidebarConfig.order as string[];
+      const visibility = sidebarConfig.visibility as Record<string, boolean>;
+
+      if (order && order.length > 0) {
+        groups.sort((a, b) => {
+          const idxA = order.indexOf(a.id);
+          const idxB = order.indexOf(b.id);
+          if (idxA === -1 && idxB === -1) return 0;
+          if (idxA === -1) return 1;
+          if (idxB === -1) return -1;
+          return idxA - idxB;
+        });
+      }
+
+      if (visibility) {
+        groups = groups.filter(g => visibility[g.id] !== false);
+      }
+    }
+
+    return groups;
+  }, [t, sidebarConfig, productsEnabled, servicesEnabled]);
 
   const handleLogout = async () => {
     if (auth) {
