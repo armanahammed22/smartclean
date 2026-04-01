@@ -159,7 +159,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const servicesEnabled = settings?.servicesEnabled !== false;
 
   const NAV_GROUPS = useMemo(() => {
-    // 1. Define Master List of Groups
     let groups = [
       {
         id: 'dashboard_link',
@@ -366,14 +365,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     ];
 
-    // 2. Filter groups and items based on Global Feature Logic
     groups = groups.filter(g => g.visible !== false);
     groups = groups.map(g => ({
       ...g,
       items: g.items.filter((i: any) => i.visible !== false)
     }));
 
-    // 3. Apply Dynamic Layout Logic (Order & Visibility Toggles)
     if (sidebarConfig) {
       const order = sidebarConfig.order as string[];
       const visibility = sidebarConfig.visibility as Record<string, boolean>;

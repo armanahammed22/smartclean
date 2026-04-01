@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
-import { useUser, useCollection, useMemoFirebase, useFirestore, useDoc } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useDoc, useFirestore } from '@/firebase';
 import { collection, doc, query, orderBy, limit, where, writeBatch, setDoc } from 'firebase/firestore';
 import { 
   Users, 
@@ -43,10 +43,11 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { getMockServices, getMockSubServices } from '@/lib/data';
 
-const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
+const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
+const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 export default function AdminDashboard() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -57,8 +58,14 @@ export default function AdminDashboard() {
   }, []);
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
-  const { data: adminRole } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid));
+  const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
+  
+  const isAuthorized = useMemo(() => {
+    if (!user) return false;
+    return !!adminRole || 
+           BOOTSTRAP_ADMIN_UIDS.includes(user.uid) || 
+           user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+  }, [adminRole, user]);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -143,6 +150,13 @@ export default function AdminDashboard() {
     { name: 'Sat', revenue: 45000 },
     { name: 'Sun', revenue: 42000 },
   ];
+
+  if (isUserLoading || roleLoading) return (
+    <div className="p-20 text-center flex flex-col items-center gap-4">
+      <Loader2 className="animate-spin text-primary" size={48} />
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Loading Terminal...</p>
+    </div>
+  );
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
@@ -281,7 +295,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-4 md:space-y-6">
               {[
-                ...(productsEnabled ? [{ label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending').length || 0, icon: Store }] : []),
+                ...(productsEnabled ? [{ label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending')?.length || 0, icon: Store }] : []),
                 ...(productsEnabled ? [{ label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box }] : []),
                 ...(servicesEnabled ? [{ label: "Active Services", val: dbServices?.length || 0, icon: Wrench }] : [])
               ].map((kpi, i) => (
