@@ -170,7 +170,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       {
         id: 'sales',
-        title: "SALES TERMINAL",
+        title: "Sales Terminal",
         icon: ShoppingCart,
         color: "text-rose-400",
         items: [
@@ -179,20 +179,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
-        id: 'finance',
-        title: "FINANCIAL HUB",
-        icon: Wallet,
-        color: "text-emerald-400",
-        items: [
-          { name: "Finance Overview", href: '/admin/finance', icon: TrendingUp },
-          { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
-          { name: "Bank & Cash", href: '/admin/finance/accounts', icon: Building2 },
-          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: DollarSign },
-        ]
-      },
-      {
         id: 'orders',
-        title: "ORDER & BOOKING",
+        title: "Order & Booking",
         icon: ShoppingCart,
         color: "text-blue-400",
         items: [
@@ -200,6 +188,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
           { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
           { name: "Logistics", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
+        ]
+      },
+      {
+        id: 'inventory',
+        title: "INVENTORY",
+        icon: Box,
+        color: "text-slate-400",
+        visible: productsEnabled,
+        items: [
+          { name: "All Products", href: '/admin/products', icon: Package },
+          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+          { name: "Categories", href: '/admin/products/categories', icon: Tags },
+          { name: "Brands", href: '/admin/products/brands', icon: Award },
+          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
         ]
       },
       {
@@ -214,6 +216,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
+        ]
+      },
+      {
+        id: 'marketing',
+        title: "MARKETING & PROMOTIONS",
+        icon: Target,
+        color: "text-pink-400",
+        items: [
+          { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
+          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
+          { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
+          { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
+          { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
+        ]
+      },
+      {
+        id: 'offers',
+        title: "OFFER & CAMPAIGN",
+        icon: TicketPercent,
+        color: "text-rose-400",
+        items: [
+          { name: "Offer Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
+          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap, visible: productsEnabled },
+          { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
+          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity, visible: servicesEnabled },
+        ]
+      },
+      {
+        id: 'seo',
+        title: "SEO & TRACKING",
+        icon: Globe,
+        color: "text-cyan-400",
+        items: [
+          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
+          { name: "Meta Pixel", href: '/admin/seo/pixel', icon: Code },
+          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
+          { name: "Event Logs", href: '/admin/seo/logs', icon: History },
+        ]
+      },
+      {
+        id: 'crm',
+        title: "CRM & USER",
+        icon: Users,
+        color: "text-purple-400",
+        items: [
+          { name: "Customer Directory", href: '/admin/customers', icon: Users },
+          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
+          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
         ]
       },
       {
@@ -240,71 +291,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
-        id: 'marketing',
-        title: "MARKETING & PROMOTIONS",
-        icon: Target,
-        color: "text-pink-400",
+        id: 'finance',
+        title: "FINANCIAL HUB",
+        icon: Wallet,
+        color: "text-emerald-400",
         items: [
-          { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
-          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
-          { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-          { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
-          { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
-        ]
-      },
-      {
-        id: 'seo',
-        title: "SEO & TRACKING",
-        icon: Globe,
-        color: "text-cyan-400",
-        items: [
-          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
-          { name: "Meta Pixel", href: '/admin/seo/pixel', icon: Code },
-          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
-          { name: "Event Logs", href: '/admin/seo/logs', icon: History },
-        ]
-      },
-      {
-        id: 'offers',
-        title: "OFFER & CAMPAIGN",
-        icon: TicketPercent,
-        color: "text-rose-400",
-        items: [
-          { name: "Offer Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
-          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap, visible: productsEnabled },
-          { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
-          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity, visible: servicesEnabled },
-        ]
-      },
-      {
-        id: 'crm',
-        title: "CRM & USERS",
-        icon: Users,
-        color: "text-purple-400",
-        items: [
-          { name: "Customer Directory", href: '/admin/customers', icon: Users },
-          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
-          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
-        ]
-      },
-      {
-        id: 'inventory',
-        title: "INVENTORY",
-        icon: Box,
-        color: "text-slate-400",
-        visible: productsEnabled,
-        items: [
-          { name: "All Products", href: '/admin/products', icon: Package },
-          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
-          { name: "Categories", href: '/admin/products/categories', icon: Tags },
-          { name: "Brands", href: '/admin/products/brands', icon: Award },
-          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
+          { name: "Finance Overview", href: '/admin/finance', icon: TrendingUp },
+          { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
+          { name: "Bank & Cash", href: '/admin/finance/accounts', icon: Building2 },
+          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: DollarSign },
         ]
       },
       {
         id: 'reports',
-        title: "BUSINESS REPORTS",
+        title: "BUSINESS REPORT",
         icon: BarChart3,
         color: "text-blue-400",
         items: [
@@ -331,7 +331,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       {
         id: 'system',
-        title: "SYSTEM",
+        title: "SETTINGS",
         icon: Settings,
         color: "text-slate-400",
         items: [
@@ -365,16 +365,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     ];
 
+    // Filter by visibility from firestore
+    if (sidebarConfig?.visibility) {
+      const visibility = sidebarConfig.visibility as Record<string, boolean>;
+      groups = groups.filter(g => visibility[g.id] !== false);
+    }
+
+    // Filter by global settings
     groups = groups.filter(g => g.visible !== false);
     groups = groups.map(g => ({
       ...g,
       items: g.items.filter((i: any) => i.visible !== false)
     }));
 
-    if (sidebarConfig) {
+    // Apply exact order from firestore
+    if (sidebarConfig?.order) {
       const order = sidebarConfig.order as string[];
-      const visibility = sidebarConfig.visibility as Record<string, boolean>;
-
       if (Array.isArray(order) && order.length > 0) {
         const orderMap = new Map(order.map((id, index) => [id, index]));
         groups.sort((a, b) => {
@@ -383,14 +389,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           return idxA - idxB;
         });
       }
-
-      if (visibility && typeof visibility === 'object') {
-        groups = groups.filter(g => visibility[g.id] !== false);
-      }
     }
 
     return groups;
-  }, [t, sidebarConfig, productsEnabled, servicesEnabled]);
+  }, [sidebarConfig, productsEnabled, servicesEnabled]);
 
   const handleLogout = async () => {
     if (auth) {

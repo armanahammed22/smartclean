@@ -34,26 +34,29 @@ import {
   MessageCircle,
   Download,
   Info,
-  Link as LinkIcon
+  Link as LinkIcon,
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
+// Strict Default Order ID Mapping
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
-  'finance',
   'orders', 
+  'inventory',
   'services', 
+  'marketing', 
+  'offers',
+  'seo',
+  'crm',
   'partners',
   'vendors',
-  'marketing', 
-  'seo',
-  'offers',
-  'crm',
-  'inventory',
+  'finance',
   'reports',
   'customize', 
   'system',
@@ -64,21 +67,21 @@ const DEFAULT_MENU_KEYS = [
 const MENU_LABELS: Record<string, string> = {
   dashboard_link: "Dashboard",
   sales: "Sales Terminal",
-  finance: "Financial Hub",
   orders: "Order & Booking",
-  services: "Services",
-  partners: "B2B Partners",
-  vendors: "Vendor Hub",
-  marketing: "Marketing & Promotions",
-  seo: "SEO & Tracking",
-  offers: "Offer & Campaign",
-  crm: "CRM & Users",
-  inventory: "Inventory",
-  reports: "Business Reports",
-  customize: "Site Customize",
-  system: "System",
-  ai_agents: "AI Agents",
-  support: "Support"
+  inventory: "INVENTORY",
+  services: "SERVICES",
+  marketing: "MARKETING & PROMOTIONS",
+  offers: "OFFER & CAMPAIGN",
+  seo: "SEO & TRACKING",
+  crm: "CRM & USER",
+  partners: "B2B PARTNERS",
+  vendors: "VENDOR HUB",
+  finance: "FINANCIAL HUB",
+  reports: "BUSINESS REPORT",
+  customize: "SITE CUSTOMIZE",
+  system: "SETTINGS",
+  ai_agents: "AI AGENTS (STAFF)",
+  support: "SUPPORT"
 };
 
 export default function AdminSettingsPage() {
@@ -103,7 +106,7 @@ export default function AdminSettingsPage() {
     appIconUrl: '',
     contactEmail: 'smartclean422@gmail.com',
     contactPhone: '+8801919640422',
-    address: 'Wireless Gate, Mohakhali, Dhaka-1212',
+    address: 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212',
     socialLinks: { facebook: '', instagram: '', linkedin: '', whatsapp: '' },
     currency: 'BDT',
     defaultLanguage: 'bn',
@@ -169,36 +172,48 @@ export default function AdminSettingsPage() {
       .finally(() => setIsSubmitting(false));
   };
 
-  const saveSidebarToFirestore = async (order: string[], visibility: Record<string, boolean>) => {
-    if (!db || !user) return;
-    try {
-      await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {
-        order,
-        visibility,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-    } catch (e) {
-      console.error('Failed to sync sidebar:', e);
-    }
-  };
-
   const moveMenu = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...menuOrder];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newOrder.length) return;
     [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
     setMenuOrder(newOrder);
-    saveSidebarToFirestore(newOrder, menuVisibility);
+    // Manual reordering does not autosave, requires "Public Change" click
   };
 
   const toggleVisibility = (key: string) => {
     const nextVal = menuVisibility[key] === false ? true : false;
-    const newVisibility = { ...menuVisibility, [key]: nextVal };
-    setMenuVisibility(newVisibility);
-    saveSidebarToFirestore(menuOrder, newVisibility);
+    setMenuVisibility(prev => ({ ...prev, [key]: nextVal }));
+    // Toggling does not autosave, requires "Public Change" click
   };
 
-  const handleSaveSidebarLayout = async () => {
+  const handleSyncSidebar = async () => {
+    if (!db || !user) return;
+    setIsSavingLayout(true);
+    try {
+      const fullVisibility: Record<string, boolean> = {};
+      DEFAULT_MENU_KEYS.forEach(key => {
+        fullVisibility[key] = true;
+      });
+
+      setMenuOrder(DEFAULT_MENU_KEYS);
+      setMenuVisibility(fullVisibility);
+
+      await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {
+        order: DEFAULT_MENU_KEYS,
+        visibility: fullVisibility,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+
+      toast({ title: "Sidebar Synced", description: "Default system order restored and applied." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Sync Failed" });
+    } finally {
+      setIsSavingLayout(false);
+    }
+  };
+
+  const handleSaveCustomLayout = async () => {
     if (!db || !user) return;
     setIsSavingLayout(true);
     try {
@@ -207,9 +222,9 @@ export default function AdminSettingsPage() {
         visibility: menuVisibility,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      toast({ title: "Sidebar Layout Saved", description: "Navigation structure updated successfully." });
+      toast({ title: "Layout Published", description: "Custom sidebar order is now active." });
     } catch (e) {
-      toast({ variant: "destructive", title: "Save Failed" });
+      toast({ variant: "destructive", title: "Publication Failed" });
     } finally {
       setIsSavingLayout(false);
     }
@@ -222,7 +237,7 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Global Command Center</h1>
-          <p className="text-muted-foreground text-sm">Synchronize core modules and feature availability system-wide</p>
+          <p className="text-muted-foreground text-sm font-medium">Synchronize core modules and feature availability system-wide</p>
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="gap-2 font-black h-11 px-8 rounded-xl shadow-lg text-primary-foreground bg-primary">
           {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
@@ -352,16 +367,21 @@ export default function AdminSettingsPage() {
         <TabsContent value="sidebar">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-[#081621] text-white p-8">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div className="space-y-1">
                   <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
                     <List className="text-primary" size={20} /> Navigation Management
                   </CardTitle>
                   <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle Visibility and Order of Menu Groups</CardDescription>
                 </div>
-                <Button onClick={handleSaveSidebarLayout} disabled={isSavingLayout} className="rounded-xl font-black bg-primary px-8 h-11 shadow-lg">
-                  {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} className="mr-2" /> Sync Sidebar</>}
-                </Button>
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                  <Button onClick={handleSyncSidebar} disabled={isSavingLayout} variant="outline" className="flex-1 sm:flex-none rounded-xl font-black bg-white/10 border-white/20 text-white hover:bg-white/20 px-6 h-11 gap-2">
+                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />} Sync Sidebar
+                  </Button>
+                  <Button onClick={handleSaveCustomLayout} disabled={isSavingLayout} className="flex-1 sm:flex-none rounded-xl font-black bg-primary px-8 h-11 shadow-lg gap-2">
+                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />} Public Change
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-8">
@@ -374,7 +394,8 @@ export default function AdminSettingsPage() {
                       isHidden ? "opacity-50 border-gray-100 bg-gray-50/50" : "border-gray-100 hover:border-primary/30 hover:shadow-md"
                     )}>
                       <div className="flex items-center gap-4">
-                        <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40"><GripVertical size={16} /></div>
+                        <div className="text-[10px] font-black text-primary/40 w-4">{index + 1}</div>
+                        <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40 cursor-grab active:cursor-grabbing"><GripVertical size={16} /></div>
                         <span className="font-black uppercase text-xs tracking-widest text-gray-700">
                           {MENU_LABELS[key] || key.replace(/_/g, ' ')}
                         </span>
