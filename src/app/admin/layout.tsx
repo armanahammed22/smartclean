@@ -68,7 +68,8 @@ import {
   UserCheck,
   DollarSign,
   ReceiptText,
-  ShieldAlert
+  ShieldAlert,
+  Package
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -126,7 +127,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
