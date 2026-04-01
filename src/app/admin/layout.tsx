@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -73,9 +74,9 @@ import {
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
+import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, collection } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import {
   Sheet,
   SheetContent,
@@ -377,18 +378,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const order = sidebarConfig.order as string[];
       const visibility = sidebarConfig.visibility as Record<string, boolean>;
 
-      if (order && order.length > 0) {
+      if (Array.isArray(order) && order.length > 0) {
+        const orderMap = new Map(order.map((id, index) => [id, index]));
         groups.sort((a, b) => {
-          const idxA = order.indexOf(a.id);
-          const idxB = order.indexOf(b.id);
-          if (idxA === -1 && idxB === -1) return 0;
-          if (idxA === -1) return 1;
-          if (idxB === -1) return -1;
+          const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 1000;
+          const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 1000;
           return idxA - idxB;
         });
       }
 
-      if (visibility) {
+      if (visibility && typeof visibility === 'object') {
         groups = groups.filter(g => visibility[g.id] !== false);
       }
     }

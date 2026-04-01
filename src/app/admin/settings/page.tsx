@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -66,6 +67,7 @@ export default function AdminSettingsPage() {
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
   const [isSavingLayout, setIsSavingLayout] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
@@ -111,7 +113,7 @@ export default function AdminSettingsPage() {
   }, [settings]);
 
   useEffect(() => {
-    if (sidebarConfig) {
+    if (sidebarConfig && !isInitialized) {
       if (sidebarConfig.order) {
         const saved = sidebarConfig.order as string[];
         const missing = DEFAULT_MENU_KEYS.filter(k => !saved.includes(k));
@@ -120,8 +122,9 @@ export default function AdminSettingsPage() {
       if (sidebarConfig.visibility) {
         setMenuVisibility(sidebarConfig.visibility);
       }
+      setIsInitialized(true);
     }
-  }, [sidebarConfig]);
+  }, [sidebarConfig, isInitialized]);
 
   const handleSave = () => {
     if (!db || !user) return;
@@ -146,19 +149,33 @@ export default function AdminSettingsPage() {
       .finally(() => setIsSubmitting(false));
   };
 
+  const saveSidebarToFirestore = async (order: string[], visibility: Record<string, boolean>) => {
+    if (!db || !user) return;
+    try {
+      await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {
+        order,
+        visibility,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.error('Failed to sync sidebar:', e);
+    }
+  };
+
   const moveMenu = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...menuOrder];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newOrder.length) return;
     [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
     setMenuOrder(newOrder);
+    saveSidebarToFirestore(newOrder, menuVisibility);
   };
 
   const toggleVisibility = (key: string) => {
-    setMenuVisibility(prev => ({
-      ...prev,
-      [key]: prev[key] === false ? true : false
-    }));
+    const nextVal = menuVisibility[key] === false ? true : false;
+    const newVisibility = { ...menuVisibility, [key]: nextVal };
+    setMenuVisibility(newVisibility);
+    saveSidebarToFirestore(menuOrder, newVisibility);
   };
 
   const handleSaveSidebarLayout = async () => {
