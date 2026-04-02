@@ -34,7 +34,8 @@ import {
   Layers,
   Box,
   Info,
-  Package
+  Package,
+  Settings2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -54,10 +55,10 @@ const ICONS: Record<string, any> = {
 };
 
 const DEFAULT_LINKS = [
-  { id: 'l1', label: 'হোম', icon: 'Home', link: '/', order: 0 },
-  { id: 'l2', label: 'মেসেজ', icon: 'MessageCircle', link: '#', order: 1 },
-  { id: 'l3', label: 'কার্ট', icon: 'ShoppingCart', link: '/cart', order: 2 },
-  { id: 'l4', label: 'একাউন্ট', icon: 'User', link: '/account/dashboard', order: 3 },
+  { id: 'l1', label: 'হোম', icon: 'Home', link: '/', order: 0, isEnabled: true, color: '#1E5F7A' },
+  { id: 'l2', label: 'মেসেজ', icon: 'MessageCircle', link: '#', order: 1, isEnabled: true, color: '#1E5F7A' },
+  { id: 'l3', label: 'কার্ট', icon: 'ShoppingCart', link: '/cart', order: 2, isEnabled: true, color: '#1E5F7A' },
+  { id: 'l4', label: 'একাউন্ট', icon: 'User', link: '/account/dashboard', order: 3, isEnabled: true, color: '#1E5F7A' },
 ];
 
 export default function BottomNavManagementPage() {
@@ -85,6 +86,12 @@ export default function BottomNavManagementPage() {
     inactiveColor: '#9ca3af',
     showOfferCircle: true,
     showPackage: true,
+    packageConfig: {
+      label: 'প্যাকেজ',
+      icon: 'Layers',
+      color: '#1E5F7A',
+      isEnabled: true
+    },
     links: DEFAULT_LINKS
   });
 
@@ -101,7 +108,11 @@ export default function BottomNavManagementPage() {
         ...formData,
         ...config,
         links: config.links || DEFAULT_LINKS,
-        showPackage: config.showPackage ?? true
+        showPackage: config.showPackage ?? true,
+        packageConfig: {
+          ...formData.packageConfig,
+          ...(config.packageConfig || {})
+        }
       });
     }
   }, [config]);
@@ -147,7 +158,7 @@ export default function BottomNavManagementPage() {
     setEditingOfferId(null);
   };
 
-  const updateLink = (idx: number, field: string, val: string) => {
+  const updateLink = (idx: number, field: string, val: any) => {
     const next = [...formData.links];
     next[idx] = { ...next[idx], [field]: val };
     setFormData({ ...formData, links: next });
@@ -161,7 +172,15 @@ export default function BottomNavManagementPage() {
   const addLink = () => {
     setFormData({ 
       ...formData, 
-      links: [...formData.links, { id: Math.random().toString(36).substr(2, 9), label: 'New Link', icon: 'Grid', link: '#', order: formData.links.length }] 
+      links: [...formData.links, { 
+        id: Math.random().toString(36).substr(2, 9), 
+        label: 'New Link', 
+        icon: 'Grid', 
+        link: '#', 
+        order: formData.links.length,
+        isEnabled: true,
+        color: '#1E5F7A'
+      }] 
     });
   };
 
@@ -172,7 +191,7 @@ export default function BottomNavManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 uppercase">Bottom Navbar Hub</h1>
-          <p className="text-muted-foreground text-sm">Control colors, static links, and circular offers</p>
+          <p className="text-muted-foreground text-sm">Individual icon controls, colors, and feature management</p>
         </div>
         <Button onClick={handleSaveConfig} disabled={isSaving} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
           {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
@@ -183,9 +202,9 @@ export default function BottomNavManagementPage() {
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4">
         <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Info size={20}/></div>
         <div className="space-y-1">
-          <h4 className="text-sm font-black uppercase text-blue-900">Automatic Logic Active</h4>
+          <h4 className="text-sm font-black uppercase text-blue-900">Automation Note</h4>
           <p className="text-xs text-blue-800/70 leading-relaxed">
-            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings {'>'} Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
+            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings {'>'} Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে। আপনি এখান থেকে ইন্ডিভিজুয়ালি আইকন এনাবল বা ডিজেবল করতে পারেন এবং প্রতিটি আইকনের জন্য আলাদা রঙ সেট করতে পারেন।
           </p>
         </div>
       </div>
@@ -193,7 +212,10 @@ export default function BottomNavManagementPage() {
       <Tabs defaultValue="links" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar">
           <TabsTrigger value="links" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <List size={16} /> Static Buttons
+            <List size={16} /> Icon Management
+          </TabsTrigger>
+          <TabsTrigger value="package" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Layers size={16} /> Package Feature
           </TabsTrigger>
           <TabsTrigger value="offers" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
             <ArrowUpCircle size={16} /> Circular Offers
@@ -205,46 +227,113 @@ export default function BottomNavManagementPage() {
 
         {/* STATIC BUTTONS */}
         <TabsContent value="links" className="space-y-6">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg font-black uppercase">Navigation Buttons</CardTitle>
-                <CardDescription className="text-xs">Standard buttons shown on both sides of the middle offer</CardDescription>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Package Button</Label>
-                  <Switch checked={formData.showPackage} onCheckedChange={v => setFormData({...formData, showPackage: v})} />
-                </div>
-                <Button onClick={addLink} variant="outline" size="sm" className="rounded-xl font-bold border-primary/20 text-primary uppercase text-[10px] h-10">
-                  <PlusCircle size={14} className="mr-1.5" /> Add Custom Link
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formData.links.map((link: any, i: number) => (
-                  <div key={link.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-4 group relative">
-                    <div className="flex justify-between items-center">
-                      <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Pos {i + 1}</Badge>
-                      <button onClick={() => removeLink(i)} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
+          <div className="flex justify-end">
+            <Button onClick={addLink} variant="outline" size="sm" className="rounded-xl font-bold border-primary/20 text-primary uppercase text-[10px] h-10 shadow-sm bg-white">
+              <PlusCircle size={14} className="mr-1.5" /> Add Custom Link
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {formData.links.map((link: any, i: number) => (
+              <Card key={link.id} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group border border-gray-100 relative">
+                <CardHeader className="bg-gray-50/50 p-6 border-b flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">POS {i + 1}</Badge>
+                    <CardTitle className="text-sm font-black uppercase">{link.label}</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border shadow-xs">
+                      <Label className="text-[8px] font-black uppercase text-muted-foreground">Enabled</Label>
+                      <Switch checked={link.isEnabled !== false} onCheckedChange={v => updateLink(i, 'isEnabled', v)} className="scale-75" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Label</Label>
-                        <Input value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} className="h-9 bg-white border-none text-xs font-bold" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Icon Keyword</Label>
-                        <Input value={link.icon} onChange={e => updateLink(i, 'icon', e.target.value)} className="h-9 bg-white border-none text-xs font-mono" placeholder="ShoppingCart, Home, Layers, etc." />
-                      </div>
+                    <button onClick={() => removeLink(i)} className="text-red-400 hover:text-red-600 transition-colors p-1.5"><Trash2 size={16}/></button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Label</Label>
+                      <Input value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[9px] font-black uppercase text-gray-400">Destination URL</Label>
-                      <Input value={link.link} onChange={e => updateLink(i, 'link', e.target.value)} className="h-9 bg-white border-none text-xs font-bold text-primary" />
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon Key</Label>
+                      <Input value={link.icon} onChange={e => updateLink(i, 'icon', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-mono text-xs" />
                     </div>
                   </div>
-                ))}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Individual Active Color</Label>
+                      <Input type="color" value={link.color || '#1E5F7A'} onChange={e => updateLink(i, 'color', e.target.value)} className="h-11 p-1 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Target Link</Label>
+                      <Input value={link.link} onChange={e => updateLink(i, 'link', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* PACKAGE FEATURE MANAGER */}
+        <TabsContent value="package" className="max-w-2xl mx-auto space-y-6">
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+            <CardHeader className="bg-[#081621] text-white p-8">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
+                  <Layers className="text-primary" /> Package Feature Manage
+                </CardTitle>
+                <Switch 
+                  checked={formData.showPackage} 
+                  onCheckedChange={v => setFormData({...formData, showPackage: v})} 
+                />
+              </div>
+              <CardDescription className="text-white/40 uppercase font-bold text-[9px] mt-1">Configure the secondary feature button</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Label</Label>
+                  <Input 
+                    value={formData.packageConfig?.label || 'প্যাকেজ'} 
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, label: e.target.value}})} 
+                    className="h-12 bg-gray-50 border-none rounded-xl font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon (Lucide)</Label>
+                  <Input 
+                    value={formData.packageConfig?.icon || 'Layers'} 
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, icon: e.target.value}})} 
+                    className="h-12 bg-gray-50 border-none rounded-xl font-mono text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Active Color</Label>
+                  <Input 
+                    type="color" 
+                    value={formData.packageConfig?.color || '#1E5F7A'} 
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, color: e.target.value}})} 
+                    className="h-12 p-1 bg-gray-50 border-none rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Redirection</Label>
+                  <Input 
+                    value="/services" 
+                    disabled 
+                    className="h-12 bg-gray-100 border-none rounded-xl opacity-50"
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                <div className="flex items-start gap-3">
+                  <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
+                    প্যাকেজ বাটনটি মূলত সার্ভিস কালেকশন পেজে নিয়ে যায়। আপনি এখান থেকে এর আইকন এবং টাইটেল পরিবর্তন করতে পারেন।
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -333,7 +422,7 @@ export default function BottomNavManagementPage() {
                   <Input type="color" value={formData.bgColor} onChange={e => setFormData({...formData, bgColor: e.target.value})} className="h-12 p-1 bg-white border-gray-100 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Active Item Color</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Global Active Color</Label>
                   <Input type="color" value={formData.activeColor} onChange={e => setFormData({...formData, activeColor: e.target.value})} className="h-12 p-1 bg-white border-gray-100 rounded-xl" />
                 </div>
                 <div className="space-y-2">

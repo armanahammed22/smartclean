@@ -84,52 +84,66 @@ export function BottomNav() {
   // 4. Generate Navigation Items with Automatic Filtering
   const NAV_ITEMS = useMemo(() => {
     let baseLinks = [];
+    const globalActiveColor = config?.activeColor || '#1E5F7A';
     
     if (config?.links && config.links.length > 0) {
       baseLinks = config.links.map((link: any) => ({
         ...link,
         icon: ICONS[link.icon] || Grid,
         badge: link.icon === 'ShoppingCart' ? itemCount : 0,
+        itemActiveColor: link.color || globalActiveColor,
         onClick: link.icon === 'MessageCircle' ? (e: any) => { e.preventDefault(); toggleSupport(); } : undefined
       }));
     } else {
       // Default Fallback
       baseLinks = [
-        { id: 'def-h', label: 'হোম', href: '/', icon: Home },
-        { id: 'def-p', label: 'প্যাকেজ', href: '/services', icon: Layers, isPackage: true },
-        { id: 'def-m', label: 'মেসেজ', href: '#', icon: MessageCircle, isMessage: true, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
-        { id: 'def-c', label: 'কার্ট', href: '/cart', icon: ShoppingCart, isCart: true, badge: itemCount },
-        { id: 'def-a', label: 'একাউন্ট', href: '/account/dashboard', icon: User },
+        { id: 'def-h', label: 'হোম', href: '/', icon: Home, isEnabled: true, itemActiveColor: globalActiveColor },
+        { id: 'def-m', label: 'মেসেজ', href: '#', icon: MessageCircle, isMessage: true, isEnabled: true, itemActiveColor: globalActiveColor, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
+        { id: 'def-c', label: 'কার্ট', href: '/cart', icon: ShoppingCart, isCart: true, isEnabled: true, itemActiveColor: globalActiveColor, badge: itemCount },
+        { id: 'def-a', label: 'একাউন্ট', href: '/account/dashboard', icon: User, isEnabled: true, itemActiveColor: globalActiveColor },
       ];
     }
 
     // 🛡️ APPLY GLOBAL LOGIC RULES
-    return baseLinks.filter((item: any) => {
+    const filtered = baseLinks.filter((item: any) => {
+      // Respect Individual Disable/Enable
+      if (item.isEnabled === false) return false;
+
       const isCartIcon = item.isCart || item.icon === ShoppingCart || (typeof item.icon === 'string' && item.icon === 'ShoppingCart');
       const isMessageIcon = item.isMessage || item.icon === MessageCircle || (typeof item.icon === 'string' && item.icon === 'MessageCircle');
-      const isPackageIcon = item.isPackage || item.icon === Layers || (typeof item.icon === 'string' && item.icon === 'Layers');
 
-      // 1. If Products Enabled: Show Cart, Hide Message
+      // Product Feature Logic
       if (productsEnabled) {
         if (isMessageIcon) return false;
-      } 
-      // 2. If Products Disabled: Hide Cart, Show Message (Only here)
-      else {
+      } else {
         if (isCartIcon) return false;
       }
 
-      // 3. Package Button Toggle
-      if (isPackageIcon && config?.showPackage === false) return false;
-
       return true;
     });
+
+    // Add Managed Package Button if enabled
+    if (config?.showPackage !== false && config?.packageConfig?.isEnabled !== false) {
+      const pkg = config?.packageConfig || {};
+      const pkgItem = {
+        id: 'system-package',
+        label: pkg.label || 'প্যাকেজ',
+        href: '/services',
+        icon: ICONS[pkg.icon] || Layers,
+        itemActiveColor: pkg.color || globalActiveColor,
+        isPackage: true
+      };
+      // Insert in middle
+      filtered.splice(Math.floor(filtered.length / 2), 0, pkgItem);
+    }
+
+    return filtered;
   }, [config, productsEnabled, itemCount, toggleSupport]);
 
   if (!mounted) return null;
 
   const showOffer = config?.showOfferCircle !== false;
   const bgColor = config?.bgColor || '#ffffff';
-  const activeColor = config?.activeColor || '#1E5F7A';
   const inactiveColor = config?.inactiveColor || '#9ca3af';
 
   return (
@@ -141,6 +155,7 @@ export function BottomNav() {
         {NAV_ITEMS.map((item: any, idx: number) => {
           const isActive = (item.href && item.href !== '#' && pathname === item.href) || (item.isMessage && isSupportOpen);
           const Icon = item.icon;
+          const activeColor = item.itemActiveColor || config?.activeColor || '#1E5F7A';
 
           const NavButton = (
             <div className="flex flex-col items-center gap-1 transition-all duration-300">
