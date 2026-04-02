@@ -186,7 +186,7 @@ export default function BottomNavManagementPage() {
         <div className="space-y-1">
           <h4 className="text-sm font-black uppercase text-blue-900">Automatic Logic Active</h4>
           <p className="text-xs text-blue-800/70 leading-relaxed">
-            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings > Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
+            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings &gt; Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
           </p>
         </div>
       </div>
