@@ -70,7 +70,8 @@ import {
   ReceiptText,
   ShieldAlert,
   Package,
-  Clock
+  Clock,
+  CircleEllipsis
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -126,6 +127,27 @@ const DEFAULT_MENU_KEYS = [
   'ai_agents',
   'support'
 ];
+
+const MENU_LABELS: Record<string, string> = {
+  dashboard_link: "Dashboard",
+  sales: "Sales Terminal",
+  orders: "Order & Booking",
+  inventory: "Inventory",
+  services: "SERVICES",
+  marketing: "MARKETING & PROMOTIONS",
+  offers: "OFFER & CAMPAIGN",
+  seo: "SEO & TRACKING",
+  hrm: "HRM",
+  customer_hub: "Customer Hub",
+  partners: "B2B PARTNERS",
+  vendors: "VENDOR HUB",
+  finance: "FINANCIAL HUB",
+  reports: "BUSINESS REPORT",
+  customize: "SITE CUSTOMIZE",
+  system: "SETTINGS",
+  ai_agents: "AI AGENTS (STAFF)",
+  support: "SUPPORT"
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -358,7 +380,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Bottom Navbar", href: '/admin/customize/bottom-nav', icon: CircleEllipsis },
           { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
           { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
           { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: Navigation },
