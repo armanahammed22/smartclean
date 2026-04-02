@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Zap, ShoppingCart } from 'lucide-react';
+import { Star, Zap } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface FlashSaleCardProps {
   product: Product;
@@ -59,14 +60,14 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
           
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {discountPercent && (
-              <div className="bg-[#f85606] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter animate-pulse shadow-lg">
+              <Badge className="bg-[#f85606] text-white border-none text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter animate-pulse shadow-lg">
                 {discountPercent}% OFF
-              </div>
+              </Badge>
             )}
             {product.badgeText && (
-              <div className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg">
+              <Badge className="bg-amber-50 text-white border-none text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg">
                 {product.badgeText}
-              </div>
+              </Badge>
             )}
           </div>
         </div>

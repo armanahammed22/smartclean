@@ -177,7 +177,6 @@ export default function SmartCleanHomePage() {
       textAlign: (style.textAlign || 'left') as any,
     };
 
-    // 📱 Standard Responsive Grid Mapping (2/3/6)
     const gridClassName = "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6";
 
     switch (sectionType) {
@@ -318,7 +317,7 @@ export default function SmartCleanHomePage() {
                               </Badge>
                             )}
                             {s.badgeText && (
-                              <Badge className="bg-amber-500 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                              <Badge className="bg-amber-50 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
                                 {s.badgeText}
                               </Badge>
                             )}

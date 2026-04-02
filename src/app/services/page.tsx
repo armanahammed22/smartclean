@@ -177,11 +177,11 @@ function ServicesContent() {
                   <div className="p-3 flex flex-col flex-1 gap-2">
                     <div className="space-y-1">
                       <Link href={`/service/${item.slug || item.id}`} className="hover:text-primary transition-colors block">
-                        <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800">
+                        <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800 text-left">
                           {item.title}
                         </h3>
                       </Link>
-                      <div className="flex flex-wrap items-baseline gap-2">
+                      <div className="flex flex-wrap items-baseline gap-2 justify-start">
                         <span className="text-base font-black text-primary tracking-tighter leading-none">
                           ৳{(item.basePrice || 0).toLocaleString()}
                         </span>
