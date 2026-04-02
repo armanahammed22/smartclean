@@ -15,11 +15,6 @@ const getAdminApp = () => {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  // Handle multiline private key from environment variables
-  if (privateKey) {
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-
   // Safety check for production build time
   if (!projectId || !clientEmail || !privateKey) {
     if (process.env.NODE_ENV === 'production') {
@@ -28,7 +23,18 @@ const getAdminApp = () => {
     return null;
   }
 
+  // Handle multiline private key and potential wrapping quotes from environment variables
   try {
+    if (privateKey) {
+      // Remove literal quotes if they exist at start/end
+      privateKey = privateKey.trim();
+      if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.substring(1, privateKey.length - 1);
+      }
+      // Replace escaped newlines with actual newlines
+      privateKey = privateKey.replace(/\\n/g, '\n');
+    }
+
     return admin.initializeApp({
       credential: admin.credential.cert({
         projectId,
@@ -45,5 +51,5 @@ const getAdminApp = () => {
 const adminApp = getAdminApp();
 
 // Export initialized services or null if vars are missing
-export const db = adminApp ? adminApp.firestore() : null as any;
-export const auth = adminApp ? adminApp.auth() : null as any;
+export const db = adminApp ? adminApp.firestore() : null;
+export const auth = adminApp ? adminApp.auth() : null;
