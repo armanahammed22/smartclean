@@ -90,7 +90,8 @@ export default function BottomNavManagementPage() {
       label: 'প্যাকেজ',
       icon: 'Layers',
       color: '#1E5F7A',
-      isEnabled: true
+      isEnabled: true,
+      href: '/services'
     },
     links: DEFAULT_LINKS
   });
@@ -320,9 +321,9 @@ export default function BottomNavManagementPage() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Redirection</Label>
                   <Input 
-                    value="/services" 
-                    disabled 
-                    className="h-12 bg-gray-100 border-none rounded-xl opacity-50"
+                    value={formData.packageConfig?.href || '/services'} 
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, href: e.target.value}})} 
+                    className="h-12 bg-gray-50 border-none rounded-xl font-bold text-primary"
                   />
                 </div>
               </div>
@@ -331,7 +332,7 @@ export default function BottomNavManagementPage() {
                 <div className="flex items-start gap-3">
                   <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
                   <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
-                    প্যাকেজ বাটনটি মূলত সার্ভিস কালেকশন পেজে নিয়ে যায়। আপনি এখান থেকে এর আইকন এবং টাইটেল পরিবর্তন করতে পারেন।
+                    প্যাকেজ বাটনটি মূলত আপনার সেবাসমূহ বা অফার পেজে নিয়ে যায়। আপনি এখান থেকে এর আইকন, টাইটেল এবং রিডাইরেকশন লিঙ্ক পরিবর্তন করতে পারেন।
                   </p>
                 </div>
               </div>

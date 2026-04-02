@@ -128,7 +128,7 @@ export function BottomNav() {
       const pkgItem = {
         id: 'system-package',
         label: pkg.label || 'প্যাকেজ',
-        href: '/services',
+        href: pkg.href || '/services',
         icon: ICONS[pkg.icon] || Layers,
         itemActiveColor: pkg.color || globalActiveColor,
         isPackage: true
