@@ -112,13 +112,16 @@ service cloud.firestore {
       allow read: if true; allow write: if isAdmin(); 
       match /products/{pId} { allow read: if true; allow write: if isAdmin(); }
     }
+    match /advanced_offers/{id} { 
+      allow read: if true; 
+      allow write: if isAdmin(); 
+    }
     
     // UI & Layout
     match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
     match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    // Backwards compatibility for quick_actions
     match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
     match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
     match /payment_methods/{id} { allow read: if true; allow write: if isAdmin(); }
@@ -155,6 +158,11 @@ service cloud.firestore {
     match /employee_profiles/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /staff_availability/{id} { allow read: if true; allow write: if isSignedIn() && (request.auth.uid == id || isAdmin()); }
     match /staff_earnings/{id} { allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid); allow write: if isAdmin(); }
+    match /expense_claims/{id} { 
+      allow create: if isSignedIn(); 
+      allow read: if isAdmin() || (isSignedIn() && resource.data.staffId == request.auth.uid);
+      allow write: if isAdmin();
+    }
     
     match /invoices/{id} { allow read: if true; allow write: if isAdmin(); }
     match /invoiceRequests/{id} { allow create: if isSignedIn(); allow read, write: if isAdmin(); }
@@ -165,5 +173,10 @@ service cloud.firestore {
     match /users/{uid} { allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin()); }
     
     match /couriers/{id} { allow read, write: if isAdmin(); }
+    match /referrals/{id} { 
+      allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
   }
 }
