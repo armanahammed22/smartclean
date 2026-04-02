@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -29,7 +28,7 @@ import {
   X
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -110,7 +109,7 @@ export default function EmployeesPage() {
 
   const toggleSkill = (serviceId: string) => {
     setSelectedSkills(prev => 
-      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, id]
     );
   };
 
