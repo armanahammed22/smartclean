@@ -67,18 +67,17 @@ export default function BottomNavManagementPage() {
   const [isOfferSubmitting, setIsOfferSubmitting] = useState(false);
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
 
-  // Offers Data (Circular rotating items)
   const offersQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'offers'), orderBy('order', 'asc')) : null, [db]);
   const { data: offers, isLoading: offersLoading } = useCollection(offersQuery);
 
-  // Bottom Nav General Settings
   const configRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'bottom_nav') : null, [db]);
   const { data: config, isLoading: configLoading } = useDoc(configRef);
 
-  // Global settings for logic context
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  const productsEnabled = settings?.productsEnabled !== false;
 
   const [formData, setFormData] = useState<any>({
     bgColor: '#ffffff',
@@ -186,7 +185,7 @@ export default function BottomNavManagementPage() {
         <div className="space-y-1">
           <h4 className="text-sm font-black uppercase text-blue-900">Automatic Logic Active</h4>
           <p className="text-xs text-blue-800/70 leading-relaxed">
-            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings &gt; Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
+            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings {'>'} Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
           </p>
         </div>
       </div>

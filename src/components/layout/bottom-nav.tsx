@@ -72,7 +72,6 @@ export function BottomNav() {
   const { data: settings } = useDoc(settingsRef);
   
   const productsEnabled = settings?.productsEnabled !== false;
-  const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
     if (offers.length <= 1) return;
@@ -136,14 +135,13 @@ export function BottomNav() {
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 z-[150] h-[70px] md:h-[80px] w-full flex items-center px-2 pb-safe shadow-[0_-15px_50px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-3xl border-t border-gray-100"
-      style={{ backgroundColor: `${bgColor}f2` }} // slight transparency
+      style={{ backgroundColor: `${bgColor}f2` }}
     >
       <div className="relative flex w-full max-w-5xl mx-auto items-center z-10 px-1">
         {NAV_ITEMS.map((item: any, idx: number) => {
           const isActive = (item.href && item.href !== '#' && pathname === item.href) || (item.isMessage && isSupportOpen);
           const Icon = item.icon;
 
-          // Standard Nav Button
           const NavButton = (
             <div className="flex flex-col items-center gap-1 transition-all duration-300">
               <div 
@@ -174,7 +172,6 @@ export function BottomNav() {
 
           return (
             <React.Fragment key={idx}>
-              {/* Insert Offer Circle in the middle */}
               {showOffer && idx === Math.floor(NAV_ITEMS.length / 2) && (
                 <div className="relative -mt-10 md:-mt-12 px-1 group animate-in slide-in-from-bottom-4 duration-700">
                   <Link href={offers[currentOffer]?.link || "/#offers"} className="flex flex-col items-center gap-1">

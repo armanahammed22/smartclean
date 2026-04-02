@@ -12,7 +12,8 @@ import {
   Loader2,
   Wrench,
   User,
-  Zap
+  Zap,
+  MessageCircle
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Input } from '@/components/ui/input';
@@ -137,7 +138,7 @@ export function Navbar() {
             </Link>
           )}
           
-          {/* 🛡️ CONDITIONALLY RENDER CART */}
+          {/* 🛡️ CONDITIONALLY RENDER CART (Only if Products Enabled) */}
           {productsEnabled && (
             <Link href="/cart" className="relative p-2.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm text-gray-600 hover:text-primary active:scale-90">
               <ShoppingCart size={22} />
