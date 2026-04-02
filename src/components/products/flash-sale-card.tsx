@@ -1,8 +1,9 @@
+
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Zap } from 'lucide-react';
+import { Star, Zap, Clock } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -16,6 +17,7 @@ interface FlashSaleCardProps {
 
 export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
   const { t } = useLanguage();
+  
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
@@ -65,10 +67,18 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               </Badge>
             )}
             {product.badgeText && (
-              <Badge className="bg-amber-50 text-white border-none text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg">
+              <Badge className={cn(
+                "border-none text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg",
+                product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-amber-500 text-white"
+              )}>
                 {product.badgeText}
               </Badge>
             )}
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 bg-[#f85606]/90 backdrop-blur-sm p-1 flex items-center justify-center gap-1.5">
+            <Clock size={10} className="text-white animate-spin" />
+            <span className="text-[8px] font-black text-white uppercase tracking-widest">Limited Stock</span>
           </div>
         </div>
 
@@ -87,7 +97,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               <p className={cn(
                 "font-black text-[#f85606] tracking-tighter leading-none",
                 customStyle?.priceSize || 'text-base md:text-lg'
-              )} style={{ color: customStyle?.priceColor }}>
+              )} style={{ color: customStyle?.priceColor || '#f85606' }}>
                 ৳{product.price.toLocaleString()}
               </p>
               {product.regularPrice && product.regularPrice > product.price && (
@@ -117,7 +127,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
                 size={customStyle?.btnSize || 'sm'}
                 className={cn(
                   "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                  btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
+                  btnAlign === 'full' ? "w-full" : "w-fit px-4"
                 )}
                 style={{ 
                   backgroundColor: customStyle?.btnBg || '#f85606', 

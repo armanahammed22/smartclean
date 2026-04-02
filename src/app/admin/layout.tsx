@@ -71,7 +71,8 @@ import {
   ShieldAlert,
   Package,
   Clock,
-  CircleEllipsis
+  CircleEllipsis,
+  Gift
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -160,7 +161,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     finance: true,
     inventory: true,
     services: true,
-    customize: true
+    customize: true,
+    offers: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -281,6 +283,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: TicketPercent,
         color: "text-orange-400",
         items: [
+          { name: "Advanced Offers", href: '/admin/offers/advanced', icon: Gift },
           { name: "Coupons", href: '/admin/offers/coupons', icon: TicketPercent },
           { name: "Flash Sales", href: '/admin/offers/flash-sales', icon: Zap },
           { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },

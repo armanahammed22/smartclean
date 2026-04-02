@@ -520,9 +520,9 @@ export default function ProductDetailsPage() {
         </div>
 
         {!isCheckoutOpen && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col min-w-[80px]">
-              <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Sale Price</span>
+              <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Total Price</span>
               <span className="text-xl font-black text-[#f85606] tracking-tighter leading-none">৳{(product.price * quantity).toLocaleString()}</span>
             </div>
             

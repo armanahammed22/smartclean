@@ -1,11 +1,12 @@
+
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { CartItem, Product, Service } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
 import { trackEvent } from '@/lib/tracking';
-import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc, useUser } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 
 interface CartContextType {
@@ -17,6 +18,7 @@ interface CartContextType {
   itemCount: number;
   subtotal: number;
   smartSubtotal: number;
+  savingsTotal: number;
   isCheckoutOpen: boolean;
   setCheckoutOpen: (open: boolean) => void;
 }
@@ -28,20 +30,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { user } = useUser();
   const db = useFirestore();
 
   // 🛡️ Global Feature Check
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Smart Pricing Logic
+  // 🚀 Fetch Advanced Offers
+  const advancedOffersQuery = useMemoFirebase(() => db ? query(collection(db, 'advanced_offers'), where('isActive', '==', true)) : null, [db]);
+  const { data: advancedOffers } = useCollection(advancedOffersQuery);
+
+  // Smart Pricing Logic (Weekend/Off-peak)
   const rulesQuery = useMemoFirebase(() => db ? query(collection(db, 'smart_pricing_rules'), where('isActive', '==', true)) : null, [db]);
   const { data: activeRules } = useCollection(rulesQuery);
 
   const smartDiscount = useMemo(() => {
     if (!activeRules?.length) return 0;
     const now = new Date();
-    const day = now.getDay(); // 5 = Fri, 6 = Sat
+    const day = now.getDay(); 
     const hour = now.getHours();
 
     let discount = 0;
@@ -64,18 +71,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const isService = 'basePrice' in item;
     const itemType = isService ? 'service' : 'product';
     
-    // 🛡️ Block disabled features
     if (itemType === 'product' && settings?.productsEnabled === false) {
-      toast({ variant: "destructive", title: "Action Blocked", description: "Product sales are currently offline. Please contact support." });
+      toast({ variant: "destructive", title: "Action Blocked", description: "Product sales are currently offline." });
       return;
     }
     if (itemType === 'service' && settings?.servicesEnabled === false) {
-      toast({ variant: "destructive", title: "Action Blocked", description: "Service bookings are currently offline. Please try again later." });
+      toast({ variant: "destructive", title: "Action Blocked", description: "Service bookings are currently offline." });
       return;
     }
 
     const price = isService ? (item as Service).basePrice : (item as Product).price;
-    const regularPrice = isService ? undefined : (item as Product).regularPrice;
+    const regularPrice = isService ? (item as Service).regularPrice || (item as Service).basePrice : (item as Product).regularPrice;
     const name = isService ? (item as Service).title : (item as Product).name;
     const category = isService ? t('services_title') : (item as Product).category;
     const imageUrl = isService ? (item as Service).imageUrl || '' : (item as Product).imageUrl;
@@ -86,9 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         toast({
           variant: "destructive",
           title: "Incompatible Order",
-          description: existingType === 'product' 
-            ? "Your cart contains products. Please clear cart to book a service." 
-            : "Your cart contains services. Please clear cart to order products.",
+          description: existingType === 'product' ? "Clear cart to book a service." : "Clear cart to order products.",
         });
         return;
       }
@@ -123,10 +127,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
     
     if (showToast) {
-      toast({
-        title: t('cart_added'),
-        description: `${name} ${t('cart_desc')}`,
-      });
+      toast({ title: t('cart_added'), description: `${name} ${t('cart_desc')}` });
     }
   }, [toast, t, items, settings]);
 
@@ -151,8 +152,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
-  const smartSubtotal = subtotal * (1 - smartDiscount / 100);
+  const subtotalRaw = items.reduce((total, item) => total + item.price * item.quantity, 0);
+
+  // 🎁 ADVANCED ENGINE LOGIC
+  const advancedCalculations = useMemo(() => {
+    let currentSubtotal = subtotalRaw;
+    let extraSavings = 0;
+
+    if (!advancedOffers) return { finalSubtotal: currentSubtotal * (1 - smartDiscount / 100), savings: 0 };
+
+    // 1. Min Order Value Logic
+    const minOrderOffer = advancedOffers.find(o => o.type === 'min_order' && currentSubtotal >= (o.rules?.minSpend || 0));
+    if (minOrderOffer) {
+      const discount = minOrderOffer.rules.discountType === 'percentage' 
+        ? (currentSubtotal * minOrderOffer.rules.discountValue) / 100
+        : minOrderOffer.rules.discountValue;
+      extraSavings += discount;
+    }
+
+    // 2. Buy X Get Y logic (Simple implementation for same product)
+    items.forEach(item => {
+      const bogoOffer = advancedOffers.find(o => o.type === 'buy_x_get_y' && (o.rules?.buyQty || 1) <= item.quantity);
+      if (bogoOffer) {
+        const freeSets = Math.floor(item.quantity / (bogoOffer.rules.buyQty + bogoOffer.rules.getQty));
+        if (freeSets > 0) {
+          extraSavings += (item.price * freeSets * bogoOffer.rules.getQty);
+        }
+      }
+    });
+
+    const smartApplied = currentSubtotal * (1 - smartDiscount / 100);
+    return { 
+      finalSubtotal: Math.max(0, smartApplied - extraSavings), 
+      savings: extraSavings 
+    };
+  }, [items, subtotalRaw, advancedOffers, smartDiscount]);
 
   return (
     <CartContext.Provider
@@ -163,8 +197,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         clearCart,
         itemCount,
-        subtotal,
-        smartSubtotal,
+        subtotal: subtotalRaw,
+        smartSubtotal: advancedCalculations.finalSubtotal,
+        savingsTotal: advancedCalculations.savings,
         isCheckoutOpen,
         setCheckoutOpen
       }}

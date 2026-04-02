@@ -92,13 +92,17 @@ export default function ServiceBookingPage() {
   const totalPrice = basePriceValue + addOnsTotal + platformFee;
 
   const discountPercent = useMemo(() => {
-    if (!baseService?.regularPrice || baseService.regularPrice <= baseService.basePrice) return null;
-    return Math.round(((baseService.regularPrice - baseService.basePrice) / baseService.regularPrice) * 100);
+    const regPrice = baseService?.regularPrice || baseService?.basePrice || 0;
+    const curPrice = baseService?.basePrice || 0;
+    if (regPrice <= curPrice) return null;
+    return Math.round(((regPrice - curPrice) / regPrice) * 100);
   }, [baseService]);
 
   const savings = useMemo(() => {
-    if (!baseService?.regularPrice || baseService.regularPrice <= baseService.basePrice) return 0;
-    return (baseService.regularPrice - baseService.basePrice) * mainQuantity;
+    const regPrice = baseService?.regularPrice || baseService?.basePrice || 0;
+    const curPrice = baseService?.basePrice || 0;
+    if (regPrice <= curPrice) return 0;
+    return (regPrice - curPrice) * mainQuantity;
   }, [baseService, mainQuantity]);
 
   const handleContinue = () => {
@@ -141,13 +145,13 @@ export default function ServiceBookingPage() {
       <div className="bg-[#F9FAFB] min-h-screen pb-24 lg:pb-12">
         
         <section className="container mx-auto px-0 md:px-4 py-0 md:py-4 max-w-7xl">
-          <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
+          <Card className="border-none shadow-2xl rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
               <div className="lg:col-span-5 p-2 md:p-4 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
                   {baseService.imageUrl ? (
-                    <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                    <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover" unoptimized />
                   ) : (
                     <Wrench size={80} className="text-gray-200" />
                   )}
@@ -199,10 +203,6 @@ export default function ServiceBookingPage() {
                         <Clock size={12} />
                         <span className="text-[9px] font-black uppercase">{baseService.duration || 'Flex'}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50/50 px-2 py-1 rounded-lg shrink-0">
-                        <Users size={12} />
-                        <span className="text-[9px] font-black uppercase">{baseService.teamSize || 'Pro'}</span>
-                      </div>
                     </div>
                   </div>
 
@@ -248,7 +248,7 @@ export default function ServiceBookingPage() {
                     <Button 
                       onClick={handleContinue} 
                       disabled={baseService.isBookingEnabled === false}
-                      className="hidden md:flex w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 gap-3 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white"
+                      className="hidden md:flex w-full h-14 rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 gap-3 bg-primary hover:bg-primary/90 text-white"
                     >
                       {baseService.bookingButtonText || 'Confirm Booking'} <ArrowRight size={18} />
                     </Button>
@@ -270,13 +270,7 @@ export default function ServiceBookingPage() {
                     {addOnOptions?.length ? addOnOptions.map((addon) => {
                       const qty = addOnsQty[addon.id] || 0;
                       return (
-                        <div 
-                          key={addon.id}
-                          className={cn(
-                            "p-2.5 rounded-xl border transition-all flex items-center justify-between bg-white group hover:shadow-md",
-                            qty > 0 ? "border-primary ring-1 ring-primary/10 bg-primary/5" : "border-gray-100"
-                          )}
-                        >
+                        <div key={addon.id} className={cn("p-2.5 rounded-xl border transition-all flex items-center justify-between bg-white group hover:shadow-md", qty > 0 ? "border-primary ring-1 ring-primary/10 bg-primary/5" : "border-gray-100")}>
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-gray-100 shrink-0 bg-gray-50">
                               {addon.imageUrl ? <Image src={addon.imageUrl} alt="+" fill className="object-cover" unoptimized /> : <Plus size={14} className="m-auto text-gray-300" />}
@@ -307,17 +301,13 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        {mounted && !isCheckoutOpen && (
+        {!isCheckoutOpen && (
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Final Amount</span>
               <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
             </div>
-            <Button 
-              onClick={handleContinue} 
-              disabled={baseService.isBookingEnabled === false} 
-              className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95"
-            >
+            <Button onClick={handleContinue} disabled={baseService.isBookingEnabled === false} className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20">
               {baseService.bookingButtonText || 'Confirm Booking'}
             </Button>
           </div>

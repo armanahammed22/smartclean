@@ -1,13 +1,15 @@
+
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Zap, Package } from 'lucide-react';
+import { Star, Zap, Package, Clock } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +19,12 @@ interface ProductCardProps {
 
 export function ProductCard({ product, isDark = false, customStyle }: ProductCardProps) {
   const { t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const discountPercent = product.regularPrice && product.regularPrice > product.price
     ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
     : null;
@@ -42,7 +50,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         )}
         style={cardStyle}
       >
-        {/* Image Area */}
         <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
           {product.imageUrl ? (
             <Image
@@ -58,22 +65,31 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </div>
           )}
           
-          {/* Top Left Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {discountPercent && (
-              <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+              <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-lg">
                 {discountPercent}% OFF
               </Badge>
             )}
             {product.badgeText && (
-              <Badge className="bg-amber-500 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+              <Badge className={cn(
+                "border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-lg",
+                product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-amber-500 text-white"
+              )}>
                 {product.badgeText}
               </Badge>
             )}
           </div>
+
+          {/* Flash Deal Timer Stub (If active) */}
+          {product.onSale && (
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-1.5 flex items-center justify-center gap-2">
+              <Clock size={10} className="text-primary animate-spin" />
+              <span className="text-[8px] font-black text-white uppercase tracking-widest">Ending Soon</span>
+            </div>
+          )}
         </div>
 
-        {/* Content Area */}
         <div className="p-3 md:p-4 flex flex-col flex-1">
           <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
             <h3 className={cn(
@@ -86,13 +102,12 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           </div>
           
           <div className="mt-auto space-y-2">
-            {/* Price Row */}
             <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
                 "font-black tracking-tighter leading-none",
                 customStyle?.priceSize || 'text-base md:text-lg',
                 isDark ? "text-amber-400" : "text-primary"
-              )} style={{ color: customStyle?.priceColor }}>
+              )} style={{ color: customStyle?.priceColor || '#1E5F7A' }}>
                 ৳{product.price.toLocaleString()}
               </p>
               {product.regularPrice && product.regularPrice > product.price && (
@@ -102,7 +117,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               )}
             </div>
             
-            {/* Rating & Count Row */}
             <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
               <div className="flex items-center gap-1 text-amber-500">
                 <Star size={12} fill="currentColor" />
@@ -111,7 +125,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               <span className="uppercase text-gray-400 font-black">{soldCount} {t('sold')}</span>
             </div>
 
-            {/* Action Button */}
             <div className={cn(
               "flex w-full pt-1",
               btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
@@ -120,7 +133,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
                 size={customStyle?.btnSize || 'sm'}
                 className={cn(
                   "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                  btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
+                  btnAlign === 'full' ? "w-full" : "w-fit px-4"
                 )}
                 style={{ 
                   backgroundColor: customStyle?.btnBg || '#1E5F7A', 
