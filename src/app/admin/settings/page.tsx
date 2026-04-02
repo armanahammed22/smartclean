@@ -43,7 +43,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-// Strict Default Order ID Mapping (Updated for Reorganization)
+// Strict Default Order ID Mapping (18 Modules as requested)
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
@@ -53,9 +53,8 @@ const DEFAULT_MENU_KEYS = [
   'marketing', 
   'offers',
   'seo',
-  'customer_hub',
   'hrm',
-  'users_roles',
+  'customer_hub',
   'partners',
   'vendors',
   'finance',
@@ -70,14 +69,13 @@ const MENU_LABELS: Record<string, string> = {
   dashboard_link: "Dashboard",
   sales: "Sales Terminal",
   orders: "Order & Booking",
-  inventory: "INVENTORY",
+  inventory: "Inventory",
   services: "SERVICES",
   marketing: "MARKETING & PROMOTIONS",
   offers: "OFFER & CAMPAIGN",
   seo: "SEO & TRACKING",
-  customer_hub: "Customer Hub",
   hrm: "HRM",
-  users_roles: "Users & Roles",
+  customer_hub: "Customer Hub",
   partners: "B2B PARTNERS",
   vendors: "VENDOR HUB",
   finance: "FINANCIAL HUB",

@@ -106,29 +106,26 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
 
-const MENU_LABELS: Record<string, string> = {
-  dashboard_link: "Dashboard",
-  sales: "Sales Terminal",
-  orders: "Order & Booking",
-  inventory: "INVENTORY",
-  services: "SERVICES",
-  marketing: "MARKETING & PROMOTIONS",
-  offers: "OFFER & CAMPAIGN",
-  seo: "SEO & TRACKING",
-  customer_hub: "Customer Hub",
-  hrm: "HRM",
-  users_roles: "Users & Roles",
-  partners: "B2B PARTNERS",
-  vendors: "VENDOR HUB",
-  finance: "FINANCIAL HUB",
-  reports: "BUSINESS REPORT",
-  customize: "SITE CUSTOMIZE",
-  system: "SETTINGS",
-  ai_agents: "AI AGENTS (STAFF)",
-  support: "SUPPORT"
-};
-
-const DEFAULT_MENU_KEYS = Object.keys(MENU_LABELS);
+const DEFAULT_MENU_KEYS = [
+  'dashboard_link', 
+  'sales', 
+  'orders', 
+  'inventory',
+  'services', 
+  'marketing', 
+  'offers',
+  'seo',
+  'hrm',
+  'customer_hub',
+  'partners',
+  'vendors',
+  'finance',
+  'reports',
+  'customize', 
+  'system',
+  'ai_agents',
+  'support'
+];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -138,7 +135,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     sales: true, 
     orders: true, 
     hrm: true,
-    finance: true
+    finance: true,
+    inventory: true,
+    services: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -192,13 +191,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {
         id: 'sales',
         title: "Sales Terminal",
-        icon: ShoppingCart,
+        icon: Zap,
         color: "text-rose-400",
         items: [
           { name: "New Order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
           { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
           { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
-        ]
+        ].filter(i => i.visible !== false)
       },
       {
         id: 'orders',
@@ -210,11 +209,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
           { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
           { name: "Logistics", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
-        ]
+        ].filter(i => i.visible !== false)
       },
       {
         id: 'inventory',
-        title: "INVENTORY",
+        title: "Inventory",
         icon: Box,
         color: "text-slate-400",
         visible: productsEnabled,
@@ -234,23 +233,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
-          { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
-        ]
-      },
-      {
-        id: 'hrm',
-        title: "HRM",
-        icon: HardHat,
-        color: "text-amber-400",
-        items: [
-          { name: "Staff Directory", href: '/admin/employees', icon: Users },
-          { name: "Attendance Logs", href: '/admin/hrm/attendance', icon: Clock },
-          { name: "Payroll & Models", href: '/admin/hrm/payroll', icon: DollarSign },
-          { name: "Leave Requests", href: '/admin/hrm/leaves', icon: Calendar },
-          { name: "Expense Claims", href: '/admin/hrm/expenses', icon: Wallet },
         ]
       },
       {
@@ -264,6 +250,79 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
           { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
+        ].filter(i => i.visible !== false)
+      },
+      {
+        id: 'offers',
+        title: "OFFER & CAMPAIGN",
+        icon: TicketPercent,
+        color: "text-orange-400",
+        items: [
+          { name: "Coupons", href: '/admin/offers/coupons', icon: TicketPercent },
+          { name: "Flash Sales", href: '/admin/offers/flash-sales', icon: Zap },
+          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
+          { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+        ]
+      },
+      {
+        id: 'seo',
+        title: "SEO & TRACKING",
+        icon: Globe,
+        color: "text-blue-400",
+        items: [
+          { name: "SEO Settings", href: '/admin/seo/settings', icon: Globe },
+          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
+          { name: "Facebook Pixel", href: '/admin/seo/pixel', icon: Code },
+          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
+          { name: "Tracking Logs", href: '/admin/seo/logs', icon: History },
+          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
+          { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Code },
+        ]
+      },
+      {
+        id: 'hrm',
+        title: "HRM",
+        icon: HardHat,
+        color: "text-amber-400",
+        items: [
+          { name: "Staff Directory", href: '/admin/employees', icon: Users },
+          { name: "Attendance Logs", href: '/admin/hrm/attendance', icon: Clock },
+          { name: "Payroll & Models", href: '/admin/hrm/payroll', icon: DollarSign },
+          { name: "Leave Requests", href: '/admin/hrm/leaves', icon: Calendar },
+          { name: "Expense Claims", href: '/admin/hrm/expenses', icon: Wallet },
+          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+        ]
+      },
+      {
+        id: 'customer_hub',
+        title: "Customer Hub",
+        icon: Users,
+        color: "text-emerald-400",
+        items: [
+          { name: "Customer Directory", href: '/admin/customers', icon: UserCheck },
+        ]
+      },
+      {
+        id: 'partners',
+        title: "B2B PARTNERS",
+        icon: Handshake,
+        color: "text-blue-400",
+        items: [
+          { name: "Partner Registry", href: '/admin/partners', icon: Building2 },
+          { name: "Partner Projects", href: '/admin/partners/projects', icon: Briefcase },
+          { name: "Commission Ledger", href: '/admin/partners/commissions', icon: Wallet },
+        ]
+      },
+      {
+        id: 'vendors',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-amber-400",
+        items: [
+          { name: "All Vendors", href: '/admin/vendors', icon: Store },
+          { name: "Pending Approvals", href: '/admin/vendors/verifications', icon: AlertCircle },
+          { name: "Vendor Commissions", href: '/admin/vendors/commissions', icon: Wallet },
         ]
       },
       {
@@ -276,6 +335,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
           { name: "Bank & Cash", href: '/admin/finance/accounts', icon: Building2 },
           { name: "Staff Salaries", href: '/admin/finance/salaries', icon: DollarSign },
+          { name: "Project Costing", href: '/admin/finance/projects', icon: Target },
+        ]
+      },
+      {
+        id: 'reports',
+        title: "BUSINESS REPORT",
+        icon: BarChart3,
+        color: "text-indigo-400",
+        items: [
+          { name: "Financial Report", href: '/admin/reports', icon: FileText },
+          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
+          { name: "Offers Analytics", href: '/admin/offers/analytics', icon: Activity },
         ]
       },
       {
@@ -286,15 +357,61 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
+        ]
+      },
+      {
+        id: 'system',
+        title: "SETTINGS",
+        icon: Settings,
+        color: "text-slate-400",
+        items: [
+          { name: "Global Settings", href: '/admin/settings', icon: Settings },
+          { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
+          { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
+          { name: "Localization", href: '/admin/settings/languages', icon: Languages },
+          { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
+        ]
+      },
+      {
+        id: 'ai_agents',
+        title: "AI AGENTS (STAFF)",
+        icon: Bot,
+        color: "text-purple-400",
+        items: [
+          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
+          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Zap },
+        ]
+      },
+      {
+        id: 'support',
+        title: "SUPPORT",
+        icon: Headphones,
+        color: "text-pink-400",
+        items: [
+          { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
+          { name: "Support Hub Config", href: '/admin/support-hub', icon: Headphones },
         ]
       }
     ];
 
-    return groups.filter(g => g.items.length > 0 || g.href);
-  }, [productsEnabled, servicesEnabled]);
+    const sidebarOrder = sidebarConfig?.order || DEFAULT_MENU_KEYS;
+    const visibility = sidebarConfig?.visibility || {};
+
+    return groups
+      .filter(g => {
+        // Core shift-up logic: Hide if group explicitly disabled or if products/services disabled
+        if (g.visible === false) return false;
+        if (visibility[g.id] === false) return false;
+        return g.items.length > 0 || g.href;
+      })
+      .sort((a, b) => {
+        const indexA = sidebarOrder.indexOf(a.id);
+        const indexB = sidebarOrder.indexOf(b.id);
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      });
+  }, [productsEnabled, servicesEnabled, sidebarConfig]);
 
   const handleLogout = async () => {
     if (auth) {
