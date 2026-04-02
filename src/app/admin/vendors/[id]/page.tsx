@@ -31,7 +31,9 @@ import {
   Building2,
   Trash2,
   Edit,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -41,6 +43,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function VendorDetailPage() {
   const { id } = useParams();
@@ -466,7 +469,7 @@ export default function VendorDetailPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
