@@ -57,7 +57,6 @@ export default function ProductDetailsPage() {
     setMounted(true);
   }, []);
 
-  // 🛡️ Slug-based lookup with fallback to ID
   const productQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'products'), where('slug', '==', slugOrId), limit(1));
@@ -101,6 +100,11 @@ export default function ProductDetailsPage() {
     return Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100);
   }, [product]);
 
+  const savings = useMemo(() => {
+    if (!product?.regularPrice || product.regularPrice <= product.price) return 0;
+    return product.regularPrice - product.price;
+  }, [product]);
+
   useEffect(() => {
     if (product) {
       trackEvent('ViewContent', {
@@ -111,7 +115,6 @@ export default function ProductDetailsPage() {
         currency: 'BDT',
         content_category: product.categoryId
       });
-      // Set SEO Title Dynamically
       document.title = `${product.name} - Buy at Best Price in Bangladesh | Smart Clean`;
     }
   }, [product]);
@@ -144,7 +147,6 @@ export default function ProductDetailsPage() {
   return (
     <PublicLayout minimalMobile={true}>
       <div className="bg-[#eff0f5] min-h-screen pb-24 lg:pb-12">
-        {/* SEO Structured Data for Product */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -176,7 +178,6 @@ export default function ProductDetailsPage() {
         />
 
         <div className="container mx-auto px-0 md:px-4 lg:py-6 max-w-7xl">
-          {/* Breadcrumbs for SEO */}
           <nav className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 px-2">
             <Link href="/" className="hover:text-primary">Home</Link>
             <ChevronRightIcon size={10} />
@@ -189,7 +190,6 @@ export default function ProductDetailsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
             
-            {/* COLUMN 1: Image & Gallery */}
             <div className="lg:col-span-4 space-y-3">
               <div className="bg-white relative lg:rounded-lg overflow-hidden lg:shadow-sm">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-white group">
@@ -208,14 +208,23 @@ export default function ProductDetailsPage() {
                     </div>
                   )}
 
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-[#f85606] text-white border-none rounded-sm px-2 py-0.5 text-[10px] font-black uppercase shadow-md">Premium</Badge>
+                  <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                    {discountPercent && (
+                      <Badge className="bg-red-600 text-white border-none rounded-sm px-2 py-1 text-[10px] font-black uppercase shadow-lg">
+                        {discountPercent}% OFF
+                      </Badge>
+                    )}
+                    {product.badgeText === 'HOT' && (
+                      <Badge className="bg-orange-500 text-white border-none rounded-sm px-2 py-1 text-[10px] font-black uppercase shadow-lg animate-pulse">
+                        HOT
+                      </Badge>
+                    )}
                   </div>
 
                   <button 
                     onClick={handleSpeak}
                     className={cn(
-                      "absolute bottom-4 left-4 p-3 rounded-full bg-white/90 shadow-lg border border-gray-100 transition-transform active:scale-90",
+                      "absolute bottom-4 left-4 p-3 rounded-full bg-white/90 shadow-lg border border-gray-100 transition-transform active:scale-90 z-10",
                       isSpeaking && "animate-pulse ring-2 ring-[#f85606]"
                     )}
                   >
@@ -242,7 +251,6 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
-            {/* COLUMN 2: Details */}
             <div className="lg:col-span-5 space-y-3">
               <div className="bg-white p-6 lg:rounded-lg lg:shadow-sm space-y-6">
                 <div className="space-y-2">
@@ -263,23 +271,29 @@ export default function ProductDetailsPage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-black text-[#f85606]">৳{product.price.toLocaleString()}</span>
+                <div className="pt-4 border-t border-gray-100 space-y-1">
+                  <div className="flex items-center gap-2">
+                    {product.regularPrice && product.regularPrice > product.price && (
+                      <span className="text-sm text-gray-400 line-through font-medium">৳{product.regularPrice.toLocaleString()}</span>
+                    )}
                     {discountPercent && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400 line-through">৳{product.regularPrice?.toLocaleString()}</span>
-                        <Badge className="bg-[#f85606]/10 text-[#f85606] border-none font-black text-[10px]">-{discountPercent}%</Badge>
-                      </div>
+                      <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                        {discountPercent}% OFF
+                      </Badge>
                     )}
                   </div>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-4xl font-black text-[#f85606]">৳{product.price.toLocaleString()}</span>
+                  </div>
+                  {savings > 0 && (
+                    <p className="text-xs font-bold text-green-600">আপনার সেভিং ৳{savings.toLocaleString()} টাকা</p>
+                  )}
                   <div className="mt-2 flex items-center gap-2 text-[#f85606] bg-[#fff1eb] px-3 py-1 rounded-md w-fit">
                     <TicketPercent size={14} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Extra ৳200 off with Voucher</span>
                   </div>
                 </div>
 
-                {/* Variants */}
                 {product.variants?.map((v: any, idx: number) => (
                   <div key={idx} className="space-y-3 pt-4 border-t border-gray-100">
                     <p className="text-[11px] font-black uppercase text-gray-400 tracking-widest">{v.name}</p>
@@ -332,7 +346,6 @@ export default function ProductDetailsPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: Delivery & Seller */}
             <div className="lg:col-span-3 space-y-3">
               <div className="bg-white p-5 lg:rounded-lg lg:shadow-sm space-y-6">
                 <div className="flex items-center justify-between">
@@ -506,7 +519,6 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        {/* 📱 Mobile Sticky Bottom Bar (Hides when Checkout Modal is open) */}
         {!isCheckoutOpen && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 flex items-center h-20 px-4 gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-offset-2">
             <div className="flex flex-col min-w-[80px]">

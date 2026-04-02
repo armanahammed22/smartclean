@@ -52,7 +52,6 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  // 1. Data Fetching
   const serviceQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
@@ -75,7 +74,6 @@ export default function ServiceBookingPage() {
   }, [db, targetId]);
   const { data: addOnOptions } = useCollection(addOnsQuery);
 
-  // 2. Pricing Logic
   const pricingLogic = baseService?.pricingType || 'fixed';
   const selectedSlab = (pricingLogic === 'sqft' && baseService?.sqftOptions) ? baseService.sqftOptions[parseInt(selectedSqftId)] : null;
   
@@ -92,6 +90,16 @@ export default function ServiceBookingPage() {
 
   const platformFee = 50;
   const totalPrice = basePriceValue + addOnsTotal + platformFee;
+
+  const discountPercent = useMemo(() => {
+    if (!baseService?.regularPrice || baseService.regularPrice <= baseService.basePrice) return null;
+    return Math.round(((baseService.regularPrice - baseService.basePrice) / baseService.regularPrice) * 100);
+  }, [baseService]);
+
+  const savings = useMemo(() => {
+    if (!baseService?.regularPrice || baseService.regularPrice <= baseService.basePrice) return 0;
+    return (baseService.regularPrice - baseService.basePrice) * mainQuantity;
+  }, [baseService, mainQuantity]);
 
   const handleContinue = () => {
     if (!baseService || baseService.isBookingEnabled === false) return;
@@ -136,7 +144,6 @@ export default function ServiceBookingPage() {
           <Card className="border-none shadow-2xl hover:shadow-[0_40px_120px_-20px_rgba(0,0,0,0.15)] transition-shadow duration-700 rounded-none md:rounded-[3rem] overflow-hidden bg-white relative z-10 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
               
-              {/* Left Column: Media (5 Columns) */}
               <div className="lg:col-span-5 p-2 md:p-4 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col gap-4">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
                   {baseService.imageUrl ? (
@@ -144,8 +151,17 @@ export default function ServiceBookingPage() {
                   ) : (
                     <Wrench size={80} className="text-gray-200" />
                   )}
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-primary text-white border-none text-[8px] font-black uppercase px-3 py-1 rounded-sm shadow-2xl">Premium Selection</Badge>
+                  <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                    {discountPercent && (
+                      <Badge className="bg-red-600 text-white border-none rounded-sm px-2 py-1 text-[10px] font-black uppercase shadow-lg">
+                        {discountPercent}% OFF
+                      </Badge>
+                    )}
+                    {baseService.badgeText === 'HOT' && (
+                      <Badge className="bg-orange-500 text-white border-none rounded-sm px-2 py-1 text-[10px] font-black uppercase shadow-lg animate-pulse">
+                        HOT
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -167,7 +183,6 @@ export default function ServiceBookingPage() {
                 )}
               </div>
 
-              {/* Middle Column: Booking Info (3 Columns) */}
               <div className="lg:col-span-3 p-4 md:p-6 flex flex-col gap-6 bg-white relative z-20">
                 <div className="space-y-4">
                   <div className="space-y-3">
@@ -192,31 +207,41 @@ export default function ServiceBookingPage() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
-                      <div className="text-left flex-1">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Price</p>
-                        <span className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
-                      </div>
-                      
-                      <div className="flex items-center shrink-0">
-                        {pricingLogic === 'sqft' && baseService.sqftOptions?.length ? (
-                          <Select value={selectedSqftId} onValueChange={setSelectedSqftId}>
-                            <SelectTrigger className="h-10 w-28 bg-white border-2 border-gray-100 rounded-xl text-[9px] font-black uppercase">
-                              <SelectValue placeholder="Size" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {baseService.sqftOptions.map((opt: any, idx: number) => (
-                                <SelectItem key={idx} value={idx.toString()} className="text-[10px] font-black uppercase">{opt.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <div className="flex items-center bg-white rounded-xl overflow-hidden h-10 border-2 border-gray-100 shadow-sm">
-                            <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Minus size={12} /></button>
-                            <span className="px-3 font-black text-sm text-[#081621] min-w-[30px] text-center">{mainQuantity}</span>
-                            <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Plus size={12} /></button>
+                    <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="text-left flex-1">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Pricing Options</p>
+                          <div className="flex items-center gap-2">
+                            {baseService.regularPrice && baseService.regularPrice > baseService.basePrice && (
+                              <span className="text-xs text-gray-400 line-through font-medium">৳{(baseService.regularPrice * mainQuantity).toLocaleString()}</span>
+                            )}
+                            <span className="text-xl md:text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
                           </div>
-                        )}
+                          {savings > 0 && (
+                            <p className="text-[9px] font-bold text-green-600 mt-1 uppercase">আপনার সেভিং ৳{savings.toLocaleString()} টাকা</p>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center shrink-0">
+                          {pricingLogic === 'sqft' && baseService.sqftOptions?.length ? (
+                            <Select value={selectedSqftId} onValueChange={setSelectedSqftId}>
+                              <SelectTrigger className="h-10 w-28 bg-white border-2 border-gray-100 rounded-xl text-[9px] font-black uppercase">
+                                <SelectValue placeholder="Size" />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {baseService.sqftOptions.map((opt: any, idx: number) => (
+                                  <SelectItem key={idx} value={idx.toString()} className="text-[10px] font-black uppercase">{opt.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <div className="flex items-center bg-white rounded-xl overflow-hidden h-10 border-2 border-gray-100 shadow-sm">
+                              <button onClick={() => setMainQuantity(Math.max(1, mainQuantity - 1))} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Minus size={12} /></button>
+                              <span className="px-3 font-black text-sm text-[#081621] min-w-[30px] text-center">{mainQuantity}</span>
+                              <button onClick={() => setMainQuantity(mainQuantity + 1)} className="px-3 h-full hover:bg-gray-50 text-gray-400"><Plus size={12} /></button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -231,7 +256,6 @@ export default function ServiceBookingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Add-ons (4 Columns) */}
               <div className="lg:col-span-4 p-4 md:p-6 bg-gray-50/30 flex flex-col gap-4">
                 <div className="space-y-4">
                   <div className="border-b border-gray-200 pb-3 flex justify-between items-center">
@@ -283,7 +307,6 @@ export default function ServiceBookingPage() {
           </Card>
         </section>
 
-        {/* Mobile Sticky CTA Bar - Hidden when Checkout is Open */}
         {mounted && !isCheckoutOpen && (
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col">
