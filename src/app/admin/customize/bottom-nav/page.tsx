@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Trash2, 
@@ -25,13 +25,26 @@ import {
   MousePointer2,
   X,
   PlusCircle,
-  List
+  List,
+  Home,
+  MessageCircle,
+  ShoppingCart,
+  User,
+  Grid
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const ICONS: Record<string, any> = {
+  Home,
+  MessageCircle,
+  ShoppingCart,
+  User,
+  Grid
+};
 
 const DEFAULT_LINKS = [
   { id: 'l1', label: 'হোম', icon: 'Home', link: '/', order: 0 },
@@ -136,7 +149,7 @@ export default function BottomNavManagementPage() {
   const addLink = () => {
     setFormData({ 
       ...formData, 
-      links: [...formData.links, { id: Math.random().toString(36).substr(2, 9), label: 'New Link', icon: 'Link', link: '#', order: formData.links.length }] 
+      links: [...formData.links, { id: Math.random().toString(36).substr(2, 9), label: 'New Link', icon: 'Grid', link: '#', order: formData.links.length }] 
     });
   };
 
