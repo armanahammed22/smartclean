@@ -37,7 +37,9 @@ import {
   Navigation,
   MoveVertical,
   AlignJustify,
-  Maximize2
+  Maximize2,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -115,13 +117,12 @@ export default function HomepageBuilderPage() {
     }
   };
 
-  const saveGlobalTheme = async (newData: any) => {
+  const updateGlobalTheme = async (newData: any) => {
     if (!db) return;
     try {
       await setDoc(doc(db, 'site_settings', 'homepage_theme'), newData, { merge: true });
-      toast({ title: "Master Styles Updated" });
     } catch (e) {
-      toast({ variant: "destructive", title: "Theme Update Failed" });
+      console.error('Theme sync failed', e);
     }
   };
 
@@ -248,90 +249,198 @@ export default function HomepageBuilderPage() {
         </TabsContent>
 
         <TabsContent value="master" className="mt-0">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-[#081621] text-white p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary rounded-xl"><Palette size={24} /></div>
-                  <div>
-                    <CardTitle className="text-xl font-black uppercase tracking-widest leading-none">Global Master Styles</CardTitle>
-                    <CardDescription className="text-white/40 mt-1 uppercase font-bold text-[9px]">Universal controls for all homepage sections</CardDescription>
-                  </div>
-                </div>
-                <Button onClick={() => saveGlobalTheme(globalTheme)} className="w-full md:w-auto h-11 px-8 rounded-xl font-black bg-primary">Sync Global Theme</Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-12">
-              <div className="p-8 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-6">
-                <div className="p-4 bg-white rounded-2xl shadow-sm text-blue-600 shrink-0"><Info size={32} /></div>
-                <div className="space-y-2">
-                  <h4 className="text-lg font-black uppercase tracking-tight text-blue-900">Styling Priority</h4>
-                  <p className="text-sm text-blue-800/70 leading-relaxed font-medium">
-                    Master styles defined below are applied to all blocks that have **Inherit Master Theme** turned ON. This ensures a consistent look across your marketplace.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                  <Type size={14} /> Typography & Backgrounds
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Section BG</Label>
-                    <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { sectionBg: e.target.value }, { merge: true })} className="h-10 p-1" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Section Title Color</Label>
-                    <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleColor: e.target.value }, { merge: true })} className="h-10 p-1" />
-                  </div>
-                  <div className="space-y-4">
-                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Size Mobile <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleSizeMobile: val[0].toString() }, { merge: true })} />
-                  </div>
-                  <div className="space-y-4">
-                    <Label className="text-[9px] font-black uppercase flex items-center justify-between">Title Size Desktop <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
-                    <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { titleSizeDesktop: val[0].toString() }, { merge: true })} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                  <Maximize size={14} /> Card & Element Geometry
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Background</Label>
-                    <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardBg: e.target.value }, { merge: true })} className="h-10 p-1" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Radius (px)</Label>
-                    <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardRadius: e.target.value }, { merge: true })} className="h-10 bg-gray-50 border-none font-bold" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground">Shadow Depth</Label>
-                    <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { cardShadow: v }, { merge: true })}>
-                      <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="shadow-none">No Shadow</SelectItem>
-                        <SelectItem value="shadow-sm">Soft Lift</SelectItem>
-                        <SelectItem value="shadow-md">Medium Float</SelectItem>
-                        <SelectItem value="shadow-xl">Deep Premium</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase">General Alignment</Label>
-                    <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                      <button onClick={() => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { textAlign: 'left' }, { merge: true })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.textAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
-                      <button onClick={() => setDoc(doc(db!, 'site_settings', 'homepage_theme'), { textAlign: 'center' }, { merge: true })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.textAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8">
+              <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+                <CardHeader className="bg-[#081621] text-white p-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary rounded-xl"><Palette size={24} /></div>
+                    <div>
+                      <CardTitle className="text-xl font-black uppercase tracking-widest leading-none">Global Master Styles</CardTitle>
+                      <CardDescription className="text-white/40 mt-1 uppercase font-bold text-[9px]">Universal controls for all homepage sections</CardDescription>
                     </div>
                   </div>
+                </CardHeader>
+                <CardContent className="p-8 space-y-12">
+                  <div className="space-y-10">
+                    {/* Section & Card Geometry */}
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                        <Maximize size={14} /> Section & Card Geometry
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Section BG</Label>
+                          <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => updateGlobalTheme({ sectionBg: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card BG</Label>
+                          <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => updateGlobalTheme({ cardBg: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Radius (px)</Label>
+                          <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => updateGlobalTheme({ cardRadius: parseInt(e.target.value) || 0 })} className="h-10 bg-gray-50 border-none font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Shadow</Label>
+                          <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => updateGlobalTheme({ cardShadow: v })}>
+                            <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="shadow-none">None</SelectItem>
+                              <SelectItem value="shadow-sm">Small</SelectItem>
+                              <SelectItem value="shadow-md">Medium</SelectItem>
+                              <SelectItem value="shadow-xl">Deep</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section Titles */}
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                        <Type size={14} /> Section Titles
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Title Color</Label>
+                          <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => updateGlobalTheme({ titleColor: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Title Align</Label>
+                          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                            <button onClick={() => updateGlobalTheme({ textAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.textAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
+                            <button onClick={() => updateGlobalTheme({ textAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.textAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Smartphone size={10}/> Size (M) <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
+                          <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => updateGlobalTheme({ titleSizeMobile: val[0].toString() })} />
+                        </div>
+                        <div className="space-y-4">
+                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Monitor size={10}/> Size (D) <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
+                          <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => updateGlobalTheme({ titleSizeDesktop: val[0].toString() })} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Content Titles */}
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                        <Type size={14} /> Item Titles (Cards)
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Item Title Color</Label>
+                          <Input type="color" value={globalTheme?.itemTitleColor || '#081621'} onChange={e => updateGlobalTheme({ itemTitleColor: e.target.value })} className="h-10 p-1" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Item Align</Label>
+                          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                            <button onClick={() => updateGlobalTheme({ titleAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.titleAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
+                            <button onClick={() => updateGlobalTheme({ titleAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.titleAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
+                          </div>
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label className="text-[9px] font-black uppercase">Item Title Font Size</Label>
+                          <Select value={globalTheme?.titleSize || 'text-sm'} onValueChange={v => updateGlobalTheme({ titleSize: v })}>
+                            <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {['text-[10px]', 'text-[11px]', 'text-xs', 'text-sm', 'text-base'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Price Styling */}
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                        <Zap size={14} /> Price Labels
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Color</Label>
+                          <Input type="color" value={globalTheme?.priceColor || '#f85606'} onChange={e => updateGlobalTheme({ priceColor: e.target.value })} className="h-10 p-1" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Price Align</Label>
+                          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                            <button onClick={() => updateGlobalTheme({ priceAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.priceAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
+                            <button onClick={() => updateGlobalTheme({ priceAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.priceAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
+                          </div>
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <Label className="text-[9px] font-black uppercase">Price Font Size</Label>
+                          <Select value={globalTheme?.priceSize || 'text-lg'} onValueChange={v => updateGlobalTheme({ priceSize: v })}>
+                            <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-6">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
+                        <MousePointer2 size={14} /> Action Buttons
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Button BG</Label>
+                          <Input type="color" value={globalTheme?.btnBg || '#22C55E'} onChange={e => updateGlobalTheme({ btnBg: e.target.value })} className="h-10 p-1" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Text Color</Label>
+                          <Input type="color" value={globalTheme?.btnTextColor || '#ffffff'} onChange={e => updateGlobalTheme({ btnTextColor: e.target.value })} className="h-10 p-1" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Button Align</Label>
+                          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+                            <button onClick={() => updateGlobalTheme({ btnAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (globalTheme?.btnAlign || 'full') === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
+                            <button onClick={() => updateGlobalTheme({ btnAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", globalTheme?.btnAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
+                            <button onClick={() => updateGlobalTheme({ btnAlign: 'full' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (globalTheme?.btnAlign || 'full') === 'full' ? "bg-white text-primary" : "text-gray-400")}><AlignJustify size={14}/></button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Button Size</Label>
+                          <Select value={globalTheme?.btnSize || 'sm'} onValueChange={v => updateGlobalTheme({ btnSize: v })}>
+                            <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="sm">Small</SelectItem>
+                              <SelectItem value="default">Medium</SelectItem>
+                              <SelectItem value="lg">Large</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="border-none shadow-sm bg-blue-50/50 rounded-3xl p-8 border border-blue-100 sticky top-24">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
+                  <Info size={16} /> Theme Persistence
+                </CardTitle>
+                <div className="space-y-4">
+                  <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
+                    এই সেকশনের সকল পরিবর্তন রিয়েল-টাইমে সেভ হয়। আপনার ওয়েবসাইটের সকল কার্ড এখন এই মাস্টার স্টাইলগুলো ফলো করবে।
+                  </p>
+                  <div className="p-4 bg-white rounded-2xl border border-blue-100">
+                    <p className="text-[10px] font-black text-blue-900 uppercase mb-2">💡 Pro Tip</p>
+                    <p className="text-[10px] text-blue-700/70 leading-normal">
+                      যদি কোনো সেকশনে ভিন্ন ডিজাইন চান, তবে সেকশন সেটিংসে গিয়ে <strong>Inherit Master Theme</strong> অপশনটি অফ করে কাস্টম স্টাইল দিন।
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -411,7 +520,6 @@ export default function HomepageBuilderPage() {
                 {!editingSection?.styleConfig?.useGlobal && (
                   <div className="space-y-12 animate-in fade-in zoom-in-95 duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                      {/* Typography & Geometry Column */}
                       <div className="space-y-10">
                         <div className="space-y-6">
                           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Background & Layout</h4>
@@ -475,7 +583,6 @@ export default function HomepageBuilderPage() {
                         </div>
                       </div>
 
-                      {/* Pricing & Button Column */}
                       <div className="space-y-10">
                         <div className="space-y-6">
                           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Zap size={14}/> Price Styling</h4>
@@ -528,9 +635,9 @@ export default function HomepageBuilderPage() {
                             <div className="space-y-2">
                               <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Align</Label>
                               <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.btnAlign === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
+                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (editingSection?.styleConfig?.btnAlign || 'full') === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
                                 <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'center'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.btnAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'full'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.btnAlign === 'full' ? "bg-white text-primary" : "text-gray-400")}><AlignJustify size={14}/></button>
+                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'full'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (editingSection?.styleConfig?.btnAlign || 'full') === 'full' ? "bg-white text-primary" : "text-gray-400")}><AlignJustify size={14}/></button>
                               </div>
                             </div>
                           </div>
