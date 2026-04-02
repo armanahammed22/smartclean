@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, updateDoc, addDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { doc, collection, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,14 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { 
   ArrowLeft, 
   Save, 
@@ -57,13 +64,35 @@ export default function ServiceDetailedEditor() {
   const reviewsQuery = useMemoFirebase(() => (db && id) ? query(collection(db, 'services', id as string, 'reviews'), orderBy('createdAt', 'desc')) : null, [db, id]);
   const { data: reviews } = useCollection(reviewsQuery);
 
-  const [mainData, setMainData] = useState<any>({});
+  const [mainData, setMainData] = useState<any>({
+    title: '',
+    duration: '',
+    teamSize: '',
+    rating: 5.0,
+    description: '',
+    pricingType: 'fixed',
+    basePrice: 0,
+    sqftOptions: [],
+    included: [],
+    notIncluded: [],
+    features: [],
+    beforeAfterImages: [],
+    isBookingEnabled: true,
+    bookingButtonText: 'Book Now',
+    reviewsEnabled: true
+  });
 
   useEffect(() => {
     if (service) {
       setMainData({
         ...service,
+        title: service.title || '',
+        duration: service.duration || '',
+        teamSize: service.teamSize || '',
+        rating: service.rating || 5.0,
+        description: service.description || '',
         pricingType: service.pricingType || 'fixed',
+        basePrice: service.basePrice || 0,
         sqftOptions: service.sqftOptions || [],
         included: service.included || [],
         notIncluded: service.notIncluded || [],
@@ -155,7 +184,7 @@ export default function ServiceDetailedEditor() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase ml-1">Manual Rating Override</Label>
-                    <Input type="number" step="0.1" value={mainData.rating || 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value) || 5.0})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" step="0.1" value={mainData.rating ?? 5.0} onChange={e => setMainData({...mainData, rating: parseFloat(e.target.value) || 5.0})} className="h-12 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -178,7 +207,7 @@ export default function ServiceDetailedEditor() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-white/40">Button Text</Label>
-                  <Input value={mainData.bookingButtonText} onChange={e => setMainData({...mainData, bookingButtonText: e.target.value})} className="h-11 bg-white/10 border-none rounded-xl font-black uppercase tracking-tighter" />
+                  <Input value={mainData.bookingButtonText || ''} onChange={e => setMainData({...mainData, bookingButtonText: e.target.value})} className="h-11 bg-white/10 border-none rounded-xl font-black uppercase tracking-tighter" />
                 </div>
               </div>
             </Card>
@@ -256,14 +285,14 @@ export default function ServiceDetailedEditor() {
                   <div className="grid grid-cols-1 gap-3">
                     {mainData.sqftOptions.map((opt: any, i: number) => (
                       <div key={i} className="flex gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100 items-center">
-                        <Input placeholder="e.g. 500-1000 Sqft" value={opt.label} onChange={e => {
+                        <Input placeholder="e.g. 500-1000 Sqft" value={opt.label || ''} onChange={e => {
                           const list = [...mainData.sqftOptions];
                           list[i].label = e.target.value;
                           setMainData({...mainData, sqftOptions: list});
                         }} className="flex-1 bg-white" />
                         <div className="relative w-32">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-primary">৳</span>
-                          <Input type="number" placeholder="Price" value={opt.price} onChange={e => {
+                          <Input type="number" placeholder="Price" value={opt.price ?? ''} onChange={e => {
                             const list = [...mainData.sqftOptions];
                             list[i].price = parseFloat(e.target.value) || 0;
                             setMainData({...mainData, sqftOptions: list});
@@ -282,7 +311,7 @@ export default function ServiceDetailedEditor() {
                   <div className="flex items-center justify-center gap-4 max-w-sm mx-auto">
                     <div className="space-y-2 flex-1">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Standard Base Price (৳)</Label>
-                      <Input type="number" value={mainData.basePrice || 0} onChange={e => setMainData({...mainData, basePrice: parseFloat(e.target.value) || 0})} className="h-14 bg-white text-2xl font-black text-primary text-center rounded-2xl border-none shadow-xl" />
+                      <Input type="number" value={mainData.basePrice ?? 0} onChange={e => setMainData({...mainData, basePrice: parseFloat(e.target.value) || 0})} className="h-14 bg-white text-2xl font-black text-primary text-center rounded-2xl border-none shadow-xl" />
                     </div>
                   </div>
                 </div>
@@ -302,7 +331,7 @@ export default function ServiceDetailedEditor() {
               <div className="space-y-3">
                 {mainData.included?.map((item: string, i: number) => (
                   <div key={i} className="flex gap-2">
-                    <Input value={item} onChange={e => {
+                    <Input value={item || ''} onChange={e => {
                       const list = [...mainData.included];
                       list[i] = e.target.value;
                       setMainData({...mainData, included: list});
@@ -323,7 +352,7 @@ export default function ServiceDetailedEditor() {
               <div className="space-y-3">
                 {mainData.notIncluded?.map((item: string, i: number) => (
                   <div key={i} className="flex gap-2">
-                    <Input value={item} onChange={e => {
+                    <Input value={item || ''} onChange={e => {
                       const list = [...mainData.notIncluded];
                       list[i] = e.target.value;
                       setMainData({...mainData, notIncluded: list});
@@ -355,7 +384,7 @@ export default function ServiceDetailedEditor() {
                   <div className="flex gap-4">
                     <div className="space-y-2 flex-1">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Icon Keyword</Label>
-                      <Input value={f.icon} onChange={e => {
+                      <Input value={f.icon || ''} onChange={e => {
                         const list = [...mainData.features];
                         list[i].icon = e.target.value;
                         setMainData({...mainData, features: list});
@@ -363,7 +392,7 @@ export default function ServiceDetailedEditor() {
                     </div>
                     <div className="space-y-2 flex-[2]">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Title</Label>
-                      <Input value={f.title} onChange={e => {
+                      <Input value={f.title || ''} onChange={e => {
                         const list = [...mainData.features];
                         list[i].title = e.target.value;
                         setMainData({...mainData, features: list});
@@ -372,7 +401,7 @@ export default function ServiceDetailedEditor() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Summary</Label>
-                    <Input value={f.desc} onChange={e => {
+                    <Input value={f.desc || ''} onChange={e => {
                       const list = [...mainData.features];
                       list[i].desc = e.target.value;
                       setMainData({...mainData, features: list});
