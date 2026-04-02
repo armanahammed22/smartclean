@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -7,6 +6,7 @@ import { Star, Zap } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
+import { Button } from '@/components/ui/button';
 
 interface FlashSaleCardProps {
   product: Product;
@@ -26,9 +26,12 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
 
   const cardStyle = {
     backgroundColor: customStyle?.cardBg || '#ffffff',
-    borderRadius: `${customStyle?.cardRadius || 24}px`,
-    textAlign: (customStyle?.textAlign || 'left') as any
+    borderRadius: `${customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 24}px`,
   };
+
+  const titleAlign = customStyle?.titleAlign || 'left';
+  const priceAlign = customStyle?.priceAlign || 'left';
+  const btnAlign = customStyle?.btnAlign || 'full';
 
   return (
     <Link href={`/product/${product.slug || product.id}`} className="block h-full group active:scale-[0.97] transition-all">
@@ -64,32 +67,62 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
         </div>
 
         <div className="p-3 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
-          <h3 className="text-[11px] md:text-xs font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
+          <div className={cn("w-full", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+            <h3 className={cn(
+              "font-bold text-gray-800 uppercase tracking-tight line-clamp-1 leading-tight group-hover:text-primary transition-colors",
+              customStyle?.titleSize || 'text-[11px] md:text-xs'
+            )} style={{ color: customStyle?.titleColor }}>
+              {product.name}
+            </h3>
+          </div>
           
-          <div className="mt-auto pt-2">
-            <div className={cn("flex items-baseline gap-2 mb-1", customStyle?.textAlign === 'center' ? 'justify-center' : '')}>
-              <p className="text-base md:text-lg font-black text-primary tracking-tighter leading-none" style={{ color: customStyle?.priceColor || '#f85606' }}>
-                ৳{product.price.toLocaleString()}
-              </p>
-              {product.regularPrice && product.regularPrice > product.price && (
-                <span className="text-[8px] md:text-[10px] font-bold text-gray-300 line-through">
-                  ৳{product.regularPrice.toLocaleString()}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mt-1 mb-2 w-full">
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star size={10} fill="currentColor" />
-                <span className="font-black text-gray-600">{rating.toFixed(1)}</span>
+          <div className="mt-auto pt-2 flex flex-col gap-3">
+            <div className={cn("w-full flex flex-col", priceAlign === 'center' ? 'items-center' : 'items-start')}>
+              <div className="flex items-baseline gap-2">
+                <p className={cn(
+                  "font-black text-primary tracking-tighter leading-none",
+                  customStyle?.priceSize || 'text-base md:text-lg'
+                )} style={{ color: customStyle?.priceColor || '#f85606' }}>
+                  ৳{product.price.toLocaleString()}
+                </p>
+                {product.regularPrice && product.regularPrice > product.price && (
+                  <span className="text-[8px] md:text-[10px] font-bold text-gray-300 line-through">
+                    ৳{product.regularPrice.toLocaleString()}
+                  </span>
+                )}
               </div>
-              <span className="uppercase tracking-widest text-[8px] font-black text-gray-400 text-right">{soldCount} {t('sold')}</span>
+              
+              <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold mt-1">
+                <div className="flex items-center gap-1 text-amber-400">
+                  <Star size={10} fill="currentColor" />
+                  <span className="font-black text-gray-600">{rating.toFixed(1)}</span>
+                </div>
+                <span className="uppercase tracking-widest text-gray-400 font-black">{soldCount} {t('sold')}</span>
+              </div>
             </div>
 
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#f85606] to-[#ff8c00] transition-all duration-1000" style={{ width: `${progress}%` }} />
+            </div>
+
+            {/* Dynamic Button Rendering */}
+            <div className={cn(
+              "flex w-full",
+              btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
+            )}>
+              <Button 
+                size={customStyle?.btnSize || 'sm'}
+                className={cn(
+                  "font-black uppercase tracking-widest text-[9px] rounded-xl transition-all active:scale-95 border-none",
+                  btnAlign === 'full' ? 'w-full' : 'w-fit px-6'
+                )}
+                style={{ 
+                  backgroundColor: customStyle?.btnBg || '#f85606', 
+                  color: customStyle?.btnTextColor || '#ffffff' 
+                }}
+              >
+                {t('buy_now')}
+              </Button>
             </div>
           </div>
         </div>

@@ -26,7 +26,8 @@ import {
   Clock,
   Users,
   TrendingUp,
-  Package
+  Package,
+  ArrowRight
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -175,14 +176,6 @@ export default function SmartCleanHomePage() {
       textAlign: (style.textAlign || 'left') as any,
     };
 
-    const buttonStyles = {
-      backgroundColor: style.btnBg || '#22C55E', 
-      color: style.btnText || '#ffffff',
-      borderRadius: `${style.btnRadius || 12}px`,
-      fontSize: mounted ? (window.innerWidth < 768 ? `${style.btnFontSizeMobile || 10}px` : `${style.btnFontSizeDesktop || 12}px`) : '12px'
-    };
-
-    // Calculate grid columns based on style override
     const gridCols = style.gridShow || '4';
     const gridClassName = cn(
       "grid gap-2 md:gap-4",
@@ -305,11 +298,15 @@ export default function SmartCleanHomePage() {
               <div className={gridClassName}>
                 {displayServices.map(s => {
                   const bookingCount = Math.floor((parseInt(s.id.slice(-2), 16) || 10) % 500) + 100;
+                  const titleAlign = style?.titleAlign || 'left';
+                  const priceAlign = style?.priceAlign || 'left';
+                  const btnAlign = style?.btnAlign || 'full';
+
                   return (
                     <div 
                       key={s.id}
                       className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
-                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius || 24}px` }}
+                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius !== undefined ? style.cardRadius : 24}px` }}
                     >
                       <Link href={`/service/${s.slug || s.id}`} className="block h-full flex flex-col">
                         <div className="p-1 relative">
@@ -322,27 +319,54 @@ export default function SmartCleanHomePage() {
                             </Badge>
                           )}
                         </div>
-                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0" style={{ textAlign: style.textAlign || 'left' }}>
-                          <h3 className="text-[11px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900">{s.title}</h3>
+                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
+                          <div className={cn("w-full", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+                            <h3 className={cn(
+                              "font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900",
+                              style?.titleSize || 'text-[11px] md:text-sm'
+                            )} style={{ color: style?.titleColor }}>
+                              {s.title}
+                            </h3>
+                          </div>
                           
-                          <div className="mt-auto pt-2">
-                            <div className={cn("flex items-baseline gap-2 mb-1", style.textAlign === 'center' ? 'justify-center' : '')}>
-                              <p className="text-lg md:text-xl font-black text-primary tracking-tighter leading-none" style={{ color: style.priceColor || '#1E5F7A' }}>৳{(s.basePrice || 0).toLocaleString()}</p>
-                              {s.regularPrice && s.regularPrice > s.basePrice && (
-                                <span className="text-[8px] md:text-[10px] text-gray-300 line-through">৳{s.regularPrice.toLocaleString()}</span>
-                              )}
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-[8px] md:text-[9px] font-bold mb-3 w-full">
-                              <div className="flex items-center gap-1 text-amber-400">
-                                <Star size={10} fill="currentColor" />
-                                <span className="text-gray-600 font-black">{s.rating?.toFixed(1) || '5.0'}</span>
+                          <div className="mt-auto pt-2 flex flex-col gap-3">
+                            <div className={cn("w-full flex flex-col", priceAlign === 'center' ? 'items-center' : 'items-start')}>
+                              <div className="flex items-baseline gap-2">
+                                <p className={cn(
+                                  "font-black tracking-tighter leading-none",
+                                  style?.priceSize || 'text-lg md:text-xl'
+                                )} style={{ color: style.priceColor || '#1E5F7A' }}>
+                                  ৳{(s.basePrice || 0).toLocaleString()}
+                                </p>
+                                {s.regularPrice && s.regularPrice > s.basePrice && (
+                                  <span className="text-[8px] md:text-[10px] text-gray-300 line-through">৳{s.regularPrice.toLocaleString()}</span>
+                                )}
                               </div>
-                              <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
+                              
+                              <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold mt-1">
+                                <div className="flex items-center gap-1 text-amber-400">
+                                  <Star size={10} fill="currentColor" />
+                                  <span className="text-gray-600 font-black">{s.rating?.toFixed(1) || '5.0'}</span>
+                                </div>
+                                <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
+                              </div>
                             </div>
 
-                            <div className="mt-1">
-                              <Button size="sm" className="w-full font-black uppercase shadow-xl h-8 md:h-10 tracking-tighter transition-all active:scale-95 border-none" style={buttonStyles}>
+                            <div className={cn(
+                              "flex w-full",
+                              btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
+                            )}>
+                              <Button 
+                                size={style?.btnSize || 'sm'}
+                                className={cn(
+                                  "font-black uppercase shadow-xl tracking-widest text-[9px] rounded-xl transition-all active:scale-95 border-none",
+                                  btnAlign === 'full' ? 'w-full' : 'w-fit px-6'
+                                )}
+                                style={{ 
+                                  backgroundColor: style?.btnBg || '#22C55E', 
+                                  color: style?.btnTextColor || '#ffffff' 
+                                }}
+                              >
                                 {t('book_now')}
                               </Button>
                             </div>
