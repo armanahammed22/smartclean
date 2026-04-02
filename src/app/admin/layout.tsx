@@ -262,8 +262,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Coupons", href: '/admin/offers/coupons', icon: TicketPercent },
           { name: "Flash Sales", href: '/admin/offers/flash-sales', icon: Zap },
           { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
-          { name: "Navbar Banners", href: '/admin/offers/navbar-banners', icon: ImageIcon },
-          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
         ]
       },
       {
@@ -359,9 +357,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-          { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
-          { name: "Quick Links", href: '/admin/customize/quick-links', icon: Grid },
-          { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: MousePointer2 },
+          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
+          { name: "Bottom Navbar Image", href: '/admin/offers/navbar-banners', icon: ImageIcon },
+          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
+          { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
+          { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: Navigation },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
