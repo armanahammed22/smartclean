@@ -27,7 +27,8 @@ import {
   Users,
   TrendingUp,
   Package,
-  ArrowRight
+  ArrowRight,
+  Calendar
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -125,7 +126,7 @@ export default function SmartCleanHomePage() {
       }
       if (sectionType === 'products_featured' || config.dataSource === 'popular') feed = feed.filter(p => p.isPopular);
       if (sectionType === 'products_new' || config.dataSource === 'latest') feed = [...feed].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      return feed.slice(0, config.limit || 10);
+      return feed.slice(0, config.limit || 12);
     };
 
     const getFilteredServices = () => {
@@ -176,14 +177,8 @@ export default function SmartCleanHomePage() {
       textAlign: (style.textAlign || 'left') as any,
     };
 
-    const gridCols = style.gridShow || '4';
-    const gridClassName = cn(
-      "grid gap-2 md:gap-4",
-      gridCols === '3' && "grid-cols-2 sm:grid-cols-3",
-      gridCols === '4' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
-      gridCols === '5' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
-      gridCols === '6' && "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
-    );
+    // 📱 Standard Responsive Grid Mapping (2/3/6)
+    const gridClassName = "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6";
 
     switch (sectionType) {
       case 'hero':
@@ -301,72 +296,85 @@ export default function SmartCleanHomePage() {
                   const titleAlign = style?.titleAlign || 'left';
                   const priceAlign = style?.priceAlign || 'left';
                   const btnAlign = style?.btnAlign || 'full';
+                  const discountPercent = s.regularPrice && s.regularPrice > s.basePrice
+                    ? Math.round(((s.regularPrice - s.basePrice) / s.regularPrice) * 100)
+                    : null;
 
                   return (
                     <div 
                       key={s.id}
-                      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1", style.cardShadow)}
-                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius !== undefined ? style.cardRadius : 24}px` }}
+                      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1 shadow-sm", style.cardShadow)}
+                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius !== undefined ? style.cardRadius : 16}px` }}
                     >
                       <Link href={`/service/${s.slug || s.id}`} className="block h-full flex flex-col">
-                        <div className="p-1 relative">
-                          <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center">
-                            {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
+                        <div className="relative aspect-square overflow-hidden bg-gray-50 flex items-center justify-center">
+                          {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
+                          
+                          {/* Badges */}
+                          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                            {discountPercent && (
+                              <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                                {discountPercent}% OFF
+                              </Badge>
+                            )}
+                            {s.badgeText && (
+                              <Badge className="bg-amber-500 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                                {s.badgeText}
+                              </Badge>
+                            )}
                           </div>
-                          {s.isAddOn && (
-                            <Badge className="absolute top-3 right-3 bg-amber-600 text-white border-none font-black text-[7px] uppercase px-2 py-0.5 rounded-full shadow-lg">
-                              {t('service')}
-                            </Badge>
-                          )}
                         </div>
-                        <div className="p-2.5 md:p-4 flex flex-col flex-1 gap-0.5 pt-0">
-                          <div className={cn("w-full", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+                        
+                        <div className="p-3 md:p-4 flex flex-col flex-1">
+                          <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
                             <h3 className={cn(
-                              "font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight text-gray-900",
+                              "font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800",
                               style?.titleSize || 'text-[11px] md:text-sm'
                             )} style={{ color: style?.titleColor }}>
                               {s.title}
                             </h3>
                           </div>
                           
-                          <div className="mt-auto pt-2 flex flex-col gap-3">
-                            <div className={cn("w-full flex flex-col", priceAlign === 'center' ? 'items-center' : 'items-start')}>
-                              <div className="flex items-baseline gap-2">
-                                <p className={cn(
-                                  "font-black tracking-tighter leading-none",
-                                  style?.priceSize || 'text-lg md:text-xl'
-                                )} style={{ color: style.priceColor || '#1E5F7A' }}>
-                                  ৳{(s.basePrice || 0).toLocaleString()}
-                                </p>
-                                {s.regularPrice && s.regularPrice > s.basePrice && (
-                                  <span className="text-[8px] md:text-[10px] text-gray-300 line-through">৳{s.regularPrice.toLocaleString()}</span>
-                                )}
+                          <div className="mt-auto space-y-2">
+                            {/* Price Row */}
+                            <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
+                              <p className={cn(
+                                "font-black tracking-tighter leading-none",
+                                style?.priceSize || 'text-base md:text-lg'
+                              )} style={{ color: style.priceColor || '#1E5F7A' }}>
+                                ৳{(s.basePrice || 0).toLocaleString()}
+                              </p>
+                              {s.regularPrice && s.regularPrice > s.basePrice && (
+                                <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">৳{s.regularPrice.toLocaleString()}</span>
+                              )}
+                            </div>
+                            
+                            {/* Rating Row */}
+                            <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
+                              <div className="flex items-center gap-1 text-amber-500">
+                                <Star size={12} fill="currentColor" />
+                                <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}</span>
                               </div>
-                              
-                              <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold mt-1">
-                                <div className="flex items-center gap-1 text-amber-400">
-                                  <Star size={10} fill="currentColor" />
-                                  <span className="text-gray-600 font-black">{s.rating?.toFixed(1) || '5.0'}</span>
-                                </div>
-                                <span className="uppercase tracking-widest text-gray-400 font-black">{bookingCount} {t('booked')}</span>
-                              </div>
+                              <span className="uppercase text-gray-400 font-black">{bookingCount} {t('booked')}</span>
                             </div>
 
+                            {/* Button */}
                             <div className={cn(
-                              "flex w-full",
+                              "flex w-full pt-1",
                               btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
                             )}>
                               <Button 
                                 size={style?.btnSize || 'sm'}
                                 className={cn(
-                                  "font-black uppercase shadow-xl tracking-widest text-[9px] rounded-xl transition-all active:scale-95 border-none",
-                                  btnAlign === 'full' ? 'w-full' : 'w-fit px-6'
+                                  "font-black uppercase shadow-md tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
+                                  btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
                                 )}
                                 style={{ 
-                                  backgroundColor: style?.btnBg || '#22C55E', 
+                                  backgroundColor: style?.btnBg || '#1E5F7A', 
                                   color: style?.btnTextColor || '#ffffff' 
                                 }}
                               >
+                                <Calendar size={12} className="mr-1" />
                                 {t('book_now')}
                               </Button>
                             </div>

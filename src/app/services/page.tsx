@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -8,7 +7,7 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, X, Wrench, Package } from 'lucide-react';
+import { Loader2, Search, Filter, X, Wrench, Package, Star, Calendar, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -32,7 +31,6 @@ function ServicesContent() {
     }
   }, [searchParams]);
 
-  // Fetch collections
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
@@ -41,7 +39,6 @@ function ServicesContent() {
   const { data: products, isLoading: pLoading } = useCollection(productsRef);
   const { data: subServices, isLoading: subLoading } = useCollection(subServicesRef);
 
-  // Unified Categories
   const CATEGORIES = [
     { id: 'All', label: t('cat_all') },
     { id: 'Cleaning', label: t('cat_cleaning') },
@@ -50,7 +47,6 @@ function ServicesContent() {
     { id: 'Tools', label: t('cat_tools') }
   ];
 
-  // In-Memory Filtering Logic for both Products, Services, and Sub-Services
   const filteredOfferings = useMemo(() => {
     let combined: any[] = [];
     if (services) {
@@ -96,7 +92,6 @@ function ServicesContent() {
 
   return (
     <div className="bg-[#F9FAFB] min-h-screen pb-24">
-      {/* Modern Header */}
       <header className="bg-white border-b py-12 md:py-16">
         <div className="container mx-auto px-4 max-w-7xl text-center space-y-8">
           <div className="space-y-3">
@@ -106,12 +101,8 @@ function ServicesContent() {
             <h1 className="text-4xl md:text-6xl font-black text-[#081621] font-headline tracking-tighter uppercase">
               {searchQuery ? `Results for "${searchQuery}"` : t('all_services_title')}
             </h1>
-            <p className="text-muted-foreground text-sm md:text-lg max-w-2xl mx-auto font-medium">
-              Discover professional services and high-quality tools in one place.
-            </p>
           </div>
 
-          {/* High Performance Search Bar */}
           <div className="max-w-2xl mx-auto relative group">
             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
               <Search size={20} />
@@ -132,7 +123,6 @@ function ServicesContent() {
             )}
           </div>
 
-          {/* Category Filter Buttons */}
           <div className="flex flex-wrap justify-center gap-3 pt-4">
             {CATEGORIES.map((cat) => (
               <Button
@@ -153,7 +143,6 @@ function ServicesContent() {
         </div>
       </header>
 
-      {/* Results Grid */}
       <div className="container mx-auto px-4 max-w-7xl py-12">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -161,17 +150,17 @@ function ServicesContent() {
             <p className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Syncing Catalog...</p>
           </div>
         ) : filteredOfferings.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
             {filteredOfferings.map((item) => (
               item.itemType === 'service' ? (
                 <div key={item.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">
-                  <Link href={`/service/${item.slug || item.id}`} className="block relative aspect-[4/3] overflow-hidden shrink-0">
+                  <Link href={`/service/${item.slug || item.id}`} className="block relative aspect-square overflow-hidden shrink-0 bg-gray-50">
                     {item.imageUrl ? (
                       <Image 
                         src={item.imageUrl} 
                         alt={item.title || 'Service Image'} 
                         fill 
-                        className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                        className="object-cover transition-transform duration-500 group-hover:scale-110" 
                         unoptimized
                       />
                     ) : (
@@ -179,67 +168,55 @@ function ServicesContent() {
                         <Wrench size={40} />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 flex flex-col gap-1">
-                      <Badge className="bg-white/95 text-primary border-none shadow-md backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-full w-fit">
+                    <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                      <Badge className="bg-white/95 text-primary border-none shadow-sm backdrop-blur-md font-black text-[8px] uppercase px-2 py-0.5 rounded-sm">
                         {item.categoryId || 'General'}
-                      </Badge>
-                      <Badge className={cn(
-                        "text-white border-none shadow-md font-black text-[7px] uppercase px-2 py-0.5 rounded-full w-fit",
-                        item.isAddOn ? "bg-amber-600" : "bg-blue-600"
-                      )}>
-                        {item.isAddOn ? 'Add-on' : 'Service'}
                       </Badge>
                     </div>
                   </Link>
                   <div className="p-3 flex flex-col flex-1 gap-2">
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       <Link href={`/service/${item.slug || item.id}`} className="hover:text-primary transition-colors block">
-                        <h3 className="text-[13px] md:text-sm font-bold group-hover:text-primary transition-colors line-clamp-1 leading-tight uppercase tracking-tight">
+                        <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800">
                           {item.title}
                         </h3>
                       </Link>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-black text-primary tracking-tighter">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-base font-black text-primary tracking-tighter leading-none">
                           ৳{(item.basePrice || 0).toLocaleString()}
                         </span>
-                        <span className="text-[9px] font-black uppercase text-gray-400">
-                          {item.pricingType === 'sqft' ? 'Start From' : 'Price'}
-                        </span>
+                        {item.regularPrice && item.regularPrice > item.basePrice && (
+                          <span className="text-[10px] text-gray-400 line-through font-medium">৳{item.regularPrice.toLocaleString()}</span>
+                        )}
                       </div>
                     </div>
-                    <Button size="sm" className="w-full rounded-full font-black text-[10px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
-                      <Link href={`/service/${item.slug || item.id}`}>{t('book_now')}</Link>
+
+                    <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star size={12} fill="currentColor" />
+                        <span className="text-gray-600">{(item.rating || 5.0).toFixed(1)}</span>
+                      </div>
+                      <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 200) + 50} {t('booked')}</span>
+                    </div>
+
+                    <Button size="sm" className="w-full rounded-lg font-black text-[9px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>
+                      <Link href={`/service/${item.slug || item.id}`}>
+                        <Calendar size={12} className="mr-1" />
+                        {t('book_now')}
+                      </Link>
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div key={item.id} className="relative h-full">
-                  <ProductCard product={item} />
-                  <div className="absolute top-12 right-2 z-10">
-                    <Badge className="bg-emerald-600 text-white border-none shadow-md font-black text-[7px] uppercase px-2 py-0.5 rounded-full">
-                      Product
-                    </Badge>
-                  </div>
-                </div>
+                <ProductCard key={item.id} product={item} />
               )
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-            <div className="p-6 bg-white rounded-full shadow-xl border border-gray-100">
-              <Filter size={48} className="text-gray-300" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-[#081621] uppercase">No Match Found</h3>
-              <p className="text-muted-foreground font-medium max-sm">We couldn't find any services or tools matching your search criteria.</p>
-            </div>
-            <Button 
-              onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
-              variant="outline" 
-              className="rounded-full px-8 font-black uppercase text-[10px] tracking-widest"
-            >
-              Clear All Filters
-            </Button>
+            <Filter size={48} className="text-gray-300" />
+            <h3 className="text-2xl font-black text-[#081621] uppercase">No Match Found</h3>
+            <Button onClick={() => { setSearchQuery(''); setActiveCategory('All'); }} variant="outline" className="rounded-full px-8 font-black uppercase text-[10px]">Clear Filters</Button>
           </div>
         )}
       </div>

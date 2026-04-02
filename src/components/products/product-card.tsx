@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Package, Truck } from 'lucide-react';
+import { Star, Zap, ShoppingCart, Package } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -23,10 +23,9 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Dynamic Styles Mapping
   const cardStyle = {
     backgroundColor: customStyle?.cardBg || (isDark ? 'transparent' : '#ffffff'),
-    borderRadius: `${customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 24}px`,
+    borderRadius: `${customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 16}px`,
   };
 
   const titleAlign = customStyle?.titleAlign || 'left';
@@ -37,54 +36,47 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     <Link href={`/product/${product.slug || product.id}`} className="block h-full group active:scale-[0.98] transition-all">
       <div 
         className={cn(
-          "flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden",
+          "flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white",
           customStyle?.cardShadow
         )}
         style={cardStyle}
       >
-        <div className="p-1">
-          <div className="relative aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
-            {product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-100">
-                <Package size={32} />
-              </div>
-            )}
-            
-            {product.badgeText ? (
-              <div className="absolute top-2 left-2">
-                <div className="bg-primary text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
-                  {product.badgeText}
-                </div>
-              </div>
-            ) : (
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1 bg-[#2E8B57] text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-lg">
-                  <Truck size={8} fill="white" className="shrink-0" />
-                  {t('shipping_free').toUpperCase()}
-                </div>
-              </div>
-            )}
-
+        {/* Image Area */}
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-200">
+              <Package size={32} />
+            </div>
+          )}
+          
+          {/* Top Left Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {discountPercent && (
-              <div className="absolute top-2 right-2 bg-[#f85606] text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-md uppercase">
-                -{discountPercent}%
-              </div>
+              <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                {discountPercent}% OFF
+              </Badge>
+            )}
+            {product.badgeText && (
+              <Badge className="bg-amber-500 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
+                {product.badgeText}
+              </Badge>
             )}
           </div>
         </div>
 
-        <div className="px-3 md:px-4 pb-5 space-y-0.5 pt-0 flex flex-col flex-1">
-          <div className={cn("w-full", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+        {/* Content Area */}
+        <div className="p-3 md:p-4 flex flex-col flex-1">
+          <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
             <h3 className={cn(
-              "font-bold line-clamp-1 leading-tight uppercase tracking-tight transition-colors",
+              "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
               customStyle?.titleSize || 'text-[11px] md:text-sm',
               isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
             )} style={{ color: customStyle?.titleColor }}>
@@ -92,52 +84,49 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </h3>
           </div>
           
-          <div className={cn("mt-auto pt-2 flex flex-col gap-3")}>
-            <div className={cn("w-full flex flex-col", priceAlign === 'center' ? 'items-center' : 'items-start')}>
-              <div className="flex items-baseline gap-2">
-                <p className={cn(
-                  "font-black tracking-tighter leading-none",
-                  customStyle?.priceSize || 'text-lg md:text-xl',
-                  isDark ? "text-amber-400" : "text-[#f85606]"
-                )} style={{ color: customStyle?.priceColor }}>
-                  <span className="text-[9px] md:text-xs font-bold mr-0.5">৳</span>
-                  {product.price.toLocaleString()}
-                </p>
-                {product.regularPrice && product.regularPrice > product.price && (
-                  <span className="text-[8px] md:text-[10px] text-gray-300 line-through font-bold">
-                    ৳{product.regularPrice.toLocaleString()}
-                  </span>
-                )}
+          <div className="mt-auto space-y-2">
+            {/* Price Row */}
+            <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
+              <p className={cn(
+                "font-black tracking-tighter leading-none",
+                customStyle?.priceSize || 'text-base md:text-lg',
+                isDark ? "text-amber-400" : "text-primary"
+              )} style={{ color: customStyle?.priceColor }}>
+                ৳{product.price.toLocaleString()}
+              </p>
+              {product.regularPrice && product.regularPrice > product.price && (
+                <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">
+                  ৳{product.regularPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
+            
+            {/* Rating & Count Row */}
+            <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
+              <div className="flex items-center gap-1 text-amber-500">
+                <Star size={12} fill="currentColor" />
+                <span className="text-gray-600">{rating.toFixed(1)}</span>
               </div>
-              
-              <div className={cn(
-                "flex items-center gap-2 text-[8px] md:text-[9px] font-bold mt-1",
-                isDark ? "text-white/40" : "text-gray-400"
-              )}>
-                <div className="flex items-center gap-1 text-amber-400">
-                  <Star size={10} fill="currentColor" />
-                  <span className={cn("font-black", isDark ? "text-white/60" : "text-gray-600")}>{rating.toFixed(1)}</span>
-                </div>
-                <span className="uppercase tracking-widest font-black">{soldCount} {t('sold')}</span>
-              </div>
+              <span className="uppercase text-gray-400 font-black">{soldCount} {t('sold')}</span>
             </div>
 
-            {/* Dynamic Button Rendering */}
+            {/* Action Button */}
             <div className={cn(
-              "flex w-full",
+              "flex w-full pt-1",
               btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
             )}>
               <Button 
                 size={customStyle?.btnSize || 'sm'}
                 className={cn(
-                  "font-black uppercase tracking-widest text-[9px] rounded-xl transition-all active:scale-95 border-none",
-                  btnAlign === 'full' ? 'w-full' : 'w-fit px-6'
+                  "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
+                  btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
                 )}
                 style={{ 
-                  backgroundColor: customStyle?.btnBg || '#f85606', 
+                  backgroundColor: customStyle?.btnBg || '#1E5F7A', 
                   color: customStyle?.btnTextColor || '#ffffff' 
                 }}
               >
+                <Zap size={12} fill="currentColor" className="mr-1" />
                 {t('buy_now')}
               </Button>
             </div>
