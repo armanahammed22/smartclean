@@ -137,7 +137,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     hrm: true,
     finance: true,
     inventory: true,
-    services: true
+    services: true,
+    customize: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -357,6 +358,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+          { name: "Top Categories", href: '/admin/customize/top-categories', icon: List },
+          { name: "Quick Links", href: '/admin/customize/quick-links', icon: Grid },
+          { name: "Quick Actions", href: '/admin/customize/quick-actions', icon: MousePointer2 },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
