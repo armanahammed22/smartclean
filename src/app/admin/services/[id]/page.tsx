@@ -23,6 +23,7 @@ import {
   ImageIcon, 
   Layout,
   CheckCircle2,
+  XCircle,
   Clock,
   Users,
   Settings2,
