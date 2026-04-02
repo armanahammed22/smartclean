@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
-import { CartItem, Product, Service } from '@/types';
+import { CartItem, Product, Service, AdvancedOffer } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from './language-provider';
 import { trackEvent } from '@/lib/tracking';
@@ -37,9 +36,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // 🚀 Fetch Advanced Offers
-  const advancedOffersQuery = useMemoFirebase(() => db ? query(collection(db, 'advanced_offers'), where('isActive', '==', true)) : null, [db]);
-  const { data: advancedOffers } = useCollection(advancedOffersQuery);
+  // 🚀 Fetch Advanced Offers (Only those that could be active)
+  const advancedOffersQuery = useMemoFirebase(() => db ? query(collection(db, 'advanced_offers'), where('status', 'in', ['Live', 'Scheduled'])) : null, [db]);
+  const { data: allPotentialOffers } = useCollection<AdvancedOffer>(advancedOffersQuery);
+
+  // Filter Live offers based on client-side time to ensure accuracy
+  const activeOffers = useMemo(() => {
+    if (!allPotentialOffers) return [];
+    const now = new Date();
+    return allPotentialOffers.filter(offer => {
+      const start = new Date(offer.startDate);
+      const end = new Date(offer.endDate);
+      return now >= start && now <= end;
+    });
+  }, [allPotentialOffers]);
 
   // Smart Pricing Logic (Weekend/Off-peak)
   const rulesQuery = useMemoFirebase(() => db ? query(collection(db, 'smart_pricing_rules'), where('isActive', '==', true)) : null, [db]);
@@ -159,10 +169,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     let currentSubtotal = subtotalRaw;
     let extraSavings = 0;
 
-    if (!advancedOffers) return { finalSubtotal: currentSubtotal * (1 - smartDiscount / 100), savings: 0 };
+    if (!activeOffers.length) return { finalSubtotal: currentSubtotal * (1 - smartDiscount / 100), savings: 0 };
 
     // 1. Min Order Value Logic
-    const minOrderOffer = advancedOffers.find(o => o.type === 'min_order' && currentSubtotal >= (o.rules?.minSpend || 0));
+    const minOrderOffer = activeOffers.find(o => o.type === 'min_order' && currentSubtotal >= (o.rules?.minSpend || 0));
     if (minOrderOffer) {
       const discount = minOrderOffer.rules.discountType === 'percentage' 
         ? (currentSubtotal * minOrderOffer.rules.discountValue) / 100
@@ -170,13 +180,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       extraSavings += discount;
     }
 
-    // 2. Buy X Get Y logic (Simple implementation for same product)
+    // 2. Buy X Get Y logic
     items.forEach(item => {
-      const bogoOffer = advancedOffers.find(o => o.type === 'buy_x_get_y' && (o.rules?.buyQty || 1) <= item.quantity);
+      const bogoOffer = activeOffers.find(o => 
+        o.type === 'buy_x_get_y' && 
+        o.applicableItems.includes(item.id) &&
+        (o.rules?.buyQty || 1) <= item.quantity
+      );
       if (bogoOffer) {
-        const freeSets = Math.floor(item.quantity / (bogoOffer.rules.buyQty + bogoOffer.rules.getQty));
+        const freeSets = Math.floor(item.quantity / ((bogoOffer.rules.buyQty || 1) + (bogoOffer.rules.getQty || 1)));
         if (freeSets > 0) {
-          extraSavings += (item.price * freeSets * bogoOffer.rules.getQty);
+          extraSavings += (item.price * freeSets * (bogoOffer.rules.getQty || 1));
         }
       }
     });
@@ -186,7 +200,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       finalSubtotal: Math.max(0, smartApplied - extraSavings), 
       savings: extraSavings 
     };
-  }, [items, subtotalRaw, advancedOffers, smartDiscount]);
+  }, [items, subtotalRaw, activeOffers, smartDiscount]);
 
   return (
     <CartContext.Provider

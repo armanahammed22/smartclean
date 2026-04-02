@@ -352,3 +352,23 @@ export interface PartnerProject {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface AdvancedOffer {
+  id: string;
+  title: string;
+  type: 'buy_x_get_y' | 'bundle' | 'min_order' | 'tiered';
+  status: 'Draft' | 'Live' | 'Scheduled' | 'Expired';
+  targeting: string;
+  rules: {
+    minSpend?: number;
+    discountValue: number;
+    discountType: 'percentage' | 'fixed';
+    buyQty?: number;
+    getQty?: number;
+  };
+  applicableItems: string[];
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
