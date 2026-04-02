@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -19,7 +18,8 @@ import {
   AlertCircle, 
   Calendar,
   User,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
