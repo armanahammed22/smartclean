@@ -69,7 +69,8 @@ import {
   DollarSign,
   ReceiptText,
   ShieldAlert,
-  Package
+  Package,
+  Clock
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -105,22 +106,39 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
 
+const MENU_LABELS: Record<string, string> = {
+  dashboard_link: "Dashboard",
+  sales: "Sales Terminal",
+  orders: "Order & Booking",
+  inventory: "INVENTORY",
+  services: "SERVICES",
+  marketing: "MARKETING & PROMOTIONS",
+  offers: "OFFER & CAMPAIGN",
+  seo: "SEO & TRACKING",
+  customer_hub: "Customer Hub",
+  hrm: "HRM",
+  users_roles: "Users & Roles",
+  partners: "B2B PARTNERS",
+  vendors: "VENDOR HUB",
+  finance: "FINANCIAL HUB",
+  reports: "BUSINESS REPORT",
+  customize: "SITE CUSTOMIZE",
+  system: "SETTINGS",
+  ai_agents: "AI AGENTS (STAFF)",
+  support: "SUPPORT"
+};
+
+const DEFAULT_MENU_KEYS = Object.keys(MENU_LABELS);
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 
     sales: true, 
-    finance: false,
     orders: true, 
-    services: true,
-    partners: false,
-    vendors: false,
-    marketing: true,
-    seo: false,
-    customer_hub: true,
     hrm: true,
-    users_roles: true
+    finance: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -223,6 +241,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
+        id: 'hrm',
+        title: "HRM",
+        icon: HardHat,
+        color: "text-amber-400",
+        items: [
+          { name: "Staff Directory", href: '/admin/employees', icon: Users },
+          { name: "Attendance Logs", href: '/admin/hrm/attendance', icon: Clock },
+          { name: "Payroll & Models", href: '/admin/hrm/payroll', icon: DollarSign },
+          { name: "Leave Requests", href: '/admin/hrm/leaves', icon: Calendar },
+          { name: "Expense Claims", href: '/admin/hrm/expenses', icon: Wallet },
+        ]
+      },
+      {
         id: 'marketing',
         title: "MARKETING & PROMOTIONS",
         icon: Target,
@@ -233,80 +264,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
           { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
           { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
-        ]
-      },
-      {
-        id: 'offers',
-        title: "OFFER & CAMPAIGN",
-        icon: TicketPercent,
-        color: "text-rose-400",
-        items: [
-          { name: "Offer Analytics", href: '/admin/offers/analytics', icon: TrendingUp },
-          { name: "Flash Sale", href: '/admin/offers/flash-sales', icon: Zap, visible: productsEnabled },
-          { name: "Coupons & Promo", href: '/admin/offers/coupons', icon: TicketPercent },
-          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: Activity, visible: servicesEnabled },
-        ]
-      },
-      {
-        id: 'seo',
-        title: "SEO & TRACKING",
-        icon: Globe,
-        color: "text-cyan-400",
-        items: [
-          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
-          { name: "Meta Pixel", href: '/admin/seo/pixel', icon: Code },
-          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
-          { name: "Event Logs", href: '/admin/seo/logs', icon: History },
-        ]
-      },
-      {
-        id: 'customer_hub',
-        title: "Customer Hub",
-        icon: Users,
-        color: "text-blue-400",
-        items: [
-          { name: "Customer Directory", href: '/admin/customers', icon: Users },
-        ]
-      },
-      {
-        id: 'hrm',
-        title: "HRM",
-        icon: HardHat,
-        color: "text-amber-400",
-        items: [
-          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
-        ]
-      },
-      {
-        id: 'users_roles',
-        title: "Users & Roles",
-        icon: ShieldCheck,
-        color: "text-purple-400",
-        items: [
-          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-        ]
-      },
-      {
-        id: 'partners',
-        title: "B2B PARTNERS",
-        icon: Handshake,
-        color: "text-amber-400",
-        items: [
-          { name: "Partner Directory", href: '/admin/partners', icon: Building2 },
-          { name: "Commission Logic", href: '/admin/partners/commissions', icon: DollarSign },
-          { name: "Project Costing", href: '/admin/partners/projects', icon: Briefcase },
-        ]
-      },
-      {
-        id: 'vendors',
-        title: "VENDOR HUB",
-        icon: Store,
-        color: "text-orange-400",
-        items: [
-          { name: "Vendor Directory", href: '/admin/vendors', icon: Users },
-          { name: "Product Approvals", href: '/admin/products/approvals', icon: CheckCircle, visible: productsEnabled },
-          { name: "Service Approvals", href: '/admin/services/approvals', icon: CheckCircle, visible: servicesEnabled },
-          { name: "Settlements", href: '/admin/vendors/commissions', icon: Wallet },
         ]
       },
       {
@@ -322,16 +279,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
-        id: 'reports',
-        title: "BUSINESS REPORT",
-        icon: BarChart3,
-        color: "text-blue-400",
-        items: [
-          { name: "Financial Reports", href: '/admin/reports', icon: FileText },
-          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
-        ]
-      },
-      {
         id: 'customize',
         title: "SITE CUSTOMIZE",
         icon: Palette,
@@ -340,78 +287,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Bottom Navbar", href: '/admin/offers/navbar-banners', icon: Smartphone },
-          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: List },
-          { name: "Quick Grid", href: '/admin/quick-links', icon: Grid },
-          { name: "Action Cards", href: '/admin/quick-actions', icon: Zap },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
-        ]
-      },
-      {
-        id: 'system',
-        title: "SETTINGS",
-        icon: Settings,
-        color: "text-slate-400",
-        items: [
-          { name: "General Settings", href: '/admin/settings', icon: Settings },
-          { name: "Localization", href: '/admin/settings/languages', icon: Globe },
-          { name: "Payment Gateways", href: '/admin/payments', icon: CreditCard },
-          { name: "Fleet Tracking", href: '/admin/settings/tracking', icon: MapPin },
-          { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
-          { name: "System Logs", href: '/admin/error-logs', icon: ShieldAlert },
-        ]
-      },
-      {
-        id: 'ai_agents',
-        title: "AI AGENTS (STAFF)",
-        icon: Bot,
-        color: "text-blue-400",
-        items: [
-          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
-          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Sparkles },
-        ]
-      },
-      {
-        id: 'support',
-        title: "SUPPORT",
-        icon: MessageCircle,
-        color: "text-green-400",
-        items: [
-          { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
-          { name: "Support Hub", href: '/admin/support-hub', icon: Headphones },
         ]
       }
     ];
 
-    // Filter by visibility from firestore
-    if (sidebarConfig?.visibility) {
-      const visibility = sidebarConfig.visibility as Record<string, boolean>;
-      groups = groups.filter(g => visibility[g.id] !== false);
-    }
-
-    // Filter by global settings
-    groups = groups.filter(g => g.visible !== false);
-    groups = groups.map(g => ({
-      ...g,
-      items: g.items.filter((i: any) => i.visible !== false)
-    }));
-
-    // Apply exact order from firestore
-    if (sidebarConfig?.order) {
-      const order = sidebarConfig.order as string[];
-      if (Array.isArray(order) && order.length > 0) {
-        const orderMap = new Map(order.map((id, index) => [id, index]));
-        groups.sort((a, b) => {
-          const idxA = orderMap.has(a.id) ? orderMap.get(a.id)! : 1000;
-          const idxB = orderMap.has(b.id) ? orderMap.get(b.id)! : 1000;
-          return idxA - idxB;
-        });
-      }
-    }
-
-    return groups;
-  }, [sidebarConfig, productsEnabled, servicesEnabled]);
+    return groups.filter(g => g.items.length > 0 || g.href);
+  }, [productsEnabled, servicesEnabled]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -437,7 +320,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
           const isDirectLink = group.items.length === 0 && group.href;
-          
           if (isDirectLink) {
             return (
               <Link
@@ -453,7 +335,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <group.icon size={18} className={cn(group.color, pathname === group.href && "text-white")} />
                   {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest">{group.title}</span>}
                 </div>
-                {!collapsed && <ChevronRight size={14} className="opacity-40" />}
               </Link>
             );
           }
@@ -466,16 +347,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className={cn("flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white", collapsed ? "justify-center px-0 h-10" : "px-3 py-2", isGroupActive && "bg-white/5 text-white")}
               >
                 <div className={cn("flex items-center", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
-                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", isGroupActive ? "bg-white/10" : "group-hover:bg-white/10")}>
-                    <group.icon size={18} className={cn("shrink-0", group.color)} />
-                  </div>
+                  <group.icon size={18} className={cn("shrink-0", group.color)} />
                   {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left">{group.title}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
 
               {expandedGroups[group.id] && !collapsed && (
-                <div className="mt-1 space-y-1 pl-11 animate-in slide-in-from-top-2 duration-300">
+                <div className="mt-1 space-y-1 pl-8 animate-in slide-in-from-top-2 duration-300">
                   {group.items.map((item: any) => (
                     <Link
                       key={item.name}
@@ -496,7 +375,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all", collapsed && "flex justify-center")}>
         <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
           <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
-          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout System</span>}
+          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout</span>}
         </Button>
       </div>
     </div>
@@ -557,7 +436,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
         <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2"><LogOut size={20} /> Logout System?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2"><LogOut size={20} /> Logout Admin?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">Confirm session termination. You will be redirected to the login page.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 flex gap-3">
