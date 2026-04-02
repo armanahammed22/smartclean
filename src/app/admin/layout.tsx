@@ -424,7 +424,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const SidebarContent = ({ collapsed }: { collapsed?: boolean }) => (
+  const SidebarContent = ({ collapsed, closeMobile }: { collapsed?: boolean, closeMobile?: () => void }) => (
     <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
       <div className={cn("flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all", collapsed ? "justify-center px-0" : "px-6")}>
         <div className="w-10 h-10 bg-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
@@ -446,6 +446,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={group.id}
                 href={group.href || '#'}
+                scroll={false}
+                onClick={closeMobile}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white",
                   collapsed ? "justify-center px-0 h-12" : "px-3 py-3",
@@ -464,8 +466,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           return (
             <div key={group.id} className="space-y-1">
               <button
-                onClick={() => setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
-                className={cn("flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white", collapsed ? "justify-center px-0 h-10" : "px-3 py-2", isGroupActive && "bg-white/5 text-white")}
+                onClick={() => !collapsed && setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
+                className={cn(
+                  "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white", 
+                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2", 
+                  isGroupActive && !collapsed && "bg-white/5 text-white"
+                )}
               >
                 <div className={cn("flex items-center", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
                   <group.icon size={18} className={cn("shrink-0", group.color)} />
@@ -480,6 +486,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={item.name}
                       href={item.href}
+                      scroll={false}
+                      onClick={closeMobile}
                       className={cn("flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", pathname === item.href ? "bg-white text-[#081621] shadow-lg scale-[1.02]" : "text-white/50 hover:text-white")}
                     >
                       <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
@@ -515,7 +523,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 ease-in-out relative border-r border-white/5 shrink-0 z-50", isCollapsed ? "w-20" : "w-72")}>
         <SidebarContent collapsed={isCollapsed} />
-        <button onClick={handleToggleCollapse} className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 border-2 border-[#F8FAFC]">
+        <button 
+          onClick={handleToggleCollapse} 
+          className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 border-2 border-[#F8FAFC] transition-transform active:scale-95"
+        >
           {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ArrowLeft size={14} strokeWidth={3} />}
         </button>
       </aside>
@@ -524,10 +535,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 text-gray-600"><Menu size={22} /></Button></SheetTrigger>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 text-gray-600">
+                  <Menu size={22} />
+                </Button>
+              </SheetTrigger>
               <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
-                <SheetHeader className="sr-only"><SheetTitle>Admin Navigation</SheetTitle><SheetDescription>Control System</SheetDescription></SheetHeader>
-                <SidebarContent collapsed={false} />
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Admin Navigation</SheetTitle>
+                  <SheetDescription>Control System</SheetDescription>
+                </SheetHeader>
+                <SidebarContent collapsed={false} closeMobile={() => setIsMobileMenuOpen(false)} />
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">

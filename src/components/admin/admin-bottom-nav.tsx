@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -50,6 +51,7 @@ export function AdminBottomNav() {
           <Link
             key={item.name}
             href={item.href}
+            scroll={false}
             className={cn(
               "flex flex-col items-center justify-center gap-1 flex-1 transition-all h-full",
               pathname === item.href ? "text-primary bg-white/5" : "text-gray-400"
