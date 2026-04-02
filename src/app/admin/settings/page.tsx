@@ -43,7 +43,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-// Strict Default Order ID Mapping
+// Strict Default Order ID Mapping (Updated for Reorganization)
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
@@ -53,7 +53,10 @@ const DEFAULT_MENU_KEYS = [
   'marketing', 
   'offers',
   'seo',
-  'crm',
+  'customer_hub',
+  'hrm',
+  'users_roles',
+  'sales_leads',
   'partners',
   'vendors',
   'finance',
@@ -73,7 +76,10 @@ const MENU_LABELS: Record<string, string> = {
   marketing: "MARKETING & PROMOTIONS",
   offers: "OFFER & CAMPAIGN",
   seo: "SEO & TRACKING",
-  crm: "CRM & USER",
+  customer_hub: "Customer Hub",
+  hrm: "HRM",
+  users_roles: "Users & Roles",
+  sales_leads: "Sales Leads",
   partners: "B2B PARTNERS",
   vendors: "VENDOR HUB",
   finance: "FINANCIAL HUB",
@@ -178,13 +184,11 @@ export default function AdminSettingsPage() {
     if (targetIndex < 0 || targetIndex >= newOrder.length) return;
     [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
     setMenuOrder(newOrder);
-    // Manual reordering does not autosave, requires "Public Change" click
   };
 
   const toggleVisibility = (key: string) => {
     const nextVal = menuVisibility[key] === false ? true : false;
     setMenuVisibility(prev => ({ ...prev, [key]: nextVal }));
-    // Toggling does not autosave, requires "Public Change" click
   };
 
   const handleSyncSidebar = async () => {

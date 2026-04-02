@@ -117,7 +117,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     partners: false,
     vendors: false,
     marketing: true,
-    seo: false
+    seo: false,
+    customer_hub: true,
+    hrm: true,
+    users_roles: true
   });
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
@@ -153,7 +156,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
-  const isAuthorized = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
+  const isAdmin = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -200,7 +203,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "All Products", href: '/admin/products', icon: Package },
           { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
           { name: "Categories", href: '/admin/products/categories', icon: Tags },
-          { name: "Brands", href: '/admin/products/brands', icon: Award },
+          { name: "Brands", href: '/admin/attributes/brands', icon: Award },
           { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
         ]
       },
@@ -256,16 +259,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
-        id: 'crm',
-        title: "CRM & USER",
+        id: 'customer_hub',
+        title: "Customer Hub",
         icon: Users,
-        color: "text-purple-400",
+        color: "text-blue-400",
         items: [
           { name: "Customer Directory", href: '/admin/customers', icon: Users },
-          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
-          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
         ]
+      },
+      {
+        id: 'hrm',
+        title: "HRM",
+        icon: HardHat,
+        color: "text-amber-400",
+        items: [
+          { name: "Staff Directory", href: '/admin/employees', icon: HardHat },
+        ]
+      },
+      {
+        id: 'users_roles',
+        title: "Users & Roles",
+        icon: ShieldCheck,
+        color: "text-purple-400",
+        items: [
+          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
+        ]
+      },
+      {
+        id: 'sales_leads',
+        title: "Sales Leads",
+        href: '/admin/leads',
+        icon: TrendingUp,
+        color: "text-green-400",
+        items: []
       },
       {
         id: 'partners',
@@ -417,7 +443,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
         {NAV_GROUPS.map((group) => {
-          if (group.id === 'dashboard_link') {
+          const isDirectLink = group.items.length === 0 && group.href;
+          
+          if (isDirectLink) {
             return (
               <Link
                 key={group.id}
