@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -18,7 +17,8 @@ import {
   Wrench,
   Grid,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  Box
 } from 'lucide-react';
 import { useCart } from '@/components/providers/cart-provider';
 import { useSupport } from '@/components/providers/support-provider';
@@ -39,7 +39,8 @@ const ICONS: Record<string, any> = {
   Wrench,
   Grid,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  Box
 };
 
 export function BottomNav() {
@@ -66,10 +67,12 @@ export function BottomNav() {
   const configRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'bottom_nav') : null, [db]);
   const { data: config } = useDoc(configRef);
 
-  // 3. Global Feature Check (for fallback logic)
+  // 3. Global Feature Check
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
+  
   const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
 
   useEffect(() => {
     if (offers.length <= 1) return;
@@ -79,26 +82,48 @@ export function BottomNav() {
     return () => clearInterval(interval);
   }, [offers]);
 
-  // 4. Generate Navigation Items
+  // 4. Generate Navigation Items with Automatic Filtering
   const NAV_ITEMS = useMemo(() => {
+    let baseLinks = [];
+    
     if (config?.links && config.links.length > 0) {
-      return config.links.map((link: any) => ({
+      baseLinks = config.links.map((link: any) => ({
         ...link,
         icon: ICONS[link.icon] || Grid,
         badge: link.icon === 'ShoppingCart' ? itemCount : 0,
         onClick: link.icon === 'MessageCircle' ? (e: any) => { e.preventDefault(); toggleSupport(); } : undefined
       }));
+    } else {
+      // Default Fallback
+      baseLinks = [
+        { id: 'def-h', label: 'হোম', href: '/', icon: Home },
+        { id: 'def-p', label: 'প্যাকেজ', href: '/services', icon: Layers, isPackage: true },
+        { id: 'def-m', label: 'মেসেজ', href: '#', icon: MessageCircle, isMessage: true, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
+        { id: 'def-c', label: 'কার্ট', href: '/cart', icon: ShoppingCart, isCart: true, badge: itemCount },
+        { id: 'def-a', label: 'একাউন্ট', href: '/account/dashboard', icon: User },
+      ];
     }
 
-    // Default Fallback
-    const base = [
-      { label: 'হোম', href: '/', icon: Home },
-      { label: 'প্যাকেজ', href: '/services', icon: Layers, hidden: productsEnabled },
-      { label: 'মেসেজ', href: '#', icon: MessageCircle, onClick: (e: any) => { e.preventDefault(); toggleSupport(); } },
-      { label: 'কার্ট', href: '/cart', icon: ShoppingCart, badge: itemCount },
-      { label: 'একাউন্ট', href: '/account/dashboard', icon: User },
-    ];
-    return base.filter(i => !i.hidden);
+    // 🛡️ APPLY GLOBAL LOGIC RULES
+    return baseLinks.filter((item: any) => {
+      const isCartIcon = item.isCart || item.icon === ShoppingCart || (typeof item.icon === 'string' && item.icon === 'ShoppingCart');
+      const isMessageIcon = item.isMessage || item.icon === MessageCircle || (typeof item.icon === 'string' && item.icon === 'MessageCircle');
+      const isPackageIcon = item.isPackage || item.icon === Layers || (typeof item.icon === 'string' && item.icon === 'Layers');
+
+      // 1. If Products Enabled: Show Cart, Hide Message
+      if (productsEnabled) {
+        if (isMessageIcon) return false;
+      } 
+      // 2. If Products Disabled: Hide Cart, Show Message (Only here)
+      else {
+        if (isCartIcon) return false;
+      }
+
+      // 3. Package Button Toggle
+      if (isPackageIcon && config?.showPackage === false) return false;
+
+      return true;
+    });
   }, [config, productsEnabled, itemCount, toggleSupport]);
 
   if (!mounted) return null;
@@ -115,7 +140,7 @@ export function BottomNav() {
     >
       <div className="relative flex w-full max-w-5xl mx-auto items-center z-10 px-1">
         {NAV_ITEMS.map((item: any, idx: number) => {
-          const isActive = (item.href !== '#' && pathname === item.href) || (item.label === 'মেসেজ' && isSupportOpen);
+          const isActive = (item.href && item.href !== '#' && pathname === item.href) || (item.isMessage && isSupportOpen);
           const Icon = item.icon;
 
           // Standard Nav Button
@@ -172,7 +197,7 @@ export function BottomNav() {
                           </div>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white">
-                            <Sparkles size={24} />
+                            <Zap size={24} />
                           </div>
                         )}
                       </div>
@@ -187,7 +212,7 @@ export function BottomNav() {
                   {NavButton}
                 </button>
               ) : (
-                <Link href={item.href || '#'} className="flex-1 flex justify-center py-1 outline-none">
+                <Link href={item.href || item.link || '#'} className="flex-1 flex justify-center py-1 outline-none">
                   {NavButton}
                 </Link>
               )}

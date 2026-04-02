@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -137,10 +136,15 @@ export function Navbar() {
               {layout?.header?.customRequestDesktopTitle || 'Request'}
             </Link>
           )}
-          <Link href="/cart" className="relative p-2.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm text-gray-600 hover:text-primary active:scale-90">
-            <ShoppingCart size={22} />
-            {itemCount > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border-2 border-white">{itemCount}</span>}
-          </Link>
+          
+          {/* 🛡️ CONDITIONALLY RENDER CART */}
+          {productsEnabled && (
+            <Link href="/cart" className="relative p-2.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm text-gray-600 hover:text-primary active:scale-90">
+              <ShoppingCart size={22} />
+              {itemCount > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black h-5 w-5 flex items-center justify-center rounded-full border-2 border-white">{itemCount}</span>}
+            </Link>
+          )}
+
           <Link href={user ? "/account/dashboard" : "/login"} className="p-2.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm text-gray-600 hover:text-primary active:scale-90">
             <User size={22} />
           </Link>

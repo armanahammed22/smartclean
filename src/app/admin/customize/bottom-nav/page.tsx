@@ -30,7 +30,11 @@ import {
   MessageCircle,
   ShoppingCart,
   User,
-  Grid
+  Grid,
+  Layers,
+  Box,
+  Info,
+  Package
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -43,7 +47,10 @@ const ICONS: Record<string, any> = {
   MessageCircle,
   ShoppingCart,
   User,
-  Grid
+  Grid,
+  Layers,
+  Box,
+  Package
 };
 
 const DEFAULT_LINKS = [
@@ -69,11 +76,16 @@ export default function BottomNavManagementPage() {
   const configRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'bottom_nav') : null, [db]);
   const { data: config, isLoading: configLoading } = useDoc(configRef);
 
+  // Global settings for logic context
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const [formData, setFormData] = useState<any>({
     bgColor: '#ffffff',
     activeColor: '#1E5F7A',
     inactiveColor: '#9ca3af',
     showOfferCircle: true,
+    showPackage: true,
     links: DEFAULT_LINKS
   });
 
@@ -89,7 +101,8 @@ export default function BottomNavManagementPage() {
       setFormData({
         ...formData,
         ...config,
-        links: config.links || DEFAULT_LINKS
+        links: config.links || DEFAULT_LINKS,
+        showPackage: config.showPackage ?? true
       });
     }
   }, [config]);
@@ -168,6 +181,16 @@ export default function BottomNavManagementPage() {
         </Button>
       </div>
 
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4">
+        <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Info size={20}/></div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-black uppercase text-blue-900">Automatic Logic Active</h4>
+          <p className="text-xs text-blue-800/70 leading-relaxed">
+            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings > Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে এবং "মেসেজ" বাটনটি বটম নেভিগেশনে যুক্ত হবে। উল্টোটি ঘটলে "মেসেজ" হাইড হবে এবং "কার্ট" দৃশ্যমান হবে।
+          </p>
+        </div>
+      </div>
+
       <Tabs defaultValue="links" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar">
           <TabsTrigger value="links" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
@@ -184,14 +207,20 @@ export default function BottomNavManagementPage() {
         {/* STATIC BUTTONS */}
         <TabsContent value="links" className="space-y-6">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
+            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-black uppercase">Navigation Buttons</CardTitle>
                 <CardDescription className="text-xs">Standard buttons shown on both sides of the middle offer</CardDescription>
               </div>
-              <Button onClick={addLink} variant="outline" size="sm" className="rounded-xl font-bold border-primary/20 text-primary uppercase text-[10px] h-9">
-                <PlusCircle size={14} className="mr-1.5" /> Add Custom Link
-              </Button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground">Package Button</Label>
+                  <Switch checked={formData.showPackage} onCheckedChange={v => setFormData({...formData, showPackage: v})} />
+                </div>
+                <Button onClick={addLink} variant="outline" size="sm" className="rounded-xl font-bold border-primary/20 text-primary uppercase text-[10px] h-10">
+                  <PlusCircle size={14} className="mr-1.5" /> Add Custom Link
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-8 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -208,7 +237,7 @@ export default function BottomNavManagementPage() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[9px] font-black uppercase text-gray-400">Icon Keyword</Label>
-                        <Input value={link.icon} onChange={e => updateLink(i, 'icon', e.target.value)} className="h-9 bg-white border-none text-xs font-mono" />
+                        <Input value={link.icon} onChange={e => updateLink(i, 'icon', e.target.value)} className="h-9 bg-white border-none text-xs font-mono" placeholder="ShoppingCart, Home, Layers, etc." />
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -320,11 +349,11 @@ export default function BottomNavManagementPage() {
                   className="w-full max-w-[350px] h-16 rounded-full shadow-2xl flex items-center justify-around px-6 border border-gray-100"
                   style={{ backgroundColor: formData.bgColor }}
                 >
-                  <div className="p-2 rounded-xl" style={{ backgroundColor: formData.activeColor, color: '#fff' }}><Smartphone size={18}/></div>
-                  <div className="p-2" style={{ color: formData.inactiveColor }}><Smartphone size={18}/></div>
+                  <div className="p-2 rounded-xl" style={{ backgroundColor: formData.activeColor, color: '#fff' }}><Home size={18}/></div>
+                  <div className="p-2" style={{ color: formData.inactiveColor }}><Box size={18}/></div>
                   <div className="w-12 h-12 rounded-full border-2 border-white shadow-xl bg-gray-300" />
-                  <div className="p-2" style={{ color: formData.inactiveColor }}><Smartphone size={18}/></div>
-                  <div className="p-2" style={{ color: formData.inactiveColor }}><Smartphone size={18}/></div>
+                  <div className="p-2" style={{ color: formData.inactiveColor }}><ShoppingCart size={18}/></div>
+                  <div className="p-2" style={{ color: formData.inactiveColor }}><User size={18}/></div>
                 </div>
               </div>
             </CardContent>
