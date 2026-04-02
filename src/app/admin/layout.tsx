@@ -179,6 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "New Order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
           { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
+          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
         ]
       },
       {
@@ -284,14 +285,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
         ]
-      },
-      {
-        id: 'sales_leads',
-        title: "Sales Leads",
-        href: '/admin/leads',
-        icon: TrendingUp,
-        color: "text-green-400",
-        items: []
       },
       {
         id: 'partners',
