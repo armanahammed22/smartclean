@@ -43,7 +43,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-// Strict Default Order ID Mapping (18 Modules as requested)
+// Strict Default Order ID Mapping (18 Modules)
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 

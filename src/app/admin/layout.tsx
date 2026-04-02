@@ -346,6 +346,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-indigo-400",
         items: [
           { name: "Financial Report", href: '/admin/reports', icon: FileText },
+          { name: "HRM Analytics", href: '/admin/hrm/payroll', icon: Activity },
           { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
           { name: "Offers Analytics", href: '/admin/offers/analytics', icon: Activity },
         ]
@@ -405,7 +406,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return groups
       .filter(g => {
-        // Core shift-up logic: Hide if group explicitly disabled or if products/services disabled
         if (g.visible === false) return false;
         if (visibility[g.id] === false) return false;
         return g.items.length > 0 || g.href;
