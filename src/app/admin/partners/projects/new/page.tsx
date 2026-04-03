@@ -24,7 +24,8 @@ import {
   Building2,
   Layers,
   Check,
-  Wallet
+  Wallet,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
