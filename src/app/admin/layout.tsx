@@ -129,27 +129,6 @@ const DEFAULT_MENU_KEYS = [
   'support'
 ];
 
-const MENU_LABELS: Record<string, string> = {
-  dashboard_link: "Dashboard",
-  sales: "Sales Terminal",
-  orders: "Order & Booking",
-  inventory: "Inventory",
-  services: "SERVICES",
-  marketing: "MARKETING & PROMOTIONS",
-  offers: "OFFER & CAMPAIGN",
-  seo: "SEO & TRACKING",
-  hrm: "HRM",
-  customer_hub: "Customer Hub",
-  partners: "B2B PARTNERS",
-  vendors: "VENDOR HUB",
-  finance: "FINANCIAL HUB",
-  reports: "BUSINESS REPORT",
-  customize: "SITE CUSTOMIZE",
-  system: "SETTINGS",
-  ai_agents: "AI AGENTS (STAFF)",
-  support: "SUPPORT"
-};
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -172,7 +151,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const { t } = useLanguage();
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -489,13 +467,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           }
 
           const isGroupActive = group.items.some((item: any) => pathname === item.href);
+          const isExpanded = expandedGroups[group.id] || (isGroupActive && mounted);
+
           return (
             <div key={group.id} className="space-y-1">
               <button
-                onClick={() => !collapsed && setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!collapsed) {
+                    setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }));
+                  }
+                }}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white", 
-                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2", 
+                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2.5", 
                   isGroupActive && !collapsed && "bg-white/5 text-white"
                 )}
               >
@@ -503,10 +488,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <group.icon size={collapsed ? 22 : 18} className={cn("shrink-0 transition-colors duration-300", group.color)} />
                   {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{group.title}</span>}
                 </div>
-                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
+                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
               </button>
 
-              {expandedGroups[group.id] && !collapsed && (
+              {isExpanded && !collapsed && (
                 <div className="mt-1 space-y-1 pl-8 animate-in slide-in-from-top-2 duration-300">
                   {group.items.map((item: any) => (
                     <Link
