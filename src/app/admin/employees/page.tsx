@@ -110,7 +110,7 @@ export default function EmployeesPage() {
 
   const toggleSkill = (serviceId: string) => {
     setSelectedSkills(prev => 
-      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, id]
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
     );
   };
 
