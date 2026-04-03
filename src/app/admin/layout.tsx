@@ -38,7 +38,6 @@ import {
   Layers,
   MousePointer2,
   Store,
-  CheckCircle,
   Wrench,
   Smartphone,
   Code,
@@ -55,22 +54,13 @@ import {
   MapPin,
   ClipboardList,
   ArrowLeft,
-  CreditCard,
   Search,
-  ChevronDown,
   BarChart,
-  Terminal,
-  Trophy,
   Wallet,
-  Crown,
-  Handshake,
   Building2,
   UserCheck,
-  DollarSign,
   ReceiptText,
-  ShieldAlert,
   Package,
-  Clock,
   CircleEllipsis,
   Gift
 } from 'lucide-react';
@@ -101,7 +91,6 @@ import {
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useLanguage } from '@/components/providers/language-provider';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
