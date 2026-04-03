@@ -33,7 +33,8 @@ import {
   ChevronDown,
   Clock,
   ShieldCheck,
-  Award
+  Award,
+  Zap
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -58,19 +59,28 @@ export default function EmployeesPage() {
   const [filterDept, setFilterDept] = useState('all');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles'), orderBy('name', 'asc')) : null, [db, user]);
+  // Robust Queries - Removed orderBy to ensure all docs return even if name is missing
+  const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
   const { data: services } = useCollection(servicesQuery);
 
+  // Hardened Filtering Logic
   const filteredStaff = useMemo(() => {
     if (!employees) return [];
-    return employees.filter(e => {
-      const matchesSearch = e.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDept = filterDept === 'all' || e.department === filterDept;
+    
+    return employees.filter(staff => {
+      const name = (staff.name || "").toLowerCase();
+      const phone = (staff.phone || "");
+      const department = staff.department || "Operations";
+      const search = searchTerm.toLowerCase();
+      
+      const matchesSearch = name.includes(search) || phone.includes(search);
+      const matchesDept = filterDept === 'all' || department === filterDept;
+      
       return matchesSearch && matchesDept;
-    });
+    }).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   }, [employees, searchTerm, filterDept]);
 
   const stats = useMemo(() => {
@@ -105,7 +115,7 @@ export default function EmployeesPage() {
     try {
       if (editingStaff) {
         await updateDoc(doc(db, 'employee_profiles', editingStaff.id), staffData);
-        toast({ title: "Profile Updated", description: "The staff record has been synchronized." });
+        toast({ title: "Profile Updated" });
       } else {
         await addDoc(collection(db, 'employee_profiles'), { 
           ...staffData, 
@@ -113,13 +123,13 @@ export default function EmployeesPage() {
           jobsCompleted: 0, 
           createdAt: new Date().toISOString() 
         });
-        toast({ title: "Personnel Enrolled", description: "Successfully added to the directory." });
+        toast({ title: "Personnel Enrolled" });
       }
       setIsDialogOpen(false);
       setEditingStaff(null);
       setSelectedSkills([]);
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Could not save staff record." });
+      toast({ variant: "destructive", title: "Error Saving Data" });
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +142,7 @@ export default function EmployeesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("Permanently remove this personnel? This action is irreversible.")) return;
+    if (!db || !confirm("Permanently remove this personnel?")) return;
     await deleteDoc(doc(db, 'employee_profiles', id));
     toast({ title: "Personnel Removed" });
   };
@@ -145,7 +155,6 @@ export default function EmployeesPage() {
 
   return (
     <div className="space-y-8 pb-20 animate-in fade-in duration-700">
-      {/* 🟢 HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">HRM - Staff Directory</h1>
@@ -154,7 +163,7 @@ export default function EmployeesPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingStaff(null); }}>
           <DialogTrigger asChild>
-            <Button className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 font-black uppercase text-xs tracking-widest gap-3 transition-all active:scale-95">
+            <Button className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl font-black uppercase text-xs tracking-widest gap-3">
               <Plus size={20} /> Hire New Personnel
             </Button>
           </DialogTrigger>
@@ -167,7 +176,7 @@ export default function EmployeesPage() {
                 <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest mt-1">Configure identity, payroll and certified skills</DialogDescription>
               </DialogHeader>
 
-              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
                 <Tabs defaultValue="identity" className="w-full">
                   <TabsList className="bg-gray-100 p-1 rounded-xl mb-8 w-fit">
                     <TabsTrigger value="identity" className="rounded-lg gap-2 text-[10px] font-black uppercase">Identity</TabsTrigger>
@@ -277,7 +286,7 @@ export default function EmployeesPage() {
               </div>
               
               <DialogFooter className="p-8 bg-gray-50 border-t shrink-0 flex gap-3">
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
+                <Button type="button" variant="ghost" onClick={() => setIsRoleDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-12 h-12 shadow-xl bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Sync Records</>}
                 </Button>
@@ -287,12 +296,11 @@ export default function EmployeesPage() {
         </Dialog>
       </div>
 
-      {/* 🟢 TOP STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all border border-gray-100">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] leading-none mb-1">Total Personnel</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Personnel</p>
               <h3 className="text-4xl font-black text-gray-900 tracking-tighter">{stats.total}</h3>
             </div>
             <div className="p-5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-inner">
@@ -304,7 +312,7 @@ export default function EmployeesPage() {
         <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all border border-gray-100">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] leading-none mb-1">Active Field Duty</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Active Field Duty</p>
               <h3 className="text-4xl font-black text-emerald-600 tracking-tighter">{stats.active}</h3>
             </div>
             <div className="p-5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-inner">
@@ -316,7 +324,7 @@ export default function EmployeesPage() {
         <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden group hover:shadow-xl transition-all border border-gray-100">
           <CardContent className="p-8 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] leading-none mb-1">Payroll Volume</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Payroll Volume</p>
               <h3 className="text-4xl font-black text-indigo-600 tracking-tighter">৳{(stats.payroll / 1000).toFixed(1)}K</h3>
             </div>
             <div className="p-5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-inner">
@@ -326,12 +334,11 @@ export default function EmployeesPage() {
         </Card>
       </div>
 
-      {/* 🟢 SEARCH & FILTERS */}
       <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
-            placeholder="Search by personnel name..." 
+            placeholder="Search by personnel name or phone..." 
             className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-2xl transition-all font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -342,20 +349,17 @@ export default function EmployeesPage() {
             <SelectTrigger className="h-12 w-full md:w-48 bg-gray-50 border-none rounded-2xl font-black uppercase text-[10px] px-6">
               <div className="flex items-center gap-2"><Filter size={14}/> <SelectValue placeholder="Department" /></div>
             </SelectTrigger>
-            <SelectContent className="rounded-2xl">
+            <SelectContent className="rounded-xl">
               <SelectItem value="all">All Depts</SelectItem>
               <SelectItem value="Operations">Operations</SelectItem>
               <SelectItem value="Logistics">Logistics</SelectItem>
               <SelectItem value="Sales">Sales</SelectItem>
+              <SelectItem value="Finance">Finance</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="h-12 w-12 p-0 rounded-2xl border-gray-100 hover:bg-gray-50">
-            <MoreVertical size={18} />
-          </Button>
         </div>
       </div>
 
-      {/* 🟢 STAFF DIRECTORY TABLE */}
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem]">
         <CardContent className="p-0">
           <div className="overflow-x-auto custom-scrollbar">
@@ -385,10 +389,10 @@ export default function EmployeesPage() {
                       <TableCell className="py-6 pl-10">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 rounded-2xl border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition-transform" onClick={() => handleOpenEdit(staff)}>
-                            <AvatarFallback className="bg-primary text-white font-black text-sm uppercase">{staff.name?.[0]}</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-white font-black text-sm uppercase">{staff.name?.[0] || '?'}</AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="font-black text-gray-900 uppercase text-xs truncate leading-tight mb-1">{staff.name}</p>
+                            <p className="font-black text-gray-900 uppercase text-xs truncate leading-tight mb-1">{staff.name || 'Unnamed'}</p>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="bg-primary/5 text-primary border-none text-[8px] font-black uppercase h-4 px-1.5">{staff.role || 'Personnel'}</Badge>
                             </div>
@@ -444,7 +448,7 @@ export default function EmployeesPage() {
                           staff.status === 'On Leave' ? "bg-amber-50 text-amber-700" :
                           "bg-rose-50 text-rose-700"
                         )}>
-                          {staff.status}
+                          {staff.status || 'Active'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right pr-10">
@@ -455,18 +459,6 @@ export default function EmployeesPage() {
                                 <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/10 rounded-xl" onClick={() => handleOpenEdit(staff)}><Edit size={16} /></Button>
                               </TooltipTrigger>
                               <TooltipContent className="text-[9px] font-black uppercase">Edit Records</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-xl"><Eye size={16} /></Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-[9px] font-black uppercase">Profile Deck</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" asChild><Link href="/admin/bookings?create=true"><Zap size={16} /></Link></Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="text-[9px] font-black uppercase">Assign Duty</TooltipContent>
                             </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -484,12 +476,15 @@ export default function EmployeesPage() {
                     <TableCell colSpan={7} className="py-24 text-center">
                       <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
                         <div className="p-6 bg-gray-50 rounded-full text-gray-200">
-                          <Award size={64} />
+                          <Zap size={64} />
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-black uppercase text-gray-900">No Personnel Found</h4>
-                          <p className="text-xs text-muted-foreground font-medium">Start by enrolling your first team member using the hire button above.</p>
+                          <p className="text-xs text-muted-foreground font-medium">No records match your current filter criteria.</p>
                         </div>
+                        {searchTerm && (
+                          <Button variant="outline" size="sm" onClick={() => setSearchTerm('')} className="mt-4 font-black uppercase text-[10px]">Clear Search</Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
