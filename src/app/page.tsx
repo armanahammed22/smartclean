@@ -30,7 +30,8 @@ import {
   Package,
   ArrowRight,
   Calendar,
-  Layers
+  Layers,
+  Plus
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
