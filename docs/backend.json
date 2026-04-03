@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "LandingPage": {
@@ -38,9 +39,12 @@
       "properties": {
         "title": { "type": "string" },
         "type": { "type": "string", "enum": ["buy_x_get_y", "bundle", "min_order", "tiered"] },
-        "isActive": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Draft", "Live", "Scheduled", "Expired"] },
         "targeting": { "type": "string" },
         "rules": { "type": "object" },
+        "applicableItems": { "type": "array" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
         "createdAt": { "type": "string" }
       }
     },
@@ -56,6 +60,19 @@
         "location": { "type": "object" },
         "status": { "type": "string" }
       }
+    },
+    "LedgerEntry": {
+      "title": "LedgerEntry",
+      "description": "Financial transaction log for income and expenses.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "paidStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "date": { "type": "string", "format": "date-time" },
+        "accountId": { "type": "string" }
+      }
     }
   },
   "auth": {
@@ -66,6 +83,7 @@
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
     "/attendance_logs/{id}": { "schema": "Attendance", "description": "Attendance tracking." },
     "/advanced_offers/{id}": { "schema": "AdvancedOffer", "description": "Marketing engine rules." },
-    "/expense_claims/{id}": { "schema": "object", "description": "Staff reimbursement claims." }
+    "/finance_ledger/{id}": { "schema": "LedgerEntry", "description": "Central accounting log." },
+    "/hero_banners/{id}": { "schema": "object", "description": "Homepage slider assets." }
   }
 }
