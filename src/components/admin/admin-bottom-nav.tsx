@@ -51,7 +51,7 @@ export function AdminBottomNav() {
           <Link
             key={item.name}
             href={item.href}
-            scroll={false}
+            scroll={false} // CRITICAL: Maintain scroll position
             className={cn(
               "flex flex-col items-center justify-center gap-1 flex-1 transition-all h-full",
               pathname === item.href ? "text-primary bg-white/5" : "text-gray-400"

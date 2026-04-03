@@ -151,6 +151,7 @@ const MENU_LABELS: Record<string, string> = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  // CRITICAL: Collapsed by default as requested
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -185,7 +186,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem(STORAGE_KEY);
+      // Ensure it defaults to true even on first load
       if (savedState !== null) setIsCollapsed(savedState === 'true');
+      else setIsCollapsed(true); 
       setMounted(true);
     }
   }, []);
@@ -240,7 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'inventory',
         title: "Inventory",
         icon: Box,
-        color: "text-slate-400",
+        color: "text-amber-400",
         visible: productsEnabled,
         items: [
           { name: "All Products", href: '/admin/products', icon: Package },
@@ -293,7 +296,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'seo',
         title: "SEO & TRACKING",
         icon: Globe,
-        color: "text-blue-400",
+        color: "text-emerald-400",
         items: [
           { name: "SEO Settings", href: '/admin/seo/settings', icon: Globe },
           { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
@@ -308,7 +311,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'hrm',
         title: "HRM",
         icon: HardHat,
-        color: "text-amber-400",
+        color: "text-yellow-400",
         items: [
           { name: "Staff Directory", href: '/admin/employees', icon: Users },
           { name: "Attendance Logs", href: '/admin/hrm/attendance', icon: Clock },
@@ -322,7 +325,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'customer_hub',
         title: "Customer Hub",
         icon: Users,
-        color: "text-emerald-400",
+        color: "text-cyan-400",
         items: [
           { name: "Customer Directory", href: '/admin/customers', icon: UserCheck },
         ]
@@ -331,7 +334,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'partners',
         title: "B2B PARTNERS",
         icon: Handshake,
-        color: "text-blue-400",
+        color: "text-violet-400",
         items: [
           { name: "Partner Registry", href: '/admin/partners', icon: Building2 },
           { name: "Partner Projects", href: '/admin/partners/projects', icon: Briefcase },
@@ -342,7 +345,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'vendors',
         title: "VENDOR HUB",
         icon: Store,
-        color: "text-amber-400",
+        color: "text-teal-400",
         items: [
           { name: "All Vendors", href: '/admin/vendors', icon: Store },
           { name: "Pending Approvals", href: '/admin/vendors/verifications', icon: AlertCircle },
@@ -353,7 +356,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'finance',
         title: "FINANCIAL HUB",
         icon: Wallet,
-        color: "text-emerald-400",
+        color: "text-green-400",
         items: [
           { name: "Finance Overview", href: '/admin/finance', icon: TrendingUp },
           { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
@@ -366,7 +369,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'reports',
         title: "BUSINESS REPORT",
         icon: BarChart3,
-        color: "text-indigo-400",
+        color: "text-purple-400",
         items: [
           { name: "Financial Report", href: '/admin/reports', icon: FileText },
           { name: "HRM Analytics", href: '/admin/hrm/payroll', icon: Activity },
@@ -378,7 +381,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'customize',
         title: "SITE CUSTOMIZE",
         icon: Palette,
-        color: "text-indigo-400",
+        color: "text-fuchsia-400",
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
@@ -395,7 +398,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'system',
         title: "SETTINGS",
         icon: Settings,
-        color: "text-slate-400",
+        color: "text-slate-300",
         items: [
           { name: "Global Settings", href: '/admin/settings', icon: Settings },
           { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
@@ -408,7 +411,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'ai_agents',
         title: "AI AGENTS (STAFF)",
         icon: Bot,
-        color: "text-purple-400",
+        color: "text-blue-300",
         items: [
           { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
           { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Zap },
@@ -418,7 +421,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         id: 'support',
         title: "SUPPORT",
         icon: Headphones,
-        color: "text-pink-400",
+        color: "text-rose-300",
         items: [
           { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
           { name: "Support Hub Config", href: '/admin/support-hub', icon: Headphones },
@@ -451,7 +454,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const SidebarContent = ({ collapsed, closeMobile }: { collapsed?: boolean, closeMobile?: () => void }) => (
     <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
-      <div className={cn("flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all", collapsed ? "justify-center px-0" : "px-6")}>
+      <div className={cn("flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all duration-300", collapsed ? "justify-center px-0" : "px-6")}>
         <div className="w-10 h-10 bg-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
           {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" unoptimized /> : <ShieldCheck size={20} className="text-primary" />}
         </div>
@@ -471,17 +474,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={group.id}
                 href={group.href || '#'}
-                scroll={false}
+                scroll={false} // CRITICAL: Maintain scroll position
                 onClick={closeMobile}
                 className={cn(
-                  "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white",
+                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
                   collapsed ? "justify-center px-0 h-12" : "px-3 py-3",
-                  pathname === group.href && "bg-white/10 text-white border border-white/5 shadow-xl"
+                  pathname === group.href && "bg-white/10 text-white border border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
                 )}
               >
-                <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3 flex-1")}>
-                  <group.icon size={18} className={cn(group.color, pathname === group.href && "text-white")} />
-                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest">{group.title}</span>}
+                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center" : "gap-3 flex-1")}>
+                  <group.icon size={collapsed ? 22 : 18} className={cn("transition-colors duration-300", group.color, pathname === group.href && "text-white scale-110")} />
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
                 </div>
               </Link>
             );
@@ -493,14 +496,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <button
                 onClick={() => !collapsed && setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}
                 className={cn(
-                  "flex items-center w-full rounded-xl transition-all text-white/40 hover:bg-white/5 hover:text-white", 
+                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white", 
                   collapsed ? "justify-center px-0 h-10" : "px-3 py-2", 
                   isGroupActive && !collapsed && "bg-white/5 text-white"
                 )}
               >
-                <div className={cn("flex items-center", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
-                  <group.icon size={18} className={cn("shrink-0", group.color)} />
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left">{group.title}</span>}
+                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
+                  <group.icon size={collapsed ? 22 : 18} className={cn("shrink-0 transition-colors duration-300", group.color)} />
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{group.title}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto", expandedGroups[group.id] ? "rotate-90" : "")} />}
               </button>
@@ -511,12 +514,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={item.name}
                       href={item.href}
-                      scroll={false}
+                      scroll={false} // CRITICAL: Maintain scroll position
                       onClick={closeMobile}
-                      className={cn("flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", pathname === item.href ? "bg-white text-[#081621] shadow-lg scale-[1.02]" : "text-white/50 hover:text-white")}
+                      className={cn(
+                        "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 
+                        pathname === item.href 
+                          ? "bg-white text-[#081621] shadow-xl scale-[1.05] z-10" 
+                          : "text-white/50 hover:text-white hover:translate-x-1"
+                      )}
                     >
-                      <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary" : "opacity-40 group-hover/item:opacity-100")} />
-                      <span className="truncate">{item.name}</span>
+                      <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary scale-110" : "opacity-40 group-hover/item:opacity-100")} />
+                      <span className="truncate whitespace-nowrap">{item.name}</span>
                     </Link>
                   ))}
                 </div>
@@ -526,8 +534,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </div>
 
-      <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all", collapsed && "flex justify-center")}>
-        <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
+      <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all duration-300", collapsed && "flex justify-center")}>
+        <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 transition-all duration-300", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
           <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
           {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout</span>}
         </Button>
@@ -546,11 +554,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-300 ease-in-out relative border-r border-white/5 shrink-0 z-50", isCollapsed ? "w-20" : "w-72")}>
+      <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-500 ease-in-out relative border-r border-white/5 shrink-0 z-50", isCollapsed ? "w-20" : "w-72")}>
         <SidebarContent collapsed={isCollapsed} />
         <button 
           onClick={handleToggleCollapse} 
-          className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 border-2 border-[#F8FAFC] transition-transform active:scale-95"
+          className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 border-2 border-[#F8FAFC] transition-all duration-300 active:scale-95"
         >
           {isCollapsed ? <ChevronRight size={14} strokeWidth={3} /> : <ArrowLeft size={14} strokeWidth={3} />}
         </button>
