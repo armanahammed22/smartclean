@@ -38,6 +38,7 @@ export default function SubServicesManagementPage() {
     status: 'Active',
     isAddOnEnabled: true,
     isDefaultAddOn: false,
+    isStandaloneEnabled: true,
     pricingType: 'quantity' as 'quantity' | 'sqft'
   });
 
@@ -59,6 +60,7 @@ export default function SubServicesManagementPage() {
         status: editingSub.status || 'Active',
         isAddOnEnabled: editingSub.isAddOnEnabled ?? true,
         isDefaultAddOn: editingSub.isDefaultAddOn ?? false,
+        isStandaloneEnabled: editingSub.isStandaloneEnabled ?? true,
         pricingType: editingSub.pricingType || 'quantity'
       });
       setImageUrl(editingSub.imageUrl || '');
@@ -72,6 +74,7 @@ export default function SubServicesManagementPage() {
         status: 'Active',
         isAddOnEnabled: true,
         isDefaultAddOn: false,
+        isStandaloneEnabled: true,
         pricingType: 'quantity'
       });
       setImageUrl('');
@@ -102,6 +105,7 @@ export default function SubServicesManagementPage() {
       status: formValues.status,
       isAddOnEnabled: formValues.isAddOnEnabled,
       isDefaultAddOn: formValues.isDefaultAddOn,
+      isStandaloneEnabled: formValues.isStandaloneEnabled,
       pricingType: formValues.pricingType,
       imageUrl: imageUrl,
       updatedAt: serverTimestamp()
@@ -209,6 +213,10 @@ export default function SubServicesManagementPage() {
                       <Label className="text-[10px] font-black uppercase text-blue-900">Add-on Mode</Label>
                       <Switch checked={formValues.isAddOnEnabled} onCheckedChange={val => setFormValues({...formValues, isAddOnEnabled: val})} />
                     </div>
+                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                      <Label className="text-[10px] font-black uppercase text-indigo-900">Show as Standalone</Label>
+                      <Switch checked={formValues.isStandaloneEnabled} onCheckedChange={val => setFormValues({...formValues, isStandaloneEnabled: val})} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -263,14 +271,19 @@ export default function SubServicesManagementPage() {
                     </TableCell>
                     <TableCell className="font-black text-sm text-gray-900">৳{sub.price?.toLocaleString()}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className={cn("text-[8px] font-black uppercase border-none px-2 py-0.5", sub.isAddOnEnabled ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400")}>
-                        {sub.isAddOnEnabled ? 'ADD-ON' : 'STANDALONE'}
-                      </Badge>
+                      <div className="flex flex-col gap-1 items-center">
+                        <Badge className={cn("text-[7px] font-black uppercase border-none px-1.5", sub.isAddOnEnabled ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400")}>
+                          {sub.isAddOnEnabled ? 'ADD-ON' : 'NO ADD-ON'}
+                        </Badge>
+                        <Badge className={cn("text-[7px] font-black uppercase border-none px-1.5", sub.isStandaloneEnabled !== false ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400")}>
+                          {sub.isStandaloneEnabled !== false ? 'STANDALONE' : 'HIDDEN'}
+                        </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => openEdit(sub)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(sub.id)}><Trash2 size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => openEdit(sub)}><Edit size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(sub.id)}><Trash2 size={16} /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

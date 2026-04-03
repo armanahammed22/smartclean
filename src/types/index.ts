@@ -145,6 +145,7 @@ export interface SubService {
   imageUrl?: string;
   isAddOnEnabled: boolean;
   isDefaultAddOn: boolean;
+  isStandaloneEnabled?: boolean;
   status: 'Active' | 'Inactive';
   duration?: string;
   pricingType?: 'quantity' | 'sqft';

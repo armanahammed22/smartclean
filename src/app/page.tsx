@@ -142,7 +142,7 @@ export default function SmartCleanHomePage() {
     };
 
     const getFilteredSubServices = () => {
-      return (allSubServices?.filter(s => s.status === 'Active') || [])
+      return (allSubServices?.filter(s => s.status === 'Active' && s.isStandaloneEnabled !== false) || [])
         .filter(s => {
           if (config.category && config.category !== 'All') {
             const parent = allServices?.find(p => p.id === s.mainServiceId);
@@ -158,7 +158,8 @@ export default function SmartCleanHomePage() {
             basePrice: sub.price, 
             itemType: 'service', 
             isSubServiceItem: true,
-            categoryId: parent?.categoryId || 'Service'
+            categoryId: parent?.categoryId || 'Service',
+            parentSlug: parent?.slug || parent?.id
           };
         })
         .slice(0, config.limit || 12);
@@ -326,11 +327,11 @@ export default function SmartCleanHomePage() {
                 >
                   {section.title}
                 </h2>
-                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Add-on Deals</Badge>
+                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Service Add-ons</Badge>
               </div>
               <div className={gridCols}>
                 {displaySubServices.map(s => (
-                  <Link key={s.id} href={`/service/${allServices?.find(p => p.id === s.mainServiceId)?.slug || s.mainServiceId}`} className="block h-full group">
+                  <Link key={s.id} href={`/service/${s.parentSlug}`} className="block h-full group">
                     <Card className={cn("border-none h-full overflow-hidden transition-all duration-500", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50">
                         {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Layers size={32} className="text-gray-200 m-auto" />}
@@ -341,6 +342,9 @@ export default function SmartCleanHomePage() {
                           <span className="font-black text-primary text-base" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
                           <div className="bg-primary/5 p-1 rounded-lg"><Plus size={14} className="text-primary" /></div>
                         </div>
+                        <Button size="sm" className="w-full h-9 rounded-lg font-black uppercase text-[9px] tracking-widest mt-2" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                          <Zap size={12} className="mr-1" /> {t('book_now')}
+                        </Button>
                       </CardContent>
                     </Card>
                   </Link>
