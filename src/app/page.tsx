@@ -31,7 +31,8 @@ import {
   ArrowRight,
   Calendar,
   Layers,
-  Plus
+  Plus,
+  Check
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -84,6 +85,7 @@ export default function SmartCleanHomePage() {
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
+  const plansRef = useMemoFirebase(() => db ? collection(db, 'subscription_plans') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
@@ -94,6 +96,7 @@ export default function SmartCleanHomePage() {
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
   const { data: globalTheme } = useDoc(themeRef);
+  const { data: plans } = useCollection(plansRef);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -262,6 +265,57 @@ export default function SmartCleanHomePage() {
                 <div className="p-3 md:p-6 flex gap-2 md:gap-4 overflow-x-auto no-scrollbar">
                   {flashProducts.map(p => <div key={p.id} className="w-[155px] md:w-[220px] shrink-0"><FlashSaleCard product={p} customStyle={style} /></div>)}
                 </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'billing_plans':
+        if (!plans || plans.length === 0) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 
+                  className={cn("font-black uppercase tracking-tighter")}
+                  style={{ 
+                    ...titleStyles, 
+                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
+                  }}
+                >
+                  {section.title}
+                </h2>
+                <Link href="/billing" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
+                  Compare Plans
+                </Link>
+              </div>
+              <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6")}>
+                {plans.slice(0, 3).map((plan) => (
+                  <Card key={plan.id} className={cn("border-none shadow-sm flex flex-col h-full overflow-hidden transition-all group hover:shadow-2xl", plan.featured && "ring-2 ring-primary")} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                    <CardContent className="p-0 flex-1 flex flex-col">
+                      <div className={cn("p-8", plan.color || 'bg-primary/5')}>
+                        <Badge className="bg-white/50 text-gray-900 border-none text-[8px] font-black uppercase tracking-widest px-2 mb-3">Service Tier</Badge>
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-4">{plan.name}</h3>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-black text-primary">{plan.price}</span>
+                          <span className="text-muted-foreground text-sm font-bold uppercase">{plan.period}</span>
+                        </div>
+                      </div>
+                      <div className="p-8 space-y-6 flex-1 flex flex-col">
+                        <ul className="space-y-4 flex-1">
+                          {plan.features.slice(0, 5).map((f: string, i: number) => (
+                            <li key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600 uppercase tracking-tight">
+                              <Check size={14} className="text-green-600 mt-0.5 shrink-0" /> {f}
+                            </li>
+                          ))}
+                        </ul>
+                        <Button className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                          Subscribe Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           </section>

@@ -39,7 +39,8 @@ import {
   Smartphone,
   Monitor,
   Wrench,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -57,8 +58,6 @@ import { Slider } from '@/components/ui/slider';
 
 /**
  * STRICT ALLOWED SECTION TYPES
- * Requirements: Only specific features can be added. 
- * Sub-services must be separate from main services.
  */
 const SECTION_TYPES = [
   { id: 'hero', label: 'Main Hero Slider', icon: Layout, category: 'Main' },
@@ -67,6 +66,7 @@ const SECTION_TYPES = [
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap, category: 'Marketing' },
   { id: 'services_featured', label: 'Main Services', icon: Wrench, category: 'Services' },
   { id: 'sub_services_custom', label: 'Custom Sub-Services', icon: Layers, category: 'Services' },
+  { id: 'billing_plans', label: 'Billing & Plans', icon: CreditCard, category: 'Business' },
   { id: 'products_featured', label: 'Featured Products', icon: Star, category: 'Products' },
   { id: 'products_new', label: 'New Arrivals', icon: Package, category: 'Products' },
   { id: 'trust_stats', label: 'Trust Stats Counter', icon: Users, category: 'UI' }
@@ -489,7 +489,7 @@ export default function HomepageBuilderPage() {
                               <Select value={editingSection?.styleConfig?.gridShow || '4'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, gridShow: v}})}>
                                 <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
                                 <SelectContent className="rounded-xl">
-                                  {['3','4','5','6'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Items Wide</SelectItem>)}
+                                  {['1','2','3','4'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Items Wide</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -560,7 +560,7 @@ export default function HomepageBuilderPage() {
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 bg-white custom-scrollbar">
-            {['Main', 'Marketing', 'Services', 'Products', 'UI'].map(category => (
+            {['Main', 'Marketing', 'Services', 'Business', 'Products', 'UI'].map(category => (
               <div key={category} className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" /> {category} Modules
