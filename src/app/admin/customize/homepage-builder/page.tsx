@@ -31,15 +31,15 @@ import {
   X,
   AlignLeft,
   AlignCenter,
-  AlignRight,
   Info,
   Filter,
   Navigation,
   MoveVertical,
   AlignJustify,
-  Maximize2,
   Smartphone,
-  Monitor
+  Monitor,
+  Wrench,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -55,13 +55,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 
+/**
+ * STRICT ALLOWED SECTION TYPES
+ * Requirements: Only specific features can be added. 
+ * Sub-services must be separate from main services.
+ */
 const SECTION_TYPES = [
   { id: 'hero', label: 'Main Hero Slider', icon: Layout, category: 'Main' },
   { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap, category: 'Marketing' },
   { id: 'categories', label: 'Categories Grid', icon: Layers, category: 'Navigation' },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap, category: 'Marketing' },
-  { id: 'services_featured', label: 'Featured Services', icon: Star, category: 'Services' },
-  { id: 'services_popular', label: 'Popular Services', icon: TrendingUp, category: 'Services' },
+  { id: 'services_featured', label: 'Main Services', icon: Wrench, category: 'Services' },
+  { id: 'sub_services_custom', label: 'Custom Sub-Services', icon: Layers, category: 'Services' },
   { id: 'products_featured', label: 'Featured Products', icon: Star, category: 'Products' },
   { id: 'products_new', label: 'New Arrivals', icon: Package, category: 'Products' },
   { id: 'trust_stats', label: 'Trust Stats Counter', icon: Users, category: 'UI' }
@@ -82,6 +87,9 @@ export default function HomepageBuilderPage() {
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
+
+  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
+  const { data: categories } = useCollection(categoriesQuery);
 
   useEffect(() => {
     if (sections) setLocalSections(sections);
@@ -178,15 +186,15 @@ export default function HomepageBuilderPage() {
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">UI Engine</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-2">Manage global theme and dynamic homepage blocks</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Homepage Engine</h1>
+          <p className="text-muted-foreground text-sm font-medium mt-2">Manage dynamic layout, visibility and global styling rules</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Button onClick={() => setIsAddOpen(true)} className="flex-1 md:flex-none gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
             <Plus size={18} /> Add Block
           </Button>
           <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="flex-1 md:flex-none gap-2 font-black h-11 px-6 rounded-xl bg-white shadow-sm">
-            <Save size={18} /> Save Order
+            <Save size={18} /> Save Sequence
           </Button>
         </div>
       </div>
@@ -194,7 +202,7 @@ export default function HomepageBuilderPage() {
       <Tabs defaultValue="builder" className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl w-full max-w-md shadow-sm">
           <TabsTrigger value="builder" className="flex-1 rounded-lg gap-2 font-bold uppercase text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Grid size={14} /> Builder
+            <Grid size={14} /> Section Builder
           </TabsTrigger>
           <TabsTrigger value="master" className="flex-1 rounded-lg gap-2 font-bold uppercase text-[10px] data-[state=active]:bg-primary data-[state=active]:text-white">
             <Palette size={14} /> Master Theme
@@ -204,7 +212,8 @@ export default function HomepageBuilderPage() {
         <TabsContent value="builder" className="mt-0">
           <div className="max-w-4xl mx-auto space-y-3">
             {localSections.map((section, index) => {
-              const Icon = SECTION_TYPES.find(t => t.id === section.type)?.icon || Layout;
+              const typeInfo = SECTION_TYPES.find(t => t.id === section.type);
+              const Icon = typeInfo?.icon || Layout;
               return (
                 <Card 
                   key={section.id}
@@ -219,25 +228,29 @@ export default function HomepageBuilderPage() {
                 >
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-300" /></div>
-                    <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}><Icon size={20} /></div>
+                    <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}>
+                      <Icon size={20} />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">{section.type.replace(/_/g, ' ')}</Badge>
+                        <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">
+                          {typeInfo?.label || section.type}
+                        </Badge>
                         {section.config?.category && section.config.category !== 'All' && (
                           <Badge className="bg-blue-50 text-blue-600 border-none text-[7px] font-black h-4 px-1.5">{section.config.category}</Badge>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                      <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
                         <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
                         <Switch checked={section.isActive} onCheckedChange={() => handleToggle(section.id, section.isActive)} className="scale-75" />
                       </div>
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
                         <Settings2 size={18} />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete this block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete this layout block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
                         <Trash2 size={18} />
                       </Button>
                     </div>
@@ -245,6 +258,13 @@ export default function HomepageBuilderPage() {
                 </Card>
               );
             })}
+            {!localSections.length && !isLoading && (
+              <div className="p-20 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic flex flex-col items-center gap-4">
+                <Sparkles size={48} className="text-gray-200" />
+                <p className="text-xs font-black uppercase tracking-widest">Homepage Layout Empty</p>
+                <Button onClick={() => setIsAddOpen(true)} variant="outline" size="sm" className="rounded-xl px-6">Build Your First Block</Button>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -256,25 +276,24 @@ export default function HomepageBuilderPage() {
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary rounded-xl"><Palette size={24} /></div>
                     <div>
-                      <CardTitle className="text-xl font-black uppercase tracking-widest leading-none">Global Master Styles</CardTitle>
+                      <CardTitle className="text-xl font-black uppercase tracking-widest leading-none">Global Branding Styles</CardTitle>
                       <CardDescription className="text-white/40 mt-1 uppercase font-bold text-[9px]">Universal controls for all homepage sections</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-8 space-y-12">
                   <div className="space-y-10">
-                    {/* Section & Card Geometry */}
                     <div className="space-y-6">
                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                        <Maximize size={14} /> Section & Card Geometry
+                        <Maximize size={14} /> Geometric Logic
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Section BG</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Section Background</Label>
                           <Input type="color" value={globalTheme?.sectionBg || '#ffffff'} onChange={e => updateGlobalTheme({ sectionBg: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card BG</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Background</Label>
                           <Input type="color" value={globalTheme?.cardBg || '#ffffff'} onChange={e => updateGlobalTheme({ cardBg: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
                         </div>
                         <div className="space-y-2">
@@ -282,7 +301,7 @@ export default function HomepageBuilderPage() {
                           <Input type="number" value={globalTheme?.cardRadius || 24} onChange={e => updateGlobalTheme({ cardRadius: parseInt(e.target.value) || 0 })} className="h-10 bg-gray-50 border-none font-bold" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Shadow</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Shadow Style</Label>
                           <Select value={globalTheme?.cardShadow || 'shadow-sm'} onValueChange={v => updateGlobalTheme({ cardShadow: v })}>
                             <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -296,100 +315,40 @@ export default function HomepageBuilderPage() {
                       </div>
                     </div>
 
-                    {/* Section Titles */}
                     <div className="space-y-6">
                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                        <Type size={14} /> Section Titles
+                        <Type size={14} /> Typography Protocols
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Title Color</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Header Color</Label>
                           <Input type="color" value={globalTheme?.titleColor || '#081621'} onChange={e => updateGlobalTheme({ titleColor: e.target.value })} className="h-10 p-1 bg-white border-gray-100 rounded-lg" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Title Align</Label>
+                          <Label className="text-[9px] font-black uppercase">Header Alignment</Label>
                           <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
                             <button onClick={() => updateGlobalTheme({ textAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.textAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
                             <button onClick={() => updateGlobalTheme({ textAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.textAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
                           </div>
                         </div>
                         <div className="space-y-4">
-                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Smartphone size={10}/> Size (M) <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
+                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Smartphone size={10}/> Mobile Title (px) <span>{globalTheme?.titleSizeMobile || 24}px</span></Label>
                           <Slider value={[parseInt(globalTheme?.titleSizeMobile || '24')]} min={16} max={48} onValueChange={val => updateGlobalTheme({ titleSizeMobile: val[0].toString() })} />
                         </div>
                         <div className="space-y-4">
-                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Monitor size={10}/> Size (D) <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
+                          <Label className="text-[9px] font-black uppercase flex items-center justify-between"><Monitor size={10}/> Desktop Title (px) <span>{globalTheme?.titleSizeDesktop || 40}px</span></Label>
                           <Slider value={[parseInt(globalTheme?.titleSizeDesktop || '40')]} min={24} max={80} onValueChange={val => updateGlobalTheme({ titleSizeDesktop: val[0].toString() })} />
                         </div>
                       </div>
                     </div>
 
-                    {/* Card Content Titles */}
                     <div className="space-y-6">
                       <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                        <Type size={14} /> Item Titles (Cards)
+                        <MousePointer2 size={14} /> Call-to-Action Protocol
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Item Title Color</Label>
-                          <Input type="color" value={globalTheme?.itemTitleColor || '#081621'} onChange={e => updateGlobalTheme({ itemTitleColor: e.target.value })} className="h-10 p-1" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Item Align</Label>
-                          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                            <button onClick={() => updateGlobalTheme({ titleAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.titleAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
-                            <button onClick={() => updateGlobalTheme({ titleAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.titleAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
-                          </div>
-                        </div>
-                        <div className="space-y-2 col-span-2">
-                          <Label className="text-[9px] font-black uppercase">Item Title Font Size</Label>
-                          <Select value={globalTheme?.titleSize || 'text-sm'} onValueChange={v => updateGlobalTheme({ titleSize: v })}>
-                            <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {['text-[10px]', 'text-[11px]', 'text-xs', 'text-sm', 'text-base'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Price Styling */}
-                    <div className="space-y-6">
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                        <Zap size={14} /> Price Labels
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Color</Label>
-                          <Input type="color" value={globalTheme?.priceColor || '#f85606'} onChange={e => updateGlobalTheme({ priceColor: e.target.value })} className="h-10 p-1" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Price Align</Label>
-                          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                            <button onClick={() => updateGlobalTheme({ priceAlign: 'left' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", (globalTheme?.priceAlign || 'left') === 'left' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignLeft size={16}/></button>
-                            <button onClick={() => updateGlobalTheme({ priceAlign: 'center' })} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center transition-all", globalTheme?.priceAlign === 'center' ? "bg-white shadow-sm text-primary" : "text-gray-400")}><AlignCenter size={16}/></button>
-                          </div>
-                        </div>
-                        <div className="space-y-2 col-span-2">
-                          <Label className="text-[9px] font-black uppercase">Price Font Size</Label>
-                          <Select value={globalTheme?.priceSize || 'text-lg'} onValueChange={v => updateGlobalTheme({ priceSize: v })}>
-                            <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="space-y-6">
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
-                        <MousePointer2 size={14} /> Action Buttons
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Button BG</Label>
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground">Action BG</Label>
                           <Input type="color" value={globalTheme?.btnBg || '#22C55E'} onChange={e => updateGlobalTheme({ btnBg: e.target.value })} className="h-10 p-1" />
                         </div>
                         <div className="space-y-2">
@@ -405,13 +364,13 @@ export default function HomepageBuilderPage() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Button Size</Label>
+                          <Label className="text-[9px] font-black uppercase">Standard Size</Label>
                           <Select value={globalTheme?.btnSize || 'sm'} onValueChange={v => updateGlobalTheme({ btnSize: v })}>
                             <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
                             <SelectContent className="rounded-xl">
-                              <SelectItem value="sm">Small</SelectItem>
-                              <SelectItem value="default">Medium</SelectItem>
-                              <SelectItem value="lg">Large</SelectItem>
+                              <SelectItem value="sm">Compact</SelectItem>
+                              <SelectItem value="default">Standard</SelectItem>
+                              <SelectItem value="lg">Prominent</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -425,16 +384,16 @@ export default function HomepageBuilderPage() {
             <div className="lg:col-span-4 space-y-6">
               <Card className="border-none shadow-sm bg-blue-50/50 rounded-3xl p-8 border border-blue-100 sticky top-24">
                 <CardTitle className="text-sm font-black uppercase tracking-widest text-blue-900 mb-4 flex items-center gap-2">
-                  <Info size={16} /> Theme Persistence
+                  <Info size={16} /> Strategy Note
                 </CardTitle>
                 <div className="space-y-4">
                   <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
-                    এই সেকশনের সকল পরিবর্তন রিয়েল-টাইমে সেভ হয়। আপনার ওয়েবসাইটের সকল কার্ড এখন এই মাস্টার স্টাইলগুলো ফলো করবে।
+                    Changes here affect all sections that have <strong>Inherit Master Theme</strong> enabled. Use this to maintain a consistent brand identity across the entire homepage.
                   </p>
                   <div className="p-4 bg-white rounded-2xl border border-blue-100">
                     <p className="text-[10px] font-black text-blue-900 uppercase mb-2">💡 Pro Tip</p>
                     <p className="text-[10px] text-blue-700/70 leading-normal">
-                      যদি কোনো সেকশনে ভিন্ন ডিজাইন চান, তবে সেকশন সেটিংসে গিয়ে <strong>Inherit Master Theme</strong> অপশনটি অফ করে কাস্টম স্টাইল দিন।
+                      For high-impact sections like a seasonal Sale, disable inheritance in the individual block settings to apply a unique high-contrast design.
                     </p>
                   </div>
                 </div>
@@ -450,12 +409,12 @@ export default function HomepageBuilderPage() {
             <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                  <Settings2 className="text-primary" /> Block Intelligence
+                  <Settings2 className="text-primary" /> Block Calibration
                 </DialogTitle>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                   <TabsList className="bg-white/10 rounded-xl p-1 h-10 flex-1 sm:flex-none">
-                    <TabsTrigger value="content" className="flex-1 sm:flex-none text-[10px] font-black uppercase rounded-lg px-4">Content</TabsTrigger>
-                    <TabsTrigger value="styles" className="flex-1 sm:flex-none text-[10px] font-black uppercase rounded-lg px-4">Styles</TabsTrigger>
+                    <TabsTrigger value="content" className="flex-1 sm:flex-none text-[10px] font-black uppercase rounded-lg px-4">Content Logic</TabsTrigger>
+                    <TabsTrigger value="styles" className="flex-1 sm:flex-none text-[10px] font-black uppercase rounded-lg px-4">Visual Styling</TabsTrigger>
                   </TabsList>
                   <button onClick={() => setIsEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
                 </div>
@@ -466,35 +425,32 @@ export default function HomepageBuilderPage() {
               <TabsContent value="content" className="mt-0 space-y-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Section Title</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Visible Section Heading</Label>
                     <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Items Limit</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Maximum Display Items</Label>
                       <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Source</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Data Feed Sort</Label>
                       <Select value={editingSection?.config?.dataSource || 'all'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, dataSource: v}})}>
                         <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          <SelectItem value="all">All Items</SelectItem>
-                          <SelectItem value="popular">Popular Only</SelectItem>
-                          <SelectItem value="latest">New Arrivals</SelectItem>
+                          <SelectItem value="all">Alphabetical / All</SelectItem>
+                          <SelectItem value="popular">Popularity / Top Rated</SelectItem>
+                          <SelectItem value="latest">Newest Arrivals First</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><Filter size={12}/> Category Focus</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 flex items-center gap-2"><Filter size={12}/> Taxonomy Filter</Label>
                       <Select value={editingSection?.config?.category || 'All'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, category: v}})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="All Categories" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          <SelectItem value="All">All Categories</SelectItem>
-                          <SelectItem value="Cleaning">Cleaning</SelectItem>
-                          <SelectItem value="Maintenance">Maintenance</SelectItem>
-                          <SelectItem value="Repair">Repair</SelectItem>
-                          <SelectItem value="Tools">Tools</SelectItem>
+                          <SelectItem value="All">Disable Filter (All)</SelectItem>
+                          {categories?.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -508,7 +464,7 @@ export default function HomepageBuilderPage() {
                     <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Maximize size={24} /></div>
                     <div className="space-y-1">
                       <Label className="text-sm font-black text-blue-900 uppercase">Inherit Master Theme</Label>
-                      <p className="text-[10px] text-blue-700/70 font-bold uppercase leading-tight">Sync this block with global marketplace design</p>
+                      <p className="text-[10px] text-blue-700/70 font-bold uppercase leading-tight">Sync this block with global system branding</p>
                     </div>
                   </div>
                   <Switch 
@@ -522,34 +478,18 @@ export default function HomepageBuilderPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                       <div className="space-y-10">
                         <div className="space-y-6">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Background & Layout</h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Surface & Grid</h4>
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
                               <Label className="text-[9px] font-black uppercase text-muted-foreground">Section BG</Label>
                               <Input type="color" value={editingSection?.styleConfig?.sectionBg || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, sectionBg: e.target.value}})} className="h-10 p-1" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Grid Columns</Label>
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Grid Spanning</Label>
                               <Select value={editingSection?.styleConfig?.gridShow || '4'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, gridShow: v}})}>
                                 <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
                                 <SelectContent className="rounded-xl">
-                                  {['3','4','5','6'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Columns</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Radius</Label>
-                              <Input type="number" value={editingSection?.styleConfig?.cardRadius || 24} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, cardRadius: parseInt(e.target.value) || 0}})} className="h-10 bg-gray-50" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Card Shadow</Label>
-                              <Select value={editingSection?.styleConfig?.cardShadow || 'shadow-sm'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, cardShadow: v}})}>
-                                <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                  <SelectItem value="shadow-none">None</SelectItem>
-                                  <SelectItem value="shadow-sm">Small</SelectItem>
-                                  <SelectItem value="shadow-md">Medium</SelectItem>
-                                  <SelectItem value="shadow-xl">Deep</SelectItem>
+                                  {['3','4','5','6'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Items Wide</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -557,27 +497,18 @@ export default function HomepageBuilderPage() {
                         </div>
 
                         <div className="space-y-6">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Title Styling</h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Title Control</h4>
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Title Color</Label>
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Header Color</Label>
                               <Input type="color" value={editingSection?.styleConfig?.titleColor || '#081621'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleColor: e.target.value}})} className="h-10 p-1" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Title Align</Label>
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Alignment</Label>
                               <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
                                 <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.titleAlign === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
                                 <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'center'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.titleAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
                               </div>
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Title Font Size</Label>
-                              <Select value={editingSection?.styleConfig?.titleSize || 'text-sm'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleSize: v}})}>
-                                <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                  {['text-[10px]', 'text-[11px]', 'text-xs', 'text-sm', 'text-base'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
                             </div>
                           </div>
                         </div>
@@ -585,60 +516,22 @@ export default function HomepageBuilderPage() {
 
                       <div className="space-y-10">
                         <div className="space-y-6">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Zap size={14}/> Price Styling</h4>
-                          <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Color</Label>
-                              <Input type="color" value={editingSection?.styleConfig?.priceColor || '#f85606'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, priceColor: e.target.value}})} className="h-10 p-1" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Align</Label>
-                              <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, priceAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.priceAlign === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, priceAlign: 'center'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.priceAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
-                              </div>
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Font Size</Label>
-                              <Select value={editingSection?.styleConfig?.priceSize || 'text-lg'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, priceSize: v}})}>
-                                <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                  {['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'].map(sz => <SelectItem key={sz} value={sz} className="text-[10px] uppercase">{sz}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Button Styling</h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Action Protocols</h4>
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
                               <Label className="text-[9px] font-black uppercase text-muted-foreground">Button BG</Label>
                               <Input type="color" value={editingSection?.styleConfig?.btnBg || '#22C55E'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnBg: e.target.value}})} className="h-10 p-1" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Text Color</Label>
-                              <Input type="color" value={editingSection?.styleConfig?.btnTextColor || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnTextColor: e.target.value}})} className="h-10 p-1" />
-                            </div>
-                            <div className="space-y-2">
                               <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Size</Label>
                               <Select value={editingSection?.styleConfig?.btnSize || 'default'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnSize: v}})}>
                                 <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
                                 <SelectContent className="rounded-xl">
-                                  <SelectItem value="sm">Small</SelectItem>
-                                  <SelectItem value="default">Medium</SelectItem>
-                                  <SelectItem value="lg">Large</SelectItem>
+                                  <SelectItem value="sm">Compact</SelectItem>
+                                  <SelectItem value="default">Standard</SelectItem>
+                                  <SelectItem value="lg">Prominent</SelectItem>
                                 </SelectContent>
                               </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Align</Label>
-                              <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (editingSection?.styleConfig?.btnAlign || 'full') === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'center'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.btnAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: 'full'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (editingSection?.styleConfig?.btnAlign || 'full') === 'full' ? "bg-white text-primary" : "text-gray-400")}><AlignJustify size={14}/></button>
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -650,9 +543,9 @@ export default function HomepageBuilderPage() {
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto h-12 rounded-xl font-bold uppercase text-[10px]">Discard Changes</Button>
+              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto h-12 rounded-xl font-bold uppercase text-[10px]">Discard</Button>
               <Button onClick={handleUpdateSection} disabled={isSubmitting} className="w-full sm:w-auto flex-1 rounded-xl font-black px-10 h-12 shadow-xl uppercase text-xs tracking-widest">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply Intelligence'}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply Logic'}
               </Button>
             </DialogFooter>
           </Tabs>
@@ -662,8 +555,8 @@ export default function HomepageBuilderPage() {
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-t-[2rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <DialogHeader className="p-6 md:p-10 bg-[#081621] text-white shrink-0 relative">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Add Layout Block</DialogTitle>
-            <DialogDescription className="text-white/40 font-bold uppercase text-[9px] tracking-widest mt-1">Select a module to insert into the sequence</DialogDescription>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight">Insert Layout Component</DialogTitle>
+            <DialogDescription className="text-white/40 font-bold uppercase text-[9px] tracking-widest mt-1">Select an allowed module to deploy to the homepage sequence</DialogDescription>
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 bg-white custom-scrollbar">

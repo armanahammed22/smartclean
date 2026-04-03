@@ -28,7 +28,8 @@ import {
   TrendingUp,
   Package,
   ArrowRight,
-  Calendar
+  Calendar,
+  Layers
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -46,8 +47,8 @@ const DEFAULT_LAYOUT = [
   { id: 'def-cats', type: 'categories', isActive: true, order: 1 },
   { id: 'def-flash', type: 'flash_deals', isActive: true, order: 2 },
   { id: 'def-camp', type: 'campaign', isActive: true, order: 3 },
-  { id: 'def-srv-feat', type: 'services_featured', title: 'Our Featured Services', isActive: true, order: 4 },
-  { id: 'def-prod-new', type: 'products_new', title: 'Latest Arrivals', isActive: true, order: 5 },
+  { id: 'def-srv-feat', type: 'services_featured', title: 'Professional Services', isActive: true, order: 4 },
+  { id: 'def-prod-new', type: 'products_new', title: 'New Equipment Arrivals', isActive: true, order: 5 },
   { id: 'def-trust', type: 'trust_stats', isActive: true, order: 6 }
 ];
 
@@ -102,7 +103,7 @@ export default function SmartCleanHomePage() {
       .filter(s => {
         if (!s.isActive) return false;
         if (!productsEnabled && (s.type === 'flash_deals' || s.type.startsWith('products_'))) return false;
-        if (!servicesEnabled && s.type.startsWith('services_')) return false;
+        if (!servicesEnabled && (s.type.startsWith('services_') || s.type === 'sub_services_custom')) return false;
         return true;
       })
       .sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -130,9 +131,23 @@ export default function SmartCleanHomePage() {
     };
 
     const getFilteredServices = () => {
-      let mainFeed = allServices?.filter(s => s.status === 'Active') || [];
-      
-      let subFeed = allSubServices?.filter(sub => sub.status === 'Active')
+      return (allServices?.filter(s => s.status === 'Active') || [])
+        .filter(s => {
+          if (config.category && config.category !== 'All') return s.categoryId === config.category;
+          return true;
+        })
+        .slice(0, config.limit || 12);
+    };
+
+    const getFilteredSubServices = () => {
+      return (allSubServices?.filter(s => s.status === 'Active') || [])
+        .filter(s => {
+          if (config.category && config.category !== 'All') {
+            const parent = allServices?.find(p => p.id === s.mainServiceId);
+            return parent?.categoryId === config.category;
+          }
+          return true;
+        })
         .map(sub => {
           const parent = allServices?.find(s => s.id === sub.mainServiceId);
           return { 
@@ -140,30 +155,11 @@ export default function SmartCleanHomePage() {
             title: sub.name, 
             basePrice: sub.price, 
             itemType: 'service', 
-            isAddOn: true,
-            categoryId: parent?.categoryId || 'General' 
+            isSubServiceItem: true,
+            categoryId: parent?.categoryId || 'Service'
           };
-        }) || [];
-
-      let combined = [...mainFeed, ...subFeed];
-
-      if (config.category && config.category !== 'All') {
-        combined = combined.filter(s => s.categoryId === config.category);
-      }
-
-      if (sectionType === 'services_featured' || config.dataSource === 'popular') {
-        combined = combined.filter(s => s.isPopular || s.isDefaultAddOn);
-      }
-      
-      if (sectionType === 'services_popular' || config.dataSource === 'popular') {
-        combined = [...combined].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      }
-
-      if (config.dataSource === 'latest') {
-        combined = [...combined].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      }
-
-      return combined.slice(0, config.limit || 12);
+        })
+        .slice(0, config.limit || 12);
     };
 
     const sectionStyles = {
@@ -177,7 +173,7 @@ export default function SmartCleanHomePage() {
       textAlign: (style.textAlign || 'left') as any,
     };
 
-    const gridClassName = "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6";
+    const gridCols = `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${style.gridShow || 6} gap-3 md:gap-4 lg:gap-6`;
 
     switch (sectionType) {
       case 'hero':
@@ -205,8 +201,8 @@ export default function SmartCleanHomePage() {
                     </CarouselContent>
                   </Carousel>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/20">
-                    <span className="text-xs font-black uppercase tracking-widest">{t('hero_placeholder')}</span>
+                  <div className="w-full h-full bg-primary/5 animate-pulse flex items-center justify-center">
+                    <Loader2 className="animate-spin text-primary/20" />
                   </div>
                 )}
               </div>
@@ -269,7 +265,6 @@ export default function SmartCleanHomePage() {
         );
 
       case 'services_featured':
-      case 'services_popular':
         const displayServices = getFilteredServices();
         if (displayServices.length === 0) return null;
         return (
@@ -289,100 +284,65 @@ export default function SmartCleanHomePage() {
                   {t('view_all').toUpperCase()}
                 </Link>
               </div>
-              <div className={gridClassName}>
-                {displayServices.map(s => {
-                  const bookingCount = Math.floor((parseInt(s.id.slice(-2), 16) || 10) % 500) + 100;
-                  const titleAlign = style?.titleAlign || 'left';
-                  const priceAlign = style?.priceAlign || 'left';
-                  const btnAlign = style?.btnAlign || 'full';
-                  const discountPercent = s.regularPrice && s.regularPrice > s.basePrice
-                    ? Math.round(((s.regularPrice - s.basePrice) / s.regularPrice) * 100)
-                    : null;
-
-                  return (
-                    <div 
-                      key={s.id}
-                      className={cn("relative group bg-white overflow-hidden transition-all duration-500 border border-gray-100 flex flex-col h-full hover:-translate-y-1 shadow-sm", style.cardShadow)}
-                      style={{ backgroundColor: style.cardBg || '#ffffff', borderRadius: `${style.cardRadius !== undefined ? style.cardRadius : 16}px` }}
-                    >
-                      <Link href={`/service/${s.slug || s.id}`} className="block h-full flex flex-col">
-                        <div className="relative aspect-square overflow-hidden bg-gray-50 flex items-center justify-center">
-                          {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200" />}
-                          
-                          {/* Badges */}
-                          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                            {discountPercent && (
-                              <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
-                                {discountPercent}% OFF
-                              </Badge>
-                            )}
-                            {s.badgeText && (
-                              <Badge className="bg-amber-50 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase">
-                                {s.badgeText}
-                              </Badge>
-                            )}
-                          </div>
+              <div className={gridCols}>
+                {displayServices.map(s => (
+                  <Link key={s.id} href={`/service/${s.slug || s.id}`} className="block h-full group">
+                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                      <div className="relative aspect-square overflow-hidden bg-gray-50">
+                        {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200 m-auto" />}
+                      </div>
+                      <CardContent className="p-3 md:p-4 space-y-2">
+                        <h3 className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight" style={{ color: style.itemTitleColor }}>{s.title}</h3>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
                         </div>
-                        
-                        <div className="p-3 md:p-4 flex flex-col flex-1">
-                          <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
-                            <h3 className={cn(
-                              "font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800",
-                              style?.titleSize || 'text-[11px] md:text-sm'
-                            )} style={{ color: style?.titleColor }}>
-                              {s.title}
-                            </h3>
-                          </div>
-                          
-                          <div className="mt-auto space-y-2">
-                            {/* Price Row */}
-                            <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
-                              <p className={cn(
-                                "font-black tracking-tighter leading-none",
-                                style?.priceSize || 'text-base md:text-lg'
-                              )} style={{ color: style.priceColor || '#1E5F7A' }}>
-                                ৳{(s.basePrice || 0).toLocaleString()}
-                              </p>
-                              {s.regularPrice && s.regularPrice > s.basePrice && (
-                                <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">৳{s.regularPrice.toLocaleString()}</span>
-                              )}
-                            </div>
-                            
-                            {/* Rating Row */}
-                            <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
-                              <div className="flex items-center gap-1 text-amber-500">
-                                <Star size={12} fill="currentColor" />
-                                <span className="text-gray-600">{s.rating?.toFixed(1) || '5.0'}</span>
-                              </div>
-                              <span className="uppercase text-gray-400 font-black">{bookingCount} {t('booked')}</span>
-                            </div>
+                        <Button size="sm" className="w-full h-9 rounded-lg font-black uppercase text-[9px] tracking-widest mt-2" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                          <Calendar size={12} className="mr-1" /> {t('book_now')}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
 
-                            {/* Button */}
-                            <div className={cn(
-                              "flex w-full pt-1",
-                              btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
-                            )}>
-                              <Button 
-                                size={style?.btnSize || 'sm'}
-                                className={cn(
-                                  "font-black uppercase shadow-md tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                                  btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
-                                )}
-                                style={{ 
-                                  backgroundColor: style?.btnBg || '#1E5F7A', 
-                                  color: style?.btnTextColor || '#ffffff' 
-                                }}
-                              >
-                                <Calendar size={12} className="mr-1" />
-                                {t('book_now')}
-                              </Button>
-                            </div>
-                          </div>
+      case 'sub_services_custom':
+        const displaySubServices = getFilteredSubServices();
+        if (displaySubServices.length === 0) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className={cn("flex items-center justify-between mb-6 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 
+                  className={cn("font-black uppercase tracking-tighter")}
+                  style={{ 
+                    ...titleStyles, 
+                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
+                  }}
+                >
+                  {section.title}
+                </h2>
+                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Add-on Deals</Badge>
+              </div>
+              <div className={gridCols}>
+                {displaySubServices.map(s => (
+                  <Link key={s.id} href={`/service/${allServices?.find(p => p.id === s.mainServiceId)?.slug || s.mainServiceId}`} className="block h-full group">
+                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                      <div className="relative aspect-square overflow-hidden bg-gray-50">
+                        {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Layers size={32} className="text-gray-200 m-auto" />}
+                      </div>
+                      <CardContent className="p-3 md:p-4 space-y-2">
+                        <h3 className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight" style={{ color: style.itemTitleColor }}>{s.title}</h3>
+                        <div className="flex justify-between items-center">
+                          <span className="font-black text-primary text-base" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
+                          <div className="bg-primary/5 p-1 rounded-lg"><Plus size={14} className="text-primary" /></div>
                         </div>
-                      </Link>
-                    </div>
-                  );
-                })}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
               </div>
             </div>
           </section>
@@ -404,7 +364,7 @@ export default function SmartCleanHomePage() {
               >
                 {section.title}
               </h2>
-              <div className={gridClassName}>
+              <div className={gridCols}>
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
@@ -453,7 +413,9 @@ export default function SmartCleanHomePage() {
             <Loader2 className="animate-spin text-primary" size={48} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('fetching_data')}</p>
           </div>
-        ) : layoutSections.map(renderSection)}
+        ) : (
+          layoutSections.map(renderSection)
+        )}
       </div>
     </PublicLayout>
   );
