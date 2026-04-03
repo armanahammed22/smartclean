@@ -147,9 +147,9 @@ export default function EmployeesPage() {
     toast({ title: "Personnel Removed" });
   };
 
-  const toggleSkill = (sId: string) => {
+  const toggleSkill = (serviceId: string) => {
     setSelectedSkills(prev => 
-      prev.includes(sId) ? prev.filter(id => id !== sId) : [...prev, sId]
+      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
     );
   };
 
@@ -286,7 +286,7 @@ export default function EmployeesPage() {
               </div>
               
               <DialogFooter className="p-8 bg-gray-50 border-t shrink-0 flex gap-3">
-                <Button type="button" variant="ghost" onClick={() => setIsRoleDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-12 h-12 shadow-xl bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Sync Records</>}
                 </Button>
