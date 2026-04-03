@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -251,51 +252,53 @@ function OrdersListContent() {
             />
           </div>
         </div>
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-gray-50/30">
-              <TableRow>
-                <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Order ID</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Customer</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
-              ) : filteredOrders?.map((order) => (
-                <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <TableCell className="py-5 pl-8">
-                    <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
-                    <div className="text-[9px] text-muted-foreground mt-1 font-bold">{mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs font-bold text-gray-700 uppercase">{order.customerName}</div>
-                    <div className="text-[10px] text-muted-foreground">{order.customerPhone}</div>
-                  </TableCell>
-                  <TableCell className="font-black text-sm text-gray-900">৳{order.totalPrice?.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
-                      <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-blue-50 text-blue-700">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(order)} disabled={isProcessingInvoice === order.id}><FileText size={16} /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}><Trash2 size={16} /></Button>
-                    </div>
-                  </TableCell>
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
+          <div className="min-w-full">
+            <Table className="min-w-[900px]">
+              <TableHeader className="bg-gray-50/30">
+                <TableRow>
+                  <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Order ID</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Customer</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                ) : filteredOrders?.map((order) => (
+                  <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <TableCell className="py-5 pl-8">
+                      <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
+                      <div className="text-[9px] text-muted-foreground mt-1 font-bold">{mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs font-bold text-gray-700 uppercase">{order.customerName}</div>
+                      <div className="text-[10px] text-muted-foreground">{order.customerPhone}</div>
+                    </TableCell>
+                    <TableCell className="font-black text-sm text-gray-900">৳{order.totalPrice?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Select defaultValue={order.status} onValueChange={(val) => handleUpdateStatus(order.id, val)}>
+                        <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-blue-50 text-blue-700">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(order)} disabled={isProcessingInvoice === order.id}><FileText size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}><Trash2 size={16} /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

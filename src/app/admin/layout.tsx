@@ -151,7 +151,6 @@ const MENU_LABELS: Record<string, string> = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // CRITICAL: Collapsed by default as requested
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -186,7 +185,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem(STORAGE_KEY);
-      // Ensure it defaults to true even on first load
       if (savedState !== null) setIsCollapsed(savedState === 'true');
       else setIsCollapsed(true); 
       setMounted(true);
@@ -474,7 +472,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={group.id}
                 href={group.href || '#'}
-                scroll={false} // CRITICAL: Maintain scroll position
+                scroll={false}
                 onClick={closeMobile}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
@@ -514,7 +512,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={item.name}
                       href={item.href}
-                      scroll={false} // CRITICAL: Maintain scroll position
+                      scroll={false}
                       onClick={closeMobile}
                       className={cn(
                         "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 
@@ -564,7 +562,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
       </aside>
 
-      <div className="flex-1 flex flex-col h-full min-0 relative">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
         <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shrink-0 z-40 shadow-sm">
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -599,8 +597,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar">
-          <div className="max-w-full lg:max-w-[1400px] mx-auto min-0">{children}</div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar min-w-0">
+          <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">{children}</div>
         </main>
         <AdminBottomNav />
       </div>
