@@ -62,7 +62,10 @@ import {
   ReceiptText,
   Package,
   CircleEllipsis,
-  Gift
+  Gift,
+  Clock,
+  DollarSign,
+  Handshake
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
