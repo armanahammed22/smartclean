@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
