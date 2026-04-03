@@ -297,21 +297,6 @@ export interface FinancialAccount {
   createdAt: string;
 }
 
-export interface ProjectCosting {
-  id: string;
-  projectId: string; // usually a bookingId or custom project
-  title: string;
-  income: number;
-  staffCost: number;
-  materialCost: number;
-  commissionCost: number;
-  otherExpenses: number;
-  totalExpense: number;
-  netProfit: number;
-  status: "In Progress" | "Completed";
-  updatedAt: string;
-}
-
 export interface Partner {
   id: string;
   name: string;
@@ -346,6 +331,7 @@ export interface PartnerProject {
   };
   commissionDirection: "TheyGiveMe" | "IGiveThem";
   commissionAmount: number;
+  commissionRate: number; // Percentage or fixed rate used for this project
   paidStatus: "Paid" | "Unpaid";
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
   notes?: string;
