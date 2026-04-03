@@ -52,7 +52,21 @@ service cloud.firestore {
     match /categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /services/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
     match /advanced_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /subscription_plans/{id} { allow read: if true; allow write: if isAdmin(); }
+    
+    // Website Configuration & Content (Public Read)
+    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    // Support for both 'offers' and 'marketing_offers'
+    match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
 
     match /bookings/{id} { 
       allow create: if true; 
