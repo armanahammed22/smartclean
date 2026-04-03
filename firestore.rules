@@ -70,6 +70,7 @@ service cloud.firestore {
 
     // HRM & Field Operations
     match /employee_profiles/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /payroll_records/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
     match /attendance_logs/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
     match /leave_requests/{id} { 
       allow create: if isSignedIn(); 

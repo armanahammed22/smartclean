@@ -28,8 +28,24 @@
         "salaryModel": { "type": "string", "enum": ["daily", "monthly", "hybrid"] },
         "baseRate": { "type": "number" },
         "commissionRate": { "type": "number" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "On Leave", "Suspended"] },
         "skills": { "type": "array" }
+      }
+    },
+    "PayrollRecord": {
+      "title": "PayrollRecord",
+      "description": "Finalized monthly salary record for staff.",
+      "type": "object",
+      "properties": {
+        "staffId": { "type": "string" },
+        "name": { "type": "string" },
+        "month": { "type": "string" },
+        "basePay": { "type": "number" },
+        "commission": { "type": "number" },
+        "adjustments": { "type": "number" },
+        "finalAmount": { "type": "number" },
+        "paidStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "status": { "type": "string" }
       }
     },
     "AdvancedOffer": {
@@ -81,6 +97,7 @@
   "firestore": {
     "/landing_pages/{id}": { "schema": "LandingPage", "description": "Dynamic landing pages." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
+    "/payroll_records/{id}": { "schema": "PayrollRecord", "description": "Finalized payslips." },
     "/attendance_logs/{id}": { "schema": "Attendance", "description": "Attendance tracking." },
     "/advanced_offers/{id}": { "schema": "AdvancedOffer", "description": "Marketing engine rules." },
     "/finance_ledger/{id}": { "schema": "LedgerEntry", "description": "Central accounting log." },
