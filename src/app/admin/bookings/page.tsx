@@ -52,6 +52,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { Label } from '@/components/ui/label';
@@ -325,17 +326,17 @@ function BookingsListContent() {
       />
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl bg-white">
-          <div className="flex flex-col h-[85vh]">
-            <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-xl"><Calendar size={24} /></div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">নতুন বুকিং</DialogTitle>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
+          <div className="flex flex-col h-full">
+            <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+              <div className="space-y-1">
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3"><Calendar className="text-primary" size={24} /> নতুন বুকিং</DialogTitle>
+                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Manual service entry protocol</DialogDescription>
               </div>
-              <button onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
+              <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-white">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-8">
                   <div className="space-y-4">
@@ -346,7 +347,7 @@ function BookingsListContent() {
                         placeholder="সার্ভিস খুঁজুন..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-14 pl-12 bg-gray-50 border-none rounded-2xl font-bold"
+                        className="h-11 md:h-12 pl-12 bg-gray-50 border-none rounded-xl font-bold"
                       />
                       {filteredServices.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden">
@@ -392,10 +393,10 @@ function BookingsListContent() {
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহকের তথ্য</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
-                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
-                    <Input type="datetime-local" value={customer.date} onChange={e => setCustomer({...customer, date: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                    <Input type="datetime-local" value={customer.date} onChange={e => setCustomer({...customer, date: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
                     <Textarea placeholder="ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
                   </div>
                 </div>
@@ -407,11 +408,11 @@ function BookingsListContent() {
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সাবটোটাল</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[10px] font-black uppercase text-gray-400">সার্ভিস ফি</Label>
-                        <Input type="number" value={pricing.serviceFee} onChange={e => setPricing({...pricing, serviceFee: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black" />
+                        <Input type="number" value={pricing.serviceFee} onChange={e => setPricing({...pricing, serviceFee: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg" />
                       </div>
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[10px] font-black uppercase text-gray-400">ডিসকাউন্ট</Label>
-                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600" />
+                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg" />
                       </div>
                       <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                         <div className="flex flex-col">
@@ -428,17 +429,17 @@ function BookingsListContent() {
                     <div className="grid grid-cols-2 gap-3">
                       <div 
                         onClick={() => setPaymentCategory('cod')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5" : "bg-white border-gray-100 opacity-60")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Wallet size={20} className={paymentCategory === 'cod' ? "text-primary" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase">Cash on Hand</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Cash on Hand</span>
                       </div>
                       <div 
                         onClick={() => setPaymentCategory('online')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50" : "bg-white border-gray-100 opacity-60")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Smartphone size={20} className={paymentCategory === 'online' ? "text-blue-600" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase">Online Gateway</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Online Gateway</span>
                       </div>
                     </div>
 
@@ -466,13 +467,16 @@ function BookingsListContent() {
                       </div>
                     )}
                   </div>
-
-                  <Button onClick={handleCreateBooking} disabled={isSubmitting} className="w-full h-16 rounded-2xl font-black text-xl shadow-xl shadow-primary/20 uppercase tracking-tight gap-2 transition-transform active:scale-95">
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : "বুকিং নিশ্চিত করুন"}
-                  </Button>
                 </div>
               </div>
             </div>
+
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button onClick={handleCreateBooking} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "বুকিং নিশ্চিত করুন"}
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

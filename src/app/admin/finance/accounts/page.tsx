@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -21,11 +22,12 @@ import {
   Smartphone,
   Info,
   ArrowRightLeft,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 
@@ -113,7 +115,7 @@ export default function FinanceAccountsPage() {
                   </Button>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Current Balance</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Current Balance</p>
                   <h4 className="text-3xl font-black text-[#081621] tracking-tighter">৳{acc.balance?.toLocaleString()}</h4>
                 </div>
                 <div className="pt-6 mt-6 border-t border-gray-50 flex justify-between items-center">
@@ -138,35 +140,50 @@ export default function FinanceAccountsPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <header className="p-8 bg-[#081621] text-white">
-            <DialogTitle className="text-xl font-black uppercase tracking-widest">Connect Account</DialogTitle>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none shadow-2xl bg-white flex flex-col">
+          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div className="space-y-1">
+              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Connect Account</DialogTitle>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Initialize a new financial liquidity source</DialogDescription>
+            </div>
+            <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
-          <form onSubmit={handleAddAccount} className="p-8 space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Account Provider Name</Label>
-              <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. City Bank / bKash" required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+          <form onSubmit={handleAddAccount} className="flex flex-col h-full bg-white">
+            <div className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Account Provider Name</Label>
+                    <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. City Bank / bKash" required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Account Type</Label>
+                    <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['Bank', 'Cash', 'Mobile Wallet'].map(t => <SelectItem key={t} value={t} className="font-bold text-[10px] uppercase">{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Account/Reference Number</Label>
+                    <Input value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} placeholder="e.g. 120-XXX..." className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1 text-primary">Initial Opening Balance (৳)</Label>
+                    <Input type="number" value={formData.balance} onChange={e => setFormData({...formData, balance: e.target.value})} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-lg" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Account Type</Label>
-              <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
-                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['Bank', 'Cash', 'Mobile Wallet'].map(t => <SelectItem key={t} value={t} className="font-bold text-[10px] uppercase">{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Account/Reference Number</Label>
-              <Input value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} placeholder="e.g. 120-XXX..." className="h-12 bg-gray-50 border-none rounded-xl" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1 text-primary">Initial Opening Balance (৳)</Label>
-              <Input type="number" value={formData.balance} onChange={e => setFormData({...formData, balance: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-black" />
-            </div>
-            <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl mt-4">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Activate"}
-            </Button>
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Activate Account"}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

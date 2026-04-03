@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -20,12 +21,13 @@ import {
   CheckCircle2,
   DollarSign,
   Briefcase,
-  Wallet
+  Wallet,
+  X
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { createLedgerEntry } from '@/lib/finance-utils';
@@ -191,53 +193,66 @@ export default function StaffSalariesPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <header className="p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-xl"><CreditCard size={20} /></div>
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">Salary Entry</DialogTitle>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none shadow-2xl bg-white flex flex-col">
+          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary rounded-xl"><CreditCard size={20} /></div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">Salary Entry</DialogTitle>
+              </div>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Disburse salary to active field technicians</DialogDescription>
             </div>
+            <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
-          <form onSubmit={handlePaySalary} className="p-8 space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Staff Member</Label>
-              <Select value={formData.staffId} onValueChange={v => setFormData({...formData, staffId: v})}>
-                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Personnel" /></SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {staffList?.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-[10px] uppercase">{s.name} ({s.role})</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <form onSubmit={handlePaySalary} className="flex flex-col h-full bg-white">
+            <div className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Staff Member</Label>
+                    <Select value={formData.staffId} onValueChange={v => setFormData({...formData, staffId: v})}>
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Personnel" /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {staffList?.map(s => <SelectItem key={s.id} value={s.id} className="font-bold text-[10px] uppercase">{s.name} ({s.role})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Pay for Month</Label>
+                    <Input type="month" value={formData.date.slice(0,7)} onChange={e => setFormData({...formData, date: e.target.value + '-01'})} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase ml-1">Base Amount (৳)</Label>
-                <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase ml-1">Base Amount (৳)</Label>
+                      <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase ml-1">Bonus/Adj (৳)</Label>
+                      <Input type="number" value={formData.adjustments} onChange={e => setFormData({...formData, adjustments: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Source Account</Label>
+                    <Select value={formData.accountId} onValueChange={v => setFormData({...formData, accountId: v})}>
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Account" /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id} className="font-bold text-[10px] uppercase">{acc.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase ml-1">Bonus/Adj (৳)</Label>
-                <Input type="number" value={formData.adjustments} onChange={e => setFormData({...formData, adjustments: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
-              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Pay for Month</Label>
-              <Input type="month" value={formData.date.slice(0,7)} onChange={e => setFormData({...formData, date: e.target.value + '-01'})} required className="h-12 bg-gray-50 border-none rounded-xl" />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Source Account</Label>
-              <Select value={formData.accountId} onValueChange={v => setFormData({...formData, accountId: v})}>
-                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Account" /></SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id} className="font-bold text-[10px] uppercase">{acc.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl mt-4">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Process Payroll"}
-            </Button>
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><DollarSign size={18} className="mr-2" /> Process Payroll</>}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -57,7 +58,7 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('all');
 
-  // Unified Controlled Form State to prevent "Auto Clean" during tab switches
+  // Unified Controlled Form State
   const [formValues, setFormValues] = useState({
     name: '',
     email: '',
@@ -200,41 +201,46 @@ export default function EmployeesPage() {
         </Button>
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => { if(!open) setIsDialogOpen(false); }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 border-none rounded-[2.5rem] shadow-2xl flex flex-col">
+          <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] overflow-hidden p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl flex flex-col bg-white">
             <form onSubmit={handleSave} className="flex flex-col h-full" key={editingStaff?.id || 'new'}>
-              <DialogHeader className="bg-[#081621] text-white p-8 shrink-0">
-                <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">
-                  <Users className="text-primary" /> {editingStaff ? 'Update Profile' : 'Staff Enrollment'}
-                </DialogTitle>
-                <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest mt-1">Configure identity, payroll and certified skills</DialogDescription>
+              <DialogHeader className="bg-[#081621] text-white p-6 md:p-8 shrink-0 flex flex-row items-center justify-between">
+                <div className="space-y-1">
+                  <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">
+                    <Users className="text-primary" /> {editingStaff ? 'Update Profile' : 'Staff Enrollment'}
+                  </DialogTitle>
+                  <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest">Identity, payroll and certified skills</DialogDescription>
+                </div>
+                <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
+                  <X size={24} />
+                </button>
               </DialogHeader>
 
-              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-white">
+              <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-white">
                 <Tabs defaultValue="identity" className="w-full">
-                  <TabsList className="bg-gray-100 p-1 rounded-xl mb-8 w-fit">
-                    <TabsTrigger value="identity" className="rounded-lg gap-2 text-[10px] font-black uppercase">Identity</TabsTrigger>
-                    <TabsTrigger value="payroll" className="rounded-lg gap-2 text-[10px] font-black uppercase">Payroll & Role</TabsTrigger>
-                    <TabsTrigger value="skills" className="rounded-lg gap-2 text-[10px] font-black uppercase">Skills</TabsTrigger>
+                  <TabsList className="bg-gray-100 p-1 rounded-xl mb-10 w-fit">
+                    <TabsTrigger value="identity" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Identity</TabsTrigger>
+                    <TabsTrigger value="payroll" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Payroll & Role</TabsTrigger>
+                    <TabsTrigger value="skills" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Skills</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="identity" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <TabsContent value="identity" className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                        <Input value={formValues.name} onChange={e => setFormValues({...formValues, name: e.target.value})} required placeholder="Full Legal Name" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.name} onChange={e => setFormValues({...formValues, name: e.target.value})} required placeholder="Full Legal Name" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Official Email</Label>
-                        <Input type="email" value={formValues.email} onChange={e => setFormValues({...formValues, email: e.target.value})} required placeholder="email@smartclean.com" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input type="email" value={formValues.email} onChange={e => setFormValues({...formValues, email: e.target.value})} required placeholder="email@smartclean.com" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone</Label>
-                        <Input value={formValues.phone} onChange={e => setFormValues({...formValues, phone: e.target.value})} required placeholder="+880" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.phone} onChange={e => setFormValues({...formValues, phone: e.target.value})} required placeholder="+880" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Department</Label>
                         <Select value={formValues.department} onValueChange={v => setFormValues({...formValues, department: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="Operations">Operations</SelectItem>
                             <SelectItem value="Logistics">Logistics</SelectItem>
@@ -246,12 +252,12 @@ export default function EmployeesPage() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="payroll" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <TabsContent value="payroll" className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Salary Model</Label>
                         <Select value={formValues.salaryModel} onValueChange={v => setFormValues({...formValues, salaryModel: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary uppercase text-[10px]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary uppercase text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="daily">Daily Wage</SelectItem>
                             <SelectItem value="monthly">Fixed Monthly</SelectItem>
@@ -262,17 +268,17 @@ export default function EmployeesPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Base Rate (৳)</Label>
-                          <Input type="number" value={formValues.baseRate} onChange={e => setFormValues({...formValues, baseRate: parseFloat(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Input type="number" value={formValues.baseRate} onChange={e => setFormValues({...formValues, baseRate: parseFloat(e.target.value) || 0})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Commission (%)</Label>
-                          <Input type="number" value={formValues.commissionRate} onChange={e => setFormValues({...formValues, commissionRate: parseFloat(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Input type="number" value={formValues.commissionRate} onChange={e => setFormValues({...formValues, commissionRate: parseFloat(e.target.value) || 0})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status</Label>
                         <Select value={formValues.status} onValueChange={v => setFormValues({...formValues, status: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="Active">Active</SelectItem>
                             <SelectItem value="On Leave">On Leave</SelectItem>
@@ -282,32 +288,32 @@ export default function EmployeesPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Designated Role</Label>
-                        <Input value={formValues.role} onChange={e => setFormValues({...formValues, role: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.role} onChange={e => setFormValues({...formValues, role: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="skills" className="space-y-6">
-                    <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100">
-                      <div className="flex items-center gap-2 mb-4">
+                  <TabsContent value="skills" className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="p-6 md:p-8 bg-gray-50 rounded-[2rem] border border-gray-100">
+                      <div className="flex items-center gap-2 mb-6">
                         <GraduationCap className="text-primary" size={20} />
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Certified Expertise</Label>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {services?.map((service) => (
                           <div 
                             key={service.id} 
                             onClick={() => toggleSkill(service.id)}
                             className={cn(
-                              "flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer group",
-                              formValues.skills.includes(service.id) ? "border-primary bg-primary/5" : "border-white bg-white hover:border-primary/20"
+                              "flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer group bg-white",
+                              formValues.skills.includes(service.id) ? "border-primary bg-primary/5" : "border-transparent hover:border-primary/20"
                             )}
                           >
                             <div className={cn(
-                              "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
+                              "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all",
                               formValues.skills.includes(service.id) ? "bg-primary border-primary text-white" : "border-gray-200"
                             )}>
-                              {formValues.skills.includes(service.id) && <CheckCircle2 size={12} strokeWidth={4} />}
+                              {formValues.skills.includes(service.id) && <CheckCircle2 size={14} strokeWidth={4} />}
                             </div>
                             <span className="text-[10px] font-bold uppercase truncate">{service.title}</span>
                           </div>
@@ -318,10 +324,10 @@ export default function EmployeesPage() {
                 </Tabs>
               </div>
               
-              <DialogFooter className="p-8 bg-gray-50 border-t shrink-0 flex gap-3">
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-12 h-12 shadow-xl bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Sync Records</>}
+              <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest">Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl font-black px-12 h-12 md:h-14 shadow-xl bg-primary hover:bg-primary/90 text-white uppercase text-[10px] tracking-widest transition-all active:scale-95 shadow-primary/20">
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Sync Records</>}
                 </Button>
               </DialogFooter>
             </form>

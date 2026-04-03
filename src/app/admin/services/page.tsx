@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -299,45 +299,47 @@ export default function ServicesManagementPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] rounded-t-[2rem] md:rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <form onSubmit={handleSaveFull} className="flex flex-col h-[85vh]">
-            <header className="p-6 bg-[#081621] text-white flex justify-between items-center shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-xl"><Wrench size={24} /></div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">{t('new_service')}</DialogTitle>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col">
+          <form onSubmit={handleSaveFull} className="flex flex-col h-full">
+            <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-row items-center justify-between">
+              <div className="space-y-1">
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <Wrench className="text-primary" size={24} /> {t('new_service')}
+                </DialogTitle>
+                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Define professional service attributes</DialogDescription>
               </div>
-              <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
                 <X size={24} />
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 custom-scrollbar bg-white">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Service Title</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Title</Label>
                     <Input 
                       value={newServiceData.title} 
                       onChange={e => setNewServiceData({...newServiceData, title: e.target.value})} 
                       required 
-                      className="h-12 bg-gray-50 border-none rounded-xl font-bold" 
+                      className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" 
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Base Price (৳)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Base Price (৳)</Label>
                       <Input 
                         type="number" 
                         value={newServiceData.basePrice} 
                         onChange={e => setNewServiceData({...newServiceData, basePrice: e.target.value})} 
                         required 
-                        className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" 
+                        className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary" 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Pricing Logic</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Logic</Label>
                       <Select value={newServiceData.pricingType} onValueChange={v => setNewServiceData({...newServiceData, pricingType: v as any})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           <SelectItem value="quantity">By Quantity (1, 2, 3...)</SelectItem>
                           <SelectItem value="sqft">By Area (Square Feet Slabs)</SelectItem>
@@ -347,21 +349,21 @@ export default function ServicesManagementPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Category</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
                       <Select value={newServiceData.categoryId} onValueChange={v => setNewServiceData({...newServiceData, categoryId: v})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
                           {['Cleaning', 'Maintenance', 'Repair'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Badge Text (Optional)</Label>
-                      <Input name="badgeText" value={newServiceData.badgeText} onChange={e => setNewServiceData({...newServiceData, badgeText: e.target.value})} placeholder="e.g. HOT" className="h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-red-600" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Badge Text (Optional)</Label>
+                      <Input name="badgeText" value={newServiceData.badgeText} onChange={e => setNewServiceData({...newServiceData, badgeText: e.target.value})} placeholder="e.g. HOT" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-red-600" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
                     <Textarea 
                       value={newServiceData.description} 
                       onChange={e => setNewServiceData({...newServiceData, description: e.target.value})} 
@@ -380,14 +382,14 @@ export default function ServicesManagementPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Team Size</Label>
-                      <Input value={newServiceData.teamSize} onChange={e => setNewServiceData({...newServiceData, teamSize: e.target.value})} placeholder="2-4 Persons" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input value={newServiceData.teamSize} onChange={e => setNewServiceData({...newServiceData, teamSize: e.target.value})} placeholder="2-4 Persons" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Avg Duration</Label>
-                      <Input value={newServiceData.duration} onChange={e => setNewServiceData({...newServiceData, duration: e.target.value})} placeholder="3-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input value={newServiceData.duration} onChange={e => setNewServiceData({...newServiceData, duration: e.target.value})} placeholder="3-4 Hours" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10 shadow-sm">
                     <div className="space-y-1">
                       <Label className="text-xs font-black uppercase">Most Popular</Label>
                       <p className="text-[9px] text-muted-foreground uppercase font-bold">SHOW BADGE ON HOMEPAGE</p>
@@ -399,13 +401,13 @@ export default function ServicesManagementPage() {
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border w-full sm:w-auto justify-between">
-                <Label className="text-[10px] font-black uppercase">Publish Immediately</Label>
+              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border w-full sm:w-auto justify-between shadow-sm">
+                <Label className="text-[10px] font-black uppercase text-gray-500">Publish Immediately</Label>
                 <Switch defaultChecked={true} onCheckedChange={v => setNewServiceData({...newServiceData, status: v ? 'Active' : 'Inactive'})} />
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none rounded-xl font-bold uppercase text-[10px] tracking-widest px-8">Discard</Button>
-                <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none rounded-xl font-black px-12 h-12 bg-primary shadow-xl uppercase tracking-tighter">
+              <div className="flex gap-3 w-full sm:w-auto">
+                <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+                <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none h-12 md:h-14 px-12 rounded-xl font-black bg-primary shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95">
                   {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Create Service</>}
                 </Button>
               </div>

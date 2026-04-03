@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -138,7 +139,7 @@ export default function AccessControlPage() {
         });
         toast({ title: "User Profile Updated" });
       } else {
-        // Secure enrollment: Use secondary app to prevent admin logout
+        // Secure enrollment
         const secondaryAppName = 'StaffCreationApp';
         const secondaryApp = getApps().find(app => app.name === secondaryAppName) 
           || initializeApp(firebaseConfig, secondaryAppName);
@@ -158,7 +159,6 @@ export default function AccessControlPage() {
           totalEarnings: 0
         });
 
-        // Add to legacy role-specific path for Rule backward compatibility
         await setDoc(doc(db, `roles_${userForm.roleId === 'admin' ? 'admins' : 'employees'}`, newUser.uid), {
           uid: newUser.uid,
           assignedAt: new Date().toISOString()
@@ -198,7 +198,7 @@ export default function AccessControlPage() {
   };
 
   return (
-    <div className="space-y-8 pb-20 min-w-0">
+    <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Access Control Center</h1>
@@ -214,7 +214,6 @@ export default function AccessControlPage() {
         </div>
       </div>
 
-      {/* Scoped KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: "Admins", val: stats.admin, icon: ShieldCheck, color: "text-red-600", bg: "bg-red-50" },
@@ -237,10 +236,10 @@ export default function AccessControlPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-white border p-1 h-12 rounded-xl w-fit">
-          <TabsTrigger value="roles" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="roles" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white uppercase font-black text-[10px]">
             <Settings size={16} /> Role Definitions
           </TabsTrigger>
-          <TabsTrigger value="users" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="users" className="rounded-lg gap-2 px-6 data-[state=active]:bg-primary data-[state=active]:text-white uppercase font-black text-[10px]">
             <Users size={16} /> Staff Directory
           </TabsTrigger>
         </TabsList>
@@ -340,24 +339,24 @@ export default function AccessControlPage() {
 
       {/* ROLE MODAL */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
-          <header className="p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
-            <div>
-              <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingRole ? 'Update Role Policies' : 'Define New Role'}</DialogTitle>
-              <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure granular access levels</DialogDescription>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
+          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div className="space-y-1">
+              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">{editingRole ? 'Update Role Policies' : 'Define New Role'}</DialogTitle>
+              <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[9px]">Configure granular access levels</DialogDescription>
             </div>
-            <button onClick={() => setIsRoleDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button type="button" onClick={() => setIsRoleDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
               <X size={24} />
             </button>
           </header>
-          <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 bg-white custom-scrollbar">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Role Label</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Role Label</Label>
               <Input 
                 value={roleForm.name} 
                 onChange={e => setRoleForm({...roleForm, name: e.target.value})}
                 placeholder="e.g. Finance Manager"
-                className="h-12 bg-gray-50 border-none rounded-xl font-bold"
+                className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"
               />
             </div>
 
@@ -365,20 +364,20 @@ export default function AccessControlPage() {
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2">Permission Matrix</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {PERMISSION_LIST.map(p => (
-                  <div key={p.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl hover:bg-primary/5 transition-colors cursor-pointer" onClick={() => togglePermission(p.id)}>
+                  <div key={p.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl hover:bg-primary/5 transition-colors cursor-pointer group" onClick={() => togglePermission(p.id)}>
                     <Checkbox checked={roleForm.permissions.includes(p.id)} onCheckedChange={() => togglePermission(p.id)} />
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-gray-800">{p.label}</p>
-                      <p className="text-[8px] font-black text-muted-foreground uppercase">{p.group}</p>
+                      <p className="text-xs font-black uppercase text-gray-800 tracking-tight">{p.label}</p>
+                      <p className="text-[8px] font-black text-muted-foreground uppercase mt-0.5">{p.group}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-2">
-            <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
-            <Button onClick={handleSaveRole} disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl">
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+            <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+            <Button onClick={handleSaveRole} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-widest text-xs transition-all active:scale-95">
               {isSubmitting ? <Loader2 className="animate-spin" /> : "Sync Policies"}
             </Button>
           </DialogFooter>
@@ -387,57 +386,71 @@ export default function AccessControlPage() {
 
       {/* USER MODAL */}
       <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl bg-white overflow-hidden">
-          <header className="p-8 bg-[#081621] text-white flex justify-between items-center">
-            <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingUser ? 'Update Staff Member' : 'Personnel Enrollment'}</DialogTitle>
-            <button onClick={() => setIsUserDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
+          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div className="space-y-1">
+              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">{editingUser ? 'Update Staff Member' : 'Personnel Enrollment'}</DialogTitle>
+              <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[9px]">Activate or edit staff authentication credentials</DialogDescription>
+            </div>
+            <button type="button" onClick={() => setIsUserDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
               <X size={24} />
             </button>
           </header>
-          <form onSubmit={handleCreateAccount} className="p-8 space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Legal Name</Label>
-              <Input 
-                value={userForm.name} 
-                onChange={e => setUserForm({...userForm, name: e.target.value})}
-                required className="h-12 bg-gray-50 border-none rounded-xl"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Login Email</Label>
-              <Input 
-                type="email"
-                value={userForm.email} 
-                onChange={e => setUserForm({...userForm, email: e.target.value})}
-                disabled={!!editingUser}
-                required className="h-12 bg-gray-50 border-none rounded-xl"
-              />
-            </div>
-            {!editingUser && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase ml-1">Secure Password</Label>
-                <Input 
-                  type="password"
-                  value={userForm.password} 
-                  onChange={e => setUserForm({...userForm, password: e.target.value})}
-                  required className="h-12 bg-gray-50 border-none rounded-xl"
-                />
+          <form onSubmit={handleCreateAccount} className="flex flex-col h-full bg-white">
+            <div className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Legal Name</Label>
+                    <Input 
+                      value={userForm.name} 
+                      onChange={e => setUserForm({...userForm, name: e.target.value})}
+                      required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Login Email</Label>
+                    <Input 
+                      type="email"
+                      value={userForm.email} 
+                      onChange={e => setUserForm({...userForm, email: e.target.value})}
+                      disabled={!!editingUser}
+                      required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  {!editingUser && (
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Secure Password</Label>
+                      <Input 
+                        type="password"
+                        value={userForm.password} 
+                        onChange={e => setUserForm({...userForm, password: e.target.value})}
+                        required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-mono"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Designated Role</Label>
+                    <Select value={userForm.roleId} onValueChange={v => setUserForm({...userForm, roleId: v})}>
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {['admin', 'manager', 'accountant', 'order_manager', 'staff'].map(r => (
+                          <SelectItem key={r} value={r} className="uppercase font-black text-[10px]">{r.replace('_', ' ')}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-            )}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Designated Role</Label>
-              <Select value={userForm.roleId} onValueChange={v => setUserForm({...userForm, roleId: v})}>
-                <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  {['admin', 'manager', 'accountant', 'order_manager', 'staff'].map(r => (
-                    <SelectItem key={r} value={r} className="uppercase font-black text-[10px]">{r.replace('_', ' ')}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
-            <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase tracking-tight shadow-xl mt-4">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : (editingUser ? "Sync Profile" : "Activate Account")}
-            </Button>
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsUserDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-widest text-xs transition-all active:scale-95">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : (editingUser ? "Sync Profile" : "Activate Account")}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
