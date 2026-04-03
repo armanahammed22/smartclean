@@ -114,6 +114,7 @@ export interface Service {
   description: string;
   shortDescription?: string;
   basePrice: number;
+  regularPrice?: number;
   imageUrl?: string;
   galleryImages?: string[];
   beforeAfterImages?: { url: string; tag: 'Before' | 'After' }[];
@@ -141,6 +142,7 @@ export interface SubService {
   mainServiceId: string;
   name: string;
   price: number;
+  regularPrice?: number;
   description?: string;
   imageUrl?: string;
   isAddOnEnabled: boolean;

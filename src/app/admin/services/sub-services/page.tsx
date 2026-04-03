@@ -5,7 +5,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, X, AlertTriangle, Zap, Settings2 } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, X, AlertTriangle, Zap, Settings2, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -33,13 +33,15 @@ export default function SubServicesManagementPage() {
     name: '',
     mainServiceId: '',
     price: '',
+    regularPrice: '',
     duration: '',
     description: '',
     status: 'Active',
     isAddOnEnabled: true,
     isDefaultAddOn: false,
     isStandaloneEnabled: true,
-    pricingType: 'quantity' as 'quantity' | 'sqft'
+    pricingType: 'quantity' as 'quantity' | 'sqft',
+    rating: '5.0'
   });
 
   // Data Queries
@@ -55,13 +57,15 @@ export default function SubServicesManagementPage() {
         name: editingSub.name || '',
         mainServiceId: editingSub.mainServiceId || '',
         price: editingSub.price?.toString() || '',
+        regularPrice: editingSub.regularPrice?.toString() || '',
         duration: editingSub.duration || '',
         description: editingSub.description || '',
         status: editingSub.status || 'Active',
         isAddOnEnabled: editingSub.isAddOnEnabled ?? true,
         isDefaultAddOn: editingSub.isDefaultAddOn ?? false,
         isStandaloneEnabled: editingSub.isStandaloneEnabled ?? true,
-        pricingType: editingSub.pricingType || 'quantity'
+        pricingType: editingSub.pricingType || 'quantity',
+        rating: editingSub.rating?.toString() || '5.0'
       });
       setImageUrl(editingSub.imageUrl || '');
     } else {
@@ -69,13 +73,15 @@ export default function SubServicesManagementPage() {
         name: '',
         mainServiceId: '',
         price: '',
+        regularPrice: '',
         duration: '',
         description: '',
         status: 'Active',
         isAddOnEnabled: true,
         isDefaultAddOn: false,
         isStandaloneEnabled: true,
-        pricingType: 'quantity'
+        pricingType: 'quantity',
+        rating: '5.0'
       });
       setImageUrl('');
     }
@@ -100,6 +106,7 @@ export default function SubServicesManagementPage() {
       name: formValues.name.trim(),
       mainServiceId: formValues.mainServiceId,
       price: parseFloat(formValues.price) || 0,
+      regularPrice: parseFloat(formValues.regularPrice) || 0,
       duration: formValues.duration.trim(),
       description: formValues.description.trim(),
       status: formValues.status,
@@ -107,6 +114,7 @@ export default function SubServicesManagementPage() {
       isDefaultAddOn: formValues.isDefaultAddOn,
       isStandaloneEnabled: formValues.isStandaloneEnabled,
       pricingType: formValues.pricingType,
+      rating: parseFloat(formValues.rating) || 5.0,
       imageUrl: imageUrl,
       updatedAt: serverTimestamp()
     };
@@ -191,8 +199,18 @@ export default function SubServicesManagementPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Base Price (৳)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Price (৳)</Label>
                       <Input type="number" value={formValues.price} onChange={e => setFormValues({...formValues, price: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
+                      <Input type="number" value={formValues.regularPrice} onChange={e => setFormValues({...formValues, regularPrice: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Rating</Label>
+                      <Input type="number" step="0.1" value={formValues.rating} onChange={e => setFormValues({...formValues, rating: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Logic</Label>
@@ -207,7 +225,7 @@ export default function SubServicesManagementPage() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <ImageUploader label="Icon" initialUrl={imageUrl} onUpload={setImageUrl} aspectRatio="aspect-square" />
+                  <ImageUploader label="Icon" hint="800 x 800 px" initialUrl={imageUrl} onUpload={setImageUrl} aspectRatio="aspect-square" />
                   <div className="grid grid-cols-1 gap-3">
                     <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                       <Label className="text-[10px] font-black uppercase text-blue-900">Add-on Mode</Label>
@@ -243,7 +261,7 @@ export default function SubServicesManagementPage() {
                 <TableRow>
                   <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Sub-Service</TableHead>
                   <TableHead className="font-bold uppercase text-[10px] tracking-widest">Pricing Type</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Base Price</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
                   <TableHead className="font-bold text-center uppercase text-[10px] tracking-widest">Mode</TableHead>
                   <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
                 </TableRow>
@@ -269,7 +287,12 @@ export default function SubServicesManagementPage() {
                         {sub.pricingType === 'sqft' ? 'Square Feet' : 'Quantity'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-black text-sm text-gray-900">৳{sub.price?.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-black text-sm text-gray-900">৳{sub.price?.toLocaleString()}</span>
+                        {sub.regularPrice > sub.price && <span className="text-[10px] text-gray-400 line-through">৳{sub.regularPrice}</span>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center">
                       <div className="flex flex-col gap-1 items-center">
                         <Badge className={cn("text-[7px] font-black uppercase border-none px-1.5", sub.isAddOnEnabled ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400")}>

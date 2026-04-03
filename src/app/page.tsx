@@ -180,7 +180,8 @@ export default function SmartCleanHomePage() {
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '32px'
     };
 
-    const gridCols = `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${style.gridShow || 4} gap-3 md:gap-4 lg:gap-6`;
+    // Responsive 2 (Mobile), 3 (Tablet), 5 (Desktop) grid
+    const gridCols = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6";
 
     switch (sectionType) {
       case 'hero':
@@ -271,54 +272,11 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'billing_plans':
-        if (!plans || plans.length === 0) return null;
-        return (
-          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
-            <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-8 px-2", (style.titleAlign || style.textAlign) === 'center' ? 'flex-col gap-2' : '')}>
-                <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
-                  {section.title}
-                </h2>
-                <Link href="/billing" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
-                  Compare Plans
-                </Link>
-              </div>
-              <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6")}>
-                {plans.slice(0, 3).map((plan) => (
-                  <Card key={plan.id} className={cn("border-none shadow-sm flex flex-col h-full overflow-hidden transition-all group hover:shadow-2xl", plan.featured && "ring-2 ring-primary")} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
-                    <CardContent className="p-0 flex-1 flex flex-col">
-                      <div className={cn("p-8", plan.color || 'bg-primary/5')}>
-                        <Badge className="bg-white/50 text-gray-900 border-none text-[8px] font-black uppercase tracking-widest px-2 mb-3">Service Tier</Badge>
-                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-4">{plan.name}</h3>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-black text-primary">{plan.price}</span>
-                          <span className="text-muted-foreground text-sm font-bold uppercase">{plan.period}</span>
-                        </div>
-                      </div>
-                      <div className="p-8 space-y-6 flex-1 flex flex-col">
-                        <ul className="space-y-4 flex-1">
-                          {plan.features.slice(0, 5).map((f: string, i: number) => (
-                            <li key={i} className="flex items-start gap-3 text-xs font-bold text-gray-600 uppercase tracking-tight">
-                              <Check size={14} className="text-green-600 mt-0.5 shrink-0" /> {f}
-                            </li>
-                          ))}
-                        </ul>
-                        <Button className="w-full h-12 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
-                          Subscribe Now
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-
       case 'services_featured':
-        const displayServices = getFilteredServices();
-        if (displayServices.length === 0) return null;
+      case 'sub_services_custom':
+        const isSub = sectionType === 'sub_services_custom';
+        const displayList = isSub ? getFilteredSubServices() : getFilteredServices();
+        if (displayList.length === 0) return null;
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
@@ -326,64 +284,71 @@ export default function SmartCleanHomePage() {
                 <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
                   {section.title}
                 </h2>
-                <Link href="/services" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
+                <Link href={isSub ? "/services" : "/services"} className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
                   {t('view_all').toUpperCase()}
                 </Link>
               </div>
               <div className={gridCols}>
-                {displayServices.map(s => (
-                  <Link key={s.id} href={`/service/${s.slug || s.id}`} className="block h-full group">
-                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
-                      <div className="relative aspect-square overflow-hidden bg-gray-50">
-                        {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200 m-auto" />}
+                {displayList.map(s => (
+                  <Link key={s.id} href={isSub ? `/service/${s.parentSlug}` : `/service/${s.slug || s.id}`} className="block h-full group">
+                    <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                      {/* TOP: Square product image (1:1 ratio) */}
+                      <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
+                        {s.imageUrl ? (
+                          <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-200">
+                            {isSub ? <Layers size={32} /> : <Wrench size={32} />}
+                          </div>
+                        )}
                       </div>
-                      <CardContent className="p-3 md:p-4 space-y-2">
-                        <h3 className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight" style={{ color: style.itemTitleColor }}>{s.title}</h3>
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
+                      
+                      <CardContent className="p-3 md:p-4 flex flex-col flex-1 gap-2">
+                        {/* BELOW: Product title (max 2 lines) */}
+                        <div className={cn("w-full", style.titleAlign === 'center' ? 'text-center' : 'text-left')}>
+                          <h3 
+                            className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight min-h-[2.5rem] transition-colors group-hover:text-primary" 
+                            style={{ color: style.itemTitleColor }}
+                          >
+                            {s.title}
+                          </h3>
                         </div>
-                        <div className={cn("flex w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
-                          <Button size={style.btnSize || 'sm'} className={cn("rounded-lg font-black uppercase text-[9px] tracking-widest mt-2", style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
-                            <Calendar size={12} className="mr-1" /> {style.btnText || t('book_now')}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
 
-      case 'sub_services_custom':
-        const displaySubServices = getFilteredSubServices();
-        if (displaySubServices.length === 0) return null;
-        return (
-          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
-            <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-6 px-2", (style.titleAlign || style.textAlign) === 'center' ? 'flex-col gap-2' : '')}>
-                <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
-                  {section.title}
-                </h2>
-                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Service Add-ons</Badge>
-              </div>
-              <div className={gridCols}>
-                {displaySubServices.map(s => (
-                  <Link key={s.id} href={`/service/${s.parentSlug}`} className="block h-full group">
-                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
-                      <div className="relative aspect-square overflow-hidden bg-gray-50">
-                        {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Layers size={32} className="text-gray-200 m-auto" />}
-                      </div>
-                      <CardContent className="p-3 md:p-4 space-y-2">
-                        <h3 className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight" style={{ color: style.itemTitleColor }}>{s.title}</h3>
-                        <div className="flex justify-between items-center">
-                          <span className="font-black text-primary text-base" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
-                          <div className="bg-primary/5 p-1 rounded-lg"><Plus size={14} className="text-primary" /></div>
+                        {/* BELOW: Price and discount price in one column */}
+                        <div className={cn("flex flex-col", style.priceAlign === 'center' ? 'items-center' : 'items-start')}>
+                          <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>
+                            ৳{s.basePrice?.toLocaleString()}
+                          </span>
+                          {s.regularPrice && s.regularPrice > s.basePrice && (
+                            <span className="text-[10px] text-gray-400 line-through font-medium leading-none">
+                              ৳{s.regularPrice.toLocaleString()}
+                            </span>
+                          )}
                         </div>
-                        <div className={cn("flex w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
-                          <Button size={style.btnSize || 'sm'} className={cn("rounded-lg font-black uppercase text-[9px] tracking-widest mt-2", style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
-                            <Zap size={12} className="mr-1" /> {style.btnText || t('book_now')}
+
+                        {/* BELOW: Rating and booked count (small text) */}
+                        <div className="flex items-center justify-between text-[9px] font-bold border-t border-gray-50 pt-2 mt-auto">
+                          <div className="flex items-center gap-1 text-amber-500">
+                            <Star size={10} fill="currentColor" />
+                            <span className="text-gray-600">{(s.rating || 5.0).toFixed(1)}</span>
+                          </div>
+                          <span className="uppercase text-gray-400 font-black">
+                            {Math.floor(Math.random() * 100) + 20} {t('booked')}
+                          </span>
+                        </div>
+
+                        {/* BOTTOM: Button (Book Now, full width, 32–36px height) */}
+                        <div className={cn("w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
+                          <Button 
+                            size={style.btnSize || 'sm'} 
+                            className={cn(
+                              "h-9 rounded-lg font-black uppercase text-[9px] tracking-widest transition-all active:scale-95", 
+                              style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
+                            )} 
+                            style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}
+                          >
+                            {isSub ? <Zap size={12} className="mr-1" /> : <Calendar size={12} className="mr-1" />}
+                            {style.btnText || t('book_now')}
                           </Button>
                         </div>
                       </CardContent>
@@ -405,7 +370,8 @@ export default function SmartCleanHomePage() {
               <h2 className="mb-6 px-2 font-black uppercase tracking-tighter" style={titleStyles}>
                 {section.title}
               </h2>
-              <div className={gridCols}>
+              {/* Note: ProductCard uses its own 2/3/6 grid logic, potentially update it if 5 col is strict for products too */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
