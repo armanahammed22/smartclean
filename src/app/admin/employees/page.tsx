@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -57,16 +56,27 @@ export default function EmployeesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('all');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // Robust Queries - Removed orderBy to ensure all docs return even if name is missing
+  // Unified Controlled Form State to prevent "Auto Clean" during tab switches
+  const [formValues, setFormValues] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'Field Technician',
+    department: 'Operations',
+    salaryModel: 'monthly',
+    baseRate: 0,
+    commissionRate: 0,
+    status: 'Active',
+    skills: [] as string[]
+  });
+
   const employeesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'employee_profiles')) : null, [db, user]);
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
 
   const { data: employees, isLoading } = useCollection(employeesQuery);
   const { data: services } = useCollection(servicesQuery);
 
-  // Hardened Filtering Logic
   const filteredStaff = useMemo(() => {
     if (!employees) return [];
     
@@ -92,23 +102,13 @@ export default function EmployeesPage() {
     };
   }, [employees]);
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
     const staffData = {
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      role: formData.get('role') as string,
-      department: formData.get('department') as string,
-      salaryModel: formData.get('salaryModel') as string,
-      baseRate: parseFloat(formData.get('baseRate') as string) || 0,
-      commissionRate: parseFloat(formData.get('commissionRate') as string) || 0,
-      status: formData.get('status') as string || 'Active',
-      skills: selectedSkills,
+      ...formValues,
       updatedAt: new Date().toISOString()
     };
 
@@ -126,8 +126,7 @@ export default function EmployeesPage() {
         toast({ title: "Personnel Enrolled" });
       }
       setIsDialogOpen(false);
-      setEditingStaff(null);
-      setSelectedSkills([]);
+      resetForm();
     } catch (error) {
       toast({ variant: "destructive", title: "Error Saving Data" });
     } finally {
@@ -135,9 +134,41 @@ export default function EmployeesPage() {
     }
   };
 
+  const resetForm = () => {
+    setEditingStaff(null);
+    setFormValues({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'Field Technician',
+      department: 'Operations',
+      salaryModel: 'monthly',
+      baseRate: 0,
+      commissionRate: 0,
+      status: 'Active',
+      skills: []
+    });
+  };
+
   const handleOpenEdit = (staff: any) => {
     setEditingStaff(staff);
-    setSelectedSkills(staff.skills || []);
+    setFormValues({
+      name: staff.name || '',
+      email: staff.email || '',
+      phone: staff.phone || '',
+      role: staff.role || 'Field Technician',
+      department: staff.department || 'Operations',
+      salaryModel: staff.salaryModel || 'monthly',
+      baseRate: staff.baseRate || 0,
+      commissionRate: staff.commissionRate || 0,
+      status: staff.status || 'Active',
+      skills: staff.skills || []
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenNew = () => {
+    resetForm();
     setIsDialogOpen(true);
   };
 
@@ -148,9 +179,12 @@ export default function EmployeesPage() {
   };
 
   const toggleSkill = (serviceId: string) => {
-    setSelectedSkills(prev => 
-      prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]
-    );
+    setFormValues(prev => ({
+      ...prev,
+      skills: prev.skills.includes(serviceId) 
+        ? prev.skills.filter(id => id !== serviceId) 
+        : [...prev.skills, serviceId]
+    }));
   };
 
   return (
@@ -161,14 +195,13 @@ export default function EmployeesPage() {
           <p className="text-muted-foreground text-sm font-medium">Manage workforce, roles, and automated payroll models</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingStaff(null); }}>
-          <DialogTrigger asChild>
-            <Button className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl font-black uppercase text-xs tracking-widest gap-3">
-              <Plus size={20} /> Hire New Personnel
-            </Button>
-          </DialogTrigger>
+        <Button onClick={handleOpenNew} className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 shadow-xl font-black uppercase text-xs tracking-widest gap-3">
+          <Plus size={20} /> Hire New Personnel
+        </Button>
+
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { if(!open) setIsDialogOpen(false); }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 border-none rounded-[2.5rem] shadow-2xl flex flex-col">
-            <form onSubmit={handleSave} className="flex flex-col h-full">
+            <form onSubmit={handleSave} className="flex flex-col h-full" key={editingStaff?.id || 'new'}>
               <DialogHeader className="bg-[#081621] text-white p-8 shrink-0">
                 <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">
                   <Users className="text-primary" /> {editingStaff ? 'Update Profile' : 'Staff Enrollment'}
@@ -188,19 +221,19 @@ export default function EmployeesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                        <Input name="name" defaultValue={editingStaff?.name || ''} required placeholder="Full Legal Name" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.name} onChange={e => setFormValues({...formValues, name: e.target.value})} required placeholder="Full Legal Name" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Official Email</Label>
-                        <Input name="email" type="email" defaultValue={editingStaff?.email || ''} required placeholder="email@smartclean.com" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input type="email" value={formValues.email} onChange={e => setFormValues({...formValues, email: e.target.value})} required placeholder="email@smartclean.com" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone</Label>
-                        <Input name="phone" defaultValue={editingStaff?.phone || ''} required placeholder="+880" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.phone} onChange={e => setFormValues({...formValues, phone: e.target.value})} required placeholder="+880" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Department</Label>
-                        <Select name="department" defaultValue={editingStaff?.department || "Operations"}>
+                        <Select value={formValues.department} onValueChange={v => setFormValues({...formValues, department: v})}>
                           <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="Operations">Operations</SelectItem>
@@ -217,7 +250,7 @@ export default function EmployeesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Salary Model</Label>
-                        <Select name="salaryModel" defaultValue={editingStaff?.salaryModel || "monthly"}>
+                        <Select value={formValues.salaryModel} onValueChange={v => setFormValues({...formValues, salaryModel: v})}>
                           <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary uppercase text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="daily">Daily Wage</SelectItem>
@@ -229,16 +262,16 @@ export default function EmployeesPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Base Rate (৳)</Label>
-                          <Input name="baseRate" type="number" defaultValue={editingStaff?.baseRate || 0} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Input type="number" value={formValues.baseRate} onChange={e => setFormValues({...formValues, baseRate: parseFloat(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Commission (%)</Label>
-                          <Input name="commissionRate" type="number" defaultValue={editingStaff?.commissionRate || 0} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Input type="number" value={formValues.commissionRate} onChange={e => setFormValues({...formValues, commissionRate: parseFloat(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Status</Label>
-                        <Select name="status" defaultValue={editingStaff?.status || "Active"}>
+                        <Select value={formValues.status} onValueChange={v => setFormValues({...formValues, status: v})}>
                           <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
                             <SelectItem value="Active">Active</SelectItem>
@@ -249,7 +282,7 @@ export default function EmployeesPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Designated Role</Label>
-                        <Input name="role" defaultValue={editingStaff?.role || "Field Technician"} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Input value={formValues.role} onChange={e => setFormValues({...formValues, role: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                       </div>
                     </div>
                   </TabsContent>
@@ -267,14 +300,14 @@ export default function EmployeesPage() {
                             onClick={() => toggleSkill(service.id)}
                             className={cn(
                               "flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer group",
-                              selectedSkills.includes(service.id) ? "border-primary bg-primary/5" : "border-white bg-white hover:border-primary/20"
+                              formValues.skills.includes(service.id) ? "border-primary bg-primary/5" : "border-white bg-white hover:border-primary/20"
                             )}
                           >
                             <div className={cn(
                               "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-                              selectedSkills.includes(service.id) ? "bg-primary border-primary text-white" : "border-gray-200"
+                              formValues.skills.includes(service.id) ? "bg-primary border-primary text-white" : "border-gray-200"
                             )}>
-                              {selectedSkills.includes(service.id) && <CheckCircle2 size={12} strokeWidth={4} />}
+                              {formValues.skills.includes(service.id) && <CheckCircle2 size={12} strokeWidth={4} />}
                             </div>
                             <span className="text-[10px] font-bold uppercase truncate">{service.title}</span>
                           </div>
