@@ -176,10 +176,11 @@ export default function SmartCleanHomePage() {
 
     const titleStyles = {
       color: style.titleColor || '#081621',
-      textAlign: (style.textAlign || 'left') as any,
+      textAlign: (style.titleAlign || style.textAlign || 'left') as any,
+      fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '32px'
     };
 
-    const gridCols = `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${style.gridShow || 6} gap-3 md:gap-4 lg:gap-6`;
+    const gridCols = `grid grid-cols-2 md:grid-cols-3 xl:grid-cols-${style.gridShow || 4} gap-3 md:gap-4 lg:gap-6`;
 
     switch (sectionType) {
       case 'hero':
@@ -254,7 +255,7 @@ export default function SmartCleanHomePage() {
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500 rounded-xl text-white"><Zap size={18} fill="currentColor" /></div>
                     <div className="flex flex-col">
-                      <span className="text-sm md:text-xl lg:text-2xl font-black uppercase tracking-tight" style={{ color: style.titleColor }}>{flashSaleConfig.title || t('flash_sale')}</span>
+                      <span className="text-sm md:xl lg:text-2xl font-black uppercase tracking-tight" style={{ color: style.titleColor }}>{flashSaleConfig.title || t('flash_sale')}</span>
                       <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
                     </div>
                   </div>
@@ -275,14 +276,8 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-8 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
-                <h2 
-                  className={cn("font-black uppercase tracking-tighter")}
-                  style={{ 
-                    ...titleStyles, 
-                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
-                  }}
-                >
+              <div className={cn("flex items-center justify-between mb-8 px-2", (style.titleAlign || style.textAlign) === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
                   {section.title}
                 </h2>
                 <Link href="/billing" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
@@ -327,14 +322,8 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-6 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
-                <h2 
-                  className={cn("font-black uppercase tracking-tighter")}
-                  style={{ 
-                    ...titleStyles, 
-                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
-                  }}
-                >
+              <div className={cn("flex items-center justify-between mb-6 px-2", (style.titleAlign || style.textAlign) === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
                   {section.title}
                 </h2>
                 <Link href="/services" className="text-[9px] md:text-xs font-black uppercase px-4 py-2 rounded-full shadow-sm border border-gray-100 bg-white" style={{ color: style.btnBg }}>
@@ -344,7 +333,7 @@ export default function SmartCleanHomePage() {
               <div className={gridCols}>
                 {displayServices.map(s => (
                   <Link key={s.id} href={`/service/${s.slug || s.id}`} className="block h-full group">
-                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50">
                         {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Wrench size={32} className="text-gray-200 m-auto" />}
                       </div>
@@ -353,9 +342,11 @@ export default function SmartCleanHomePage() {
                         <div className="flex items-baseline gap-2">
                           <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
                         </div>
-                        <Button size="sm" className="w-full h-9 rounded-lg font-black uppercase text-[9px] tracking-widest mt-2" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
-                          <Calendar size={12} className="mr-1" /> {t('book_now')}
-                        </Button>
+                        <div className={cn("flex w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
+                          <Button size={style.btnSize || 'sm'} className={cn("rounded-lg font-black uppercase text-[9px] tracking-widest mt-2", style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                            <Calendar size={12} className="mr-1" /> {style.btnText || t('book_now')}
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
@@ -371,14 +362,8 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <div className={cn("flex items-center justify-between mb-6 px-2", style.textAlign === 'center' ? 'flex-col gap-2' : '')}>
-                <h2 
-                  className={cn("font-black uppercase tracking-tighter")}
-                  style={{ 
-                    ...titleStyles, 
-                    fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
-                  }}
-                >
+              <div className={cn("flex items-center justify-between mb-6 px-2", (style.titleAlign || style.textAlign) === 'center' ? 'flex-col gap-2' : '')}>
+                <h2 className="font-black uppercase tracking-tighter" style={titleStyles}>
                   {section.title}
                 </h2>
                 <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">Service Add-ons</Badge>
@@ -386,7 +371,7 @@ export default function SmartCleanHomePage() {
               <div className={gridCols}>
                 {displaySubServices.map(s => (
                   <Link key={s.id} href={`/service/${s.parentSlug}`} className="block h-full group">
-                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
+                    <Card className={cn("border-none h-full overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50">
                         {s.imageUrl ? <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized /> : <Layers size={32} className="text-gray-200 m-auto" />}
                       </div>
@@ -396,9 +381,11 @@ export default function SmartCleanHomePage() {
                           <span className="font-black text-primary text-base" style={{ color: style.priceColor }}>৳{s.basePrice?.toLocaleString()}</span>
                           <div className="bg-primary/5 p-1 rounded-lg"><Plus size={14} className="text-primary" /></div>
                         </div>
-                        <Button size="sm" className="w-full h-9 rounded-lg font-black uppercase text-[9px] tracking-widest mt-2" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
-                          <Zap size={12} className="mr-1" /> {t('book_now')}
-                        </Button>
+                        <div className={cn("flex w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
+                          <Button size={style.btnSize || 'sm'} className={cn("rounded-lg font-black uppercase text-[9px] tracking-widest mt-2", style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                            <Zap size={12} className="mr-1" /> {style.btnText || t('book_now')}
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
@@ -415,13 +402,7 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
             <div className="container mx-auto max-w-7xl">
-              <h2 
-                className={cn("mb-6 px-2 font-black uppercase tracking-tighter")}
-                style={{ 
-                  ...titleStyles, 
-                  fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 20}px` : `${style.titleSizeDesktop || 32}px`) : '24px' 
-                }}
-              >
+              <h2 className="mb-6 px-2 font-black uppercase tracking-tighter" style={titleStyles}>
                 {section.title}
               </h2>
               <div className={gridCols}>

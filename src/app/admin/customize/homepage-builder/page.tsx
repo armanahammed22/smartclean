@@ -40,7 +40,8 @@ import {
   Monitor,
   Wrench,
   Sparkles,
-  CreditCard
+  CreditCard,
+  AlignRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -157,7 +158,10 @@ export default function HomepageBuilderPage() {
         textAlign: 'left',
         titleAlign: 'left',
         priceAlign: 'left',
-        btnAlign: 'full'
+        btnAlign: 'full',
+        btnText: 'Book Now',
+        btnSize: 'default',
+        btnType: 'default'
       },
       createdAt: new Date().toISOString()
     });
@@ -390,7 +394,7 @@ export default function HomepageBuilderPage() {
                   <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
                     Changes here affect all sections that have <strong>Inherit Master Theme</strong> enabled. Use this to maintain a consistent brand identity across the entire homepage.
                   </p>
-                  <div className="p-4 bg-white rounded-2xl border border-blue-100">
+                  <div className="p-4 bg-white rounded-2xl border border-blue-100 mt-4">
                     <p className="text-[10px] font-black text-blue-900 uppercase mb-2">💡 Pro Tip</p>
                     <p className="text-[10px] text-blue-700/70 leading-normal">
                       For high-impact sections like a seasonal Sale, disable inheritance in the individual block settings to apply a unique high-contrast design.
@@ -408,7 +412,7 @@ export default function HomepageBuilderPage() {
           <Tabs defaultValue="content" className="flex flex-col h-full">
             <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                   <Settings2 className="text-primary" /> Block Calibration
                 </DialogTitle>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -469,7 +473,7 @@ export default function HomepageBuilderPage() {
                   </div>
                   <Switch 
                     checked={!!editingSection?.styleConfig?.useGlobal} 
-                    onCheckedChange={(val) => setEditingSection({...editingSection, styleConfig: {...(editingSection.styleConfig || {}), useGlobal: val}})} 
+                    onCheckedChange={(val) => setEditingSection({...editingSection, styleConfig: {...(editingSection.styleConfig || { useGlobal: true }), useGlobal: val}})} 
                   />
                 </div>
 
@@ -477,6 +481,7 @@ export default function HomepageBuilderPage() {
                   <div className="space-y-12 animate-in fade-in zoom-in-95 duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                       <div className="space-y-10">
+                        {/* Section & Grid */}
                         <div className="space-y-6">
                           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Surface & Grid</h4>
                           <div className="grid grid-cols-2 gap-6">
@@ -489,13 +494,14 @@ export default function HomepageBuilderPage() {
                               <Select value={editingSection?.styleConfig?.gridShow || '4'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, gridShow: v}})}>
                                 <SelectTrigger className="h-10 rounded-xl bg-gray-50 border-none font-black text-[10px]"><SelectValue /></SelectTrigger>
                                 <SelectContent className="rounded-xl">
-                                  {['1','2','3','4'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Items Wide</SelectItem>)}
+                                  {['1','2','3','4','5','6'].map(col => <SelectItem key={col} value={col} className="text-[10px] font-black">{col} Items Wide</SelectItem>)}
                                 </SelectContent>
                               </Select>
                             </div>
                           </div>
                         </div>
 
+                        {/* Title Control */}
                         <div className="space-y-6">
                           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Title Control</h4>
                           <div className="grid grid-cols-2 gap-6">
@@ -506,32 +512,81 @@ export default function HomepageBuilderPage() {
                             <div className="space-y-2">
                               <Label className="text-[9px] font-black uppercase text-muted-foreground">Alignment</Label>
                               <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.titleAlign === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
+                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'left'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", (editingSection?.styleConfig?.titleAlign || 'left') === 'left' ? "bg-white text-primary" : "text-gray-400")}><AlignLeft size={14}/></button>
                                 <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'center'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.titleAlign === 'center' ? "bg-white text-primary" : "text-gray-400")}><AlignCenter size={14}/></button>
+                                <button type="button" onClick={() => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleAlign: 'right'}})} className={cn("flex-1 h-8 rounded-lg flex items-center justify-center", editingSection?.styleConfig?.titleAlign === 'right' ? "bg-white text-primary" : "text-gray-400")}><AlignRight size={14}/></button>
                               </div>
+                            </div>
+                            <div className="space-y-4">
+                              <Label className="text-[9px] font-black uppercase flex items-center justify-between">Mobile Title Size <span>{editingSection?.styleConfig?.titleSizeMobile || 20}px</span></Label>
+                              <Slider value={[parseInt(editingSection?.styleConfig?.titleSizeMobile || '20')]} min={12} max={48} onValueChange={val => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleSizeMobile: val[0].toString() }})} />
+                            </div>
+                            <div className="space-y-4">
+                              <Label className="text-[9px] font-black uppercase flex items-center justify-between">Desktop Title Size <span>{editingSection?.styleConfig?.titleSizeDesktop || 32}px</span></Label>
+                              <Slider value={[parseInt(editingSection?.styleConfig?.titleSizeDesktop || '32')]} min={12} max={80} onValueChange={val => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, titleSizeDesktop: val[0].toString() }})} />
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-10">
+                        {/* Item Cards Content */}
                         <div className="space-y-6">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Action Protocols</h4>
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Grid size={14}/> Card Item Aesthetics</h4>
                           <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Button BG</Label>
-                              <Input type="color" value={editingSection?.styleConfig?.btnBg || '#22C55E'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnBg: e.target.value}})} className="h-10 p-1" />
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Item Title Color</Label>
+                              <Input type="color" value={editingSection?.styleConfig?.itemTitleColor || '#1f2937'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, itemTitleColor: e.target.value}})} className="h-10 p-1" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Size</Label>
-                              <Select value={editingSection?.styleConfig?.btnSize || 'default'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnSize: v}})}>
-                                <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                  <SelectItem value="sm">Compact</SelectItem>
-                                  <SelectItem value="default">Standard</SelectItem>
-                                  <SelectItem value="lg">Prominent</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Price Color</Label>
+                              <Input type="color" value={editingSection?.styleConfig?.priceColor || '#1E5F7A'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, priceColor: e.target.value}})} className="h-10 p-1" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Protocols */}
+                        <div className="space-y-6">
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><MousePointer2 size={14}/> Action Button Logic</h4>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Text</Label>
+                              <Input value={editingSection?.styleConfig?.btnText || 'Book Now'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnText: e.target.value}})} className="h-10 bg-gray-50 border-none font-bold" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground">Button BG</Label>
+                                <Input type="color" value={editingSection?.styleConfig?.btnBg || '#1E5F7A'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnBg: e.target.value}})} className="h-10 p-1" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground">Button Text Color</Label>
+                                <Input type="color" value={editingSection?.styleConfig?.btnTextColor || '#ffffff'} onChange={e => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnTextColor: e.target.value}})} className="h-10 p-1" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase">Button Size</Label>
+                                <Select value={editingSection?.styleConfig?.btnSize || 'default'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnSize: v}})}>
+                                  <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
+                                  <SelectContent className="rounded-xl">
+                                    <SelectItem value="sm">Compact</SelectItem>
+                                    <SelectItem value="default">Standard</SelectItem>
+                                    <SelectItem value="lg">Prominent</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase">Alignment</Label>
+                                <Select value={editingSection?.styleConfig?.btnAlign || 'full'} onValueChange={v => setEditingSection({...editingSection, styleConfig: {...editingSection.styleConfig, btnAlign: v}})}>
+                                  <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue /></SelectTrigger>
+                                  <SelectContent className="rounded-xl">
+                                    <SelectItem value="left">Left</SelectItem>
+                                    <SelectItem value="center">Center</SelectItem>
+                                    <SelectItem value="right">Right</SelectItem>
+                                    <SelectItem value="full">Full Width</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           </div>
                         </div>
