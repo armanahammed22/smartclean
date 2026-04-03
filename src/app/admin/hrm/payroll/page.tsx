@@ -35,8 +35,9 @@ import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { createLedgerEntry } from '@/lib/finance-utils';
 
 export default function AdminPayrollPage() {
   const db = useFirestore();
@@ -59,14 +60,19 @@ export default function AdminPayrollPage() {
   
   const earningsQuery = useMemoFirebase(() => (db && user) ? collection(db, 'staff_earnings') : null, [db, user]);
   
-  // Finalized Payroll Records
+  // Finalized Payroll Records - Removed WHERE to avoid index requirement
   const payrollRecordsQuery = useMemoFirebase(() => 
-    (db && user) ? query(collection(db, 'payroll_records'), where('month', '==', selectedMonth), orderBy('createdAt', 'desc')) : null, [db, user, selectedMonth]);
+    (db && user) ? query(collection(db, 'payroll_records'), orderBy('createdAt', 'desc')) : null, [db, user]);
 
   const { data: staffList, isLoading: sLoading } = useCollection(staffQuery);
   const { data: attendance, isLoading: aLoading } = useCollection(attendanceQuery);
   const { data: earnings } = useCollection(earningsQuery);
-  const { data: payrollRecords, isLoading: rLoading } = useCollection(payrollRecordsQuery);
+  const { data: allPayrollRecords, isLoading: rLoading } = useCollection(payrollRecordsQuery);
+
+  // Filter in memory to avoid "Missing Index" errors
+  const payrollRecords = useMemo(() => {
+    return allPayrollRecords?.filter(r => r.month === selectedMonth) || [];
+  }, [allPayrollRecords, selectedMonth]);
 
   // Logic to determine which staff need payroll generation
   const pendingPayrollData = useMemo(() => {
