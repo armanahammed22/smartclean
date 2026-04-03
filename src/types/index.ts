@@ -372,3 +372,42 @@ export interface AdvancedOffer {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AttendanceLog {
+  id: string;
+  staffId: string;
+  staffName: string;
+  date: string;
+  checkIn?: string;
+  checkOut?: string;
+  locationIn?: { lat: number; lng: number };
+  locationOut?: { lat: number; lng: number };
+  status: 'Present' | 'Late' | 'Absent' | 'On Leave';
+  updatedAt: any;
+}
+
+export interface LeaveRequest {
+  id: string;
+  staffId: string;
+  staffName: string;
+  type: 'Sick' | 'Casual' | 'Annual' | 'Emergency';
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ExpenseClaim {
+  id: string;
+  staffId: string;
+  staffName: string;
+  title: string;
+  amount: number;
+  description: string;
+  imageUrl?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
+  updatedAt?: string;
+}

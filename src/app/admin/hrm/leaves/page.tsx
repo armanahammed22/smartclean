@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -14,11 +13,11 @@ import {
   XCircle, 
   Clock, 
   Loader2, 
-  User, 
   Briefcase,
   AlertCircle,
   TrendingUp,
-  ArrowRight
+  History,
+  FileText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -40,7 +39,7 @@ export default function AdminLeavesPage() {
         status,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: `Leave ${status}`, description: `Request has been marked as ${status}.` });
+      toast({ title: `Leave ${status}`, description: `Request processed successfully.` });
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
     }
@@ -58,52 +57,54 @@ export default function AdminLeavesPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase">Leave Management</h1>
-          <p className="text-muted-foreground text-sm font-medium">Review and verify staff leave applications</p>
+          <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight">Leave Management</h1>
+          <p className="text-muted-foreground text-sm font-medium">Verify and manage staff time-off requests</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-orange-50 text-orange-700 rounded-3xl overflow-hidden">
-          <CardContent className="p-6 flex items-center justify-between">
+        <Card className="border-none shadow-sm bg-orange-50 text-orange-700 rounded-[2.5rem] overflow-hidden border border-orange-100">
+          <CardContent className="p-8 flex items-center justify-between">
             <div>
               <p className="text-orange-700/80 text-[10px] font-black uppercase tracking-widest mb-1">Awaiting Review</p>
-              <h3 className="text-3xl font-black">{stats.pending} Requests</h3>
+              <h3 className="text-4xl font-black tracking-tighter">{stats.pending} Requests</h3>
             </div>
-            <div className="p-4 bg-white rounded-2xl shadow-sm"><AlertCircle size={24} /></div>
+            <div className="p-5 bg-white rounded-2xl shadow-sm"><AlertCircle size={32} /></div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-emerald-50 text-emerald-700 rounded-3xl overflow-hidden">
-          <CardContent className="p-6 flex items-center justify-between">
+        
+        <Card className="border-none shadow-sm bg-emerald-50 text-emerald-700 rounded-[2.5rem] overflow-hidden border border-emerald-100">
+          <CardContent className="p-8 flex items-center justify-between">
             <div>
-              <p className="text-emerald-700/80 text-[10px] font-black uppercase tracking-widest mb-1">Approved Monthly</p>
-              <h3 className="text-3xl font-black">{stats.approved} Total</h3>
+              <p className="text-emerald-700/80 text-[10px] font-black uppercase tracking-widest mb-1">Approved This Month</p>
+              <h3 className="text-4xl font-black tracking-tighter">{stats.approved} Total</h3>
             </div>
-            <div className="p-4 bg-white rounded-2xl shadow-sm"><CheckCircle2 size={24} /></div>
+            <div className="p-5 bg-white rounded-2xl shadow-sm"><CheckCircle2 size={32} /></div>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-[#081621] text-white rounded-3xl overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><TrendingUp size={100} /></div>
-          <CardContent className="p-6 flex items-center justify-between h-full relative z-10">
-            <div>
+
+        <Card className="border-none shadow-sm bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><History size={100} /></div>
+          <CardContent className="p-8 flex items-center justify-between h-full relative z-10">
+            <div className="space-y-1">
               <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">Resource Health</p>
-              <h3 className="text-3xl font-black italic">OPTIMAL</h3>
+              <h3 className="text-4xl font-black tracking-tighter">STABLE</h3>
             </div>
-            <Badge className="bg-primary text-white border-none font-black text-[10px] px-3 py-1">REAL-TIME</Badge>
+            <Badge className="bg-primary text-white border-none font-black text-[10px] px-3 py-1 rounded-lg uppercase tracking-widest">Live</Badge>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem]">
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <Table>
             <TableHeader className="bg-gray-50/50">
-              <TableRow>
-                <TableHead className="pl-8 py-5 font-bold uppercase text-[10px] tracking-widest">Personnel</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Type</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Duration</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="py-6 pl-10 font-black uppercase text-[10px] tracking-widest text-[#081621]">Personnel</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Type</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Duration</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621] text-center">Status</TableHead>
+                <TableHead className="text-right pr-10 font-black uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -111,41 +112,41 @@ export default function AdminLeavesPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
               ) : requests?.map((req) => (
                 <TableRow key={req.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <TableCell className="pl-8 py-5">
+                  <TableCell className="pl-10 py-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black">{req.staffName?.[0]}</div>
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-black text-xs text-gray-400 uppercase shadow-inner">{req.staffName?.[0]}</div>
                       <div>
-                        <div className="font-black text-gray-900 uppercase text-xs leading-none mb-1">{req.staffName || 'Technician'}</div>
-                        <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight italic">"{req.reason}"</div>
+                        <div className="font-black text-gray-900 uppercase text-xs leading-none mb-1">{req.staffName}</div>
+                        <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight italic">"{req.reason}"</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase px-2 py-0.5 border-primary/20 text-primary">
+                    <Badge variant="outline" className="text-[8px] font-black uppercase px-2 py-0.5 border-primary/20 text-primary bg-primary/5">
                       {req.type}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-[10px] font-bold text-gray-500 uppercase">
                     {req.startDate} <span className="mx-1 text-gray-300">→</span> {req.endDate}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="secondary" className={cn(
-                      "text-[8px] font-black uppercase border-none px-2",
+                      "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg shadow-sm",
                       req.status === 'Pending' ? "bg-amber-50 text-amber-700" :
-                      req.status === 'Approved' ? "bg-green-50 text-green-700" :
-                      "bg-red-50 text-red-700"
+                      req.status === 'Approved' ? "bg-emerald-50 text-emerald-700" :
+                      "bg-rose-50 text-rose-700"
                     )}>
                       {req.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right pr-8">
+                  <TableCell className="text-right pr-10">
                     {req.status === 'Pending' && (
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'Approved')}>
-                          <CheckCircle2 size={16} />
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'Approved')}>
+                          <CheckCircle2 size={18} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-50 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'Rejected')}>
-                          <XCircle size={16} />
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl" onClick={() => handleUpdateStatus(req.id, 'Rejected')}>
+                          <XCircle size={18} />
                         </Button>
                       </div>
                     )}
@@ -153,7 +154,7 @@ export default function AdminLeavesPage() {
                 </TableRow>
               ))}
               {requests?.length === 0 && !isLoading && (
-                <TableRow><TableCell colSpan={5} className="text-center py-24 italic text-muted-foreground font-medium">No leave requests in the queue.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center py-32 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Queue Clear. No leave requests found.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
