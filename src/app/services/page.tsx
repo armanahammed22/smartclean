@@ -14,6 +14,7 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { ProductCard } from '@/components/products/product-card';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 
 function ServicesContent() {
   const db = useFirestore();
@@ -175,21 +176,21 @@ function ServicesContent() {
                     </div>
                   </Link>
                   <div className="p-3 flex flex-col flex-1">
-                    <div className="min-h-[40px] md:min-h-[48px] mb-2">
+                    <div className="min-h-[40px] md:min-h-[48px] mb-2 text-left">
                       <Link href={`/service/${item.slug || item.id}`} className="hover:text-primary transition-colors block">
-                        <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800 text-left">
+                        <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800">
                           {item.title}
                         </h3>
                       </Link>
                     </div>
                     
                     <div className="space-y-2 mb-3">
-                      <div className="flex flex-wrap items-baseline gap-2 justify-start pt-1">
+                      <div className="flex flex-col items-start pt-1">
                         <span className="text-base font-black text-primary tracking-tighter leading-none">
                           ৳{(item.basePrice || 0).toLocaleString()}
                         </span>
                         {item.regularPrice && item.regularPrice > item.basePrice && (
-                          <span className="text-[10px] text-gray-400 line-through font-medium">৳{item.regularPrice.toLocaleString()}</span>
+                          <span className="text-[10px] text-gray-400 line-through font-medium leading-none mt-1">৳{item.regularPrice.toLocaleString()}</span>
                         )}
                       </div>
 
