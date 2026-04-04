@@ -36,7 +36,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  CreditCard
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -377,24 +378,61 @@ export default function SmartCleanHomePage() {
 
       case 'trust_stats':
         return (
-          <section key={section.id} style={sectionStyles} className="px-4 bg-white">
-            <div className="container mx-auto max-w-7xl grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <section key={section.id} style={{ ...sectionStyles, paddingTop: '12px', paddingBottom: '12px' }} className="px-4 bg-white border-y border-gray-50">
+            <div className="container mx-auto max-w-7xl flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
               {[
                 { label: t('happy_clients'), val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
                 { label: t('trust_score'), val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
                 { label: t('verified_pros'), val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
                 { label: t('service_hours'), val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
               ].map((stat, i) => (
-                <div key={i} className="flex flex-col items-center text-center space-y-3">
-                  <div className={cn("p-4 md:p-6 rounded-2xl transition-transform hover:scale-110 shadow-sm", stat.bg, stat.color)} style={{ borderRadius: `${style.cardRadius || 24}px` }}>
-                    <stat.icon size={28} strokeWidth={2.5} />
+                <div key={i} className="flex items-center gap-3 h-[48px] px-2 shrink-0">
+                  <div className={cn("p-2 rounded-xl transition-transform hover:scale-110 shadow-sm shrink-0", stat.bg, stat.color)} style={{ borderRadius: `${(style.cardRadius || 24) / 2}px` }}>
+                    <stat.icon size={18} strokeWidth={2.5} />
                   </div>
-                  <div>
-                    <h4 className="text-xl md:text-3xl font-black text-[#081621] tracking-tighter" style={{ color: style.titleColor }}>{stat.val}</h4>
-                    <p className="text-[8px] md:xs font-black uppercase text-muted-foreground tracking-[0.2em] mt-1">{stat.label}</p>
+                  <div className="flex flex-col justify-center">
+                    <h4 className="text-sm md:text-base font-black text-[#081621] tracking-tighter leading-none" style={{ color: style.titleColor }}>{stat.val}</h4>
+                    <p className="text-[7px] md:text-[8px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-0.5 whitespace-nowrap leading-none">{stat.label}</p>
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+        );
+
+      case 'billing_plans':
+        return (
+          <section key={section.id} style={sectionStyles} className="px-4">
+            <div className="container mx-auto max-w-7xl">
+              <h2 className="mb-10 px-2 font-black uppercase tracking-tighter" style={titleStyles}>
+                {section.title || 'Subscription Plans'}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {plans?.slice(0, 3).map((plan) => (
+                  <Card key={plan.id} className={cn("border-none flex flex-col h-full overflow-hidden transition-all duration-500 bg-white", style.cardShadow, plan.featured && "ring-2 ring-primary")} style={{ borderRadius: `${style.cardRadius || 24}px` }}>
+                    <div className={cn("p-6", plan.color || 'bg-gray-50')}>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-primary mb-1">Plan Tier</p>
+                      <h3 className="text-xl font-black text-gray-900 uppercase">{plan.name}</h3>
+                      <div className="mt-4 flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-primary">{plan.price}</span>
+                        <span className="text-gray-400 font-bold text-[10px] uppercase">{plan.period}</span>
+                      </div>
+                    </div>
+                    <CardContent className="p-6 flex-1 flex flex-col bg-white">
+                      <ul className="space-y-3 mb-6 flex-1">
+                        {plan.features?.slice(0, 4).map((f: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2 text-[10px] font-bold text-gray-600 uppercase tracking-tight">
+                            <Check size={12} className="text-green-500 shrink-0 mt-0.5" strokeWidth={4} /> {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button className="w-full h-10 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}>
+                        Activate Plan
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </section>
         );
