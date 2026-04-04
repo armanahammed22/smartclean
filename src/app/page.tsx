@@ -184,7 +184,6 @@ export default function SmartCleanHomePage() {
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '32px'
     };
 
-    // Responsive 2 (Mobile), 3 (Tablet), 5 (Desktop) grid
     const gridCols = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6";
 
     switch (sectionType) {
@@ -296,7 +295,6 @@ export default function SmartCleanHomePage() {
                 {displayList.map(s => (
                   <Link key={s.id} href={isSub ? `/service/${s.parentSlug}` : `/service/${s.slug || s.id}`} className="block h-full group">
                     <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
-                      {/* TOP: Square product image (1:1 ratio) */}
                       <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
                         {s.imageUrl ? (
                           <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
@@ -307,9 +305,8 @@ export default function SmartCleanHomePage() {
                         )}
                       </div>
                       
-                      <CardContent className="p-3 md:p-4 flex flex-col flex-1 gap-2">
-                        {/* BELOW: Product title (fixed height for 2 lines) */}
-                        <div className={cn("w-full min-h-[40px] md:min-h-[48px]", style.titleAlign === 'center' ? 'text-center' : 'text-left')}>
+                      <CardContent className="p-3 md:p-4 flex flex-col flex-1">
+                        <div className={cn("w-full min-h-[40px] md:min-h-[48px] mb-2", style.titleAlign === 'center' ? 'text-center' : 'text-left')}>
                           <h3 
                             className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight transition-colors group-hover:text-primary" 
                             style={{ color: style.itemTitleColor }}
@@ -318,8 +315,7 @@ export default function SmartCleanHomePage() {
                           </h3>
                         </div>
 
-                        {/* BELOW: Price section */}
-                        <div className={cn("flex flex-col mt-auto pt-1", style.priceAlign === 'center' ? 'items-center' : 'items-start')}>
+                        <div className={cn("flex flex-col mb-2", style.priceAlign === 'center' ? 'items-center' : 'items-start')}>
                           <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>
                             ৳{s.basePrice?.toLocaleString()}
                           </span>
@@ -330,8 +326,7 @@ export default function SmartCleanHomePage() {
                           )}
                         </div>
 
-                        {/* BELOW: Rating and booked count */}
-                        <div className="flex items-center justify-between text-[9px] font-bold border-t border-gray-50 pt-2">
+                        <div className="flex items-center justify-between text-[9px] font-bold border-t border-gray-50 pt-2 mb-3">
                           <div className="flex items-center gap-1 text-amber-500">
                             <Star size={10} fill="currentColor" />
                             <span className="text-gray-600">{(s.rating || 5.0).toFixed(1)}</span>
@@ -341,13 +336,12 @@ export default function SmartCleanHomePage() {
                           </span>
                         </div>
 
-                        {/* BOTTOM: Button (Book Now) */}
-                        <div className={cn("w-full pt-1 mt-auto", style.btnAlign === 'center' ? 'flex justify-center' : style.btnAlign === 'right' ? 'flex justify-end' : 'flex justify-start')}>
+                        <div className={cn("w-full mt-auto", style.btnAlign === 'center' ? 'flex justify-center' : style.btnAlign === 'right' ? 'flex justify-end' : 'flex justify-start')}>
                           <Button 
                             size={style.btnSize || 'sm'} 
                             className={cn(
                               "h-9 rounded-lg font-black uppercase text-[9px] tracking-widest transition-all active:scale-95", 
-                              style.btnAlign === 'full' ? 'w-full' : 'w-fit px-4'
+                              style.btnAlign === 'full' ? "w-full" : "w-fit px-4"
                             )} 
                             style={{ backgroundColor: style.btnBg, color: style.btnTextColor }}
                           >

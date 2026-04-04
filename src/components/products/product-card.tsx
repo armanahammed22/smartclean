@@ -73,14 +73,13 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             {product.badgeText && (
               <Badge className={cn(
                 "border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-lg",
-                product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-amber-500 text-white"
+                product.badgeText === 'HOT' ? "bg-orange-50 text-white animate-pulse" : "bg-amber-50 text-white"
               )}>
                 {product.badgeText}
               </Badge>
             )}
           </div>
 
-          {/* Flash Deal Timer Stub (If active) */}
           {product.onSale && (
             <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-1.5 flex items-center justify-center gap-2">
               <Clock size={10} className="text-primary animate-spin" />
@@ -90,8 +89,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
 
         <div className="p-3 md:p-4 flex flex-col flex-1">
-          {/* BELOW: Product title (fixed height for 2 lines) */}
-          <div className={cn("w-full min-h-[40px] md:min-h-[48px]", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+          <div className={cn("w-full min-h-[40px] md:min-h-[48px] mb-2", titleAlign === 'center' ? 'text-center' : 'text-left')}>
             <h3 className={cn(
               "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
               customStyle?.titleSize || 'text-[11px] md:text-sm',
@@ -101,7 +99,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </h3>
           </div>
           
-          <div className="mt-auto space-y-2">
+          <div className="space-y-2 mb-3">
             <div className={cn("w-full flex flex-wrap items-baseline gap-2 pt-1", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
                 "font-black tracking-tighter leading-none",
@@ -124,26 +122,26 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               </div>
               <span className="uppercase text-gray-400 font-black">{soldCount} {t('sold')}</span>
             </div>
+          </div>
 
-            <div className={cn(
-              "flex w-full pt-1 mt-auto",
-              btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
-            )}>
-              <Button 
-                size={customStyle?.btnSize || 'sm'}
-                className={cn(
-                  "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                  btnAlign === 'full' ? "w-full" : "w-fit px-4"
-                )}
-                style={{ 
-                  backgroundColor: customStyle?.btnBg || '#1E5F7A', 
-                  color: customStyle?.btnTextColor || '#ffffff' 
-                }}
-              >
-                <Zap size={12} fill="currentColor" className="mr-1" />
-                {t('buy_now')}
-              </Button>
-            </div>
+          <div className={cn(
+            "flex w-full mt-auto",
+            btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
+          )}>
+            <Button 
+              size={customStyle?.btnSize || 'sm'}
+              className={cn(
+                "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
+                btnAlign === 'full' ? "w-full" : "w-fit px-4"
+              )}
+              style={{ 
+                backgroundColor: customStyle?.btnBg || '#1E5F7A', 
+                color: customStyle?.btnTextColor || '#ffffff' 
+              }}
+            >
+              <Zap size={12} fill="currentColor" className="mr-1" />
+              {t('buy_now')}
+            </Button>
           </div>
         </div>
       </div>

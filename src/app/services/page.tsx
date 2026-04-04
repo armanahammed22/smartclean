@@ -174,14 +174,17 @@ function ServicesContent() {
                       </Badge>
                     </div>
                   </Link>
-                  <div className="p-3 flex flex-col flex-1 gap-2">
-                    <div className="space-y-1">
+                  <div className="p-3 flex flex-col flex-1">
+                    <div className="min-h-[40px] md:min-h-[48px] mb-2">
                       <Link href={`/service/${item.slug || item.id}`} className="hover:text-primary transition-colors block">
                         <h3 className="text-[11px] md:text-xs font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight uppercase tracking-tight text-gray-800 text-left">
                           {item.title}
                         </h3>
                       </Link>
-                      <div className="flex flex-wrap items-baseline gap-2 justify-start">
+                    </div>
+                    
+                    <div className="space-y-2 mb-3">
+                      <div className="flex flex-wrap items-baseline gap-2 justify-start pt-1">
                         <span className="text-base font-black text-primary tracking-tighter leading-none">
                           ৳{(item.basePrice || 0).toLocaleString()}
                         </span>
@@ -189,14 +192,14 @@ function ServicesContent() {
                           <span className="text-[10px] text-gray-400 line-through font-medium">৳{item.regularPrice.toLocaleString()}</span>
                         )}
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star size={12} fill="currentColor" />
-                        <span className="text-gray-600">{(item.rating || 5.0).toFixed(1)}</span>
+                      <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star size={12} fill="currentColor" />
+                          <span className="text-gray-600">{(item.rating || 5.0).toFixed(1)}</span>
+                        </div>
+                        <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 200) + 50} {t('booked')}</span>
                       </div>
-                      <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 200) + 50} {t('booked')}</span>
                     </div>
 
                     <Button size="sm" className="w-full rounded-lg font-black text-[9px] uppercase shadow-md h-9 tracking-widest transition-transform active:scale-95 mt-auto" asChild>

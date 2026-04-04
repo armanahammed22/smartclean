@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -69,7 +68,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
             {product.badgeText && (
               <Badge className={cn(
                 "border-none text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-tighter shadow-lg",
-                product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-amber-500 text-white"
+                product.badgeText === 'HOT' ? "bg-orange-50 text-white animate-pulse" : "bg-amber-50 text-white"
               )}>
                 {product.badgeText}
               </Badge>
@@ -83,7 +82,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
         </div>
 
         <div className="p-3 md:p-4 flex flex-col flex-1">
-          <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+          <div className={cn("w-full min-h-[40px] md:min-h-[48px] mb-2", titleAlign === 'center' ? 'text-center' : 'text-left')}>
             <h3 className={cn(
               "font-bold text-gray-800 uppercase tracking-tight line-clamp-2 leading-tight group-hover:text-primary transition-colors",
               customStyle?.titleSize || 'text-[11px] md:text-xs'
@@ -92,7 +91,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
             </h3>
           </div>
           
-          <div className="mt-auto space-y-3">
+          <div className="space-y-2 mb-2">
             <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
                 "font-black text-[#f85606] tracking-tighter leading-none",
@@ -115,29 +114,29 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               <span className="uppercase text-gray-400 font-black">{soldCount} {t('sold')}</span>
             </div>
 
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden shadow-inner">
+            <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden shadow-inner mt-1">
               <div className="h-full bg-gradient-to-r from-[#f85606] to-[#ff8c00] transition-all duration-1000" style={{ width: `${progress}%` }} />
             </div>
+          </div>
 
-            <div className={cn(
-              "flex w-full pt-1",
-              btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
-            )}>
-              <Button 
-                size={customStyle?.btnSize || 'sm'}
-                className={cn(
-                  "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                  btnAlign === 'full' ? "w-full" : "w-fit px-4"
-                )}
-                style={{ 
-                  backgroundColor: customStyle?.btnBg || '#f85606', 
-                  color: customStyle?.btnTextColor || '#ffffff' 
-                }}
-              >
-                <Zap size={12} fill="currentColor" className="mr-1" />
-                {t('buy_now')}
-              </Button>
-            </div>
+          <div className={cn(
+            "flex w-full mt-auto",
+            btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
+          )}>
+            <Button 
+              size={customStyle?.btnSize || 'sm'}
+              className={cn(
+                "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
+                btnAlign === 'full' ? "w-full" : "w-fit px-4"
+              )}
+              style={{ 
+                backgroundColor: customStyle?.btnBg || '#f85606', 
+                color: customStyle?.btnTextColor || '#ffffff' 
+              }}
+            >
+              <Zap size={12} fill="currentColor" className="mr-1" />
+              {t('buy_now')}
+            </Button>
           </div>
         </div>
       </div>
