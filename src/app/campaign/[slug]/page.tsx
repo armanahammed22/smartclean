@@ -128,7 +128,7 @@ export default function CampaignLandingPage() {
           {itemsLoading ? (
             <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3 lg:gap-4">
               {mergedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

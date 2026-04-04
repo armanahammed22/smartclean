@@ -75,7 +75,7 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
     }));
   }, [pathname]);
 
-  const DEFAULT_CUSTOM_REQ_ICON = 'https://picsum.photos/seed/clean-bucket/100/100';
+  const DEFAULT_CUSTOM_REQ_ICON = 'https://img.icons8.com/?size=100&id=s2Gt5IShdSyz&format=png&color=000000';
   const customReqIcon = layout?.header?.customRequestIconUrl || DEFAULT_CUSTOM_REQ_ICON;
   const mobileTitle = layout?.header?.customRequestMobileTitle;
 

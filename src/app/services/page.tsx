@@ -83,7 +83,7 @@ function ServicesContent() {
       const matchesCategory = activeCategory === 'All' || 
         (activeCategory === 'Tools' ? item.itemType === 'product' : item.categoryId === activeCategory);
       
-      return matchesSearch && matchesCategory;
+      return nameMatch && matchesCategory;
     });
   }, [services, products, subServices, searchQuery, activeCategory]);
 
@@ -151,7 +151,7 @@ function ServicesContent() {
             <p className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">Syncing Catalog...</p>
           </div>
         ) : filteredOfferings.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3 lg:gap-4">
             {filteredOfferings.map((item) => (
               item.itemType === 'service' ? (
                 <div key={item.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative h-full">

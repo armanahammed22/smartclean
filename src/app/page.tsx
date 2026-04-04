@@ -185,7 +185,7 @@ export default function SmartCleanHomePage() {
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '32px'
     };
 
-    const gridCols = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6";
+    const gridCols = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4";
 
     switch (sectionType) {
       case 'hero':
@@ -369,7 +369,7 @@ export default function SmartCleanHomePage() {
               <h2 className="mb-6 px-2 font-black uppercase tracking-tighter" style={titleStyles}>
                 {section.title}
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3 lg:gap-4">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
             </div>
