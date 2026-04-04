@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -50,7 +49,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         )}
         style={cardStyle}
       >
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-50 shrink-0">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -91,7 +90,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
 
         <div className="p-3 md:p-4 flex flex-col flex-1">
-          <div className={cn("w-full mb-1", titleAlign === 'center' ? 'text-center' : 'text-left')}>
+          {/* BELOW: Product title (fixed height for 2 lines) */}
+          <div className={cn("w-full min-h-[40px] md:min-h-[48px]", titleAlign === 'center' ? 'text-center' : 'text-left')}>
             <h3 className={cn(
               "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
               customStyle?.titleSize || 'text-[11px] md:text-sm',
@@ -102,7 +102,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           </div>
           
           <div className="mt-auto space-y-2">
-            <div className={cn("w-full flex flex-wrap items-baseline gap-2", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
+            <div className={cn("w-full flex flex-wrap items-baseline gap-2 pt-1", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
                 "font-black tracking-tighter leading-none",
                 customStyle?.priceSize || 'text-base md:text-lg',
@@ -126,7 +126,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </div>
 
             <div className={cn(
-              "flex w-full pt-1",
+              "flex w-full pt-1 mt-auto",
               btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
             )}>
               <Button 

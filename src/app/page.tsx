@@ -32,7 +32,11 @@ import {
   Calendar,
   Layers,
   Plus,
-  Check
+  Check,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -304,18 +308,18 @@ export default function SmartCleanHomePage() {
                       </div>
                       
                       <CardContent className="p-3 md:p-4 flex flex-col flex-1 gap-2">
-                        {/* BELOW: Product title (max 2 lines) */}
-                        <div className={cn("w-full", style.titleAlign === 'center' ? 'text-center' : 'text-left')}>
+                        {/* BELOW: Product title (fixed height for 2 lines) */}
+                        <div className={cn("w-full min-h-[40px] md:min-h-[48px]", style.titleAlign === 'center' ? 'text-center' : 'text-left')}>
                           <h3 
-                            className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight min-h-[2.5rem] transition-colors group-hover:text-primary" 
+                            className="font-bold text-[11px] md:text-sm text-gray-800 uppercase line-clamp-2 leading-tight transition-colors group-hover:text-primary" 
                             style={{ color: style.itemTitleColor }}
                           >
                             {s.title}
                           </h3>
                         </div>
 
-                        {/* BELOW: Price and discount price in one column */}
-                        <div className={cn("flex flex-col", style.priceAlign === 'center' ? 'items-center' : 'items-start')}>
+                        {/* BELOW: Price section */}
+                        <div className={cn("flex flex-col mt-auto pt-1", style.priceAlign === 'center' ? 'items-center' : 'items-start')}>
                           <span className="font-black text-primary text-base md:text-lg" style={{ color: style.priceColor }}>
                             ৳{s.basePrice?.toLocaleString()}
                           </span>
@@ -326,8 +330,8 @@ export default function SmartCleanHomePage() {
                           )}
                         </div>
 
-                        {/* BELOW: Rating and booked count (small text) */}
-                        <div className="flex items-center justify-between text-[9px] font-bold border-t border-gray-50 pt-2 mt-auto">
+                        {/* BELOW: Rating and booked count */}
+                        <div className="flex items-center justify-between text-[9px] font-bold border-t border-gray-50 pt-2">
                           <div className="flex items-center gap-1 text-amber-500">
                             <Star size={10} fill="currentColor" />
                             <span className="text-gray-600">{(s.rating || 5.0).toFixed(1)}</span>
@@ -337,8 +341,8 @@ export default function SmartCleanHomePage() {
                           </span>
                         </div>
 
-                        {/* BOTTOM: Button (Book Now, full width, 32–36px height) */}
-                        <div className={cn("w-full pt-1", style.btnAlign === 'center' ? 'justify-center' : style.btnAlign === 'right' ? 'justify-end' : 'justify-start')}>
+                        {/* BOTTOM: Button (Book Now) */}
+                        <div className={cn("w-full pt-1 mt-auto", style.btnAlign === 'center' ? 'flex justify-center' : style.btnAlign === 'right' ? 'flex justify-end' : 'flex justify-start')}>
                           <Button 
                             size={style.btnSize || 'sm'} 
                             className={cn(
@@ -370,7 +374,6 @@ export default function SmartCleanHomePage() {
               <h2 className="mb-6 px-2 font-black uppercase tracking-tighter" style={titleStyles}>
                 {section.title}
               </h2>
-              {/* Note: ProductCard uses its own 2/3/6 grid logic, potentially update it if 5 col is strict for products too */}
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
                 {displayProducts.map(p => <ProductCard key={p.id} product={p} customStyle={style} />)}
               </div>
