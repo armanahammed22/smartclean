@@ -574,7 +574,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar min-w-0">
+        <main className="flex-1 overflow-y-auto p-3 md:p-10 bg-[#F9FAFB] pb-24 lg:pb-10 custom-scrollbar min-w-0">
           <div className="max-w-full lg:max-w-[1400px] mx-auto min-w-0">{children}</div>
         </main>
         <AdminBottomNav />

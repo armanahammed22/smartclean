@@ -180,22 +180,22 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 md:space-y-8 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1 md:px-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Global Overview</h1>
-          <div className="text-muted-foreground text-xs md:text-sm font-medium mt-2 flex items-center gap-2">
+          <div className="text-muted-foreground text-[10px] md:text-sm font-medium mt-2 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Terminal Operational
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
           {productsEnabled && (
-            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-xs h-10 uppercase">
+            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
               <Link href="/admin/orders?create=true"><Plus size={16} /> New Order</Link>
             </Button>
           )}
           {servicesEnabled && (
-            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-xs h-10 uppercase">
+            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
               <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
             </Button>
           )}
@@ -213,17 +213,17 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         {STATS_CARDS.map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
-            <CardContent className="p-5 md:p-6">
-              <div className="flex justify-between items-start mb-4">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex justify-between items-start mb-3 md:mb-4">
                 <div className={cn("p-2 md:p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                  <stat.icon size={20} className="md:w-6 md:h-6" />
+                  <stat.icon size={18} className="md:w-6 md:h-6" />
                 </div>
               </div>
-              <p className="text-[9px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
-              <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{stat.val}</h3>
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
+              <h3 className="text-base md:text-2xl font-black text-gray-900 tracking-tight truncate">{stat.val}</h3>
             </CardContent>
           </Card>
         ))}
@@ -232,16 +232,16 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         <div className="lg:col-span-8 min-w-0 space-y-6 md:space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardHeader className="bg-gray-50/50 border-b p-5 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-lg font-bold">Revenue Growth</CardTitle>
-                <CardDescription className="text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Financial performance trends</CardDescription>
+                <CardTitle className="text-base md:text-lg font-bold">Revenue Growth</CardTitle>
+                <CardDescription className="text-[9px] md:text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Financial performance trends</CardDescription>
               </div>
-              <Button variant="ghost" className="text-xs font-bold text-primary gap-2" asChild>
+              <Button variant="ghost" className="text-[10px] md:text-xs font-bold text-primary gap-2" asChild>
                 <Link href="/admin/reports">View Full Reports <ArrowUpRight size={14} /></Link>
               </Button>
             </CardHeader>
-            <CardContent className="p-4 md:p-8 h-[300px] md:h-[400px]">
+            <CardContent className="p-3 md:p-8 h-[250px] md:h-[400px]">
               {mounted && (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
@@ -252,10 +252,10 @@ export default function AdminDashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                    <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
-                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={9} fontStyle="bold" />
+                    <YAxis axisLine={false} tickLine={false} fontSize={9} fontStyle="bold" />
+                    <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
+                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -263,22 +263,22 @@ export default function AdminDashboard() {
           </Card>
 
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-6 md:p-8">
-              <CardTitle className="text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
-                <Database className="text-primary" size={20} /> Firestore Registry Check
+            <CardHeader className="bg-gray-50/50 border-b p-5 md:p-8">
+              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
+                <Database className="text-primary" size={18} /> Registry Check
               </CardTitle>
-              <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Live counts across core collection nodes</CardDescription>
+              <CardDescription className="text-[9px] md:text-[10px] font-bold uppercase text-muted-foreground mt-1">Live counts across core collection nodes</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 md:p-10">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+            <CardContent className="p-4 md:p-10">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6">
                 {REGISTRY_STATS.map((reg, i) => (
-                  <div key={i} className="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center text-center gap-2 group hover:bg-white hover:shadow-xl transition-all">
-                    <div className={cn("p-2 rounded-xl bg-white shadow-sm transition-transform group-hover:scale-110", reg.color)}>
-                      <reg.icon size={20} />
+                  <div key={i} className="p-3 md:p-4 rounded-xl md:rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center text-center gap-2 group hover:bg-white hover:shadow-xl transition-all">
+                    <div className={cn("p-1.5 md:p-2 rounded-lg md:rounded-xl bg-white shadow-sm transition-transform group-hover:scale-110", reg.color)}>
+                      <reg.icon size={16} />
                     </div>
                     <div>
-                      <p className="text-[18px] font-black text-gray-900 leading-none">{reg.count}</p>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">{reg.label}</p>
+                      <p className="text-base md:text-[18px] font-black text-gray-900 leading-none">{reg.count}</p>
+                      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">{reg.label}</p>
                     </div>
                   </div>
                 ))}
@@ -293,18 +293,18 @@ export default function AdminDashboard() {
             <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
               <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Quick Metrics</CardTitle>
             </CardHeader>
-            <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-4 md:space-y-6">
+            <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-3 md:space-y-6">
               {[
                 ...(productsEnabled ? [{ label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending')?.length || 0, icon: Store }] : []),
                 ...(productsEnabled ? [{ label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box }] : []),
                 ...(servicesEnabled ? [{ label: "Active Services", val: dbServices?.length || 0, icon: Wrench }] : [])
               ].map((kpi, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
+                <div key={i} className="bg-white/10 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
                   <div className="space-y-1">
-                    <p className="text-[9px] md:text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
-                    <span className="text-xl md:text-2xl font-black">{kpi.val}</span>
+                    <p className="text-[8px] md:text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
+                    <span className="text-lg md:text-2xl font-black">{kpi.val}</span>
                   </div>
-                  <kpi.icon size={20} className="md:w-6 md:h-6 opacity-40" />
+                  <kpi.icon size={18} className="md:w-6 md:h-6 opacity-40" />
                 </div>
               ))}
             </CardContent>
