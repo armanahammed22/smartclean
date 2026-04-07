@@ -1,14 +1,17 @@
+
 "use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Zap, Package, Clock } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { Star, Package, Clock } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import React, { useState, useEffect } from 'react';
+import { useCart } from '@/components/providers/cart-provider';
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +21,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, isDark = false, customStyle }: ProductCardProps) {
   const { t } = useLanguage();
+  const { addToCart, setCheckoutOpen } = useCart();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -36,20 +40,39 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     borderRadius: `${customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 16}px`,
   };
 
-  const titleAlign = customStyle?.titleAlign || 'left';
-  const priceAlign = customStyle?.priceAlign || 'left';
-  const btnAlign = customStyle?.btnAlign || 'full';
+  const titleAlign = customStyle?.textAlign || 'left';
+  
+  // Icon Helper
+  const renderIcon = (iconName: string, className?: string) => {
+    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Zap;
+    return <Icon className={className || "size-3"} />;
+  };
+
+  const handleOrderNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product as any, 1, false);
+    setCheckoutOpen(true);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product as any, 1);
+  };
+
+  if (!mounted) return null;
 
   return (
-    <Link href={`/product/${product.slug || product.id}`} className="block h-full group active:scale-[0.98] transition-all">
+    <div className="block h-full group active:scale-[0.98] transition-all">
       <div 
         className={cn(
           "flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white",
-          customStyle?.cardShadow
+          customStyle?.showShadow !== false ? "shadow-sm" : "shadow-none"
         )}
         style={cardStyle}
       >
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-50 shrink-0">
+        <Link href={`/product/${product.slug || product.id}`} className="block relative aspect-square w-full overflow-hidden bg-gray-50 shrink-0">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
@@ -59,7 +82,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               unoptimized
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-200">
+            <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200">
               <Package size={32} />
             </div>
           )}
@@ -86,21 +109,23 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               <span className="text-[8px] font-black text-white uppercase tracking-widest">Ending Soon</span>
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="p-3 md:p-4 flex flex-col flex-1">
           <div className={cn("w-full min-h-[40px] md:min-h-[48px] mb-2", titleAlign === 'center' ? 'text-center' : 'text-left')}>
-            <h3 className={cn(
-              "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
-              customStyle?.titleSize || 'text-[11px] md:text-sm',
-              isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
-            )} style={{ color: customStyle?.titleColor }}>
-              {product.name}
-            </h3>
+            <Link href={`/product/${product.slug || product.id}`}>
+              <h3 className={cn(
+                "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
+                customStyle?.titleSize || 'text-[11px] md:text-sm',
+                isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
+              )} style={{ color: customStyle?.titleColor }}>
+                {product.name}
+              </h3>
+            </Link>
           </div>
           
           <div className="space-y-2 mb-3">
-            <div className={cn("w-full flex flex-wrap items-baseline gap-2 pt-1", priceAlign === 'center' ? 'justify-center' : 'justify-start')}>
+            <div className={cn("w-full flex flex-wrap items-baseline gap-2 pt-1", titleAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
                 "font-black tracking-tighter leading-none",
                 customStyle?.priceSize || 'text-base md:text-lg',
@@ -124,27 +149,43 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </div>
           </div>
 
-          <div className={cn(
-            "flex w-full mt-auto",
-            btnAlign === 'center' ? 'justify-center' : btnAlign === 'right' ? 'justify-end' : 'justify-start'
-          )}>
-            <Button 
-              size={customStyle?.btnSize || 'sm'}
-              className={cn(
-                "font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9",
-                btnAlign === 'full' ? "w-full" : "w-fit px-4"
-              )}
-              style={{ 
-                backgroundColor: customStyle?.btnBg || '#1E5F7A', 
-                color: customStyle?.btnTextColor || '#ffffff' 
-              }}
-            >
-              <Zap size={12} fill="currentColor" className="mr-1" />
-              {t('buy_now')}
-            </Button>
+          <div className="flex flex-col gap-2 mt-auto">
+            {/* Primary Button: Buy Now */}
+            {customStyle?.primaryBtnEnabled !== false && (
+              <Button 
+                size="sm"
+                onClick={handleOrderNow}
+                className="font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9 w-full shadow-lg"
+                style={{ 
+                  backgroundColor: customStyle?.primaryBtnBg || '#1E5F7A', 
+                  color: customStyle?.primaryBtnColor || '#ffffff' 
+                }}
+              >
+                {renderIcon(customStyle?.primaryBtnIcon || 'Zap', "mr-1.5 size-3")}
+                {customStyle?.primaryBtnText || t('buy_now')}
+              </Button>
+            )}
+
+            {/* Secondary Button: Add to Cart */}
+            {customStyle?.secondaryBtnEnabled === true && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={handleAddToCart}
+                className="font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 h-9 w-full border-2"
+                style={{ 
+                  backgroundColor: customStyle?.secondaryBtnBg || '#f3f4f6', 
+                  color: customStyle?.secondaryBtnColor || '#1f2937',
+                  borderColor: 'rgba(0,0,0,0.05)'
+                }}
+              >
+                {renderIcon(customStyle?.secondaryBtnIcon || 'ShoppingCart', "mr-1.5 size-3")}
+                {customStyle?.secondaryBtnText || 'Add to Cart'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

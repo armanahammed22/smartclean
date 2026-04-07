@@ -34,7 +34,9 @@ import {
   ImageIcon,
   PlusCircle,
   Database,
-  Columns
+  Columns,
+  ShoppingCart,
+  Link as LinkIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -73,11 +75,21 @@ const DEFAULT_CARD_STYLE = {
   cardRadius: 24,
   showShadow: true,
   textAlign: 'left',
-  btnBg: '#1E5F7A',
-  btnTextColor: '#ffffff',
-  btnSize: 'sm',
   titleSize: 'text-sm',
-  priceSize: 'text-lg'
+  priceSize: 'text-lg',
+  // Button 1 (Primary)
+  primaryBtnEnabled: true,
+  primaryBtnText: 'এখনই কিনুন',
+  primaryBtnBg: '#1E5F7A',
+  primaryBtnColor: '#ffffff',
+  primaryBtnIcon: 'Zap',
+  // Button 2 (Secondary)
+  secondaryBtnEnabled: false,
+  secondaryBtnText: 'কার্টে যোগ করুন',
+  secondaryBtnBg: '#f3f4f6',
+  secondaryBtnColor: '#1f2937',
+  secondaryBtnIcon: 'ShoppingCart',
+  secondaryBtnLink: ''
 };
 
 export default function HomepageBuilderPage() {
@@ -94,15 +106,12 @@ export default function HomepageBuilderPage() {
   const { data: globalStyles, isLoading: stylesLoading } = useDoc(stylesRef);
   const [localStyles, setLocalStyles] = useState<any>({
     productCard: DEFAULT_CARD_STYLE,
-    serviceCard: DEFAULT_CARD_STYLE
+    serviceCard: { ...DEFAULT_CARD_STYLE, primaryBtnText: 'বুকিং দিন', secondaryBtnText: 'বিস্তারিত' }
   });
 
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const sectionsQuery = useMemoFirebase(() => db ? query(sectionsRef!, orderBy('order', 'asc')) : null, [db, sectionsRef]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
-
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('order', 'asc')) : null, [db]);
-  const { data: categories } = useCollection(categoriesQuery);
 
   useEffect(() => {
     if (sections) setLocalSections(sections);
@@ -112,7 +121,7 @@ export default function HomepageBuilderPage() {
     if (globalStyles) {
       setLocalStyles({
         productCard: { ...DEFAULT_CARD_STYLE, ...(globalStyles.productCard || {}) },
-        serviceCard: { ...DEFAULT_CARD_STYLE, ...(globalStyles.serviceCard || {}) }
+        serviceCard: { ...DEFAULT_CARD_STYLE, primaryBtnText: 'বুকিং দিন', secondaryBtnText: 'বিস্তারিত', ...(globalStyles.serviceCard || {}) }
       });
     }
   }, [globalStyles]);
@@ -230,7 +239,6 @@ export default function HomepageBuilderPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* 📋 LAYOUT SEQUENCE TAB */}
         <TabsContent value="sequence" className="space-y-6">
           <div className="flex justify-end gap-2">
             <Button onClick={() => setIsAddOpen(true)} className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
@@ -291,7 +299,6 @@ export default function HomepageBuilderPage() {
           </div>
         </TabsContent>
 
-        {/* 🎨 GLOBAL STYLES TAB */}
         <TabsContent value="styles" className="space-y-8">
           <div className="flex justify-end">
             <Button onClick={handleSaveGlobalStyles} disabled={isSubmitting} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20">
@@ -329,7 +336,6 @@ export default function HomepageBuilderPage() {
         </TabsContent>
       </Tabs>
 
-      {/* 🛠️ BLOCK SETTINGS DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-xl rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
           <header className="p-8 bg-[#081621] text-white shrink-0">
@@ -368,7 +374,6 @@ export default function HomepageBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ➕ ADD BLOCK DIALOG */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <DialogHeader className="p-10 bg-[#081621] text-white shrink-0 relative">
@@ -402,7 +407,7 @@ export default function HomepageBuilderPage() {
 
 function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serviceCard', styles: any, onChange: any }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Aesthetics</h4>
@@ -447,29 +452,69 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
         </div>
       </div>
 
-      <div className="space-y-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><MousePointer2 size={14}/> Call-to-Action (Button)</h4>
+      {/* 🔘 PRIMARY BUTTON SETTINGS */}
+      <div className="space-y-6 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+            <MousePointer2 size={14}/> Primary Button ({type === 'productCard' ? 'Buy Now' : 'Book Now'})
+          </h4>
+          <Switch checked={styles.primaryBtnEnabled} onCheckedChange={v => onChange(type, 'primaryBtnEnabled', v)} />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase">Button Text</Label>
+            <Input value={styles.primaryBtnText} onChange={e => onChange(type, 'primaryBtnText', e.target.value)} className="h-10 bg-white" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
+            <Input value={styles.primaryBtnIcon} onChange={e => onChange(type, 'primaryBtnIcon', e.target.value)} placeholder="Zap, ShoppingCart, etc" className="h-10 bg-white font-mono text-[10px]" />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[9px] font-black uppercase">Bg Color</Label>
-              <Input type="color" value={styles.btnBg} onChange={e => onChange(type, 'btnBg', e.target.value)} className="h-9 p-1" />
+              <Input type="color" value={styles.primaryBtnBg} onChange={e => onChange(type, 'primaryBtnBg', e.target.value)} className="h-9 p-1" />
             </div>
             <div className="space-y-2">
               <Label className="text-[9px] font-black uppercase">Text Color</Label>
-              <Input type="color" value={styles.btnTextColor} onChange={e => onChange(type, 'btnTextColor', e.target.value)} className="h-9 p-1" />
+              <Input type="color" value={styles.primaryBtnColor} onChange={e => onChange(type, 'primaryBtnColor', e.target.value)} className="h-9 p-1" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 🔘 SECONDARY BUTTON SETTINGS */}
+      <div className="space-y-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <PlusCircle size={14}/> Secondary Button ({type === 'productCard' ? 'Add to Cart' : 'View Details'})
+          </h4>
+          <Switch checked={styles.secondaryBtnEnabled} onCheckedChange={v => onChange(type, 'secondaryBtnEnabled', v)} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Button Align</Label>
-            <Select value={styles.btnSize} onValueChange={v => onChange(type, 'btnSize', v)}>
-              <SelectTrigger className="h-9 bg-white border-none font-bold"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="full">Full Width</SelectItem>
-                <SelectItem value="sm">Compact</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-[9px] font-black uppercase">Button Text</Label>
+            <Input value={styles.secondaryBtnText} onChange={e => onChange(type, 'secondaryBtnText', e.target.value)} className="h-10 bg-white" />
           </div>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
+            <Input value={styles.secondaryBtnIcon} onChange={e => onChange(type, 'secondaryBtnIcon', e.target.value)} placeholder="ShoppingCart, Info, etc" className="h-10 bg-white font-mono text-[10px]" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase">Bg Color</Label>
+              <Input type="color" value={styles.secondaryBtnBg} onChange={e => onChange(type, 'secondaryBtnBg', e.target.value)} className="h-9 p-1" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase">Text Color</Label>
+              <Input type="color" value={styles.secondaryBtnColor} onChange={e => onChange(type, 'secondaryBtnColor', e.target.value)} className="h-9 p-1" />
+            </div>
+          </div>
+          {type === 'serviceCard' && (
+            <div className="space-y-2 md:col-span-2">
+              <Label className="text-[9px] font-black uppercase flex items-center gap-2"><LinkIcon size={10}/> Detail Redirect Link</Label>
+              <Input value={styles.secondaryBtnLink} onChange={e => onChange(type, 'secondaryBtnLink', e.target.value)} placeholder="/page/custom-link" className="h-10 bg-white" />
+            </div>
+          )}
         </div>
       </div>
     </div>

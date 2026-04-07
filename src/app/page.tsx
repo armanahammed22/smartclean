@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
+import * as LucideIcons from 'lucide-react';
 import { 
   Wrench, 
   ChevronRight, 
@@ -40,7 +41,9 @@ import {
   Columns,
   ImageIcon,
   MousePointer2,
-  Box
+  Box,
+  ShoppingCart,
+  Info
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -287,34 +290,56 @@ export default function SmartCleanHomePage() {
                 </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-                {displayServices.map(s => (
-                  <Link key={s.id} href={`/service/${s.slug || s.id}`} className="block h-full group">
-                    <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", sStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${sStyle.cardRadius || 24}px`, backgroundColor: sStyle.cardBg || '#ffffff' }}>
-                      <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
-                        {s.imageUrl ? (
-                          <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                        ) : (
-                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
-                        )}
-                      </div>
-                      <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: sStyle.textAlign || 'left' }}>
-                        <div className="min-h-[48px] mb-2">
-                          <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: sStyle.titleColor }}>{s.title}</h3>
-                        </div>
-                        <div className="flex flex-col mb-2">
-                          <span className="font-black text-lg" style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] font-bold border-t border-gray-50 pt-2 mb-4">
-                          <div className="flex items-center gap-1 text-amber-500"><Star size={12} fill="currentColor" /><span>{(s.rating || 5.0).toFixed(1)}</span></div>
-                          <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
-                        </div>
-                        <Button size="sm" className={cn("mt-auto h-10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg", sStyle.btnSize === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: sStyle.btnBg, color: sStyle.btnTextColor }}>
-                          {t('book_now')}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {displayServices.map(s => {
+                  const PrimaryIcon = (LucideIcons as any)[sStyle.primaryBtnIcon] || LucideIcons.Zap;
+                  const SecondaryIcon = (LucideIcons as any)[sStyle.secondaryBtnIcon] || LucideIcons.Info;
+                  return (
+                    <div key={s.id} className="block h-full group">
+                      <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", sStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${sStyle.cardRadius || 24}px`, backgroundColor: sStyle.cardBg || '#ffffff' }}>
+                        <Link href={`/service/${s.slug || s.id}`} className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
+                          {s.imageUrl ? (
+                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                          ) : (
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
+                          )}
+                        </Link>
+                        <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: sStyle.textAlign || 'left' }}>
+                          <div className="min-h-[48px] mb-2">
+                            <Link href={`/service/${s.slug || s.id}`}>
+                              <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: sStyle.titleColor }}>{s.title}</h3>
+                            </Link>
+                          </div>
+                          <div className="flex flex-col mb-2">
+                            <span className="font-black text-lg" style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] font-bold border-t border-gray-50 pt-2 mb-4">
+                            <div className="flex items-center gap-1 text-amber-500"><Star size={12} fill="currentColor" /><span>{(s.rating || 5.0).toFixed(1)}</span></div>
+                            <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 mt-auto">
+                            {sStyle.primaryBtnEnabled !== false && (
+                              <Button asChild size="sm" className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg w-full" style={{ backgroundColor: sStyle.primaryBtnBg, color: sStyle.primaryBtnColor }}>
+                                <Link href={`/service/${s.slug || s.id}`}>
+                                  <PrimaryIcon className="mr-1.5 size-3" />
+                                  {sStyle.primaryBtnText || t('book_now')}
+                                </Link>
+                              </Button>
+                            )}
+                            {sStyle.secondaryBtnEnabled === true && (
+                              <Button asChild variant="outline" size="sm" className="h-9 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all w-full border-2" style={{ backgroundColor: sStyle.secondaryBtnBg, color: sStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+                                <Link href={sStyle.secondaryBtnLink || `/service/${s.slug || s.id}`}>
+                                  <SecondaryIcon className="mr-1.5 size-3" />
+                                  {sStyle.secondaryBtnText || 'বিস্তারিত'}
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -329,26 +354,46 @@ export default function SmartCleanHomePage() {
             <div className="container mx-auto max-w-7xl">
               <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10 text-[#081621]">{section.title}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-                {displaySubs.map(s => (
-                  <Link key={s.id} href={`/service/${s.mainServiceId}`} className="block h-full group">
-                    <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", subStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${subStyle.cardRadius || 24}px`, backgroundColor: subStyle.cardBg || '#ffffff' }}>
-                      <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
-                        {s.imageUrl ? (
-                          <Image src={s.imageUrl} alt={s.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                        ) : (
-                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Layers size={40} /></div>
-                        )}
-                      </div>
-                      <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: subStyle.textAlign || 'left' }}>
-                        <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: subStyle.titleColor }}>{s.name}</h3>
-                        <div className="mt-2"><span className="font-black text-lg" style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span></div>
-                        <Button size="sm" className={cn("mt-4 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg", subStyle.btnSize === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: subStyle.btnBg, color: subStyle.btnTextColor }}>
-                          View Pack
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {displaySubs.map(s => {
+                  const PrimaryIcon = (LucideIcons as any)[subStyle.primaryBtnIcon] || LucideIcons.Zap;
+                  const SecondaryIcon = (LucideIcons as any)[subStyle.secondaryBtnIcon] || LucideIcons.Info;
+                  return (
+                    <div key={s.id} className="block h-full group">
+                      <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", subStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${subStyle.cardRadius || 24}px`, backgroundColor: subStyle.cardBg || '#ffffff' }}>
+                        <Link href={`/service/${s.mainServiceId}`} className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
+                          {s.imageUrl ? (
+                            <Image src={s.imageUrl} alt={s.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                          ) : (
+                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Layers size={40} /></div>
+                          )}
+                        </Link>
+                        <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: subStyle.textAlign || 'left' }}>
+                          <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: subStyle.titleColor }}>{s.name}</h3>
+                          <div className="mt-2 mb-4"><span className="font-black text-lg" style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span></div>
+                          
+                          <div className="flex flex-col gap-2 mt-auto">
+                            {subStyle.primaryBtnEnabled !== false && (
+                              <Button asChild size="sm" className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg w-full" style={{ backgroundColor: subStyle.primaryBtnBg, color: subStyle.primaryBtnColor }}>
+                                <Link href={`/service/${s.mainServiceId}`}>
+                                  <PrimaryIcon className="mr-1.5 size-3" />
+                                  {subStyle.primaryBtnText || 'View Pack'}
+                                </Link>
+                              </Button>
+                            )}
+                            {subStyle.secondaryBtnEnabled === true && (
+                              <Button asChild variant="outline" size="sm" className="h-9 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all w-full border-2" style={{ backgroundColor: subStyle.secondaryBtnBg, color: subStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+                                <Link href={subStyle.secondaryBtnLink || `/service/${s.mainServiceId}`}>
+                                  <SecondaryIcon className="mr-1.5 size-3" />
+                                  {subStyle.secondaryBtnText || 'বিস্তারিত'}
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
