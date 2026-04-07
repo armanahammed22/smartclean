@@ -135,6 +135,30 @@ export default function SmartCleanHomePage() {
   const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
+  const getColsClass = (cols: any, prefix: string = '') => {
+    const c = String(cols);
+    const p = prefix ? `${prefix}:` : '';
+    const map: Record<string, string> = {
+      '1': `${p}grid-cols-1`,
+      '2': `${p}grid-cols-2`,
+      '3': `${p}grid-cols-3`,
+      '4': `${p}grid-cols-4`,
+      '5': `${p}grid-cols-5`,
+      '6': `${p}grid-cols-6`,
+    };
+    return map[c] || (prefix ? '' : 'grid-cols-2');
+  };
+
+  const getGapClass = (gap: number) => {
+    if (gap <= 4) return 'gap-1';
+    if (gap <= 8) return 'gap-2';
+    if (gap <= 12) return 'gap-3';
+    if (gap <= 16) return 'gap-4';
+    if (gap <= 20) return 'gap-5';
+    if (gap <= 24) return 'gap-6';
+    return 'gap-8';
+  };
+
   const renderSection = (section: any) => {
     const config = section.config || {};
     const sectionType = section.type;
@@ -149,17 +173,22 @@ export default function SmartCleanHomePage() {
         const activeItems = module.items?.filter((i: any) => i.isActive) || [];
         if (activeItems.length === 0) return null;
         
-        const gridCols = `grid grid-cols-${style.columnsMobile || 2} md:grid-cols-${style.columnsTablet || 3} lg:grid-cols-${style.columnsDesktop || 4}`;
-        const gridGap = `gap-${Math.floor(style.gap / 4) || 4}`;
+        const gridClasses = cn(
+          "grid",
+          getColsClass(style.columnsMobile),
+          getColsClass(style.columnsTablet, 'md'),
+          getColsClass(style.columnsDesktop, 'lg'),
+          getGapClass(style.gap || 16)
+        );
 
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
               <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10" style={{ textAlign: style.textAlign || 'left' }}>{section.title || module.name}</h2>
-              <div className={cn(gridCols, gridGap)}>
+              <div className={gridClasses}>
                 {activeItems.map((item: any) => (
                   <Link key={item.id} href={item.btnLink || '#'} className="block h-full group">
-                    <Card className="border-none flex flex-col h-full overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 bg-white" style={{ borderRadius: `${style.cardRadius || 24}px` }}>
+                    <Card className={cn("border-none flex flex-col h-full overflow-hidden bg-white transition-all duration-500", style.showShadow !== false ? "shadow-sm hover:shadow-2xl" : "border")} style={{ borderRadius: `${style.cardRadius || 24}px`, backgroundColor: style.cardBg || '#ffffff' }}>
                       {item.imageUrl && (
                         <div className="relative overflow-hidden bg-gray-50 shrink-0" style={{ height: `${style.imgHeight || 200}px` }}>
                           <Image src={item.imageUrl} alt={item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
