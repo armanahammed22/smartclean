@@ -541,78 +541,88 @@ export default function HomepageBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 🧱 GRID BUILDER EDIT DIALOG */}
+      {/* 🧱 GRID BUILDER EDIT DIALOG (OPTIMIZED) */}
       <Dialog open={isGridEditOpen} onOpenChange={setIsGridEditOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] rounded-t-[2.5rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
-          <Tabs defaultValue="items" className="flex flex-col h-full">
-            <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary rounded-2xl shadow-xl"><Settings2 size={24}/></div>
-                <div>
+        <DialogContent className="max-w-6xl w-[95vw] md:w-[90vw] lg:w-full h-[95vh] md:h-auto md:max-h-[90vh] rounded-none md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
+          <Tabs defaultValue="items" className="flex flex-col h-full overflow-hidden">
+            <DialogHeader className="p-4 md:p-8 bg-[#081621] text-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-6 border-b border-white/5">
+              <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+                <div className="p-2 md:p-3 bg-primary rounded-xl md:rounded-2xl shadow-xl hidden xs:block"><Settings2 size={24}/></div>
+                <div className="flex-1 min-w-0">
                   <DialogTitle asChild>
                     <Input 
                       value={editingGridModule?.name || ''} 
                       onChange={e => setEditingGridModule({...editingGridModule, name: e.target.value})} 
-                      className="h-8 bg-transparent border-none text-xl font-black uppercase p-0 focus-visible:ring-0 w-full md:w-[300px]"
+                      className="h-8 md:h-10 bg-transparent border-none text-base md:text-xl font-black uppercase p-0 focus-visible:ring-0 w-full"
                     />
                   </DialogTitle>
-                  <p className="text-white/40 font-bold uppercase text-[9px] tracking-widest">Editing Grid Template</p>
+                  <p className="text-white/40 font-bold uppercase text-[8px] md:text-[9px] tracking-widest truncate">Editing Grid Template</p>
                 </div>
               </div>
-              <TabsList className="bg-white/10 rounded-xl p-1 h-10">
-                <TabsTrigger value="items" className="text-[10px] font-black uppercase rounded-lg px-6">Cards</TabsTrigger>
-                <TabsTrigger value="style" className="text-[10px] font-black uppercase rounded-lg px-6">Style</TabsTrigger>
-              </TabsList>
-              <button onClick={() => setIsGridEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={24}/></button>
+              
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <TabsList className="bg-white/10 rounded-xl p-1 h-10 flex-1 sm:flex-none">
+                  <TabsTrigger value="items" className="text-[9px] md:text-[10px] font-black uppercase rounded-lg px-3 md:px-6 flex-1">Cards</TabsTrigger>
+                  <TabsTrigger value="style" className="text-[9px] md:text-[10px] font-black uppercase rounded-lg px-3 md:px-6 flex-1">Style</TabsTrigger>
+                </TabsList>
+                <button onClick={() => setIsGridEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={20}/></button>
+              </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white custom-scrollbar">
-              <TabsContent value="items" className="mt-0 space-y-8">
-                <div className="flex justify-between items-center px-1">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-[#081621]">Card Registry ({editingGridModule?.items?.length || 0})</h3>
-                  <Button onClick={addGridItem} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] gap-2 shadow-lg">
+            <div className="flex-1 overflow-y-auto p-4 md:p-10 bg-white custom-scrollbar">
+              <TabsContent value="items" className="mt-0 space-y-6 md:space-y-8 pb-4">
+                <div className="flex flex-col xs:flex-row justify-between items-center gap-4 px-1">
+                  <h3 className="text-xs md:text-sm font-black uppercase tracking-widest text-[#081621]">Card Registry ({editingGridModule?.items?.length || 0})</h3>
+                  <Button onClick={addGridItem} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] gap-2 shadow-lg w-full xs:w-auto">
                     <PlusCircle size={16} /> Add Individual Card
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:gap-6">
                   {editingGridModule?.items?.map((item: any) => (
-                    <Card key={item.id} className="border-none shadow-sm bg-gray-50/50 rounded-3xl overflow-hidden border border-gray-100 group">
+                    <Card key={item.id} className="border-none shadow-sm bg-gray-50/50 rounded-2xl md:rounded-3xl overflow-hidden border border-gray-100 group">
                       <CardContent className="p-0 flex flex-col lg:flex-row">
-                        <div className="lg:w-64 p-6 bg-white border-r border-gray-100">
+                        <div className="lg:w-64 p-4 md:p-6 bg-white border-b lg:border-b-0 lg:border-r border-gray-100">
                           <ImageUploader initialUrl={item.imageUrl} label="Card Visual" onUpload={url => updateGridItem(item.id, 'imageUrl', url)} aspectRatio="aspect-square" />
                         </div>
-                        <div className="flex-1 p-6 md:p-8 space-y-6">
+                        <div className="flex-1 p-4 md:p-8 space-y-6">
                           <div className="flex justify-between items-start gap-4">
                             <div className="flex-1 space-y-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase">Card Title</Label>
+                                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Card Title</Label>
                                   <Input value={item.title} onChange={e => updateGridItem(item.id, 'title', e.target.value)} className="h-10 bg-white border-none rounded-xl font-bold" />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase">Badge (e.g. -50%)</Label>
+                                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Badge (e.g. -50%)</Label>
                                   <Input value={item.badge} onChange={e => updateGridItem(item.id, 'badge', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-red-600 uppercase text-[9px]" />
                                 </div>
                               </div>
-                              <Textarea value={item.desc} onChange={e => updateGridItem(item.id, 'desc', e.target.value)} placeholder="Description..." className="min-h-[80px] bg-white border-none rounded-xl text-xs" />
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Description</Label>
+                                <Textarea value={item.desc} onChange={e => updateGridItem(item.id, 'desc', e.target.value)} placeholder="Short description..." className="min-h-[80px] md:min-h-[100px] bg-white border-none rounded-xl text-xs p-4 leading-relaxed" />
+                              </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-3 p-1 bg-white/50 rounded-xl">
                               <button onClick={() => removeGridItem(item.id)} className="p-2 text-destructive hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={18}/></button>
-                              <Switch checked={item.isActive} onCheckedChange={v => updateGridItem(item.id, 'isActive', v)} className="scale-75" />
+                              <div className="flex flex-col items-center gap-1">
+                                <Label className="text-[7px] font-black uppercase text-gray-400">Live</Label>
+                                <Switch checked={item.isActive} onCheckedChange={v => updateGridItem(item.id, 'isActive', v)} className="scale-75" />
+                              </div>
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase">Price (৳)</Label>
-                              <Input value={item.price} onChange={e => updateGridItem(item.id, 'price', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black" />
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Price (৳)</Label>
+                              <Input value={item.price} onChange={e => updateGridItem(item.id, 'price', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-primary" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase">Button Text</Label>
-                              <Input value={item.btnText} onChange={e => updateGridItem(item.id, 'btnText', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-[10px]" />
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Button Text</Label>
+                              <Input value={item.btnText} onChange={e => updateGridItem(item.id, 'btnText', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-[10px] uppercase" />
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase">Redirect Link</Label>
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Target Link</Label>
                               <Input value={item.btnLink} onChange={e => updateGridItem(item.id, 'btnLink', e.target.value)} className="h-10 bg-white border-none rounded-xl font-mono text-[10px]" />
                             </div>
                           </div>
@@ -623,50 +633,55 @@ export default function HomepageBuilderPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="style" className="mt-0 space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <TabsContent value="style" className="mt-0 space-y-8 md:space-y-12 pb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
                   <div className="space-y-8">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Maximize size={14}/> Layout Configuration</h4>
-                    <div className="grid grid-cols-3 gap-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Maximize size={14}/> Layout Geometry</h4>
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Mob. Cols</Label>
-                        <Input type="number" value={editingGridModule?.styleConfig?.columnsMobile || 2} onChange={e => updateGridStyle('columnsMobile', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Mob. Cols</Label>
+                        <Input type="number" value={editingGridModule?.styleConfig?.columnsMobile || 2} onChange={e => updateGridStyle('columnsMobile', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-center" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Tab. Cols</Label>
-                        <Input type="number" value={editingGridModule?.styleConfig?.columnsTablet || 3} onChange={e => updateGridStyle('columnsTablet', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Tab. Cols</Label>
+                        <Input type="number" value={editingGridModule?.styleConfig?.columnsTablet || 3} onChange={e => updateGridStyle('columnsTablet', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-center" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Desk. Cols</Label>
-                        <Input type="number" value={editingGridModule?.styleConfig?.columnsDesktop || 4} onChange={e => updateGridStyle('columnsDesktop', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Desk. Cols</Label>
+                        <Input type="number" value={editingGridModule?.styleConfig?.columnsDesktop || 4} onChange={e => updateGridStyle('columnsDesktop', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-center" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase">Gap (px)</Label>
-                      <Input type="number" value={editingGridModule?.styleConfig?.gap || 16} onChange={e => updateGridStyle('gap', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                      <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Grid Spacing (Gap px)</Label>
+                      <Input type="number" value={editingGridModule?.styleConfig?.gap || 16} onChange={e => updateGridStyle('gap', parseInt(e.target.value))} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary px-6" />
                     </div>
                   </div>
 
                   <div className="space-y-8">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Aesthetic Styles</h4>
-                    <div className="grid grid-cols-2 gap-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b pb-2 flex items-center gap-2"><Palette size={14}/> Aesthetic Styles</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Img Height</Label>
-                        <Input type="number" value={editingGridModule?.styleConfig?.imgHeight || 200} onChange={e => updateGridStyle('imgHeight', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Image Height</Label>
+                        <Input type="number" value={editingGridModule?.styleConfig?.imgHeight || 200} onChange={e => updateGridStyle('imgHeight', parseInt(e.target.value))} className="h-11 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Card Radius</Label>
-                        <Input type="number" value={editingGridModule?.styleConfig?.cardRadius || 24} onChange={e => updateGridStyle('cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Corner Radius</Label>
+                        <Input type="number" value={editingGridModule?.styleConfig?.cardRadius || 24} onChange={e => updateGridStyle('cardRadius', parseInt(e.target.value))} className="h-11 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Background</Label>
-                        <Input type="color" value={editingGridModule?.styleConfig?.cardBg || '#ffffff'} onChange={e => updateGridStyle('cardBg', e.target.value)} className="h-10 p-1" />
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Card Background</Label>
+                        <div className="flex gap-2">
+                          <div className="w-11 h-11 rounded-xl border p-1 bg-white">
+                            <Input type="color" value={editingGridModule?.styleConfig?.cardBg || '#ffffff'} onChange={e => updateGridStyle('cardBg', e.target.value)} className="w-full h-full p-0 border-none rounded-lg" />
+                          </div>
+                          <Input value={editingGridModule?.styleConfig?.cardBg || '#ffffff'} onChange={e => updateGridStyle('cardBg', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-mono text-xs" />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Txt Alignment</Label>
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Txt Alignment</Label>
                         <Select value={editingGridModule?.styleConfig?.textAlign} onValueChange={v => updateGridStyle('textAlign', v)}>
-                          <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                          <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent className="rounded-xl">
                             <SelectItem value="left">Left</SelectItem>
                             <SelectItem value="center">Center</SelectItem>
                             <SelectItem value="right">Right</SelectItem>
@@ -679,9 +694,9 @@ export default function HomepageBuilderPage() {
               </TabsContent>
             </div>
 
-            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t flex gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsGridEditOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Discard</Button>
-              <Button onClick={handleUpdateGrid} disabled={isGridSubmitting} className="rounded-xl font-black px-12 h-14 shadow-xl uppercase text-xs tracking-widest">
+            <DialogFooter className="p-4 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col xs:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsGridEditOpen(false)} className="flex-1 md:flex-none h-12 md:h-14 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest order-2 xs:order-1">Discard</Button>
+              <Button onClick={handleUpdateGrid} disabled={isGridSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black px-12 shadow-xl uppercase text-xs tracking-widest order-1 xs:order-2">
                 {isGridSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Template</>}
               </Button>
             </DialogFooter>
