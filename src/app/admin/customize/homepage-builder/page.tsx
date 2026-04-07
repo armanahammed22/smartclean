@@ -72,23 +72,27 @@ const DEFAULT_CARD_STYLE = {
   cardBg: '#ffffff',
   titleColor: '#1f2937',
   priceColor: '#1E5F7A',
+  metaColor: '#9ca3af',
   cardRadius: 24,
   showShadow: true,
   textAlign: 'left',
   titleSize: 'text-sm',
   priceSize: 'text-lg',
+  metaSize: 'text-[10px]',
   // Button 1 (Primary)
   primaryBtnEnabled: true,
   primaryBtnText: 'এখনই কিনুন',
   primaryBtnBg: '#1E5F7A',
   primaryBtnColor: '#ffffff',
   primaryBtnIcon: 'Zap',
+  primaryBtnTextSize: 'text-[9px]',
   // Button 2 (Secondary)
   secondaryBtnEnabled: false,
   secondaryBtnText: 'কার্টে যোগ করুন',
   secondaryBtnBg: '#f3f4f6',
   secondaryBtnColor: '#1f2937',
   secondaryBtnIcon: 'ShoppingCart',
+  secondaryBtnTextSize: 'text-[9px]',
   secondaryBtnLink: ''
 };
 
@@ -406,6 +410,15 @@ export default function HomepageBuilderPage() {
 }
 
 function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serviceCard', styles: any, onChange: any }) {
+  const FONT_SIZES = [
+    { label: 'Extra Small', value: 'text-[10px]' },
+    { label: 'Small', value: 'text-xs' },
+    { label: 'Medium', value: 'text-sm' },
+    { label: 'Base', value: 'text-base' },
+    { label: 'Large', value: 'text-lg' },
+    { label: 'Extra Large', value: 'text-xl' }
+  ];
+
   return (
     <div className="space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -428,7 +441,7 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
         </div>
 
         <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Typography</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Typography & Meta</h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[9px] font-black uppercase">Title Color</Label>
@@ -437,6 +450,21 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
             <div className="space-y-2">
               <Label className="text-[9px] font-black uppercase">Price Color</Label>
               <Input type="color" value={styles.priceColor} onChange={e => onChange(type, 'priceColor', e.target.value)} className="h-10 p-1 bg-white" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase">Meta Color (Rating)</Label>
+              <Input type="color" value={styles.metaColor || '#9ca3af'} onChange={e => onChange(type, 'metaColor', e.target.value)} className="h-10 p-1 bg-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[9px] font-black uppercase">Meta Text Size</Label>
+              <Select value={styles.metaSize || 'text-[10px]'} onValueChange={v => onChange(type, 'metaSize', v)}>
+                <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {FONT_SIZES.slice(0, 3).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">
@@ -466,8 +494,13 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
             <Input value={styles.primaryBtnText} onChange={e => onChange(type, 'primaryBtnText', e.target.value)} className="h-10 bg-white" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
-            <Input value={styles.primaryBtnIcon} onChange={e => onChange(type, 'primaryBtnIcon', e.target.value)} placeholder="Zap, ShoppingCart, etc" className="h-10 bg-white font-mono text-[10px]" />
+            <Label className="text-[9px] font-black uppercase">Text Size</Label>
+            <Select value={styles.primaryBtnTextSize || 'text-[9px]'} onValueChange={v => onChange(type, 'primaryBtnTextSize', v)}>
+              <SelectTrigger className="h-10 bg-white border-none font-bold"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FONT_SIZES.slice(0, 4).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -478,6 +511,10 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
               <Label className="text-[9px] font-black uppercase">Text Color</Label>
               <Input type="color" value={styles.primaryBtnColor} onChange={e => onChange(type, 'primaryBtnColor', e.target.value)} className="h-9 p-1" />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
+            <Input value={styles.primaryBtnIcon} onChange={e => onChange(type, 'primaryBtnIcon', e.target.value)} placeholder="Zap, ShoppingCart, etc" className="h-10 bg-white font-mono text-[10px]" />
           </div>
         </div>
       </div>
@@ -496,8 +533,13 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
             <Input value={styles.secondaryBtnText} onChange={e => onChange(type, 'secondaryBtnText', e.target.value)} className="h-10 bg-white" />
           </div>
           <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
-            <Input value={styles.secondaryBtnIcon} onChange={e => onChange(type, 'secondaryBtnIcon', e.target.value)} placeholder="ShoppingCart, Info, etc" className="h-10 bg-white font-mono text-[10px]" />
+            <Label className="text-[9px] font-black uppercase">Text Size</Label>
+            <Select value={styles.secondaryBtnTextSize || 'text-[9px]'} onValueChange={v => onChange(type, 'secondaryBtnTextSize', v)}>
+              <SelectTrigger className="h-10 bg-white border-none font-bold"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FONT_SIZES.slice(0, 4).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -508,6 +550,10 @@ function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serv
               <Label className="text-[9px] font-black uppercase">Text Color</Label>
               <Input type="color" value={styles.secondaryBtnColor} onChange={e => onChange(type, 'secondaryBtnColor', e.target.value)} className="h-9 p-1" />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase">Icon (Lucide)</Label>
+            <Input value={styles.secondaryBtnIcon} onChange={e => onChange(type, 'secondaryBtnIcon', e.target.value)} placeholder="ShoppingCart, Info, etc" className="h-10 bg-white font-mono text-[10px]" />
           </div>
           {type === 'serviceCard' && (
             <div className="space-y-2 md:col-span-2">

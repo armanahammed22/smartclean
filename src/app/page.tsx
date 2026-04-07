@@ -306,20 +306,26 @@ export default function SmartCleanHomePage() {
                         <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: sStyle.textAlign || 'left' }}>
                           <div className="min-h-[48px] mb-2">
                             <Link href={`/service/${s.slug || s.id}`}>
-                              <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: sStyle.titleColor }}>{s.title}</h3>
+                              <h3 className={cn("font-bold uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors", sStyle.titleSize || 'text-sm')} style={{ color: sStyle.titleColor }}>{s.title}</h3>
                             </Link>
                           </div>
                           <div className="flex flex-col mb-2">
-                            <span className="font-black text-lg" style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
+                            <span className={cn("font-black", sStyle.priceSize || 'text-lg')} style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
                           </div>
-                          <div className="flex items-center justify-between text-[10px] font-bold border-t border-gray-50 pt-2 mb-4">
-                            <div className="flex items-center gap-1 text-amber-500"><Star size={12} fill="currentColor" /><span>{(s.rating || 5.0).toFixed(1)}</span></div>
-                            <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
+                          <div 
+                            className={cn("flex items-center justify-between font-bold border-t border-gray-50 pt-2 mb-4", sStyle.metaSize || 'text-[10px]')}
+                            style={{ color: sStyle.metaColor || '#9ca3af' }}
+                          >
+                            <div className="flex items-center gap-1 text-amber-500">
+                              <Star size={12} fill="currentColor" />
+                              <span style={{ color: sStyle.metaColor || '#4b5563' }}>{(s.rating || 5.0).toFixed(1)}</span>
+                            </div>
+                            <span className="uppercase font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
                           </div>
                           
                           <div className="flex flex-col gap-2 mt-auto">
                             {sStyle.primaryBtnEnabled !== false && (
-                              <Button asChild size="sm" className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg w-full" style={{ backgroundColor: sStyle.primaryBtnBg, color: sStyle.primaryBtnColor }}>
+                              <Button asChild size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all shadow-lg w-full h-10", sStyle.primaryBtnTextSize || 'text-[10px]')} style={{ backgroundColor: sStyle.primaryBtnBg, color: sStyle.primaryBtnColor }}>
                                 <Link href={`/service/${s.slug || s.id}`}>
                                   <PrimaryIcon className="mr-1.5 size-3" />
                                   {sStyle.primaryBtnText || t('book_now')}
@@ -327,7 +333,7 @@ export default function SmartCleanHomePage() {
                               </Button>
                             )}
                             {sStyle.secondaryBtnEnabled === true && (
-                              <Button asChild variant="outline" size="sm" className="h-9 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all w-full border-2" style={{ backgroundColor: sStyle.secondaryBtnBg, color: sStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+                              <Button asChild variant="outline" size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all w-full border-2 h-9", sStyle.secondaryBtnTextSize || 'text-[9px]')} style={{ backgroundColor: sStyle.secondaryBtnBg, color: sStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
                                 <Link href={sStyle.secondaryBtnLink || `/service/${s.slug || s.id}`}>
                                   <SecondaryIcon className="mr-1.5 size-3" />
                                   {sStyle.secondaryBtnText || 'বিস্তারিত'}
@@ -368,12 +374,14 @@ export default function SmartCleanHomePage() {
                           )}
                         </Link>
                         <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: subStyle.textAlign || 'left' }}>
-                          <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: subStyle.titleColor }}>{s.name}</h3>
-                          <div className="mt-2 mb-4"><span className="font-black text-lg" style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span></div>
+                          <h3 className={cn("font-bold uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors", subStyle.titleSize || 'text-sm')} style={{ color: subStyle.titleColor }}>{s.name}</h3>
+                          <div className="mt-2 mb-4">
+                            <span className={cn("font-black", subStyle.priceSize || 'text-lg')} style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span>
+                          </div>
                           
                           <div className="flex flex-col gap-2 mt-auto">
                             {subStyle.primaryBtnEnabled !== false && (
-                              <Button asChild size="sm" className="h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg w-full" style={{ backgroundColor: subStyle.primaryBtnBg, color: subStyle.primaryBtnColor }}>
+                              <Button asChild size="sm" className={cn("rounded-xl font-black uppercase tracking-widest shadow-lg w-full h-10", subStyle.primaryBtnTextSize || 'text-[10px]')} style={{ backgroundColor: subStyle.primaryBtnBg, color: subStyle.primaryBtnColor }}>
                                 <Link href={`/service/${s.mainServiceId}`}>
                                   <PrimaryIcon className="mr-1.5 size-3" />
                                   {subStyle.primaryBtnText || 'View Pack'}
@@ -381,7 +389,7 @@ export default function SmartCleanHomePage() {
                               </Button>
                             )}
                             {subStyle.secondaryBtnEnabled === true && (
-                              <Button asChild variant="outline" size="sm" className="h-9 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all w-full border-2" style={{ backgroundColor: subStyle.secondaryBtnBg, color: subStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
+                              <Button asChild variant="outline" size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all w-full border-2 h-9", subStyle.secondaryBtnTextSize || 'text-[9px]')} style={{ backgroundColor: subStyle.secondaryBtnBg, color: subStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
                                 <Link href={subStyle.secondaryBtnLink || `/service/${s.mainServiceId}`}>
                                   <SecondaryIcon className="mr-1.5 size-3" />
                                   {subStyle.secondaryBtnText || 'বিস্তারিত'}

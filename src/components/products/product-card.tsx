@@ -140,12 +140,15 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               )}
             </div>
             
-            <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold border-t border-gray-50 pt-2">
+            <div 
+              className={cn("flex items-center justify-between font-bold border-t border-gray-50 pt-2", customStyle?.metaSize || 'text-[9px] md:text-[10px]')}
+              style={{ color: customStyle?.metaColor || '#9ca3af' }}
+            >
               <div className="flex items-center gap-1 text-amber-500">
                 <Star size={12} fill="currentColor" />
-                <span className="text-gray-600">{rating.toFixed(1)}</span>
+                <span style={{ color: customStyle?.metaColor || '#4b5563' }}>{rating.toFixed(1)}</span>
               </div>
-              <span className="uppercase text-gray-400 font-black">{soldCount} {t('sold')}</span>
+              <span className="uppercase font-black">{soldCount} {t('sold')}</span>
             </div>
           </div>
 
@@ -155,7 +158,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               <Button 
                 size="sm"
                 onClick={handleOrderNow}
-                className="font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 border-none h-9 w-full shadow-lg"
+                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 border-none h-9 w-full shadow-lg", customStyle?.primaryBtnTextSize || 'text-[9px]')}
                 style={{ 
                   backgroundColor: customStyle?.primaryBtnBg || '#1E5F7A', 
                   color: customStyle?.primaryBtnColor || '#ffffff' 
@@ -172,7 +175,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
                 variant="outline"
                 size="sm"
                 onClick={handleAddToCart}
-                className="font-black uppercase tracking-widest text-[9px] rounded-lg transition-all active:scale-95 h-9 w-full border-2"
+                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 h-9 w-full border-2", customStyle?.secondaryBtnTextSize || 'text-[9px]')}
                 style={{ 
                   backgroundColor: customStyle?.secondaryBtnBg || '#f3f4f6', 
                   color: customStyle?.secondaryBtnColor || '#1f2937',
