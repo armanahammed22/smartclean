@@ -32,62 +32,15 @@
         "skills": { "type": "array" }
       }
     },
-    "PayrollRecord": {
-      "title": "PayrollRecord",
-      "description": "Finalized monthly salary record for staff.",
+    "CustomGridModule": {
+      "title": "CustomGridModule",
+      "description": "A reusable grid block containing multiple customizable cards and design settings.",
       "type": "object",
       "properties": {
-        "staffId": { "type": "string" },
         "name": { "type": "string" },
-        "month": { "type": "string" },
-        "basePay": { "type": "number" },
-        "commission": { "type": "number" },
-        "adjustments": { "type": "number" },
-        "finalAmount": { "type": "number" },
-        "paidStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
-        "status": { "type": "string" }
-      }
-    },
-    "AdvancedOffer": {
-      "title": "AdvancedOffer",
-      "description": "Sophisticated marketing campaign configuration including BOGO and bundles.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "type": { "type": "string", "enum": ["buy_x_get_y", "bundle", "min_order", "tiered"] },
-        "status": { "type": "string", "enum": ["Draft", "Live", "Scheduled", "Expired"] },
-        "targeting": { "type": "string" },
-        "rules": { "type": "object" },
-        "applicableItems": { "type": "array" },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
+        "items": { "type": "array" },
+        "styleConfig": { "type": "object" },
         "createdAt": { "type": "string" }
-      }
-    },
-    "Attendance": {
-      "title": "Attendance",
-      "description": "Daily clock-in and clock-out logs with GPS data.",
-      "type": "object",
-      "properties": {
-        "staffId": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "checkIn": { "type": "string", "format": "date-time" },
-        "checkOut": { "type": "string", "format": "date-time" },
-        "location": { "type": "object" },
-        "status": { "type": "string" }
-      }
-    },
-    "LedgerEntry": {
-      "title": "LedgerEntry",
-      "description": "Financial transaction log for income and expenses.",
-      "type": "object",
-      "properties": {
-        "type": { "type": "string", "enum": ["income", "expense"] },
-        "category": { "type": "string" },
-        "amount": { "type": "number" },
-        "paidStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
-        "date": { "type": "string", "format": "date-time" },
-        "accountId": { "type": "string" }
       }
     }
   },
@@ -97,10 +50,8 @@
   "firestore": {
     "/landing_pages/{id}": { "schema": "LandingPage", "description": "Dynamic landing pages." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
-    "/payroll_records/{id}": { "schema": "PayrollRecord", "description": "Finalized payslips." },
-    "/attendance_logs/{id}": { "schema": "Attendance", "description": "Attendance tracking." },
-    "/advanced_offers/{id}": { "schema": "AdvancedOffer", "description": "Marketing engine rules." },
-    "/finance_ledger/{id}": { "schema": "LedgerEntry", "description": "Central accounting log." },
+    "/custom_grid_modules/{id}": { "schema": "CustomGridModule", "description": "Reusable grid layouts." },
+    "/homepage_sections/{id}": { "schema": "object", "description": "Homepage layout sequence." },
     "/hero_banners/{id}": { "schema": "object", "description": "Homepage slider assets." }
   }
 }
