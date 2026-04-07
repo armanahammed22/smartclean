@@ -291,6 +291,12 @@ export default function HomepageBuilderPage() {
     });
   };
 
+  // Helper to safely get numeric values for inputs
+  const safeNum = (val: any, def: number = 0) => {
+    if (val === undefined || val === null || isNaN(val)) return def;
+    return val;
+  };
+
   if (isLoading || stylesLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
@@ -395,15 +401,15 @@ export default function HomepageBuilderPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Radius (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.cardRadius ?? 16} onChange={e => updateCardStyle('productCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.productCard?.cardRadius, 16)} onChange={e => updateCardStyle('productCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Padding (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.cardPadding ?? 16} onChange={e => updateCardStyle('productCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.productCard?.cardPadding, 16)} onChange={e => updateCardStyle('productCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.elementGap ?? 12} onChange={e => updateCardStyle('productCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.productCard?.elementGap, 12)} onChange={e => updateCardStyle('productCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
 
@@ -497,15 +503,15 @@ export default function HomepageBuilderPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Radius (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.cardRadius ?? 16} onChange={e => updateCardStyle('serviceCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.serviceCard?.cardRadius, 16)} onChange={e => updateCardStyle('serviceCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Padding (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.cardPadding ?? 16} onChange={e => updateCardStyle('serviceCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.serviceCard?.cardPadding, 16)} onChange={e => updateCardStyle('serviceCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.elementGap ?? 12} onChange={e => updateCardStyle('serviceCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={safeNum(localStyles?.serviceCard?.elementGap, 12)} onChange={e => updateCardStyle('serviceCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
 
@@ -618,7 +624,7 @@ export default function HomepageBuilderPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Limit Items</Label>
-                      <Input type="number" value={editingSection?.config?.limit ?? 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value) || 0}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Input type="number" value={safeNum(editingSection?.config?.limit, 8)} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value) || 0}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sorting</Label>
