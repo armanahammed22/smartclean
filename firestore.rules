@@ -44,6 +44,7 @@ service cloud.firestore {
     match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
     match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
     match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /custom_grid_modules/{id} { allow read: if true; allow write: if isAdmin(); }
     match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
     match /landing_pages/{id} { allow read: if true; allow write: if isAdmin(); }
     match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
