@@ -53,6 +53,11 @@ export async function generateMetadata(): Promise<Metadata> {
     verification: {
       google: settings?.googleSearchConsoleToken,
     },
+    icons: {
+      icon: settings?.faviconUrl || '/favicon.ico',
+      shortcut: settings?.faviconUrl || '/favicon.ico',
+      apple: settings?.appIconUrl || '/apple-icon.png',
+    },
     openGraph: {
       type: 'website',
       locale: 'bn_BD',
@@ -101,8 +106,6 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
 
         {/* JSON-LD Structured Data */}
         <script
