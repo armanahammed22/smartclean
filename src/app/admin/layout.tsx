@@ -121,6 +121,27 @@ const DEFAULT_MENU_KEYS = [
   'support'
 ];
 
+const MENU_LABELS: Record<string, string> = {
+  dashboard_link: "Dashboard",
+  sales: "Sales Terminal",
+  orders: "Order & Booking",
+  inventory: "Inventory",
+  services: "SERVICES",
+  marketing: "MARKETING & PROMOTIONS",
+  offers: "OFFER & CAMPAIGN",
+  seo: "SEO & TRACKING",
+  hrm: "HRM",
+  customer_hub: "Customer Hub",
+  partners: "B2B PARTNERS",
+  vendors: "VENDOR HUB",
+  finance: "FINANCIAL HUB",
+  reports: "BUSINESS REPORT",
+  customize: "SITE CUSTOMIZE",
+  system: "SETTINGS",
+  ai_agents: "AI AGENTS (STAFF)",
+  support: "SUPPORT"
+};
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -352,7 +373,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-fuchsia-400",
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
-          { name: "Grid Builder", href: '/admin/customize/grid-builder', icon: Grid },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
           { name: "Bottom Navbar", href: '/admin/customize/bottom-nav', icon: CircleEllipsis },
