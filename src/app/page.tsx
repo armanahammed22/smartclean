@@ -96,7 +96,7 @@ export default function SmartCleanHomePage() {
   const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const gridModulesRef = useMemoFirebase(() => db ? collection(db, 'custom_grid_modules') : null, [db]);
+  const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const plansRef = useMemoFirebase(() => db ? collection(db, 'subscription_plans') : null, [db]);
   const marketingOffersRef = useMemoFirebase(() => db ? collection(db, 'marketing_offers') : null, [db]);
   const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
@@ -110,7 +110,7 @@ export default function SmartCleanHomePage() {
   const { data: allSubServices } = useCollection(subServicesRef);
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
-  const { data: gridModules } = useCollection(gridModulesRef);
+  const { data: cardStyles } = useDoc(stylesRef);
   const { data: plans } = useCollection(plansRef);
   const { data: marketingOffers } = useCollection(marketingOffersRef);
   const { data: quickLinks } = useCollection(quickLinksRef);
@@ -135,30 +135,6 @@ export default function SmartCleanHomePage() {
   const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
-  const getColsClass = (cols: any, prefix: string = '') => {
-    const c = String(cols);
-    const p = prefix ? `${prefix}:` : '';
-    const map: Record<string, string> = {
-      '1': `${p}grid-cols-1`,
-      '2': `${p}grid-cols-2`,
-      '3': `${p}grid-cols-3`,
-      '4': `${p}grid-cols-4`,
-      '5': `${p}grid-cols-5`,
-      '6': `${p}grid-cols-6`,
-    };
-    return map[c] || (prefix ? '' : 'grid-cols-2');
-  };
-
-  const getGapClass = (gap: number) => {
-    if (gap <= 4) return 'gap-1';
-    if (gap <= 8) return 'gap-2';
-    if (gap <= 12) return 'gap-3';
-    if (gap <= 16) return 'gap-4';
-    if (gap <= 20) return 'gap-5';
-    if (gap <= 24) return 'gap-6';
-    return 'gap-8';
-  };
-
   const renderSection = (section: any) => {
     const config = section.config || {};
     const sectionType = section.type;
@@ -166,108 +142,6 @@ export default function SmartCleanHomePage() {
     if (sectionType === 'hero' || sectionType === 'side_promo') return null;
 
     switch (sectionType) {
-      case 'grid_module':
-        const module = gridModules?.find(m => m.id === config.moduleId);
-        if (!module) return null;
-        const style = module.styleConfig || {};
-        const activeItems = module.items?.filter((i: any) => i.isActive) || [];
-        if (activeItems.length === 0) return null;
-        
-        const gridClasses = cn(
-          "grid",
-          getColsClass(style.columnsMobile),
-          getColsClass(style.columnsTablet, 'md'),
-          getColsClass(style.columnsDesktop, 'lg'),
-          getGapClass(style.gap || 16)
-        );
-
-        return (
-          <section key={section.id} className="px-4 py-12">
-            <div className="container mx-auto max-w-7xl">
-              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10" style={{ textAlign: style.textAlign || 'left', color: style.titleColor || '#081621' }}>{section.title || module.name}</h2>
-              <div className={gridClasses}>
-                {activeItems.map((item: any) => {
-                  // Resolve Dynamic Data
-                  let displayData = { 
-                    title: item.title, 
-                    price: item.price, 
-                    imageUrl: item.imageUrl, 
-                    link: item.btnLink,
-                    rating: 5.0,
-                    soldCount: 0 
-                  };
-
-                  if (item.sourceType === 'product') {
-                    const p = allProducts?.find(x => x.id === item.sourceId);
-                    if (p) {
-                      displayData.title = item.title || p.name;
-                      displayData.price = item.price || p.price;
-                      displayData.imageUrl = item.imageUrl || p.imageUrl;
-                      displayData.link = item.btnLink || `/product/${p.slug || p.id}`;
-                      displayData.soldCount = p.salesCount || 120;
-                    }
-                  } else if (item.sourceType === 'service') {
-                    const s = allServices?.find(x => x.id === item.sourceId);
-                    if (s) {
-                      displayData.title = item.title || s.title;
-                      displayData.price = item.price || s.basePrice;
-                      displayData.imageUrl = item.imageUrl || s.imageUrl;
-                      displayData.link = item.btnLink || `/service/${s.slug || s.id}`;
-                      displayData.rating = s.rating || 5.0;
-                      displayData.soldCount = 45;
-                    }
-                  } else if (item.sourceType === 'sub_service') {
-                    const sub = allSubServices?.find(x => x.id === item.sourceId);
-                    if (sub) {
-                      displayData.title = item.title || sub.name;
-                      displayData.price = item.price || sub.price;
-                      displayData.imageUrl = item.imageUrl || sub.imageUrl;
-                      displayData.link = item.btnLink || `/service/${sub.mainServiceId}`;
-                      displayData.rating = sub.rating || 5.0;
-                    }
-                  }
-
-                  return (
-                    <Link key={item.id} href={displayData.link || '#'} className="block h-full group">
-                      <Card className={cn("border-none flex flex-col h-full overflow-hidden bg-white transition-all duration-500", style.showShadow !== false ? "shadow-sm hover:shadow-2xl" : "border")} style={{ borderRadius: `${style.cardRadius || 24}px`, backgroundColor: style.cardBg || '#ffffff' }}>
-                        {displayData.imageUrl && (
-                          <div className="relative overflow-hidden bg-gray-50 shrink-0" style={{ height: `${style.imgHeight || 200}px` }}>
-                            <Image src={displayData.imageUrl} alt={displayData.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                            {item.badge && <Badge className="absolute top-3 left-3 bg-primary text-white border-none font-black text-[8px] uppercase px-2 py-0.5 rounded-sm shadow-lg">{item.badge}</Badge>}
-                          </div>
-                        )}
-                        <CardContent className="p-5 flex flex-col flex-1" style={{ textAlign: style.textAlign || 'left' }}>
-                          <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 mb-2 leading-tight group-hover:text-primary transition-colors">{displayData.title}</h3>
-                          
-                          {item.desc && <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mb-3 leading-relaxed">{item.desc}</p>}
-                          
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-black">
-                              <Star size={10} fill="currentColor" /> {displayData.rating.toFixed(1)}
-                            </div>
-                            {displayData.soldCount > 0 && (
-                              <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{displayData.soldCount} {item.sourceType === 'product' ? 'Sold' : 'Booked'}</span>
-                            )}
-                          </div>
-
-                          <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-gray-50">
-                            <div className="flex items-baseline gap-2">
-                              {displayData.price && <span className="font-black text-primary text-lg leading-none">৳{displayData.price.toLocaleString()}</span>}
-                            </div>
-                            <Button className="w-full h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnTextColor || '#ffffff' }}>
-                              {item.btnText || 'Action'}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        );
-
       case 'top_nav_links':
         if (!topCategories.length) return null;
         return (
@@ -402,6 +276,7 @@ export default function SmartCleanHomePage() {
       case 'services_featured':
         const displayServices = (allServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
         if (displayServices.length === 0) return null;
+        const sStyle = cardStyles?.serviceCard || {};
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
@@ -414,7 +289,7 @@ export default function SmartCleanHomePage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                 {displayServices.map(s => (
                   <Link key={s.id} href={`/service/${s.slug || s.id}`} className="block h-full group">
-                    <Card className="border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white shadow-sm hover:shadow-xl rounded-3xl border border-gray-100">
+                    <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", sStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${sStyle.cardRadius || 24}px`, backgroundColor: sStyle.cardBg || '#ffffff' }}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
                         {s.imageUrl ? (
                           <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
@@ -422,14 +297,18 @@ export default function SmartCleanHomePage() {
                           <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
                         )}
                       </div>
-                      <CardContent className="p-4 flex flex-col flex-1">
-                        <div className="min-h-[48px] mb-2"><h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors">{s.title}</h3></div>
-                        <div className="flex flex-col mb-2"><span className="font-black text-primary text-lg">৳{s.basePrice?.toLocaleString()}</span></div>
+                      <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: sStyle.textAlign || 'left' }}>
+                        <div className="min-h-[48px] mb-2">
+                          <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: sStyle.titleColor }}>{s.title}</h3>
+                        </div>
+                        <div className="flex flex-col mb-2">
+                          <span className="font-black text-lg" style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
+                        </div>
                         <div className="flex items-center justify-between text-[10px] font-bold border-t border-gray-50 pt-2 mb-4">
                           <div className="flex items-center gap-1 text-amber-500"><Star size={12} fill="currentColor" /><span>{(s.rating || 5.0).toFixed(1)}</span></div>
                           <span className="uppercase text-gray-400 font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
                         </div>
-                        <Button size="sm" className="w-full mt-auto h-10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 shadow-lg shadow-primary/10">
+                        <Button size="sm" className={cn("mt-auto h-10 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg", sStyle.btnSize === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: sStyle.btnBg, color: sStyle.btnTextColor }}>
                           {t('book_now')}
                         </Button>
                       </CardContent>
@@ -444,6 +323,7 @@ export default function SmartCleanHomePage() {
       case 'sub_services_custom':
         const displaySubs = (allSubServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
         if (displaySubs.length === 0) return null;
+        const subStyle = cardStyles?.serviceCard || {};
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
@@ -451,7 +331,7 @@ export default function SmartCleanHomePage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                 {displaySubs.map(s => (
                   <Link key={s.id} href={`/service/${s.mainServiceId}`} className="block h-full group">
-                    <Card className="border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white shadow-sm hover:shadow-xl rounded-3xl border border-gray-100">
+                    <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", subStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${subStyle.cardRadius || 24}px`, backgroundColor: subStyle.cardBg || '#ffffff' }}>
                       <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
                         {s.imageUrl ? (
                           <Image src={s.imageUrl} alt={s.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
@@ -459,10 +339,10 @@ export default function SmartCleanHomePage() {
                           <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Layers size={40} /></div>
                         )}
                       </div>
-                      <CardContent className="p-4 flex flex-col flex-1">
-                        <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors">{s.name}</h3>
-                        <div className="mt-2"><span className="font-black text-primary text-lg">৳{s.price?.toLocaleString()}</span></div>
-                        <Button size="sm" className="w-full mt-4 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10">
+                      <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: subStyle.textAlign || 'left' }}>
+                        <h3 className="font-bold text-sm uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors" style={{ color: subStyle.titleColor }}>{s.name}</h3>
+                        <div className="mt-2"><span className="font-black text-lg" style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span></div>
+                        <Button size="sm" className={cn("mt-4 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg", subStyle.btnSize === 'full' ? 'w-full' : 'w-fit px-4')} style={{ backgroundColor: subStyle.btnBg, color: subStyle.btnTextColor }}>
                           View Pack
                         </Button>
                       </CardContent>
@@ -483,7 +363,7 @@ export default function SmartCleanHomePage() {
             <div className="container mx-auto max-w-7xl">
               <h2 className="mb-10 px-2 text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">{section.title}</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
-                {displayProducts.map(p => <ProductCard key={p.id} product={p as any} />)}
+                {displayProducts.map(p => <ProductCard key={p.id} product={p as any} customStyle={cardStyles?.productCard} />)}
               </div>
             </div>
           </section>
