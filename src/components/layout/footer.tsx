@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -24,6 +23,9 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function Footer() {
   const { t } = useLanguage();
