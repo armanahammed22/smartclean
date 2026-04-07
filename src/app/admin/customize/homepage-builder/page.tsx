@@ -199,9 +199,21 @@ export default function HomepageBuilderPage() {
   const handleCreateGrid = async () => {
     if (!db) return;
     try {
-      const docRef = await addDoc(collection(db, 'custom_grid_modules'), {
+      const defaultCard = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: 'New Dynamic Card',
+        desc: 'Enter a catchy description for this item here.',
+        price: '999',
+        imageUrl: 'https://picsum.photos/seed/default/400/300',
+        btnText: 'View Details',
+        btnLink: '#',
+        badge: 'NEW',
+        isActive: true
+      };
+
+      await addDoc(collection(db, 'custom_grid_modules'), {
         name: 'New Grid Template',
-        items: [],
+        items: [defaultCard],
         styleConfig: {
           columnsMobile: '2',
           columnsTablet: '3',
@@ -218,7 +230,7 @@ export default function HomepageBuilderPage() {
         },
         createdAt: new Date().toISOString()
       });
-      toast({ title: "Template Initialized" });
+      toast({ title: "Template Initialized", description: "Default card added." });
     } catch (e) {
       toast({ variant: "destructive", title: "Creation Failed" });
     }
@@ -397,7 +409,7 @@ export default function HomepageBuilderPage() {
         <DialogContent className="max-w-4xl w-[95vw] rounded-t-[2.5rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
             <div className="flex justify-between items-center">
-              <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                 <Settings2 className="text-primary" /> Global Block Logic
               </DialogTitle>
               <button onClick={() => setIsEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-white/60"><X size={24}/></button>
