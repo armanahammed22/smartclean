@@ -239,19 +239,21 @@ export default function SmartCleanHomePage() {
                         <CardContent className="p-5 flex flex-col flex-1" style={{ textAlign: style.textAlign || 'left' }}>
                           <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 mb-2 leading-tight group-hover:text-primary transition-colors">{displayData.title}</h3>
                           
-                          {item.desc && <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mb-3">{item.desc}</p>}
+                          {item.desc && <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mb-3 leading-relaxed">{item.desc}</p>}
                           
                           <div className="flex items-center gap-3 mb-4">
                             <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-black">
                               <Star size={10} fill="currentColor" /> {displayData.rating.toFixed(1)}
                             </div>
                             {displayData.soldCount > 0 && (
-                              <span className="text-[9px] font-black text-gray-400 uppercase">{displayData.soldCount} {item.sourceType === 'product' ? 'Sold' : 'Booked'}</span>
+                              <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">{displayData.soldCount} {item.sourceType === 'product' ? 'Sold' : 'Booked'}</span>
                             )}
                           </div>
 
                           <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-gray-50">
-                            {displayData.price && <span className="font-black text-primary text-lg leading-none">৳{displayData.price.toLocaleString()}</span>}
+                            <div className="flex items-baseline gap-2">
+                              {displayData.price && <span className="font-black text-primary text-lg leading-none">৳{displayData.price.toLocaleString()}</span>}
+                            </div>
                             <Button className="w-full h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnTextColor || '#ffffff' }}>
                               {item.btnText || 'Action'}
                             </Button>
