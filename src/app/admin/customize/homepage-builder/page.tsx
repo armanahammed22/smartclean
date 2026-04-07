@@ -36,7 +36,14 @@ import {
   Database,
   Columns,
   ShoppingCart,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Search,
+  Filter,
+  CheckCircle2,
+  ArrowRight,
+  TrendingUp,
+  TicketPercent,
+  Gift
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -59,42 +66,13 @@ const SECTION_TYPES = [
   { id: 'categories', label: 'Categories Grid', icon: Layers, category: 'Navigation' },
   { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap, category: 'Marketing' },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap, category: 'Marketing' },
+  { id: 'advanced_offers', label: 'Advanced Offers Row', icon: Gift, category: 'Marketing' },
+  { id: 'coupons_grid', label: 'Coupons Grid', icon: TicketPercent, category: 'Marketing' },
   { id: 'section_banners', label: 'Section Banners', icon: ImageIcon, category: 'Marketing' },
-  { id: 'feature_cards', label: 'Feature Cards', icon: Zap, category: 'Marketing' },
-  { id: 'services_featured', label: 'Main Services', icon: Wrench, category: 'Services' },
-  { id: 'sub_services_custom', label: 'Custom Sub-Services', icon: Layers, category: 'Services' },
-  { id: 'products_featured', label: 'Featured Products', icon: Star, category: 'Products' },
-  { id: 'products_new', label: 'New Arrivals', icon: Package, category: 'Products' },
+  { id: 'products_dynamic', label: 'Dynamic Products', icon: Package, category: 'Products' },
+  { id: 'services_dynamic', label: 'Dynamic Services', icon: Wrench, category: 'Services' },
   { id: 'trust_stats', label: 'Trust Stats Counter', icon: Users, category: 'UI' }
 ];
-
-const DEFAULT_CARD_STYLE = {
-  cardBg: '#ffffff',
-  titleColor: '#1f2937',
-  priceColor: '#1E5F7A',
-  metaColor: '#9ca3af',
-  cardRadius: 24,
-  showShadow: true,
-  textAlign: 'left',
-  titleSize: 'text-sm',
-  priceSize: 'text-lg',
-  metaSize: 'text-[10px]',
-  // Button 1 (Primary)
-  primaryBtnEnabled: true,
-  primaryBtnText: 'এখনই কিনুন',
-  primaryBtnBg: '#1E5F7A',
-  primaryBtnColor: '#ffffff',
-  primaryBtnIcon: 'Zap',
-  primaryBtnTextSize: 'text-[9px]',
-  // Button 2 (Secondary)
-  secondaryBtnEnabled: false,
-  secondaryBtnText: 'কার্টে যোগ করুন',
-  secondaryBtnBg: '#f3f4f6',
-  secondaryBtnColor: '#1f2937',
-  secondaryBtnIcon: 'ShoppingCart',
-  secondaryBtnTextSize: 'text-[9px]',
-  secondaryBtnLink: ''
-};
 
 export default function HomepageBuilderPage() {
   const db = useFirestore();
@@ -104,31 +82,34 @@ export default function HomepageBuilderPage() {
   const [editingSection, setEditingSection] = useState<any>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [localSections, setLocalSections] = useState<any[]>([]);
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
 
-  // 🎨 Global Card Style State
-  const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
-  const { data: globalStyles, isLoading: stylesLoading } = useDoc(stylesRef);
-  const [localStyles, setLocalStyles] = useState<any>({
-    productCard: DEFAULT_CARD_STYLE,
-    serviceCard: { ...DEFAULT_CARD_STYLE, primaryBtnText: 'বুকিং দিন', secondaryBtnText: 'বিস্তারিত' }
-  });
-
+  // Queries
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const sectionsQuery = useMemoFirebase(() => db ? query(sectionsRef!, orderBy('order', 'asc')) : null, [db, sectionsRef]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
 
+  const categoriesQuery = useMemoFirebase(() => db ? collection(db, 'categories') : null, [db]);
+  const { data: categories } = useCollection(categoriesQuery);
+
+  const brandsQuery = useMemoFirebase(() => db ? collection(db, 'brands') : null, [db]);
+  const { data: brands } = useCollection(brandsQuery);
+
+  const vendorsQuery = useMemoFirebase(() => db ? collection(db, 'vendor_profiles') : null, [db]);
+  const { data: vendors } = useCollection(vendorsQuery);
+
+  const campaignsQuery = useMemoFirebase(() => db ? collection(db, 'campaigns') : null, [db]);
+  const { data: campaigns } = useCollection(campaignsQuery);
+
+  const productsQuery = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
+  const { data: allProducts } = useCollection(productsQuery);
+
+  const servicesQuery = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const { data: allServices } = useCollection(servicesQuery);
+
   useEffect(() => {
     if (sections) setLocalSections(sections);
   }, [sections]);
-
-  useEffect(() => {
-    if (globalStyles) {
-      setLocalStyles({
-        productCard: { ...DEFAULT_CARD_STYLE, ...(globalStyles.productCard || {}) },
-        serviceCard: { ...DEFAULT_CARD_STYLE, primaryBtnText: 'বুকিং দিন', secondaryBtnText: 'বিস্তারিত', ...(globalStyles.serviceCard || {}) }
-      });
-    }
-  }, [globalStyles]);
 
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
@@ -170,13 +151,13 @@ export default function HomepageBuilderPage() {
       order: localSections.length,
       config: {
         limit: 8,
-        titleColor: '#081621',
-        titleSizeMobile: 'text-2xl',
-        titleSizeDesktop: 'text-5xl',
-        titleAlign: 'left',
+        sourceType: 'all',
+        sourceId: '',
+        sortBy: 'latest',
         gridColsMobile: '2',
-        gridColsTablet: '3',
-        gridColsDesktop: '5'
+        gridColsDesktop: '5',
+        titleAlign: 'left',
+        manualIds: []
       },
       createdAt: new Date().toISOString()
     });
@@ -199,192 +180,277 @@ export default function HomepageBuilderPage() {
     }
   };
 
-  const handleSaveGlobalStyles = async () => {
-    if (!db) return;
-    setIsSubmitting(true);
-    try {
-      await setDoc(doc(db, 'site_settings', 'card_styles'), {
-        ...localStyles,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      toast({ title: "Global Card Styles Published", description: "All cards updated across the site." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Save Failed" });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const filteredItemsForManual = useMemo(() => {
+    if (!itemSearchQuery.trim()) return [];
+    const source = editingSection?.type === 'services_dynamic' ? allServices : allProducts;
+    return source?.filter((i: any) => 
+      (i.name || i.title || '').toLowerCase().includes(itemSearchQuery.toLowerCase())
+    ).slice(0, 10);
+  }, [itemSearchQuery, allProducts, allServices, editingSection?.type]);
 
-  const updateCardStyle = (type: 'productCard' | 'serviceCard', field: string, val: any) => {
-    setLocalStyles({
-      ...localStyles,
-      [type]: { ...localStyles[type], [field]: val }
+  const toggleManualId = (id: string) => {
+    const currentIds = editingSection.config.manualIds || [];
+    const nextIds = currentIds.includes(id) 
+      ? currentIds.filter((i: string) => i !== id) 
+      : [...currentIds, id].slice(0, 20);
+    setEditingSection({
+      ...editingSection,
+      config: { ...editingSection.config, manualIds: nextIds }
     });
   };
-
-  if (isLoading && localSections.length === 0) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Homepage Engine</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-2">Manage layout sequence and global component aesthetics</p>
+          <p className="text-muted-foreground text-sm font-medium mt-2">Manage dynamic layout sequence and source-based data pipes</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsAddOpen(true)} className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
+            <Plus size={18} /> Add Module
+          </Button>
+          <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="gap-2 font-black h-11 px-6 rounded-xl bg-white shadow-sm">
+            <Save size={18} /> Sync Sequence
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="sequence" className="space-y-8">
-        <TabsList className="bg-white border p-1 h-12 rounded-xl w-full max-w-xl">
-          <TabsTrigger value="sequence" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Navigation size={14}/> Layout Sequence
-          </TabsTrigger>
-          <TabsTrigger value="styles" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Palette size={14}/> Global Card Styles
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="sequence" className="space-y-6">
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => setIsAddOpen(true)} className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary">
-              <Plus size={18} /> Add Section Block
-            </Button>
-            <Button onClick={saveOrder} disabled={isSubmitting} variant="outline" className="gap-2 font-black h-11 px-6 rounded-xl bg-white shadow-sm">
-              <Save size={18} /> Sync Sequence
-            </Button>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-3">
-            {localSections.map((section, index) => {
-              const typeInfo = SECTION_TYPES.find(t => t.id === section.type);
-              const Icon = typeInfo?.icon || Layout;
-              return (
-                <Card 
-                  key={section.id}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  className={cn(
-                    "border-none shadow-sm transition-all duration-300 group bg-white rounded-2xl overflow-hidden",
-                    !section.isActive && "opacity-50 grayscale",
-                    draggedItem === index ? "ring-2 ring-primary scale-[1.01] shadow-xl z-50" : "hover:shadow-md border border-gray-100"
-                  )}
-                >
-                  <CardContent className="p-4 flex items-center gap-4">
-                    <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-300" /></div>
-                    <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}>
-                      <Icon size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
-                      <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">
-                        {typeInfo?.label || section.type}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                        <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
-                        <Switch checked={section.isActive} onCheckedChange={(val) => {
-                          const next = localSections.map(s => s.id === section.id ? { ...s, isActive: val } : s);
-                          setLocalSections(next);
-                          updateDoc(doc(db!, 'homepage_sections', section.id), { isActive: val });
-                        }} className="scale-75" />
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
-                        <Settings2 size={18} />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
-                        <Trash2 size={18} />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="styles" className="space-y-8">
-          <div className="flex justify-end">
-            <Button onClick={handleSaveGlobalStyles} disabled={isSubmitting} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <Save size={18} />} Publish Global Designs
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* PRODUCT CARD STYLING */}
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
-              <CardHeader className="bg-[#081621] text-white p-8">
-                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                  <Package className="text-primary" /> Product Card Style
-                </CardTitle>
-                <CardDescription className="text-white/40 font-bold uppercase text-[9px]">Applied to all product items automatically</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <CardStyleForm type="productCard" styles={localStyles.productCard} onChange={updateCardStyle} />
+      <div className="max-w-4xl mx-auto space-y-3">
+        {localSections.map((section, index) => {
+          const typeInfo = SECTION_TYPES.find(t => t.id === section.type);
+          const Icon = typeInfo?.icon || Layout;
+          return (
+            <Card 
+              key={section.id}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              className={cn(
+                "border-none shadow-sm transition-all duration-300 group bg-white rounded-2xl overflow-hidden",
+                !section.isActive && "opacity-50 grayscale",
+                draggedItem === index ? "ring-2 ring-primary scale-[1.01] shadow-xl z-50" : "hover:shadow-md border border-gray-100"
+              )}
+            >
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-300" /></div>
+                <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}>
+                  <Icon size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">
+                      {typeInfo?.label || section.type}
+                    </Badge>
+                    {section.config?.sourceType && (
+                      <span className="text-[8px] font-black text-primary/60 uppercase">Source: {section.config.sourceType}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                    <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
+                    <Switch checked={section.isActive} onCheckedChange={(val) => {
+                      const next = localSections.map(s => s.id === section.id ? { ...s, isActive: val } : s);
+                      setLocalSections(next);
+                      updateDoc(doc(db!, 'homepage_sections', section.id), { isActive: val });
+                    }} className="scale-75" />
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
+                    <Settings2 size={18} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
+                    <Trash2 size={18} />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+          );
+        })}
+      </div>
 
-            {/* SERVICE CARD STYLING */}
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
-              <CardHeader className="bg-[#081621] text-white p-8">
-                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                  <Wrench className="text-primary" /> Service Card Style
-                </CardTitle>
-                <CardDescription className="text-white/40 font-bold uppercase text-[9px]">Applied to all services & sub-services automatically</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <CardStyleForm type="serviceCard" styles={localStyles.serviceCard} onChange={updateCardStyle} />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
+      {/* 🛠️ SECTION EDITOR DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-xl rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
-          <header className="p-8 bg-[#081621] text-white shrink-0">
-            <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-              <Settings2 className="text-primary" /> Section Parameters
-            </DialogTitle>
-          </header>
-          <div className="p-8 space-y-8">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Section Heading</Label>
-              <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Max Items</Label>
-                <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
+          <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary rounded-2xl shadow-xl"><Settings2 size={24}/></div>
+                <div>
+                  <DialogTitle className="text-xl font-black uppercase tracking-tight">Configure Module</DialogTitle>
+                  <DialogDescription className="text-white/40 font-bold uppercase text-[9px]">Type: {editingSection?.type}</DialogDescription>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Heading Align</Label>
-                <Select value={editingSection?.config?.titleAlign || 'left'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, titleAlign: v}})}>
-                  <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                  </SelectContent>
-                </Select>
+              <button onClick={() => setIsEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={24}/></button>
+            </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {/* Left Column: Metadata */}
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2">Heading & Logic</h4>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Section Title</Label>
+                    <Input value={editingSection?.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Limit Items</Label>
+                      <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sorting</Label>
+                      <Select value={editingSection?.config?.sortBy || 'latest'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, sortBy: v}})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="latest">Newest First</SelectItem>
+                          <SelectItem value="popular">Most Popular</SelectItem>
+                          <SelectItem value="rating">Top Rated</SelectItem>
+                          <SelectItem value="discount">Highest Discount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Source Configuration */}
+                {(editingSection?.type === 'products_dynamic' || editingSection?.type === 'services_dynamic') && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 border-b pb-2">Intelligence Source</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Source Type</Label>
+                        <Select 
+                          value={editingSection?.config?.sourceType || 'all'} 
+                          onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, sourceType: v, sourceId: '', manualIds: []}})}
+                        >
+                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Global Catalog (All)</SelectItem>
+                            <SelectItem value="category">Specific Category</SelectItem>
+                            {editingSection.type === 'products_dynamic' && <SelectItem value="brand">Brand Specific</SelectItem>}
+                            {editingSection.type === 'products_dynamic' && <SelectItem value="vendor">Vendor Shop</SelectItem>}
+                            {editingSection.type === 'products_dynamic' && <SelectItem value="campaign">Marketing Campaign</SelectItem>}
+                            <SelectItem value="manual">Manual Selection (Pinned)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {['category', 'brand', 'vendor', 'campaign'].includes(editingSection.config.sourceType) && (
+                        <div className="space-y-2 animate-in zoom-in-95">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assign {editingSection.config.sourceType}</Label>
+                          <Select 
+                            value={editingSection?.config?.sourceId || ''} 
+                            onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, sourceId: v}})}
+                          >
+                            <SelectTrigger className="h-12 bg-indigo-50 border-none rounded-xl font-black text-indigo-700">
+                              <SelectValue placeholder="Select Source..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {editingSection.config.sourceType === 'category' && categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                              {editingSection.config.sourceType === 'brand' && brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
+                              {editingSection.config.sourceType === 'vendor' && vendors?.map(v => <SelectItem key={v.id} value={v.id}>{v.shopName}</SelectItem>)}
+                              {editingSection.config.sourceType === 'campaign' && campaigns?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Manual Item Picker or Style */}
+              <div className="space-y-8">
+                {editingSection?.config?.sourceType === 'manual' ? (
+                  <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col h-[400px] animate-in slide-in-from-right-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Item Selector</h4>
+                      <Badge className="bg-primary text-white border-none">{editingSection.config.manualIds?.length || 0}/20</Badge>
+                    </div>
+                    <div className="relative mb-4">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                      <Input 
+                        placeholder="Search items..." 
+                        value={itemSearchQuery}
+                        onChange={e => setItemSearchQuery(e.target.value)}
+                        className="h-10 pl-9 bg-white border-none rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+                      {filteredItemsForManual?.map((item: any) => {
+                        const isSelected = editingSection.config.manualIds?.includes(item.id);
+                        return (
+                          <div 
+                            key={item.id} 
+                            onClick={() => toggleManualId(item.id)}
+                            className={cn(
+                              "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                              isSelected ? "border-primary bg-primary/5" : "border-transparent bg-white hover:border-primary/20"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border bg-gray-50">
+                                {item.imageUrl && <Image src={item.imageUrl} alt="P" fill className="object-cover" unoptimized />}
+                              </div>
+                              <span className="text-[10px] font-bold uppercase truncate max-w-[150px]">{item.name || item.title}</span>
+                            </div>
+                            {isSelected ? <CheckCircle2 size={16} className="text-primary" /> : <PlusCircle size={16} className="text-gray-200" />}
+                          </div>
+                        );
+                      })}
+                      {itemSearchQuery && filteredItemsForManual.length === 0 && <p className="text-center py-10 text-[10px] font-black uppercase opacity-20">No matching items</p>}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Layout Aesthetics</h4>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Grid Cols (Desktop)</Label>
+                        <Select value={editingSection?.config?.gridColsDesktop || '5'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, gridColsDesktop: v}})}>
+                          <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['2', '3', '4', '5', '6'].map(c => <SelectItem key={c} value={c}>{c} Columns</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Grid Cols (Mobile)</Label>
+                        <Select value={editingSection?.config?.gridColsMobile || '2'} onValueChange={v => setEditingSection({...editingSection, config: {...editingSection.config, gridColsMobile: v}})}>
+                          <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['1', '2'].map(c => <SelectItem key={c} value={c}>{c} Column</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-3">
-            <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 font-bold">Discard</Button>
-            <Button onClick={handleUpdateSection} disabled={isSubmitting} className="flex-1 rounded-xl font-black h-12 shadow-xl bg-primary">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : 'Save Config'}
+
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t flex flex-col sm:flex-row gap-3">
+            <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+            <Button onClick={handleUpdateSection} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Component</>}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* ➕ ADD SECTION DIALOG */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
           <DialogHeader className="p-10 bg-[#081621] text-white shrink-0 relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Deploy Module</DialogTitle>
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60"><X size={24}/></button>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-10 space-y-12 bg-white custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
             {['Main', 'Navigation', 'Marketing', 'Services', 'Products', 'UI'].map(category => {
               const types = SECTION_TYPES.filter(t => t.category === category);
               if (types.length === 0) return null;
@@ -405,164 +471,6 @@ export default function HomepageBuilderPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function CardStyleForm({ type, styles, onChange }: { type: 'productCard' | 'serviceCard', styles: any, onChange: any }) {
-  const FONT_SIZES = [
-    { label: 'Extra Small', value: 'text-[10px]' },
-    { label: 'Small', value: 'text-xs' },
-    { label: 'Medium', value: 'text-sm' },
-    { label: 'Base', value: 'text-base' },
-    { label: 'Large', value: 'text-lg' },
-    { label: 'Extra Large', value: 'text-xl' }
-  ];
-
-  return (
-    <div className="space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Palette size={14}/> Aesthetics</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Card Background</Label>
-              <Input type="color" value={styles.cardBg} onChange={e => onChange(type, 'cardBg', e.target.value)} className="h-10 p-1 bg-white border-gray-100" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Corner Radius</Label>
-              <Input type="number" value={styles.cardRadius} onChange={e => onChange(type, 'cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none font-bold" />
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-            <Label className="text-[10px] font-black uppercase">Drop Shadow</Label>
-            <Switch checked={styles.showShadow} onCheckedChange={v => onChange(type, 'showShadow', v)} />
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Type size={14}/> Typography & Meta</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Title Color</Label>
-              <Input type="color" value={styles.titleColor} onChange={e => onChange(type, 'titleColor', e.target.value)} className="h-10 p-1 bg-white" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Price Color</Label>
-              <Input type="color" value={styles.priceColor} onChange={e => onChange(type, 'priceColor', e.target.value)} className="h-10 p-1 bg-white" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Meta Color (Rating)</Label>
-              <Input type="color" value={styles.metaColor || '#9ca3af'} onChange={e => onChange(type, 'metaColor', e.target.value)} className="h-10 p-1 bg-white" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Meta Text Size</Label>
-              <Select value={styles.metaSize || 'text-[10px]'} onValueChange={v => onChange(type, 'metaSize', v)}>
-                <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FONT_SIZES.slice(0, 3).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Text Align</Label>
-            <Select value={styles.textAlign} onValueChange={v => onChange(type, 'textAlign', v)}>
-              <SelectTrigger className="h-10 bg-gray-50 border-none font-bold"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">Left Align</SelectItem>
-                <SelectItem value="center">Center Align</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* 🔘 PRIMARY BUTTON SETTINGS */}
-      <div className="space-y-6 p-6 bg-primary/5 rounded-2xl border border-primary/10">
-        <div className="flex items-center justify-between">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-            <MousePointer2 size={14}/> Primary Button ({type === 'productCard' ? 'Buy Now' : 'Book Now'})
-          </h4>
-          <Switch checked={styles.primaryBtnEnabled} onCheckedChange={v => onChange(type, 'primaryBtnEnabled', v)} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Button Text</Label>
-            <Input value={styles.primaryBtnText} onChange={e => onChange(type, 'primaryBtnText', e.target.value)} className="h-10 bg-white" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Text Size</Label>
-            <Select value={styles.primaryBtnTextSize || 'text-[9px]'} onValueChange={v => onChange(type, 'primaryBtnTextSize', v)}>
-              <SelectTrigger className="h-10 bg-white border-none font-bold"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FONT_SIZES.slice(0, 4).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Bg Color</Label>
-              <Input type="color" value={styles.primaryBtnBg} onChange={e => onChange(type, 'primaryBtnBg', e.target.value)} className="h-9 p-1" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Text Color</Label>
-              <Input type="color" value={styles.primaryBtnColor} onChange={e => onChange(type, 'primaryBtnColor', e.target.value)} className="h-9 p-1" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Icon Key (Lucide)</Label>
-            <Input value={styles.primaryBtnIcon} onChange={e => onChange(type, 'primaryBtnIcon', e.target.value)} placeholder="Zap, ShoppingCart, etc" className="h-10 bg-white font-mono text-[10px]" />
-          </div>
-        </div>
-      </div>
-
-      {/* 🔘 SECONDARY BUTTON SETTINGS */}
-      <div className="space-y-6 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-        <div className="flex items-center justify-between">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <PlusCircle size={14}/> Secondary Button ({type === 'productCard' ? 'Add to Cart' : 'View Details'})
-          </h4>
-          <Switch checked={styles.secondaryBtnEnabled} onCheckedChange={v => onChange(type, 'secondaryBtnEnabled', v)} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Button Text</Label>
-            <Input value={styles.secondaryBtnText} onChange={e => onChange(type, 'secondaryBtnText', e.target.value)} className="h-10 bg-white" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Text Size</Label>
-            <Select value={styles.secondaryBtnTextSize || 'text-[9px]'} onValueChange={v => onChange(type, 'secondaryBtnTextSize', v)}>
-              <SelectTrigger className="h-10 bg-white border-none font-bold"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FONT_SIZES.slice(0, 4).map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Bg Color</Label>
-              <Input type="color" value={styles.secondaryBtnBg} onChange={e => onChange(type, 'secondaryBtnBg', e.target.value)} className="h-9 p-1" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase">Text Color</Label>
-              <Input type="color" value={styles.secondaryBtnColor} onChange={e => onChange(type, 'secondaryBtnColor', e.target.value)} className="h-9 p-1" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[9px] font-black uppercase">Icon (Lucide)</Label>
-            <Input value={styles.secondaryBtnIcon} onChange={e => onChange(type, 'secondaryBtnIcon', e.target.value)} placeholder="ShoppingCart, Info, etc" className="h-10 bg-white font-mono text-[10px]" />
-          </div>
-          {type === 'serviceCard' && (
-            <div className="space-y-2 md:col-span-2">
-              <Label className="text-[9px] font-black uppercase flex items-center gap-2"><LinkIcon size={10}/> Detail Redirect Link</Label>
-              <Input value={styles.secondaryBtnLink} onChange={e => onChange(type, 'secondaryBtnLink', e.target.value)} placeholder="/page/custom-link" className="h-10 bg-white" />
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

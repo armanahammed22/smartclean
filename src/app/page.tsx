@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where, orderBy, limit } from 'firebase/firestore';
 import * as LucideIcons from 'lucide-react';
 import { 
   Wrench, 
@@ -43,7 +43,9 @@ import {
   MousePointer2,
   Box,
   ShoppingCart,
-  Info
+  Info,
+  TicketPercent,
+  Gift
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -67,7 +69,9 @@ const ICONS: Record<string, any> = {
   Calendar,
   Grid,
   ShieldCheck,
-  Award
+  Award,
+  TicketPercent,
+  Gift
 };
 
 const getCategoryStyles = (name: string) => {
@@ -91,6 +95,7 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
+  // Registry Queries
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
@@ -100,7 +105,8 @@ export default function SmartCleanHomePage() {
   const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
-  const plansRef = useMemoFirebase(() => db ? collection(db, 'subscription_plans') : null, [db]);
+  const advancedOffersRef = useMemoFirebase(() => db ? collection(db, 'advanced_offers') : null, [db]);
+  const couponsRef = useMemoFirebase(() => db ? collection(db, 'coupons') : null, [db]);
   const marketingOffersRef = useMemoFirebase(() => db ? collection(db, 'marketing_offers') : null, [db]);
   const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
   const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
@@ -114,7 +120,8 @@ export default function SmartCleanHomePage() {
   const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
   const { data: cardStyles } = useDoc(stylesRef);
-  const { data: plans } = useCollection(plansRef);
+  const { data: advancedOffers } = useCollection(advancedOffersRef);
+  const { data: coupons } = useCollection(couponsRef);
   const { data: marketingOffers } = useCollection(marketingOffersRef);
   const { data: quickLinks } = useCollection(quickLinksRef);
   const { data: quickActions } = useCollection(quickActionsRef);
@@ -142,6 +149,7 @@ export default function SmartCleanHomePage() {
     const config = section.config || {};
     const sectionType = section.type;
     
+    // Skip fixed layout pieces if they are rendered explicitly elsewhere
     if (sectionType === 'hero' || sectionType === 'side_promo') return null;
 
     switch (sectionType) {
@@ -197,7 +205,7 @@ export default function SmartCleanHomePage() {
                   <Link key={action.id} href={action.link || '#'}>
                     <Card className={cn("border-none shadow-xl bg-gradient-to-br text-white relative overflow-hidden h-32 rounded-3xl", action.bgGradient)}>
                       <CardContent className="p-6 h-full flex flex-col justify-center gap-1 relative z-10">
-                        <MousePointer2 size={24} className="opacity-40 mb-1" />
+                        {ICONS[action.iconName] ? React.createElement(ICONS[action.iconName], { size: 24, className: "opacity-40 mb-1" }) : <Zap size={24} className="opacity-40 mb-1" />}
                         <h3 className="text-xl font-black uppercase tracking-tight">{action.title}</h3>
                       </CardContent>
                     </Card>
@@ -208,215 +216,112 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
-      case 'section_banners':
-        const enabledBanners = marketingOffers?.filter(o => o.enabled) || [];
-        if (!enabledBanners.length) return null;
-        return (
-          <section key={section.id} className="px-4 py-8 space-y-6">
-            <div className="container mx-auto max-w-7xl">
-              {enabledBanners.map(banner => (
-                <Link key={banner.id} href={banner.link || '#'} className="block relative aspect-[21/7] w-full rounded-[2.5rem] overflow-hidden shadow-lg group mb-6">
-                  <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
+      case 'products_dynamic':
+        let filteredProducts = allProducts?.filter(p => p.status?.toLowerCase() === 'active') || [];
+        if (config.sourceType === 'category' && config.sourceId) {
+          filteredProducts = filteredProducts.filter(p => p.categoryId === config.sourceId);
+        } else if (config.sourceType === 'brand' && config.sourceId) {
+          filteredProducts = filteredProducts.filter(p => p.brand === config.sourceId);
+        } else if (config.sourceType === 'vendor' && config.sourceId) {
+          filteredProducts = filteredProducts.filter(p => p.vendorId === config.sourceId);
+        } else if (config.sourceType === 'manual' && config.manualIds?.length) {
+          filteredProducts = filteredProducts.filter(p => config.manualIds.includes(p.id));
+        }
 
-      case 'categories':
-        return (
-          <section key={section.id} className="px-4 py-10">
-            <div className="container mx-auto max-w-7xl">
-              <div className="bg-white p-6 md:p-10 shadow-sm border border-gray-100 rounded-[2.5rem] overflow-hidden">
-                <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory">
-                  {topCategories.map((cat) => {
-                    const catStyle = getCategoryStyles(cat.name);
-                    const DisplayIcon = catStyle.icon;
-                    return (
-                      <Link key={cat.id} href={cat.link || `/services?search=${cat.name}`} className="flex flex-col items-center gap-3 group shrink-0 basis-[calc(25%-1rem)] sm:basis-[calc(16%-1rem)] snap-start">
-                        <div className={cn("w-14 h-14 md:w-20 md:h-20 rounded-[1.5rem] flex items-center justify-center p-4 border shadow-sm transition-all duration-300 group-hover:scale-110", catStyle.bg, catStyle.color)}>
-                          {cat.imageUrl ? <div className="relative w-full h-full"><Image src={cat.imageUrl} alt={cat.name} fill className="object-contain" unoptimized /></div> : <DisplayIcon size={28} />}
-                        </div>
-                        <span className="text-[10px] md:text-xs font-black text-center text-gray-600 uppercase tracking-tighter truncate w-full group-hover:text-primary">{cat.name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
+        // Sorting Logic
+        if (config.sortBy === 'popular') filteredProducts.sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0));
+        if (config.sortBy === 'rating') filteredProducts.sort((a,b) => (b.rating || 0) - (a.rating || 0));
+        if (config.sortBy === 'discount') filteredProducts.sort((a,b) => ((b.regularPrice || 0) - b.price) - ((a.regularPrice || 0) - a.price));
+        
+        filteredProducts = filteredProducts.slice(0, config.limit || 12);
+        if (!filteredProducts.length) return null;
 
-      case 'flash_deals':
-        if (!flashSaleConfig?.isActive || !productsEnabled) return null;
-        const flashProducts = allProducts?.filter(p => flashSaleConfig.productIds?.includes(p.id) && p.status?.toLowerCase() === 'active') || [];
-        if (flashProducts.length === 0) return null;
-        return (
-          <section key={section.id} className="px-4 py-8">
-            <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-md border border-gray-100">
-              <div className="container mx-auto max-w-7xl">
-                <div className="p-6 md:p-8 flex items-center justify-between border-b">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-red-500 rounded-2xl text-white shadow-lg shadow-red-500/20"><Zap size={24} fill="currentColor" /></div>
-                    <div className="flex flex-col">
-                      <span className="text-xl md:text-3xl font-black uppercase tracking-tight">{flashSaleConfig.title || t('flash_sale')}</span>
-                      <CountdownTimer endDate={flashSaleConfig.endDate} variant="dark" />
-                    </div>
-                  </div>
-                  <Link href="/products" className="flex items-center gap-1 text-xs font-black text-primary uppercase tracking-widest hover:underline">
-                    {t('view_all').toUpperCase()} <ChevronRight size={16} />
-                  </Link>
-                </div>
-                <div className="p-6 md:p-8 flex gap-4 overflow-x-auto no-scrollbar">
-                  {flashProducts.map(p => <div key={p.id} className="w-[180px] md:w-[240px] shrink-0"><FlashSaleCard product={p} /></div>)}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-
-      case 'services_featured':
-        const displayServices = (allServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
-        if (displayServices.length === 0) return null;
-        const sStyle = cardStyles?.serviceCard || {};
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
               <div className="flex items-center justify-between mb-10 px-2">
-                <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">{section.title}</h2>
-                <Link href="/services" className="text-xs font-black uppercase px-6 py-2.5 rounded-full shadow-md border border-gray-100 bg-white hover:bg-gray-50">
-                  {t('view_all').toUpperCase()}
-                </Link>
+                <h2 className={cn("font-black uppercase tracking-tighter text-[#081621]", config.titleSizeDesktop || 'text-3xl md:text-5xl')} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+                <Link href="/products" className="text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">VIEW ALL <ChevronRight size={14}/></Link>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-                {displayServices.map(s => {
-                  const PrimaryIcon = (LucideIcons as any)[sStyle.primaryBtnIcon] || LucideIcons.Zap;
-                  const SecondaryIcon = (LucideIcons as any)[sStyle.secondaryBtnIcon] || LucideIcons.Info;
-                  return (
-                    <div key={s.id} className="block h-full group">
-                      <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", sStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${sStyle.cardRadius || 24}px`, backgroundColor: sStyle.cardBg || '#ffffff' }}>
-                        <Link href={`/service/${s.slug || s.id}`} className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
-                          {s.imageUrl ? (
-                            <Image src={s.imageUrl} alt={s.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                          ) : (
-                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Wrench size={40} /></div>
-                          )}
-                        </Link>
-                        <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: sStyle.textAlign || 'left' }}>
-                          <div className="min-h-[48px] mb-2">
-                            <Link href={`/service/${s.slug || s.id}`}>
-                              <h3 className={cn("font-bold uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors", sStyle.titleSize || 'text-sm')} style={{ color: sStyle.titleColor }}>{s.title}</h3>
-                            </Link>
-                          </div>
-                          <div className="flex flex-col mb-2">
-                            <span className={cn("font-black", sStyle.priceSize || 'text-lg')} style={{ color: sStyle.priceColor || '#1E5F7A' }}>৳{s.basePrice?.toLocaleString()}</span>
-                          </div>
-                          <div 
-                            className={cn("flex items-center justify-between font-bold border-t border-gray-50 pt-2 mb-4", sStyle.metaSize || 'text-[10px]')}
-                            style={{ color: sStyle.metaColor || '#9ca3af' }}
-                          >
-                            <div className="flex items-center gap-1 text-amber-500">
-                              <Star size={12} fill="currentColor" />
-                              <span style={{ color: sStyle.metaColor || '#4b5563' }}>{(s.rating || 5.0).toFixed(1)}</span>
-                            </div>
-                            <span className="uppercase font-black">{Math.floor(Math.random() * 100) + 20} {t('booked')}</span>
-                          </div>
-                          
-                          <div className="flex flex-col gap-2 mt-auto">
-                            {sStyle.primaryBtnEnabled !== false && (
-                              <Button asChild size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all shadow-lg w-full h-10", sStyle.primaryBtnTextSize || 'text-[10px]')} style={{ backgroundColor: sStyle.primaryBtnBg, color: sStyle.primaryBtnColor }}>
-                                <Link href={`/service/${s.slug || s.id}`}>
-                                  <PrimaryIcon className="mr-1.5 size-3" />
-                                  {sStyle.primaryBtnText || t('book_now')}
-                                </Link>
-                              </Button>
-                            )}
-                            {sStyle.secondaryBtnEnabled === true && (
-                              <Button asChild variant="outline" size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all w-full border-2 h-9", sStyle.secondaryBtnTextSize || 'text-[9px]')} style={{ backgroundColor: sStyle.secondaryBtnBg, color: sStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
-                                <Link href={sStyle.secondaryBtnLink || `/service/${s.slug || s.id}`}>
-                                  <SecondaryIcon className="mr-1.5 size-3" />
-                                  {sStyle.secondaryBtnText || 'বিস্তারিত'}
-                                </Link>
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })}
+              <div className={cn("grid gap-4 md:gap-6", `grid-cols-2 md:grid-cols-3 lg:grid-cols-${config.gridColsDesktop || '5'}`)}>
+                {filteredProducts.map(p => <ProductCard key={p.id} product={p as any} customStyle={cardStyles?.productCard} />)}
               </div>
             </div>
           </section>
         );
 
-      case 'sub_services_custom':
-        const displaySubs = (allSubServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
-        if (displaySubs.length === 0) return null;
-        const subStyle = cardStyles?.serviceCard || {};
+      case 'services_dynamic':
+        let filteredServices = allServices?.filter(s => s.status?.toLowerCase() === 'active') || [];
+        if (config.sourceType === 'category' && config.sourceId) {
+          filteredServices = filteredServices.filter(s => s.categoryId === config.sourceId);
+        } else if (config.sourceType === 'manual' && config.manualIds?.length) {
+          filteredServices = filteredServices.filter(s => config.manualIds.includes(s.id));
+        }
+        
+        filteredServices = filteredServices.slice(0, config.limit || 10);
+        if (!filteredServices.length) return null;
+
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10 text-[#081621]">{section.title}</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-                {displaySubs.map(s => {
-                  const PrimaryIcon = (LucideIcons as any)[subStyle.primaryBtnIcon] || LucideIcons.Zap;
-                  const SecondaryIcon = (LucideIcons as any)[subStyle.secondaryBtnIcon] || LucideIcons.Info;
-                  return (
-                    <div key={s.id} className="block h-full group">
-                      <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500", subStyle.showShadow !== false ? "shadow-sm hover:shadow-xl" : "border")} style={{ borderRadius: `${subStyle.cardRadius || 24}px`, backgroundColor: subStyle.cardBg || '#ffffff' }}>
-                        <Link href={`/service/${s.mainServiceId}`} className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
-                          {s.imageUrl ? (
-                            <Image src={s.imageUrl} alt={s.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                          ) : (
-                            <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Layers size={40} /></div>
-                          )}
-                        </Link>
-                        <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: subStyle.textAlign || 'left' }}>
-                          <h3 className={cn("font-bold uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors", subStyle.titleSize || 'text-sm')} style={{ color: subStyle.titleColor }}>{s.name}</h3>
-                          <div className="mt-2 mb-4">
-                            <span className={cn("font-black", subStyle.priceSize || 'text-lg')} style={{ color: subStyle.priceColor || '#1E5F7A' }}>৳{s.price?.toLocaleString()}</span>
-                          </div>
-                          
-                          <div className="flex flex-col gap-2 mt-auto">
-                            {subStyle.primaryBtnEnabled !== false && (
-                              <Button asChild size="sm" className={cn("rounded-xl font-black uppercase tracking-widest shadow-lg w-full h-10", subStyle.primaryBtnTextSize || 'text-[10px]')} style={{ backgroundColor: subStyle.primaryBtnBg, color: subStyle.primaryBtnColor }}>
-                                <Link href={`/service/${s.mainServiceId}`}>
-                                  <PrimaryIcon className="mr-1.5 size-3" />
-                                  {subStyle.primaryBtnText || 'View Pack'}
-                                </Link>
-                              </Button>
-                            )}
-                            {subStyle.secondaryBtnEnabled === true && (
-                              <Button asChild variant="outline" size="sm" className={cn("rounded-xl font-black uppercase tracking-widest transition-all w-full border-2 h-9", subStyle.secondaryBtnTextSize || 'text-[9px]')} style={{ backgroundColor: subStyle.secondaryBtnBg, color: subStyle.secondaryBtnColor, borderColor: 'rgba(0,0,0,0.05)' }}>
-                                <Link href={subStyle.secondaryBtnLink || `/service/${s.mainServiceId}`}>
-                                  <SecondaryIcon className="mr-1.5 size-3" />
-                                  {subStyle.secondaryBtnText || 'বিস্তারিত'}
-                                </Link>
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })}
+              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621]", config.titleSizeDesktop || 'text-3xl md:text-5xl')} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+              <div className={cn("grid gap-4 md:gap-6", `grid-cols-2 md:grid-cols-3 lg:grid-cols-${config.gridColsDesktop || '5'}`)}>
+                {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, name: s.title, price: s.basePrice, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
               </div>
             </div>
           </section>
         );
 
-      case 'products_new':
-      case 'products_featured':
-        const displayProducts = (allProducts?.filter(p => p.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 12);
-        if (displayProducts.length === 0) return null;
+      case 'advanced_offers':
+        const liveOffers = advancedOffers?.filter(o => o.status === 'Live') || [];
+        if (!liveOffers.length) return null;
+        return (
+          <section key={section.id} className="px-4 py-12">
+            <div className="container mx-auto max-w-7xl space-y-8">
+              <div className="flex items-center gap-3 px-2">
+                <div className="p-2 bg-rose-500 rounded-xl text-white"><Gift size={20}/></div>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621]">{section.title || 'Exclusive Offers'}</h2>
+              </div>
+              <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
+                {liveOffers.map(offer => (
+                  <Card key={offer.id} className="border-none shadow-xl rounded-[2.5rem] overflow-hidden min-w-[300px] flex-1 bg-gradient-to-br from-indigo-600 to-indigo-900 text-white relative">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={80} /></div>
+                    <CardContent className="p-8 relative z-10 space-y-4">
+                      <Badge className="bg-white/20 text-white border-none text-[8px] font-black uppercase px-2 py-0.5">{offer.type.replace(/_/g, ' ')}</Badge>
+                      <h3 className="text-xl font-black uppercase tracking-tight leading-tight">{offer.title}</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-black text-primary">
+                          {offer.rules.discountType === 'percentage' ? `${offer.rules.discountValue}%` : `৳${offer.rules.discountValue}`}
+                        </span>
+                        <span className="text-[10px] font-bold opacity-60 uppercase">OFF AT CHECKOUT</span>
+                      </div>
+                      <Button className="w-full h-11 rounded-xl bg-white text-indigo-600 hover:bg-gray-100 font-black uppercase tracking-widest text-[9px]">Claim Offer</Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'coupons_grid':
+        const activeCoupons = coupons?.filter(c => c.status === 'Active') || [];
+        if (!activeCoupons.length) return null;
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className="mb-10 px-2 text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">{section.title}</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
-                {displayProducts.map(p => <ProductCard key={p.id} product={p as any} customStyle={cardStyles?.productCard} />)}
+              <h2 className="text-2xl font-black uppercase tracking-tight text-[#081621] mb-8 px-2">{section.title || 'Voucher Codes'}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {activeCoupons.map(coupon => (
+                  <div key={coupon.id} className="p-6 bg-white rounded-3xl border-2 border-dashed border-primary/20 flex flex-col items-center justify-center text-center gap-3 relative group overflow-hidden">
+                    <div className="absolute -top-4 -right-4 bg-primary/5 p-8 rounded-full group-hover:scale-110 transition-transform"><TicketPercent size={48} className="text-primary/10" /></div>
+                    <span className="text-[9px] font-black uppercase text-gray-400">Coupon Code</span>
+                    <div className="text-2xl font-black font-mono tracking-widest text-[#081621]">{coupon.code}</div>
+                    <Badge className="bg-primary/10 text-primary border-none font-black text-[9px] uppercase px-3 py-1">
+                      {coupon.discountType === 'percent' ? `${coupon.value}% OFF` : `৳${coupon.value} FLAT`}
+                    </Badge>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -440,40 +345,6 @@ export default function SmartCleanHomePage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </section>
-        );
-
-      case 'billing_plans':
-        if (!plans?.length) return null;
-        return (
-          <section key={section.id} className="px-4 py-16 bg-gray-50/50">
-            <div className="container mx-auto max-w-7xl text-center space-y-12">
-              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-[#081621]">{section.title || 'Subscription Plans'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {plans.slice(0, 3).map((plan) => (
-                  <Card key={plan.id} className={cn("border-none flex flex-col h-full overflow-hidden transition-all duration-500 bg-white shadow-sm hover:shadow-2xl rounded-[2.5rem]", plan.featured && "ring-4 ring-primary ring-offset-4 scale-105 z-10")}>
-                    <div className={cn("p-8", plan.color || 'bg-gray-50')}>
-                      <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-2">Package Tier</p>
-                      <h3 className="text-2xl font-black text-gray-900 uppercase">{plan.name}</h3>
-                      <div className="mt-6 flex items-baseline justify-center gap-1">
-                        <span className="text-4xl font-black text-primary">{plan.price}</span>
-                        <span className="text-gray-400 font-bold text-sm uppercase">{plan.period}</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-8 flex-1 flex flex-col">
-                      <ul className="space-y-4 mb-10 flex-1 text-left">
-                        {plan.features?.slice(0, 5).map((f: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-3 text-xs font-bold text-gray-600 uppercase tracking-tight">
-                            <Check size={14} className="text-green-500 shrink-0 mt-0.5" strokeWidth={4} /> {f}
-                          </li>
-                        ))}
-                      </ul>
-                      <Button className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20">Subscribe Plan</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
             </div>
           </section>
         );
@@ -533,7 +404,7 @@ export default function SmartCleanHomePage() {
                       {sidePromos.slice(0, 2).map(promo => (
                         <Link key={promo.id} href={promo.buttonLink || '#'} className="flex-1 relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm group">
                           <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-2 md:p-6 flex flex-col justify-end">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 md:p-6 flex flex-col justify-end">
                             <h3 className="text-white text-[7px] sm:text-[10px] md:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
                             <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[5px] sm:text-[8px] md:text-[10px] font-black uppercase">
                               {promo.buttonText || 'Discover'} <ChevronRight size={10} className="w-2 h-2 md:w-3 md:h-3"/>

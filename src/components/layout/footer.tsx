@@ -12,7 +12,12 @@ import {
   Facebook,
   Instagram,
   Smartphone,
-  Download
+  Download,
+  Award,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
+  Zap
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -45,12 +50,42 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-white/10 pt-6 md:pt-8 pb-4 mt-auto transition-colors duration-500" style={footerStyles}>
+    <footer className="border-t border-white/10 pt-16 pb-4 mt-auto transition-colors duration-500" style={footerStyles}>
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
-          <div className="space-y-4">
+        
+        {/* 🚀 AFFILIATE PROMO BAR */}
+        <section className="mb-16">
+          <Card className="border-none shadow-2xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative border border-white/5">
+            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={160} className="text-primary" /></div>
+            <CardContent className="p-8 md:p-12 relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="space-y-4 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-3">
+                    <div className="p-2 bg-primary rounded-xl shadow-lg shadow-primary/20"><TrendingUp size={24}/></div>
+                    <Badge className="bg-primary/20 text-primary border-none uppercase font-black tracking-widest px-3 py-1 rounded-lg text-[9px]">Passive Income</Badge>
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic">Earn with Smart Clean</h3>
+                  <p className="text-white/60 text-base md:text-lg max-w-xl leading-relaxed">
+                    Join our affiliate network and earn up to <span className="text-primary font-black">৳500 per booking</span> when your friends or followers book a professional cleaning service.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                  <Button asChild className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                    <Link href="/account/affiliate">Join Program <ArrowRight className="ml-2" size={18}/></Link>
+                  </Button>
+                  <Button variant="outline" asChild className="h-16 px-10 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 font-black uppercase text-xs tracking-widest">
+                    <Link href="/page/partnership-terms">Terms & Benefits</Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12 mb-12">
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative h-8 md:h-10 w-auto min-w-[80px] md:min-w-[100px] flex items-center justify-start overflow-hidden">
+              <div className="relative h-10 md:h-12 w-auto min-w-[100px] flex items-center justify-start overflow-hidden">
                 {displayLogo ? (
                   <Image 
                     src={displayLogo} 
@@ -67,32 +102,32 @@ export function Footer() {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-base md:text-lg font-black tracking-tighter font-headline uppercase leading-none" style={headingStyles}>
+                <span className="text-lg md:text-xl font-black tracking-tighter font-headline uppercase leading-none" style={headingStyles}>
                   {settings?.websiteName || 'SMART CLEAN'}
                 </span>
-                <span className="text-[6px] font-black text-primary uppercase tracking-[0.2em] mt-0.5">Reliable Cleaning</span>
+                <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em] mt-1">Professional Excellence</span>
               </div>
             </div>
-            <p className="text-xs leading-relaxed max-w-xs opacity-80">
-              {settings?.seoDescription || "Expert cleaning services for your home and office in Bangladesh."}
+            <p className="text-sm leading-relaxed max-w-xs opacity-80">
+              {settings?.seoDescription || "Expert cleaning services for your home and office in Bangladesh. We use modern tech for a spotless life."}
             </p>
             
             <div className="flex flex-wrap items-center gap-4">
               {(layout?.footer?.showSocial !== false) && (
                 <div className="flex gap-2">
                   {settings?.socialLinks?.facebook && (
-                    <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <Facebook size={14} />
+                    <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 rounded-xl hover:bg-primary transition-all text-gray-400 hover:text-white border border-white/5 shadow-inner">
+                      <Facebook size={16} />
                     </a>
                   )}
                   {settings?.socialLinks?.instagram && (
-                    <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <Instagram size={14} />
+                    <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 rounded-xl hover:bg-primary transition-all text-gray-400 hover:text-white border border-white/5 shadow-inner">
+                      <Instagram size={16} />
                     </a>
                   )}
                   {settings?.socialLinks?.whatsapp && (
-                    <a href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-white/5 rounded-lg hover:bg-primary transition-all text-gray-400 hover:text-white">
-                      <MessageCircle size={14} />
+                    <a href={`https://wa.me/${settings.socialLinks.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 rounded-xl hover:bg-primary transition-all text-gray-400 hover:text-white border border-white/5 shadow-inner">
+                      <MessageCircle size={16} />
                     </a>
                   )}
                 </div>
@@ -105,24 +140,15 @@ export function Footer() {
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className={cn(
-                      "flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all",
+                      "flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5 hover:bg-white/10 transition-all",
                       !settings?.playStoreLink && "opacity-50 cursor-not-allowed"
                     )}
                   >
-                    <Smartphone size={14} className="text-primary" />
-                    <span className="text-[8px] font-black text-white uppercase">Play Store</span>
-                  </a>
-                  <a 
-                    href={settings?.apkDownloadLink || "#"} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className={cn(
-                      "flex items-center gap-2 bg-white/5 p-1.5 rounded-lg border border-white/5 hover:bg-white/10 transition-all",
-                      !settings?.apkDownloadLink && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    <Download size={14} className="text-primary" />
-                    <span className="text-[8px] font-black text-white uppercase">Direct APK</span>
+                    <Smartphone size={16} className="text-primary" />
+                    <div className="flex flex-col">
+                      <span className="text-[7px] font-black text-white/40 uppercase leading-none">GET IT ON</span>
+                      <span className="text-[9px] font-black text-white uppercase leading-none mt-1">Play Store</span>
+                    </div>
                   </a>
                 </div>
               )}
@@ -130,60 +156,61 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
-            <ul className="space-y-2 text-[11px]">
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
+            <ul className="space-y-3 text-sm">
               {layout?.footer?.serviceLinks?.map((item: any, i: number) => {
                 const isProdLink = item.link === '/products';
                 const isServLink = item.link === '/services';
                 if (isProdLink && !productsEnabled) return null;
                 if (isServLink && !servicesEnabled) return null;
-                return <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
+                return <li key={i}><Link href={item.link} className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{item.label}</Link></li>
               }) || (
                 <>
-                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Residential Cleaning</Link></li>}
-                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Office Cleaning</Link></li>}
-                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors">Deep Cleaning</Link></li>}
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">Residential Cleaning</Link></li>}
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">Office Deep Cleaning</Link></li>}
+                  {servicesEnabled && <li><Link href="/services" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">Kitchen Sanitization</Link></li>}
                 </>
               )}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_company')}</h4>
-            <ul className="space-y-2 text-[11px]">
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_company')}</h4>
+            <ul className="space-y-3 text-sm">
               {layout?.footer?.companyLinks?.map((item: any, i: number) => (
-                <li key={i}><Link href={item.link} className="hover:text-primary transition-colors">{item.label}</Link></li>
+                <li key={i}><Link href={item.link} className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{item.label}</Link></li>
               )) || (
                 <>
-                  <li><Link href="/page/about-us" className="hover:text-primary transition-colors">{t('footer_about')}</Link></li>
-                  <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors">{t('footer_privacy')}</Link></li>
-                  <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors">{t('footer_terms')}</Link></li>
+                  <li><Link href="/page/about-us" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_about')}</Link></li>
+                  <li><Link href="/page/careers" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">Work with us</Link></li>
+                  <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_privacy')}</Link></li>
+                  <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_terms')}</Link></li>
                 </>
               )}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[9px] md:text-[10px] font-black mb-3 md:mb-4 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_contact')}</h4>
-            <div className="space-y-2 text-[11px]">
-              <div className="flex items-start gap-2">
-                <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
-                <span className="line-clamp-2">{settings?.address || "Wireless Gate, Mohakhali, Dhaka-1212"}</span>
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_contact')}</h4>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-white/5 rounded-lg text-primary"><MapPin size={16} className="shrink-0" /></div>
+                <span className="line-clamp-2 leading-relaxed opacity-80">{settings?.address || "Wireless Gate, Mohakhali, Dhaka-1212"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone size={14} className="text-primary shrink-0" />
-                <span>{settings?.contactPhone || '+8801919640422'}</span>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/5 rounded-lg text-primary"><Phone size={16} className="shrink-0" /></div>
+                <span className="opacity-80 font-bold">{settings?.contactPhone || '+8801919640422'}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail size={14} className="text-primary shrink-0" />
-                <span className="truncate">{settings?.contactEmail || 'smartclean422@gmail.com'}</span>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/5 rounded-lg text-primary"><Mail size={16} className="shrink-0" /></div>
+                <span className="truncate opacity-80">{settings?.contactEmail || 'smartclean422@gmail.com'}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-white/5 text-center">
-          <p className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] font-medium opacity-50">
+        <div className="pt-8 border-t border-white/5 text-center">
+          <p className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black opacity-30 italic">
             {settings?.footerContent || "© 2026 Smart Clean Bangladesh. All rights reserved."}
           </p>
         </div>
