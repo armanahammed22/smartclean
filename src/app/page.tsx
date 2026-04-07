@@ -318,7 +318,7 @@ export default function SmartCleanHomePage() {
 
       case 'flash_deals':
         if (!flashSaleConfig?.isActive || !productsEnabled) return null;
-        const flashProducts = allProducts?.filter(p => flashSaleConfig.productIds?.includes(p.id) && p.status === 'Active') || [];
+        const flashProducts = allProducts?.filter(p => flashSaleConfig.productIds?.includes(p.id) && p.status?.toLowerCase() === 'active') || [];
         if (flashProducts.length === 0) return null;
         return (
           <section key={section.id} className="px-4 py-8">
@@ -345,7 +345,7 @@ export default function SmartCleanHomePage() {
         );
 
       case 'services_featured':
-        const displayServices = (allServices?.filter(s => s.status === 'Active') || []).slice(0, config.limit || 10);
+        const displayServices = (allServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
         if (displayServices.length === 0) return null;
         return (
           <section key={section.id} className="px-4 py-12">
@@ -386,8 +386,42 @@ export default function SmartCleanHomePage() {
           </section>
         );
 
+      case 'sub_services_custom':
+        const displaySubs = (allSubServices?.filter(s => s.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 10);
+        if (displaySubs.length === 0) return null;
+        return (
+          <section key={section.id} className="px-4 py-12">
+            <div className="container mx-auto max-w-7xl">
+              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10 text-[#081621]">{section.title}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                {displaySubs.map(s => (
+                  <Link key={s.id} href={`/service/${s.mainServiceId}`} className="block h-full group">
+                    <Card className="border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white shadow-sm hover:shadow-xl rounded-3xl border border-gray-100">
+                      <div className="relative aspect-square overflow-hidden bg-gray-50 shrink-0">
+                        {s.imageUrl ? (
+                          <Image src={s.imageUrl} alt={s.name} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                        ) : (
+                          <div className="w-full h-full bg-primary/5 flex items-center justify-center text-primary/40"><Layers size={40} /></div>
+                        )}
+                      </div>
+                      <CardContent className="p-4 flex flex-col flex-1">
+                        <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 leading-tight group-hover:text-primary transition-colors">{s.name}</h3>
+                        <div className="mt-2"><span className="font-black text-primary text-lg">৳{s.price?.toLocaleString()}</span></div>
+                        <Button size="sm" className="w-full mt-4 h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10">
+                          View Pack
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
       case 'products_new':
-        const displayProducts = (allProducts?.filter(p => p.status === 'Active') || []).slice(0, config.limit || 12);
+      case 'products_featured':
+        const displayProducts = (allProducts?.filter(p => p.status?.toLowerCase() === 'active') || []).slice(0, config.limit || 12);
         if (displayProducts.length === 0) return null;
         return (
           <section key={section.id} className="px-4 py-12">
