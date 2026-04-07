@@ -37,7 +37,13 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
-  CreditCard
+  CreditCard,
+  Navigation,
+  Grid,
+  Columns,
+  ImageIcon,
+  ExternalLink,
+  MousePointer2
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { FlashSaleCard } from '@/components/products/flash-sale-card';
@@ -52,13 +58,28 @@ import { CountdownTimer } from '@/components/campaigns/countdown-timer';
 
 const DEFAULT_LAYOUT = [
   { id: 'def-hero', type: 'hero', isActive: true, order: 0 },
-  { id: 'def-cats', type: 'categories', isActive: true, order: 1 },
-  { id: 'def-flash', type: 'flash_deals', isActive: true, order: 2 },
-  { id: 'def-camp', type: 'campaign', isActive: true, order: 3 },
-  { id: 'def-srv-feat', type: 'services_featured', title: 'Professional Services', isActive: true, order: 4 },
-  { id: 'def-prod-new', type: 'products_new', title: 'New Equipment Arrivals', isActive: true, order: 5 },
-  { id: 'def-trust', type: 'trust_stats', isActive: true, order: 6 }
+  { id: 'def-nav', type: 'top_nav_links', isActive: true, order: 1 },
+  { id: 'def-icons', type: 'icon_grid', isActive: true, order: 2 },
+  { id: 'def-flash', type: 'flash_deals', isActive: true, order: 3 },
+  { id: 'def-camp', type: 'campaign', isActive: true, order: 4 },
+  { id: 'def-srv-feat', type: 'services_featured', title: 'Professional Services', isActive: true, order: 5 },
+  { id: 'def-prod-new', type: 'products_new', title: 'New Equipment Arrivals', isActive: true, order: 6 },
+  { id: 'def-trust', type: 'trust_stats', isActive: true, order: 7 }
 ];
+
+const ICONS: Record<string, any> = {
+  Smartphone,
+  Zap,
+  Wrench,
+  Package,
+  Layers,
+  Star,
+  Activity: TrendingUp,
+  Calendar,
+  Grid,
+  ShieldCheck,
+  Award
+};
 
 const getCategoryStyles = (name: string) => {
   const n = name.toLowerCase();
@@ -91,6 +112,11 @@ export default function SmartCleanHomePage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
   const plansRef = useMemoFirebase(() => db ? collection(db, 'subscription_plans') : null, [db]);
+  
+  // Marketing Feature Refs
+  const marketingOffersRef = useMemoFirebase(() => db ? collection(db, 'marketing_offers') : null, [db]);
+  const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
+  const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
@@ -102,6 +128,10 @@ export default function SmartCleanHomePage() {
   const { data: settings } = useDoc(settingsRef);
   const { data: globalTheme } = useDoc(themeRef);
   const { data: plans } = useCollection(plansRef);
+  
+  const { data: marketingOffers } = useCollection(marketingOffersRef);
+  const { data: quickLinks } = useCollection(quickLinksRef);
+  const { data: quickActions } = useCollection(quickActionsRef);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -120,6 +150,7 @@ export default function SmartCleanHomePage() {
   }, [allSectionsRaw, layoutLoading, productsEnabled, servicesEnabled]);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
+  const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
   const renderSection = (section: any) => {
@@ -217,6 +248,107 @@ export default function SmartCleanHomePage() {
                     <Loader2 className="animate-spin text-primary/20" />
                   </div>
                 )}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'top_nav_links':
+        if (!topCategories.length) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className="bg-white border rounded-2xl p-2 md:p-4 shadow-sm overflow-x-auto no-scrollbar whitespace-nowrap flex gap-4">
+                {topCategories.map(cat => (
+                  <Link key={cat.id} href={cat.link || '#'} className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-600 hover:text-primary transition-colors">
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'icon_grid':
+        if (!quickLinks?.length) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
+                {quickLinks.map(link => {
+                  const LinkIcon = ICONS[link.iconName] || Grid;
+                  return (
+                    <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-2 group">
+                      <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
+                        {link.imageUrl ? (
+                          <Image src={link.imageUrl} alt={link.label} fill className="object-cover" unoptimized />
+                        ) : (
+                          <LinkIcon size={24} className="text-primary" />
+                        )}
+                      </div>
+                      <span className="text-[8px] md:text-[10px] font-black uppercase text-center text-gray-600 truncate w-full">{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'feature_cards':
+        if (!quickActions?.length) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {quickActions.map(action => (
+                  <Link key={action.id} href={action.link || '#'}>
+                    <Card className={cn("border-none shadow-xl bg-gradient-to-br text-white relative overflow-hidden h-24 md:h-32 rounded-3xl", action.bgGradient)}>
+                      <CardContent className="p-6 h-full flex flex-col justify-center gap-1 relative z-10">
+                        <MousePointer2 size={24} className="opacity-40 mb-1" />
+                        <h3 className="text-lg md:text-xl font-black uppercase tracking-tight">{action.title}</h3>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'section_banners':
+        const enabledBanners = marketingOffers?.filter(o => o.enabled) || [];
+        if (!enabledBanners.length) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl space-y-6">
+              {enabledBanners.map(banner => (
+                <Link key={banner.id} href={banner.link || '#'} className="block relative aspect-[21/7] w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-lg group">
+                  <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+
+      case 'side_promo':
+        if (!sidePromos.length) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sidePromos.slice(0, 2).map(promo => (
+                  <Link key={promo.id} href={promo.buttonLink || '#'} className="block relative aspect-[21/9] md:aspect-square w-full rounded-3xl overflow-hidden shadow-sm group">
+                    <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-6 flex flex-col justify-end">
+                      <h3 className="text-white text-lg md:text-xl font-black uppercase tracking-tight leading-tight">{promo.title}</h3>
+                      <div className="mt-2 text-primary flex items-center gap-1 text-[10px] font-black uppercase">
+                        {promo.buttonText || 'Discover'} <ChevronRight size={12}/>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
           </section>

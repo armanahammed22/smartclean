@@ -41,7 +41,9 @@ import {
   Wrench,
   Sparkles,
   CreditCard,
-  AlignRight
+  AlignRight,
+  ImageIcon,
+  Columns
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -62,9 +64,14 @@ import { Slider } from '@/components/ui/slider';
  */
 const SECTION_TYPES = [
   { id: 'hero', label: 'Main Hero Slider', icon: Layout, category: 'Main' },
-  { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap, category: 'Marketing' },
+  { id: 'side_promo', label: 'Side Promo (2 Slots)', icon: Columns, category: 'Main' },
+  { id: 'top_nav_links', label: 'Top Nav Links', icon: Navigation, category: 'Navigation' },
+  { id: 'icon_grid', label: 'Icon Grid', icon: Grid, category: 'Navigation' },
   { id: 'categories', label: 'Categories Grid', icon: Layers, category: 'Navigation' },
+  { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap, category: 'Marketing' },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap, category: 'Marketing' },
+  { id: 'section_banners', label: 'Section Banners', icon: ImageIcon, category: 'Marketing' },
+  { id: 'feature_cards', label: 'Feature Cards', icon: Zap, category: 'Marketing' },
   { id: 'services_featured', label: 'Main Services', icon: Wrench, category: 'Services' },
   { id: 'sub_services_custom', label: 'Custom Sub-Services', icon: Layers, category: 'Services' },
   { id: 'billing_plans', label: 'Billing & Plans', icon: CreditCard, category: 'Business' },
@@ -598,7 +605,7 @@ export default function HomepageBuilderPage() {
             </div>
 
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto h-12 rounded-xl font-bold uppercase text-[10px]">Discard</Button>
+              <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="w-full sm:auto h-12 rounded-xl font-bold uppercase text-[10px]">Discard</Button>
               <Button onClick={handleUpdateSection} disabled={isSubmitting} className="w-full sm:w-auto flex-1 rounded-xl font-black px-10 h-12 shadow-xl uppercase text-xs tracking-widest">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : 'Apply Logic'}
               </Button>
@@ -615,7 +622,7 @@ export default function HomepageBuilderPage() {
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-12 bg-white custom-scrollbar">
-            {['Main', 'Marketing', 'Services', 'Business', 'Products', 'UI'].map(category => (
+            {['Main', 'Marketing', 'Services', 'Business', 'Products', 'UI', 'Navigation'].map(category => (
               <div key={category} className="space-y-6">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary border-b pb-2 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" /> {category} Modules
