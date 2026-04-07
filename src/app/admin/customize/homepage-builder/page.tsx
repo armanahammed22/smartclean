@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -534,15 +533,17 @@ export default function HomepageBuilderPage() {
       <Dialog open={isGridEditOpen} onOpenChange={setIsGridEditOpen}>
         <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] rounded-t-[2.5rem] md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <Tabs defaultValue="items" className="flex flex-col h-full">
-            <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-6">
+            <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary rounded-2xl shadow-xl"><Settings2 size={24}/></div>
                 <div>
-                  <Input 
-                    value={editingGridModule?.name || ''} 
-                    onChange={e => setEditingGridModule({...editingGridModule, name: e.target.value})} 
-                    className="h-8 bg-transparent border-none text-xl font-black uppercase p-0 focus-visible:ring-0 w-full md:w-[300px]"
-                  />
+                  <DialogTitle asChild>
+                    <Input 
+                      value={editingGridModule?.name || ''} 
+                      onChange={e => setEditingGridModule({...editingGridModule, name: e.target.value})} 
+                      className="h-8 bg-transparent border-none text-xl font-black uppercase p-0 focus-visible:ring-0 w-full md:w-[300px]"
+                    />
+                  </DialogTitle>
                   <p className="text-white/40 font-bold uppercase text-[9px] tracking-widest">Editing Grid Template</p>
                 </div>
               </div>
@@ -551,7 +552,7 @@ export default function HomepageBuilderPage() {
                 <TabsTrigger value="style" className="text-[10px] font-black uppercase rounded-lg px-6">Style</TabsTrigger>
               </TabsList>
               <button onClick={() => setIsGridEditOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={24}/></button>
-            </header>
+            </DialogHeader>
 
             <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white custom-scrollbar">
               <TabsContent value="items" className="mt-0 space-y-8">
