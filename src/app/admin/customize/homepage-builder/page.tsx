@@ -106,48 +106,54 @@ export default function HomepageBuilderPage() {
   const { data: globalStyles, isLoading: stylesLoading } = useDoc(stylesRef);
 
   // 2. Local State for Styles
-  const [localStyles, setLocalStyles] = useState<any>(null);
+  const [localStyles, setLocalStyles] = useState<any>({
+    productCard: { 
+      cardBg: '#ffffff', 
+      cardRadius: 16, 
+      cardPadding: 16,
+      elementGap: 12,
+      textAlign: 'left',
+      titleSize: 'text-sm',
+      titleColor: '#1f2937',
+      priceSize: 'text-lg',
+      priceColor: '#1E5F7A',
+      metaSize: 'text-[10px]',
+      metaColor: '#9ca3af',
+      primaryBtnBg: '#1E5F7A', 
+      primaryBtnColor: '#ffffff', 
+      primaryBtnSize: 'text-[10px]',
+      primaryBtnEnabled: true, 
+      secondaryBtnEnabled: false 
+    },
+    serviceCard: { 
+      cardBg: '#ffffff', 
+      cardRadius: 16, 
+      cardPadding: 16,
+      elementGap: 12,
+      textAlign: 'left',
+      titleSize: 'text-sm',
+      titleColor: '#1f2937',
+      priceSize: 'text-lg',
+      priceColor: '#1E5F7A',
+      metaSize: 'text-[10px]',
+      metaColor: '#9ca3af',
+      primaryBtnBg: '#1E5F7A', 
+      primaryBtnColor: '#ffffff', 
+      primaryBtnSize: 'text-[10px]',
+      primaryBtnEnabled: true, 
+      secondaryBtnEnabled: false 
+    }
+  });
 
   useEffect(() => {
-    if (globalStyles) setLocalStyles(globalStyles);
-    else setLocalStyles({
-      productCard: { 
-        cardBg: '#ffffff', 
-        cardRadius: 16, 
-        cardPadding: 16,
-        elementGap: 12,
-        textAlign: 'left',
-        titleSize: 'text-sm',
-        titleColor: '#1f2937',
-        priceSize: 'text-lg',
-        priceColor: '#1E5F7A',
-        metaSize: 'text-[10px]',
-        metaColor: '#9ca3af',
-        primaryBtnBg: '#1E5F7A', 
-        primaryBtnColor: '#ffffff', 
-        primaryBtnSize: 'text-[10px]',
-        primaryBtnEnabled: true, 
-        secondaryBtnEnabled: false 
-      },
-      serviceCard: { 
-        cardBg: '#ffffff', 
-        cardRadius: 16, 
-        cardPadding: 16,
-        elementGap: 12,
-        textAlign: 'left',
-        titleSize: 'text-sm',
-        titleColor: '#1f2937',
-        priceSize: 'text-lg',
-        priceColor: '#1E5F7A',
-        metaSize: 'text-[10px]',
-        metaColor: '#9ca3af',
-        primaryBtnBg: '#1E5F7A', 
-        primaryBtnColor: '#ffffff', 
-        primaryBtnSize: 'text-[10px]',
-        primaryBtnEnabled: true, 
-        secondaryBtnEnabled: false 
-      }
-    });
+    if (globalStyles) {
+      setLocalStyles({
+        ...localStyles,
+        ...globalStyles,
+        productCard: { ...localStyles.productCard, ...(globalStyles.productCard || {}) },
+        serviceCard: { ...localStyles.serviceCard, ...(globalStyles.serviceCard || {}) }
+      });
+    }
   }, [globalStyles]);
 
   // 3. Fetch Layout Sections
@@ -385,19 +391,19 @@ export default function HomepageBuilderPage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Card Background</Label>
-                    <Input type="color" value={localStyles?.productCard?.cardBg} onChange={e => updateCardStyle('productCard', 'cardBg', e.target.value)} className="h-10 p-1" />
+                    <Input type="color" value={localStyles?.productCard?.cardBg || '#ffffff'} onChange={e => updateCardStyle('productCard', 'cardBg', e.target.value)} className="h-10 p-1" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Radius (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.cardRadius} onChange={e => updateCardStyle('productCard', 'cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.productCard?.cardRadius ?? 16} onChange={e => updateCardStyle('productCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Padding (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.cardPadding} onChange={e => updateCardStyle('productCard', 'cardPadding', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.productCard?.cardPadding ?? 16} onChange={e => updateCardStyle('productCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
-                    <Input type="number" value={localStyles?.productCard?.elementGap} onChange={e => updateCardStyle('productCard', 'elementGap', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.productCard?.elementGap ?? 12} onChange={e => updateCardStyle('productCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
 
@@ -408,7 +414,7 @@ export default function HomepageBuilderPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Title Size</Label>
-                        <Select value={localStyles?.productCard?.titleSize} onValueChange={v => updateCardStyle('productCard', 'titleSize', v)}>
+                        <Select value={localStyles?.productCard?.titleSize || 'text-sm'} onValueChange={v => updateCardStyle('productCard', 'titleSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -417,14 +423,14 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Title Color</Label>
-                        <Input type="color" value={localStyles?.productCard?.titleColor} onChange={e => updateCardStyle('productCard', 'titleColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.productCard?.titleColor || '#1f2937'} onChange={e => updateCardStyle('productCard', 'titleColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Size</Label>
-                        <Select value={localStyles?.productCard?.priceSize} onValueChange={v => updateCardStyle('productCard', 'priceSize', v)}>
+                        <Select value={localStyles?.productCard?.priceSize || 'text-lg'} onValueChange={v => updateCardStyle('productCard', 'priceSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -433,14 +439,14 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Color</Label>
-                        <Input type="color" value={localStyles?.productCard?.priceColor} onChange={e => updateCardStyle('productCard', 'priceColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.productCard?.priceColor || '#1E5F7A'} onChange={e => updateCardStyle('productCard', 'priceColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Meta Text Size</Label>
-                        <Select value={localStyles?.productCard?.metaSize} onValueChange={v => updateCardStyle('productCard', 'metaSize', v)}>
+                        <Select value={localStyles?.productCard?.metaSize || 'text-[10px]'} onValueChange={v => updateCardStyle('productCard', 'metaSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -449,7 +455,7 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Meta Color</Label>
-                        <Input type="color" value={localStyles?.productCard?.metaColor} onChange={e => updateCardStyle('productCard', 'metaColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.productCard?.metaColor || '#9ca3af'} onChange={e => updateCardStyle('productCard', 'metaColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
                   </div>
@@ -460,11 +466,11 @@ export default function HomepageBuilderPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase">Btn Background</Label>
-                      <Input type="color" value={localStyles?.productCard?.primaryBtnBg} onChange={e => updateCardStyle('productCard', 'primaryBtnBg', e.target.value)} className="h-9 p-1" />
+                      <Input type="color" value={localStyles?.productCard?.primaryBtnBg || '#1E5F7A'} onChange={e => updateCardStyle('productCard', 'primaryBtnBg', e.target.value)} className="h-9 p-1" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase">Btn Text Color</Label>
-                      <Input type="color" value={localStyles?.productCard?.primaryBtnColor} onChange={e => updateCardStyle('productCard', 'primaryBtnColor', e.target.value)} className="h-9 p-1" />
+                      <Input type="color" value={localStyles?.productCard?.primaryBtnColor || '#ffffff'} onChange={e => updateCardStyle('productCard', 'primaryBtnColor', e.target.value)} className="h-9 p-1" />
                     </div>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
@@ -472,7 +478,7 @@ export default function HomepageBuilderPage() {
                       <Label className="text-xs font-black uppercase">Enable Add to Cart</Label>
                       <p className="text-[8px] font-bold text-gray-400">SHOW SECONDARY BUTTON</p>
                     </div>
-                    <Switch checked={localStyles?.productCard?.secondaryBtnEnabled} onCheckedChange={v => updateCardStyle('productCard', 'secondaryBtnEnabled', v)} />
+                    <Switch checked={localStyles?.productCard?.secondaryBtnEnabled ?? false} onCheckedChange={v => updateCardStyle('productCard', 'secondaryBtnEnabled', v)} />
                   </div>
                 </div>
               </CardContent>
@@ -487,19 +493,19 @@ export default function HomepageBuilderPage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Card Background</Label>
-                    <Input type="color" value={localStyles?.serviceCard?.cardBg} onChange={e => updateCardStyle('serviceCard', 'cardBg', e.target.value)} className="h-10 p-1" />
+                    <Input type="color" value={localStyles?.serviceCard?.cardBg || '#ffffff'} onChange={e => updateCardStyle('serviceCard', 'cardBg', e.target.value)} className="h-10 p-1" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Radius (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.cardRadius} onChange={e => updateCardStyle('serviceCard', 'cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.serviceCard?.cardRadius ?? 16} onChange={e => updateCardStyle('serviceCard', 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Padding (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.cardPadding} onChange={e => updateCardStyle('serviceCard', 'cardPadding', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.serviceCard?.cardPadding ?? 16} onChange={e => updateCardStyle('serviceCard', 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
-                    <Input type="number" value={localStyles?.serviceCard?.elementGap} onChange={e => updateCardStyle('serviceCard', 'elementGap', parseInt(e.target.value))} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    <Input type="number" value={localStyles?.serviceCard?.elementGap ?? 12} onChange={e => updateCardStyle('serviceCard', 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                   </div>
                 </div>
 
@@ -510,7 +516,7 @@ export default function HomepageBuilderPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Title Size</Label>
-                        <Select value={localStyles?.serviceCard?.titleSize} onValueChange={v => updateCardStyle('serviceCard', 'titleSize', v)}>
+                        <Select value={localStyles?.serviceCard?.titleSize || 'text-sm'} onValueChange={v => updateCardStyle('serviceCard', 'titleSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -519,14 +525,14 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Title Color</Label>
-                        <Input type="color" value={localStyles?.serviceCard?.titleColor} onChange={e => updateCardStyle('serviceCard', 'titleColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.serviceCard?.titleColor || '#1f2937'} onChange={e => updateCardStyle('serviceCard', 'titleColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Size</Label>
-                        <Select value={localStyles?.serviceCard?.priceSize} onValueChange={v => updateCardStyle('serviceCard', 'priceSize', v)}>
+                        <Select value={localStyles?.serviceCard?.priceSize || 'text-lg'} onValueChange={v => updateCardStyle('serviceCard', 'priceSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -535,14 +541,14 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Color</Label>
-                        <Input type="color" value={localStyles?.serviceCard?.priceColor} onChange={e => updateCardStyle('serviceCard', 'priceColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.serviceCard?.priceColor || '#1E5F7A'} onChange={e => updateCardStyle('serviceCard', 'priceColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Meta Text Size</Label>
-                        <Select value={localStyles?.serviceCard?.metaSize} onValueChange={v => updateCardStyle('serviceCard', 'metaSize', v)}>
+                        <Select value={localStyles?.serviceCard?.metaSize || 'text-[10px]'} onValueChange={v => updateCardStyle('serviceCard', 'metaSize', v)}>
                           <SelectTrigger className="h-9 text-[10px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -551,7 +557,7 @@ export default function HomepageBuilderPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Meta Color</Label>
-                        <Input type="color" value={localStyles?.serviceCard?.metaColor} onChange={e => updateCardStyle('serviceCard', 'metaColor', e.target.value)} className="h-9 p-1" />
+                        <Input type="color" value={localStyles?.serviceCard?.metaColor || '#9ca3af'} onChange={e => updateCardStyle('serviceCard', 'metaColor', e.target.value)} className="h-9 p-1" />
                       </div>
                     </div>
                   </div>
@@ -564,11 +570,11 @@ export default function HomepageBuilderPage() {
                       <Label className="text-xs font-black uppercase">Show "View Details" Btn</Label>
                       <p className="text-[8px] font-bold text-gray-400">SECONDARY CTA</p>
                     </div>
-                    <Switch checked={localStyles?.serviceCard?.secondaryBtnEnabled} onCheckedChange={v => updateCardStyle('serviceCard', 'secondaryBtnEnabled', v)} />
+                    <Switch checked={localStyles?.serviceCard?.secondaryBtnEnabled ?? false} onCheckedChange={v => updateCardStyle('serviceCard', 'secondaryBtnEnabled', v)} />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase">Text Alignment</Label>
-                    <Select value={localStyles?.serviceCard?.textAlign} onValueChange={v => updateCardStyle('serviceCard', 'textAlign', v)}>
+                    <Select value={localStyles?.serviceCard?.textAlign || 'left'} onValueChange={v => updateCardStyle('serviceCard', 'textAlign', v)}>
                       <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="left">Left Aligned</SelectItem>
@@ -612,7 +618,7 @@ export default function HomepageBuilderPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Limit Items</Label>
-                      <Input type="number" value={editingSection?.config?.limit || 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value)}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Input type="number" value={editingSection?.config?.limit ?? 8} onChange={e => setEditingSection({...editingSection, config: {...editingSection.config, limit: parseInt(e.target.value) || 0}})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sorting</Label>
@@ -652,7 +658,7 @@ export default function HomepageBuilderPage() {
                         </Select>
                       </div>
 
-                      {['category', 'brand', 'vendor', 'campaign'].includes(editingSection.config.sourceType) && (
+                      {['category', 'brand', 'vendor', 'campaign'].includes(editingSection?.config?.sourceType) && (
                         <div className="space-y-2 animate-in zoom-in-95">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assign {editingSection.config.sourceType}</Label>
                           <Select 
@@ -709,7 +715,7 @@ export default function HomepageBuilderPage() {
                             key={item.id} 
                             onClick={() => toggleManualId(item.id)}
                             className={cn(
-                              "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                              "p-2.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
                               isSelected ? "border-primary bg-primary/5" : "border-transparent bg-white hover:border-primary/20"
                             )}
                           >
