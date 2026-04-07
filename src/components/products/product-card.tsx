@@ -39,37 +39,37 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Styling Data
+  // Styling Logic with International Defaults
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadius: customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 16,
-    cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 16,
+    cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 12,
     elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 12,
     
-    imgHeight: customStyle?.imgHeight || 200,
+    imgHeight: customStyle?.imgHeight || 180,
     imgRadius: customStyle?.imgRadius !== undefined ? customStyle.imgRadius : 12,
     imgPadding: customStyle?.imgPadding !== undefined ? customStyle.imgPadding : 0,
     
     textAlign: customStyle?.textAlign || 'left',
     
-    titleSize: customStyle?.titleSize || 'text-sm',
+    titleSize: customStyle?.titleSize || 'text-xs',
     titleColor: customStyle?.titleColor || '#1f2937',
-    titlePadding: customStyle?.titlePadding !== undefined ? customStyle.titlePadding : 0,
+    titlePadding: customStyle?.titlePadding !== undefined ? customStyle.titlePadding : 4,
     
-    priceSize: customStyle?.priceSize || 'text-lg',
+    priceSize: customStyle?.priceSize || 'text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
-    pricePadding: customStyle?.pricePadding !== undefined ? customStyle.pricePadding : 0,
+    pricePadding: customStyle?.pricePadding !== undefined ? customStyle.pricePadding : 4,
     
-    metaSize: customStyle?.metaSize || 'text-[10px]',
+    metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
-    metaPadding: customStyle?.metaPadding !== undefined ? customStyle.metaPadding : 0,
+    metaPadding: customStyle?.metaPadding !== undefined ? customStyle.metaPadding : 4,
     metaLabelRating: customStyle?.metaLabelRating || 'Rating',
     metaLabelCount: customStyle?.metaLabelCount || (isService ? 'Booked' : 'Sold'),
     
     btnBg: customStyle?.primaryBtnBg || '#1E5F7A',
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
-    btnPadding: customStyle?.btnPadding !== undefined ? customStyle.btnPadding : 0
+    btnPadding: customStyle?.btnPadding !== undefined ? customStyle.btnPadding : 4
   };
 
   const handleOrderNow = (e: React.MouseEvent) => {
@@ -145,7 +145,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           className="w-full" 
           style={{ 
             textAlign: style.textAlign as any, 
-            padding: `${style.titlePadding}px` 
+            padding: `0 ${style.titlePadding}px` 
           }}
         >
           <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
@@ -161,7 +161,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         {/* 💰 PRICE AREA */}
         <div 
           className={cn("w-full flex flex-wrap items-baseline gap-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
-          style={{ padding: `${style.pricePadding}px` }}
+          style={{ padding: `0 ${style.pricePadding}px` }}
         >
           <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
             ৳{displayPrice?.toLocaleString()}
@@ -178,7 +178,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" 
           style={{ 
             color: style.metaColor,
-            padding: `${style.metaPadding}px`
+            padding: `2px ${style.metaPadding}px`
           }}
         >
           <div className="flex items-center gap-1 text-amber-500">
@@ -191,7 +191,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         {/* 🛒 BUTTON AREA */}
         <div 
           className="w-full flex flex-col gap-2 mt-auto"
-          style={{ padding: `${style.btnPadding}px` }}
+          style={{ padding: `0 ${style.btnPadding}px` }}
         >
           {customStyle?.primaryBtnEnabled !== false && (
             <Button 
