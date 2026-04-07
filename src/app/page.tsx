@@ -184,30 +184,83 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10" style={{ textAlign: style.textAlign || 'left' }}>{section.title || module.name}</h2>
+              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-10" style={{ textAlign: style.textAlign || 'left', color: style.titleColor || '#081621' }}>{section.title || module.name}</h2>
               <div className={gridClasses}>
-                {activeItems.map((item: any) => (
-                  <Link key={item.id} href={item.btnLink || '#'} className="block h-full group">
-                    <Card className={cn("border-none flex flex-col h-full overflow-hidden bg-white transition-all duration-500", style.showShadow !== false ? "shadow-sm hover:shadow-2xl" : "border")} style={{ borderRadius: `${style.cardRadius || 24}px`, backgroundColor: style.cardBg || '#ffffff' }}>
-                      {item.imageUrl && (
-                        <div className="relative overflow-hidden bg-gray-50 shrink-0" style={{ height: `${style.imgHeight || 200}px` }}>
-                          <Image src={item.imageUrl} alt={item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
-                          {item.badge && <Badge className="absolute top-3 left-3 bg-primary text-white border-none font-black text-[8px] uppercase px-2 py-0.5 rounded-sm shadow-lg">{item.badge}</Badge>}
-                        </div>
-                      )}
-                      <CardContent className="p-5 flex flex-col flex-1" style={{ textAlign: style.textAlign || 'left' }}>
-                        <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 mb-2 leading-tight">{item.title}</h3>
-                        <p className="text-[11px] text-gray-500 font-medium line-clamp-3 mb-4">{item.desc}</p>
-                        <div className="mt-auto pt-4 flex flex-col gap-3">
-                          {item.price && <span className="font-black text-primary text-lg">৳{item.price}</span>}
-                          <Button className="w-full h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnTextColor || '#ffffff' }}>
-                            {item.btnText || 'Action'}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {activeItems.map((item: any) => {
+                  // Resolve Dynamic Data
+                  let displayData = { 
+                    title: item.title, 
+                    price: item.price, 
+                    imageUrl: item.imageUrl, 
+                    link: item.btnLink,
+                    rating: 5.0,
+                    soldCount: 0 
+                  };
+
+                  if (item.sourceType === 'product') {
+                    const p = allProducts?.find(x => x.id === item.sourceId);
+                    if (p) {
+                      displayData.title = item.title || p.name;
+                      displayData.price = item.price || p.price;
+                      displayData.imageUrl = item.imageUrl || p.imageUrl;
+                      displayData.link = item.btnLink || `/product/${p.slug || p.id}`;
+                      displayData.soldCount = p.salesCount || 120;
+                    }
+                  } else if (item.sourceType === 'service') {
+                    const s = allServices?.find(x => x.id === item.sourceId);
+                    if (s) {
+                      displayData.title = item.title || s.title;
+                      displayData.price = item.price || s.basePrice;
+                      displayData.imageUrl = item.imageUrl || s.imageUrl;
+                      displayData.link = item.btnLink || `/service/${s.slug || s.id}`;
+                      displayData.rating = s.rating || 5.0;
+                      displayData.soldCount = 45;
+                    }
+                  } else if (item.sourceType === 'sub_service') {
+                    const sub = allSubServices?.find(x => x.id === item.sourceId);
+                    if (sub) {
+                      displayData.title = item.title || sub.name;
+                      displayData.price = item.price || sub.price;
+                      displayData.imageUrl = item.imageUrl || sub.imageUrl;
+                      displayData.link = item.btnLink || `/service/${sub.mainServiceId}`;
+                      displayData.rating = sub.rating || 5.0;
+                    }
+                  }
+
+                  return (
+                    <Link key={item.id} href={displayData.link || '#'} className="block h-full group">
+                      <Card className={cn("border-none flex flex-col h-full overflow-hidden bg-white transition-all duration-500", style.showShadow !== false ? "shadow-sm hover:shadow-2xl" : "border")} style={{ borderRadius: `${style.cardRadius || 24}px`, backgroundColor: style.cardBg || '#ffffff' }}>
+                        {displayData.imageUrl && (
+                          <div className="relative overflow-hidden bg-gray-50 shrink-0" style={{ height: `${style.imgHeight || 200}px` }}>
+                            <Image src={displayData.imageUrl} alt={displayData.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                            {item.badge && <Badge className="absolute top-3 left-3 bg-primary text-white border-none font-black text-[8px] uppercase px-2 py-0.5 rounded-sm shadow-lg">{item.badge}</Badge>}
+                          </div>
+                        )}
+                        <CardContent className="p-5 flex flex-col flex-1" style={{ textAlign: style.textAlign || 'left' }}>
+                          <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 mb-2 leading-tight group-hover:text-primary transition-colors">{displayData.title}</h3>
+                          
+                          {item.desc && <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mb-3">{item.desc}</p>}
+                          
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-black">
+                              <Star size={10} fill="currentColor" /> {displayData.rating.toFixed(1)}
+                            </div>
+                            {displayData.soldCount > 0 && (
+                              <span className="text-[9px] font-black text-gray-400 uppercase">{displayData.soldCount} {item.sourceType === 'product' ? 'Sold' : 'Booked'}</span>
+                            )}
+                          </div>
+
+                          <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-gray-50">
+                            {displayData.price && <span className="font-black text-primary text-lg leading-none">৳{displayData.price.toLocaleString()}</span>}
+                            <Button className="w-full h-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg" style={{ backgroundColor: style.btnBg || '#1E5F7A', color: style.btnTextColor || '#ffffff' }}>
+                              {item.btnText || 'Action'}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </section>

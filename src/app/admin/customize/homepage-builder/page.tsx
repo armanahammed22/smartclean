@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,7 +45,8 @@ import {
   AlignLeft,
   AlignRight,
   Edit,
-  AlignJustify
+  AlignJustify,
+  Database
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -98,13 +100,22 @@ export default function HomepageBuilderPage() {
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'homepage_theme') : null, [db]);
   const { data: globalTheme } = useDoc(themeRef);
 
-  const sectionsQuery = useMemoFirebase(() => db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
+  const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
+  const sectionsQuery = useMemoFirebase(() => db ? query(sectionsRef!, orderBy('order', 'asc')) : null, [db, sectionsRef]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
 
-  const gridModulesQuery = useMemoFirebase(() => db ? query(collection(db, 'custom_grid_modules'), orderBy('createdAt', 'desc')) : null, [db]);
+  const gridModulesQuery = useMemoFirebase(() => 
+    db ? query(collection(db, 'custom_grid_modules'), orderBy('createdAt', 'desc')) : null, [db]);
   const { data: gridModules, isLoading: gridsLoading } = useCollection(gridModulesQuery);
 
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
+  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), orderBy('name', 'asc')) : null, [db]);
   const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
+
+  const { data: allProducts } = useCollection(productsQuery);
+  const { data: allServices } = useCollection(servicesQuery);
+  const { data: allSubServices } = useCollection(subServicesQuery);
   const { data: categories } = useCollection(categoriesQuery);
 
   useEffect(() => {
@@ -201,6 +212,8 @@ export default function HomepageBuilderPage() {
     try {
       const defaultCard = {
         id: Math.random().toString(36).substr(2, 9),
+        sourceType: 'manual',
+        sourceId: '',
         title: 'New Dynamic Card',
         desc: 'Enter a catchy description for this item here.',
         price: '999',
@@ -257,6 +270,8 @@ export default function HomepageBuilderPage() {
   const addGridItem = () => {
     const newItem = {
       id: Math.random().toString(36).substr(2, 9),
+      sourceType: 'manual',
+      sourceId: '',
       title: 'New Card',
       desc: 'Short description...',
       price: '',
@@ -270,7 +285,27 @@ export default function HomepageBuilderPage() {
   };
 
   const updateGridItem = (id: string, field: string, val: any) => {
-    const nextItems = editingGridModule.items.map((item: any) => item.id === id ? { ...item, [field]: val } : item);
+    const nextItems = editingGridModule.items.map((item: any) => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: val };
+        // Auto-fill if dynamic source selected
+        if (field === 'sourceId' && updated.sourceType !== 'manual') {
+          let sourceData: any = null;
+          if (updated.sourceType === 'product') sourceData = allProducts?.find(p => p.id === val);
+          if (updated.sourceType === 'service') sourceData = allServices?.find(s => s.id === val);
+          if (updated.sourceType === 'sub_service') sourceData = allSubServices?.find(s => s.id === val);
+          
+          if (sourceData) {
+            updated.title = sourceData.name || sourceData.title;
+            updated.price = sourceData.price || sourceData.basePrice;
+            updated.imageUrl = sourceData.imageUrl;
+            updated.btnLink = `/${updated.sourceType}/${sourceData.slug || sourceData.id}`;
+          }
+        }
+        return updated;
+      }
+      return item;
+    });
     setEditingGridModule({ ...editingGridModule, items: nextItems });
   };
 
@@ -541,13 +576,13 @@ export default function HomepageBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 🧱 GRID BUILDER EDIT DIALOG (OPTIMIZED) */}
+      {/* 🧱 GRID BUILDER EDIT DIALOG (DYNAMIZED) */}
       <Dialog open={isGridEditOpen} onOpenChange={setIsGridEditOpen}>
         <DialogContent className="max-w-6xl w-[95vw] md:w-[90vw] lg:w-full h-[95vh] md:h-auto md:max-h-[90vh] rounded-none md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col">
           <Tabs defaultValue="items" className="flex flex-col h-full overflow-hidden">
             <DialogHeader className="p-4 md:p-8 bg-[#081621] text-white shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4 md:gap-6 border-b border-white/5">
               <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
-                <div className="p-2 md:p-3 bg-primary rounded-xl md:rounded-2xl shadow-xl hidden xs:block"><Settings2 size={24}/></div>
+                <div className="p-2 md:p-3 bg-primary rounded-xl md:rounded-2xl shadow-xl hidden xs:block"><Database size={24}/></div>
                 <div className="flex-1 min-w-0">
                   <DialogTitle asChild>
                     <Input 
@@ -556,7 +591,7 @@ export default function HomepageBuilderPage() {
                       className="h-8 md:h-10 bg-transparent border-none text-base md:text-xl font-black uppercase p-0 focus-visible:ring-0 w-full"
                     />
                   </DialogTitle>
-                  <p className="text-white/40 font-bold uppercase text-[8px] md:text-[9px] tracking-widest truncate">Editing Grid Template</p>
+                  <p className="text-white/40 font-bold uppercase text-[8px] md:text-[9px] tracking-widest truncate">Reusable Template Engine</p>
                 </div>
               </div>
               
@@ -572,9 +607,11 @@ export default function HomepageBuilderPage() {
             <div className="flex-1 overflow-y-auto p-4 md:p-10 bg-white custom-scrollbar">
               <TabsContent value="items" className="mt-0 space-y-6 md:space-y-8 pb-4">
                 <div className="flex flex-col xs:flex-row justify-between items-center gap-4 px-1">
-                  <h3 className="text-xs md:text-sm font-black uppercase tracking-widest text-[#081621]">Card Registry ({editingGridModule?.items?.length || 0})</h3>
+                  <h3 className="text-xs md:text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
+                    <Grid size={16} /> Individual Cards ({editingGridModule?.items?.length || 0})
+                  </h3>
                   <Button onClick={addGridItem} className="rounded-xl h-10 px-6 font-black uppercase text-[10px] gap-2 shadow-lg w-full xs:w-auto">
-                    <PlusCircle size={16} /> Add Individual Card
+                    <PlusCircle size={16} /> Add Dynamic Card
                   </Button>
                 </div>
 
@@ -583,48 +620,87 @@ export default function HomepageBuilderPage() {
                     <Card key={item.id} className="border-none shadow-sm bg-gray-50/50 rounded-2xl md:rounded-3xl overflow-hidden border border-gray-100 group">
                       <CardContent className="p-0 flex flex-col lg:flex-row">
                         <div className="lg:w-64 p-4 md:p-6 bg-white border-b lg:border-b-0 lg:border-r border-gray-100">
-                          <ImageUploader initialUrl={item.imageUrl} label="Card Visual" onUpload={url => updateGridItem(item.id, 'imageUrl', url)} aspectRatio="aspect-square" />
+                          <ImageUploader 
+                            initialUrl={item.imageUrl} 
+                            label="Card Image" 
+                            hint={item.sourceType === 'manual' ? "Upload manual image" : "System will fetch automatically"}
+                            onUpload={url => updateGridItem(item.id, 'imageUrl', url)} 
+                            aspectRatio="aspect-square" 
+                          />
                         </div>
                         <div className="flex-1 p-4 md:p-8 space-y-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex-1 space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Card Title</Label>
-                                  <Input value={item.title} onChange={e => updateGridItem(item.id, 'title', e.target.value)} className="h-10 bg-white border-none rounded-xl font-bold" />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                              <h4 className="text-[9px] font-black uppercase tracking-widest text-primary border-b pb-1">Data Source</h4>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <Label className="text-[8px] uppercase font-black">Type</Label>
+                                  <Select value={item.sourceType || 'manual'} onValueChange={v => updateGridItem(item.id, 'sourceType', v)}>
+                                    <SelectTrigger className="h-9 text-[10px] font-bold bg-white border-none rounded-lg"><SelectValue/></SelectTrigger>
+                                    <SelectContent className="rounded-xl">
+                                      <SelectItem value="manual" className="text-[10px] font-bold">Manual Entry</SelectItem>
+                                      <SelectItem value="product" className="text-[10px] font-bold">From Product</SelectItem>
+                                      <SelectItem value="service" className="text-[10px] font-bold">From Service</SelectItem>
+                                      <SelectItem value="sub_service" className="text-[10px] font-bold">From Sub-Service</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                                <div className="space-y-2">
-                                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Badge (e.g. -50%)</Label>
-                                  <Input value={item.badge} onChange={e => updateGridItem(item.id, 'badge', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-red-600 uppercase text-[9px]" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Description</Label>
-                                <Textarea value={item.desc} onChange={e => updateGridItem(item.id, 'desc', e.target.value)} placeholder="Short description..." className="min-h-[80px] md:min-h-[100px] bg-white border-none rounded-xl text-xs p-4 leading-relaxed" />
+                                {item.sourceType !== 'manual' && (
+                                  <div className="space-y-1.5 animate-in slide-in-from-left-2">
+                                    <Label className="text-[8px] uppercase font-black">Link Entity</Label>
+                                    <Select value={item.sourceId} onValueChange={v => updateGridItem(item.id, 'sourceId', v)}>
+                                      <SelectTrigger className="h-9 text-[10px] font-bold bg-white border-none rounded-lg"><SelectValue placeholder="Pick..." /></SelectTrigger>
+                                      <SelectContent className="rounded-xl">
+                                        {item.sourceType === 'product' && allProducts?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                        {item.sourceType === 'service' && allServices?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                                        {item.sourceType === 'sub_service' && allSubServices?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <div className="flex flex-col gap-3 p-1 bg-white/50 rounded-xl">
-                              <button onClick={() => removeGridItem(item.id)} className="p-2 text-destructive hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={18}/></button>
-                              <div className="flex flex-col items-center gap-1">
-                                <Label className="text-[7px] font-black uppercase text-gray-400">Live</Label>
-                                <Switch checked={item.isActive} onCheckedChange={v => updateGridItem(item.id, 'isActive', v)} className="scale-75" />
+
+                            <div className="space-y-4">
+                              <h4 className="text-[9px] font-black uppercase tracking-widest text-primary border-b pb-1">Overrides</h4>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <Label className="text-[8px] uppercase font-black">Label/Title</Label>
+                                  <Input value={item.title} onChange={e => updateGridItem(item.id, 'title', e.target.value)} className="h-9 bg-white border-none rounded-lg font-bold text-xs" />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-[8px] uppercase font-black">Badge</Label>
+                                  <Input value={item.badge} onChange={e => updateGridItem(item.id, 'badge', e.target.value)} placeholder="NEW" className="h-9 bg-white border-none rounded-lg font-black text-red-600 text-[9px]" />
+                                </div>
                               </div>
                             </div>
                           </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[8px] font-black uppercase text-gray-400 ml-1">Marketing Summary</Label>
+                            <Textarea value={item.desc} onChange={e => updateGridItem(item.id, 'desc', e.target.value)} placeholder="Catchy hook text..." className="min-h-[80px] bg-white border-none rounded-xl text-xs p-4 leading-relaxed" />
+                          </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Price (৳)</Label>
-                              <Input value={item.price} onChange={e => updateGridItem(item.id, 'price', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-primary" />
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400 ml-1">Price Override (৳)</Label>
+                              <Input value={item.price} onChange={e => updateGridItem(item.id, 'price', e.target.value)} className="h-9 bg-white border-none rounded-lg font-black text-primary" />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Button Text</Label>
-                              <Input value={item.btnText} onChange={e => updateGridItem(item.id, 'btnText', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-[10px] uppercase" />
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400 ml-1">Button Text</Label>
+                              <Input value={item.btnText} onChange={e => updateGridItem(item.id, 'btnText', e.target.value)} className="h-9 bg-white border-none rounded-lg font-black text-[10px] uppercase" />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Target Link</Label>
-                              <Input value={item.btnLink} onChange={e => updateGridItem(item.id, 'btnLink', e.target.value)} className="h-10 bg-white border-none rounded-xl font-mono text-[10px]" />
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400 ml-1">Target Link</Label>
+                              <Input value={item.btnLink} onChange={e => updateGridItem(item.id, 'btnLink', e.target.value)} className="h-9 bg-white border-none rounded-lg font-mono text-[10px]" />
                             </div>
+                          </div>
+                        </div>
+                        <div className="lg:w-16 flex flex-row lg:flex-col items-center justify-center p-2 lg:p-4 gap-4 bg-gray-100/50">
+                          <button onClick={() => removeGridItem(item.id)} className="p-2 text-destructive hover:bg-red-100 rounded-xl transition-all"><Trash2 size={18}/></button>
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-[7px] font-black uppercase text-gray-400">Live</span>
+                            <Switch checked={item.isActive} onCheckedChange={v => updateGridItem(item.id, 'isActive', v)} className="scale-75" />
                           </div>
                         </div>
                       </CardContent>

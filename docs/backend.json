@@ -38,7 +38,25 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "items": { "type": "array" },
+        "items": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "sourceType": { "type": "string", "enum": ["manual", "product", "service", "sub_service"] },
+              "sourceId": { "type": "string" },
+              "title": { "type": "string" },
+              "desc": { "type": "string" },
+              "price": { "type": "string" },
+              "imageUrl": { "type": "string" },
+              "btnText": { "type": "string" },
+              "btnLink": { "type": "string" },
+              "badge": { "type": "string" },
+              "isActive": { "type": "boolean" }
+            }
+          }
+        },
         "styleConfig": { "type": "object" },
         "createdAt": { "type": "string" }
       }
