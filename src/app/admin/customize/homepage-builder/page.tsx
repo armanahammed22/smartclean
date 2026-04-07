@@ -43,7 +43,10 @@ import {
   ArrowRight,
   TrendingUp,
   TicketPercent,
-  Gift
+  Gift,
+  RefreshCw,
+  Box,
+  Palette as PaletteIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -57,6 +60,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 const SECTION_TYPES = [
   { id: 'hero', label: 'Main Hero Slider', icon: Layout, category: 'Main' },
@@ -84,7 +88,22 @@ export default function HomepageBuilderPage() {
   const [localSections, setLocalSections] = useState<any[]>([]);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
 
-  // Queries
+  // 1. Fetch Global Styling Data
+  const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
+  const { data: globalStyles, isLoading: stylesLoading } = useDoc(stylesRef);
+
+  // 2. Local State for Styles (Optimistic UI)
+  const [localStyles, setLocalStyles] = useState<any>(null);
+
+  useEffect(() => {
+    if (globalStyles) setLocalStyles(globalStyles);
+    else setLocalStyles({
+      productCard: { cardBg: '#ffffff', cardRadius: 16, textAlign: 'left', primaryBtnBg: '#1E5F7A', primaryBtnColor: '#ffffff', primaryBtnEnabled: true, secondaryBtnEnabled: false },
+      serviceCard: { cardBg: '#ffffff', cardRadius: 16, textAlign: 'left', primaryBtnBg: '#1E5F7A', primaryBtnColor: '#ffffff', primaryBtnEnabled: true, secondaryBtnEnabled: false }
+    });
+  }, [globalStyles]);
+
+  // 3. Fetch Layout Sections
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const sectionsQuery = useMemoFirebase(() => db ? query(sectionsRef!, orderBy('order', 'asc')) : null, [db, sectionsRef]);
   const { data: sections, isLoading } = useCollection(sectionsQuery);
@@ -141,6 +160,19 @@ export default function HomepageBuilderPage() {
     }
   };
 
+  const handleSaveStyles = async () => {
+    if (!db || !localStyles) return;
+    setIsSubmitting(true);
+    try {
+      await setDoc(doc(db, 'site_settings', 'card_styles'), localStyles);
+      toast({ title: "Global Styles Published" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Styles Update Failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddSection = async (type: string) => {
     if (!db) return;
     const typeInfo = SECTION_TYPES.find(t => t.id === type);
@@ -180,6 +212,13 @@ export default function HomepageBuilderPage() {
     }
   };
 
+  const updateCardStyle = (cardType: 'productCard' | 'serviceCard', field: string, val: any) => {
+    setLocalStyles({
+      ...localStyles,
+      [cardType]: { ...localStyles[cardType], [field]: val }
+    });
+  };
+
   const filteredItemsForManual = useMemo(() => {
     if (!itemSearchQuery.trim()) return [];
     const source = editingSection?.type === 'services_dynamic' ? allServices : allProducts;
@@ -199,6 +238,8 @@ export default function HomepageBuilderPage() {
     });
   };
 
+  if (isLoading || stylesLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
+
   return (
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -216,59 +257,150 @@ export default function HomepageBuilderPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-3">
-        {localSections.map((section, index) => {
-          const typeInfo = SECTION_TYPES.find(t => t.id === section.type);
-          const Icon = typeInfo?.icon || Layout;
-          return (
-            <Card 
-              key={section.id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              className={cn(
-                "border-none shadow-sm transition-all duration-300 group bg-white rounded-2xl overflow-hidden",
-                !section.isActive && "opacity-50 grayscale",
-                draggedItem === index ? "ring-2 ring-primary scale-[1.01] shadow-xl z-50" : "hover:shadow-md border border-gray-100"
-              )}
-            >
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-300" /></div>
-                <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}>
-                  <Icon size={20} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">
-                      {typeInfo?.label || section.type}
-                    </Badge>
-                    {section.config?.sourceType && (
-                      <span className="text-[8px] font-black text-primary/60 uppercase">Source: {section.config.sourceType}</span>
-                    )}
+      <Tabs defaultValue="sequence" className="space-y-8">
+        <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar whitespace-nowrap shadow-sm">
+          <TabsTrigger value="sequence" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase"><Layout size={14}/> Layout Sequence</TabsTrigger>
+          <TabsTrigger value="styles" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase"><PaletteIcon size={14}/> Global Card Styles</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sequence" className="max-w-4xl mx-auto space-y-3 mt-0">
+          {localSections.map((section, index) => {
+            const typeInfo = SECTION_TYPES.find(t => t.id === section.type);
+            const Icon = typeInfo?.icon || Layout;
+            return (
+              <Card 
+                key={section.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                className={cn(
+                  "border-none shadow-sm transition-all duration-300 group bg-white rounded-2xl overflow-hidden",
+                  !section.isActive && "opacity-50 grayscale",
+                  draggedItem === index ? "ring-2 ring-primary scale-[1.01] shadow-xl z-50" : "hover:shadow-md border border-gray-100"
+                )}
+              >
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg shrink-0"><GripVertical size={20} className="text-gray-300" /></div>
+                  <div className={cn("p-2.5 rounded-xl shrink-0", section.isActive ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400")}>
+                    <Icon size={20} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-gray-900 uppercase text-xs tracking-tight truncate">{section.title}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-[7px] font-black uppercase px-1.5 h-4 border-gray-200">
+                        {typeInfo?.label || section.type}
+                      </Badge>
+                      {section.config?.sourceType && (
+                        <span className="text-[8px] font-black text-primary/60 uppercase">Source: {section.config.sourceType}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                      <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
+                      <Switch checked={section.isActive} onCheckedChange={(val) => {
+                        const next = localSections.map(s => s.id === section.id ? { ...s, isActive: val } : s);
+                        setLocalSections(next);
+                        updateDoc(doc(db!, 'homepage_sections', section.id), { isActive: val });
+                      }} className="scale-75" />
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
+                      <Settings2 size={18} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
+                      <Trash2 size={18} />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </TabsContent>
+
+        <TabsContent value="styles" className="space-y-8 mt-0">
+          <div className="flex justify-end">
+            <Button onClick={handleSaveStyles} disabled={isSubmitting} className="rounded-xl h-11 px-8 font-black uppercase shadow-lg">
+              {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />} Publish Visual Rules
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Product Card Style */}
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+              <CardHeader className="bg-red-50/50 border-b p-8">
+                <CardTitle className="text-xl font-black uppercase text-red-900 flex items-center gap-3"><Package size={24}/> Product Card Rules</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase">Card Background</Label>
+                    <Input type="color" value={localStyles?.productCard?.cardBg} onChange={e => updateCardStyle('productCard', 'cardBg', e.target.value)} className="h-10 p-1" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase">Border Radius (px)</Label>
+                    <Input type="number" value={localStyles?.productCard?.cardRadius} onChange={e => updateCardStyle('productCard', 'cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50" />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                    <Label className="text-[8px] font-black uppercase text-gray-400">Live</Label>
-                    <Switch checked={section.isActive} onCheckedChange={(val) => {
-                      const next = localSections.map(s => s.id === section.id ? { ...s, isActive: val } : s);
-                      setLocalSections(next);
-                      updateDoc(doc(db!, 'homepage_sections', section.id), { isActive: val });
-                    }} className="scale-75" />
+                
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-[10px] font-black uppercase text-primary tracking-widest">Button Configuration</h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Primary Button Bg</Label>
+                      <Input type="color" value={localStyles?.productCard?.primaryBtnBg} onChange={e => updateCardStyle('productCard', 'primaryBtnBg', e.target.value)} className="h-10 p-1" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase">Primary Text Color</Label>
+                      <Input type="color" value={localStyles?.productCard?.primaryBtnColor} onChange={e => updateCardStyle('productCard', 'primaryBtnColor', e.target.value)} className="h-10 p-1" />
+                    </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => { setEditingSection(section); setIsEditOpen(true); }}>
-                    <Settings2 size={18} />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-lg" onClick={() => { if(confirm("Delete block?")) deleteDoc(doc(db!, 'homepage_sections', section.id)); }}>
-                    <Trash2 size={18} />
-                  </Button>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <Label className="text-xs font-black uppercase">Enable Add to Cart</Label>
+                    <Switch checked={localStyles?.productCard?.secondaryBtnEnabled} onCheckedChange={v => updateCardStyle('productCard', 'secondaryBtnEnabled', v)} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+
+            {/* Service Card Style */}
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+              <CardHeader className="bg-indigo-50/50 border-b p-8">
+                <CardTitle className="text-xl font-black uppercase text-indigo-900 flex items-center gap-3"><Wrench size={24}/> Service Card Rules</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase">Card Background</Label>
+                    <Input type="color" value={localStyles?.serviceCard?.cardBg} onChange={e => updateCardStyle('serviceCard', 'cardBg', e.target.value)} className="h-10 p-1" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase">Border Radius (px)</Label>
+                    <Input type="number" value={localStyles?.serviceCard?.cardRadius} onChange={e => updateCardStyle('serviceCard', 'cardRadius', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-[10px] font-black uppercase text-primary tracking-widest">Interaction Rules</h4>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <Label className="text-xs font-black uppercase">Show "View Details" Btn</Label>
+                    <Switch checked={localStyles?.serviceCard?.secondaryBtnEnabled} onCheckedChange={v => updateCardStyle('serviceCard', 'secondaryBtnEnabled', v)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase">Text Alignment</Label>
+                    <Select value={localStyles?.serviceCard?.textAlign} onValueChange={v => updateCardStyle('serviceCard', 'textAlign', v)}>
+                      <SelectTrigger className="h-10 bg-gray-50"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left Aligned</SelectItem>
+                        <SelectItem value="center">Centered</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* 🛠️ SECTION EDITOR DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -350,10 +482,18 @@ export default function HomepageBuilderPage() {
                               <SelectValue placeholder="Select Source..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {editingSection.config.sourceType === 'category' && categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                              {editingSection.config.sourceType === 'brand' && brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
-                              {editingSection.config.sourceType === 'vendor' && vendors?.map(v => <SelectItem key={v.id} value={v.id}>{v.shopName}</SelectItem>)}
-                              {editingSection.config.sourceType === 'campaign' && campaigns?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                              {editingSection.config.sourceType === 'category' && categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>) || (
+                                 <SelectItem value="none" disabled>No categories available</SelectItem>
+                              )}
+                              {editingSection.config.sourceType === 'brand' && brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>) || (
+                                 <SelectItem value="none" disabled>No brands available</SelectItem>
+                              )}
+                              {editingSection.config.sourceType === 'vendor' && vendors?.map(v => <SelectItem key={v.id} value={v.id}>{v.shopName}</SelectItem>) || (
+                                 <SelectItem value="none" disabled>No vendors available</SelectItem>
+                              )}
+                              {editingSection.config.sourceType === 'campaign' && campaigns?.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>) || (
+                                 <SelectItem value="none" disabled>No campaigns available</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>

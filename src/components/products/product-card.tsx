@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
-import { Star, Package, Clock } from 'lucide-react';
+import { Star, Package, Clock, Zap, ShoppingCart } from 'lucide-react';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -28,11 +28,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     setMounted(true);
   }, []);
 
-  const discountPercent = product.regularPrice && product.regularPrice > product.price
-    ? Math.round(((product.regularPrice - product.price) / product.regularPrice) * 100)
+  const isService = 'basePrice' in product || (product as any).type === 'service';
+  const displayPrice = isService ? (product as any).basePrice : product.price;
+  const regularPrice = isService ? (product as any).regularPrice : product.regularPrice;
+  const displayName = isService ? (product as any).title : product.name;
+
+  const discountPercent = regularPrice && regularPrice > displayPrice
+    ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
     : null;
 
-  const rating = 4.8;
+  const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
   const cardStyle = {
@@ -44,7 +49,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   
   // Icon Helper
   const renderIcon = (iconName: string, className?: string) => {
-    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Zap;
+    const Icon = (LucideIcons as any)[iconName] || Zap;
     return <Icon className={className || "size-3"} />;
   };
 
@@ -72,11 +77,11 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         )}
         style={cardStyle}
       >
-        <Link href={`/product/${product.slug || product.id}`} className="block relative aspect-square w-full overflow-hidden bg-gray-50 shrink-0">
+        <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`} className="block relative aspect-square w-full overflow-hidden bg-gray-50 shrink-0">
           {product.imageUrl ? (
             <Image
               src={product.imageUrl}
-              alt={product.name}
+              alt={displayName}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-110"
               unoptimized
@@ -102,24 +107,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               </Badge>
             )}
           </div>
-
-          {product.onSale && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md p-1.5 flex items-center justify-center gap-2">
-              <Clock size={10} className="text-primary animate-spin" />
-              <span className="text-[8px] font-black text-white uppercase tracking-widest">Ending Soon</span>
-            </div>
-          )}
         </Link>
 
         <div className="p-3 md:p-4 flex flex-col flex-1">
           <div className={cn("w-full min-h-[40px] md:min-h-[48px] mb-2", titleAlign === 'center' ? 'text-center' : 'text-left')}>
-            <Link href={`/product/${product.slug || product.id}`}>
+            <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
               <h3 className={cn(
-                "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors",
-                customStyle?.titleSize || 'text-[11px] md:text-sm',
+                "font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors text-[11px] md:text-sm",
                 isDark ? "text-white/90 group-hover:text-white" : "text-gray-800 group-hover:text-primary"
               )} style={{ color: customStyle?.titleColor }}>
-                {product.name}
+                {displayName}
               </h3>
             </Link>
           </div>
@@ -127,63 +124,67 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           <div className="space-y-2 mb-3">
             <div className={cn("w-full flex flex-wrap items-baseline gap-2 pt-1", titleAlign === 'center' ? 'justify-center' : 'justify-start')}>
               <p className={cn(
-                "font-black tracking-tighter leading-none",
-                customStyle?.priceSize || 'text-base md:text-lg',
+                "font-black tracking-tighter leading-none text-base md:text-lg",
                 isDark ? "text-amber-400" : "text-primary"
               )} style={{ color: customStyle?.priceColor || '#1E5F7A' }}>
-                ৳{product.price.toLocaleString()}
+                ৳{displayPrice?.toLocaleString()}
               </p>
-              {product.regularPrice && product.regularPrice > product.price && (
+              {regularPrice && regularPrice > displayPrice && (
                 <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">
-                  ৳{product.regularPrice.toLocaleString()}
+                  ৳{regularPrice.toLocaleString()}
                 </span>
               )}
             </div>
             
-            <div 
-              className={cn("flex items-center justify-between font-bold border-t border-gray-50 pt-2", customStyle?.metaSize || 'text-[9px] md:text-[10px]')}
-              style={{ color: customStyle?.metaColor || '#9ca3af' }}
-            >
+            <div className="flex items-center justify-between font-bold border-t border-gray-50 pt-2 text-[9px] md:text-[10px]">
               <div className="flex items-center gap-1 text-amber-500">
                 <Star size={12} fill="currentColor" />
-                <span style={{ color: customStyle?.metaColor || '#4b5563' }}>{rating.toFixed(1)}</span>
+                <span className="text-gray-600">{rating.toFixed(1)}</span>
               </div>
-              <span className="uppercase font-black">{soldCount} {t('sold')}</span>
+              <span className="uppercase font-black text-gray-400">{soldCount} {isService ? t('booked') : t('sold')}</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-2 mt-auto">
-            {/* Primary Button: Buy Now */}
             {customStyle?.primaryBtnEnabled !== false && (
               <Button 
                 size="sm"
                 onClick={handleOrderNow}
-                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 border-none h-9 w-full shadow-lg", customStyle?.primaryBtnTextSize || 'text-[9px]')}
+                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 border-none h-9 w-full shadow-lg text-[9px]")}
                 style={{ 
                   backgroundColor: customStyle?.primaryBtnBg || '#1E5F7A', 
                   color: customStyle?.primaryBtnColor || '#ffffff' 
                 }}
               >
                 {renderIcon(customStyle?.primaryBtnIcon || 'Zap', "mr-1.5 size-3")}
-                {customStyle?.primaryBtnText || t('buy_now')}
+                {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
               </Button>
             )}
 
-            {/* Secondary Button: Add to Cart */}
             {customStyle?.secondaryBtnEnabled === true && (
               <Button 
                 variant="outline"
                 size="sm"
-                onClick={handleAddToCart}
-                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 h-9 w-full border-2", customStyle?.secondaryBtnTextSize || 'text-[9px]')}
+                onClick={isService ? undefined : handleAddToCart}
+                asChild={isService}
+                className={cn("font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 h-9 w-full border-2 text-[9px]")}
                 style={{ 
                   backgroundColor: customStyle?.secondaryBtnBg || '#f3f4f6', 
                   color: customStyle?.secondaryBtnColor || '#1f2937',
                   borderColor: 'rgba(0,0,0,0.05)'
                 }}
               >
-                {renderIcon(customStyle?.secondaryBtnIcon || 'ShoppingCart', "mr-1.5 size-3")}
-                {customStyle?.secondaryBtnText || 'Add to Cart'}
+                {isService ? (
+                  <Link href={`/service/${product.slug || product.id}`}>
+                    {renderIcon(customStyle?.secondaryBtnIcon || 'Search', "mr-1.5 size-3")}
+                    {customStyle?.secondaryBtnText || 'View Details'}
+                  </Link>
+                ) : (
+                  <>
+                    {renderIcon(customStyle?.secondaryBtnIcon || 'ShoppingCart', "mr-1.5 size-3")}
+                    {customStyle?.secondaryBtnText || 'Add to Cart'}
+                  </>
+                )}
               </Button>
             )}
           </div>

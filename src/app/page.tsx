@@ -45,10 +45,10 @@ import {
   ShoppingCart,
   Info,
   TicketPercent,
-  Gift
+  Gift,
+  Layout
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
-import { FlashSaleCard } from '@/components/products/flash-sale-card';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
 import { 
   Carousel, 
@@ -74,18 +74,6 @@ const ICONS: Record<string, any> = {
   Gift
 };
 
-const getCategoryStyles = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('clean')) return { bg: 'bg-blue-50', color: 'text-blue-600', icon: Droplets };
-  if (n.includes('ac')) return { bg: 'bg-cyan-50', color: 'text-cyan-600', icon: Wind };
-  if (n.includes('sofa') || n.includes('furniture')) return { bg: 'bg-orange-50', color: 'text-orange-600', icon: Armchair };
-  if (n.includes('repair')) return { bg: 'bg-red-50', color: 'text-red-600', icon: Wrench };
-  if (n.includes('office')) return { bg: 'bg-indigo-50', color: 'text-indigo-600', icon: Briefcase };
-  if (n.includes('device') || n.includes('gadget')) return { bg: 'bg-purple-50', color: 'text-purple-600', icon: Smartphone };
-  if (n.includes('health') || n.includes('sanit')) return { bg: 'bg-green-50', color: 'text-green-600', icon: ShieldCheck };
-  return { bg: 'bg-gray-50', color: 'text-gray-600', icon: LayoutGrid };
-};
-
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const db = useFirestore();
@@ -102,12 +90,10 @@ export default function SmartCleanHomePage() {
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
-  const flashSaleRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'flash_sale') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const advancedOffersRef = useMemoFirebase(() => db ? collection(db, 'advanced_offers') : null, [db]);
   const couponsRef = useMemoFirebase(() => db ? collection(db, 'coupons') : null, [db]);
-  const marketingOffersRef = useMemoFirebase(() => db ? collection(db, 'marketing_offers') : null, [db]);
   const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
   const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
 
@@ -117,12 +103,10 @@ export default function SmartCleanHomePage() {
   const { data: allProducts } = useCollection(productsRef);
   const { data: allServices } = useCollection(servicesRef);
   const { data: allSubServices } = useCollection(subServicesRef);
-  const { data: flashSaleConfig } = useDoc(flashSaleRef);
   const { data: settings } = useDoc(settingsRef);
   const { data: cardStyles } = useDoc(stylesRef);
   const { data: advancedOffers } = useCollection(advancedOffersRef);
   const { data: coupons } = useCollection(couponsRef);
-  const { data: marketingOffers } = useCollection(marketingOffersRef);
   const { data: quickLinks } = useCollection(quickLinksRef);
   const { data: quickActions } = useCollection(quickActionsRef);
 
@@ -145,11 +129,20 @@ export default function SmartCleanHomePage() {
   const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
+  const getGridCols = (cols: string | undefined) => {
+    const c = cols || '5';
+    if (c === '2') return 'grid-cols-2';
+    if (c === '3') return 'grid-cols-2 md:grid-cols-3';
+    if (c === '4') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+    if (c === '5') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
+    if (c === '6') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6';
+    return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
+  };
+
   const renderSection = (section: any) => {
     const config = section.config || {};
     const sectionType = section.type;
     
-    // Skip fixed layout pieces if they are rendered explicitly elsewhere
     if (sectionType === 'hero' || sectionType === 'side_promo') return null;
 
     switch (sectionType) {
@@ -230,8 +223,9 @@ export default function SmartCleanHomePage() {
 
         // Sorting Logic
         if (config.sortBy === 'popular') filteredProducts.sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0));
-        if (config.sortBy === 'rating') filteredProducts.sort((a,b) => (b.rating || 0) - (a.rating || 0));
-        if (config.sortBy === 'discount') filteredProducts.sort((a,b) => ((b.regularPrice || 0) - b.price) - ((a.regularPrice || 0) - a.price));
+        else if (config.sortBy === 'rating') filteredProducts.sort((a,b) => (b.rating || 0) - (a.rating || 0));
+        else if (config.sortBy === 'discount') filteredProducts.sort((a,b) => ((b.regularPrice || 0) - b.price) - ((a.regularPrice || 0) - a.price));
+        else filteredProducts.sort((a,b) => (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime()));
         
         filteredProducts = filteredProducts.slice(0, config.limit || 12);
         if (!filteredProducts.length) return null;
@@ -240,10 +234,10 @@ export default function SmartCleanHomePage() {
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
               <div className="flex items-center justify-between mb-10 px-2">
-                <h2 className={cn("font-black uppercase tracking-tighter text-[#081621]", config.titleSizeDesktop || 'text-3xl md:text-5xl')} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+                <h2 className={cn("font-black uppercase tracking-tighter text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
                 <Link href="/products" className="text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">VIEW ALL <ChevronRight size={14}/></Link>
               </div>
-              <div className={cn("grid gap-4 md:gap-6", `grid-cols-2 md:grid-cols-3 lg:grid-cols-${config.gridColsDesktop || '5'}`)}>
+              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
                 {filteredProducts.map(p => <ProductCard key={p.id} product={p as any} customStyle={cardStyles?.productCard} />)}
               </div>
             </div>
@@ -264,8 +258,8 @@ export default function SmartCleanHomePage() {
         return (
           <section key={section.id} className="px-4 py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621]", config.titleSizeDesktop || 'text-3xl md:text-5xl')} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
-              <div className={cn("grid gap-4 md:gap-6", `grid-cols-2 md:grid-cols-3 lg:grid-cols-${config.gridColsDesktop || '5'}`)}>
+              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
                 {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, name: s.title, price: s.basePrice, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
               </div>
             </div>
@@ -357,9 +351,6 @@ export default function SmartCleanHomePage() {
     }
   };
 
-  const heroSection = activeLayoutSections.find(s => s.type === 'hero');
-  const sidePromoSection = activeLayoutSections.find(s => s.type === 'side_promo');
-
   if (!mounted) return null;
 
   return (
@@ -372,51 +363,49 @@ export default function SmartCleanHomePage() {
           </div>
         ) : (
           <>
-            {(heroSection || sidePromoSection) && (
-              <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
-                <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[280px] md:h-[320px] max-h-[320px] overflow-hidden">
-                  {heroSection && (
-                    <div className={cn("relative overflow-hidden bg-gray-100 shadow-sm rounded-xl md:rounded-2xl lg:rounded-3xl h-full", sidePromoSection ? "w-[70%]" : "w-full")}>
-                      {mainBanners.length > 0 ? (
-                        <Carousel className="w-full h-full" opts={{ loop: true }}>
-                          <CarouselContent className="h-full -ml-0">
-                            {mainBanners.map((banner) => (
-                              <CarouselItem key={banner.id} className="h-full basis-full relative pl-0">
-                                <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
-                                  <Image src={banner.imageUrl || ''} alt={banner.title} fill className="object-cover" priority unoptimized />
-                                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-4 md:p-12">
-                                    <h2 className="text-white text-[10px] sm:text-base md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl">{banner.title}</h2>
-                                    <p className="text-white/90 text-[7px] sm:text-[10px] md:text-lg font-medium mb-2 md:mb-4 max-w-[80px] sm:max-w-xs md:max-w-md line-clamp-2">{banner.subtitle}</p>
-                                    <Button size="sm" className="w-fit h-5 sm:h-7 md:h-10 rounded-full px-2 sm:px-4 md:px-6 font-black uppercase text-[6px] sm:text-[8px] md:text-xs shadow-lg" style={{ backgroundColor: banner.buttonColor }}>
-                                      {banner.buttonText || t('view_all')}
-                                    </Button>
-                                  </div>
-                                </Link>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                        </Carousel>
-                      ) : <div className="w-full h-full bg-primary/5 animate-pulse flex items-center justify-center"><Loader2 className="animate-spin text-primary/20" /></div>}
-                    </div>
-                  )}
-                  {sidePromoSection && sidePromos.length > 0 && (
-                    <div className={cn("w-[30%] min-w-[100px] shrink-0 flex flex-col gap-2 md:gap-4 h-full", !heroSection ? "w-full" : "")}>
-                      {sidePromos.slice(0, 2).map(promo => (
-                        <Link key={promo.id} href={promo.buttonLink || '#'} className="flex-1 relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm group">
-                          <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 md:p-6 flex flex-col justify-end">
-                            <h3 className="text-white text-[7px] sm:text-[10px] md:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
-                            <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[5px] sm:text-[8px] md:text-[10px] font-black uppercase">
-                              {promo.buttonText || 'Discover'} <ChevronRight size={10} className="w-2 h-2 md:w-3 md:h-3"/>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+            {/* Standard Hero Section */}
+            <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
+              <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[280px] md:h-[320px] max-h-[320px] overflow-hidden">
+                <div className="relative overflow-hidden bg-gray-100 shadow-sm rounded-xl md:rounded-2xl lg:rounded-3xl h-full w-full lg:w-[70%]">
+                  {mainBanners.length > 0 ? (
+                    <Carousel className="w-full h-full" opts={{ loop: true }}>
+                      <CarouselContent className="h-full -ml-0">
+                        {mainBanners.map((banner) => (
+                          <CarouselItem key={banner.id} className="h-full basis-full relative pl-0">
+                            <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
+                              <Image src={banner.imageUrl || ''} alt={banner.title} fill className="object-cover" priority unoptimized />
+                              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-4 md:p-12 text-left">
+                                <h2 className="text-white text-base md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl">{banner.title}</h2>
+                                <p className="text-white/90 text-[10px] md:text-lg font-medium mb-2 md:mb-4 max-w-md line-clamp-2">{banner.subtitle}</p>
+                                <Button size="sm" className="w-fit h-7 md:h-10 rounded-full px-4 md:px-6 font-black uppercase text-[10px] md:text-xs shadow-lg" style={{ backgroundColor: banner.buttonColor }}>
+                                  {banner.buttonText || t('view_all')}
+                                </Button>
+                              </div>
+                            </Link>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                  ) : <div className="w-full h-full bg-primary/5 animate-pulse flex items-center justify-center"><Loader2 className="animate-spin text-primary/20" /></div>}
                 </div>
-              </section>
-            )}
+                {sidePromos.length > 0 && (
+                  <div className="hidden lg:flex w-[30%] min-w-[100px] shrink-0 flex-col gap-2 md:gap-4 h-full">
+                    {sidePromos.slice(0, 2).map(promo => (
+                      <Link key={promo.id} href={promo.buttonLink || '#'} className="flex-1 relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm group">
+                        <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 md:p-6 flex flex-col justify-end text-left">
+                          <h3 className="text-white text-[10px] md:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
+                          <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[8px] md:text-[10px] font-black uppercase">
+                            {promo.buttonText || 'Discover'} <ChevronRight size={10} className="w-2 h-2 md:w-3 md:h-3"/>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
             {activeLayoutSections.map(renderSection)}
           </>
         )}
