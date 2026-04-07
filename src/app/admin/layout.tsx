@@ -65,7 +65,8 @@ import {
   Gift,
   Clock,
   DollarSign,
-  Handshake
+  Handshake,
+  Compass
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -374,11 +375,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
+          { name: "Navigation Hub", href: '/admin/customize/navigation', icon: Compass },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Bottom Navbar", href: '/admin/customize/bottom-nav', icon: CircleEllipsis },
-          { name: "Top Nav Links", href: '/admin/customize/top-categories', icon: Navigation },
-          { name: "Icon Grid", href: '/admin/customize/quick-links', icon: Grid },
-          { name: "Feature Cards", href: '/admin/customize/quick-actions', icon: Navigation },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
         ]
