@@ -52,6 +52,8 @@ service cloud.firestore {
     match /campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
     match /campaigns/{campId}/products/{id} { allow read: if true; allow write: if isAdmin(); }
     match /invoices/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
 
     // 🔒 USER/STAFF SPECIFIC (Requires Auth)
     match /users/{uid} { allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin()); }
