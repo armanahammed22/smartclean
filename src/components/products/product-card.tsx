@@ -48,24 +48,28 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     
     imgHeight: customStyle?.imgHeight || 200,
     imgRadius: customStyle?.imgRadius !== undefined ? customStyle.imgRadius : 12,
+    imgPadding: customStyle?.imgPadding !== undefined ? customStyle.imgPadding : 0,
     
     textAlign: customStyle?.textAlign || 'left',
     
     titleSize: customStyle?.titleSize || 'text-sm',
     titleColor: customStyle?.titleColor || '#1f2937',
-    titlePadding: customStyle?.titlePadding || 0,
+    titlePadding: customStyle?.titlePadding !== undefined ? customStyle.titlePadding : 0,
     
     priceSize: customStyle?.priceSize || 'text-lg',
     priceColor: customStyle?.priceColor || '#1E5F7A',
+    pricePadding: customStyle?.pricePadding !== undefined ? customStyle.pricePadding : 0,
     
     metaSize: customStyle?.metaSize || 'text-[10px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
+    metaPadding: customStyle?.metaPadding !== undefined ? customStyle.metaPadding : 0,
     metaLabelRating: customStyle?.metaLabelRating || 'Rating',
     metaLabelCount: customStyle?.metaLabelCount || (isService ? 'Booked' : 'Sold'),
     
     btnBg: customStyle?.primaryBtnBg || '#1E5F7A',
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
-    btnSize: customStyle?.primaryBtnSize || 'text-[10px]'
+    btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
+    btnPadding: customStyle?.btnPadding !== undefined ? customStyle.btnPadding : 0
   };
 
   const handleOrderNow = (e: React.MouseEvent) => {
@@ -95,7 +99,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         }}
       >
         {/* 🖼️ IMAGE AREA */}
-        <div className="w-full shrink-0">
+        <div 
+          className="w-full shrink-0"
+          style={{ padding: `${style.imgPadding}px` }}
+        >
           <Link 
             href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`} 
             className="block relative overflow-hidden bg-gray-50"
@@ -134,7 +141,13 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
 
         {/* 🏷️ TITLE AREA */}
-        <div className={cn("w-full")} style={{ textAlign: style.textAlign, paddingBottom: `${style.titlePadding}px` }}>
+        <div 
+          className="w-full" 
+          style={{ 
+            textAlign: style.textAlign as any, 
+            padding: `${style.titlePadding}px` 
+          }}
+        >
           <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
             <h3 
               className={cn("font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors", style.titleSize)}
@@ -146,7 +159,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
         
         {/* 💰 PRICE AREA */}
-        <div className={cn("w-full flex flex-wrap items-baseline gap-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}>
+        <div 
+          className={cn("w-full flex flex-wrap items-baseline gap-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
+          style={{ padding: `${style.pricePadding}px` }}
+        >
           <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
             ৳{displayPrice?.toLocaleString()}
           </p>
@@ -158,7 +174,13 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
         
         {/* ⭐ RATING & COUNT AREA */}
-        <div className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" style={{ color: style.metaColor }}>
+        <div 
+          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" 
+          style={{ 
+            color: style.metaColor,
+            padding: `${style.metaPadding}px`
+          }}
+        >
           <div className="flex items-center gap-1 text-amber-500">
             <Star size={12} fill="currentColor" />
             <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
@@ -167,7 +189,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         </div>
 
         {/* 🛒 BUTTON AREA */}
-        <div className="w-full flex flex-col gap-2 mt-auto">
+        <div 
+          className="w-full flex flex-col gap-2 mt-auto"
+          style={{ padding: `${style.btnPadding}px` }}
+        >
           {customStyle?.primaryBtnEnabled !== false && (
             <Button 
               size="sm"

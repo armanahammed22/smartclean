@@ -50,7 +50,8 @@ import {
   AlignLeft,
   AlignCenter,
   MoveVertical,
-  Image as ImageIconLucide
+  Image as ImageIconLucide,
+  Move
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -92,7 +93,7 @@ const FONT_SIZES = [
   { label: '2XL', value: 'text-2xl' }
 ];
 
-export default function HomepageBuilderPage() {
+export default function GridBuilderPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,16 +114,20 @@ export default function HomepageBuilderPage() {
       elementGap: 12,
       imgHeight: 200,
       imgRadius: 12,
+      imgPadding: 0,
       textAlign: 'left',
       titleSize: 'text-sm',
       titleColor: '#1f2937',
       titlePadding: 0,
       priceSize: 'text-lg',
       priceColor: '#1E5F7A',
+      pricePadding: 0,
       metaSize: 'text-[10px]',
       metaColor: '#9ca3af',
+      metaPadding: 0,
       metaLabelRating: 'Rating',
       metaLabelCount: 'Sold',
+      btnPadding: 0,
       primaryBtnBg: '#1E5F7A', 
       primaryBtnColor: '#ffffff', 
       primaryBtnSize: 'text-[10px]',
@@ -136,16 +141,20 @@ export default function HomepageBuilderPage() {
       elementGap: 12,
       imgHeight: 200,
       imgRadius: 12,
+      imgPadding: 0,
       textAlign: 'left',
       titleSize: 'text-sm',
       titleColor: '#1f2937',
       titlePadding: 0,
       priceSize: 'text-lg',
       priceColor: '#1E5F7A',
+      pricePadding: 0,
       metaSize: 'text-[10px]',
       metaColor: '#9ca3af',
+      metaPadding: 0,
       metaLabelRating: 'Rating',
       metaLabelCount: 'Booked',
+      btnPadding: 0,
       primaryBtnBg: '#1E5F7A', 
       primaryBtnColor: '#ffffff', 
       primaryBtnSize: 'text-[10px]',
@@ -426,11 +435,15 @@ export default function HomepageBuilderPage() {
                         <Input type="number" value={safeNum(localStyles[cardType]?.imgRadius, 12)} onChange={e => updateCardStyle(cardType, 'imgRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Image Inner Padding (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.imgPadding, 0)} onChange={e => updateCardStyle(cardType, 'imgPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
                         <Input type="number" value={safeNum(localStyles[cardType]?.elementGap, 12)} onChange={e => updateCardStyle(cardType, 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Inner Padding (px)</Label>
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Main Inner Padding (px)</Label>
                         <Input type="number" value={safeNum(localStyles[cardType]?.cardPadding, 16)} onChange={e => updateCardStyle(cardType, 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
                     </div>
@@ -452,6 +465,10 @@ export default function HomepageBuilderPage() {
                         <Input type="color" value={localStyles[cardType]?.titleColor || '#1f2937'} onChange={e => updateCardStyle(cardType, 'titleColor', e.target.value)} className="h-10 p-1" />
                       </div>
                       <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Title Padding (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.titlePadding, 0)} onChange={e => updateCardStyle(cardType, 'titlePadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Size</Label>
                         <Select value={localStyles[cardType]?.priceSize || 'text-lg'} onValueChange={v => updateCardStyle(cardType, 'priceSize', v)}>
                           <SelectTrigger className="h-10 text-[10px]"><SelectValue /></SelectTrigger>
@@ -461,6 +478,10 @@ export default function HomepageBuilderPage() {
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Color</Label>
                         <Input type="color" value={localStyles[cardType]?.priceColor || '#1E5F7A'} onChange={e => updateCardStyle(cardType, 'priceColor', e.target.value)} className="h-10 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Price Area Padding (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.pricePadding, 0)} onChange={e => updateCardStyle(cardType, 'pricePadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-gray-400">Global Alignment</Label>
@@ -498,6 +519,10 @@ export default function HomepageBuilderPage() {
                         <Label className="text-[9px] font-black uppercase">Meta Color</Label>
                         <Input type="color" value={localStyles[cardType]?.metaColor || '#9ca3af'} onChange={e => updateCardStyle(cardType, 'metaColor', e.target.value)} className="h-10 p-1" />
                       </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Meta Area Padding (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.metaPadding, 0)} onChange={e => updateCardStyle(cardType, 'metaPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                      </div>
                     </div>
                   </div>
                   
@@ -512,6 +537,10 @@ export default function HomepageBuilderPage() {
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Btn Text Color</Label>
                         <Input type="color" value={localStyles[cardType]?.primaryBtnColor || '#ffffff'} onChange={e => updateCardStyle(cardType, 'primaryBtnColor', e.target.value)} className="h-10 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Btn Area Padding (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.btnPadding, 0)} onChange={e => updateCardStyle(cardType, 'btnPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
                     </div>
                     <div className="flex flex-col gap-3">
