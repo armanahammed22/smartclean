@@ -219,9 +219,64 @@ export default function SmartCleanHomePage() {
       fontSize: mounted ? (window.innerWidth < 768 ? `${style.titleSizeMobile || 24}px` : `${style.titleSizeDesktop || 40}px`) : '32px'
     };
 
-    const gridCols = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3 lg:gap-4";
+    const gridCols = `grid grid-cols-${style.columnsMobile || 2} md:grid-cols-${style.columnsTablet || 3} lg:grid-cols-${style.columnsDesktop || 5}`;
+    const gridGap = `gap-${(style.gap / 4) || 2} md:gap-${(style.gap / 4) || 3} lg:gap-${(style.gap / 4) || 4}`;
 
     switch (sectionType) {
+      case 'custom_grid':
+        const activeItems = section.items?.filter((i: any) => i.isActive) || [];
+        if (activeItems.length === 0) return null;
+        return (
+          <section key={section.id} style={sectionStyles} className="px-2 md:px-4">
+            <div className="container mx-auto max-w-7xl">
+              <h2 className="mb-8 font-black uppercase tracking-tighter" style={titleStyles}>{section.title}</h2>
+              <div className={cn(gridCols, gridGap)}>
+                {activeItems.map((item: any) => (
+                  <Link key={item.id} href={item.btnLink || '#'} className="block h-full group">
+                    <Card 
+                      className={cn("border-none flex flex-col h-full overflow-hidden transition-all duration-500", style.showShadow !== false ? style.cardShadow || 'shadow-md hover:shadow-xl' : '')} 
+                      style={{ 
+                        backgroundColor: style.cardBg || '#ffffff', 
+                        borderRadius: `${style.cardRadius || 24}px`,
+                        height: style.cardHeight !== 'auto' ? `${style.cardHeight}px` : 'auto'
+                      }}
+                    >
+                      {item.imageUrl && (
+                        <div className="relative overflow-hidden bg-gray-50 shrink-0" style={{ height: `${style.imgHeight || 200}px` }}>
+                          <Image src={item.imageUrl} alt={item.title} fill className="object-cover transition-transform group-hover:scale-110" unoptimized />
+                          {item.badge && (
+                            <Badge className="absolute top-2 left-2 bg-primary text-white border-none font-black text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.badge}</Badge>
+                          )}
+                        </div>
+                      )}
+                      <CardContent className="p-4 flex flex-col flex-1" style={{ textAlign: style.textAlign || 'left' }}>
+                        <h3 className="font-bold text-sm text-gray-800 uppercase line-clamp-2 leading-tight mb-2">{item.title}</h3>
+                        <p className="text-[11px] text-gray-500 font-medium line-clamp-3 mb-4">{item.desc}</p>
+                        <div className="mt-auto pt-2 space-y-3">
+                          {item.price && <span className="font-black text-primary text-lg block">৳{item.price}</span>}
+                          <Button 
+                            className={cn(
+                              "font-black uppercase text-[10px] tracking-widest h-10 rounded-xl",
+                              style.btnAlign === 'full' ? 'w-full' : 'w-fit px-6'
+                            )}
+                            style={{ 
+                              backgroundColor: style.btnBg || '#1E5F7A', 
+                              color: style.btnTextColor || '#ffffff',
+                              alignSelf: style.btnAlign === 'center' ? 'center' : style.btnAlign === 'right' ? 'flex-end' : 'flex-start'
+                            }}
+                          >
+                            {item.btnText || 'Learn More'}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
       case 'top_nav_links':
         if (!topCategories.length) return null;
         return (
@@ -371,7 +426,7 @@ export default function SmartCleanHomePage() {
                   {t('view_all').toUpperCase()}
                 </Link>
               </div>
-              <div className={gridCols}>
+              <div className={cn(gridCols, gridGap)}>
                 {displayList.map(s => (
                   <Link key={s.id} href={isSub ? `/service/${s.parentSlug}` : `/service/${s.slug || s.id}`} className="block h-full group">
                     <Card className={cn("border-none h-full flex flex-col overflow-hidden transition-all duration-500 bg-white", style.cardShadow)} style={{ backgroundColor: style.cardBg, borderRadius: `${style.cardRadius}px` }}>
