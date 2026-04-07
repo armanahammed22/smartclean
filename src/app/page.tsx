@@ -162,7 +162,6 @@ export default function SmartCleanHomePage() {
       
     const sectionType = section.type;
     
-    // We already handle hero and side_promo in the top layout
     if (sectionType === 'hero' || sectionType === 'side_promo') return null;
 
     const getFilteredProducts = () => {
@@ -540,21 +539,21 @@ export default function SmartCleanHomePage() {
           </div>
         ) : (
           <>
-            {/* 🛡️ TOP ROW: Side Promo + Hero Banner */}
+            {/* 🛡️ TOP ROW: SIDE-BY-SIDE SIDE PROMO & HERO BANNER */}
             {(heroSection || sidePromoSection) && (
-              <section className="bg-white pb-2 lg:bg-transparent lg:mt-4">
-                <div className="container mx-auto px-0 lg:px-4">
-                  <div className="flex flex-row gap-2 md:gap-4 w-full">
-                    {/* LEFT: Side Promo (30%) */}
+              <section className="bg-white pb-2 lg:bg-transparent lg:mt-4 w-full">
+                <div className="w-full px-0 lg:px-4">
+                  <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full">
+                    {/* LEFT: Side Promo (30%) - Stacked Vertically */}
                     {sidePromoSection && sidePromos.length > 0 && (
-                      <div className="w-[30%] shrink-0 flex flex-col gap-2 md:gap-4">
+                      <div className="w-[30%] min-w-[100px] shrink-0 flex flex-col gap-2 md:gap-4">
                         {sidePromos.slice(0, 2).map(promo => (
                           <Link key={promo.id} href={promo.buttonLink || '#'} className="block relative aspect-square w-full rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm group">
                             <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-2 md:p-6 flex flex-col justify-end">
-                              <h3 className="text-white text-[8px] md:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2">{promo.title}</h3>
-                              <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[6px] md:text-[10px] font-black uppercase">
-                                {promo.buttonText || 'Discover'} <ChevronRight size={10} className="md:w-3 md:h-3"/>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-2 md:p-6 flex flex-col justify-end">
+                              <h3 className="text-white text-[7px] sm:text-[10px] md:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
+                              <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[5px] sm:text-[8px] md:text-[10px] font-black uppercase">
+                                {promo.buttonText || 'Discover'} <ChevronRight size={10} className="w-2 h-2 md:w-3 md:h-3"/>
                               </div>
                             </div>
                           </Link>
@@ -562,10 +561,10 @@ export default function SmartCleanHomePage() {
                       </div>
                     )}
 
-                    {/* RIGHT: Hero Banner (70% if Side Promo active, else 100%) */}
+                    {/* RIGHT: Hero Banner (70% or 100%) */}
                     {heroSection && (
-                      <div className={cn("relative overflow-hidden bg-gray-100 shadow-sm lg:rounded-3xl h-full flex-1", !sidePromoSection ? "w-full" : "")} style={{ minHeight: '100%' }}>
-                        <div className="relative aspect-[21/11] md:aspect-[982/400] w-full h-full">
+                      <div className={cn("relative overflow-hidden bg-gray-100 shadow-sm rounded-xl md:rounded-2xl lg:rounded-3xl flex-1", !sidePromoSection ? "w-full" : "")}>
+                        <div className="relative aspect-[21/11] md:aspect-[982/400] lg:aspect-[982/400] w-full h-full">
                           {mainBanners.length > 0 ? (
                             <Carousel className="w-full h-full" opts={{ loop: true }}>
                               <CarouselContent className="h-full -ml-0">
@@ -573,10 +572,10 @@ export default function SmartCleanHomePage() {
                                   <CarouselItem key={banner.id} className="h-full basis-full relative pl-0">
                                     <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
                                       <Image src={banner.imageUrl || ''} alt={banner.title} fill className="object-cover" priority unoptimized />
-                                      <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex flex-col justify-center p-4 md:p-12">
-                                        <h2 className="text-white text-sm md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-md">{banner.title}</h2>
-                                        <p className="text-white/90 text-[8px] md:text-lg font-medium mb-2 md:mb-4 max-w-[120px] md:max-w-md line-clamp-2">{banner.subtitle}</p>
-                                        <Button size="sm" className="w-fit h-6 md:h-10 rounded-full px-3 md:px-6 font-black uppercase text-[7px] md:text-xs" style={{ backgroundColor: banner.buttonColor }}>
+                                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-4 md:p-12">
+                                        <h2 className="text-white text-[10px] sm:text-base md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl">{banner.title}</h2>
+                                        <p className="text-white/90 text-[7px] sm:text-[10px] md:text-lg font-medium mb-2 md:mb-4 max-w-[80px] sm:max-w-xs md:max-w-md line-clamp-2">{banner.subtitle}</p>
+                                        <Button size="sm" className="w-fit h-5 sm:h-7 md:h-10 rounded-full px-2 sm:px-4 md:px-6 font-black uppercase text-[6px] sm:text-[8px] md:text-xs shadow-lg" style={{ backgroundColor: banner.buttonColor }}>
                                           {banner.buttonText || t('view_all')}
                                         </Button>
                                       </div>
