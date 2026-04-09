@@ -55,35 +55,6 @@ export function Footer() {
     <footer className="border-t border-white/10 pt-16 pb-4 mt-auto transition-colors duration-500" style={footerStyles}>
       <div className="container mx-auto px-4">
         
-        {/* 🚀 AFFILIATE PROMO BAR */}
-        <section className="mb-16">
-          <Card className="border-none shadow-2xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative border border-white/5">
-            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={160} className="text-primary" /></div>
-            <CardContent className="p-8 md:p-12 relative z-10">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="space-y-4 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-3">
-                    <div className="p-2 bg-primary rounded-xl shadow-lg shadow-primary/20"><TrendingUp size={24}/></div>
-                    <Badge className="bg-primary/20 text-primary border-none uppercase font-black tracking-widest px-3 py-1 rounded-lg text-[9px]">Passive Income</Badge>
-                  </div>
-                  <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter italic">Earn with Smart Clean</h3>
-                  <p className="text-white/60 text-base md:text-lg max-w-xl leading-relaxed">
-                    Join our affiliate network and earn up to <span className="text-primary font-black">৳500 per booking</span> when your friends or followers book a professional cleaning service.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                  <Button asChild className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                    <Link href="/account/affiliate">Join Program <ArrowRight className="ml-2" size={18}/></Link>
-                  </Button>
-                  <Button variant="outline" asChild className="h-16 px-10 rounded-2xl bg-white/5 border-white/10 text-white hover:bg-white/10 font-black uppercase text-xs tracking-widest">
-                    <Link href="/page/partnership-terms">Terms & Benefits</Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12 mb-12">
           <div className="space-y-6">
             <div className="flex items-center gap-3">

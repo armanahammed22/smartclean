@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -76,6 +75,7 @@ const SECTION_TYPES = [
   { id: 'categories', label: 'Categories Grid', icon: Layers, category: 'Navigation' },
   { id: 'flash_deals', label: 'Flash Sale Slider', icon: Zap, category: 'Marketing' },
   { id: 'campaign', label: 'Mega Campaign Banner', icon: Zap, category: 'Marketing' },
+  { id: 'affiliate_promo', label: 'Affiliate Promo Banner', icon: TrendingUp, category: 'Marketing' },
   { id: 'advanced_offers', label: 'Advanced Offers Row', icon: Gift, category: 'Marketing' },
   { id: 'coupons_grid', label: 'Coupons Grid', icon: TicketPercent, category: 'Marketing' },
   { id: 'section_banners', label: 'Section Banners', icon: ImageIcon, category: 'Marketing' },
