@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -260,7 +259,7 @@ export default function SmartCleanHomePage() {
             <div className="container mx-auto max-w-7xl">
               <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
               <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
-                {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, name: s.title, price: s.basePrice, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
+                {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
               </div>
             </div>
           </section>
@@ -283,7 +282,7 @@ export default function SmartCleanHomePage() {
                 {filteredSubs.map(s => (
                   <div key={s.id}>
                     <ProductCard 
-                      product={{...s, name: s.name, price: s.price, type: 'service'} as any} 
+                      product={{...s, type: 'service'} as any} 
                       customStyle={cardStyles?.serviceCard} 
                     />
                   </div>

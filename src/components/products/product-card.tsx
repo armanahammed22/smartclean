@@ -26,10 +26,13 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     setMounted(true);
   }, []);
 
-  const isService = 'basePrice' in product || (product as any).type === 'service';
-  const displayPrice = isService ? (product as any).basePrice : product.price;
-  const regularPrice = isService ? (product as any).regularPrice : product.regularPrice;
-  const displayName = isService ? (product as any).title : product.name;
+  // 🛡️ UNIFIED FIELD LOGIC: Support Product, Main Service, and Sub-Service schemas
+  // Main Services use 'basePrice' and 'title'
+  // Products and Sub-Services use 'price' and 'name'
+  const isService = (product as any).type === 'service' || 'basePrice' in product || 'mainServiceId' in product;
+  const displayPrice = (product as any).basePrice !== undefined ? (product as any).basePrice : product.price;
+  const regularPrice = (product as any).regularPrice !== undefined ? (product as any).regularPrice : product.regularPrice;
+  const displayName = (product as any).title || product.name;
 
   const discountPercent = regularPrice && regularPrice > displayPrice
     ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
@@ -38,7 +41,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Styling Logic
+  // Styling Logic from Admin Config
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadiusTL: customStyle?.cardRadiusTL !== undefined ? customStyle.cardRadiusTL : 16,
@@ -278,11 +281,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           }}
         >
           {customStyle?.primaryBtnEnabled !== false && (
-            <Button 
-              size="sm"
+            <button 
               onClick={handleOrderNow}
               className={cn(
-                "font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", 
+                "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", 
                 style.btnSize,
                 isFullWidthBtn && "flex-1"
               )}
@@ -299,17 +301,14 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             >
               <Zap className="mr-1.5 size-3" fill="currentColor" />
               {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
-            </Button>
+            </button>
           )}
 
           {customStyle?.secondaryBtnEnabled === true && (
-            <Button 
-              variant="outline"
-              size="sm"
+            <button 
               onClick={isService ? undefined : handleAddToCart}
-              asChild={isService}
               className={cn(
-                "font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", 
+                "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", 
                 style.btnSize,
                 isFullWidthBtn && "flex-1"
               )}
@@ -326,7 +325,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               }}
             >
               {isService ? (
-                <Link href={`/service/${product.slug || product.id}`}>
+                <Link href={`/service/${product.slug || product.id}`} className="flex items-center justify-center w-full h-full">
                   <Search className="mr-1.5 size-3" />
                   {customStyle?.secondaryBtnText || 'View'}
                 </Link>
@@ -336,7 +335,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
                   {customStyle?.secondaryBtnText || 'Cart'}
                 </>
               )}
-            </Button>
+            </button>
           )}
         </div>
       </div>
