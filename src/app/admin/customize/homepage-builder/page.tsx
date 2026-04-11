@@ -62,6 +62,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,10 +102,7 @@ const FONT_SIZES = [
 const DEFAULT_CARD_STYLES = {
   productCard: { 
     cardBg: '#ffffff', 
-    cardRadiusTL: 16, 
-    cardRadiusTR: 16, 
-    cardRadiusBL: 16, 
-    cardRadiusBR: 16, 
+    cardRadiusTL: 16, cardRadiusTR: 16, cardRadiusBL: 16, cardRadiusBR: 16, 
     cardPadding: 12,
     elementGap: 12,
     imgHeight: 180,
@@ -137,10 +135,7 @@ const DEFAULT_CARD_STYLES = {
   },
   serviceCard: { 
     cardBg: '#ffffff', 
-    cardRadiusTL: 16, 
-    cardRadiusTR: 16, 
-    cardRadiusBL: 16, 
-    cardRadiusBR: 16, 
+    cardRadiusTL: 16, cardRadiusTR: 16, cardRadiusBL: 16, cardRadiusBR: 16, 
     cardPadding: 12,
     elementGap: 12,
     imgHeight: 180,
@@ -276,7 +271,7 @@ export default function HomepageBuilderPage() {
     setLocalStyles(DEFAULT_CARD_STYLES);
     if (db) {
       await setDoc(doc(db, 'site_settings', 'card_styles'), DEFAULT_CARD_STYLES);
-      toast({ title: "Styles Reset", description: "Default designs restored." });
+      toast({ title: "Styles Reset" });
     }
   };
 
@@ -356,8 +351,6 @@ export default function HomepageBuilderPage() {
       config: { ...editingSection.config, manualIds: next }
     });
   };
-
-  if (isLoading || stylesLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-24 min-w-0">
@@ -767,7 +760,7 @@ export default function HomepageBuilderPage() {
                   <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col h-[400px] animate-in slide-in-from-right-4">
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Item Selector</h4>
-                      <Badge className="bg-primary text-white border-none">{editingSection.config.manualIds?.length || 0}/20</Badge>
+                      <Badge className="bg-primary text-white border-none">{editingSection.config.manualIds?.length || 0} SELECTED</Badge>
                     </div>
                     <div className="relative mb-4">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
