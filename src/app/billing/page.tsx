@@ -7,7 +7,7 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Zap, Target, Shield, Clock } from 'lucide-react';
+import { Check, Loader2, Zap, Target, Shield, Clock, Users, Headphones } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, any> = {
@@ -136,5 +136,3 @@ export default function BillingPlansPage() {
     </PublicLayout>
   );
 }
-
-import { Headphones } from 'lucide-react';
