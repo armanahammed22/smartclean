@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -132,6 +131,9 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   };
 
   if (!mounted) return null;
+
+  // Determine if we should use flex-1 for buttons when width is 100%
+  const isFullWidthBtn = style.btnWidth === '100%';
 
   return (
     <div className="block h-full group active:scale-[0.98] transition-all">
@@ -274,11 +276,15 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             <Button 
               size="sm"
               onClick={handleOrderNow}
-              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", style.btnSize)}
+              className={cn(
+                "font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", 
+                style.btnSize,
+                isFullWidthBtn && "flex-1"
+              )}
               style={{ 
                 backgroundColor: style.btnBg, 
                 color: style.btnColor,
-                width: style.btnWidth,
+                width: isFullWidthBtn ? 'auto' : style.btnWidth,
                 height: `${style.btnHeight}px`,
                 paddingTop: `${style.btnPadding.top}px`,
                 paddingBottom: `${style.btnPadding.bottom}px`,
@@ -297,12 +303,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               size="sm"
               onClick={isService ? undefined : handleAddToCart}
               asChild={isService}
-              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", style.btnSize)}
+              className={cn(
+                "font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", 
+                style.btnSize,
+                isFullWidthBtn && "flex-1"
+              )}
               style={{ 
                 backgroundColor: '#f3f4f6', 
                 color: '#1f2937',
                 borderColor: 'rgba(0,0,0,0.05)',
-                width: style.btnWidth,
+                width: isFullWidthBtn ? 'auto' : style.btnWidth,
                 height: `${style.btnHeight}px`,
                 paddingTop: `${style.btnPadding.top}px`,
                 paddingBottom: `${style.btnPadding.bottom}px`,
