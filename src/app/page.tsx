@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -260,6 +261,33 @@ export default function SmartCleanHomePage() {
               <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
               <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
                 {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, name: s.title, price: s.basePrice, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'sub_services_custom':
+        let filteredSubs = allSubServices?.filter(s => s.status?.toLowerCase() === 'active') || [];
+        if (config.sourceType === 'manual' && config.manualIds?.length) {
+          filteredSubs = filteredSubs.filter(s => config.manualIds.includes(s.id));
+        }
+        
+        filteredSubs = filteredSubs.slice(0, config.limit || 10);
+        if (!filteredSubs.length) return null;
+
+        return (
+          <section key={section.id} className="px-4 py-12">
+            <div className="container mx-auto max-w-7xl">
+              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
+                {filteredSubs.map(s => (
+                  <div key={s.id}>
+                    <ProductCard 
+                      product={{...s, name: s.name, price: s.price, type: 'service'} as any} 
+                      customStyle={cardStyles?.serviceCard} 
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </section>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -62,7 +63,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -84,6 +84,7 @@ const SECTION_TYPES = [
   { id: 'section_banners', label: 'Section Banners', icon: ImageIcon, category: 'Marketing' },
   { id: 'products_dynamic', label: 'Dynamic Products', icon: Package, category: 'Products' },
   { id: 'services_dynamic', label: 'Dynamic Services', icon: Wrench, category: 'Services' },
+  { id: 'sub_services_custom', label: 'Sub-Services Grid', icon: Layers, category: 'Services' },
   { id: 'trust_stats', label: 'Trust Stats Counter', icon: Users, category: 'UI' }
 ];
 
@@ -220,6 +221,9 @@ export default function HomepageBuilderPage() {
   const servicesQuery = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const { data: allServices } = useCollection(servicesQuery);
 
+  const subServicesQuery = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
+  const { data: allSubServices } = useCollection(subServicesQuery);
+
   useEffect(() => {
     if (sections) setLocalSections(sections);
   }, [sections]);
@@ -331,14 +335,15 @@ export default function HomepageBuilderPage() {
     if (!editingSection) return [];
     const combined = [
       ...(allProducts?.map(p => ({ ...p, itemType: 'product' })) || []),
-      ...(allServices?.map(s => ({ ...s, itemType: 'service', name: s.title })) || [])
+      ...(allServices?.map(s => ({ ...s, itemType: 'service', name: s.title })) || []),
+      ...(allSubServices?.map(sub => ({ ...sub, itemType: 'service', name: sub.name })) || [])
     ];
     if (!itemSearchQuery.trim()) return combined.slice(0, 20);
     return combined.filter(item => 
       (item.name || '').toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
       item.id.toLowerCase().includes(itemSearchQuery.toLowerCase())
     ).slice(0, 20);
-  }, [allProducts, allServices, itemSearchQuery, editingSection]);
+  }, [allProducts, allServices, allSubServices, itemSearchQuery, editingSection]);
 
   const toggleManualId = (id: string) => {
     if (!editingSection) return;
@@ -703,7 +708,7 @@ export default function HomepageBuilderPage() {
                   </div>
                 </div>
 
-                {(editingSection?.type === 'products_dynamic' || editingSection?.type === 'services_dynamic') && (
+                {(editingSection?.type === 'products_dynamic' || editingSection?.type === 'services_dynamic' || editingSection?.type === 'sub_services_custom') && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 border-b pb-2">Intelligence Source</h4>
                     <div className="grid grid-cols-1 gap-4">
