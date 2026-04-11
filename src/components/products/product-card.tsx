@@ -188,16 +188,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           <span className={cn("uppercase font-black", style.metaSize)}>{soldCount} {style.metaLabelCount}</span>
         </div>
 
-        {/* 🛒 BUTTON AREA */}
+        {/* 🛒 BUTTON AREA - NOW HORIZONTAL */}
         <div 
-          className="w-full flex flex-col gap-2 mt-auto"
+          className="w-full flex flex-row items-center gap-2 mt-auto"
           style={{ padding: `0 ${style.btnPadding}px` }}
         >
           {customStyle?.primaryBtnEnabled !== false && (
             <Button 
               size="sm"
               onClick={handleOrderNow}
-              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none h-10 w-full shadow-lg", style.btnSize)}
+              className={cn("flex-1 font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none h-10 shadow-lg", style.btnSize)}
               style={{ 
                 backgroundColor: style.btnBg, 
                 color: style.btnColor 
@@ -214,7 +214,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               size="sm"
               onClick={isService ? undefined : handleAddToCart}
               asChild={isService}
-              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 h-10 w-full border-2", style.btnSize)}
+              className={cn("flex-1 font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 h-10 border-2", style.btnSize)}
               style={{ 
                 backgroundColor: '#f3f4f6', 
                 color: '#1f2937',
@@ -224,12 +224,12 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               {isService ? (
                 <Link href={`/service/${product.slug || product.id}`}>
                   <Search className="mr-1.5 size-3" />
-                  {customStyle?.secondaryBtnText || 'View Details'}
+                  {customStyle?.secondaryBtnText || 'View'}
                 </Link>
               ) : (
                 <>
                   <ShoppingCart className="mr-1.5 size-3" />
-                  {customStyle?.secondaryBtnText || 'Add to Cart'}
+                  {customStyle?.secondaryBtnText || 'Cart'}
                 </>
               )}
             </Button>
