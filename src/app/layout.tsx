@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 /**
- * Server-side helper to fetch global settings for script injection
+ * Server-side helper to fetch global settings for script injection and icons
  */
 async function getGlobalSettings() {
   try {
@@ -33,11 +33,16 @@ async function getGlobalSettings() {
 }
 
 /**
- * Generate Dynamic Metadata for SEO
+ * Generate Dynamic Metadata for SEO and Icons
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
   const baseUrl = settings?.websiteUrl ? settings.websiteUrl.replace(/\/$/, '') : 'https://smartclean.com.bd';
+  
+  // Favicon Priority: Custom Favicon > Website Logo > Default
+  const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
+  // Apple Touch Icon Priority: Custom App Icon > Website Logo > Default
+  const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
   return {
     metadataBase: new URL(baseUrl),
@@ -54,9 +59,22 @@ export async function generateMetadata(): Promise<Metadata> {
       google: settings?.googleSearchConsoleToken,
     },
     icons: {
-      icon: settings?.faviconUrl || '/favicon.ico',
-      shortcut: settings?.faviconUrl || '/favicon.ico',
-      apple: settings?.appIconUrl || '/apple-icon.png',
+      icon: [
+        { url: favicon },
+        { url: favicon, sizes: '32x32', type: 'image/png' },
+        { url: favicon, sizes: '16x16', type: 'image/png' },
+      ],
+      shortcut: favicon,
+      apple: [
+        { url: appleIcon, sizes: '180x180', type: 'image/png' },
+      ],
+      other: [
+        {
+          rel: 'mask-icon',
+          url: favicon,
+          color: '#1E5F7A',
+        },
+      ],
     },
     openGraph: {
       type: 'website',
@@ -89,6 +107,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getGlobalSettings();
+  
+  const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
+  const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
   // Helper to clean scripts for next/script
   const cleanScript = (script: string) => {
@@ -106,6 +127,10 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+        
+        {/* Explicit Icon Tags for older browser support */}
+        <link rel="icon" href={favicon} />
+        <link rel="apple-touch-icon" href={appleIcon} />
 
         {/* JSON-LD Structured Data */}
         <script
