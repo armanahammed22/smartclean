@@ -304,10 +304,10 @@ function OrdersListContent() {
         </CardContent>
       </Card>
 
-      {/* 🛠️ IMPROVED DIALOG UI */}
+      {/* 🛠️ IMPROVED SCROLLABLE DIALOG UI */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full overflow-hidden">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
                 <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
@@ -375,10 +375,10 @@ function OrdersListContent() {
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Customer Identity</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                      <Input placeholder="Mobile Number" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      <Input placeholder="Mobile Number" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                     </div>
-                    <Textarea placeholder="Detailed Address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px] p-4" />
+                    <Textarea placeholder="Detailed Address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px] p-4 shadow-inner" />
                   </div>
                 </div>
 
@@ -389,11 +389,11 @@ function OrdersListContent() {
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[10px] font-black uppercase text-gray-400">Delivery Fee</Label>
-                        <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg" />
+                        <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg shadow-sm" />
                       </div>
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[10px] font-black uppercase text-gray-400">Discount</Label>
-                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg" />
+                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg shadow-sm" />
                       </div>
                       <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                         <div className="flex flex-col">
@@ -410,14 +410,14 @@ function OrdersListContent() {
                     <div className="grid grid-cols-2 gap-3">
                       <div 
                         onClick={() => setPaymentCategory('cod')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-md" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Package size={20} className={paymentCategory === 'cod' ? "text-primary" : "text-gray-400"} />
                         <span className="text-[10px] font-black uppercase tracking-widest">COD</span>
                       </div>
                       <div 
                         onClick={() => setPaymentCategory('online')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-md" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Smartphone size={20} className={paymentCategory === 'online' ? "text-blue-600" : "text-gray-400"} />
                         <span className="text-[10px] font-black uppercase tracking-widest">Gateway</span>

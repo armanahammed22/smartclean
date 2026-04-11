@@ -327,10 +327,10 @@ function BookingsListContent() {
         onClose={() => setAssignBooking(null)} 
       />
 
-      {/* 🛠️ IMPROVED DIALOG UI */}
+      {/* 🛠️ IMPROVED SCROLLABLE DIALOG UI */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full overflow-hidden">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
                 <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">

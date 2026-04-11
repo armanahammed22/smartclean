@@ -298,9 +298,10 @@ export default function ServicesManagementPage() {
         </CardContent>
       </Card>
 
+      {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col">
-          <form onSubmit={handleSaveFull} className="flex flex-col h-full">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
+          <form onSubmit={handleSaveFull} className="flex flex-col h-full overflow-hidden">
             <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex flex-row items-center justify-between">
               <div className="space-y-1">
                 <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
@@ -413,43 +414,6 @@ export default function ServicesManagementPage() {
               </div>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!viewingService} onOpenChange={() => setViewingService(null)}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <DialogHeader className="p-8 bg-[#081621] text-white flex flex-row items-center justify-between">
-            <DialogTitle className="text-xl font-black uppercase tracking-tight leading-none">{viewingService?.title}</DialogTitle>
-            <button onClick={() => setViewingService(null)} className="text-white/60 hover:text-white transition-colors">
-              <X size={24} />
-            </button>
-          </DialogHeader>
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white">
-            <div className="relative aspect-video md:aspect-square rounded-2xl overflow-hidden bg-gray-50 border">
-              {viewingService?.imageUrl ? (
-                <Image src={viewingService.imageUrl} alt="Preview" fill className="object-cover" unoptimized />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-200"><Wrench size={80} /></div>
-              )}
-            </div>
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Base Rate</p>
-                <span className="text-3xl font-black text-primary">৳{viewingService?.basePrice?.toLocaleString()}</span>
-                <div className="flex gap-4 mt-2">
-                  <p className="text-[10px] font-bold text-gray-600 flex items-center gap-1.5 uppercase"><Clock size={12} className="text-primary" /> {viewingService?.duration || 'Flexible'}</p>
-                  <p className="text-[10px] font-bold text-gray-600 flex items-center gap-1.5 uppercase"><Users size={12} className="text-blue-500" /> {viewingService?.teamSize || 'Professional'}</p>
-                </div>
-              </div>
-              <p className="text-xs text-gray-600 leading-relaxed font-medium">"{viewingService?.description || 'Full service details available in deep configuration mode.'}"</p>
-              <div className="pt-4 border-t flex gap-3">
-                <Button className="flex-1 font-black uppercase text-xs h-11" asChild>
-                  <Link href={`/admin/services/${viewingService?.id}`}>Configure</Link>
-                </Button>
-                <Button variant="outline" className="flex-1 font-black uppercase text-xs h-11" onClick={() => setViewingService(null)}>Close</Button>
-              </div>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

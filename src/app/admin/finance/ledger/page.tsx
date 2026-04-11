@@ -189,6 +189,7 @@ export default function LedgerManagementPage() {
         </CardContent>
       </Card>
 
+      {/* 🛠️ IMPROVED SCROLLABLE DIALOG UI */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-white flex flex-col rounded-none md:rounded-[2.5rem]">
           <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
@@ -201,7 +202,7 @@ export default function LedgerManagementPage() {
             </div>
             <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
-          <form onSubmit={handleAddEntry} className="flex flex-col h-full bg-white">
+          <form onSubmit={handleAddEntry} className="flex flex-col h-full bg-white overflow-hidden">
             <div className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
                 <div className="space-y-6">
@@ -217,7 +218,7 @@ export default function LedgerManagementPage() {
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category Classification</Label>
                     <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v as any})}>
                       <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">
+                      <SelectContent className="rounded-xl">
                         {["Staff Salary", "Material Cost", "Vendor Commission", "Partner Commission", "Service Income", "Product Income", "Project Cost", "Marketing", "Transport", "Rent", "Other"].map(c => (
                           <SelectItem key={c} value={c} className="font-bold text-[10px] uppercase py-3">{c}</SelectItem>
                         ))}
@@ -242,7 +243,7 @@ export default function LedgerManagementPage() {
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Target Account Pool</Label>
                     <Select value={formData.accountId} onValueChange={v => setFormData({...formData, accountId: v})}>
                       <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner"><SelectValue placeholder="Choose Account..." /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">
+                      <SelectContent className="rounded-xl">
                         {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id} className="font-bold text-[10px] uppercase py-3">{acc.name} (৳{acc.balance})</SelectItem>)}
                       </SelectContent>
                     </Select>

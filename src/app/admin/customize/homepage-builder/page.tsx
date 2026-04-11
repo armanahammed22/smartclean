@@ -656,9 +656,9 @@ export default function HomepageBuilderPage() {
         </TabsContent>
       </Tabs>
 
-      {/* 🛠️ SECTION EDITOR DIALOG */}
+      {/* 🛠️ SECTION EDITOR DIALOG - FIXED SCROLLING */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
+        <DialogContent className="max-w-4xl w-[95vw] h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
           <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -757,12 +757,12 @@ export default function HomepageBuilderPage() {
 
               <div className="space-y-8">
                 {editingSection?.config?.sourceType === 'manual' ? (
-                  <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col h-[400px] animate-in slide-in-from-right-4">
-                    <div className="flex justify-between items-center mb-4">
+                  <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col h-[400px] animate-in slide-in-from-right-4 overflow-hidden">
+                    <div className="flex justify-between items-center mb-4 shrink-0">
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Item Selector</h4>
                       <Badge className="bg-primary text-white border-none">{editingSection.config.manualIds?.length || 0} SELECTED</Badge>
                     </div>
-                    <div className="relative mb-4">
+                    <div className="relative mb-4 shrink-0">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                       <Input 
                         placeholder="Search items..." 
@@ -824,7 +824,7 @@ export default function HomepageBuilderPage() {
             </div>
           </div>
 
-          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t flex flex-col sm:flex-row gap-3">
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
             <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
             <Button onClick={handleUpdateSection} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Component</>}
@@ -833,9 +833,9 @@ export default function HomepageBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ➕ ADD SECTION DIALOG */}
+      {/* ➕ ADD SECTION DIALOG - FIXED SCROLLING */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] max-h-[85vh] rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
+        <DialogContent className="max-w-4xl w-[95vw] h-full md:h-auto md:max-h-[85vh] rounded-none md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col bg-white">
           <DialogHeader className="p-10 bg-[#081621] text-white shrink-0 relative">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Deploy Module</DialogTitle>
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60"><X size={24}/></button>

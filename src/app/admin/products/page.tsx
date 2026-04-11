@@ -257,9 +257,10 @@ export default function ProductsManagementPage() {
         </CardContent>
       </Card>
 
+      {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl flex flex-col bg-white">
-          <form onSubmit={handleSave} className="flex flex-col h-full">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl flex flex-col bg-white overflow-hidden">
+          <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
             <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">

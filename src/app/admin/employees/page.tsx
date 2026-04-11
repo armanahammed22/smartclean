@@ -200,9 +200,10 @@ export default function EmployeesPage() {
           <Plus size={20} /> Hire New Personnel
         </Button>
 
+        {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => { if(!open) setIsDialogOpen(false); }}>
           <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] overflow-hidden p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl flex flex-col bg-white">
-            <form onSubmit={handleSave} className="flex flex-col h-full" key={editingStaff?.id || 'new'}>
+            <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden" key={editingStaff?.id || 'new'}>
               <DialogHeader className="bg-[#081621] text-white p-6 md:p-8 shrink-0 flex flex-row items-center justify-between">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">
@@ -217,7 +218,7 @@ export default function EmployeesPage() {
 
               <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-white">
                 <Tabs defaultValue="identity" className="w-full">
-                  <TabsList className="bg-gray-100 p-1 rounded-xl mb-10 w-fit">
+                  <TabsList className="bg-gray-100 p-1 rounded-xl mb-10 w-fit shrink-0">
                     <TabsTrigger value="identity" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Identity</TabsTrigger>
                     <TabsTrigger value="payroll" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Payroll & Role</TabsTrigger>
                     <TabsTrigger value="skills" className="rounded-lg gap-2 text-[10px] font-black uppercase px-6">Skills</TabsTrigger>
