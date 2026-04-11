@@ -42,7 +42,8 @@ import {
   Link as LinkIcon,
   CircleEllipsis,
   ExternalLink,
-  CreditCard
+  CreditCard,
+  Compass
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -124,7 +125,7 @@ export default function NavigationHubPage() {
   // Feature Cards (Quick Actions) States
   const [actionFormData, setActionFormData] = useState({ title: '', iconName: 'Wrench', link: '', bgGradient: 'from-primary to-primary/80' });
   const [isActionSubmitting, setIsActionSubmitting] = useState(false);
-  const actionsQuery = useMemoFirebase(() => db ? query(collection(db, 'quick_actions')) : null, [db]);
+  const actionsQuery = useMemoFirebase(() => db ? collection(db, 'quick_actions')) : null, [db]);
   const { data: quickActions, isLoading: actionsLoading } = useCollection(actionsQuery);
 
   useEffect(() => {
@@ -205,7 +206,7 @@ export default function NavigationHubPage() {
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Navigation &amp; Interface Hub</h1>
+          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Navigation & Interface Hub</h1>
           <p className="text-muted-foreground text-sm font-medium">Consolidated control for navbars, icon grids, and call-to-action cards</p>
         </div>
       </div>
@@ -218,7 +219,6 @@ export default function NavigationHubPage() {
           <TabsTrigger value="feature_cards" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white"><Layout size={14}/> Feature Cards</TabsTrigger>
         </TabsList>
 
-        {/* 📱 BOTTOM NAVBAR BLOCK */}
         <TabsContent value="bottom_nav" className="mt-0 space-y-8">
           <div className="flex justify-end">
             <Button onClick={handleSaveBottom} disabled={isSavingBottom} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20">
@@ -230,7 +230,7 @@ export default function NavigationHubPage() {
             <TabsList className="bg-gray-100 p-1 h-10 rounded-lg">
               <TabsTrigger value="links" className="text-[9px] uppercase font-black">Icon Controls</TabsTrigger>
               <TabsTrigger value="package" className="text-[9px] uppercase font-black">Package Toggle</TabsTrigger>
-              <TabsTrigger value="style" className="text-[9px] uppercase font-black">Style &amp; Themes</TabsTrigger>
+              <TabsTrigger value="style" className="text-[9px] uppercase font-black">Style & Themes</TabsTrigger>
             </TabsList>
 
             <TabsContent value="links" className="mt-0">
@@ -280,7 +280,7 @@ export default function NavigationHubPage() {
                         onValueChange={v => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, href: v}})}
                       >
                         <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold">
-                          <SelectValue />
+                          <SelectValue placeholder="Select Target..." />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                           <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
@@ -292,7 +292,7 @@ export default function NavigationHubPage() {
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
                     <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
                     <p className="text-[10px] font-medium text-blue-800 leading-relaxed">
-                      "Billing &amp; Plan" অপশনটি সিলেক্ট করলে প্যাকেজ আইকনে ক্লিক করলে ইউজার আপনার সাবস্ক্রিপশন প্ল্যানগুলো দেখতে পাবে।
+                      "Billing &amp; Plan (Live)" অপশনটি সিলেক্ট করলে প্যাকেজ আইকনে ক্লিক করলে ইউজার আপনার সাবস্ক্রিপশন প্ল্যানগুলো দেখতে পাবে।
                     </p>
                   </div>
                 </CardContent>
@@ -321,7 +321,6 @@ export default function NavigationHubPage() {
           </Tabs>
         </TabsContent>
 
-        {/* 🔗 TOP LINKS BLOCK */}
         <TabsContent value="top_nav" className="mt-0 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 h-fit">
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
@@ -352,7 +351,6 @@ export default function NavigationHubPage() {
           </div>
         </TabsContent>
 
-        {/* 🧊 ICON GRID BLOCK */}
         <TabsContent value="icon_grid" className="mt-0 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 h-fit">
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">

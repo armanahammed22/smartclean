@@ -81,8 +81,6 @@ export default function BottomNavManagementPage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const productsEnabled = settings?.productsEnabled !== false;
-
   const [formData, setFormData] = useState<any>({
     bgColor: '#ffffff',
     activeColor: '#1E5F7A',
@@ -208,29 +206,28 @@ export default function BottomNavManagementPage() {
         <div className="space-y-1">
           <h4 className="text-sm font-black uppercase text-blue-900">Automation Note</h4>
           <p className="text-xs text-blue-800/70 leading-relaxed">
-            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings {'>'} Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে। আপনি এখান থেকে ইন্ডিভিজুয়ালি আইকন এনাবল বা ডিজেবল করতে পারেন এবং প্রতিটি আইকনের জন্য আলাদা রঙ সেট করতে পারেন।
+            সিস্টেম অটোমেশন অন আছে: যদি <strong>Settings {'>'} Products Enabled</strong> অফ থাকে, তবে স্বয়ংক্রিয়ভাবে নেভিগেশন বার থেকে "কার্ট" হাইড হবে। আপনি এখান থেকে ইন্ডিভিজুয়ালি আইকন এনাবল বা ডিজেবল করতে পারেন।
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="links" className="space-y-6">
-        <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar">
-          <TabsTrigger value="links" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+        <TabsList className="bg-white border p-1 h-12 rounded-xl flex overflow-x-auto no-scrollbar shadow-sm">
+          <TabsTrigger value="links" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[10px] uppercase">
             <List size={16} /> Icon Management
           </TabsTrigger>
-          <TabsTrigger value="package" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="package" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[10px] uppercase">
             <Layers size={16} /> Package Feature
           </TabsTrigger>
-          <TabsTrigger value="offers" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="offers" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[10px] uppercase">
             <ArrowUpCircle size={16} /> Circular Offers
           </TabsTrigger>
-          <TabsTrigger value="style" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white">
+          <TabsTrigger value="style" className="rounded-lg gap-2 flex-1 data-[state=active]:bg-primary data-[state=active]:text-white font-black text-[10px] uppercase">
             <Palette size={16} /> Visual Theme
           </TabsTrigger>
         </TabsList>
 
-        {/* STATIC BUTTONS */}
-        <TabsContent value="links" className="space-y-6">
+        <TabsContent value="links" className="space-y-6 mt-0">
           <div className="flex justify-end">
             <Button onClick={addLink} variant="outline" size="sm" className="rounded-xl font-bold border-primary/20 text-primary uppercase text-[10px] h-10 shadow-sm bg-white">
               <PlusCircle size={14} className="mr-1.5" /> Add Custom Link
@@ -238,14 +235,14 @@ export default function BottomNavManagementPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {formData.links.map((link: any, i: number) => (
-              <Card key={link.id} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group border border-gray-100 relative">
+              <Card key={link.id} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100 relative">
                 <CardHeader className="bg-gray-50/50 p-6 border-b flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">POS {i + 1}</Badge>
                     <CardTitle className="text-sm font-black uppercase">{link.label}</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border shadow-xs">
+                    <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border shadow-sm">
                       <Label className="text-[8px] font-black uppercase text-muted-foreground">Enabled</Label>
                       <Switch checked={link.isEnabled !== false} onCheckedChange={v => updateLink(i, 'isEnabled', v)} className="scale-75" />
                     </div>
@@ -265,7 +262,7 @@ export default function BottomNavManagementPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Individual Active Color</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Individual Color</Label>
                       <Input type="color" value={link.color || '#1E5F7A'} onChange={e => updateLink(i, 'color', e.target.value)} className="h-11 p-1 bg-gray-50 border-none rounded-xl" />
                     </div>
                     <div className="space-y-2">
@@ -279,8 +276,7 @@ export default function BottomNavManagementPage() {
           </div>
         </TabsContent>
 
-        {/* PACKAGE FEATURE MANAGER */}
-        <TabsContent value="package" className="max-w-2xl mx-auto space-y-6">
+        <TabsContent value="package" className="max-w-2xl mx-auto space-y-6 mt-0">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
             <CardHeader className="bg-[#081621] text-white p-8">
               <div className="flex items-center justify-between">
@@ -305,6 +301,21 @@ export default function BottomNavManagementPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Quick Link Selection</Label>
+                  <Select
+                    value={formData.packageConfig?.href || '/services'}
+                    onValueChange={v => setFormData({...formData, packageConfig: {...formData.packageConfig, href: v}})}
+                  >
+                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
+                      <SelectValue placeholder="Select Target..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
+                      <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Live)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon (Lucide)</Label>
                   <Input
                     value={formData.packageConfig?.icon || 'Layers'}
@@ -321,23 +332,8 @@ export default function BottomNavManagementPage() {
                     className="h-12 p-1 bg-gray-50 border-none rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Quick Link Selection</Label>
-                  <Select
-                    value={formData.packageConfig?.href || '/services'}
-                    onValueChange={v => setFormData({...formData, packageConfig: {...formData.packageConfig, href: v}})}
-                  >
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
-                      <SelectValue placeholder="Select Target..." />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
-                      <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Subscription)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Manual Redirection</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Manual Link Overide</Label>
                   <Input
                     value={formData.packageConfig?.href || '/services'}
                     onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, href: e.target.value}})}
@@ -358,8 +354,7 @@ export default function BottomNavManagementPage() {
           </Card>
         </TabsContent>
 
-        {/* CIRCULAR OFFERS */}
-        <TabsContent value="offers" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <TabsContent value="offers" className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-0">
           <div className="lg:col-span-5 space-y-6">
             <Card className="border-none shadow-sm h-fit bg-white rounded-3xl overflow-hidden border border-gray-100">
               <CardHeader className="bg-[#081621] text-white p-8">
@@ -367,7 +362,7 @@ export default function BottomNavManagementPage() {
                   <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
                     <Smartphone size={20} /> {editingOfferId ? 'Update Offer' : 'Add New Offer'}
                   </CardTitle>
-                  <Switch checked={formData.showOfferCircle} onCheckedChange={v => setFormData({...formData, showOfferCircle: v})} />
+                  <Switch checked={bottomFormData.showOfferCircle} onCheckedChange={v => setFormData({...formData, showOfferCircle: v})} />
                 </div>
                 <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle middle rotating offers</CardDescription>
               </CardHeader>
@@ -428,8 +423,7 @@ export default function BottomNavManagementPage() {
           </div>
         </TabsContent>
 
-        {/* VISUAL THEME */}
-        <TabsContent value="style" className="max-w-3xl mx-auto space-y-6">
+        <TabsContent value="style" className="max-w-3xl mx-auto space-y-6 mt-0">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-8">
               <CardTitle className="text-lg font-bold">Navbar Aesthetics</CardTitle>
