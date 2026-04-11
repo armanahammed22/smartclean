@@ -24,7 +24,14 @@ import {
   RefreshCw,
   Plus,
   ClipboardList,
-  Tags
+  Tags,
+  FileText,
+  Clock,
+  Wallet,
+  Activity,
+  History,
+  ReceiptText,
+  ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,29 +103,18 @@ export default function AdminDashboard() {
     setIsSeeding(true);
     try {
       const batch = writeBatch(db);
-      
       const services = getMockServices('en');
       const subServices = getMockSubServices();
 
       services.forEach(srv => {
         const sRef = doc(db, 'services', srv.id);
-        batch.set(sRef, {
-          ...srv,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
+        batch.set(sRef, { ...srv, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       });
 
       subServices.forEach((sub, idx) => {
         const subId = `sub_srv_${idx + 1}`;
         const subRef = doc(db, 'sub_services', subId);
-        
-        batch.set(subRef, {
-          ...sub,
-          id: subId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
+        batch.set(subRef, { ...sub, id: subId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       });
 
       await batch.commit();
@@ -160,8 +156,6 @@ export default function AdminDashboard() {
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
-  const showSeedButton = !servicesLoading && servicesEnabled && (!dbServices || dbServices.length === 0);
-
   const STATS_CARDS = [
     { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
     ...(productsEnabled ? [{ label: "Active Vendors", val: metrics?.activeVendors || 0, icon: Store, color: "text-orange-600", bg: "bg-orange-50" }] : []),
@@ -169,23 +163,21 @@ export default function AdminDashboard() {
     { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
-  const REGISTRY_STATS = [
-    { label: "Users", count: dbUsers?.length || 0, icon: Users, color: "text-blue-500" },
-    { label: "Leads", count: dbLeads?.length || 0, icon: TrendingUp, color: "text-purple-500" },
-    { label: "Requests", count: dbRequests?.length || 0, icon: ClipboardList, color: "text-orange-500" },
-    { label: "Bookings", count: dbBookings?.length || 0, icon: Calendar, color: "text-emerald-500" },
-    { label: "Products", count: products?.length || 0, icon: Box, color: "text-amber-500" },
-    { label: "Services", count: dbServices?.length || 0, icon: Wrench, color: "text-sky-500" },
+  const MANAGEMENT_SHORTCUTS = [
+    { label: "Master Ledger", href: "/admin/finance/ledger", icon: Wallet, color: "bg-green-600", desc: "Finance & Accounts" },
+    { label: "Attendance Logs", href: "/admin/hrm/attendance", icon: Clock, color: "bg-amber-600", desc: "HRM Control" },
+    { label: "Invoices", href: "/admin/invoices", icon: ReceiptText, color: "bg-indigo-600", desc: "Billing Center" },
+    { label: "Service List", href: "/admin/services", icon: Wrench, color: "bg-blue-600", desc: "Inventory" },
   ];
 
   return (
-    <div className="space-y-6 md:space-y-8 min-w-0">
+    <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1 md:px-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Global Overview</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Admin Overview</h1>
           <div className="text-muted-foreground text-[10px] md:text-sm font-medium mt-2 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Terminal Operational
+            System Operational
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
@@ -199,21 +191,29 @@ export default function AdminDashboard() {
               <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
             </Button>
           )}
-          {showSeedButton && (
-            <Button 
-              onClick={handleSeedData} 
-              disabled={isSeeding} 
-              variant="outline" 
-              className="flex-1 sm:flex-none rounded-xl font-black bg-white border-primary/20 text-primary shadow-sm gap-2 text-[10px] h-10 uppercase tracking-widest"
-            >
-              {isSeeding ? <RefreshCw className="animate-spin" size={14} /> : <Database size={14} />}
-              Seed ERP Data
-            </Button>
-          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+      {/* 🚀 QUICK MANAGEMENT SHORTCUTS */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {MANAGEMENT_SHORTCUTS.map((item, i) => (
+          <Link key={i} href={item.href}>
+            <Card className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden bg-white group cursor-pointer border border-gray-100/50">
+              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                <div className={cn("p-4 rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110 group-hover:rotate-3", item.color)}>
+                  <item.icon size={24} />
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="font-black text-xs uppercase tracking-tight text-gray-900">{item.label}</h4>
+                  <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{item.desc}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </section>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {STATS_CARDS.map((stat, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
             <CardContent className="p-4 md:p-6">
@@ -261,43 +261,19 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
-
-          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-5 md:p-8">
-              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
-                <Database className="text-primary" size={18} /> Registry Check
-              </CardTitle>
-              <CardDescription className="text-[9px] md:text-[10px] font-bold uppercase text-muted-foreground mt-1">Live counts across core collection nodes</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 md:p-10">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6">
-                {REGISTRY_STATS.map((reg, i) => (
-                  <div key={i} className="p-3 md:p-4 rounded-xl md:rounded-2xl border border-gray-100 bg-gray-50/30 flex flex-col items-center justify-center text-center gap-2 group hover:bg-white hover:shadow-xl transition-all">
-                    <div className={cn("p-1.5 md:p-2 rounded-lg md:rounded-xl bg-white shadow-sm transition-transform group-hover:scale-110", reg.color)}>
-                      <reg.icon size={16} />
-                    </div>
-                    <div>
-                      <p className="text-base md:text-[18px] font-black text-gray-900 leading-none">{reg.count}</p>
-                      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">{reg.label}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="lg:col-span-4 space-y-6 md:gap-8 min-w-0">
           <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
             <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
-              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Quick Metrics</CardTitle>
+              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Registry Health</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-3 md:space-y-6">
               {[
-                ...(productsEnabled ? [{ label: "Pending Vendors", val: vendors?.filter(v => v.status === 'Pending')?.length || 0, icon: Store }] : []),
-                ...(productsEnabled ? [{ label: "Review Queue", val: metrics?.pendingProducts || 0, icon: Box }] : []),
-                ...(servicesEnabled ? [{ label: "Active Services", val: dbServices?.length || 0, icon: Wrench }] : [])
+                { label: "Active Members", val: dbUsers?.length || 0, icon: Users },
+                { label: "Live Services", val: dbServices?.length || 0, icon: Wrench },
+                { label: "Inventory SKUs", val: products?.length || 0, icon: Box }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/10 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
                   <div className="space-y-1">

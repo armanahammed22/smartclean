@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -33,7 +34,8 @@ import {
   Smartphone,
   ChevronDown,
   Users,
-  ShieldCheck
+  ShieldCheck,
+  ClipboardList
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -147,12 +149,12 @@ function BookingsListContent() {
   const handleCreateBooking = async () => {
     if (!db) return;
     if (selectedItems.length === 0 || !customer.name || !customer.phone || !customer.address || !customer.date) {
-      toast({ variant: "destructive", title: "তথ্য অসম্পূর্ণ", description: "সবগুলো ঘর সঠিকভাবে পূরণ করুন।" });
+      toast({ variant: "destructive", title: "Incomplete Details", description: "All fields are required." });
       return;
     }
 
     if (paymentCategory === 'online' && !selectedGatewayId) {
-      toast({ variant: "destructive", title: "Payment Method Error", description: "Please select an online gateway." });
+      toast({ variant: "destructive", title: "Payment Error", description: "Please select a gateway." });
       return;
     }
 
@@ -179,7 +181,7 @@ function BookingsListContent() {
       const docRef = await addDoc(collection(db, 'bookings'), bookingData);
       await getOrCreateInvoice(db, docRef.id, 'booking', bookingData);
 
-      toast({ title: "সফল হয়েছে", description: "নতুন বুকিং তৈরি হয়েছে!" });
+      toast({ title: "Success", description: "Booking added to schedule." });
       setIsCreateOpen(false);
       setSelectedItems([]);
       setCustomer({ name: '', phone: '', address: '', date: '', time: '8AM - 12PM' });
@@ -215,20 +217,20 @@ function BookingsListContent() {
     <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">বুকিং ম্যানেজমেন্ট</h1>
-          <p className="text-muted-foreground text-sm font-medium">সার্ভিস শিডিউল এবং টেকনিশিয়ান ট্র্যাকিং</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Service Bookings</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage professional service schedules and technicians</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl font-black gap-2 h-11 px-6 shadow-xl shadow-primary/20 uppercase text-xs tracking-widest">
-          <Plus size={18} /> নতুন বুকিং
+          <Plus size={18} /> New Intake
         </Button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "মোট বুকিং", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "পেন্ডিং", val: stats.pending, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
-          { label: "সম্পন্ন", val: stats.completed, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
-          { label: "বাতিল", val: stats.cancelled, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }
+          { label: "Total Bookings", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Unassigned", val: stats.pending, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
+          { label: "Jobs Done", val: stats.completed, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: "Cancelled", val: stats.cancelled, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
@@ -247,8 +249,8 @@ function BookingsListContent() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input 
-              placeholder="কাস্টমার বা সার্ভিস দিয়ে খুঁজুন..." 
-              className="pl-10 h-11 bg-white border-gray-200"
+              placeholder="Search by customer or service..." 
+              className="pl-10 h-11 bg-white border-gray-200 rounded-xl"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -325,13 +327,16 @@ function BookingsListContent() {
         onClose={() => setAssignBooking(null)} 
       />
 
+      {/* 🛠️ IMPROVED DIALOG UI */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
           <div className="flex flex-col h-full">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3"><Calendar className="text-primary" size={24} /> নতুন বুকিং</DialogTitle>
-                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Manual service entry protocol</DialogDescription>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <ClipboardList className="text-primary" size={24} /> New Booking Intake
+                </DialogTitle>
+                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Manual service enrollment protocol</DialogDescription>
               </div>
               <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
             </header>
@@ -340,14 +345,14 @@ function BookingsListContent() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-8">
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">সার্ভিস নির্বাচন</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Selection</Label>
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <Input 
-                        placeholder="সার্ভিস খুঁজুন..." 
+                        placeholder="Search service catalog..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-11 md:h-12 pl-12 bg-gray-50 border-none rounded-xl font-bold"
+                        className="h-11 md:h-12 pl-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner"
                       />
                       {filteredServices.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border z-50 overflow-hidden">
@@ -366,7 +371,7 @@ function BookingsListContent() {
 
                     <div className="space-y-3">
                       {selectedItems.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
                           <div className="flex-1 min-w-0 mr-4">
                             <p className="font-black text-xs uppercase truncate">{item.name}</p>
                             <p className="text-[9px] font-bold text-primary mt-0.5">৳{item.price} × {item.quantity}</p>
@@ -391,32 +396,32 @@ function BookingsListContent() {
                   </div>
 
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহকের তথ্য</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client Identification</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
-                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="Recipient Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      <Input placeholder="Mobile No" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                     </div>
-                    <Input type="datetime-local" value={customer.date} onChange={e => setCustomer({...customer, date: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
-                    <Textarea placeholder="ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
+                    <Input type="datetime-local" value={customer.date} onChange={e => setCustomer({...customer, date: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                    <Textarea placeholder="Full Service Address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-2xl min-h-[80px] p-4 shadow-inner" />
                   </div>
                 </div>
 
-                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
+                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2.5rem] border border-gray-100 flex flex-col gap-8 h-fit">
                   <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> সারসংক্ষেপ</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> Financial Overview</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সাবটোটাল</span><span>৳{subtotal.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">সার্ভিস ফি</Label>
-                        <Input type="number" value={pricing.serviceFee} onChange={e => setPricing({...pricing, serviceFee: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg" />
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Service/Admin Fee</Label>
+                        <Input type="number" value={pricing.serviceFee} onChange={e => setPricing({...pricing, serviceFee: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg shadow-sm" />
                       </div>
                       <div className="grid grid-cols-2 gap-4 items-center">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">ডিসকাউন্ট</Label>
-                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg" />
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Campaign Discount</Label>
+                        <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg shadow-sm" />
                       </div>
                       <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black uppercase text-gray-400">মোট প্রদেয়</span>
+                          <span className="text-[10px] font-black uppercase text-gray-400">Grand Total</span>
                           <span className="text-4xl font-black text-primary tracking-tighter">৳{total.toLocaleString()}</span>
                         </div>
                         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px]">BDT</Badge>
@@ -425,47 +430,23 @@ function BookingsListContent() {
                   </div>
 
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট মেথড</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Settlement Logic</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div 
                         onClick={() => setPaymentCategory('cod')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-md" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Wallet size={20} className={paymentCategory === 'cod' ? "text-primary" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Cash on Hand</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Post-Service</span>
                       </div>
                       <div 
                         onClick={() => setPaymentCategory('online')} 
-                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
+                        className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-md" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Smartphone size={20} className={paymentCategory === 'online' ? "text-blue-600" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Online Gateway</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Gateway</span>
                       </div>
                     </div>
-
-                    {paymentCategory === 'online' && (
-                      <div className="space-y-3 pt-2 animate-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">সিলেক্ট গেটওয়ে</Label>
-                        <div className="grid grid-cols-1 gap-2">
-                          {activeGateways?.filter(g => g.type !== 'cod' && g.type !== 'cash').map(gateway => (
-                            <div 
-                              key={gateway.id}
-                              onClick={() => setSelectedGatewayId(gateway.id)}
-                              className={cn(
-                                "flex items-center gap-4 p-3 rounded-xl border-2 transition-all cursor-pointer",
-                                selectedGatewayId === gateway.id ? "border-blue-600 bg-white" : "border-gray-100 bg-gray-50/50"
-                              )}
-                            >
-                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border bg-white flex-shrink-0">
-                                {gateway.logoUrl ? <Image src={gateway.logoUrl} alt={gateway.name} fill className="object-contain p-1" unoptimized /> : <Wallet size={16} className="m-auto text-gray-300" />}
-                              </div>
-                              <span className="text-xs font-bold uppercase flex-1">{gateway.name}</span>
-                              {selectedGatewayId === gateway.id && <CheckCircle2 size={16} className="text-blue-600" />}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -474,7 +455,7 @@ function BookingsListContent() {
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
               <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
               <Button onClick={handleCreateBooking} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "বুকিং নিশ্চিত করুন"}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "Deploy Booking Plan"}
               </Button>
             </DialogFooter>
           </div>

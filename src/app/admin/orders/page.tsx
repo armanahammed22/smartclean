@@ -55,6 +55,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { Label } from '@/components/ui/label';
@@ -214,20 +215,20 @@ function OrdersListContent() {
     <div className="space-y-8 min-w-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">অর্ডার ম্যানেজমেন্ট</h1>
-          <p className="text-muted-foreground text-sm font-medium">পণ্য বিক্রয় এবং ডেলিভারি ট্র্যাকিং</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Product Orders</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage e-commerce sales and tracking</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl font-black gap-2 h-11 px-6 shadow-xl shadow-primary/20 uppercase text-xs tracking-widest">
-          <Plus size={18} /> নতুন অর্ডার
+          <Plus size={18} /> Create Manual Order
         </Button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "মোট অর্ডার", val: stats.total, icon: ShoppingCart, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "প্রসেসিং", val: stats.processing, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
-          { label: "ডেলিভারড", val: stats.delivered, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
-          { label: "আজকের আয়", val: `৳${stats.daily.toLocaleString()}`, icon: Zap, bg: "bg-primary/5", color: "text-primary" }
+          { label: "Total Volume", val: stats.total, icon: ShoppingCart, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Processing", val: stats.processing, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
+          { label: "Completed", val: stats.delivered, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
+          { label: "Daily Revenue", val: `৳${stats.daily.toLocaleString()}`, icon: Zap, bg: "bg-primary/5", color: "text-primary" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
@@ -235,7 +236,7 @@ function OrdersListContent() {
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl group-hover:scale-110 transition-transform", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
@@ -246,7 +247,7 @@ function OrdersListContent() {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input 
-              placeholder="অর্ডার আইডি বা নাম দিয়ে খুঁজুন..." 
+              placeholder="Search by Order ID or Name..." 
               className="pl-10 h-11 bg-white border-gray-200"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -303,13 +304,16 @@ function OrdersListContent() {
         </CardContent>
       </Card>
 
+      {/* 🛠️ IMPROVED DIALOG UI */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
           <div className="flex flex-col h-full">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3"><ShoppingCart className="text-primary" size={24} /> নতুন অর্ডার</DialogTitle>
-                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Manual order entry terminal</DialogDescription>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <ShoppingCart className="text-primary" size={24} /> Manual Order Terminal
+                </DialogTitle>
+                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Enroll direct sales into registry</DialogDescription>
               </div>
               <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
             </header>
@@ -318,11 +322,11 @@ function OrdersListContent() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="space-y-8">
                   <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">পণ্য নির্বাচন</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Select Products</Label>
                     <div className="relative">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                       <Input 
-                        placeholder="সার্চ করুন..." 
+                        placeholder="Search product catalog..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="h-11 md:h-12 pl-12 bg-gray-50 border-none rounded-xl font-bold"
@@ -369,31 +373,31 @@ function OrdersListContent() {
                   </div>
 
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">গ্রাহকের তথ্য</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Customer Identity</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input placeholder="নাম" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
-                      <Input placeholder="ফোন" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl" />
+                      <Input placeholder="Full Name" value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Input placeholder="Mobile Number" value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
-                    <Textarea placeholder="ঠিকানা" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
+                    <Textarea placeholder="Detailed Address" value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="bg-gray-50 border-none rounded-xl min-h-[80px] p-4" />
                   </div>
                 </div>
 
                 <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
                   <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> সারসংক্ষেপ</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> Bill Calculation</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>সাবটোটাল</span><span>৳{subtotal.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">ডেলিভারি চার্জ</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Delivery Fee</Label>
                         <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg" />
                       </div>
                       <div className="grid grid-cols-2 gap-4 items-center">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">ডিসকাউন্ট</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Discount</Label>
                         <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black text-red-600 rounded-lg" />
                       </div>
                       <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black uppercase text-gray-400">মোট প্রদেয়</span>
+                          <span className="text-[10px] font-black uppercase text-gray-400">Net Payable</span>
                           <span className="text-4xl font-black text-primary tracking-tighter">৳{total.toLocaleString()}</span>
                         </div>
                         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px]">BDT</Badge>
@@ -402,47 +406,23 @@ function OrdersListContent() {
                   </div>
 
                   <div className="space-y-4 pt-4 border-t">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground">পেমেন্ট মেথড</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Settlement Channel</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div 
                         onClick={() => setPaymentCategory('cod')} 
                         className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'cod' ? "border-primary bg-primary/5 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Package size={20} className={paymentCategory === 'cod' ? "text-primary" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Cash on Delivery</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">COD</span>
                       </div>
                       <div 
                         onClick={() => setPaymentCategory('online')} 
                         className={cn("p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2", paymentCategory === 'online' ? "border-blue-600 bg-blue-50 shadow-sm" : "bg-white border-gray-100 opacity-60 hover:opacity-100")}
                       >
                         <Smartphone size={20} className={paymentCategory === 'online' ? "text-blue-600" : "text-gray-400"} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Online Payment</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Gateway</span>
                       </div>
                     </div>
-
-                    {paymentCategory === 'online' && (
-                      <div className="space-y-3 pt-2 animate-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-blue-600 ml-1">সিলেক্ট গেটওয়ে</Label>
-                        <div className="grid grid-cols-1 gap-2">
-                          {activeGateways?.filter(g => g.type !== 'cod' && g.type !== 'cash').map(gateway => (
-                            <div 
-                              key={gateway.id}
-                              onClick={() => setSelectedGatewayId(gateway.id)}
-                              className={cn(
-                                "flex items-center gap-4 p-3 rounded-xl border-2 transition-all cursor-pointer",
-                                selectedGatewayId === gateway.id ? "border-blue-600 bg-white" : "border-gray-100 bg-gray-50/50"
-                              )}
-                            >
-                              <div className="relative w-8 h-8 rounded-lg overflow-hidden border bg-white flex-shrink-0">
-                                {gateway.logoUrl ? <Image src={gateway.logoUrl} alt={gateway.name} fill className="object-contain p-1" unoptimized /> : <Wallet size={16} className="m-auto text-gray-300" />}
-                              </div>
-                              <span className="text-xs font-bold uppercase flex-1">{gateway.name}</span>
-                              {selectedGatewayId === gateway.id && <CheckCircle2 size={16} className="text-blue-600" />}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -451,7 +431,7 @@ function OrdersListContent() {
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
               <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
               <Button onClick={handleCreateOrder} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "অর্ডার নিশ্চিত করুন"}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirm & Finalize Order"}
               </Button>
             </DialogFooter>
           </div>

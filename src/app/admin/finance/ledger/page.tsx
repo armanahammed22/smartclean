@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { createLedgerEntry } from '@/lib/finance-utils';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function LedgerManagementPage() {
   const db = useFirestore();
@@ -108,9 +109,9 @@ export default function LedgerManagementPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl font-bold h-11 border-gray-200 gap-2"><Download size={16} /> Export CSV</Button>
+          <Button variant="outline" className="rounded-xl font-bold h-11 border-gray-200 gap-2"><Download size={16} /> Export Audit</Button>
           <Button onClick={() => setIsDialogOpen(true)} className="rounded-xl font-black h-11 px-6 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest">
-            <PlusCircle size={18} /> New Entry
+            <PlusCircle size={18} /> New Ledger Entry
           </Button>
         </div>
       </div>
@@ -120,7 +121,7 @@ export default function LedgerManagementPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input 
             placeholder="Filter by category, notes or reference..." 
-            className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all"
+            className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -189,14 +190,14 @@ export default function LedgerManagementPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-white flex flex-col">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none shadow-2xl overflow-hidden bg-white flex flex-col rounded-none md:rounded-[2.5rem]">
           <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary rounded-xl"><FileText size={20} /></div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">Manual Entry</DialogTitle>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">Manual Ledger Entry</DialogTitle>
               </div>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Record direct income or operational expense</DialogDescription>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Record direct income or operational expense into registry</DialogDescription>
             </div>
             <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
@@ -205,20 +206,20 @@ export default function LedgerManagementPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Entry Flow</Label>
-                    <div className="flex bg-gray-100 p-1 rounded-xl">
-                      <button type="button" onClick={() => setFormData({...formData, type: 'income'})} className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-lg transition-all", formData.type === 'income' ? "bg-emerald-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600")}>Income</button>
-                      <button type="button" onClick={() => setFormData({...formData, type: 'expense'})} className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-lg transition-all", formData.type === 'expense' ? "bg-rose-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600")}>Expense</button>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Entry Flow Direction</Label>
+                    <div className="flex bg-gray-100 p-1.5 rounded-2xl border border-gray-200 shadow-inner">
+                      <button type="button" onClick={() => setFormData({...formData, type: 'income'})} className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all", formData.type === 'income' ? "bg-emerald-600 text-white shadow-lg" : "text-gray-400 hover:text-gray-600")}>Income In</button>
+                      <button type="button" onClick={() => setFormData({...formData, type: 'expense'})} className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all", formData.type === 'expense' ? "bg-rose-600 text-white shadow-lg" : "text-gray-400 hover:text-gray-600")}>Expense Out</button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Category Classification</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category Classification</Label>
                     <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v as any})}>
-                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">
                         {["Staff Salary", "Material Cost", "Vendor Commission", "Partner Commission", "Service Income", "Product Income", "Project Cost", "Marketing", "Transport", "Rent", "Other"].map(c => (
-                          <SelectItem key={c} value={c} className="font-bold text-[10px] uppercase">{c}</SelectItem>
+                          <SelectItem key={c} value={c} className="font-bold text-[10px] uppercase py-3">{c}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -228,21 +229,21 @@ export default function LedgerManagementPage() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase ml-1">Amount (৳)</Label>
-                      <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Total Amount (৳)</Label>
+                      <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} required className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-black text-lg text-primary shadow-inner" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase ml-1">Entry Date</Label>
-                      <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Entry Date</Label>
+                      <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Select Account</Label>
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Target Account Pool</Label>
                     <Select value={formData.accountId} onValueChange={v => setFormData({...formData, accountId: v})}>
-                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Account" /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id} className="font-bold text-[10px] uppercase">{acc.name}</SelectItem>)}
+                      <SelectTrigger className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner"><SelectValue placeholder="Choose Account..." /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">
+                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id} className="font-bold text-[10px] uppercase py-3">{acc.name} (৳{acc.balance})</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -250,8 +251,8 @@ export default function LedgerManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase ml-1">Transaction Notes / Reference</Label>
-                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe the purpose of this entry..." className="h-24 md:h-32 bg-gray-50 border-none rounded-xl p-4 font-medium" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Transaction Notes / Reference Memo</Label>
+                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe the purpose of this entry for auditing..." className="h-24 md:h-32 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
               </div>
             </div>
 
