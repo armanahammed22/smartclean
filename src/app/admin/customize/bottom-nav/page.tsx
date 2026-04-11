@@ -9,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Save, 
-  Loader2, 
-  ImageIcon, 
-  Layout, 
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Save,
+  Loader2,
+  ImageIcon,
+  Layout,
   ChevronRight,
   Eye,
   ArrowUpCircle,
@@ -35,13 +35,15 @@ import {
   Box,
   Info,
   Package,
-  Settings2
+  Settings2,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ICONS: Record<string, any> = {
   Home,
@@ -51,7 +53,8 @@ const ICONS: Record<string, any> = {
   Grid,
   Layers,
   Box,
-  Package
+  Package,
+  CreditCard
 };
 
 const DEFAULT_LINKS = [
@@ -68,7 +71,7 @@ export default function BottomNavManagementPage() {
   const [isOfferSubmitting, setIsOfferSubmitting] = useState(false);
   const [editingOfferId, setEditingOfferId] = useState<string | null>(null);
 
-  const offersQuery = useMemoFirebase(() => 
+  const offersQuery = useMemoFirebase(() =>
     db ? query(collection(db, 'offers'), orderBy('order', 'asc')) : null, [db]);
   const { data: offers, isLoading: offersLoading } = useCollection(offersQuery);
 
@@ -171,17 +174,17 @@ export default function BottomNavManagementPage() {
   };
 
   const addLink = () => {
-    setFormData({ 
-      ...formData, 
-      links: [...formData.links, { 
-        id: Math.random().toString(36).substr(2, 9), 
-        label: 'New Link', 
-        icon: 'Grid', 
-        link: '#', 
+    setFormData({
+      ...formData,
+      links: [...formData.links, {
+        id: Math.random().toString(36).substr(2, 9),
+        label: 'New Link',
+        icon: 'Grid',
+        link: '#',
         order: formData.links.length,
         isEnabled: true,
         color: '#1E5F7A'
-      }] 
+      }]
     });
   };
 
@@ -284,9 +287,9 @@ export default function BottomNavManagementPage() {
                 <CardTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
                   <Layers className="text-primary" /> Package Feature Manage
                 </CardTitle>
-                <Switch 
-                  checked={formData.showPackage} 
-                  onCheckedChange={v => setFormData({...formData, showPackage: v})} 
+                <Switch
+                  checked={formData.showPackage}
+                  onCheckedChange={v => setFormData({...formData, showPackage: v})}
                 />
               </div>
               <CardDescription className="text-white/40 uppercase font-bold text-[9px] mt-1">Configure the secondary feature button</CardDescription>
@@ -295,34 +298,49 @@ export default function BottomNavManagementPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Label</Label>
-                  <Input 
-                    value={formData.packageConfig?.label || 'প্যাকেজ'} 
-                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, label: e.target.value}})} 
+                  <Input
+                    value={formData.packageConfig?.label || 'প্যাকেজ'}
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, label: e.target.value}})}
                     className="h-12 bg-gray-50 border-none rounded-xl font-bold"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon (Lucide)</Label>
-                  <Input 
-                    value={formData.packageConfig?.icon || 'Layers'} 
-                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, icon: e.target.value}})} 
+                  <Input
+                    value={formData.packageConfig?.icon || 'Layers'}
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, icon: e.target.value}})}
                     className="h-12 bg-gray-50 border-none rounded-xl font-mono text-xs"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Active Color</Label>
-                  <Input 
-                    type="color" 
-                    value={formData.packageConfig?.color || '#1E5F7A'} 
-                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, color: e.target.value}})} 
+                  <Input
+                    type="color"
+                    value={formData.packageConfig?.color || '#1E5F7A'}
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, color: e.target.value}})}
                     className="h-12 p-1 bg-gray-50 border-none rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Redirection</Label>
-                  <Input 
-                    value={formData.packageConfig?.href || '/services'} 
-                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, href: e.target.value}})} 
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Quick Link Selection</Label>
+                  <Select
+                    value={formData.packageConfig?.href || '/services'}
+                    onValueChange={v => setFormData({...formData, packageConfig: {...formData.packageConfig, href: v}})}
+                  >
+                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
+                      <SelectValue placeholder="Select Target..." />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
+                      <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Subscription)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Manual Redirection</Label>
+                  <Input
+                    value={formData.packageConfig?.href || '/services'}
+                    onChange={e => setFormData({...formData, packageConfig: {...formData.packageConfig, href: e.target.value}})}
                     className="h-12 bg-gray-50 border-none rounded-xl font-bold text-primary"
                   />
                 </div>
@@ -332,7 +350,7 @@ export default function BottomNavManagementPage() {
                 <div className="flex items-start gap-3">
                   <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
                   <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
-                    প্যাকেজ বাটনটি মূলত আপনার সেবাসমূহ বা অফার পেজে নিয়ে যায়। আপনি এখান থেকে এর আইকন, টাইটেল এবং রিডাইরেকশন লিঙ্ক পরিবর্তন করতে পারেন।
+                    প্যাকেজ বাটনটি মূলত আপনার সেবাসমূহ বা সাবস্ক্রিপশন পেজে নিয়ে যায়। আপনি এখান থেকে এর আইকন, টাইটেল এবং গন্তব্য (Billing/Services) পরিবর্তন করতে পারেন।
                   </p>
                 </div>
               </div>
@@ -355,12 +373,12 @@ export default function BottomNavManagementPage() {
               </CardHeader>
               <CardContent className="p-8">
                 <form onSubmit={handleOfferSubmit} className="space-y-6">
-                  <ImageUploader 
-                    label="Offer Image (1:1 Circle)" 
+                  <ImageUploader
+                    label="Offer Image (1:1 Circle)"
                     hint="200 x 200 px"
-                    initialUrl={offerFormData.image} 
-                    onUpload={url => setOfferFormData({...offerFormData, image: url})} 
-                    aspectRatio="aspect-square w-24 mx-auto" 
+                    initialUrl={offerFormData.image}
+                    onUpload={url => setOfferFormData({...offerFormData, image: url})}
+                    aspectRatio="aspect-square w-24 mx-auto"
                   />
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Redirect Link</Label>
@@ -434,7 +452,7 @@ export default function BottomNavManagementPage() {
 
               <div className="p-10 border-2 border-dashed border-gray-100 rounded-[2.5rem] bg-gray-50 flex flex-col items-center gap-6">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Visual Simulation</p>
-                <div 
+                <div
                   className="w-full max-w-[350px] h-16 rounded-full shadow-2xl flex items-center justify-around px-6 border border-gray-100"
                   style={{ backgroundColor: formData.bgColor }}
                 >

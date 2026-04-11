@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -10,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Save, 
-  Loader2, 
-  ImageIcon, 
-  Layout, 
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Save,
+  Loader2,
+  ImageIcon,
+  Layout,
   ChevronRight,
   Eye,
   ArrowUpCircle,
@@ -42,7 +41,8 @@ import {
   MoveDown,
   Link as LinkIcon,
   CircleEllipsis,
-  ExternalLink
+  ExternalLink,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -50,6 +50,8 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import * as LucideIcons from 'lucide-react';
 
 const ICONS: Record<string, any> = {
   Home,
@@ -60,6 +62,7 @@ const ICONS: Record<string, any> = {
   Layers,
   Box,
   Package,
+  CreditCard,
   Zap: LucideIcons.Zap,
   Star: LucideIcons.Star,
   Settings: LucideIcons.Settings,
@@ -71,8 +74,6 @@ const ICONS: Record<string, any> = {
   Monitor: LucideIcons.Monitor,
   Laptop: LucideIcons.Laptop
 };
-
-import * as LucideIcons from 'lucide-react';
 
 const DEFAULT_LINKS = [
   { id: 'l1', label: 'হোম', icon: 'Home', link: '/', order: 0, isEnabled: true, color: '#1E5F7A' },
@@ -204,7 +205,7 @@ export default function NavigationHubPage() {
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Navigation & Interface Hub</h1>
+          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Navigation &amp; Interface Hub</h1>
           <p className="text-muted-foreground text-sm font-medium">Consolidated control for navbars, icon grids, and call-to-action cards</p>
         </div>
       </div>
@@ -224,8 +225,15 @@ export default function NavigationHubPage() {
               {isSavingBottom ? <Loader2 className="animate-spin" /> : <Save size={18} />} Publish Bottom Nav
             </Button>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-6">
+
+          <Tabs defaultValue="links" className="space-y-6">
+            <TabsList className="bg-gray-100 p-1 h-10 rounded-lg">
+              <TabsTrigger value="links" className="text-[9px] uppercase font-black">Icon Controls</TabsTrigger>
+              <TabsTrigger value="package" className="text-[9px] uppercase font-black">Package Toggle</TabsTrigger>
+              <TabsTrigger value="style" className="text-[9px] uppercase font-black">Style &amp; Themes</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="links" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bottomFormData.links.map((link: any, i: number) => (
                   <Card key={link.id} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
@@ -249,29 +257,68 @@ export default function NavigationHubPage() {
                   </Card>
                 ))}
               </div>
-            </div>
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-none shadow-sm bg-[#081621] text-white rounded-[2rem] overflow-hidden">
-                <CardHeader><CardTitle className="text-base font-black uppercase tracking-widest text-primary">Nav Theme</CardTitle></CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black text-white/40 uppercase">Global Active Color</Label>
-                    <Input type="color" value={bottomFormData.activeColor} onChange={e => setBottomFormData({...bottomFormData, activeColor: e.target.value})} className="h-10 p-1 bg-white/10 border-none" />
+            </TabsContent>
+
+            <TabsContent value="package" className="mt-0 max-w-2xl mx-auto">
+              <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+                <CardHeader className="bg-[#081621] text-white p-8">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-black uppercase flex items-center gap-2"><Layers className="text-primary"/> Package Logic</CardTitle>
+                    <Switch checked={bottomFormData.showPackage} onCheckedChange={v => setBottomFormData({...bottomFormData, showPackage: v})} />
                   </div>
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <div className="flex items-center justify-between mb-4">
-                      <Label className="text-xs font-black uppercase">Rotating Offer Circle</Label>
-                      <Switch checked={bottomFormData.showOfferCircle} onCheckedChange={v => setBottomFormData({...bottomFormData, showOfferCircle: v})} />
+                </CardHeader>
+                <CardContent className="p-8 space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Label</Label>
+                      <Input value={bottomFormData.packageConfig?.label} onChange={e => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, label: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-black uppercase">Package Feature</Label>
-                      <Switch checked={bottomFormData.showPackage} onCheckedChange={v => setBottomFormData({...bottomFormData, showPackage: v})} />
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Active Feature Target</Label>
+                      <Select
+                        value={bottomFormData.packageConfig?.href || '/services'}
+                        onValueChange={v => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, href: v}})}
+                      >
+                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
+                          <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Live)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+                  </div>
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
+                    <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-medium text-blue-800 leading-relaxed">
+                      "Billing &amp; Plan" অপশনটি সিলেক্ট করলে প্যাকেজ আইকনে ক্লিক করলে ইউজার আপনার সাবস্ক্রিপশন প্ল্যানগুলো দেখতে পাবে।
+                    </p>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="style" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="border-none shadow-sm bg-[#081621] text-white rounded-[2rem] overflow-hidden">
+                  <CardHeader><CardTitle className="text-base font-black uppercase tracking-widest text-primary">Nav Theme</CardTitle></CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-white/40 uppercase">Global Active Color</Label>
+                      <Input type="color" value={bottomFormData.activeColor} onChange={e => setBottomFormData({...bottomFormData, activeColor: e.target.value})} className="h-10 p-1 bg-white/10 border-none" />
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="flex items-center justify-between mb-4">
+                        <Label className="text-xs font-black uppercase">Rotating Offer Circle</Label>
+                        <Switch checked={bottomFormData.showOfferCircle} onCheckedChange={v => setBottomFormData({...bottomFormData, showOfferCircle: v})} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* 🔗 TOP LINKS BLOCK */}
