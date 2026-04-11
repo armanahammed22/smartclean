@@ -195,10 +195,12 @@ export default function BottomNavManagementPage() {
           <h1 className="text-2xl font-bold text-gray-900 uppercase">Bottom Navbar Hub</h1>
           <p className="text-muted-foreground text-sm">Individual icon controls, colors, and feature management</p>
         </div>
-        <Button onClick={handleSaveConfig} disabled={isSaving} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
-          {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
-          Publish Changes
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleSaveConfig} disabled={isSaving} className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-tighter">
+            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+            Publish Changes
+          </Button>
+        </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4">
@@ -311,7 +313,7 @@ export default function BottomNavManagementPage() {
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
-                      <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Live)</SelectItem>
+                      <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing & Plan (Live)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -362,7 +364,7 @@ export default function BottomNavManagementPage() {
                   <CardTitle className="text-lg font-black uppercase flex items-center gap-2">
                     <Smartphone size={20} /> {editingOfferId ? 'Update Offer' : 'Add New Offer'}
                   </CardTitle>
-                  <Switch checked={bottomFormData.showOfferCircle} onCheckedChange={v => setFormData({...formData, showOfferCircle: v})} />
+                  <Switch checked={formData.showOfferCircle} onCheckedChange={v => setFormData({...formData, showOfferCircle: v})} />
                 </div>
                 <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle middle rotating offers</CardDescription>
               </CardHeader>

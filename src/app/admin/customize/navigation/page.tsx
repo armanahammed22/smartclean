@@ -268,7 +268,7 @@ export default function NavigationHubPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground">Label</Label>
                       <Input value={bottomFormData.packageConfig?.label} onChange={e => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, label: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
@@ -284,15 +284,23 @@ export default function NavigationHubPage() {
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                           <SelectItem value="/services" className="font-bold text-[10px] uppercase">Service Catalog</SelectItem>
-                          <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing &amp; Plan (Live)</SelectItem>
+                          <SelectItem value="/billing" className="font-bold text-[10px] uppercase">Billing & Plan (Live)</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Icon (Lucide)</Label>
+                      <Input value={bottomFormData.packageConfig?.icon} onChange={e => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, icon: e.target.value}})} className="h-11 bg-gray-50 border-none rounded-xl font-mono text-xs" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground">Custom Color</Label>
+                      <Input type="color" value={bottomFormData.packageConfig?.color} onChange={e => setBottomFormData({...bottomFormData.packageConfig, color: e.target.value}})} className="h-11 p-1 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
                     <Info size={16} className="text-blue-600 shrink-0 mt-0.5" />
                     <p className="text-[10px] font-medium text-blue-800 leading-relaxed">
-                      "Billing &amp; Plan (Live)" অপশনটি সিলেক্ট করলে প্যাকেজ আইকনে ক্লিক করলে ইউজার আপনার সাবস্ক্রিপশন প্ল্যানগুলো দেখতে পাবে।
+                      "Billing & Plan (Live)" অপশনটি সিলেক্ট করলে প্যাকেজ আইকনে ক্লিক করলে ইউজার আপনার সাবস্ক্রিপশন প্ল্যানগুলো দেখতে পাবে।
                     </p>
                   </div>
                 </CardContent>
