@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -52,7 +51,8 @@ import {
   MoveVertical,
   Image as ImageIconLucide,
   Move,
-  RotateCcw
+  RotateCcw,
+  DollarSign
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
