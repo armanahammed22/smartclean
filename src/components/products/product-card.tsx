@@ -41,7 +41,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   // Styling Logic
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
-    cardRadius: customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 16,
+    cardRadiusTL: customStyle?.cardRadiusTL !== undefined ? customStyle.cardRadiusTL : 16,
+    cardRadiusTR: customStyle?.cardRadiusTR !== undefined ? customStyle.cardRadiusTR : 16,
+    cardRadiusBL: customStyle?.cardRadiusBL !== undefined ? customStyle.cardRadiusBL : 16,
+    cardRadiusBR: customStyle?.cardRadiusBR !== undefined ? customStyle.cardRadiusBR : 16,
     cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 12,
     elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 12,
     
@@ -132,7 +135,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
 
   if (!mounted) return null;
 
-  // Determine if we should use flex-1 for buttons when width is 100%
   const isFullWidthBtn = style.btnWidth === '100%';
 
   return (
@@ -141,7 +143,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         className="flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
         style={{ 
           backgroundColor: style.cardBg, 
-          borderRadius: `${style.cardRadius}px`, 
+          borderTopLeftRadius: `${style.cardRadiusTL}px`, 
+          borderTopRightRadius: `${style.cardRadiusTR}px`, 
+          borderBottomLeftRadius: `${style.cardRadiusBL}px`, 
+          borderBottomRightRadius: `${style.cardRadiusBR}px`, 
           padding: `${style.cardPadding}px`,
           gap: `${style.elementGap}px`
         }}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, writeBatch, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,7 +99,10 @@ const FONT_SIZES = [
 const DEFAULT_CARD_STYLES = {
   productCard: { 
     cardBg: '#ffffff', 
-    cardRadius: 16, 
+    cardRadiusTL: 16, 
+    cardRadiusTR: 16, 
+    cardRadiusBL: 16, 
+    cardRadiusBR: 16, 
     cardPadding: 12,
     elementGap: 12,
     imgHeight: 180,
@@ -132,7 +135,10 @@ const DEFAULT_CARD_STYLES = {
   },
   serviceCard: { 
     cardBg: '#ffffff', 
-    cardRadius: 16, 
+    cardRadiusTL: 16, 
+    cardRadiusTR: 16, 
+    cardRadiusBL: 16, 
+    cardRadiusBR: 16, 
     cardPadding: 12,
     elementGap: 12,
     imgHeight: 180,
@@ -315,25 +321,6 @@ export default function HomepageBuilderPage() {
     });
   };
 
-  const filteredItemsForManual = useMemo(() => {
-    if (!itemSearchQuery.trim()) return [];
-    const source = editingSection?.type === 'services_dynamic' ? allServices : allProducts;
-    return source?.filter((i: any) => 
-      (i.name || i.title || '').toLowerCase().includes(itemSearchQuery.toLowerCase())
-    ).slice(0, 10);
-  }, [itemSearchQuery, allProducts, allServices, editingSection?.type]);
-
-  const toggleManualId = (id: string) => {
-    const currentIds = editingSection.config.manualIds || [];
-    const nextIds = currentIds.includes(id) 
-      ? currentIds.filter((i: string) => i !== id) 
-      : [...currentIds, id].slice(0, 20);
-    setEditingSection({
-      ...editingSection,
-      config: { ...editingSection.config, manualIds: nextIds }
-    });
-  };
-
   const safeNum = (val: any, def: number = 0) => {
     if (val === undefined || val === null || isNaN(val)) return def;
     return val;
@@ -454,14 +441,31 @@ export default function HomepageBuilderPage() {
                         <Input type="color" value={localStyles[cardType]?.cardBg || '#ffffff'} onChange={e => updateCardStyle(cardType, 'cardBg', e.target.value)} className="h-10 p-1" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Card Radius (px)</Label>
-                        <Input type="number" value={safeNum(localStyles[cardType]?.cardRadius, 16)} onChange={e => updateCardStyle(cardType, 'cardRadius', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-gray-400">Outer Padding (px)</Label>
                         <Input type="number" value={safeNum(localStyles[cardType]?.cardPadding, 12)} onChange={e => updateCardStyle(cardType, 'cardPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-4 col-span-2 pt-4 border-t">
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Border Radius Corners (px)</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="space-y-1.5">
+                            <Label className="text-[8px] font-bold text-gray-400">TOP-L</Label>
+                            <Input type="number" value={safeNum(localStyles[cardType]?.cardRadiusTL, 16)} onChange={e => updateCardStyle(cardType, 'cardRadiusTL', parseInt(e.target.value) || 0)} className="h-9 text-[10px] bg-gray-50 border-none rounded-lg" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[8px] font-bold text-gray-400">TOP-R</Label>
+                            <Input type="number" value={safeNum(localStyles[cardType]?.cardRadiusTR, 16)} onChange={e => updateCardStyle(cardType, 'cardRadiusTR', parseInt(e.target.value) || 0)} className="h-9 text-[10px] bg-gray-50 border-none rounded-lg" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[8px] font-bold text-gray-400">BOT-L</Label>
+                            <Input type="number" value={safeNum(localStyles[cardType]?.cardRadiusBL, 16)} onChange={e => updateCardStyle(cardType, 'cardRadiusBL', parseInt(e.target.value) || 0)} className="h-9 text-[10px] bg-gray-50 border-none rounded-lg" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[8px] font-bold text-gray-400">BOT-R</Label>
+                            <Input type="number" value={safeNum(localStyles[cardType]?.cardRadiusBR, 16)} onChange={e => updateCardStyle(cardType, 'cardRadiusBR', parseInt(e.target.value) || 0)} className="h-9 text-[10px] bg-gray-50 border-none rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2 col-span-2">
                         <Label className="text-[9px] font-black uppercase text-gray-400">Element Gap (px)</Label>
                         <Input type="number" value={safeNum(localStyles[cardType]?.elementGap, 12)} onChange={e => updateCardStyle(cardType, 'elementGap', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
                       </div>
