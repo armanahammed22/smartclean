@@ -39,7 +39,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Styling Logic with International Defaults
+  // Styling Logic
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadius: customStyle?.cardRadius !== undefined ? customStyle.cardRadius : 16,
@@ -54,22 +54,68 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     
     titleSize: customStyle?.titleSize || 'text-xs',
     titleColor: customStyle?.titleColor || '#1f2937',
-    titlePadding: customStyle?.titlePadding !== undefined ? customStyle.titlePadding : 4,
+    titlePadding: {
+      top: customStyle?.titlePaddingTop ?? 4,
+      bottom: customStyle?.titlePaddingBottom ?? 4,
+      left: customStyle?.titlePaddingLeft ?? 0,
+      right: customStyle?.titlePaddingRight ?? 0
+    },
+    titleMargin: {
+      top: customStyle?.titleMarginTop ?? 0,
+      bottom: customStyle?.titleMarginBottom ?? 0,
+      left: customStyle?.titleMarginLeft ?? 0,
+      right: customStyle?.titleMarginRight ?? 0
+    },
     
     priceSize: customStyle?.priceSize || 'text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
-    pricePadding: customStyle?.pricePadding !== undefined ? customStyle.pricePadding : 4,
+    pricePadding: {
+      top: customStyle?.pricePaddingTop ?? 4,
+      bottom: customStyle?.pricePaddingBottom ?? 4,
+      left: customStyle?.pricePaddingLeft ?? 0,
+      right: customStyle?.pricePaddingRight ?? 0
+    },
+    priceMargin: {
+      top: customStyle?.priceMarginTop ?? 0,
+      bottom: customStyle?.priceMarginBottom ?? 0,
+      left: customStyle?.priceMarginLeft ?? 0,
+      right: customStyle?.priceMarginRight ?? 0
+    },
     
     metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
-    metaPadding: customStyle?.metaPadding !== undefined ? customStyle.metaPadding : 4,
+    metaPadding: {
+      top: customStyle?.metaPaddingTop ?? 4,
+      bottom: customStyle?.metaPaddingBottom ?? 4,
+      left: customStyle?.metaPaddingLeft ?? 0,
+      right: customStyle?.metaPaddingRight ?? 0
+    },
+    metaMargin: {
+      top: customStyle?.metaMarginTop ?? 0,
+      bottom: customStyle?.metaMarginBottom ?? 0,
+      left: customStyle?.metaMarginLeft ?? 0,
+      right: customStyle?.metaMarginRight ?? 0
+    },
     metaLabelRating: customStyle?.metaLabelRating || 'Rating',
     metaLabelCount: customStyle?.metaLabelCount || (isService ? 'Booked' : 'Sold'),
     
     btnBg: customStyle?.primaryBtnBg || '#1E5F7A',
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
-    btnPadding: customStyle?.btnPadding !== undefined ? customStyle.btnPadding : 4
+    btnWidth: customStyle?.btnWidth || '100%',
+    btnHeight: customStyle?.btnHeight || '40',
+    btnPadding: {
+      top: customStyle?.btnPaddingTop ?? 8,
+      bottom: customStyle?.btnPaddingBottom ?? 8,
+      left: customStyle?.btnPaddingLeft ?? 12,
+      right: customStyle?.btnPaddingRight ?? 12
+    },
+    btnMargin: {
+      top: customStyle?.btnMarginTop ?? 4,
+      bottom: customStyle?.btnMarginBottom ?? 4,
+      left: customStyle?.btnMarginLeft ?? 0,
+      right: customStyle?.btnMarginRight ?? 0
+    }
   };
 
   const handleOrderNow = (e: React.MouseEvent) => {
@@ -144,8 +190,15 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         <div 
           className="w-full" 
           style={{ 
-            textAlign: style.textAlign as any, 
-            padding: `0 ${style.titlePadding}px` 
+            textAlign: style.textAlign as any,
+            paddingTop: `${style.titlePadding.top}px`,
+            paddingBottom: `${style.titlePadding.bottom}px`,
+            paddingLeft: `${style.titlePadding.left}px`,
+            paddingRight: `${style.titlePadding.right}px`,
+            marginTop: `${style.titleMargin.top}px`,
+            marginBottom: `${style.titleMargin.bottom}px`,
+            marginLeft: `${style.titleMargin.left}px`,
+            marginRight: `${style.titleMargin.right}px`,
           }}
         >
           <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
@@ -161,7 +214,16 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         {/* 💰 PRICE AREA */}
         <div 
           className={cn("w-full flex flex-wrap items-baseline gap-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
-          style={{ padding: `0 ${style.pricePadding}px` }}
+          style={{ 
+            paddingTop: `${style.pricePadding.top}px`,
+            paddingBottom: `${style.pricePadding.bottom}px`,
+            paddingLeft: `${style.pricePadding.left}px`,
+            paddingRight: `${style.pricePadding.right}px`,
+            marginTop: `${style.priceMargin.top}px`,
+            marginBottom: `${style.priceMargin.bottom}px`,
+            marginLeft: `${style.priceMargin.left}px`,
+            marginRight: `${style.priceMargin.right}px`,
+          }}
         >
           <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
             ৳{displayPrice?.toLocaleString()}
@@ -178,7 +240,14 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" 
           style={{ 
             color: style.metaColor,
-            padding: `2px ${style.metaPadding}px`
+            paddingTop: `${style.metaPadding.top + 2}px`,
+            paddingBottom: `${style.metaPadding.bottom}px`,
+            paddingLeft: `${style.metaPadding.left}px`,
+            paddingRight: `${style.metaPadding.right}px`,
+            marginTop: `${style.metaMargin.top}px`,
+            marginBottom: `${style.metaMargin.bottom}px`,
+            marginLeft: `${style.metaMargin.left}px`,
+            marginRight: `${style.metaMargin.right}px`,
           }}
         >
           <div className="flex items-center gap-1 text-amber-500">
@@ -188,19 +257,33 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           <span className={cn("uppercase font-black", style.metaSize)}>{soldCount} {style.metaLabelCount}</span>
         </div>
 
-        {/* 🛒 BUTTON AREA - NOW HORIZONTAL */}
+        {/* 🛒 BUTTON AREA */}
         <div 
-          className="w-full flex flex-row items-center gap-2 mt-auto"
-          style={{ padding: `0 ${style.btnPadding}px` }}
+          className={cn(
+            "w-full flex items-center gap-2 mt-auto",
+            style.textAlign === 'center' ? 'justify-center' : 'justify-start'
+          )}
+          style={{ 
+            marginTop: `${style.btnMargin.top}px`,
+            marginBottom: `${style.btnMargin.bottom}px`,
+            marginLeft: `${style.btnMargin.left}px`,
+            marginRight: `${style.btnMargin.right}px`,
+          }}
         >
           {customStyle?.primaryBtnEnabled !== false && (
             <Button 
               size="sm"
               onClick={handleOrderNow}
-              className={cn("flex-1 font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none h-10 shadow-lg", style.btnSize)}
+              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", style.btnSize)}
               style={{ 
                 backgroundColor: style.btnBg, 
-                color: style.btnColor 
+                color: style.btnColor,
+                width: style.btnWidth,
+                height: `${style.btnHeight}px`,
+                paddingTop: `${style.btnPadding.top}px`,
+                paddingBottom: `${style.btnPadding.bottom}px`,
+                paddingLeft: `${style.btnPadding.left}px`,
+                paddingRight: `${style.btnPadding.right}px`,
               }}
             >
               <Zap className="mr-1.5 size-3" fill="currentColor" />
@@ -214,11 +297,17 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               size="sm"
               onClick={isService ? undefined : handleAddToCart}
               asChild={isService}
-              className={cn("flex-1 font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 h-10 border-2", style.btnSize)}
+              className={cn("font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", style.btnSize)}
               style={{ 
                 backgroundColor: '#f3f4f6', 
                 color: '#1f2937',
-                borderColor: 'rgba(0,0,0,0.05)'
+                borderColor: 'rgba(0,0,0,0.05)',
+                width: style.btnWidth,
+                height: `${style.btnHeight}px`,
+                paddingTop: `${style.btnPadding.top}px`,
+                paddingBottom: `${style.btnPadding.bottom}px`,
+                paddingLeft: `${style.btnPadding.left}px`,
+                paddingRight: `${style.btnPadding.right}px`,
               }}
             >
               {isService ? (

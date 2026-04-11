@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -107,19 +108,25 @@ const DEFAULT_CARD_STYLES = {
     textAlign: 'left',
     titleSize: 'text-xs',
     titleColor: '#1f2937',
-    titlePadding: 4,
+    titlePaddingTop: 4, titlePaddingBottom: 4, titlePaddingLeft: 0, titlePaddingRight: 0,
+    titleMarginTop: 0, titleMarginBottom: 0, titleMarginLeft: 0, titleMarginRight: 0,
     priceSize: 'text-base',
     priceColor: '#1E5F7A',
-    pricePadding: 4,
+    pricePaddingTop: 4, pricePaddingBottom: 4, pricePaddingLeft: 0, pricePaddingRight: 0,
+    priceMarginTop: 0, priceMarginBottom: 0, priceMarginLeft: 0, priceMarginRight: 0,
     metaSize: 'text-[9px]',
     metaColor: '#9ca3af',
-    metaPadding: 4,
+    metaPaddingTop: 4, metaPaddingBottom: 4, metaPaddingLeft: 0, metaPaddingRight: 0,
+    metaMarginTop: 0, metaMarginBottom: 0, metaMarginLeft: 0, metaMarginRight: 0,
     metaLabelRating: 'Rating',
     metaLabelCount: 'Sold',
-    btnPadding: 4,
     primaryBtnBg: '#1E5F7A', 
     primaryBtnColor: '#ffffff', 
     primaryBtnSize: 'text-[10px]',
+    btnWidth: '100%',
+    btnHeight: '40',
+    btnPaddingTop: 8, btnPaddingBottom: 8, btnPaddingLeft: 12, btnPaddingRight: 12,
+    btnMarginTop: 4, btnMarginBottom: 4, btnMarginLeft: 0, btnMarginRight: 0,
     primaryBtnEnabled: true, 
     secondaryBtnEnabled: false 
   },
@@ -134,25 +141,31 @@ const DEFAULT_CARD_STYLES = {
     textAlign: 'left',
     titleSize: 'text-xs',
     titleColor: '#1f2937',
-    titlePadding: 4,
+    titlePaddingTop: 4, titlePaddingBottom: 4, titlePaddingLeft: 0, titlePaddingRight: 0,
+    titleMarginTop: 0, titleMarginBottom: 0, titleMarginLeft: 0, titleMarginRight: 0,
     priceSize: 'text-base',
     priceColor: '#1E5F7A',
-    pricePadding: 4,
+    pricePaddingTop: 4, pricePaddingBottom: 4, pricePaddingLeft: 0, pricePaddingRight: 0,
+    priceMarginTop: 0, priceMarginBottom: 0, priceMarginLeft: 0, priceMarginRight: 0,
     metaSize: 'text-[9px]',
     metaColor: '#9ca3af',
-    metaPadding: 4,
+    metaPaddingTop: 4, metaPaddingBottom: 4, metaPaddingLeft: 0, metaPaddingRight: 0,
+    metaMarginTop: 0, metaMarginBottom: 0, metaMarginLeft: 0, metaMarginRight: 0,
     metaLabelRating: 'Rating',
     metaLabelCount: 'Booked',
-    btnPadding: 4,
     primaryBtnBg: '#1E5F7A', 
     primaryBtnColor: '#ffffff', 
     primaryBtnSize: 'text-[10px]',
+    btnWidth: '100%',
+    btnHeight: '40',
+    btnPaddingTop: 8, btnPaddingBottom: 8, btnPaddingLeft: 12, btnPaddingRight: 12,
+    btnMarginTop: 4, btnMarginBottom: 4, btnMarginLeft: 0, btnMarginRight: 0,
     primaryBtnEnabled: true, 
     secondaryBtnEnabled: false 
   }
 };
 
-export default function GridBuilderPage() {
+export default function HomepageBuilderPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -474,9 +487,9 @@ export default function GridBuilderPage() {
                     </div>
                   </div>
 
-                  {/* Title & Price Section */}
+                  {/* Title Section */}
                   <div className="space-y-6 pt-6 border-t">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><Type size={14}/> Typography & Pricing</h4>
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><Type size={14}/> Title Config</h4>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Title Size</Label>
@@ -489,10 +502,34 @@ export default function GridBuilderPage() {
                         <Label className="text-[9px] font-black uppercase">Title Color</Label>
                         <Input type="color" value={localStyles[cardType]?.titleColor || '#1f2937'} onChange={e => updateCardStyle(cardType, 'titleColor', e.target.value)} className="h-10 p-1" />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Title Pad (px)</Label>
-                        <Input type="number" value={safeNum(localStyles[cardType]?.titlePadding, 4)} onChange={e => updateCardStyle(cardType, 'titlePadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    {/* Padding & Margin Subgrid */}
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Title Padding (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titlePaddingTop, 4)} onChange={e => updateCardStyle(cardType, 'titlePaddingTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titlePaddingBottom, 4)} onChange={e => updateCardStyle(cardType, 'titlePaddingBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titlePaddingLeft, 0)} onChange={e => updateCardStyle(cardType, 'titlePaddingLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titlePaddingRight, 0)} onChange={e => updateCardStyle(cardType, 'titlePaddingRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
                       </div>
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Title Margin (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titleMarginTop, 0)} onChange={e => updateCardStyle(cardType, 'titleMarginTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titleMarginBottom, 0)} onChange={e => updateCardStyle(cardType, 'titleMarginBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titleMarginLeft, 0)} onChange={e => updateCardStyle(cardType, 'titleMarginLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.titleMarginRight, 0)} onChange={e => updateCardStyle(cardType, 'titleMarginRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price Section */}
+                  <div className="space-y-6 pt-6 border-t">
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><DollarSign size={14}/> Price Config</h4>
+                    <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Price Size</Label>
                         <Select value={localStyles[cardType]?.priceSize || 'text-base'} onValueChange={v => updateCardStyle(cardType, 'priceSize', v)}>
@@ -504,57 +541,41 @@ export default function GridBuilderPage() {
                         <Label className="text-[9px] font-black uppercase">Price Color</Label>
                         <Input type="color" value={localStyles[cardType]?.priceColor || '#1E5F7A'} onChange={e => updateCardStyle(cardType, 'priceColor', e.target.value)} className="h-10 p-1" />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Price Pad (px)</Label>
-                        <Input type="number" value={safeNum(localStyles[cardType]?.pricePadding, 4)} onChange={e => updateCardStyle(cardType, 'pricePadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Price Padding (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.pricePaddingTop, 4)} onChange={e => updateCardStyle(cardType, 'pricePaddingTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.pricePaddingBottom, 4)} onChange={e => updateCardStyle(cardType, 'pricePaddingBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.pricePaddingLeft, 0)} onChange={e => updateCardStyle(cardType, 'pricePaddingLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.pricePaddingRight, 0)} onChange={e => updateCardStyle(cardType, 'pricePaddingRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Global Alignment</Label>
-                        <Select value={localStyles[cardType]?.textAlign || 'left'} onValueChange={v => updateCardStyle(cardType, 'textAlign', v)}>
-                          <SelectTrigger className="h-10 bg-gray-50 border-none rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="left">Left Aligned</SelectItem>
-                            <SelectItem value="center">Centered</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Price Margin (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.priceMarginTop, 0)} onChange={e => updateCardStyle(cardType, 'priceMarginTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.priceMarginBottom, 0)} onChange={e => updateCardStyle(cardType, 'priceMarginBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.priceMarginLeft, 0)} onChange={e => updateCardStyle(cardType, 'priceMarginLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.priceMarginRight, 0)} onChange={e => updateCardStyle(cardType, 'priceMarginRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Rating & Count Management */}
-                  <div className="space-y-6 pt-6 border-t">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><Star size={14}/> Rating & Sales Metadata</h4>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Meta Label (Rating)</Label>
-                        <Input value={localStyles[cardType]?.metaLabelRating || 'Rating'} onChange={e => updateCardStyle(cardType, 'metaLabelRating', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-[10px] font-bold" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Meta Label (Count)</Label>
-                        <Input value={localStyles[cardType]?.metaLabelCount || (cardType === 'productCard' ? 'Sold' : 'Booked')} onChange={e => updateCardStyle(cardType, 'metaLabelCount', e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-[10px] font-bold" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Meta Text Size</Label>
-                        <Select value={localStyles[cardType]?.metaSize || 'text-[9px]'} onValueChange={v => updateCardStyle(cardType, 'metaSize', v)}>
-                          <SelectTrigger className="h-10 text-[10px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>{FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Meta Color</Label>
-                        <Input type="color" value={localStyles[cardType]?.metaColor || '#9ca3af'} onChange={e => updateCardStyle(cardType, 'metaColor', e.target.value)} className="h-10 p-1" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Meta Pad (px)</Label>
-                        <Input type="number" value={safeNum(localStyles[cardType]?.metaPadding, 4)} onChange={e => updateCardStyle(cardType, 'metaPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                    </div>
-                  </div>
-                  
                   {/* Button Logic */}
                   <div className="space-y-6 pt-6 border-t">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><MousePointer2 size={14}/> Action Buttons</h4>
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2 border-b pb-2"><MousePointer2 size={14}/> Button Geometry & Style</h4>
                     <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Btn Width</Label>
+                        <Input value={localStyles[cardType]?.btnWidth || '100%'} onChange={e => updateCardStyle(cardType, 'btnWidth', e.target.value)} placeholder="e.g. 100% or 120px" className="h-10 text-[10px]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Btn Height (px)</Label>
+                        <Input type="number" value={safeNum(localStyles[cardType]?.btnHeight, 40)} onChange={e => updateCardStyle(cardType, 'btnHeight', parseInt(e.target.value))} className="h-10 text-[10px]" />
+                      </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase">Btn Background</Label>
                         <Input type="color" value={localStyles[cardType]?.primaryBtnBg || '#1E5F7A'} onChange={e => updateCardStyle(cardType, 'primaryBtnBg', e.target.value)} className="h-10 p-1" />
@@ -564,10 +585,35 @@ export default function GridBuilderPage() {
                         <Input type="color" value={localStyles[cardType]?.primaryBtnColor || '#ffffff'} onChange={e => updateCardStyle(cardType, 'primaryBtnColor', e.target.value)} className="h-10 p-1" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Btn Pad (px)</Label>
-                        <Input type="number" value={safeNum(localStyles[cardType]?.btnPadding, 4)} onChange={e => updateCardStyle(cardType, 'btnPadding', parseInt(e.target.value) || 0)} className="h-10 bg-gray-50 border-none rounded-xl" />
+                        <Label className="text-[9px] font-black uppercase">Btn Text Size</Label>
+                        <Select value={localStyles[cardType]?.primaryBtnSize || 'text-[10px]'} onValueChange={v => updateCardStyle(cardType, 'primaryBtnSize', v)}>
+                          <SelectTrigger className="h-10 text-[10px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FONT_SIZES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                        </Select>
                       </div>
                     </div>
+                    
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Btn Padding (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnPaddingTop, 8)} onChange={e => updateCardStyle(cardType, 'btnPaddingTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnPaddingBottom, 8)} onChange={e => updateCardStyle(cardType, 'btnPaddingBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnPaddingLeft, 12)} onChange={e => updateCardStyle(cardType, 'btnPaddingLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnPaddingRight, 12)} onChange={e => updateCardStyle(cardType, 'btnPaddingRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[8px] font-black uppercase text-muted-foreground">Btn Margin (px)</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnMarginTop, 4)} onChange={e => updateCardStyle(cardType, 'btnMarginTop', parseInt(e.target.value))} placeholder="T" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnMarginBottom, 4)} onChange={e => updateCardStyle(cardType, 'btnMarginBottom', parseInt(e.target.value))} placeholder="B" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnMarginLeft, 0)} onChange={e => updateCardStyle(cardType, 'btnMarginLeft', parseInt(e.target.value))} placeholder="L" className="h-8 text-[10px]" />
+                          <Input type="number" value={safeNum(localStyles[cardType]?.btnMarginRight, 0)} onChange={e => updateCardStyle(cardType, 'btnMarginRight', parseInt(e.target.value))} placeholder="R" className="h-8 text-[10px]" />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
                         <Label className="text-xs font-black uppercase">Enable Secondary Button</Label>
@@ -598,7 +644,7 @@ export default function GridBuilderPage() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-8">
                 <div className="space-y-4">
@@ -766,7 +812,7 @@ export default function GridBuilderPage() {
             <DialogTitle className="text-2xl font-black uppercase tracking-tight">Deploy Module</DialogTitle>
             <button onClick={() => setIsAddOpen(false)} className="absolute right-6 top-6 p-2 hover:bg-white/10 rounded-full text-white/60"><X size={24}/></button>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar bg-white">
             {['Main', 'Navigation', 'Marketing', 'Services', 'Products', 'UI'].map(category => {
               const types = SECTION_TYPES.filter(t => t.category === category);
               if (types.length === 0) return null;
