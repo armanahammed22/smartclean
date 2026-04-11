@@ -61,11 +61,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUploader } from '@/components/ui/image-uploader';
+import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 
 const SECTION_TYPES = [
@@ -95,7 +96,6 @@ const FONT_SIZES = [
   { label: '2XL', value: 'text-2xl' }
 ];
 
-// International Standard Defaults
 const DEFAULT_CARD_STYLES = {
   productCard: { 
     cardBg: '#ffffff', 
@@ -324,6 +324,31 @@ export default function HomepageBuilderPage() {
   const safeNum = (val: any, def: number = 0) => {
     if (val === undefined || val === null || isNaN(val)) return def;
     return val;
+  };
+
+  const filteredItemsForManual = useMemo(() => {
+    if (!editingSection) return [];
+    const combined = [
+      ...(allProducts?.map(p => ({ ...p, itemType: 'product' })) || []),
+      ...(allServices?.map(s => ({ ...s, itemType: 'service', name: s.title })) || [])
+    ];
+    if (!itemSearchQuery.trim()) return combined.slice(0, 20);
+    return combined.filter(item => 
+      (item.name || '').toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
+      item.id.toLowerCase().includes(itemSearchQuery.toLowerCase())
+    ).slice(0, 20);
+  }, [allProducts, allServices, itemSearchQuery, editingSection]);
+
+  const toggleManualId = (id: string) => {
+    if (!editingSection) return;
+    const current = editingSection.config?.manualIds || [];
+    const next = current.includes(id) 
+      ? current.filter((i: string) => i !== id) 
+      : [...current, id].slice(0, 20); 
+    setEditingSection({
+      ...editingSection,
+      config: { ...editingSection.config, manualIds: next }
+    });
   };
 
   if (isLoading || stylesLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
