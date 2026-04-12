@@ -1,28 +1,37 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Zap, Target, Shield, Clock, Users, Headphones } from 'lucide-react';
+import { Check, Loader2, Zap, Target, Shield, Clock, Users, Headphones, TrendingUp, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, any> = {
   Zap,
   Target,
   Shield,
-  Clock
+  Clock,
+  TrendingUp,
+  Briefcase
 };
 
 export default function BillingPlansPage() {
   const db = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const plansQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'subscription_plans'), orderBy('createdAt', 'asc')) : null, [db]);
   const { data: plans, isLoading } = useCollection(plansQuery);
+
+  if (!mounted) return null;
 
   return (
     <PublicLayout>

@@ -263,7 +263,7 @@ export default function NavigationHubPage() {
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
                 <CardHeader className="bg-[#081621] text-white p-8">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-black uppercase flex items-center gap-2"><Layers className="text-primary"/> Package Logic</CardTitle>
+                    <CardTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-2"><Layers className="text-primary"/> Package Logic</CardTitle>
                     <Switch checked={bottomFormData.showPackage} onCheckedChange={v => setBottomFormData({...bottomFormData, showPackage: v})} />
                   </div>
                 </CardHeader>
@@ -390,7 +390,6 @@ export default function NavigationHubPage() {
           </div>
         </TabsContent>
 
-        {/* 🎴 FEATURE CARDS BLOCK */}
         <TabsContent value="feature_cards" className="mt-0 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 h-fit">
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">

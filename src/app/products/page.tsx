@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -13,10 +13,17 @@ import { useLanguage } from '@/components/providers/language-provider';
 export default function ProductsListPage() {
   const db = useFirestore();
   const { t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const productsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'products'), where('status', '==', 'Active'), orderBy('name', 'asc')) : null, [db]);
   const { data: products, isLoading } = useCollection(productsQuery);
+
+  if (!mounted) return null;
 
   return (
     <PublicLayout>
