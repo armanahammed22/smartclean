@@ -24,7 +24,13 @@ import {
   Zap,
   CheckCircle2,
   Clock,
-  Check
+  Check,
+  ChevronRight,
+  Wallet,
+  ShieldCheck,
+  Package,
+  Layers,
+  Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -104,7 +110,7 @@ export default function CreateManualBookingPage() {
         discount: manualDiscount,
         totalPrice: total,
         status: 'Assigned',
-        paymentMethod: 'Cash in Hand (Manual)',
+        paymentMethod: 'Manual Enrollment',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -124,44 +130,53 @@ export default function CreateManualBookingPage() {
   };
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-24 min-w-0">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full bg-white shadow-sm border h-10 w-10">
           <ArrowLeft size={20} />
         </Button>
         <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">Manual Booking</h1>
-          <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1">SaaS Service Intake</p>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight leading-none">Service Intake</h1>
+          <p className="text-muted-foreground text-[10px] md:text-sm font-bold uppercase tracking-widest mt-1">Manual Enrollment Terminal</p>
         </div>
       </div>
 
       <form onSubmit={handleCreateBooking} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-7 space-y-8">
-          {/* Service Selector */}
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+          {/* 🛠️ SERVICE CONFIGURATION */}
+          <Card className="border-none shadow-sm rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="bg-[#081621] text-white p-8">
               <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                <Wrench size={18} className="text-primary" /> Service Configuration
+                <Wrench size={18} className="text-primary" /> Service Definition
               </CardTitle>
+              <CardDescription className="text-white/40 font-bold uppercase text-[9px]">Select primary service and optional add-ons</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Main Service</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Choose Main Service</Label>
                 <Select value={selectedServiceId} onValueChange={v => { setSelectedServiceId(v); setSelectedAddOnIds([]); }}>
-                  <SelectTrigger className="h-14 bg-gray-50 border-none rounded-2xl font-bold">
-                    <SelectValue placeholder="Choose a service..." />
+                  <SelectTrigger className="h-14 bg-gray-50 border-none rounded-2xl font-bold text-sm shadow-inner">
+                    <SelectValue placeholder="Search service catalog..." />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
-                    {services?.map(s => <SelectItem key={s.id} value={s.id} className="font-bold uppercase text-[10px]">{s.title}</SelectItem>)}
+                  <SelectContent className="rounded-2xl border-none shadow-2xl">
+                    {services?.map(s => (
+                      <SelectItem key={s.id} value={s.id} className="py-3 px-4 font-black uppercase text-[10px]">{s.title}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedServiceId && addOnOptions && addOnOptions.length > 0 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Available Add-ons</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {addOnOptions.map(addon => (
+              {selectedServiceId && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-6">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <Zap size={14} fill="currentColor" /> Available Customizations
+                    </h4>
+                    <Badge variant="outline" className="text-[8px] font-black uppercase h-5">{addOnOptions?.length || 0} Options</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {addOnOptions?.map(addon => (
                       <div 
                         key={addon.id} 
                         onClick={() => toggleAddOn(addon.id)}
@@ -171,114 +186,132 @@ export default function CreateManualBookingPage() {
                         )}
                       >
                         <div className="min-w-0">
-                          <p className="font-black text-xs uppercase truncate leading-tight">{addon.name}</p>
+                          <p className="font-black text-[11px] uppercase truncate leading-tight text-gray-900">{addon.name}</p>
                           <p className="font-black text-primary text-[10px] mt-1">+৳{addon.price}</p>
                         </div>
                         <div className={cn(
-                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
+                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0",
                           selectedAddOnIds.includes(addon.id) ? "bg-primary border-primary text-white" : "border-gray-200"
                         )}>
                           {selectedAddOnIds.includes(addon.id) && <Check size={14} strokeWidth={4} />}
                         </div>
                       </div>
                     ))}
+                    {addOnOptions?.length === 0 && <p className="col-span-full py-6 text-center text-[10px] font-bold text-gray-400 uppercase italic">No add-ons available for this service.</p>}
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Customer & Schedule */}
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+          {/* 👤 CLIENT & LOGISTICS */}
+          <Card className="border-none shadow-sm rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="bg-gray-50 border-b p-8">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Calendar size={18} className="text-primary" /> Client & Schedule
+              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+                <User size={18} className="text-primary" /> Client & Logistics
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Karim Ahmed" className="h-12 bg-gray-50 border-none rounded-xl" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Legal Name</Label>
+                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Recipient Name" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone</Label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-12 bg-gray-50 border-none rounded-xl" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Contact Phone</Label>
+                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Booking Date</Label>
-                  <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl" />
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Date</Label>
+                  <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Time Slot</Label>
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Arrival Window</Label>
                   <Select value={formData.time} onValueChange={v => setFormData({...formData, time: v})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
+                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-black text-[10px] uppercase shadow-inner">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="8AM - 12PM">Morning (8AM-12PM)</SelectItem>
-                      <SelectItem value="12PM - 4PM">Afternoon (12PM-4PM)</SelectItem>
-                      <SelectItem value="4PM - 8PM">Evening (4PM-8PM)</SelectItem>
+                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                      <SelectItem value="8AM - 12PM" className="font-bold text-[10px] uppercase">Morning (8AM - 12PM)</SelectItem>
+                      <SelectItem value="12PM - 4PM" className="font-bold text-[10px] uppercase">Afternoon (12PM - 4PM)</SelectItem>
+                      <SelectItem value="4PM - 8PM" className="font-bold text-[10px] uppercase">Evening (4PM - 8PM)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Address</Label>
-                <Textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House, Road, Area" className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4 pt-4" />
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-4 text-primary" size={18} />
+                  <Textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House, Road, Block, Area..." className="min-h-[120px] pl-12 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* 💰 REAL-TIME BILLING SIDEBAR */}
         <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-8">
-          {/* Summary Card */}
-          <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white border-t-8 border-indigo-600">
-            <CardHeader className="p-8 border-b">
-              <CardTitle className="text-lg font-black uppercase tracking-widest text-[#081621]">Booking Summary</CardTitle>
+          <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white border-t-[12px] border-indigo-600">
+            <CardHeader className="p-8 border-b bg-gray-50/50 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight text-[#081621]">Bill Calculation</CardTitle>
+                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Live configuration metrics</CardDescription>
+              </div>
+              <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-600/20"><Wallet size={20}/></div>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
+            <CardContent className="p-8 space-y-8">
               <div className="space-y-4">
                 <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>Base Price</span>
+                  <span>Base Premium Service</span>
                   <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>Add-ons</span>
+                  <span>Selected Add-ons</span>
                   <span className="text-gray-900">৳{addOnPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>VAT (8%)</span>
+                  <span>VAT (Government 8%)</span>
                   <span className="text-gray-900">৳{tax.toLocaleString()}</span>
                 </div>
-                <div className="space-y-2 pt-2">
-                  <Label className="text-[10px] font-black uppercase text-primary ml-1">Admin Discount (Manual)</Label>
-                  <Input 
-                    type="number" 
-                    value={manualDiscount} 
-                    onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)} 
-                    className="h-10 bg-gray-50 border-none font-black text-xs shadow-inner rounded-xl"
-                  />
+                
+                <div className="pt-4 mt-4 border-t border-dashed border-gray-200">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-rose-600 ml-1">Manual Discount Override (৳)</Label>
+                    <div className="relative">
+                      <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-600" size={14} />
+                      <Input 
+                        type="number" 
+                        value={manualDiscount} 
+                        onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)} 
+                        className="h-12 pl-10 bg-rose-50/50 border-rose-100 border-2 font-black text-lg text-rose-600 rounded-2xl shadow-inner"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="pt-6 border-t-4 border-dashed border-gray-100 flex flex-col gap-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Total Payable</p>
-                  <p className="text-5xl font-black text-indigo-600 tracking-tighter">৳{total.toLocaleString()}</p>
+
+                <div className="pt-8 border-t-4 border-dashed border-gray-100 flex flex-col gap-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] leading-none mb-1">Total Authorized Payable</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-6xl font-black text-indigo-600 tracking-tighter">৳{total.toLocaleString()}</span>
+                    <Badge className="bg-indigo-100 text-indigo-700 border-none font-black text-[10px]">BDT</Badge>
+                  </div>
                 </div>
               </div>
 
-              <div className="pt-4 space-y-4">
-                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-start gap-3">
-                  <CheckCircle2 size={20} className="text-indigo-600 mt-0.5" />
-                  <p className="text-[10px] font-bold text-indigo-800 leading-relaxed uppercase">
-                    Booking will be created with "Assigned" status. Official invoice will be sent to the client.
+              <div className="space-y-4">
+                <div className="p-5 bg-indigo-50 rounded-[2rem] border border-indigo-100 flex items-start gap-4">
+                  <ShieldCheck size={24} className="text-indigo-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-bold text-indigo-800 leading-relaxed uppercase">
+                    Verification Protocol Active. This booking will be created with "Assigned" status and an immediate professional invoice.
                   </p>
                 </div>
                 <Button 
-                  type="submit" 
+                  onClick={handleCreateBooking}
                   disabled={isSubmitting}
-                  className="w-full h-16 md:h-20 rounded-2xl font-black text-2xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-tight shadow-xl shadow-indigo-600/20 gap-3 active:scale-95 transition-transform"
+                  className="w-full h-16 md:h-20 rounded-[2rem] font-black text-2xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-tight shadow-2xl shadow-indigo-600/30 gap-4 active:scale-95 transition-all"
                 >
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={24} /> Confirm Booking</>}
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={28} /> Deploy Booking</>}
                 </Button>
               </div>
             </CardContent>
