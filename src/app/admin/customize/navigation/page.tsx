@@ -125,7 +125,7 @@ export default function NavigationHubPage() {
   // Feature Cards (Quick Actions) States
   const [actionFormData, setActionFormData] = useState({ title: '', iconName: 'Wrench', link: '', bgGradient: 'from-primary to-primary/80' });
   const [isActionSubmitting, setIsActionSubmitting] = useState(false);
-  const actionsQuery = useMemoFirebase(() => db ? collection(db, 'quick_actions')) : null, [db]);
+  const actionsQuery = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
   const { data: quickActions, isLoading: actionsLoading } = useCollection(actionsQuery);
 
   useEffect(() => {
@@ -294,7 +294,7 @@ export default function NavigationHubPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground">Custom Color</Label>
-                      <Input type="color" value={bottomFormData.packageConfig?.color} onChange={e => setBottomFormData({...bottomFormData.packageConfig, color: e.target.value}})} className="h-11 p-1 bg-gray-50 border-none rounded-xl" />
+                      <Input type="color" value={bottomFormData.packageConfig?.color} onChange={e => setBottomFormData({...bottomFormData, packageConfig: {...bottomFormData.packageConfig, color: e.target.value}})} className="h-11 p-1 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
