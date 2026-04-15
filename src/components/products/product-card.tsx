@@ -27,8 +27,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   }, []);
 
   // 🛡️ UNIFIED FIELD LOGIC: Support Product, Main Service, and Sub-Service schemas
-  // Main Services use 'basePrice' and 'title'
-  // Products and Sub-Services use 'price' and 'name'
   const isService = (product as any).type === 'service' || 'basePrice' in product || 'mainServiceId' in product;
   const displayPrice = (product as any).basePrice !== undefined ? (product as any).basePrice : product.price;
   const regularPrice = (product as any).regularPrice !== undefined ? (product as any).regularPrice : product.regularPrice;
@@ -169,7 +167,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
                 src={product.imageUrl}
                 alt={displayName}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                className="object-contain transition-transform duration-500 group-hover:scale-110"
                 unoptimized
               />
             ) : (

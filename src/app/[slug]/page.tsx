@@ -240,7 +240,7 @@ export default function DynamicLandingPage() {
                         src={item.imageUrl || 'https://picsum.photos/seed/item/200/200'} 
                         alt={item.name || item.title} 
                         fill 
-                        className="object-cover transition-transform group-hover:scale-110" 
+                        className="object-contain transition-transform group-hover:scale-110" 
                         unoptimized 
                       />
                     </div>
@@ -383,7 +383,7 @@ export default function DynamicLandingPage() {
                     {isProduct ? (
                       <div className="flex gap-4 items-center">
                         <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border bg-gray-50">
-                          <NextImage src={mainProduct?.imageUrl || 'https://picsum.photos/seed/product/200/200'} alt="Summary" fill className="object-cover" unoptimized />
+                          <NextImage src={mainProduct?.imageUrl || 'https://picsum.photos/seed/product/200/200'} alt="Summary" fill className="object-contain" unoptimized />
                         </div>
                         <div className="flex-1 space-y-2">
                           <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs leading-tight line-clamp-2">{mainProduct?.name}</h4>
@@ -415,10 +415,10 @@ export default function DynamicLandingPage() {
                             <Label className="text-[10px] font-black uppercase text-muted-foreground">অ্যাড-অন সার্ভিস (ঐচ্ছিক)</Label>
                             <div className="grid grid-cols-1 gap-2">
                               {page.addOns.filter((a: any) => a.enabled !== false).map((add: any) => (
-                                <div key={add.id} onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, add.id])} className={cn("p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100")}>
+                                <div key={add.id} onClick={() => setSelectedAddOnIds(prev => prev.includes(add.id) ? prev.filter(i => i !== add.id) : [...prev, id])} className={cn("p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group", selectedAddOnIds.includes(add.id) ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100")}>
                                   <div className="flex items-center gap-2 md:gap-3">
                                     <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-50">
-                                      <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-cover" unoptimized />
+                                      <NextImage src={add.imageUrl || 'https://picsum.photos/seed/addon/100/100'} alt={add.name} fill className="object-contain" unoptimized />
                                     </div>
                                     <span className="text-[9px] md:text-[10px] font-bold uppercase text-gray-700">{add.name}</span>
                                   </div>

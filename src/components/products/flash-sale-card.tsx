@@ -50,7 +50,7 @@ export function FlashSaleCard({ product, customStyle }: FlashSaleCardProps) {
               src={product.imageUrl}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-contain transition-transform duration-700 group-hover:scale-110"
               unoptimized
             />
           ) : (

@@ -161,7 +161,7 @@ function ServicesContent() {
                         src={item.imageUrl} 
                         alt={item.title || 'Service Image'} 
                         fill 
-                        className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                        className="object-contain transition-transform duration-500 group-hover:scale-110" 
                         unoptimized
                       />
                     ) : (
