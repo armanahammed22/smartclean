@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * Meta Conversion API (CAPI) Implementation
  * - Handles SHA-256 hashing of User Data
  * - Proxies payload to Meta Graph API
- * - Logs tracking success/failure to Firestore
+ * - Logs tracking success/failure to Firestore with full error details
  */
 
 /** Hash PII data as per Meta requirements */
@@ -21,32 +21,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'Database not initialized' }, { status: 500 });
     }
 
-    const { eventName, eventId, payload } = await req.json();
+    const body = await req.json();
+    const { eventName, eventId, payload } = body;
 
-    // 1. Get Marketing Config
+    // 1. Get Marketing & Global Config
     const settingsSnap = await db.collection('site_settings').doc('marketing').get();
+    const globalSnap = await db.collection('site_settings').doc('global').get();
+    
     const config = settingsSnap.data();
+    const global = globalSnap.data();
 
     if (!config?.trackingEnabled || !config?.pixelId || !config?.accessToken) {
       return NextResponse.json({ status: 'Tracking Disabled or Config Missing' });
     }
 
-    // Dynamic API Version from Dashboard
     const apiVersion = config.apiVersion || 'v18.0';
 
-    // 2. Prepare User Data (Server Side Hashing)
+    // 2. Prepare User Data (Cleaned and Hashed)
     const userData: any = {
       client_ip_address: req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
       client_user_agent: req.headers.get('user-agent') || '',
-      fbp: payload.fbp || null,
-      fbc: payload.fbc || null,
     };
+
+    if (payload.fbp) userData.fbp = payload.fbp;
+    if (payload.fbc) userData.fbc = payload.fbc;
 
     if (payload.user_data?.email) {
       userData.em = [hashData(payload.user_data.email)];
     }
     if (payload.user_data?.phone) {
-      // Ensure phone is in E.164 format (digits only)
       const cleanPhone = payload.user_data.phone.replace(/\D/g, '');
       userData.ph = [hashData(cleanPhone)];
     }
@@ -54,27 +57,31 @@ export async function POST(req: NextRequest) {
       userData.external_id = [hashData(payload.user_data.external_id)];
     }
 
-    // 3. Construct Meta Payload
+    // 3. Prepare Custom Data (Only include defined values)
+    const customData: any = {
+      currency: payload.currency || 'BDT',
+    };
+
+    if (typeof payload.value === 'number') customData.value = payload.value;
+    if (payload.content_ids && payload.content_ids.length > 0) customData.content_ids = payload.content_ids;
+    if (payload.content_type) customData.content_type = payload.content_type;
+    if (payload.content_name) customData.content_name = payload.content_name;
+    if (payload.content_category) customData.content_category = payload.content_category;
+
+    // 4. Construct Meta Payload
     const fbPayload = {
       data: [{
         event_name: eventName,
         event_time: Math.floor(Date.now() / 1000),
         event_id: eventId,
         action_source: 'website',
-        event_source_url: req.headers.get('referer') || '',
+        event_source_url: req.headers.get('referer') || global?.websiteUrl || '',
         user_data: userData,
-        custom_data: {
-          value: payload.value,
-          currency: payload.currency || 'BDT',
-          content_ids: payload.content_ids || [],
-          content_type: payload.content_type || 'product',
-          content_name: payload.content_name || '',
-          content_category: payload.content_category || '',
-        },
+        custom_data: customData,
       }],
     };
 
-    // 4. Send to Meta Graph API using Dynamic Version
+    // 5. Send to Meta Graph API
     const fbResponse = await fetch(
       `https://graph.facebook.com/${apiVersion}/${config.pixelId}/events?access_token=${config.accessToken}`,
       {
@@ -86,13 +93,14 @@ export async function POST(req: NextRequest) {
 
     const result = await fbResponse.json();
 
-    // 5. Audit Log
+    // 6. Audit Log (Include full results for debugging)
     await db.collection('tracking_logs').add({
       eventName,
       eventId,
       method: 'Server',
       status: fbResponse.ok ? 'Success' : 'Failed',
       metaResponse: result,
+      requestPayload: body,
       timestamp: new Date().toISOString(),
     });
 
