@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -91,6 +90,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -294,6 +294,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
           { name: "Tracking Logs", href: '/admin/seo/logs', icon: History },
           { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
+          { name: "Meta Verification", href: '/admin/seo/meta-verification', icon: ShieldCheck },
           { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Code },
         ]
       },

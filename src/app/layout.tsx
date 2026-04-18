@@ -51,12 +51,15 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${settings?.websiteName || 'Smart Clean'}`
     },
     description: settings?.seoDescription || 'Top-rated home and office cleaning, AC maintenance, and appliance repair services in Dhaka.',
-    keywords: settings?.seoKeywords?.split(',') || ['cleaning services dhaka', 'home cleaning bangladesh'],
+    keywords: settings?.seoDescription?.split(' ') || ['cleaning services dhaka', 'home cleaning bangladesh'],
     authors: [{ name: 'Smart Clean Team' }],
     creator: 'Smart Clean',
     publisher: 'Smart Clean Bangladesh',
     verification: {
       google: settings?.googleSearchConsoleToken,
+      other: {
+        'facebook-domain-verification': settings?.metaDomainVerification ? [settings.metaDomainVerification] : [],
+      }
     },
     icons: {
       icon: [
