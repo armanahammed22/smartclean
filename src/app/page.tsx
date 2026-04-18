@@ -216,6 +216,8 @@ export default function SmartCleanHomePage() {
           filteredProducts = filteredProducts.filter(p => p.brand === config.sourceId);
         } else if (config.sourceType === 'vendor' && config.sourceId) {
           filteredProducts = filteredProducts.filter(p => p.vendorId === config.sourceId);
+        } else if (config.sourceType === 'campaign' && config.sourceId) {
+          filteredProducts = filteredProducts.filter(p => p.campaignId === config.sourceId);
         } else if (config.sourceType === 'manual' && config.manualIds?.length) {
           filteredProducts = filteredProducts.filter(p => config.manualIds.includes(p.id));
         }
@@ -408,7 +410,7 @@ export default function SmartCleanHomePage() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted) return <div className="min-h-screen bg-white" />;
 
   return (
     <PublicLayout>
