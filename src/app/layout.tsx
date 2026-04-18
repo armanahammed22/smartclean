@@ -33,7 +33,8 @@ async function getGlobalSettings() {
 }
 
 /**
- * Generate Dynamic Metadata for SEO and Icons
+ * Generate Dynamic Metadata for SEO and Verification
+ * This handles the <meta name="facebook-domain-verification" ... /> injection
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
@@ -131,11 +132,11 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
         
-        {/* Explicit Icon Tags for older browser support */}
+        {/* Dynamic Verification Tokens are handled via Metadata API */}
+        
         <link rel="icon" href={favicon} />
         <link rel="apple-touch-icon" href={appleIcon} />
 
-        {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -157,7 +158,6 @@ export default async function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen">
-        {/* Google Tag Manager (Body Script) - Immediate injection */}
         {settings?.gtmBodyScript && (
           <div
             id="gtm-body-noscript"
@@ -167,7 +167,6 @@ export default async function RootLayout({
           />
         )}
 
-        {/* Google Tag Manager (Head Script) - Optimized loading */}
         {settings?.gtmHeadScript && (
           <Script
             id="gtm-init"
@@ -178,7 +177,6 @@ export default async function RootLayout({
           />
         )}
 
-        {/* Google Analytics (Direct injection if GTM is not used) */}
         {!settings?.gtmHeadScript && settings?.googleAnalyticsId && (
           <>
             <Script
