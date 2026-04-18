@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -16,7 +15,8 @@ import {
   Award,
   ChevronRight,
   Shield,
-  ThumbsUp
+  ThumbsUp,
+  BadgeCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +58,7 @@ export default function StandaloneLandingPage() {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8 text-center lg:text-left">
-              <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-[0.2em] animate-fade-in">
+              <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-[0.2em]">
                 Next-Gen Cleaning Solutions
               </Badge>
               <h1 className="text-5xl md:text-8xl font-black text-[#081621] leading-[0.9] tracking-tighter uppercase italic">
@@ -98,8 +98,8 @@ export default function StandaloneLandingPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent" />
               </div>
-              {/* Floating Badge */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-gray-50 animate-bounce duration-[3000ms]">
+              {/* Floating Badge - Fixed Ambiguous Utility Class */}
+              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 animate-bounce [animation-duration:3s]">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
                     <ShieldCheck size={24} />

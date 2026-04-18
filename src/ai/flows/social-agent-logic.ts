@@ -1,8 +1,8 @@
-
-'use client';
+'use server';
 /**
  * @fileOverview Social Agent Intelligence Logic.
  * Handles intent parsing, lead extraction, and smart reply generation.
+ * This is a server-side module to protect API keys and use Node.js dependencies.
  */
 
 import { ai } from '@/ai/genkit';
@@ -29,7 +29,8 @@ const SocialAgentOutputSchema = z.object({
 });
 
 /**
- * Main AI function to process social media messages
+ * Main AI function to process social media messages.
+ * Runs on the server to ensure compatibility with Genkit and environment variables.
  */
 export async function processSocialMessage(input: z.infer<typeof SocialAgentInputSchema>) {
   const { output } = await ai.generate({
