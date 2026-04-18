@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -25,22 +24,12 @@ import {
   XCircle,
   Plus,
   Search,
-  X,
-  User,
-  MapPin,
-  Wrench,
-  Zap,
-  Wallet,
-  Smartphone,
-  ChevronDown,
-  Users,
-  ShieldCheck,
-  ClipboardList
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -108,6 +97,8 @@ function BookingsListContent() {
       setIsProcessingInvoice(null);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-8 min-w-0">
@@ -194,7 +185,7 @@ function BookingsListContent() {
                     </TableCell>
                     <TableCell>
                       <Select defaultValue={booking.status} onValueChange={(v) => handleUpdateStatus(booking.id, v)}>
-                        <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-indigo-50 text-indigo-700">
+                        <SelectTrigger className="h-8 text-[9px] font-black uppercase w-[110px] border-none bg-blue-50 text-blue-700">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

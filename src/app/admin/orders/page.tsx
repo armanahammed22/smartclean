@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, writeBatch, addDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -16,27 +15,19 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, 
-  Filter, 
   ShoppingCart, 
   Trash2,
   Loader2,
   Zap,
   FileText,
-  Download,
-  MoreVertical,
   CheckCircle2,
   Clock,
   Plus,
   X,
-  User,
-  MapPin,
   Package,
-  Wallet,
-  Smartphone,
-  ChevronDown
+  Smartphone
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -71,8 +62,6 @@ function OrdersListContent() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessingInvoice, setIsProcessingInvoice] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Creation State
@@ -83,7 +72,6 @@ function OrdersListContent() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 80 });
   
-  // Payment State
   const [paymentCategory, setPaymentCategory] = useState<'cod' | 'online'>('cod');
   const [selectedGatewayId, setSelectedGatewayId] = useState<string>('');
 
@@ -150,12 +138,7 @@ function OrdersListContent() {
   const handleCreateOrder = async () => {
     if (!db) return;
     if (selectedItems.length === 0 || !customer.name || !customer.phone || !customer.address) {
-      toast({ variant: "destructive", title: "তথ্য অসম্পূর্ণ", description: "সবগুলো ঘর সঠিকভাবে পূরণ করুন।" });
-      return;
-    }
-
-    if (paymentCategory === 'online' && !selectedGatewayId) {
-      toast({ variant: "destructive", title: "Payment Method Error", description: "Please select an online gateway." });
+      toast({ variant: "destructive", title: "Information Missing", description: "Please fill all required fields." });
       return;
     }
 
@@ -179,12 +162,10 @@ function OrdersListContent() {
       const docRef = await addDoc(collection(db, 'orders'), orderData);
       await getOrCreateInvoice(db, docRef.id, 'order', orderData);
 
-      toast({ title: "সফল হয়েছে", description: "নতুন অর্ডার তৈরি হয়েছে!" });
+      toast({ title: "Success", description: "Order created successfully!" });
       setIsCreateOpen(false);
       setSelectedItems([]);
       setCustomer({ name: '', phone: '', address: '' });
-      setPaymentCategory('cod');
-      setSelectedGatewayId('');
     } catch (e) {
       toast({ variant: "destructive", title: "Error" });
     } finally {
@@ -210,6 +191,8 @@ function OrdersListContent() {
       setIsProcessingInvoice(null);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-8 min-w-0">
@@ -268,12 +251,12 @@ function OrdersListContent() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
                 ) : filteredOrders?.map((order) => (
                   <TableRow key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                     <TableCell className="py-5 pl-8">
                       <div className="font-black text-gray-900 text-xs">#ORD-{order.id.slice(0, 6).toUpperCase()}</div>
-                      <div className="text-[9px] text-muted-foreground mt-1 font-bold">{mounted && order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}</div>
+                      <div className="text-[9px] text-muted-foreground mt-1 font-bold">{order.createdAt ? format(new Date(order.createdAt), 'MMM dd, HH:mm') : 'N/A'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="text-xs font-bold text-gray-700 uppercase">{order.customerName}</div>
@@ -304,9 +287,8 @@ function OrdersListContent() {
         </CardContent>
       </Card>
 
-      {/* 🛠️ IMPROVED SCROLLABLE DIALOG UI */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 overflow-hidden border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
@@ -384,7 +366,7 @@ function OrdersListContent() {
 
                 <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit">
                   <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Wallet size={16} /> Bill Calculation</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Plus size={16} /> Bill Calculation</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">

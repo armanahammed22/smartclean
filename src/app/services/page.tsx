@@ -7,14 +7,13 @@ import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, X, Wrench, Package, Star, Calendar, Zap } from 'lucide-react';
+import { Loader2, Search, Filter, X, Wrench, Package, Star, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/components/providers/language-provider';
 import { ProductCard } from '@/components/products/product-card';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
 
 function ServicesContent() {
   const db = useFirestore();
@@ -85,7 +84,7 @@ function ServicesContent() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [services, products, subServices, searchQuery, activeCategory]);
+  }, [services, products, subServices, searchQuery, activeCategory, t]);
 
   const isLoading = sLoading || pLoading || subLoading;
 

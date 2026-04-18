@@ -17,7 +17,7 @@ const getAdminApp = () => {
 
   // Safety check for production build time
   if (!projectId || !clientEmail || !privateKey) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PHASE) {
       console.warn('Firebase Admin variables missing. Server features (API/Sitemap) will be limited.');
     }
     return null;
@@ -43,7 +43,9 @@ const getAdminApp = () => {
       }),
     });
   } catch (error) {
-    console.error('Firebase Admin initialization failure:', error);
+    if (!process.env.NEXT_PHASE) {
+      console.error('Firebase Admin initialization failure:', error);
+    }
     return null;
   }
 };

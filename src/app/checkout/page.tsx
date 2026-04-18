@@ -31,9 +31,9 @@ import {
   Calendar as CalendarIcon, 
   Clock, 
   Zap, 
-  CreditCard,
-  Wallet,
-  ShieldCheck
+  ShieldCheck,
+  Smartphone,
+  Wallet
 } from 'lucide-react';
 import { useFirestore, useUser, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, addDoc, query, orderBy } from 'firebase/firestore';
@@ -64,6 +64,7 @@ function CheckoutContent() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   const hasServices = items.some(i => i.itemType === 'service');
@@ -73,6 +74,7 @@ function CheckoutContent() {
   const deliveryOptions = allDeliveryOptions?.filter(opt => opt.isEnabled === true) || [];
 
   useEffect(() => {
+    setMounted(true);
     if (items.length > 0) {
       trackEvent('InitiateCheckout', { 
         value: subtotal, 
@@ -148,6 +150,8 @@ function CheckoutContent() {
       setIsSubmitting(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen py-8 pb-32">
@@ -245,7 +249,6 @@ function CheckoutContent() {
                 </Card>
               )}
 
-              {/* Desktop Checkout Button */}
               <Button type="submit" className="w-full hidden lg:flex h-20 font-black text-2xl rounded-[2rem] shadow-2xl bg-green-600 hover:bg-green-700 text-white uppercase tracking-tight gap-4 transition-all active:scale-95 shadow-green-600/20" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={28} /> Complete Secure Checkout</>}
               </Button>
@@ -299,7 +302,6 @@ function CheckoutContent() {
                 </CardContent>
               </Card>
 
-              {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-3">
                   <div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><ShieldCheck size={20} /></div>
@@ -315,7 +317,6 @@ function CheckoutContent() {
         </Form>
       </div>
 
-      {/* 📱 Mobile Sticky Action Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[100] pb-safe-offset-2">
         <div className="flex flex-col">
           <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Grand Total</span>
