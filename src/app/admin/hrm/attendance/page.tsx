@@ -25,9 +25,12 @@ import {
   ClipboardCheck,
   ChevronRight,
   MoreVertical,
-  X
+  X,
+  UserX,
+  ShieldAlert,
+  Settings2
 } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
+import { format, parseISO, subDays, isBefore } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AdminAttendanceManagementPage() {
   const db = useFirestore();
@@ -50,23 +54,45 @@ export default function AdminAttendanceManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  
+  // Alert Configuration
+  const [noTaskThreshold, setNoTaskThreshold] = useState(3);
 
   // 1. Fetch Staff List
   const staffQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'employee_profiles'), where('status', '==', 'Active')) : null, [db]);
   const { data: staffList, isLoading: sLoading } = useCollection(staffQuery);
 
-  // 2. Fetch Attendance Logs for filtering/history
-  const logsQuery = useMemoFirebase(() => 
-    (db && user) ? query(collection(db, 'attendance_logs'), orderBy('date', 'desc')) : null, [db, user]);
-  const { data: logs, isLoading: lLoading } = useCollection(logsQuery);
+  // 2. Fetch Recent Logs for Alert Analysis (Last 7 days)
+  const recentLogsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+    return query(collection(db, 'attendance_logs'), where('date', '>=', sevenDaysAgo), orderBy('date', 'desc'));
+  }, [db]);
+  const { data: recentLogs } = useCollection(recentLogsQuery);
 
-  // Filter logs for the selected date to show in "Manage" tab
+  const { data: allLogs, isLoading: lLoading } = useCollection(useMemoFirebase(() => 
+    db ? query(collection(db, 'attendance_logs'), orderBy('date', 'desc'), limit(1000)) : null, [db]));
+
   const todaysLogs = useMemo(() => {
-    return logs?.filter(l => l.date === selectedDate) || [];
-  }, [logs, selectedDate]);
+    return allLogs?.filter(l => l.date === selectedDate) || [];
+  }, [allLogs, selectedDate]);
 
-  // Handle Mark Attendance
+  // 🧠 IDLE ALERTS LOGIC
+  const idleAlerts = useMemo(() => {
+    if (!staffList || !recentLogs) return [];
+    
+    return staffList.map(staff => {
+      const staffLogs = recentLogs.filter(l => l.staffId === staff.id).sort((a,b) => b.date.localeCompare(a.date));
+      let consecutiveNoTask = 0;
+      for (const log of staffLogs) {
+        if (log.status === 'No Task') consecutiveNoTask++;
+        else break;
+      }
+      return { staff, consecutiveNoTask };
+    }).filter(a => a.consecutiveNoTask >= noTaskThreshold);
+  }, [staffList, recentLogs, noTaskThreshold]);
+
   const markAttendance = async (staff: any, status: string) => {
     if (!db) return;
     const logId = `${staff.id}_${selectedDate}`;
@@ -92,42 +118,24 @@ export default function AdminAttendanceManagementPage() {
   };
 
   const filteredLogs = useMemo(() => {
-    if (!logs) return [];
-    return logs.filter(log => {
+    if (!allLogs) return [];
+    return allLogs.filter(log => {
       const nameMatch = log.staffName?.toLowerCase().includes(searchTerm.toLowerCase());
       const statusMatch = statusFilter === 'all' || log.status === statusFilter;
       return nameMatch && statusMatch;
     });
-  }, [logs, searchTerm, statusFilter]);
+  }, [allLogs, searchTerm, statusFilter]);
 
   const stats = useMemo(() => {
-    const today = logs?.filter(l => l.date === format(new Date(), 'yyyy-MM-dd')) || [];
+    const today = allLogs?.filter(l => l.date === format(new Date(), 'yyyy-MM-dd')) || [];
     return {
       present: today.filter(l => l.status === 'Present').length,
       absent: today.filter(l => l.status === 'Absent').length,
       late: today.filter(l => l.status === 'Late').length,
+      noTask: today.filter(l => l.status === 'No Task').length,
       leave: today.filter(l => l.status === 'Leave').length,
     };
-  }, [logs]);
-
-  const exportCSV = () => {
-    if (!filteredLogs.length) return;
-    const headers = ["Staff Name", "Date", "Check In", "Check Out", "Status", "Marked By"];
-    const rows = filteredLogs.map(l => [
-      l.staffName, 
-      l.date, 
-      l.checkIn ? format(new Date(l.checkIn), 'hh:mm a') : 'N/A',
-      l.checkOut ? format(new Date(l.checkOut), 'hh:mm a') : 'N/A',
-      l.status,
-      l.markedBy || 'Staff'
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `attendance_report_${selectedDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-  };
+  }, [allLogs]);
 
   return (
     <div className="space-y-8 pb-24 min-w-0">
@@ -135,20 +143,43 @@ export default function AdminAttendanceManagementPage() {
         <div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Duty Control Hub</h1>
           <p className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
-            <ClipboardCheck className="text-primary" size={16} /> Workforce Presence Management
+            <ClipboardCheck className="text-primary" size={16} /> Workforce Presence & Task Monitoring
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={exportCSV} className="rounded-xl h-11 border-gray-200 gap-2 font-black uppercase text-[10px] tracking-widest bg-white shadow-sm hover:bg-gray-50">
-            <Download size={16} /> Export Records
-          </Button>
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border items-center gap-4 px-4">
+           <Label className="text-[10px] font-black uppercase text-gray-400">Alert Threshold</Label>
+           <div className="flex items-center gap-2">
+              <Input 
+                type="number" 
+                value={noTaskThreshold} 
+                onChange={e => setNoTaskThreshold(parseInt(e.target.value) || 1)}
+                className="h-8 w-14 text-center font-black bg-gray-50 border-none rounded-lg"
+              />
+              <span className="text-[9px] font-bold text-gray-400">DAYS</span>
+           </div>
         </div>
       </div>
 
+      {/* ⚠️ IDLE ALERTS */}
+      {idleAlerts.length > 0 && (
+        <div className="space-y-3 animate-in slide-in-from-top-4 duration-500">
+           {idleAlerts.map((alert, i) => (
+             <Alert key={i} variant="destructive" className="bg-rose-50 border-rose-200 rounded-3xl p-6">
+               <ShieldAlert className="h-5 w-5" />
+               <AlertTitle className="font-black uppercase tracking-tight text-rose-900">Personnel Efficiency Alert</AlertTitle>
+               <AlertDescription className="text-sm font-medium text-rose-800">
+                 <strong>{alert.staff.name}</strong> has been in <span className="font-black">"No Task"</span> status for <strong>{alert.consecutiveNoTask} consecutive days</strong>. Please review workload distribution.
+               </AlertDescription>
+             </Alert>
+           ))}
+        </div>
+      )}
+
       {/* 📊 SUMMARY CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         {[
-          { label: "Present Today", val: stats.present, icon: CheckCircle2, bg: "bg-emerald-50", color: "text-emerald-600" },
+          { label: "Active Field", val: stats.present, icon: CheckCircle2, bg: "bg-emerald-50", color: "text-emerald-600" },
+          { label: "Idle (No Task)", val: stats.noTask, icon: UserX, bg: "bg-orange-50", color: "text-orange-600" },
           { label: "Absent", val: stats.absent, icon: XCircle, bg: "bg-rose-50", color: "text-rose-600" },
           { label: "Late Arrival", val: stats.late, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
           { label: "On Leave", val: stats.leave, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" }
@@ -166,22 +197,21 @@ export default function AdminAttendanceManagementPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white border p-1 h-12 rounded-xl w-full max-w-md">
+        <TabsList className="bg-white border p-1 h-12 rounded-xl w-full max-w-md shadow-sm">
           <TabsTrigger value="manage" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Zap size={14} /> Mark Attendance
+            <Zap size={14} /> Mark Intake
           </TabsTrigger>
           <TabsTrigger value="logs" className="flex-1 rounded-lg gap-2 text-[10px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white">
-            <History size={14} /> All Logs
+            <History size={14} /> Analytics & Logs
           </TabsTrigger>
         </TabsList>
 
-        {/* 🟢 MANAGE TAB */}
         <TabsContent value="manage" className="space-y-6 mt-0">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+          <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden border border-gray-100">
             <CardHeader className="bg-gray-50/50 p-6 md:p-8 border-b flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="space-y-1">
-                <CardTitle className="text-lg font-black uppercase tracking-tight">Manual Intake Protocol</CardTitle>
-                <CardDescription className="text-[10px] font-bold uppercase">Mark attendance for a specific date</CardDescription>
+                <CardTitle className="text-lg font-black uppercase tracking-tight">Daily Presence Matrix</CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase">Manual status override for specific dates</CardDescription>
               </div>
               <div className="flex bg-white p-1 rounded-xl border border-gray-200 shadow-inner">
                 <Calendar className="ml-3 mt-2 text-primary" size={16} />
@@ -197,9 +227,9 @@ export default function AdminAttendanceManagementPage() {
               <Table>
                 <TableHeader className="bg-gray-50/30">
                   <TableRow className="border-none">
-                    <TableHead className="py-5 pl-8 font-black uppercase text-[10px] tracking-widest text-gray-400">Employee Profile</TableHead>
+                    <TableHead className="py-5 pl-8 font-black uppercase text-[10px] tracking-widest text-gray-400">Personnel</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-gray-400">Current Status</TableHead>
-                    <TableHead className="text-right pr-8 font-black uppercase text-[10px] tracking-widest text-gray-400">One-Click Actions</TableHead>
+                    <TableHead className="text-right pr-8 font-black uppercase text-[10px] tracking-widest text-gray-400">Action Control</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -210,7 +240,7 @@ export default function AdminAttendanceManagementPage() {
                     const isBusy = isProcessing === `${staff.id}_${selectedDate}`;
                     
                     return (
-                      <TableRow key={staff.id} className="hover:bg-gray-50/50 transition-colors">
+                      <TableRow key={staff.id} className="hover:bg-gray-50/50 transition-colors group">
                         <TableCell className="py-5 pl-8">
                           <div className="flex items-center gap-4">
                             <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
@@ -218,39 +248,40 @@ export default function AdminAttendanceManagementPage() {
                             </Avatar>
                             <div>
                               <div className="font-black text-gray-900 uppercase text-xs leading-none mb-1">{staff.name}</div>
-                              <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">ID: {staff.id.slice(0, 8)} • {staff.role}</div>
+                              <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">{staff.role}</div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           {log ? (
                             <Badge className={cn(
-                              "text-[8px] font-black uppercase border-none px-2 py-0.5",
+                              "text-[8px] font-black uppercase border-none px-2.5 py-1 rounded-lg shadow-inner",
                               log.status === 'Present' ? "bg-emerald-100 text-emerald-700" :
                               log.status === 'Absent' ? "bg-rose-100 text-rose-700" :
                               log.status === 'Late' ? "bg-amber-100 text-amber-700" :
+                              log.status === 'No Task' ? "bg-orange-100 text-orange-700" :
                               "bg-blue-100 text-blue-700"
                             )}>
                               {log.status}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[8px] font-black uppercase text-gray-300 border-gray-100">Unmarked</Badge>
+                            <Badge variant="outline" className="text-[8px] font-black uppercase text-gray-300 border-gray-100">Unassigned</Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right pr-8">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-1.5">
                             {isBusy ? (
                               <Loader2 className="animate-spin text-primary mx-4" size={16} />
                             ) : (
-                              ['Present', 'Absent', 'Late', 'Leave'].map((status) => (
+                              ['Present', 'No Task', 'Absent', 'Late', 'Leave'].map((status) => (
                                 <Button
                                   key={status}
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => markAttendance(staff, status)}
                                   className={cn(
-                                    "h-8 px-3 rounded-lg text-[9px] font-black uppercase border transition-all",
-                                    log?.status === status ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-gray-400 border-gray-100 hover:bg-gray-50"
+                                    "h-8 px-2.5 rounded-lg text-[8px] font-black uppercase border transition-all",
+                                    log?.status === status ? "bg-primary text-white border-primary shadow-md" : "bg-white text-gray-400 border-gray-100 hover:bg-gray-50"
                                   )}
                                 >
                                   {status}
@@ -268,14 +299,13 @@ export default function AdminAttendanceManagementPage() {
           </Card>
         </TabsContent>
 
-        {/* 📜 LOGS TAB */}
         <TabsContent value="logs" className="space-y-6 mt-0">
           <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <Input 
                 placeholder="Search logs by staff name..." 
-                className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-2xl transition-all font-medium"
+                className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-2xl transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -287,6 +317,7 @@ export default function AdminAttendanceManagementPage() {
               <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Logs</SelectItem>
                 <SelectItem value="Present">Present</SelectItem>
+                <SelectItem value="No Task">No Task</SelectItem>
                 <SelectItem value="Absent">Absent</SelectItem>
                 <SelectItem value="Late">Late</SelectItem>
                 <SelectItem value="Leave">On Leave</SelectItem>
@@ -301,35 +332,24 @@ export default function AdminAttendanceManagementPage() {
                   <TableRow className="border-none">
                     <TableHead className="py-6 pl-10 font-black uppercase text-[10px] tracking-widest text-[#081621]">Personnel</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Date</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Timing (In/Out)</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621] text-center">Status</TableHead>
-                    <TableHead className="text-right pr-10 font-black uppercase text-[10px] tracking-widest text-[#081621]">Geotag</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621] text-center">Final Status</TableHead>
+                    <TableHead className="text-right pr-10 font-black uppercase text-[10px] tracking-widest text-[#081621]">Marked By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {lLoading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
                   ) : filteredLogs.map((log) => (
                     <TableRow key={log.id} className="hover:bg-gray-50/50 transition-colors group">
                       <TableCell className="py-6 pl-10">
                         <div className="font-black text-gray-900 uppercase text-xs leading-none">{log.staffName}</div>
-                        <p className="text-[8px] font-black text-gray-400 mt-1 uppercase tracking-widest">Marked by: {log.markedBy || 'Self'}</p>
                       </TableCell>
                       <TableCell className="text-[10px] font-bold text-gray-500 uppercase">{format(parseISO(log.date), 'MMM dd, yyyy')}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-[10px] font-black text-gray-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {log.checkIn ? format(new Date(log.checkIn), 'hh:mm a') : '--:--'}
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-black text-gray-400">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {log.checkOut ? format(new Date(log.checkOut), 'hh:mm a') : 'On Duty'}
-                          </div>
-                        </div>
-                      </TableCell>
                       <TableCell className="text-center">
                         <Badge className={cn(
                           "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
                           log.status === 'Present' ? "bg-emerald-50 text-emerald-700" :
+                          log.status === 'No Task' ? "bg-orange-50 text-orange-700" :
                           log.status === 'Absent' ? "bg-rose-50 text-rose-700" :
                           log.status === 'Late' ? "bg-amber-50 text-amber-700" :
                           "bg-blue-50 text-blue-700"
@@ -338,13 +358,7 @@ export default function AdminAttendanceManagementPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right pr-10">
-                        {log.locationIn ? (
-                          <Button variant="ghost" size="sm" className="h-9 px-4 text-[9px] font-black uppercase gap-2 text-primary bg-primary/5 hover:bg-primary/10 rounded-xl" asChild>
-                            <a href={`https://www.google.com/maps?q=${log.locationIn.lat},${log.locationIn.lng}`} target="_blank">
-                              <MapPin size={12} /> Map
-                            </a>
-                          </Button>
-                        ) : <span className="text-[9px] text-gray-200 font-black uppercase">Offline</span>}
+                        <span className="text-[9px] font-black uppercase text-gray-400">{log.markedBy || 'System'}</span>
                       </TableCell>
                     </TableRow>
                   ))}

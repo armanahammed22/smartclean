@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -31,7 +30,8 @@ import {
   Activity,
   History,
   ReceiptText,
-  ArrowRight
+  ArrowRight,
+  UserX
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { getMockServices, getMockSubServices } from '@/lib/data';
+import { format } from 'date-fns';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -58,7 +59,6 @@ export default function AdminDashboard() {
   const db = useFirestore();
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -82,60 +82,31 @@ export default function AdminDashboard() {
 
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
-  const vendorsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'vendor_profiles') : null, [db, isAuthorized]);
   const servicesQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
   const usersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'users') : null, [db, isAuthorized]);
-  const leadsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'leads') : null, [db, isAuthorized]);
-  const requestsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'custom_requests') : null, [db, isAuthorized]);
-  const bookingsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'bookings') : null, [db, isAuthorized]);
   
+  // Attendance Monitoring
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized]);
+
   const { data: orders } = useCollection(ordersQuery);
   const { data: products } = useCollection(productsQuery);
-  const { data: vendors } = useCollection(vendorsQuery);
-  const { data: dbServices, isLoading: servicesLoading } = useCollection(servicesQuery);
+  const { data: dbServices } = useCollection(servicesQuery);
   const { data: dbUsers } = useCollection(usersQuery);
-  const { data: dbLeads } = useCollection(leadsQuery);
-  const { data: dbRequests } = useCollection(requestsQuery);
-  const { data: dbBookings } = useCollection(bookingsQuery);
-
-  const handleSeedData = async () => {
-    if (!db) return;
-    setIsSeeding(true);
-    try {
-      const batch = writeBatch(db);
-      const services = getMockServices('en');
-      const subServices = getMockSubServices();
-
-      services.forEach(srv => {
-        const sRef = doc(db, 'services', srv.id);
-        batch.set(sRef, { ...srv, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-      });
-
-      subServices.forEach((sub, idx) => {
-        const subId = `sub_srv_${idx + 1}`;
-        const subRef = doc(db, 'sub_services', subId);
-        batch.set(subRef, { ...sub, id: subId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-      });
-
-      await batch.commit();
-      toast({ title: "ERP Data Seeded", description: "All services and sub-services are now live." });
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Seeding Failed", description: e.message });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
+  const { data: todayAttendance } = useCollection(attendanceQuery);
 
   const metrics = useMemo(() => {
-    if (!orders || !products || !vendors) return null;
+    if (!orders || !products) return null;
     const totalRevenue = orders.reduce((acc, o) => acc + (o.totalPrice || 0), 0);
+    const idleCount = todayAttendance?.filter(l => l.status === 'No Task').length || 0;
+    
     return {
       revenue: totalRevenue,
       pendingProducts: products.filter(p => p.approvalStatus === 'Pending').length,
-      activeVendors: vendors.filter(v => v.status === 'Approved').length,
-      totalOrders: orders.length
+      totalOrders: orders.length,
+      idleStaff: idleCount
     };
-  }, [orders, products, vendors]);
+  }, [orders, products, todayAttendance]);
 
   const chartData = [
     { name: 'Mon', revenue: 15000 },
@@ -158,16 +129,9 @@ export default function AdminDashboard() {
 
   const STATS_CARDS = [
     { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
-    ...(productsEnabled ? [{ label: "Active Vendors", val: metrics?.activeVendors || 0, icon: Store, color: "text-orange-600", bg: "bg-orange-50" }] : []),
-    ...(productsEnabled ? [{ label: "Pending Approvals", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" }] : []),
+    { label: "Idle Personnel", val: metrics?.idleStaff || 0, icon: UserX, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/hrm/attendance" },
+    { label: "Pending Approvals", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
-  ];
-
-  const MANAGEMENT_SHORTCUTS = [
-    { label: "Master Ledger", href: "/admin/finance/ledger", icon: Wallet, color: "bg-green-600", desc: "Finance & Accounts" },
-    { label: "Attendance Logs", href: "/admin/hrm/attendance", icon: Clock, color: "bg-amber-600", desc: "HRM Control" },
-    { label: "Invoices", href: "/admin/invoices", icon: ReceiptText, color: "bg-indigo-600", desc: "Billing Center" },
-    { label: "Service List", href: "/admin/services", icon: Wrench, color: "bg-blue-600", desc: "Inventory" },
   ];
 
   return (
@@ -181,51 +145,27 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
-          {productsEnabled && (
-            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-blue-600 hover:bg-blue-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
-              <Link href="/admin/orders?create=true"><Plus size={16} /> New Order</Link>
-            </Button>
-          )}
-          {servicesEnabled && (
-            <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
-              <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
-            </Button>
-          )}
+          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
+            <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
+          </Button>
         </div>
       </div>
 
-      {/* 🚀 QUICK MANAGEMENT SHORTCUTS */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {MANAGEMENT_SHORTCUTS.map((item, i) => (
-          <Link key={i} href={item.href}>
-            <Card className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden bg-white group cursor-pointer border border-gray-100/50">
-              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-                <div className={cn("p-4 rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110 group-hover:rotate-3", item.color)}>
-                  <item.icon size={24} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {STATS_CARDS.map((stat, i) => (
+          <Link key={i} href={stat.link || '#'}>
+            <Card className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all h-full">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex justify-between items-start mb-3 md:mb-4">
+                  <div className={cn("p-2 md:p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
+                    <stat.icon size={18} className="md:w-6 md:h-6" />
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <h4 className="font-black text-xs uppercase tracking-tight text-gray-900">{item.label}</h4>
-                  <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{item.desc}</p>
-                </div>
+                <p className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
+                <h3 className="text-base md:text-2xl font-black text-gray-900 tracking-tight truncate">{stat.val}</h3>
               </CardContent>
             </Card>
           </Link>
-        ))}
-      </section>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {STATS_CARDS.map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex justify-between items-start mb-3 md:mb-4">
-                <div className={cn("p-2 md:p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                  <stat.icon size={18} className="md:w-6 md:h-6" />
-                </div>
-              </div>
-              <p className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
-              <h3 className="text-base md:text-2xl font-black text-gray-900 tracking-tight truncate">{stat.val}</h3>
-            </CardContent>
-          </Card>
         ))}
       </div>
 
@@ -237,9 +177,6 @@ export default function AdminDashboard() {
                 <CardTitle className="text-base md:text-lg font-bold">Revenue Growth</CardTitle>
                 <CardDescription className="text-[9px] md:text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Financial performance trends</CardDescription>
               </div>
-              <Button variant="ghost" className="text-[10px] md:text-xs font-bold text-primary gap-2" asChild>
-                <Link href="/admin/reports">View Full Reports <ArrowUpRight size={14} /></Link>
-              </Button>
             </CardHeader>
             <CardContent className="p-3 md:p-8 h-[250px] md:h-[400px]">
               {mounted && (
@@ -267,13 +204,13 @@ export default function AdminDashboard() {
           <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
             <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
-              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Registry Health</CardTitle>
+              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Workforce Health</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-3 md:space-y-6">
               {[
-                { label: "Active Members", val: dbUsers?.length || 0, icon: Users },
-                { label: "Live Services", val: dbServices?.length || 0, icon: Wrench },
-                { label: "Inventory SKUs", val: products?.length || 0, icon: Box }
+                { label: "Idle Today", val: metrics?.idleStaff || 0, icon: UserX },
+                { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck },
+                { label: "Total Personnel", val: dbUsers?.length || 0, icon: Users }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/10 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
                   <div className="space-y-1">

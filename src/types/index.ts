@@ -371,8 +371,9 @@ export interface AttendanceLog {
   checkOut?: string;
   locationIn?: { lat: number; lng: number };
   locationOut?: { lat: number; lng: number };
-  status: 'Present' | 'Late' | 'Absent' | 'On Leave';
+  status: 'Present' | 'Late' | 'Absent' | 'On Leave' | 'No Task';
   updatedAt: any;
+  markedBy?: string;
 }
 
 export interface LeaveRequest {
