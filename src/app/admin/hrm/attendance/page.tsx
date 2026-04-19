@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, setDoc, where, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, setDoc, where, serverTimestamp, deleteDoc, limit } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ import {
   MoreVertical,
   X,
   UserX,
+  UserCheck,
   ShieldAlert,
   Settings2
 } from 'lucide-react';
