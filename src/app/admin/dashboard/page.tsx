@@ -170,6 +170,27 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* ⚡ QUICK ACTIONS TERMINAL */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Master Ledger", href: "/admin/finance/ledger", icon: ReceiptText, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Attendance Logs", href: "/admin/hrm/attendance", icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "New Booking", href: "/admin/bookings/create", icon: Plus, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Service Bookings", href: "/admin/bookings", icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
+        ].map((action, i) => (
+          <Link key={i} href={action.href}>
+            <Card className="border-none shadow-sm hover:shadow-md transition-all bg-white rounded-2xl group cursor-pointer overflow-hidden border border-gray-100/50">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className={cn("p-2.5 rounded-xl transition-all group-hover:scale-110 shadow-sm", action.bg, action.color)}>
+                  <action.icon size={18} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-700">{action.label}</span>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         <div className="lg:col-span-8 min-w-0 space-y-6 md:space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
