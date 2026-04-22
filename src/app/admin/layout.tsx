@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -225,6 +226,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "Product Orders", href: '/admin/orders', icon: Package, visible: productsEnabled },
           { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
+          { name: "Cleaning Projects", href: '/admin/projects', icon: Briefcase },
           { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
           { name: "Logistics", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
         ].filter(i => i.visible !== false)

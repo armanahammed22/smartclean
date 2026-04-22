@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  Maximize2
+  Maximize2,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
