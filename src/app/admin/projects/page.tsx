@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Briefcase, 
   Plus, 
@@ -117,7 +118,7 @@ export default function ProjectManagementPage() {
           { label: "Pending Logs", val: "5 Due", icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
           { label: "Total Managed", val: stats.total, icon: LayoutGrid, bg: "bg-indigo-50", color: "text-indigo-600" }
         ].map((s, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-3xl overflow-hidden group">
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
                 <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
