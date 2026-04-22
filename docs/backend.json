@@ -1,6 +1,35 @@
 
 {
   "entities": {
+    "CleaningProject": {
+      "title": "CleaningProject",
+      "description": "Master project configuration for cleaning contracts.",
+      "type": "object",
+      "properties": {
+        "clientName": { "type": "string" },
+        "location": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "totalArea": { "type": "number", "description": "Total area in Square Feet" },
+        "status": { "type": "string", "enum": ["Active", "Completed", "On Hold"] },
+        "supervisorId": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "WorkEntry": {
+      "title": "WorkEntry",
+      "description": "Daily work log entry for a specific project.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "date": { "type": "string" },
+        "workType": { "type": "string", "enum": ["Floor Cleaning", "Glass Cleaning", "Sofa Cleaning", "Deep Cleaning", "Toilet Cleaning", "Carpet Cleaning", "Other"] },
+        "quantity": { "type": "number" },
+        "unitType": { "type": "string", "enum": ["Square Feet", "Pieces", "KG", "Feet", "Meter"] },
+        "workers": { "type": "array" },
+        "notes": { "type": "string" }
+      }
+    },
     "LandingPage": {
       "title": "LandingPage",
       "description": "Configuration for a dynamic product or service landing page.",
@@ -66,6 +95,8 @@
     "providers": ["password"]
   },
   "firestore": {
+    "/cleaning_projects/{id}": { "schema": "CleaningProject", "description": "Main projects." },
+    "/work_entries/{id}": { "schema": "WorkEntry", "description": "Daily logs." },
     "/landing_pages/{id}": { "schema": "LandingPage", "description": "Dynamic landing pages." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
     "/custom_grid_modules/{id}": { "schema": "CustomGridModule", "description": "Reusable grid layouts." },

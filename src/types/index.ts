@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -27,6 +28,31 @@ export interface Product {
   badgeText?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface CleaningProject {
+  id: string;
+  clientName: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  totalArea: number;
+  status: 'Active' | 'Completed' | 'On Hold';
+  supervisorId?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface WorkEntry {
+  id: string;
+  projectId: string;
+  date: string;
+  workType: 'Floor Cleaning' | 'Glass Cleaning' | 'Sofa Cleaning' | 'Deep Cleaning' | 'Toilet Cleaning' | 'Carpet Cleaning' | 'Other';
+  quantity: number;
+  unitType: 'Square Feet' | 'Pieces' | 'KG' | 'Feet' | 'Meter';
+  workers?: string[];
+  notes?: string;
+  createdAt: string;
 }
 
 export interface Review {
