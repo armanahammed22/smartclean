@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -28,7 +27,8 @@ import {
   X,
   Building2,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -219,9 +219,10 @@ export default function ProjectManagementPage() {
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
           <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
             <div className="space-y-1">
-              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest flex items-center gap-3">
-                <Briefcase className="text-primary"/> Initialize Contract
-              </DialogTitle>
+              <div className="flex items-center gap-3">
+                <Briefcase className="text-primary"/> 
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Initialize Contract</DialogTitle>
+              </div>
               <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Setup new operational cleaning project</DialogDescription>
             </div>
             <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
