@@ -27,14 +27,18 @@ import {
   Zap,
   Package,
   Layers,
-  FileText
+  FileText,
+  Building2,
+  History,
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 
 const WORK_TYPES = ["Floor Cleaning", "Glass Cleaning", "Sofa Cleaning", "Deep Cleaning", "Toilet Cleaning", "Carpet Cleaning", "Other"];
 const UNIT_TYPES = ["Square Feet", "Pieces", "KG", "Feet", "Meter"];
@@ -179,6 +183,12 @@ export default function ProjectDetailsPage() {
           <Card className="border-none shadow-sm bg-white rounded-3xl p-8 space-y-6 border border-gray-100">
              <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><ClipboardList size={16}/> Project Scope</h3>
              <div className="space-y-4">
+                {project.partnerName && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Building2 size={14}/></div>
+                    <div><p className="text-[9px] font-black text-gray-400 uppercase">Partner Lead</p><p className="text-xs font-bold uppercase">{project.partnerName}</p></div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                    <div className="p-2 bg-gray-50 text-gray-400 rounded-lg"><Calendar size={14}/></div>
                    <div><p className="text-[9px] font-black text-gray-400 uppercase">Timeline</p><p className="text-xs font-bold">{project.startDate} to {project.endDate}</p></div>
@@ -261,7 +271,7 @@ export default function ProjectDetailsPage() {
 
       {/* 🛠️ ADD LOG DIALOG */}
       <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
-        <DialogContent className="max-w-xl rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
+        <DialogContent className="max-w-xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden bg-white flex flex-col">
           <header className="p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
             <div className="space-y-1">
               <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
@@ -271,72 +281,55 @@ export default function ProjectDetailsPage() {
             </div>
             <button onClick={() => setIsLogDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
-          <form onSubmit={handleAddLog} className="p-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Work Date</Label>
-                <Input type="date" value={logForm.date} onChange={e => setLogForm({...logForm, date: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+          
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 bg-white custom-scrollbar">
+            <form onSubmit={handleAddLog} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Work Date</Label>
+                  <Input type="date" value={logForm.date} onChange={e => setLogForm({...logForm, date: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Task Category</Label>
+                  <Select value={logForm.workType} onValueChange={v => setLogForm({...logForm, workType: v})}>
+                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {WORK_TYPES.map(t => <SelectItem key={t} value={t} className="font-bold text-[10px] uppercase">{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Work Volume (Quantity)</Label>
+                  <Input type="number" value={logForm.quantity} onChange={e => setLogForm({...logForm, quantity: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Measurement Unit</Label>
+                  <Select value={logForm.unitType} onValueChange={v => setLogForm({...logForm, unitType: v})}>
+                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {UNIT_TYPES.map(u => <SelectItem key={u} value={u} className="font-bold text-[10px] uppercase">{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Worker(s) / Team Names</Label>
+                  <Input value={logForm.workers} onChange={e => setLogForm({...logForm, workers: e.target.value})} placeholder="e.g. Team Alpha (Karim, Rahim)" className="h-12 bg-gray-50 border-none rounded-xl" />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Task Category</Label>
-                <Select value={logForm.workType} onValueChange={v => setLogForm({...logForm, workType: v})}>
-                  <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {WORK_TYPES.map(t => <SelectItem key={t} value={t} className="font-bold text-[10px] uppercase">{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Observations / Issues</Label>
+                <Textarea value={logForm.notes} onChange={e => setLogForm({...logForm, notes: e.target.value})} placeholder="Any site issues or special mentions..." className="bg-gray-50 border-none rounded-2xl min-h-[80px] p-4 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Work Volume (Quantity)</Label>
-                <Input type="number" value={logForm.quantity} onChange={e => setLogForm({...logForm, quantity: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Measurement Unit</Label>
-                <Select value={logForm.unitType} onValueChange={v => setLogForm({...logForm, unitType: v})}>
-                  <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    {UNIT_TYPES.map(u => <SelectItem key={u} value={u} className="font-bold text-[10px] uppercase">{u}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Worker(s) / Team Names</Label>
-                <Input value={logForm.workers} onChange={e => setLogForm({...logForm, workers: e.target.value})} placeholder="e.g. Team Alpha (Karim, Rahim)" className="h-12 bg-gray-50 border-none rounded-xl" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Observations / Issues</Label>
-              <Textarea value={logForm.notes} onChange={e => setLogForm({...logForm, notes: e.target.value})} placeholder="Any site issues or special mentions..." className="bg-gray-50 border-none rounded-2xl min-h-[80px] p-4 text-sm" />
-            </div>
-            <DialogFooter className="pt-4">
-              <Button type="submit" disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Commit Entry to Database"}
-              </Button>
-            </DialogFooter>
-          </form>
+            </form>
+          </div>
+
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0">
+            <Button type="button" onClick={handleAddLog} disabled={isSubmitting} className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95 bg-primary text-white">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Commit Entry to Database"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function History(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
-      <path d="m12 7v5l4 2" />
-    </svg>
   );
 }

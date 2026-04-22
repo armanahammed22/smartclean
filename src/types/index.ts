@@ -39,6 +39,8 @@ export interface CleaningProject {
   totalArea: number;
   status: 'Active' | 'Completed' | 'On Hold';
   supervisorId?: string;
+  partnerId?: string; // Connection to Partner
+  partnerName?: string;
   notes?: string;
   createdAt: string;
 }
