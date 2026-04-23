@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -28,7 +27,8 @@ import {
   ChevronRight,
   Edit,
   Activity,
-  BarChart3
+  BarChart3,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -438,7 +438,7 @@ export default function ServicesAttributePage() {
             </div>
           </div>
           <DialogFooter className="p-8 bg-gray-50 border-t flex flex-col sm:flex-row gap-3">
-             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="flex-1 rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
+             <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="rounded-xl font-bold uppercase text-[10px]">Cancel</Button>
              <Button onClick={handleUpdate} disabled={isSubmitting} className="flex-1 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs h-12">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Sync Changes</>}
              </Button>
