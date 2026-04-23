@@ -18,7 +18,8 @@ import {
   AlertCircle, 
   XCircle,
   Eye,
-  Settings2
+  Settings2,
+  FolderTree
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -244,7 +245,7 @@ export default function ProductsManagementPage() {
                     </TableCell>
                     <TableCell className="py-5 pl-4">
                       <div className="flex items-center gap-4">
-                        <div className="relative w-12 h-12 rounded-xl overflow-hidden border bg-gray-50 shrink-0">
+                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
                           {product.imageUrl && <Image src={product.imageUrl} alt={product.name} fill className="object-cover" unoptimized />}
                         </div>
                         <div className="min-w-0">
@@ -303,7 +304,7 @@ export default function ProductsManagementPage() {
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
               {activeTab === 'identity' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

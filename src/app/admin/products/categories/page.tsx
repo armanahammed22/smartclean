@@ -16,7 +16,8 @@ import {
   ChevronDown,
   FolderPlus,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -151,7 +152,7 @@ export default function ProductCategoriesPage() {
                       <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold">
                         <SelectValue placeholder="Select Parent..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {activeLevel === 'sub' ? (
                           categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)
                         ) : (
