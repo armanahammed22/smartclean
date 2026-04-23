@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -41,6 +42,9 @@ export default function AdminInvoiceDetailPage() {
   const invoiceRef = useMemoFirebase(() => (db && id) ? doc(db, 'invoices', id as string) : null, [db, id]);
   const { data: invoice, isLoading } = useDoc(invoiceRef);
 
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const handleUpdateStatus = async (status: string) => {
     if (!invoiceRef || !invoice) return;
     try {
@@ -63,6 +67,8 @@ export default function AdminInvoiceDetailPage() {
 
   if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
   if (!invoice) return <div className="p-20 text-center uppercase font-black opacity-20">Secure Invoice Not Found</div>;
+
+  const signatureUrl = settings?.signatureUrl;
 
   return (
     <div className="space-y-8 pb-20 max-w-6xl mx-auto">
@@ -193,8 +199,8 @@ export default function AdminInvoiceDetailPage() {
                         </tr>
                       )}
                       <tr className="border-t border-black">
-                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT</td>
-                        <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.tax.toLocaleString()} /-</td>
+                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT (0%)</td>
+                        <td className="py-2 px-4 text-center font-black text-xs">৳0 /-</td>
                       </tr>
                       <tr className="border-t-2 border-black bg-[#1E5F7A] text-white">
                         <td colSpan={4} className="py-3 px-4 text-right font-black uppercase text-[12px] border-r border-black">Grand Total Payable</td>
@@ -228,8 +234,12 @@ export default function AdminInvoiceDetailPage() {
                   </div>
 
                   <div className="text-center space-y-4">
-                     <div className="h-16 w-32 relative mx-auto opacity-80">
-                        <Image src="https://picsum.photos/seed/sig/200/100" alt="Authorized Signature" fill className="object-contain grayscale" unoptimized />
+                     <div className="h-16 w-32 relative mx-auto">
+                        {signatureUrl ? (
+                          <Image src={signatureUrl} alt="Authorized Signature" fill className="object-contain" unoptimized />
+                        ) : (
+                          <div className="h-full w-full border-2 border-dashed border-gray-200 flex items-center justify-center text-[8px] font-black text-gray-300 uppercase">NO SIG</div>
+                        )}
                      </div>
                      <div className="space-y-0.5">
                         <p className="font-black text-sm uppercase">Authorized Signature</p>
@@ -303,7 +313,7 @@ export default function AdminInvoiceDetailPage() {
                  )}
                  <div className="flex justify-between items-center text-[10px] font-black uppercase opacity-60">
                     <span>Tax (VAT):</span>
-                    <span>৳{invoice.tax.toLocaleString()}</span>
+                    <span>৳0</span>
                  </div>
                  <div className="flex justify-between items-center text-sm font-black uppercase text-primary border-t border-white/5 pt-4">
                     <span>Net Payable:</span>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -37,8 +38,13 @@ export default function PublicInvoiceViewPage() {
   const invoiceRef = useMemoFirebase(() => (db && id) ? doc(db, 'invoices', id as string) : null, [db, id]);
   const { data: invoice, isLoading } = useDoc(invoiceRef);
 
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Secure Document Not Found</div>;
+
+  const signatureUrl = settings?.signatureUrl;
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16">
@@ -163,8 +169,8 @@ export default function PublicInvoiceViewPage() {
                       </tr>
                     )}
                     <tr className="border-t border-black">
-                      <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Service Tax / VAT</td>
-                      <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.tax.toLocaleString()} /-</td>
+                      <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Service Tax / VAT (0%)</td>
+                      <td className="py-2 px-4 text-center font-black text-xs">৳0 /-</td>
                     </tr>
                     <tr className="border-t-2 border-black bg-[#1E5F7A] text-white">
                       <td colSpan={4} className="py-3.5 px-4 text-right font-black uppercase text-[12px] border-r border-black">Net Amount Payable</td>
@@ -203,8 +209,12 @@ export default function PublicInvoiceViewPage() {
                 </div>
 
                 <div className="flex flex-col items-center justify-end text-center space-y-4 pb-4">
-                   <div className="h-14 w-28 relative opacity-80">
-                      <Image src="https://picsum.photos/seed/sig/200/100" alt="Authorized Sign" fill className="object-contain grayscale" unoptimized />
+                   <div className="h-14 w-28 relative">
+                      {signatureUrl ? (
+                        <Image src={signatureUrl} alt="Authorized Sign" fill className="object-contain" unoptimized />
+                      ) : (
+                        <div className="h-full w-full border-2 border-dashed border-gray-100 flex items-center justify-center text-[7px] font-black text-gray-300 uppercase">NO SIG</div>
+                      )}
                    </div>
                    <div className="space-y-0.5">
                       <p className="font-black text-xs uppercase text-gray-900">Authorized Officer</p>

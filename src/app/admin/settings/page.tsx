@@ -36,7 +36,8 @@ import {
   Info,
   Link as LinkIcon,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  FileSignature
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -103,6 +104,7 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState<any>({
     websiteName: 'Smart Clean',
     logoUrl: '',
+    signatureUrl: '',
     logoLink: '/',
     faviconUrl: '',
     appIconUrl: '',
@@ -268,15 +270,30 @@ export default function AdminSettingsPage() {
                 <CardTitle className="text-lg font-bold">Brand Identity</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Website Name</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Website Name</Label>
                       <Input value={formData.websiteName} onChange={(e) => setFormData({...formData, websiteName: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
+
+                    <div className="space-y-6 pt-6 border-t">
+                      <div className="flex items-center gap-3 mb-2">
+                        <FileSignature className="text-primary" size={20} />
+                        <Label className="text-xs font-black uppercase text-gray-900 tracking-widest">Digital Authentication</Label>
+                      </div>
+                      <ImageUploader 
+                        label="Official Signature" 
+                        hint="200 x 100 px (Transparent PNG Recommended)" 
+                        initialUrl={formData.signatureUrl} 
+                        onUpload={(url) => setFormData({...formData, signatureUrl: url})} 
+                        aspectRatio="aspect-[2/1] w-48"
+                      />
+                      <p className="text-[10px] text-muted-foreground italic leading-relaxed">This signature will appear on all generated invoices and quotations.</p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <ImageUploader label="Master Logo" hint="512 x 512 px" initialUrl={formData.logoUrl} onUpload={(url) => setFormData({...formData, logoUrl: url})} />
+                  <div className="space-y-8">
+                    <ImageUploader label="Master Branding Logo" hint="512 x 512 px" initialUrl={formData.logoUrl} onUpload={(url) => setFormData({...formData, logoUrl: url})} />
                   </div>
                 </div>
               </CardContent>
