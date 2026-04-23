@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Table, 
@@ -30,7 +30,8 @@ import {
   Clock,
   ClipboardList,
   Edit,
-  ArrowRight
+  ArrowRight,
+  Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -44,10 +45,12 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookingAssignDialog } from '@/components/admin/BookingAssignDialog';
+import { useRouter } from 'next/navigation';
 
 export default function AdminCustomRequestsPage() {
   const db = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -82,6 +85,25 @@ export default function AdminCustomRequestsPage() {
         ...data,
         updatedAt: new Date().toISOString()
       });
+
+      // If Quoted or Approved, create a virtual invoice for design preview
+      if (status === 'Quoted' || status === 'Approved') {
+        const invData = {
+          invoiceNumber: `QTN-${id.slice(0, 6).toUpperCase()}`,
+          customerInfo: { name: selectedRequest.customerName, address: 'Pending Address', phone: selectedRequest.customerPhone || 'N/A' },
+          items: selectedRequest.services.map((s: string) => ({ name: s, price: data.price || 0, quantity: 1, type: 'service' })),
+          total: data.price || 0,
+          subtotal: data.price || 0,
+          tax: (data.price || 0) * 0.08,
+          paymentStatus: 'Unpaid',
+          createdAt: new Date().toISOString(),
+          projectId: id // Mark as quotation
+        };
+        const invRef = await addDoc(collection(db, 'invoices'), invData);
+        toast({ title: `Quotation Protocol Activated` });
+        router.push(`/admin/invoices/${invRef.id}`);
+      }
+
       toast({ title: `Request ${status}` });
       setSelectedRequest(null);
     } catch (e) {
@@ -198,7 +220,6 @@ export default function AdminCustomRequestsPage() {
         </CardContent>
       </Card>
 
-      {/* DETAIL & QUOTATION DIALOG */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
           <div className="flex flex-col max-h-[85vh]">
@@ -215,7 +236,7 @@ export default function AdminCustomRequestsPage() {
                   <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest border-b pb-2 block">Client & Intent</Label>
                   <div className="space-y-1">
                     <p className="text-sm font-black uppercase">{selectedRequest?.customerName}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold">CONTACT INFO PENDING VERIFICATION</p>
+                    <p className="text-[10px] text-muted-foreground font-bold">SOURCE: DYNAMIC LANDING</p>
                   </div>
                   <div className="space-y-2">
                     {selectedRequest?.services?.map((s: string, i: number) => (
@@ -232,16 +253,12 @@ export default function AdminCustomRequestsPage() {
                       <div className="flex items-center gap-2 text-blue-700 font-bold text-xs"><Calendar size={14}/> {selectedRequest?.requestedDate}</div>
                       <div className="flex items-center gap-2 text-blue-700 font-bold text-xs"><Clock size={14}/> {selectedRequest?.requestedTime}</div>
                     </div>
-                    <div className="p-3 bg-gray-50 rounded-xl flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase text-gray-400">Participants</span>
-                      <span className="text-xs font-black text-gray-900">{selectedRequest?.staffCount} Personnel</span>
-                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Description of Work</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Client Memo</Label>
                 <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 italic text-sm text-gray-600 leading-relaxed font-medium">
                   "{selectedRequest?.details}"
                 </div>
@@ -249,11 +266,11 @@ export default function AdminCustomRequestsPage() {
 
               <div className="p-8 bg-indigo-50 rounded-[2.5rem] border border-indigo-100 space-y-6">
                 <h4 className="text-sm font-black uppercase tracking-widest text-indigo-900 flex items-center gap-2">
-                  <Wallet size={18} /> Official Quotation
+                  <Wallet size={18} /> Official Quotation Config
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-indigo-700">Total Project Price (৳)</Label>
+                    <Label className="text-[10px] font-black uppercase text-indigo-700">Project Budget (৳)</Label>
                     <Input 
                       type="number" 
                       defaultValue={selectedRequest?.price || ''} 
@@ -263,13 +280,8 @@ export default function AdminCustomRequestsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-indigo-700">Admin Note / Terms</Label>
-                    <Input 
-                      defaultValue={selectedRequest?.adminNote || ''}
-                      placeholder="e.g. Includes materials"
-                      onChange={(e) => selectedRequest.adminNote = e.target.value}
-                      className="h-12 bg-white border-none rounded-xl font-medium text-xs shadow-sm"
-                    />
+                    <Label className="text-[10px] font-black uppercase text-indigo-700">Audit Status</Label>
+                    <Badge className="h-12 w-full flex items-center justify-center bg-white text-indigo-600 border-none font-black">DESIGN: CORPORATE V2</Badge>
                   </div>
                 </div>
               </div>
@@ -278,25 +290,18 @@ export default function AdminCustomRequestsPage() {
             <footer className="p-8 bg-gray-50 border-t flex flex-col sm:flex-row gap-3 shrink-0">
               <Button variant="ghost" onClick={() => setSelectedRequest(null)} className="rounded-xl h-12 flex-1 font-bold">Close</Button>
               <Button 
-                onClick={() => handleUpdateStatus(selectedRequest.id, 'Quoted', { price: selectedRequest.price, adminNote: selectedRequest.adminNote })}
+                onClick={() => handleUpdateStatus(selectedRequest.id, 'Quoted', { price: selectedRequest.price })}
                 disabled={isSubmitting || !selectedRequest?.price}
-                className="rounded-xl h-12 flex-1 font-black bg-blue-600 hover:bg-blue-700 uppercase tracking-tighter shadow-xl"
+                className="rounded-xl h-12 flex-1 font-black bg-[#1E5F7A] hover:bg-[#15435a] uppercase tracking-tighter shadow-xl text-white gap-2"
               >
-                Send Quotation
-              </Button>
-              <Button 
-                onClick={() => handleUpdateStatus(selectedRequest.id, 'Approved', { price: selectedRequest.price })}
-                disabled={isSubmitting || !selectedRequest?.price}
-                className="rounded-xl h-12 flex-1 font-black bg-green-600 hover:bg-green-700 uppercase tracking-tighter shadow-xl"
-              >
-                Direct Approve
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <Printer size={18} />}
+                Generate & Send Quote
               </Button>
             </footer>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* STAFF ASSIGNMENT DIALOG */}
       <BookingAssignDialog 
         booking={assignTarget ? { ...assignTarget, id: assignTarget.id, serviceTitle: assignTarget.services?.join(', ') } : null} 
         isOpen={!!assignTarget} 
