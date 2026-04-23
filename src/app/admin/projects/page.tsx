@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -29,7 +28,8 @@ import {
   DollarSign,
   Save,
   Calculator,
-  ListPlus
+  ListPlus,
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
