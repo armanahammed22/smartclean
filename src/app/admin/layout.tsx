@@ -94,6 +94,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -241,6 +242,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: productsEnabled,
         items: [
           { name: "All Products", href: '/admin/products', icon: Package },
+          { name: "Products Attribute", href: '/admin/products/attributes', icon: Settings2 },
           { name: "Taxonomy (L1, L2, L3)", href: '/admin/products/categories', icon: FolderTree },
           { name: "Brand Registry", href: '/admin/attributes/brands', icon: Award },
           { name: "Variant Rules", href: '/admin/attributes/variants', icon: Shapes },
@@ -255,6 +257,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
+          { name: "Service Attribute", href: '/admin/services/attributes', icon: Settings2 },
           { name: "Sub-Services (Add-ons)", href: '/admin/services/sub-services', icon: Layers },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },

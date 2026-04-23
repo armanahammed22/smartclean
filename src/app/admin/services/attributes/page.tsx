@@ -12,26 +12,28 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Trash2, 
-  Tag, 
+  Wrench, 
   Zap, 
   Settings2, 
   Loader2, 
   Save, 
   LayoutGrid,
-  Box,
+  Users,
   CheckCircle2,
-  AlertTriangle
+  Clock,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const ATTRIBUTE_GROUPS = [
-  { id: 'product_unit', label: 'Unit Types', desc: 'e.g. Sqft, Piece, KG', icon: Box },
-  { id: 'product_badge', label: 'Badge Texts', desc: 'e.g. NEW, HOT, 20% OFF', icon: Zap }
+  { id: 'service_team_size', label: 'Team Sizes', desc: 'e.g. 1 Person, 2-4 Persons', icon: Users },
+  { id: 'service_duration', label: 'Durations', desc: 'e.g. 1-2 Hours, Full Day', icon: Clock },
+  { id: 'service_pricing_type', label: 'Pricing Models', desc: 'e.g. Fixed, Sqft, Quantity', icon: Layers }
 ];
 
-export default function ProductsAttributePage() {
+export default function ServicesAttributePage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [activeGroup, setActiveGroup] = useState(ATTRIBUTE_GROUPS[0].id);
@@ -56,20 +58,20 @@ export default function ProductsAttributePage() {
         group: activeGroup,
         label: newValue.trim(),
         value: newValue.trim().toLowerCase().replace(/\s+/g, '_'),
-        category: 'product',
+        category: 'service',
         createdAt: new Date().toISOString()
       });
       setNewValue('');
-      toast({ title: "Attribute Added", description: "This will now appear in product dropdowns." });
+      toast({ title: "Attribute Added", description: "Successfully updated the service master table." });
     } catch (e) {
-      toast({ variant: "destructive", title: "Error Adding Attribute" });
+      toast({ variant: "destructive", title: "Action Failed" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete this master attribute? Existing products using this won't be affected.")) return;
+    if (!db || !confirm("Delete this attribute from master table?")) return;
     await deleteDoc(doc(db, 'master_attributes', id));
     toast({ title: "Attribute Removed" });
   };
@@ -78,8 +80,8 @@ export default function ProductsAttributePage() {
     <div className="space-y-8 pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Products Attribute Hub</h1>
-          <p className="text-muted-foreground text-sm font-medium">Manage master data for product listings</p>
+          <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Service Attribute Engine</h1>
+          <p className="text-muted-foreground text-sm font-medium">Control dynamic configuration for all service offerings</p>
         </div>
       </div>
 
@@ -102,27 +104,27 @@ export default function ProductsAttributePage() {
               )}>
                 <group.icon size={24} />
               </div>
-              <div>
-                <p className="font-black uppercase text-xs tracking-tight">{group.label}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold">{group.desc}</p>
+              <div className="min-w-0">
+                <p className="font-black uppercase text-xs tracking-tight truncate">{group.label}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold truncate">{group.desc}</p>
               </div>
             </button>
           ))}
         </div>
 
         <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-col sm:flex-row justify-between items-center gap-4">
               <div>
                 <CardTitle className="text-lg font-black uppercase tracking-widest text-[#081621]">
-                  {ATTRIBUTE_GROUPS.find(g => g.id === activeGroup)?.label} Registry
+                  {ATTRIBUTE_GROUPS.find(g => g.id === activeGroup)?.label} List
                 </CardTitle>
               </div>
               <form onSubmit={handleAddAttribute} className="flex gap-2 w-full sm:w-auto">
                 <Input 
                   value={newValue} 
                   onChange={e => setNewValue(e.target.value)}
-                  placeholder="Enter value..."
+                  placeholder="New value..."
                   className="h-11 bg-white rounded-xl border-gray-200 font-bold"
                 />
                 <Button type="submit" disabled={isSubmitting} className="rounded-xl h-11 px-6 font-black uppercase text-[10px]">
@@ -139,7 +141,7 @@ export default function ProductsAttributePage() {
                     <div key={attr.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-primary/20 transition-all group">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-primary/40" />
-                        <span className="font-black text-xs uppercase text-gray-700 tracking-tight">{attr.label}</span>
+                        <span className="font-black text-[11px] uppercase text-gray-700 tracking-tight">{attr.label}</span>
                       </div>
                       <button onClick={() => handleDelete(attr.id)} className="text-destructive p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Trash2 size={14} />
@@ -148,8 +150,8 @@ export default function ProductsAttributePage() {
                   ))}
                   {filteredAttributes.length === 0 && (
                     <div className="col-span-full py-20 text-center opacity-20">
-                      <Zap size={48} className="mx-auto mb-4" />
-                      <p className="font-black uppercase tracking-widest text-xs">No records defined yet</p>
+                      <Sparkles size={48} className="mx-auto mb-4" />
+                      <p className="font-black uppercase tracking-widest text-xs">Registry is empty</p>
                     </div>
                   )}
                 </div>

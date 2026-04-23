@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -60,11 +61,12 @@ export default function ProductsManagementPage() {
 
   // Master Data Queries
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
-  const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, user]);
+  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
   const subCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db, user]);
   const childCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db, user]);
   const brandsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db, user]);
   const specTemplatesQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_specs'), orderBy('key', 'asc')) : null, [db]);
+  const attributesQuery = useMemoFirebase(() => db ? query(collection(db, 'master_attributes'), orderBy('label', 'asc')) : null, [db]);
 
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);
@@ -72,6 +74,10 @@ export default function ProductsManagementPage() {
   const { data: childcategories } = useCollection(childCategoriesQuery);
   const { data: brands } = useCollection(brandsQuery);
   const { data: specTemplates } = useCollection(specTemplatesQuery);
+  const { data: masterAttributes } = useCollection(attributesQuery);
+
+  const productUnits = useMemo(() => masterAttributes?.filter(a => a.group === 'product_unit') || [], [masterAttributes]);
+  const productBadges = useMemo(() => masterAttributes?.filter(a => a.group === 'product_badge') || [], [masterAttributes]);
 
   const stats = useMemo(() => {
     if (!products) return { total: 0, low: 0, out: 0, cats: 0 };
@@ -130,6 +136,7 @@ export default function ProductsManagementPage() {
       childCategoryId: selectedChildCatId,
       brand: formData.get('brand') as string || 'General',
       badgeText: formData.get('badgeText') as string || '',
+      unitType: formData.get('unitType') as string || 'Piece',
       description: formData.get('description') as string,
       imageUrl: uploadedImageUrl || editingProduct?.imageUrl || '',
       specifications: specifications,
@@ -178,7 +185,6 @@ export default function ProductsManagementPage() {
     setIsDialogOpen(true);
   };
 
-  // Filtered Lists for Dependent Dropdowns
   const availableSubs = useMemo(() => subcategories?.filter(s => s.categoryId === selectedCatId) || [], [subcategories, selectedCatId]);
   const availableChildren = useMemo(() => childcategories?.filter(c => c.subcategoryId === selectedSubCatId) || [], [childcategories, selectedSubCatId]);
 
@@ -216,7 +222,7 @@ export default function ProductsManagementPage() {
       <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
-            <Table className="min-w-[900px]">
+            <Table>
               <TableHeader className="bg-gray-50/50">
                 <TableRow>
                   <TableHead className="w-12 pl-6">
@@ -266,7 +272,7 @@ export default function ProductsManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn("text-[9px] font-black border-none", product.stockQuantity === 0 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")}>
-                        {product.stockQuantity} UNITS
+                        {product.stockQuantity} {product.unitType || 'UNITS'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
@@ -319,16 +325,37 @@ export default function ProductsManagementPage() {
                           <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
                         </div>
                         <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Unit Type</Label>
+                          <Select name="unitType" defaultValue={editingProduct?.unitType || 'Piece'}>
+                            <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {productUnits.map(u => <SelectItem key={u.id} value={u.label}>{u.label}</SelectItem>) || <SelectItem value="Piece">Piece</SelectItem>}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Stock Qty</Label>
                           <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                         </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assigned Brand</Label>
+                          <Select name="brand" defaultValue={editingProduct?.brand || 'General'}>
+                            <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>) || <SelectItem value="General">General</SelectItem>}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assigned Brand</Label>
-                        <Select name="brand" defaultValue={editingProduct?.brand || 'General'}>
-                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Highlight Badge</Label>
+                        <Select name="badgeText" defaultValue={editingProduct?.badgeText || ''}>
+                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="No Badge" /></SelectTrigger>
                           <SelectContent>
-                            {brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>) || <SelectItem value="General">General</SelectItem>}
+                            <SelectItem value=" ">None</SelectItem>
+                            {productBadges.map(b => <SelectItem key={b.id} value={b.label}>{b.label}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -67,24 +68,30 @@ export default function ServicesManagementPage() {
   const [newServiceData, setNewServiceData] = useState({
     title: '',
     basePrice: '',
-    duration: '2-4 Hours',
-    teamSize: '2 Persons',
+    duration: '',
+    teamSize: '',
     badgeText: '',
     description: '',
     status: 'Active',
     isPopular: false,
     rating: 5.0,
-    pricingType: 'quantity' as 'quantity' | 'sqft'
+    pricingType: 'quantity' as 'quantity' | 'sqft' | 'fixed'
   });
 
   // Queries
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
   const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
   const subCategoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db]);
+  const attributesQuery = useMemoFirebase(() => db ? query(collection(db, 'master_attributes'), orderBy('label', 'asc')) : null, [db]);
   
   const { data: services, isLoading } = useCollection(servicesQuery);
   const { data: categories } = useCollection(categoriesQuery);
   const { data: subcategories } = useCollection(subCategoriesQuery);
+  const { data: masterAttributes } = useCollection(attributesQuery);
+
+  const teamSizes = useMemo(() => masterAttributes?.filter(a => a.group === 'service_team_size') || [], [masterAttributes]);
+  const durations = useMemo(() => masterAttributes?.filter(a => a.group === 'service_duration') || [], [masterAttributes]);
+  const pricingModels = useMemo(() => masterAttributes?.filter(a => a.group === 'service_pricing_type') || [], [masterAttributes]);
 
   const stats = useMemo(() => {
     if (!services) return { total: 0, active: 0, inactive: 0 };
@@ -133,8 +140,8 @@ export default function ServicesManagementPage() {
     setNewServiceData({
       title: '',
       basePrice: '',
-      duration: '2-4 Hours',
-      teamSize: '2 Persons',
+      duration: '',
+      teamSize: '',
       badgeText: '',
       description: '',
       status: 'Active',
@@ -252,7 +259,7 @@ export default function ServicesManagementPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin inline" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
                 ) : filteredServices?.map((service) => (
                   <TableRow key={service.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(service.id) && "bg-primary/5")}>
                     <TableCell className="pl-6">
@@ -263,7 +270,7 @@ export default function ServicesManagementPage() {
                     </TableCell>
                     <TableCell className="py-5 pl-4">
                       <div className="flex items-center gap-4">
-                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
+                        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
                           {service.imageUrl && <Image src={service.imageUrl} alt={service.title} fill className="object-cover" unoptimized />}
                         </div>
                         <div className="min-w-0">
@@ -303,7 +310,6 @@ export default function ServicesManagementPage() {
         </CardContent>
       </Card>
 
-      {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl flex flex-col overflow-hidden bg-white">
           <form onSubmit={handleSaveFull} className="flex flex-col h-full overflow-hidden">
@@ -349,9 +355,13 @@ export default function ServicesManagementPage() {
                         <Select value={newServiceData.pricingType} onValueChange={v => setNewServiceData({...newServiceData, pricingType: v as any})}>
                           <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-xl">
-                            <SelectItem value="quantity">By Quantity (1, 2, 3...)</SelectItem>
-                            <SelectItem value="sqft">By Area (Square Feet Slabs)</SelectItem>
-                            <SelectItem value="fixed">Fixed Global Price</SelectItem>
+                            {pricingModels.length > 0 ? pricingModels.map(m => <SelectItem key={m.id} value={m.value}>{m.label}</SelectItem>) : (
+                              <>
+                                <SelectItem value="quantity">By Quantity</SelectItem>
+                                <SelectItem value="sqft">By Square Feet</SelectItem>
+                                <SelectItem value="fixed">Fixed Global Price</SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -395,18 +405,22 @@ export default function ServicesManagementPage() {
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Default Team Size</Label>
                       <Select value={newServiceData.teamSize} onValueChange={v => setNewServiceData({...newServiceData, teamSize: v})}>
-                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          {['1 Person', '2 Persons', '3-4 Persons', '5+ Expert Team'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          {teamSizes.length > 0 ? teamSizes.map(t => <SelectItem key={t.id} value={t.label}>{t.label}</SelectItem>) : (
+                            ['1 Person', '2 Persons', '3-4 Persons', '5+ Expert Team'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Standard Duration</Label>
                       <Select value={newServiceData.duration} onValueChange={v => setNewServiceData({...newServiceData, duration: v})}>
-                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          {['1-2 Hours', '2-4 Hours', 'Full Day (8h)', 'Multi-Day Cycle'].map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                          {durations.length > 0 ? durations.map(d => <SelectItem key={d.id} value={d.label}>{d.label}</SelectItem>) : (
+                            ['1-2 Hours', '2-4 Hours', 'Full Day (8h)', 'Multi-Day Cycle'].map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
