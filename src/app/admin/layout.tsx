@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -69,7 +68,8 @@ import {
   Compass,
   ListChecks,
   Settings2,
-  FolderTree
+  FolderTree,
+  Video
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -243,7 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         items: [
           { name: "All Products", href: '/admin/products', icon: Package },
           { name: "Products Attribute", href: '/admin/products/attributes', icon: Settings2 },
-          { name: "Taxonomy (L1, L2, L3)", href: '/admin/products/categories', icon: FolderTree },
+          { name: "Taxonomy (L1, L2, L3)", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree },
           { name: "Brand Registry", href: '/admin/attributes/brands', icon: Award },
           { name: "Variant Rules", href: '/admin/attributes/variants', icon: Shapes },
           { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
@@ -259,6 +259,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Service List", href: '/admin/services', icon: Wrench },
           { name: "Service Attribute", href: '/admin/services/attributes', icon: Settings2 },
           { name: "Sub-Services (Add-ons)", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Movie Attribute", href: '/admin/services/movie-attributes', icon: Video },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
