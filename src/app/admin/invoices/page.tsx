@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,17 +22,44 @@ import {
   Calendar, 
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Plus,
+  X,
+  PlusCircle,
+  User,
+  MapPin,
+  Save,
+  DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function InvoicesListPage() {
   const db = useFirestore();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  // Manual Invoice State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service' }]);
+  const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
+  const [pricing, setPricing] = useState({ discount: 0, delivery: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
@@ -76,6 +103,7 @@ export default function InvoicesListPage() {
       });
       await batch.commit();
       setSelectedIds([]);
+      toast({ title: "Status Updated" });
     } catch (e) {} finally {
       setIsBulkProcessing(false);
     }
@@ -92,8 +120,62 @@ export default function InvoicesListPage() {
       });
       await batch.commit();
       setSelectedIds([]);
+      toast({ title: "Deleted Successfully" });
     } catch (e) {} finally {
       setIsBulkProcessing(false);
+    }
+  };
+
+  // Manual Invoice Logic
+  const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service' }]);
+  const removeManualItem = (idx: number) => setManualItems(manualItems.filter((_, i) => i !== idx));
+  const updateManualItem = (idx: number, field: string, val: any) => {
+    const next = [...manualItems];
+    next[idx][field] = val;
+    setManualItems(next);
+  };
+
+  const subtotal = useMemo(() => manualItems.reduce((acc, item) => acc + (parseFloat(item.price) || 0) * (item.quantity || 1), 0), [manualItems]);
+  const tax = Number((subtotal * 0.08).toFixed(2));
+  const totalAmount = subtotal + tax + Number(pricing.delivery) - Number(pricing.discount);
+
+  const handleCreateManualInvoice = async () => {
+    if (!db) return;
+    if (!customer.name || !customer.phone || manualItems.some(i => !i.name || !i.price)) {
+      toast({ variant: "destructive", title: "Information Missing", description: "Customer name, phone and item details are required." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const countSnap = await getDocs(collection(db, 'invoices'));
+      const invoiceNumber = `INV-MAN-${(countSnap.size + 1).toString().padStart(4, '0')}`;
+
+      const invoiceData = {
+        invoiceNumber,
+        customerInfo: { ...customer },
+        items: manualItems.map(i => ({ ...i, price: parseFloat(i.price), quantity: parseInt(i.quantity) })),
+        subtotal,
+        tax,
+        discount: Number(pricing.discount),
+        deliveryCharge: Number(pricing.delivery),
+        total: totalAmount,
+        paymentStatus: pricing.paymentStatus,
+        paymentMethod: pricing.paymentMethod,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(collection(db, 'invoices'), invoiceData);
+      
+      toast({ title: "Invoice Created", description: "Manual invoice has been registered." });
+      setIsCreateOpen(false);
+      setManualItems([{ name: '', price: '', quantity: 1, type: 'service' }]);
+      setCustomer({ name: '', phone: '', address: '' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error Creating Invoice" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -101,50 +183,53 @@ export default function InvoicesListPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 uppercase">Billing Registry</h1>
-          <p className="text-muted-foreground text-sm">Monitor all service and product invoices</p>
+          <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-tight leading-none">Billing Registry</h1>
+          <p className="text-muted-foreground text-sm font-medium mt-1">Monitor all service and product invoices</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2 font-bold h-11"><Download size={18} /> Export CSV</Button>
+          <Button variant="outline" className="rounded-xl h-11 border-gray-200 gap-2"><Download size={16} /> Export CSV</Button>
+          <Button onClick={() => setIsCreateOpen(true)} className="rounded-xl font-black h-11 px-8 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest bg-primary">
+            <Plus size={18} /> Create Manual Invoice
+          </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm bg-blue-50 text-blue-700">
+        <Card className="border-none shadow-sm bg-blue-50 text-blue-700 rounded-2xl overflow-hidden group">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Volume</p>
               <h3 className="text-3xl font-black">{stats.total}</h3>
             </div>
-            <ReceiptText size={40} className="opacity-20" />
+            <ReceiptText size={40} className="opacity-20 group-hover:scale-110 transition-transform" />
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-green-50 text-green-700">
+        <Card className="border-none shadow-sm bg-green-50 text-green-700 rounded-2xl overflow-hidden group">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Revenue</p>
               <h3 className="text-3xl font-black">৳{stats.totalRev.toLocaleString()}</h3>
             </div>
-            <Wallet size={40} className="opacity-20" />
+            <Wallet size={40} className="opacity-20 group-hover:scale-110 transition-transform" />
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-red-50 text-red-700">
+        <Card className="border-none shadow-sm bg-red-50 text-red-700 rounded-2xl overflow-hidden group">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Outstandings</p>
               <h3 className="text-3xl font-black">৳{stats.due.toLocaleString()}</h3>
             </div>
-            <AlertCircle size={40} className="opacity-20" />
+            <AlertCircle size={40} className="opacity-20 group-hover:scale-110 transition-transform" />
           </CardContent>
         </Card>
-        <Card className="border-none shadow-sm bg-amber-50 text-amber-700">
+        <Card className="border-none shadow-sm bg-amber-50 text-amber-700 rounded-2xl overflow-hidden group">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Pending</p>
               <h3 className="text-3xl font-black">{stats.unpaid}</h3>
             </div>
-            <Clock size={40} className="opacity-20" />
+            <Clock size={40} className="opacity-20 group-hover:scale-110 transition-transform" />
           </CardContent>
         </Card>
       </div>
@@ -164,11 +249,12 @@ export default function InvoicesListPage() {
 
       {/* Bulk Bar */}
       {selectedIds.length > 0 && (
-        <div className="bg-primary text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between">
+        <div className="bg-primary text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
           <div className="flex items-center gap-4 px-2">
             <span className="text-xs font-black uppercase">{selectedIds.length} SELECTED</span>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Paid')} disabled={isBulkProcessing} className="h-8 text-[9px] font-black uppercase">Mark Paid</Button>
+              <Button size="sm" variant="secondary" onClick={() => handleBulkStatus('Unpaid')} disabled={isBulkProcessing} className="h-8 text-[9px] font-black uppercase">Mark Unpaid</Button>
             </div>
           </div>
           <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-white hover:bg-red-500 font-black uppercase text-[9px]">
@@ -188,12 +274,12 @@ export default function InvoicesListPage() {
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest">Invoice #</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Client</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Amount</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Payment</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Date</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
+                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Invoice #</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Settlement</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Created</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,14 +295,14 @@ export default function InvoicesListPage() {
                   </TableCell>
                   <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
                   <TableCell>
-                    <div className="text-xs font-bold text-gray-900 uppercase">{inv.customerInfo?.name}</div>
-                    <div className="text-[9px] text-muted-foreground font-medium">{inv.customerInfo?.phone}</div>
+                    <div className="text-xs font-bold text-gray-900 uppercase leading-none">{inv.customerInfo?.name}</div>
+                    <div className="text-[9px] text-muted-foreground font-medium mt-1">{inv.customerInfo?.phone}</div>
                   </TableCell>
                   <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={cn(
-                      "text-[8px] font-black uppercase border-none px-2 py-0.5 rounded-md",
-                      inv.paymentStatus === 'Paid' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                      "text-[8px] font-black uppercase border-none px-2 py-0.5 rounded-md shadow-sm",
+                      inv.paymentStatus === 'Paid' ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700"
                     )}>
                       {inv.paymentStatus}
                     </Badge>
@@ -229,9 +315,6 @@ export default function InvoicesListPage() {
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-xl" asChild>
                         <Link href={`/admin/invoices/${inv.id}`}><Eye size={16} /></Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" asChild>
-                        <Link href={`/admin/invoices/${inv.id}?download=true`}><Download size={16} /></Link>
-                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50 rounded-xl" onClick={() => deleteDoc(doc(db!, 'invoices', inv.id))}>
                         <Trash2 size={16} />
                       </Button>
@@ -243,6 +326,143 @@ export default function InvoicesListPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* ➕ MANUAL INVOICE DIALOG */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
+          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary rounded-xl shadow-lg"><ReceiptText size={20} /></div>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">Manual Invoice Generation</DialogTitle>
+              </div>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Create an authenticated billing document from scratch</DialogDescription>
+            </div>
+            <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              <div className="lg:col-span-7 space-y-8">
+                {/* 👤 CUSTOMER INFO */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><User size={14}/> Client Identification</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
+                      <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="e.g. Acme Corp" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</Label>
+                      <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Address</Label>
+                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, Dhaka" className="min-h-[80px] bg-gray-50 border-none rounded-2xl p-4 shadow-inner" />
+                  </div>
+                </div>
+
+                {/* 📋 ITEMS LIST */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2"><ReceiptText size={14}/> Billing Items</h4>
+                    <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-8 text-[9px] font-black uppercase border-primary/20 text-primary">+ Add Item</Button>
+                  </div>
+                  <div className="space-y-3">
+                    {manualItems.map((item, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
+                        <div className="flex-1 space-y-1 w-full">
+                          <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
+                          <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="Service or product name" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                          <div className="space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400">Rate</Label>
+                            <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 w-24 bg-white border-none rounded-lg text-xs font-black text-primary" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-gray-400">Qty</Label>
+                            <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="h-9 w-16 bg-white border-none rounded-lg text-xs font-black" />
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-8 w-8 text-red-400 hover:bg-red-50 mt-4 sm:mt-4">
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 💰 SUMMARY PANEL */}
+              <div className="lg:col-span-5">
+                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit sticky top-0">
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Calculator size={16} /> Final Calculations</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Delivery/Extra Fee</Label>
+                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs shadow-sm" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Amount</Label>
+                          <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs text-rose-600 shadow-sm" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Method</Label>
+                          <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
+                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Status</Label>
+                          <Select value={pricing.paymentStatus} onValueChange={v => setPricing({...pricing, paymentStatus: v})}>
+                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {['Paid', 'Unpaid'].map(s => <SelectItem key={s} value={s} className="font-black text-[9px] uppercase">{s}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-8 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">Total Payable Amount</span>
+                        <span className="text-4xl font-black text-primary tracking-tighter">৳{totalAmount.toLocaleString()}</span>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] px-3 py-1 rounded-md">BDT</Badge>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                    <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
+                    <p className="text-[9px] font-bold text-blue-900 leading-tight uppercase">
+                      Manual invoices carry the same legal authenticity as system-generated ones. All records are archived in the primary ledger.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+            <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+            <Button onClick={handleCreateManualInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Authorize & Generate</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
