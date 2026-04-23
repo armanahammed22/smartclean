@@ -29,7 +29,8 @@ import {
   Smartphone,
   Info,
   Calculator,
-  User
+  User,
+  Save
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -299,7 +300,7 @@ function InvoicesListContent() {
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
                 <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Settlement</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Created</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest">Created</TableHead>
                 <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -333,7 +334,7 @@ function InvoicesListContent() {
                   </TableCell>
                   <TableCell className="text-right pr-8">
                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-xl" asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild>
                         <Link href={`/admin/invoices/${inv.id}`}><Eye size={16} /></Link>
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50 rounded-xl" onClick={() => deleteDoc(doc(db!, 'invoices', inv.id))}>
