@@ -64,6 +64,7 @@ export default function ServicesManagementPage() {
   // Taxonomy States
   const [selectedCatId, setSelectedCatId] = useState<string>('');
   const [selectedSubCatId, setSelectedSubCatId] = useState<string>('');
+  const [selectedChildCatId, setSelectedChildCatId] = useState<string>('');
 
   const [newServiceData, setNewServiceData] = useState({
     title: '',
@@ -81,12 +82,14 @@ export default function ServicesManagementPage() {
   // Queries
   const servicesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db, user]);
   const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
-  const subCategoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db]);
+  const subCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db, user]);
+  const childCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db, user]);
   const attributesQuery = useMemoFirebase(() => db ? query(collection(db, 'master_attributes'), orderBy('label', 'asc')) : null, [db]);
   
   const { data: services, isLoading } = useCollection(servicesQuery);
   const { data: categories } = useCollection(categoriesQuery);
   const { data: subcategories } = useCollection(subCategoriesQuery);
+  const { data: childcategories } = useCollection(childCategoriesQuery);
   const { data: masterAttributes } = useCollection(attributesQuery);
 
   const teamSizes = useMemo(() => masterAttributes?.filter(a => a.group === 'service_team_size') || [], [masterAttributes]);
@@ -152,6 +155,7 @@ export default function ServicesManagementPage() {
     setMainImageUrl('');
     setSelectedCatId('');
     setSelectedSubCatId('');
+    setSelectedChildCatId('');
   }, []);
 
   const handleOpenAddModal = () => {
@@ -172,6 +176,7 @@ export default function ServicesManagementPage() {
         slug: slug,
         categoryId: selectedCatId,
         subCategoryId: selectedSubCatId,
+        childCategoryId: selectedChildCatId,
         basePrice: parseFloat(newServiceData.basePrice as string) || 0,
         imageUrl: mainImageUrl,
         createdAt: new Date().toISOString(),
@@ -190,6 +195,7 @@ export default function ServicesManagementPage() {
   };
 
   const availableSubs = useMemo(() => subcategories?.filter(s => s.categoryId === selectedCatId) || [], [subcategories, selectedCatId]);
+  const availableChildren = useMemo(() => childcategories?.filter(c => c.subcategoryId === selectedSubCatId) || [], [childcategories, selectedSubCatId]);
 
   return (
     <div className="space-y-8 pb-20">
@@ -216,7 +222,7 @@ export default function ServicesManagementPage() {
                 <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
                 <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl group-hover:scale-110 transition-transform", s.bg, s.color)}><s.icon size={20} /></div>
+              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={20} /></div>
             </CardContent>
           </Card>
         ))}
@@ -370,22 +376,33 @@ export default function ServicesManagementPage() {
 
                   <div className="space-y-4 pt-4">
                     <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest border-b pb-2 flex items-center gap-2"><FolderTree size={14}/> Taxonomy Mapping</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Level 1 (Main)</Label>
-                        <Select value={selectedCatId} onValueChange={(v) => { setSelectedCatId(v); setSelectedSubCatId(''); }}>
-                          <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Level 1 (Main)</Label>
+                          <Select value={selectedCatId} onValueChange={(v) => { setSelectedCatId(v); setSelectedSubCatId(''); setSelectedChildCatId(''); }}>
+                            <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Level 2 (Sub)</Label>
+                          <Select value={selectedSubCatId} onValueChange={(v) => { setSelectedSubCatId(v); setSelectedChildCatId(''); }} disabled={!selectedCatId}>
+                            <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {availableSubs.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Level 2 (Sub)</Label>
-                        <Select value={selectedSubCatId} onValueChange={setSelectedSubCatId} disabled={!selectedCatId}>
-                          <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Level 3 (Child)</Label>
+                        <Select value={selectedChildCatId} onValueChange={setSelectedChildCatId} disabled={!selectedSubCatId}>
+                          <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Child Category (Optional)" /></SelectTrigger>
                           <SelectContent className="rounded-xl">
-                            {availableSubs.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                            {availableChildren.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -27,8 +28,8 @@ import {
   ChevronRight,
   Edit,
   Activity,
-  BarChart3,
-  ShieldCheck
+  ShieldCheck,
+  Package
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -63,7 +64,7 @@ export default function ServicesAttributePage() {
   const [isEditDialogOpen, setIsEditModalOpen] = useState(false);
 
   // Taxonomy Form States
-  const [taxonomyLevel, setTaxonomyLevel] = useState<'main' | 'sub'>('main');
+  const [taxonomyLevel, setTaxonomyLevel] = useState<'main' | 'sub' | 'child'>('main');
   const [taxonomyName, setTaxonomyName] = useState('');
   const [parentId, setParentId] = useState('');
 
@@ -74,9 +75,11 @@ export default function ServicesAttributePage() {
 
   const catsQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
   const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db]);
+  const childsQuery = useMemoFirebase(() => db ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db]);
 
   const { data: categories, isLoading: catsLoading } = useCollection(catsQuery);
   const { data: subcategories } = useCollection(subsQuery);
+  const { data: childcategories } = useCollection(childsQuery);
 
   const filteredAttributes = useMemo(() => {
     return allAttributes?.filter(a => a.group === activeGroup) || [];
@@ -87,9 +90,10 @@ export default function ServicesAttributePage() {
     return {
       totalL1: categories?.length || 0,
       totalL2: subcategories?.length || 0,
+      totalL3: childcategories?.length || 0,
       totalAttrs: allAttributes?.filter(a => a.category === 'service').length || 0
     };
-  }, [categories, subcategories, allAttributes]);
+  }, [categories, subcategories, childcategories, allAttributes]);
 
   const handleAddAttribute = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +117,7 @@ export default function ServicesAttributePage() {
     }
   };
 
-  const handleEditItem = (item: any, level: 'main' | 'sub' | 'attr') => {
+  const handleEditItem = (item: any, level: 'main' | 'sub' | 'child' | 'attr') => {
     setEditingItem({ ...item, level });
     setEditValue(item.name || item.label);
     setIsEditModalOpen(true);
@@ -123,7 +127,11 @@ export default function ServicesAttributePage() {
     if (!db || !editingItem || !editValue.trim()) return;
     setIsSubmitting(true);
     
-    const colName = editingItem.level === 'main' ? 'categories' : editingItem.level === 'sub' ? 'subcategories' : 'master_attributes';
+    const colName = editingItem.level === 'main' ? 'categories' 
+      : editingItem.level === 'sub' ? 'subcategories' 
+      : editingItem.level === 'child' ? 'childcategories'
+      : 'master_attributes';
+
     const field = editingItem.level === 'attr' ? 'label' : 'name';
     const slugField = editingItem.level === 'attr' ? 'value' : 'slug';
     
@@ -150,7 +158,7 @@ export default function ServicesAttributePage() {
     setIsSubmitting(true);
 
     const slug = taxonomyName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const colName = taxonomyLevel === 'main' ? 'categories' : 'subcategories';
+    const colName = taxonomyLevel === 'main' ? 'categories' : taxonomyLevel === 'sub' ? 'subcategories' : 'childcategories';
     
     const payload: any = {
       name: taxonomyName.trim(),
@@ -160,12 +168,13 @@ export default function ServicesAttributePage() {
     };
 
     if (taxonomyLevel === 'sub') payload.categoryId = parentId;
+    if (taxonomyLevel === 'child') payload.subcategoryId = parentId;
 
     try {
       await addDoc(collection(db, colName), payload);
       setTaxonomyName('');
       setParentId('');
-      toast({ title: `${taxonomyLevel === 'main' ? 'Main' : 'Sub'} Category Added` });
+      toast({ title: `Level ${taxonomyLevel === 'main' ? '1' : taxonomyLevel === 'sub' ? '2' : '3'} Category Added` });
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
     } finally {
@@ -189,34 +198,23 @@ export default function ServicesAttributePage() {
       </div>
 
       {/* 📊 KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Main Categories (L1)</p>
-              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.totalL1}</h3>
-            </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform shadow-inner"><LayoutGrid size={24}/></div>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Sub Categories (L2)</p>
-              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">{stats.totalL2}</h3>
-            </div>
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform shadow-inner"><Layers size={24}/></div>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none">Active Attributes</p>
-              <h3 className="text-3xl font-black text-emerald-600 tracking-tighter">{stats.totalAttrs}</h3>
-            </div>
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform shadow-inner"><Activity size={24}/></div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[
+          { label: "Main (L1)", val: stats.totalL1, icon: LayoutGrid, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Subs (L2)", val: stats.totalL2, icon: Layers, bg: "bg-indigo-50", color: "text-indigo-600" },
+          { label: "Child (L3)", val: stats.totalL3, icon: FolderTree, bg: "bg-purple-50", color: "text-purple-600" },
+          { label: "Active Attrs", val: stats.totalAttrs, icon: Activity, bg: "bg-emerald-50", color: "text-emerald-600" }
+        ].map((s, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
+                <h3 className="text-xl font-black text-gray-900">{s.val}</h3>
+              </div>
+              <div className={cn("p-2.5 rounded-xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={18} /></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
@@ -312,14 +310,14 @@ export default function ServicesAttributePage() {
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white sticky top-24 border border-gray-100">
                 <CardHeader className="bg-[#081621] text-white p-6">
                   <CardTitle className="text-base font-black uppercase tracking-widest flex items-center gap-2">
-                    <Plus size={18} className="text-primary" /> New Hierarchy Item
+                    <FolderTree size={18} className="text-primary" /> New Hierarchy Item
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 pt-8 space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Hierarchy Level</Label>
-                    <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
-                      {(['main', 'sub'] as const).map(l => (
+                    <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-xl">
+                      {(['main', 'sub', 'child'] as const).map(l => (
                         <button 
                           key={l}
                           type="button"
@@ -329,7 +327,7 @@ export default function ServicesAttributePage() {
                             taxonomyLevel === l ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
                           )}
                         >
-                          {l === 'main' ? 'L1 (Main)' : 'L2 (Sub)'}
+                          {l === 'main' ? 'L1' : l === 'sub' ? 'L2' : 'L3'}
                         </button>
                       ))}
                     </div>
@@ -341,19 +339,25 @@ export default function ServicesAttributePage() {
                       <Input value={taxonomyName} onChange={e => setTaxonomyName(e.target.value)} placeholder="e.g. AC Repair" className="h-12 bg-gray-50 border-none rounded-xl font-bold" required />
                     </div>
 
-                    {taxonomyLevel === 'sub' && (
+                    {taxonomyLevel !== 'main' && (
                       <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assign to Main Category</Label>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                          {taxonomyLevel === 'sub' ? 'Assign to Level 1' : 'Assign to Level 2'}
+                        </Label>
                         <Select value={parentId} onValueChange={setParentId}>
                           <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Parent..." /></SelectTrigger>
                           <SelectContent className="rounded-xl">
-                            {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            {taxonomyLevel === 'sub' ? (
+                              categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)
+                            ) : (
+                              subcategories?.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({categories?.find(c => c.id === s.categoryId)?.name})</SelectItem>)
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
                     )}
 
-                    <Button type="submit" disabled={isSubmitting || (taxonomyLevel === 'sub' && !parentId)} className="w-full h-14 rounded-xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
+                    <Button type="submit" disabled={isSubmitting || (taxonomyLevel !== 'main' && !parentId)} className="w-full h-14 rounded-xl font-black uppercase tracking-tight shadow-xl shadow-primary/20">
                       {isSubmitting ? <Loader2 className="animate-spin" /> : "Deploy Category"}
                     </Button>
                   </form>
@@ -381,25 +385,35 @@ export default function ServicesAttributePage() {
                       </div>
 
                       <div className="p-6 px-10 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {subcategories?.filter(s => s.categoryId === cat.id).map(sub => (
-                            <div key={sub.id} className="flex items-center justify-between p-4 bg-gray-50/30 rounded-2xl group/sub border border-transparent hover:border-gray-200 hover:bg-white hover:shadow-md transition-all">
-                                <div className="flex items-center gap-3">
-                                    <ChevronRight size={14} className="text-primary/40" />
-                                    <span className="text-[11px] font-bold text-gray-600 uppercase">{sub.name}</span>
-                                </div>
-                                <div className="flex gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
-                                    <button onClick={() => handleEditItem(sub, 'sub')} className="text-blue-500 p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={12}/></button>
-                                    <button onClick={() => handleDelete('subcategories', sub.id)} className="text-destructive p-1.5 hover:bg-red-50 rounded-lg"><X size={12}/></button>
-                                </div>
+                        {subcategories?.filter(s => s.categoryId === cat.id).map(sub => (
+                          <div key={sub.id} className="space-y-2">
+                            <div className="flex items-center justify-between group/sub bg-gray-50/30 p-3 px-5 rounded-2xl border border-transparent hover:border-gray-200 hover:bg-white hover:shadow-md transition-all">
+                              <div className="flex items-center gap-3">
+                                <Layers size={14} className="text-blue-500" />
+                                <span className="text-[11px] font-black text-gray-700 uppercase">{sub.name}</span>
+                              </div>
+                              <div className="flex gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                <button onClick={() => handleEditItem(sub, 'sub')} className="text-blue-500 p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={12}/></button>
+                                <button onClick={() => handleDelete('subcategories', sub.id)} className="text-destructive p-1.5 hover:bg-red-50 rounded-lg"><X size={12}/></button>
+                              </div>
                             </div>
-                            ))}
-                            {subcategories?.filter(s => s.categoryId === cat.id).length === 0 && (
-                                <div className="col-span-full py-6 text-center border-2 border-dashed rounded-2xl opacity-10">
-                                    <p className="text-[10px] font-black uppercase">No Subcategories</p>
+                            
+                            <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {childcategories?.filter(c => c.subcategoryId === sub.id).map(child => (
+                                <div key={child.id} className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-gray-100 group/child hover:shadow-sm transition-all">
+                                  <div className="flex items-center gap-3">
+                                    <ChevronRight size={10} className="text-gray-300" />
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase">{child.name}</span>
+                                  </div>
+                                  <div className="flex gap-1 opacity-0 group-hover/child:opacity-100 transition-opacity">
+                                    <button onClick={() => handleEditItem(child, 'child')} className="text-blue-400 p-1 hover:bg-blue-50 rounded-lg"><Edit size={10}/></button>
+                                    <button onClick={() => handleDelete('childcategories', child.id)} className="text-destructive p-1 hover:bg-red-50 rounded-lg"><X size={10}/></button>
+                                  </div>
                                 </div>
-                            )}
-                        </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
