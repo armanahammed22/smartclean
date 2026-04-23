@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -48,7 +48,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export default function InvoicesListPage() {
+function InvoicesListContent() {
   const db = useFirestore();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,7 +67,7 @@ export default function InvoicesListPage() {
 
   // Dynamic KPIs
   const stats = useMemo(() => {
-    if (!invoices) return { total: 0, paid: 0, unpaid: 0, totalRev: 0, duo: 0 };
+    if (!invoices) return { total: 0, paid: 0, unpaid: 0, totalRev: 0, due: 0 };
     return {
       total: invoices.length,
       paid: invoices.filter(i => i.paymentStatus === 'Paid').length,
@@ -199,7 +199,6 @@ export default function InvoicesListPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm bg-blue-50 text-blue-700 rounded-2xl overflow-hidden group">
           <CardContent className="p-6 flex items-center justify-between">
@@ -252,7 +251,6 @@ export default function InvoicesListPage() {
         <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
       </div>
 
-      {/* Bulk Bar */}
       {selectedIds.length > 0 && (
         <div className="bg-primary text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
           <div className="flex items-center gap-4 px-2">
@@ -332,142 +330,148 @@ export default function InvoicesListPage() {
         </CardContent>
       </Card>
 
-      {/* ➕ MANUAL INVOICE DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
-          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-xl shadow-lg"><ReceiptText size={20} /></div>
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">Manual Invoice Generation</DialogTitle>
+          <div className="flex flex-col h-full overflow-hidden">
+            <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary rounded-xl shadow-lg"><ReceiptText size={20} /></div>
+                  <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">Manual Invoice Generation</DialogTitle>
+                </div>
+                <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Create an authenticated billing document from scratch</DialogDescription>
               </div>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Create an authenticated billing document from scratch</DialogDescription>
-            </div>
-            <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
-          </header>
+              <button type="button" onClick={() => setIsCreateOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
+            </header>
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-7 space-y-8">
-                {/* 👤 CUSTOMER INFO */}
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><User size={14}/> Client Identification</h4>
-                  <div className="grid grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="lg:col-span-7 space-y-8">
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><User size={14}/> Client Identification</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
+                        <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="e.g. Acme Corp" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</Label>
+                        <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                      <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="e.g. Acme Corp" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</Label>
-                      <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Address</Label>
+                      <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, Dhaka" className="min-h-[80px] bg-gray-50 border-none rounded-2xl p-4 shadow-inner" />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Address</Label>
-                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, Dhaka" className="min-h-[80px] bg-gray-50 border-none rounded-2xl p-4 shadow-inner" />
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2"><ReceiptText size={14}/> Billing Items</h4>
+                      <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-8 text-[9px] font-black uppercase border-primary/20 text-primary">+ Add Item</Button>
+                    </div>
+                    <div className="space-y-3">
+                      {manualItems.map((item: any, idx: number) => (
+                        <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
+                          <div className="flex-1 space-y-1 w-full">
+                            <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
+                            <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="Service or product name" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400">Rate</Label>
+                              <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 w-24 bg-white border-none rounded-lg text-xs font-black text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400">Qty</Label>
+                              <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="h-9 w-16 bg-white border-none rounded-lg text-xs font-black" />
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-8 w-8 text-red-400 hover:bg-red-50 mt-4 sm:mt-4">
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* 📋 ITEMS LIST */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2"><ReceiptText size={14}/> Billing Items</h4>
-                    <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-8 text-[9px] font-black uppercase border-primary/20 text-primary">+ Add Item</Button>
-                  </div>
-                  <div className="space-y-3">
-                    {manualItems.map((item: any, idx: number) => (
-                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
-                        <div className="flex-1 space-y-1 w-full">
-                          <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
-                          <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="Service or product name" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
-                          <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">Rate</Label>
-                            <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 w-24 bg-white border-none rounded-lg text-xs font-black text-primary" />
+                <div className="lg:col-span-5">
+                  <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit sticky top-0">
+                    <div className="space-y-6">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Calculator size={16} /> Final Calculations</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Delivery/Extra Fee</Label>
+                            <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs shadow-sm" />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">Qty</Label>
-                            <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="h-9 w-16 bg-white border-none rounded-lg text-xs font-black" />
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Amount</Label>
+                            <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs text-rose-600 shadow-sm" />
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-8 w-8 text-red-400 hover:bg-red-50 mt-4 sm:mt-4">
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
-              {/* 💰 SUMMARY PANEL */}
-              <div className="lg:col-span-5">
-                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit sticky top-0">
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Calculator size={16} /> Final Calculations</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Delivery/Extra Fee</Label>
-                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs shadow-sm" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Amount</Label>
-                          <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs text-rose-600 shadow-sm" />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Method</Label>
+                            <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
+                              <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Status</Label>
+                            <Select value={pricing.paymentStatus} onValueChange={v => setPricing({...pricing, paymentStatus: v})}>
+                              <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {['Paid', 'Unpaid'].map(s => <SelectItem key={s} value={s} className="font-black text-[9px] uppercase">{s}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Method</Label>
-                          <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
-                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                      <div className="pt-8 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">Total Payable Amount</span>
+                          <span className="text-4xl font-black text-primary tracking-tighter">৳{totalAmount.toLocaleString()}</span>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Status</Label>
-                          <Select value={pricing.paymentStatus} onValueChange={v => setPricing({...pricing, paymentStatus: v})}>
-                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {['Paid', 'Unpaid'].map(s => <SelectItem key={s} value={s} className="font-black text-[9px] uppercase">{s}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] px-3 py-1 rounded-md">BDT</Badge>
                       </div>
                     </div>
 
-                    <div className="pt-8 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">Total Payable Amount</span>
-                        <span className="text-4xl font-black text-primary tracking-tighter">৳{totalAmount.toLocaleString()}</span>
-                      </div>
-                      <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] px-3 py-1 rounded-md">BDT</Badge>
+                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                      <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
+                      <p className="text-[9px] font-bold text-blue-900 leading-tight uppercase">
+                        Manual invoices carry the same legal authenticity as system-generated ones. All records are archived in the primary ledger.
+                      </p>
                     </div>
-                  </div>
-
-                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
-                    <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
-                    <p className="text-[9px] font-bold text-blue-900 leading-tight uppercase">
-                      Manual invoices carry the same legal authenticity as system-generated ones. All records are archived in the primary ledger.
-                    </p>
                   </div>
                 </div>
               </div>
             </div>
+
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button onClick={handleCreateManualInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Authorize & Generate</>}
+              </Button>
+            </DialogFooter>
           </div>
-
-          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-            <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
-            <Button onClick={handleCreateManualInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Authorize & Generate</>}
-            </Button>
-          </DialogFooter>
-        </div>
+        </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function InvoicesListPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>}>
+      <InvoicesListContent />
+    </Suspense>
   );
 }
