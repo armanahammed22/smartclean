@@ -63,9 +63,8 @@ export interface WorkEntry {
   employeeAssignments?: {
     uid: string;
     name: string;
-    cost: number; // Individual labor cost for this entry
+    cost: number; // Daily wage or per-entry cost for this personnel
   }[];
-  workers?: string; // Legacy fallback
   notes?: string;
   createdAt: string;
 }

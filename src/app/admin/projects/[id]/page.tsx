@@ -113,7 +113,7 @@ export default function ProjectOperationalConsole() {
         : (project.commissionValue || 0);
     }
 
-    // 3. Calculate Employee Labor Cost
+    // 3. Calculate Employee Labor Cost (Group based: Sum of assigned employee wages for each entry)
     const laborCost = logs.reduce((acc, log) => {
       return acc + (log.employeeAssignments?.reduce((eAcc: number, e: any) => eAcc + (e.cost || 0), 0) || 0);
     }, 0);
@@ -136,6 +136,11 @@ export default function ProjectOperationalConsole() {
   const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !id || !logForm.workType) return;
+    if (logForm.assignments.length === 0) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Assign at least one employee." });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await addDoc(collection(db, 'work_entries'), {
@@ -152,11 +157,14 @@ export default function ProjectOperationalConsole() {
       // Auto Update Partner Project Amount if linked
       if (project.partnerId !== 'none' && summary) {
         const partnerProjRef = doc(db, 'partner_projects', project.id);
-        await setDoc(partnerProjRef, {
-          projectAmount: summary.grossRevenue,
-          commissionAmount: summary.partnerCommission,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+        const snap = await getDoc(partnerProjRef);
+        if (snap.exists()) {
+           await setDoc(partnerProjRef, {
+            projectAmount: summary.grossRevenue,
+            commissionAmount: summary.partnerCommission,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
       }
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
@@ -181,7 +189,11 @@ export default function ProjectOperationalConsole() {
 
       // Update B2B Partner Status
       if (project.partnerId !== 'none') {
-        await updateDoc(doc(db, 'partner_projects', id as string), { status: 'Completed', updatedAt: serverTimestamp() });
+        const partnerProjRef = doc(db, 'partner_projects', project.id);
+        const snap = await getDoc(partnerProjRef);
+        if (snap.exists()) {
+           await updateDoc(partnerProjRef, { status: 'Completed', updatedAt: serverTimestamp() });
+        }
       }
 
       const invRef = await addDoc(collection(db, 'invoices'), {
@@ -349,12 +361,12 @@ export default function ProjectOperationalConsole() {
           <header className="p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center">
             <div className="space-y-1">
               <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest flex items-center gap-3"><Clock className="text-primary"/> Workforce Intake</DialogTitle>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase">Log activities and assign personnel to calculate daily burn</DialogDescription>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase">Log activities and assign personnel as a group</DialogDescription>
             </div>
             <button onClick={() => setIsLogDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
           </header>
           
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
             <form onSubmit={handleAddLog} className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
@@ -374,18 +386,18 @@ export default function ProjectOperationalConsole() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Quantity (Volume)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Total Group Quantity</Label>
                       <Input type="number" value={logForm.quantity} onChange={e => setLogForm({...logForm, quantity: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-lg text-primary shadow-inner" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2">Personnel & Labor Costs</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2">Personnel Assignments</h4>
                   <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col h-[300px] overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
-                       <Label className="text-[9px] font-black uppercase text-gray-400">Select Staff Members</Label>
-                       <Badge className="bg-indigo-600 text-white border-none text-[8px]">{logForm.assignments.length} ACTIVE</Badge>
+                       <Label className="text-[9px] font-black uppercase text-gray-400">Select All Group Members</Label>
+                       <Badge className="bg-indigo-600 text-white border-none text-[8px]">{logForm.assignments.length} SELECTED</Badge>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
                       {employees?.map(emp => {
@@ -394,7 +406,7 @@ export default function ProjectOperationalConsole() {
                           <div key={emp.id} className={cn("p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between", assigned ? "border-primary bg-primary/5" : "bg-white border-transparent hover:border-primary/20")} onClick={() => handleToggleEmployee(emp)}>
                              <div className="flex items-center gap-3">
                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px]", assigned ? "bg-primary text-white" : "bg-gray-100 text-gray-400")}>{emp.name[0]}</div>
-                               <div className="min-w-0"><p className="text-[10px] font-bold uppercase truncate">{emp.name}</p><p className="text-[8px] text-gray-400 font-bold">RATE: ৳{emp.baseRate}</p></div>
+                               <div className="min-w-0"><p className="text-[10px] font-bold uppercase truncate">{emp.name}</p><p className="text-[8px] text-gray-400 font-bold">{emp.role}</p></div>
                              </div>
                              {assigned && <CheckCircle2 size={16} className="text-primary"/>}
                           </div>
@@ -406,12 +418,12 @@ export default function ProjectOperationalConsole() {
               </div>
 
               <div className="space-y-2 pt-6 border-t">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Operational Observation</Label>
-                <Textarea value={logForm.notes} onChange={e => setLogForm({...logForm, notes: e.target.value})} placeholder="Notes on site conditions, extra materials used, or workforce performance..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 text-sm" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Operation Memo</Label>
+                <Textarea value={logForm.notes} onChange={e => setLogForm({...logForm, notes: e.target.value})} placeholder="Notes on team performance or site conditions..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 text-sm" />
               </div>
 
               <Button type="submit" disabled={isSubmitting} className="w-full h-16 rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl bg-primary text-white active:scale-95 transition-all">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-2" /> Commit Entry to Database</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-2" /> Sync Log Entry</>}
               </Button>
             </form>
           </div>
