@@ -28,7 +28,8 @@ import {
   Package,
   Smartphone,
   Info,
-  Calculator
+  Calculator,
+  User
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -138,9 +139,17 @@ function InvoicesListContent() {
     setManualItems(next);
   };
 
-  const subtotal = useMemo(() => manualItems.reduce((acc, item) => acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 1), 0), [manualItems]);
+  // 🧮 Automatic Real-time Calculations
+  const subtotal = useMemo(() => {
+    return manualItems.reduce((acc, item) => {
+      const p = parseFloat(item.price) || 0;
+      const q = parseFloat(item.quantity) || 1;
+      return acc + (p * q);
+    }, 0);
+  }, [manualItems]);
+
   const tax = Number((subtotal * 0.08).toFixed(2));
-  const totalAmount = subtotal + tax + Number(pricing.delivery) - Number(pricing.discount);
+  const totalAmount = Number((subtotal + tax + Number(pricing.delivery) - Number(pricing.discount)).toFixed(2));
 
   const handleCreateManualInvoice = async () => {
     if (!db) return;
@@ -339,8 +348,9 @@ function InvoicesListContent() {
         </CardContent>
       </Card>
 
+      {/* 🛠️ MANUAL INVOICE MODAL */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
+        <DialogContent className="max-w-4xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
           <div className="flex flex-col h-full overflow-hidden">
             <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
               <div className="space-y-1">
