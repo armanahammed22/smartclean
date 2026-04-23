@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,10 @@ import {
   Save,
   Calculator,
   ListPlus,
-  Zap
+  Zap,
+  Handshake,
+  Percent,
+  Wallet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -62,8 +66,10 @@ export default function ProjectManagementPage() {
     totalArea: '',
     status: 'Ongoing' as any,
     partnerId: 'none',
+    commissionType: 'percentage' as 'percentage' | 'fixed',
+    commissionValue: '',
     notes: '',
-    activeWorkTypes: [] as string[], // Track which types are selected for this project
+    activeWorkTypes: [] as string[],
     rates: {} as Record<string, number>
   });
 
@@ -87,6 +93,16 @@ export default function ProjectManagementPage() {
       revenue: projects.filter(p => p.status === 'Completed').reduce((acc, curr) => acc + (curr.finalBillAmount || 0), 0)
     };
   }, [projects]);
+
+  const handlePartnerSelect = (val: string) => {
+    const selectedPartner = partners?.find(p => p.id === val);
+    setFormData({
+      ...formData,
+      partnerId: val,
+      commissionType: selectedPartner?.commissionType || 'percentage',
+      commissionValue: selectedPartner?.commissionRate?.toString() || ''
+    });
+  };
 
   const addWorkTypeToMatrix = (typeId: string) => {
     if (formData.activeWorkTypes.includes(typeId)) return;
@@ -115,24 +131,43 @@ export default function ProjectManagementPage() {
     setIsSubmitting(true);
     try {
       const selectedPartner = partners?.find(p => p.id === formData.partnerId);
-      
       const endDate = new Date(formData.startDate);
       endDate.setDate(endDate.getDate() + parseInt(formData.duration));
 
-      await addDoc(collection(db, 'cleaning_projects'), {
+      const projectData = {
         ...formData,
         endDate: endDate.toISOString().split('T')[0],
         partnerName: selectedPartner?.name || null,
         totalArea: parseFloat(formData.totalArea) || 0,
+        commissionValue: parseFloat(formData.commissionValue) || 0,
         createdAt: new Date().toISOString()
-      });
+      };
+
+      const docRef = await addDoc(collection(db, 'cleaning_projects'), projectData);
       
-      toast({ title: "Project Initialized", description: "Operational tracking and rate matrix are now active." });
+      // Auto Sync to B2B Partner Module
+      if (formData.partnerId !== 'none') {
+        await addDoc(collection(db, 'partner_projects'), {
+          id: docRef.id, // Keep ID reference same
+          partnerId: formData.partnerId,
+          partnerName: selectedPartner?.name || 'Unknown',
+          title: formData.clientName + " - " + formData.location,
+          projectAmount: 0, // Will update when work entries are added
+          commissionAmount: 0,
+          commissionRate: parseFloat(formData.commissionValue) || 0,
+          commissionDirection: selectedPartner?.commissionDirection || 'TheyGiveMe',
+          status: 'Pending',
+          paidStatus: 'Unpaid',
+          createdAt: new Date().toISOString(),
+          sourceProjectId: docRef.id
+        });
+      }
+      
+      toast({ title: "Project Initialized", description: "Operational tracking and B2B sync active." });
       setIsDialogOpen(false);
       setFormData({ 
-        clientName: '', location: '', startDate: '', duration: '7', totalArea: '', status: 'Ongoing', partnerId: 'none', notes: '',
-        activeWorkTypes: [],
-        rates: {}
+        clientName: '', location: '', startDate: '', duration: '7', totalArea: '', status: 'Ongoing', partnerId: 'none', 
+        commissionType: 'percentage', commissionValue: '', notes: '', activeWorkTypes: [], rates: {}
       });
     } catch (e) {
       toast({ variant: "destructive", title: "Error Saving" });
@@ -147,7 +182,7 @@ export default function ProjectManagementPage() {
         <div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Projects Hub</h1>
           <p className="text-muted-foreground text-sm font-medium mt-2 flex items-center gap-2">
-            <Briefcase size={16} className="text-primary"/> Managing professional contracts and billable logs
+            <Briefcase size={16} className="text-primary"/> Professional contract management with B2B automation
           </p>
         </div>
         <Button onClick={() => setIsDialogOpen(true)} className="rounded-xl font-black h-11 px-8 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest transition-all active:scale-95">
@@ -159,8 +194,8 @@ export default function ProjectManagementPage() {
         {[
           { label: "Total Projects", val: stats.total, icon: Briefcase, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Ongoing Jobs", val: stats.ongoing, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
-          { label: "Completed Revenue", val: `৳${stats.revenue.toLocaleString()}`, icon: DollarSign, bg: "bg-emerald-50", color: "text-emerald-600" },
-          { label: "Operational Registry", val: "Active", icon: LayoutGrid, bg: "bg-indigo-50", color: "text-indigo-600" }
+          { label: "Revenue Lock", val: `৳${stats.revenue.toLocaleString()}`, icon: DollarSign, bg: "bg-emerald-50", color: "text-emerald-600" },
+          { label: "B2B Linked", val: projects?.filter(p => p.partnerId !== 'none').length || 0, icon: Handshake, bg: "bg-indigo-50", color: "text-indigo-600" }
         ].map((s, i) => (
           <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
             <CardContent className="p-5 flex items-center justify-between">
@@ -201,6 +236,13 @@ export default function ProjectManagementPage() {
                 )}>{proj.status}</Badge>
               </div>
 
+              {proj.partnerName && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-xl w-fit">
+                   <Handshake size={14} className="text-indigo-600"/>
+                   <span className="text-[9px] font-black uppercase text-indigo-700">Partner: {proj.partnerName}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
                 <div className="p-3 bg-gray-50 rounded-2xl">
                   <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Timeline</p>
@@ -226,14 +268,14 @@ export default function ProjectManagementPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
+        <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[95vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
           <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <Briefcase className="text-primary"/> 
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Project Configuration</DialogTitle>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Deploy Business Protocol</DialogTitle>
               </div>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Setup contract parameters and select work types</DialogDescription>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Setup contract parameters, B2B logic and rate matrix</DialogDescription>
             </div>
             <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
@@ -241,52 +283,88 @@ export default function ProjectManagementPage() {
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 bg-white custom-scrollbar">
             <form onSubmit={handleAddProject} className="space-y-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Plus size={14}/> General Identity</h4>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client Name</Label>
-                      <Input value={formData.clientName} onChange={e => setFormData({...formData, clientName: e.target.value})} required placeholder="e.g. Grameenphone HQ" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Associated B2B Partner</Label>
-                      <Select value={formData.partnerId} onValueChange={v => setFormData({...formData, partnerId: v})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Internal Project" /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="none" className="font-bold text-[10px] uppercase">None (Direct Client)</SelectItem>
-                          {partners?.map(p => <SelectItem key={p.id} value={p.id} className="font-bold text-[10px] uppercase">{p.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-10">
+                  {/* General Info */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Plus size={14}/> General Identity</h4>
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Start Date</Label>
-                        <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client Name</Label>
+                        <Input value={formData.clientName} onChange={e => setFormData({...formData, clientName: e.target.value})} required placeholder="e.g. Grameenphone HQ" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Start Date</Label>
+                          <Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Est. Duration (Days)</Label>
+                          <Select value={formData.duration} onValueChange={v => setFormData({...formData, duration: v})}>
+                            <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {['1','3','7','15','30','90'].map(d => <SelectItem key={d} value={d} className="font-bold text-[10px] uppercase">{d} Days Cycle</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duration (Days)</Label>
-                        <Select value={formData.duration} onValueChange={v => setFormData({...formData, duration: v})}>
-                          <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Site Address</Label>
+                        <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required placeholder="Detailed Address" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* B2B Logic */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b pb-2 flex items-center gap-2"><Handshake size={14}/> B2B Collaboration</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Select B2B Partner</Label>
+                        <Select value={formData.partnerId} onValueChange={handlePartnerSelect}>
+                          <SelectTrigger className="h-12 bg-indigo-50/50 border-none rounded-xl font-bold text-indigo-700 shadow-inner">
+                            <SelectValue placeholder="Internal Project (No Partner)" />
+                          </SelectTrigger>
                           <SelectContent className="rounded-xl">
-                            {['1','3','7','15','30','90'].map(d => <SelectItem key={d} value={d} className="font-bold text-[10px] uppercase">{d} Days Cycle</SelectItem>)}
+                            <SelectItem value="none" className="font-bold text-[10px] uppercase">None (In-house)</SelectItem>
+                            {partners?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Site Address</Label>
-                      <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required placeholder="Detailed Address" className="h-12 bg-gray-50 border-none rounded-xl" />
+                      {formData.partnerId !== 'none' && (
+                        <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground">Comm. Type</Label>
+                            <Select value={formData.commissionType} onValueChange={v => setFormData({...formData, commissionType: v as any})}>
+                              <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percentage">Percentage %</SelectItem>
+                                <SelectItem value="fixed">Fixed ৳</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground">Value</Label>
+                            <Input 
+                              type="number" 
+                              value={formData.commissionValue} 
+                              onChange={e => setFormData({...formData, commissionValue: e.target.value})} 
+                              className="h-11 bg-gray-50 border-none rounded-xl font-black text-indigo-600"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b pb-2 flex items-center gap-2"><Calculator size={14}/> Unit Rate Matrix</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 border-b pb-2 flex items-center gap-2"><Calculator size={14}/> Unit Rate Matrix</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Add Work Type to Project</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Add Work Component</Label>
                       <Select value="" onValueChange={addWorkTypeToMatrix}>
-                        <SelectTrigger className="h-12 bg-indigo-50 border-none rounded-xl font-black text-indigo-600 text-[10px] uppercase shadow-inner">
+                        <SelectTrigger className="h-12 bg-emerald-50 border-none rounded-xl font-black text-emerald-600 text-[10px] uppercase shadow-inner">
                           <div className="flex items-center gap-2"><ListPlus size={16}/> Select and Add...</div>
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
@@ -329,7 +407,7 @@ export default function ProjectManagementPage() {
                       {formData.activeWorkTypes.length === 0 && (
                         <div className="p-10 text-center border-2 border-dashed rounded-2xl opacity-20">
                           <Zap size={32} className="mx-auto mb-2" />
-                          <p className="text-[9px] font-black uppercase">No Work Types Added</p>
+                          <p className="text-[9px] font-black uppercase">No Rate Components Defined</p>
                         </div>
                       )}
                     </div>
@@ -337,7 +415,7 @@ export default function ProjectManagementPage() {
 
                   <div className="pt-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Est. Total Area (Sqft)</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Target Total Area (Sqft)</Label>
                       <Input type="number" value={formData.totalArea} onChange={e => setFormData({...formData, totalArea: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
                     </div>
                   </div>
@@ -346,7 +424,7 @@ export default function ProjectManagementPage() {
 
               <div className="space-y-2 pt-6 border-t">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Scope / Specific Instructions</Label>
-                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe technical scope or special client instructions..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 font-medium" />
+                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe technical scope, special equipment needs or client specific instructions..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 font-medium shadow-inner" />
               </div>
             </form>
           </div>
@@ -354,7 +432,7 @@ export default function ProjectManagementPage() {
           <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
              <Button onClick={handleAddProject} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Project Engine</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Launch Operations</>}
              </Button>
           </DialogFooter>
         </DialogContent>

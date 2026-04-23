@@ -37,22 +37,35 @@ export interface CleaningProject {
   startDate: string;
   endDate: string;
   totalArea: number;
-  status: 'Active' | 'Completed' | 'On Hold';
+  status: 'Ongoing' | 'Completed' | 'On Hold';
   supervisorId?: string;
-  partnerId?: string; // Connection to Partner
+  partnerId?: string;
   partnerName?: string;
+  commissionType: 'percentage' | 'fixed';
+  commissionValue: number;
+  activeWorkTypes: string[];
+  rates: Record<string, number>;
   notes?: string;
+  finalBillAmount?: number;
+  totalEmployeeCost?: number;
+  totalCommission?: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WorkEntry {
   id: string;
   projectId: string;
   date: string;
-  workType: 'Floor Cleaning' | 'Glass Cleaning' | 'Sofa Cleaning' | 'Deep Cleaning' | 'Toilet Cleaning' | 'Carpet Cleaning' | 'Other';
+  workType: string;
   quantity: number;
-  unitType: 'Square Feet' | 'Pieces' | 'KG' | 'Feet' | 'Meter';
-  workers?: string[];
+  unitType: string;
+  employeeAssignments?: {
+    uid: string;
+    name: string;
+    cost: number; // Individual labor cost for this entry
+  }[];
+  workers?: string; // Legacy fallback
   notes?: string;
   createdAt: string;
 }
@@ -201,7 +214,7 @@ export interface InvoiceItem {
   name: string;
   price: number;
   quantity: number;
-  type: 'product' | 'service' | 'addon' | 'package';
+  type: 'product' | 'service' | 'addon' | 'package' | 'project_work';
 }
 
 export interface Invoice {
@@ -209,6 +222,7 @@ export interface Invoice {
   invoiceNumber: string;
   orderId?: string;
   bookingId?: string;
+  projectId?: string;
   customerInfo: {
     name: string;
     phone: string;
