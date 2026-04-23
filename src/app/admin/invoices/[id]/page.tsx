@@ -150,15 +150,16 @@ export default function AdminInvoiceDetailPage() {
                   </h3>
                </div>
 
-               {/* Professional Service Table */}
+               {/* Professional Optimized Table */}
                <div className="overflow-hidden border-2 border-black rounded-lg">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#00A8B5] text-white">
                       <tr>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase w-12">SL.</th>
+                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase w-12 text-center">SL.</th>
                         <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-left">Service Description</th>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase w-20">Qty</th>
-                        <th className="py-2 px-3 text-[10px] font-black uppercase w-28">Price (BDT)</th>
+                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-center w-24">Qty</th>
+                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-center w-28">Rate (BDT)</th>
+                        <th className="py-2 px-3 text-[10px] font-black uppercase text-center w-28">Amount (BDT)</th>
                       </tr>
                     </thead>
                     <tbody className="text-[11px] font-medium">
@@ -166,35 +167,37 @@ export default function AdminInvoiceDetailPage() {
                         <tr key={i} className="border-t border-black">
                           <td className="py-4 text-center border-r border-black font-black">{i + 1}</td>
                           <td className="py-4 px-3 border-r border-black font-black uppercase">
-                            <div className="flex flex-col gap-1">
-                                <span>{item.name}</span>
-                                <Badge variant="outline" className="w-fit text-[7px] font-black border-primary/20 text-primary h-4 px-1">
-                                    {item.type === 'package' ? 'MAIN SERVICE' : item.type === 'addon' ? 'ADD-ON' : 'MANUAL ENTRY'}
-                                </Badge>
-                            </div>
+                            <span>{item.name}</span>
                           </td>
-                          <td className="py-4 text-center border-r border-black font-black">{item.quantity}</td>
-                          <td className="py-4 text-center font-black">৳{(item.price * item.quantity).toLocaleString()}/-</td>
+                          <td className="py-4 text-center border-r border-black font-black uppercase">
+                            {item.quantity} {item.unit || (item.type === 'service' || item.type === 'addon' ? 'Pcs' : 'Qty')}
+                          </td>
+                          <td className="py-4 text-center border-r border-black font-black">
+                            ৳{item.price?.toLocaleString()}
+                          </td>
+                          <td className="py-4 text-center font-black">
+                            ৳{(item.price * item.quantity).toLocaleString()}/-
+                          </td>
                         </tr>
                       ))}
                       
                       {/* Pricing Calculation Section */}
                       <tr className="border-t-2 border-black bg-gray-50">
-                        <td colSpan={3} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Subtotal</td>
+                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Subtotal</td>
                         <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.subtotal.toLocaleString()} /-</td>
                       </tr>
                       {invoice.discount > 0 && (
                         <tr className="border-t border-black">
-                          <td colSpan={3} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black text-rose-600">Special Discount</td>
+                          <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black text-rose-600">Discount</td>
                           <td className="py-2 px-4 text-center font-black text-xs text-rose-600">-৳{invoice.discount.toLocaleString()} /-</td>
                         </tr>
                       )}
                       <tr className="border-t border-black">
-                        <td colSpan={3} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT</td>
+                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT</td>
                         <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.tax.toLocaleString()} /-</td>
                       </tr>
                       <tr className="border-t-2 border-black bg-[#1E5F7A] text-white">
-                        <td colSpan={3} className="py-3 px-4 text-right font-black uppercase text-[12px] border-r border-black">Grand Total Payable</td>
+                        <td colSpan={4} className="py-3 px-4 text-right font-black uppercase text-[12px] border-r border-black">Grand Total Payable</td>
                         <td className="py-3 px-4 text-center font-black text-lg">৳{invoice.total.toLocaleString()} /-</td>
                       </tr>
                     </tbody>
@@ -270,7 +273,7 @@ export default function AdminInvoiceDetailPage() {
                 <div className="flex items-center gap-3">
                   <Badge className={cn(
                     "h-10 px-4 text-xs font-black uppercase border-none",
-                    invoice.paymentStatus === 'Paid' ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                    invoice.paymentStatus === 'Paid' ? "bg-green-50 text-white" : "bg-red-50 text-white"
                   )}>
                     {invoice.paymentStatus}
                   </Badge>
