@@ -28,7 +28,8 @@ import {
   Building2,
   DollarSign,
   Save,
-  Calculator
+  Calculator,
+  ListPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -62,14 +63,8 @@ export default function ProjectManagementPage() {
     status: 'Ongoing' as any,
     partnerId: 'none',
     notes: '',
-    rates: {
-      floor: 2.5,
-      glass: 3.0,
-      sofa: 500,
-      deep: 10,
-      toilet: 300,
-      carpet: 15
-    } as Record<string, number>
+    activeWorkTypes: [] as string[], // Track which types are selected for this project
+    rates: {} as Record<string, number>
   });
 
   const projectsQuery = useMemoFirebase(() => 
@@ -93,9 +88,30 @@ export default function ProjectManagementPage() {
     };
   }, [projects]);
 
+  const addWorkTypeToMatrix = (typeId: string) => {
+    if (formData.activeWorkTypes.includes(typeId)) return;
+    setFormData(prev => ({
+      ...prev,
+      activeWorkTypes: [...prev.activeWorkTypes, typeId],
+      rates: { ...prev.rates, [typeId]: prev.rates[typeId] || 0 }
+    }));
+  };
+
+  const removeWorkTypeFromMatrix = (typeId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      activeWorkTypes: prev.activeWorkTypes.filter(id => id !== typeId)
+    }));
+  };
+
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
+    if (!formData.clientName || !formData.startDate || formData.activeWorkTypes.length === 0) {
+      toast({ variant: "destructive", title: "Incomplete Form", description: "Client, Start Date, and at least one Work Type are required." });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const selectedPartner = partners?.find(p => p.id === formData.partnerId);
@@ -111,11 +127,12 @@ export default function ProjectManagementPage() {
         createdAt: new Date().toISOString()
       });
       
-      toast({ title: "Project Initialized", description: "Operational tracking is now live." });
+      toast({ title: "Project Initialized", description: "Operational tracking and rate matrix are now active." });
       setIsDialogOpen(false);
       setFormData({ 
         clientName: '', location: '', startDate: '', duration: '7', totalArea: '', status: 'Ongoing', partnerId: 'none', notes: '',
-        rates: { floor: 2.5, glass: 3.0, sofa: 500, deep: 10, toilet: 300, carpet: 15 }
+        activeWorkTypes: [],
+        rates: {}
       });
     } catch (e) {
       toast({ variant: "destructive", title: "Error Saving" });
@@ -208,34 +225,38 @@ export default function ProjectManagementPage() {
         ))}
       </div>
 
-      {/* ➕ ADD PROJECT DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden">
-          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+          <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <Briefcase className="text-primary"/> 
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">New Project Enrollment</DialogTitle>
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Project Configuration</DialogTitle>
               </div>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Setup contract parameters and unit billing rates</DialogDescription>
+              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Setup contract parameters and select work types</DialogDescription>
             </div>
             <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
           
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 bg-white custom-scrollbar">
             <form onSubmit={handleAddProject} className="space-y-10">
-              {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
                 <div className="space-y-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Plus size={14}/> General Definition</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Plus size={14}/> General Identity</h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client / Project Name</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Client Name</Label>
                       <Input value={formData.clientName} onChange={e => setFormData({...formData, clientName: e.target.value})} required placeholder="e.g. Grameenphone HQ" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Site Location</Label>
-                      <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required placeholder="Detailed Address" className="h-12 bg-gray-50 border-none rounded-xl font-medium shadow-inner" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Associated B2B Partner</Label>
+                      <Select value={formData.partnerId} onValueChange={v => setFormData({...formData, partnerId: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Internal Project" /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="none" className="font-bold text-[10px] uppercase">None (Direct Client)</SelectItem>
+                          {partners?.map(p => <SelectItem key={p.id} value={p.id} className="font-bold text-[10px] uppercase">{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -252,45 +273,80 @@ export default function ProjectManagementPage() {
                         </Select>
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Site Address</Label>
+                      <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required placeholder="Detailed Address" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Billing Setup */}
                 <div className="space-y-6">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 border-b pb-2 flex items-center gap-2"><Calculator size={14}/> Unit Rate Matrix</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {WORK_TYPES.map(type => (
-                      <div key={type.id} className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">{type.label} Rate</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-indigo-600">৳</span>
-                          <Input 
-                            type="number" 
-                            step="0.1" 
-                            value={formData.rates[type.id]} 
-                            onChange={e => setFormData({
-                              ...formData, 
-                              rates: { ...formData.rates, [type.id]: parseFloat(e.target.value) || 0 }
-                            })} 
-                            className="h-10 pl-7 bg-indigo-50/50 border-none rounded-xl font-black text-xs shadow-inner" 
-                          />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Add Work Type to Project</Label>
+                      <Select value="" onValueChange={addWorkTypeToMatrix}>
+                        <SelectTrigger className="h-12 bg-indigo-50 border-none rounded-xl font-black text-indigo-600 text-[10px] uppercase shadow-inner">
+                          <div className="flex items-center gap-2"><ListPlus size={16}/> Select and Add...</div>
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {WORK_TYPES.map(t => (
+                            <SelectItem key={t.id} value={t.id} className="font-bold text-[10px] uppercase py-3" disabled={formData.activeWorkTypes.includes(t.id)}>
+                              {t.label} ({t.unit})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      {formData.activeWorkTypes.map(typeId => {
+                        const type = WORK_TYPES.find(t => t.id === typeId);
+                        return (
+                          <div key={typeId} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between gap-4 animate-in slide-in-from-right-4">
+                            <div className="flex-1">
+                              <p className="text-[10px] font-black text-gray-900 uppercase">{type?.label}</p>
+                              <p className="text-[8px] font-bold text-gray-400 uppercase">Rate per {type?.unit}</p>
+                            </div>
+                            <div className="relative w-32 shrink-0">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-primary">৳</span>
+                              <Input 
+                                type="number" 
+                                value={formData.rates[typeId]} 
+                                onChange={e => setFormData({
+                                  ...formData, 
+                                  rates: { ...formData.rates, [typeId]: parseFloat(e.target.value) || 0 }
+                                })} 
+                                className="h-10 pl-7 bg-white border-none rounded-xl font-black text-xs text-right shadow-inner" 
+                              />
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => removeWorkTypeFromMatrix(typeId)} className="text-red-400 hover:text-red-600">
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                      {formData.activeWorkTypes.length === 0 && (
+                        <div className="p-10 text-center border-2 border-dashed rounded-2xl opacity-20">
+                          <Zap size={32} className="mx-auto mb-2" />
+                          <p className="text-[9px] font-black uppercase">No Work Types Added</p>
                         </div>
-                        <p className="text-[8px] font-bold text-gray-300 uppercase px-1">Per {type.unit}</p>
-                      </div>
-                    ))}
+                      )}
+                    </div>
                   </div>
+
                   <div className="pt-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Est. Total Area (Sqft)</Label>
-                      <Input type="number" value={formData.totalArea} onChange={e => setFormData({...formData, totalArea: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary shadow-inner" />
+                      <Input type="number" value={formData.totalArea} onChange={e => setFormData({...formData, totalArea: e.target.value})} placeholder="0.00" required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2 pt-6 border-t">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Operational Scope / Contract Notes</Label>
-                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe technical scope or special client instructions..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 font-medium focus:bg-white transition-all shadow-inner" />
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Project Scope / Specific Instructions</Label>
+                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Describe technical scope or special client instructions..." className="bg-gray-50 border-none rounded-[2rem] min-h-[100px] p-6 font-medium" />
               </div>
             </form>
           </div>
@@ -298,7 +354,7 @@ export default function ProjectManagementPage() {
           <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
              <Button onClick={handleAddProject} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Launch Project Protocol</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Publish Project Engine</>}
              </Button>
           </DialogFooter>
         </DialogContent>
@@ -306,4 +362,3 @@ export default function ProjectManagementPage() {
     </div>
   );
 }
-
