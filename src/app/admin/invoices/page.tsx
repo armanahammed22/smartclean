@@ -67,7 +67,7 @@ export default function InvoicesListPage() {
 
   // Dynamic KPIs
   const stats = useMemo(() => {
-    if (!invoices) return { total: 0, paid: 0, unpaid: 0, totalRev: 0, due: 0 };
+    if (!invoices) return { total: 0, paid: 0, unpaid: 0, totalRev: 0, duo: 0 };
     return {
       total: invoices.length,
       paid: invoices.filter(i => i.paymentStatus === 'Paid').length,
@@ -105,7 +105,9 @@ export default function InvoicesListPage() {
       await batch.commit();
       setSelectedIds([]);
       toast({ title: "Status Updated" });
-    } catch (e) {} finally {
+    } catch (e) {
+      console.error(e);
+    } finally {
       setIsBulkProcessing(false);
     }
   };
@@ -122,7 +124,9 @@ export default function InvoicesListPage() {
       await batch.commit();
       setSelectedIds([]);
       toast({ title: "Deleted Successfully" });
-    } catch (e) {} finally {
+    } catch (e) {
+      console.error(e);
+    } finally {
       setIsBulkProcessing(false);
     }
   };
@@ -167,7 +171,7 @@ export default function InvoicesListPage() {
         updatedAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'invoices'), invoiceData);
+      await addDoc(collection(db, 'invoices'), invoiceData);
       
       toast({ title: "Invoice Created", description: "Manual invoice has been registered." });
       setIsCreateOpen(false);
@@ -371,7 +375,7 @@ export default function InvoicesListPage() {
                     <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-8 text-[9px] font-black uppercase border-primary/20 text-primary">+ Add Item</Button>
                   </div>
                   <div className="space-y-3">
-                    {manualItems.map((item, idx) => (
+                    {manualItems.map((item: any, idx: number) => (
                       <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
                         <div className="flex-1 space-y-1 w-full">
                           <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
@@ -462,29 +466,8 @@ export default function InvoicesListPage() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Authorize & Generate</>}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </div>
       </Dialog>
     </div>
-  );
-}
-
-function ReceiptText(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-      <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
-      <path d="M12 17.5V6.5" />
-    </svg>
   );
 }
