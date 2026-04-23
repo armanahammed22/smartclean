@@ -1,4 +1,3 @@
-
 'use client';
 
 import { collection, query, where, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
@@ -53,7 +52,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   }
 
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = sourceData.tax || (subtotal * 0.08);
+  const tax = 0; // VAT confirmed 0
   const delivery = sourceData.deliveryCharge || sourceData.additionalCharge || 0;
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
   const total = subtotal + tax + delivery - discount;

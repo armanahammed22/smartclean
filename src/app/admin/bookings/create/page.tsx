@@ -72,7 +72,7 @@ export default function CreateManualBookingPage() {
   const addOnPrice = addOnOptions?.filter(a => selectedAddOnIds.includes(a.id)).reduce((acc, a) => acc + (a.price || 0), 0) || 0;
   
   const subtotal = basePrice + addOnPrice;
-  const tax = Number((subtotal * 0.08).toFixed(2));
+  const tax = 0; // VAT confirmed 0
   const total = subtotal + tax - manualDiscount;
 
   const toggleAddOn = (id: string) => {
@@ -271,7 +271,7 @@ export default function CreateManualBookingPage() {
                   <span className="text-gray-900">৳{addOnPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>VAT (Government 8%)</span>
+                  <span>VAT (0%)</span>
                   <span className="text-gray-900">৳{tax.toLocaleString()}</span>
                 </div>
                 

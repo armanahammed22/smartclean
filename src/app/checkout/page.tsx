@@ -103,7 +103,7 @@ function CheckoutContent() {
   const selectedDelivery = deliveryOptions?.find(d => d.id === selectedDeliveryId);
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
-  const tax = Number((smartSubtotal * 0.08).toFixed(2));
+  const tax = 0; // VAT confirmed 0
   const finalAmount = Number((smartSubtotal + tax + deliveryCharge).toFixed(2));
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -280,7 +280,7 @@ function CheckoutContent() {
                         <span className="text-gray-900">৳{subtotal.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        <span>VAT (8%)</span>
+                        <span>VAT (0%)</span>
                         <span className="text-gray-900">৳{tax.toLocaleString()}</span>
                       </div>
                       {deliveryCharge > 0 && (

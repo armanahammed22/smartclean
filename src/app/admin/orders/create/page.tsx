@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -76,7 +75,7 @@ export default function CreateManualOrderPage() {
   };
 
   const subtotal = useMemo(() => selectedItems.reduce((acc, item) => acc + (item.price * item.quantity), 0), [selectedItems]);
-  const tax = Number((subtotal * 0.08).toFixed(2));
+  const tax = 0; // VAT confirmed 0
   const total = subtotal + tax;
 
   const handleCreateOrder = async (e: React.FormEvent) => {
@@ -264,7 +263,7 @@ export default function CreateManualOrderPage() {
                   <span>৳{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>VAT (8%)</span>
+                  <span>VAT (0%)</span>
                   <span>৳{tax.toLocaleString()}</span>
                 </div>
                 <div className="pt-6 border-t-2 border-dashed border-gray-100 flex flex-col gap-1">

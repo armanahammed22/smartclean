@@ -115,7 +115,7 @@ export function CheckoutModal() {
   const deliveryCharge = !hasServices ? (Number(selectedDelivery?.amount) || 0) : 0;
 
   const smartSavings = subtotal - smartSubtotal;
-  const tax = Number((smartSubtotal * 0.08).toFixed(2));
+  const tax = 0; // VAT confirmed 0
   const finalTotal = Number((smartSubtotal + tax + deliveryCharge).toFixed(2));
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -273,7 +273,7 @@ export function CheckoutModal() {
               <div className="space-y-3 pt-6 border-t-2 border-dashed border-gray-200 mt-auto">
                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-400"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
                 {smartSavings > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-blue-600"><span>Smart Discount</span><span>-৳{smartSavings.toLocaleString()}</span></div>}
-                <div className="flex justify-between text-[10px] font-black uppercase text-gray-400"><span>VAT (8%)</span><span>৳{tax.toLocaleString()}</span></div>
+                <div className="flex justify-between text-[10px] font-black uppercase text-gray-400"><span>VAT (0%)</span><span>৳{tax.toLocaleString()}</span></div>
                 {deliveryCharge > 0 && <div className="flex justify-between text-[10px] font-black uppercase text-primary"><span>Shipping</span><span>৳{deliveryCharge.toLocaleString()}</span></div>}
                 
                 <div className="pt-6 flex justify-between items-end border-t border-gray-100 mt-2">

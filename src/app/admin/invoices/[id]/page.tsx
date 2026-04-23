@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -190,7 +189,7 @@ export default function AdminInvoiceDetailPage() {
                         </tr>
                       )}
                       <tr className="border-t border-black">
-                        <td colSpan={3} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT (8%)</td>
+                        <td colSpan={3} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT</td>
                         <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.tax.toLocaleString()} /-</td>
                       </tr>
                       <tr className="border-t-2 border-black bg-[#1E5F7A] text-white">

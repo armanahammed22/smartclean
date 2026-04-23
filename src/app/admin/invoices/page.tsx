@@ -149,7 +149,7 @@ function InvoicesListContent() {
     }, 0);
   }, [manualItems]);
 
-  const tax = Number((subtotal * 0.08).toFixed(2));
+  const tax = 0; // VAT set to 0 as confirmed
   const totalAmount = Number((subtotal + tax + Number(pricing.delivery) - Number(pricing.discount)).toFixed(2));
 
   const handleCreateManualInvoice = async () => {
