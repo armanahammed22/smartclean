@@ -25,17 +25,12 @@ import {
   Clock,
   Plus,
   X,
-  PlusCircle,
-  User,
-  MapPin,
-  Save,
-  DollarSign,
-  Calculator,
-  Info,
   Package,
-  Smartphone
+  Smartphone,
+  Info,
+  Calculator
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -61,7 +56,7 @@ function InvoicesListContent() {
   // Manual Invoice State
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service' }]);
+  const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
@@ -135,7 +130,7 @@ function InvoicesListContent() {
   };
 
   // Manual Invoice Logic
-  const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service' }]);
+  const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const removeManualItem = (idx: number) => setManualItems(manualItems.filter((_, i) => i !== idx));
   const updateManualItem = (idx: number, field: string, val: any) => {
     const next = [...manualItems];
@@ -143,7 +138,7 @@ function InvoicesListContent() {
     setManualItems(next);
   };
 
-  const subtotal = useMemo(() => manualItems.reduce((acc, item) => acc + (parseFloat(item.price) || 0) * (item.quantity || 1), 0), [manualItems]);
+  const subtotal = useMemo(() => manualItems.reduce((acc, item) => acc + (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 1), 0), [manualItems]);
   const tax = Number((subtotal * 0.08).toFixed(2));
   const totalAmount = subtotal + tax + Number(pricing.delivery) - Number(pricing.discount);
 
@@ -162,7 +157,14 @@ function InvoicesListContent() {
       const invoiceData = {
         invoiceNumber,
         customerInfo: { ...customer },
-        items: manualItems.map(i => ({ ...i, price: parseFloat(i.price), quantity: parseInt(i.quantity) })),
+        items: manualItems.map(i => ({ 
+          id: 'manual-' + Math.random().toString(36).substr(2, 9),
+          name: i.name, 
+          price: parseFloat(i.price), 
+          quantity: parseFloat(i.quantity),
+          unit: i.unit,
+          type: i.type 
+        })),
         subtotal,
         tax,
         discount: Number(pricing.discount),
@@ -171,14 +173,18 @@ function InvoicesListContent() {
         paymentStatus: pricing.paymentStatus,
         paymentMethod: pricing.paymentMethod,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        paidAmount: pricing.paymentStatus === 'Paid' ? totalAmount : 0,
+        dueAmount: pricing.paymentStatus === 'Paid' ? 0 : totalAmount
       };
 
-      await addDoc(collection(db, 'invoices'), invoiceData);
+      const docRef = await addDoc(collection(db, 'invoices'), invoiceData);
+      const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
+      await updateDoc(doc(db, 'invoices', docRef.id), { publicLink });
       
       toast({ title: "Invoice Created", description: "Manual invoice has been registered." });
       setIsCreateOpen(false);
-      setManualItems([{ name: '', price: '', quantity: 1, type: 'service' }]);
+      setManualItems([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
       setCustomer({ name: '', phone: '', address: '' });
     } catch (e) {
       toast({ variant: "destructive", title: "Error Creating Invoice" });
@@ -375,24 +381,38 @@ function InvoicesListContent() {
                     </div>
                     <div className="space-y-3">
                       {manualItems.map((item: any, idx: number) => (
-                        <div key={idx} className="flex flex-col sm:flex-row items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
-                          <div className="flex-1 space-y-1 w-full">
+                        <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
+                          <div className="space-y-1 w-full">
                             <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
                             <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="Service or product name" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
                           </div>
-                          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                             <div className="space-y-1">
-                              <Label className="text-[8px] font-black uppercase text-gray-400">Rate</Label>
-                              <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 w-24 bg-white border-none rounded-lg text-xs font-black text-primary" />
+                              <Label className="text-[8px] font-black uppercase text-gray-400">Unit Type</Label>
+                              <Select value={item.unit} onValueChange={v => updateManualItem(idx, 'unit', v)}>
+                                <SelectTrigger className="h-9 bg-white border-none rounded-lg text-[9px] font-black uppercase shadow-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-lg">
+                                  <SelectItem value="Qty" className="text-[10px] font-black uppercase">Quantity (Qty)</SelectItem>
+                                  <SelectItem value="Sqft" className="text-[10px] font-black uppercase">Square Feet (Sqft)</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-[8px] font-black uppercase text-gray-400">Qty</Label>
-                              <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="h-9 w-16 bg-white border-none rounded-lg text-xs font-black" />
+                              <Label className="text-[8px] font-black uppercase text-gray-400">Rate (৳)</Label>
+                              <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 bg-white border-none rounded-lg text-xs font-black text-primary shadow-sm" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[8px] font-black uppercase text-gray-400">{item.unit === 'Sqft' ? 'Area' : 'Qty'}</Label>
+                              <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', e.target.value)} className="h-9 bg-white border-none rounded-lg text-xs font-black shadow-sm" />
+                            </div>
+                            <div className="flex justify-end">
+                              <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-9 w-9 text-red-400 hover:bg-red-50 rounded-lg">
+                                <Trash2 size={16} />
+                              </Button>
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-8 w-8 text-red-400 hover:bg-red-50 mt-4 sm:mt-4">
-                            <Trash2 size={16} />
-                          </Button>
                         </div>
                       ))}
                     </div>
