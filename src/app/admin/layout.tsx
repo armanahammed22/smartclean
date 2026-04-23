@@ -66,7 +66,10 @@ import {
   Clock,
   DollarSign,
   Handshake,
-  Compass
+  Compass,
+  ListChecks,
+  Settings2,
+  FolderTree
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -91,7 +94,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -127,8 +129,8 @@ const MENU_LABELS: Record<string, string> = {
   dashboard_link: "Dashboard",
   sales: "Sales Terminal",
   orders: "Order & Booking",
-  inventory: "Inventory",
-  services: "SERVICES",
+  inventory: "PRODUCT MENU",
+  services: "SERVICE MENU",
   marketing: "MARKETING & PROMOTIONS",
   offers: "OFFER & CAMPAIGN",
   seo: "SEO & TRACKING",
@@ -233,27 +235,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       {
         id: 'inventory',
-        title: "Inventory",
+        title: "PRODUCT MENU",
         icon: Box,
         color: "text-amber-400",
         visible: productsEnabled,
         items: [
           { name: "All Products", href: '/admin/products', icon: Package },
+          { name: "Taxonomy (L1, L2, L3)", href: '/admin/products/categories', icon: FolderTree },
+          { name: "Brand Registry", href: '/admin/attributes/brands', icon: Award },
+          { name: "Variant Rules", href: '/admin/attributes/variants', icon: Shapes },
           { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
-          { name: "Categories", href: '/admin/products/categories', icon: Tags },
-          { name: "Brands", href: '/admin/attributes/brands', icon: Award },
-          { name: "Variants", href: '/admin/attributes/variants', icon: Shapes },
         ]
       },
       {
         id: 'services',
-        title: "SERVICES",
+        title: "SERVICE MENU",
         icon: Wrench,
         color: "text-sky-400",
         visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
-          { name: "Sub-Services", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Sub-Services (Add-ons)", href: '/admin/services/sub-services', icon: Layers },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
