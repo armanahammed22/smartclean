@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -46,9 +45,9 @@ export default function ProductCategoriesPage() {
   const [expandedSubs, setExpandedSubs] = useState<string[]>([]);
 
   // Queries
-  const catsQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('order', 'asc')) : null, [db]);
-  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('order', 'asc')) : null, [db]);
-  const childsQuery = useMemoFirebase(() => db ? query(collection(db, 'childcategories'), orderBy('order', 'asc')) : null, [db]);
+  const catsQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
+  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db]);
+  const childsQuery = useMemoFirebase(() => db ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db]);
 
   const { data: categories, isLoading: catsLoading } = useCollection(catsQuery);
   const { data: subcategories } = useCollection(subsQuery);

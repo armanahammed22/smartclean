@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -52,12 +51,26 @@ export default function ProductsManagementPage() {
   const [activeTab, setActiveTab] = useState('identity');
   const [uploadedImageUrl, setUploadedImageUrl] = useState('');
   const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
   
+  // Dynamic Dropdown States
+  const [selectedCatId, setSelectedCatId] = useState<string>('');
+  const [selectedSubCatId, setSelectedSubCatId] = useState<string>('');
+  const [selectedChildCatId, setSelectedChildCatId] = useState<string>('');
+
+  // Master Data Queries
   const productsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db, user]);
-  const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories')) : null, [db, user]);
+  const categoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db, user]);
+  const subCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db, user]);
+  const childCategoriesQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db, user]);
+  const brandsQuery = useMemoFirebase(() => (db && user) ? query(collection(db, 'brands'), orderBy('name', 'asc')) : null, [db, user]);
+  const specTemplatesQuery = useMemoFirebase(() => db ? query(collection(db, 'reusable_specs'), orderBy('key', 'asc')) : null, [db]);
+
   const { data: products, isLoading } = useCollection(productsQuery);
   const { data: categories } = useCollection(categoriesQuery);
+  const { data: subcategories } = useCollection(subCategoriesQuery);
+  const { data: childcategories } = useCollection(childCategoriesQuery);
+  const { data: brands } = useCollection(brandsQuery);
+  const { data: specTemplates } = useCollection(specTemplatesQuery);
 
   const stats = useMemo(() => {
     if (!products) return { total: 0, low: 0, out: 0, cats: 0 };
@@ -111,7 +124,9 @@ export default function ProductsManagementPage() {
       price: parseFloat(formData.get('price') as string),
       regularPrice: parseFloat(formData.get('regularPrice') as string) || 0,
       stockQuantity: parseInt(formData.get('stockQuantity') as string),
-      categoryId: selectedCategory,
+      categoryId: selectedCatId,
+      subCategoryId: selectedSubCatId,
+      childCategoryId: selectedChildCatId,
       brand: formData.get('brand') as string || 'General',
       badgeText: formData.get('badgeText') as string || '',
       description: formData.get('description') as string,
@@ -146,7 +161,9 @@ export default function ProductsManagementPage() {
     setEditingProduct(null);
     setUploadedImageUrl('');
     setSpecifications([]);
-    setSelectedCategory('');
+    setSelectedCatId('');
+    setSelectedSubCatId('');
+    setSelectedChildCatId('');
     setActiveTab('identity');
   };
 
@@ -154,9 +171,15 @@ export default function ProductsManagementPage() {
     setEditingProduct(product);
     setUploadedImageUrl(product.imageUrl || '');
     setSpecifications(product.specifications || []);
-    setSelectedCategory(product.categoryId || '');
+    setSelectedCatId(product.categoryId || '');
+    setSelectedSubCatId(product.subCategoryId || '');
+    setSelectedChildCatId(product.childCategoryId || '');
     setIsDialogOpen(true);
   };
+
+  // Filtered Lists for Dependent Dropdowns
+  const availableSubs = useMemo(() => subcategories?.filter(s => s.categoryId === selectedCatId) || [], [subcategories, selectedCatId]);
+  const availableChildren = useMemo(() => childcategories?.filter(c => c.subcategoryId === selectedSubCatId) || [], [childcategories, selectedSubCatId]);
 
   return (
     <div className="space-y-8 pb-20">
@@ -231,7 +254,9 @@ export default function ProductsManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px]">{product.categoryId}</Badge>
+                      <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black uppercase text-[8px]">
+                        {categories?.find(c => c.id === product.categoryId)?.name || 'General'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
@@ -257,7 +282,6 @@ export default function ProductsManagementPage() {
         </CardContent>
       </Card>
 
-      {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl flex flex-col bg-white overflow-hidden">
           <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
@@ -265,21 +289,16 @@ export default function ProductsManagementPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">
                   <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
-                    <Package className="text-primary" /> {editingProduct ? 'Update SKU' : 'Catalog New Item'}
+                    <Package className="text-primary" size={24} /> {editingProduct ? 'Update SKU' : 'Catalog New Item'}
                   </DialogTitle>
-                  <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Configure identity and inventory levels</DialogDescription>
+                  <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Configure identity and taxonomy hierarchy</DialogDescription>
                 </div>
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                  <div className="flex bg-white/10 p-1 rounded-xl flex-1 sm:flex-none">
-                    {['identity', 'media', 'specs'].map(tab => (
-                      <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("flex-1 sm:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all", activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white")}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-                  <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
-                    <X size={24} />
-                  </button>
+                <div className="flex bg-white/10 p-1 rounded-xl">
+                  {['identity', 'media', 'specs'].map(tab => (
+                    <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={cn("px-4 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all", activeTab === tab ? "bg-primary text-white" : "text-white/40 hover:text-white")}>
+                      {tab}
+                    </button>
+                  ))}
                 </div>
               </div>
             </DialogHeader>
@@ -287,7 +306,7 @@ export default function ProductsManagementPage() {
             <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
               {activeTab === 'identity' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Product Name</Label>
@@ -299,82 +318,86 @@ export default function ProductsManagementPage() {
                           <Input name="price" type="number" defaultValue={editingProduct?.price} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price</Label>
-                          <Input name="regularPrice" type="number" defaultValue={editingProduct?.regularPrice} className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black" />
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Stock Qty</Label>
+                          <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold" />
                         </div>
                       </div>
-                    </div>
-                    <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Stock Quantity</Label>
-                        <Input name="stockQuantity" type="number" defaultValue={editingProduct?.stockQuantity} required className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black" />
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Assigned Brand</Label>
+                        <Select name="brand" defaultValue={editingProduct?.brand || 'General'}>
+                          <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {brands?.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>) || <SelectItem value="General">General</SelectItem>}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select" /></SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>) || (
-                                ['Cleaning', 'Maintenance', 'Tools'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)
-                              )}
+                    </div>
+                    
+                    <div className="space-y-6 bg-primary/5 p-6 rounded-3xl border border-primary/10">
+                      <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><FolderTree size={14}/> Taxonomy Mapping</h4>
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-black uppercase">Level 1 (Main Category)</Label>
+                          <Select value={selectedCatId} onValueChange={(v) => { setSelectedCatId(v); setSelectedSubCatId(''); setSelectedChildCatId(''); }}>
+                            <SelectTrigger className="h-10 bg-white border-none rounded-xl"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                            <SelectContent>
+                              {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Badge Text (Optional)</Label>
-                          <Input name="badgeText" defaultValue={editingProduct?.badgeText} placeholder="e.g. HOT" className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-black uppercase text-red-600" />
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-black uppercase">Level 2 (Sub-Category)</Label>
+                          <Select value={selectedSubCatId} onValueChange={(v) => { setSelectedSubCatId(v); setSelectedChildCatId(''); }} disabled={!selectedCatId}>
+                            <SelectTrigger className="h-10 bg-white border-none rounded-xl"><SelectValue placeholder="Select Sub-Category" /></SelectTrigger>
+                            <SelectContent>
+                              {availableSubs.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-black uppercase">Level 3 (Child-Category)</Label>
+                          <Select value={selectedChildCatId} onValueChange={setSelectedChildCatId} disabled={!selectedSubCatId}>
+                            <SelectTrigger className="h-10 bg-white border-none rounded-xl"><SelectValue placeholder="Select Child-Category" /></SelectTrigger>
+                            <SelectContent>
+                              {availableChildren.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
-                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none rounded-2xl min-h-[200px] md:min-h-[250px] p-6 leading-relaxed" />
+                    <Textarea name="description" defaultValue={editingProduct?.description} className="bg-gray-50 border-none rounded-2xl min-h-[150px] p-6 leading-relaxed" />
                   </div>
                 </div>
               )}
 
               {activeTab === 'media' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-2xl mx-auto">
-                  <ImageUploader 
-                    label="Primary Display Image" 
-                    hint="800 x 800 px (1:1 Square)"
-                    initialUrl={uploadedImageUrl} 
-                    onUpload={setUploadedImageUrl} 
-                    aspectRatio="aspect-square"
-                  />
+                  <ImageUploader label="Primary Product Media" hint="800 x 800 px (1:1 Square)" initialUrl={uploadedImageUrl} onUpload={setUploadedImageUrl} aspectRatio="aspect-square" />
                 </div>
               )}
 
               {activeTab === 'specs' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                   <div className="flex justify-between items-center px-1">
-                    <Label className="text-sm font-black uppercase text-gray-900 tracking-tight">Technical Specifications</Label>
-                    <Button type="button" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4 uppercase">+ Add Row</Button>
+                    <Label className="text-sm font-black uppercase text-gray-900 tracking-tight">Technical Matrix</Label>
+                    <Button type="button" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} size="sm" className="rounded-xl font-black text-[10px] h-9 px-4 uppercase">+ Add Property</Button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {specifications.map((spec, i) => (
-                      <div key={i} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 relative group">
-                        <Input placeholder="Label (e.g. Color)" value={spec.key} onChange={e => {
-                          const next = [...specifications];
-                          next[i].key = e.target.value;
-                          setSpecifications(next);
-                        }} className="bg-white border-none h-10 md:h-11 font-bold uppercase text-[10px] flex-1" />
-                        <Input placeholder="Value (e.g. Red)" value={spec.value} onChange={e => {
-                          const next = [...specifications];
-                          next[i].value = e.target.value;
-                          setSpecifications(next);
-                        }} className="bg-white border-none h-10 md:h-11 font-medium text-xs flex-1" />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="text-destructive shrink-0 h-10 w-10"><Trash2 size={16} /></Button>
+                      <div key={i} className="flex gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 group">
+                        <Select value={spec.key} onValueChange={v => { const next = [...specifications]; next[i].key = v; setSpecifications(next); }}>
+                          <SelectTrigger className="h-10 bg-white border-none rounded-lg text-[10px] font-bold uppercase flex-1"><SelectValue placeholder="Prop Label" /></SelectTrigger>
+                          <SelectContent>
+                            {specTemplates?.map(t => <SelectItem key={t.id} value={t.key} className="text-[10px] font-bold uppercase">{t.key}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Input placeholder="Value (e.g. 500W)" value={spec.value} onChange={e => { const next = [...specifications]; next[i].value = e.target.value; setSpecifications(next); }} className="h-10 bg-white border-none rounded-lg text-xs flex-1" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="text-destructive h-10 w-10"><Trash2 size={14} /></Button>
                       </div>
                     ))}
-                    {specifications.length === 0 && (
-                      <div className="p-12 text-center border-2 border-dashed rounded-[2rem] bg-gray-50/50 text-muted-foreground italic flex flex-col items-center gap-3">
-                        <Settings2 size={32} className="opacity-20" />
-                        <p className="text-[10px] font-black uppercase tracking-widest">No technical details listed.</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -382,13 +405,13 @@ export default function ProductsManagementPage() {
 
             <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border w-full sm:w-auto justify-between shadow-sm">
-                <Label className="text-[10px] font-black uppercase text-gray-500">Active Listing</Label>
+                <Label className="text-[10px] font-black uppercase text-gray-500">Public Status</Label>
                 <Switch name="status" defaultChecked={editingProduct?.status === 'Active'} />
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 sm:flex-none h-12 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
                 <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none h-12 md:h-14 px-12 rounded-xl font-black bg-primary shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Sync SKU</>}
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Sync Records</>}
                 </Button>
               </div>
             </DialogFooter>
