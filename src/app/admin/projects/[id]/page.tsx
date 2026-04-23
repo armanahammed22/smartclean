@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, orderBy, addDoc, deleteDoc, updateDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, addDoc, deleteDoc, updateDoc, serverTimestamp, setDoc, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,9 +82,17 @@ export default function ProjectOperationalConsole() {
     assignments: [] as { uid: string, name: string, cost: number }[]
   });
 
+  // 🛡️ SECURITY FIX: Removed 'orderBy' from query to avoid missing index error.
+  // We will sort the data in memory via useMemo below.
   const logsQuery = useMemoFirebase(() => 
-    (db && id) ? query(collection(db, 'work_entries'), where('projectId', '==', id), orderBy('date', 'desc')) : null, [db, id]);
-  const { data: logs, isLoading: lLoading } = useCollection(logsQuery);
+    (db && id) ? query(collection(db, 'work_entries'), where('projectId', '==', id)) : null, [db, id]);
+  const { data: logsRaw, isLoading: lLoading } = useCollection(logsQuery);
+
+  // Client-side sorting for index resilience
+  const logs = useMemo(() => {
+    if (!logsRaw) return [];
+    return [...logsRaw].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }, [logsRaw]);
 
   const projectEnabledTypes = useMemo(() => {
     if (!project?.activeWorkTypes) return [];
@@ -115,7 +123,7 @@ export default function ProjectOperationalConsole() {
 
     // 3. Calculate Employee Labor Cost (Group based: Sum of assigned employee wages for each entry)
     const laborCost = logs.reduce((acc, log) => {
-      return acc + (log.employeeAssignments?.reduce((eAcc: number, e: any) => eAcc + (e.cost || 0), 0) || 0);
+      return acc + (log.assignments?.reduce((eAcc: number, e: any) => eAcc + (e.cost || 0), 0) || 0);
     }, 0);
 
     const netProfit = grossRevenue - (partnerCommission + laborCost);
@@ -155,7 +163,7 @@ export default function ProjectOperationalConsole() {
       setLogForm({ ...logForm, workType: '', quantity: '', notes: '', assignments: [] });
       
       // Auto Update Partner Project Amount if linked
-      if (project.partnerId !== 'none' && summary) {
+      if (project.partnerId && project.partnerId !== 'none' && summary) {
         const partnerProjRef = doc(db, 'partner_projects', project.id);
         const snap = await getDoc(partnerProjRef);
         if (snap.exists()) {
@@ -188,7 +196,7 @@ export default function ProjectOperationalConsole() {
       });
 
       // Update B2B Partner Status
-      if (project.partnerId !== 'none') {
+      if (project.partnerId && project.partnerId !== 'none') {
         const partnerProjRef = doc(db, 'partner_projects', project.id);
         const snap = await getDoc(partnerProjRef);
         if (snap.exists()) {
@@ -321,7 +329,7 @@ export default function ProjectOperationalConsole() {
                     {lLoading ? <TableRow><TableCell colSpan={4} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow> : 
                       logs?.map((log) => {
                         const typeInfo = ALL_WORK_TYPES.find(t => t.id === log.workType);
-                        const cost = log.employeeAssignments?.reduce((a: number, e: any) => a + (e.cost || 0), 0) || 0;
+                        const cost = log.assignments?.reduce((a: number, e: any) => a + (e.cost || 0), 0) || 0;
                         return (
                           <TableRow key={log.id} className="hover:bg-gray-50/50 transition-colors group">
                             <TableCell className="py-6 pl-8">
@@ -331,7 +339,7 @@ export default function ProjectOperationalConsole() {
                               <div className="flex flex-col gap-1.5">
                                 <span className="text-xs font-black text-gray-700 uppercase tracking-tight">{typeInfo?.label || log.workType}</span>
                                 <div className="flex -space-x-2">
-                                  {log.employeeAssignments?.map((emp: any, idx: number) => (
+                                  {log.assignments?.map((emp: any, idx: number) => (
                                     <div key={idx} className="w-5 h-5 rounded-full bg-indigo-100 border border-white flex items-center justify-center text-[7px] font-black text-indigo-600 uppercase" title={emp.name}>{emp.name[0]}</div>
                                   ))}
                                 </div>
@@ -360,7 +368,10 @@ export default function ProjectOperationalConsole() {
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none shadow-2xl bg-white flex flex-col overflow-hidden rounded-none md:rounded-[3rem]">
           <header className="p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center">
             <div className="space-y-1">
-              <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest flex items-center gap-3"><Clock className="text-primary"/> Workforce Intake</DialogTitle>
+              <div className="flex items-center gap-3">
+                <Clock className="text-primary"/> 
+                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-widest">Workforce Intake</DialogTitle>
+              </div>
               <DialogDescription className="text-white/40 text-[9px] font-bold uppercase">Log activities and assign personnel as a group</DialogDescription>
             </div>
             <button onClick={() => setIsLogDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
