@@ -257,9 +257,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: servicesEnabled,
         items: [
           { name: "Service List", href: '/admin/services', icon: Wrench },
-          { name: "Service Attribute", href: '/admin/services/attributes', icon: Settings2 },
           { name: "Sub-Services (Add-ons)", href: '/admin/services/sub-services', icon: Layers },
-          { name: "Movie Attribute", href: '/admin/services/movie-attributes', icon: Video },
+          { name: "Service Attribute", href: '/admin/services/attributes', icon: Settings2 },
           { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
