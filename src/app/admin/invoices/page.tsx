@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +30,10 @@ import {
   MapPin,
   Save,
   DollarSign,
-  Calculator
+  Calculator,
+  Info,
+  Package,
+  Smartphone
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
