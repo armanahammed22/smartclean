@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -18,7 +17,8 @@ import {
   Info,
   Printer,
   Wallet,
-  Heart
+  Heart,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,15 +42,22 @@ export default function PublicInvoiceViewPage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  const providedServicesList = useMemo(() => {
+    if (settings?.invoiceProvidedServices) {
+      return settings.invoiceProvidedServices.split(',').map((s: string) => s.trim()).filter((s: string) => !!s);
+    }
+    return ['Home Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Sofa & Carpet', 'Kitchen Sanitization', 'Pest Control'];
+  }, [settings]);
+
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Secure Document Not Found</div>;
 
   const signatureUrl = settings?.signatureUrl;
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
 
-  const headerPhone = invoice.headerInfo?.phone || settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = invoice.headerInfo?.email || settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = invoice.headerInfo?.address || settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
+  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
+  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   
   const websiteName = settings?.websiteName || 'Smart Clean';
   const footerNote = settings?.invoiceFooterNote || 'Payment should be cleared at site upon completion.';
@@ -62,7 +69,7 @@ export default function PublicInvoiceViewPage() {
     <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white">
       <div className="container mx-auto px-4 flex flex-col items-center">
         
-        <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-10 gap-6 px-4">
+        <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-10 gap-6 px-4 text-center sm:text-left">
           <div className="flex items-center gap-4 text-left">
             <div className="w-12 h-12 bg-[#081621] rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl border border-white/10">SC</div>
             <div>
@@ -82,10 +89,10 @@ export default function PublicInvoiceViewPage() {
         <div 
           id="public-invoice-render" 
           className="bg-white shadow-2xl relative border-t-[15px] border-[#1E5F7A]"
-          style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'hidden' }}
+          style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         >
           {/* 🖼️ CORPORATE HEADER */}
-          <div className="pt-12 px-12 pb-8 flex justify-between items-start border-b-2 border-gray-100">
+          <div className="pt-12 px-12 pb-8 flex justify-between items-start border-b-2 border-gray-100 shrink-0">
              <div className="flex gap-4">
                <div className="w-20 h-20 relative shrink-0">
                   <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
@@ -108,7 +115,7 @@ export default function PublicInvoiceViewPage() {
              </div>
           </div>
 
-          <div className="px-12 pt-8 space-y-8 relative z-10">
+          <div className="px-12 pt-8 space-y-8 flex-1 relative z-10">
              <div className="text-center space-y-1">
                 <h3 className="text-2xl font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">Invoice / Bill</h3>
                 <p className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>
@@ -117,7 +124,7 @@ export default function PublicInvoiceViewPage() {
              </div>
 
              <div className="flex justify-between items-start">
-                <div className="space-y-4">
+                <div className="space-y-4 text-left">
                   <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-1 w-fit">Invoiced To:</p>
                   <div className="space-y-0.5 text-left">
                     <p className="text-lg font-black text-[#081621] uppercase leading-tight">{invoice.customerInfo.name}</p>
@@ -152,7 +159,7 @@ export default function PublicInvoiceViewPage() {
                     {invoice.items.map((item: any, i: number) => (
                       <tr key={i} className="border-t border-[#081621]">
                         <td className="py-3 text-center border-r border-[#081621] font-black text-gray-400">{i + 1}</td>
-                        <td className="py-3 px-4 border-r border-[#081621] font-black uppercase text-gray-800">{item.name}</td>
+                        <td className="py-3 px-4 border-r border-[#081621] font-black uppercase text-gray-800 text-left">{item.name}</td>
                         <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">{item.quantity} {item.unit}</td>
                         <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">{item.price?.toLocaleString()}</td>
                         <td className="py-3 text-center font-black text-gray-900 bg-gray-50/20">{(item.price * item.quantity).toLocaleString()}/-</td>
@@ -178,7 +185,6 @@ export default function PublicInvoiceViewPage() {
                       </tr>
                     )}
 
-                    {/* 💰 PROFESSIONAL PAYABLE BOX */}
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
                       <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-xs tracking-widest border-r border-white/10 italic">
                         Final Amount Payable
@@ -201,7 +207,7 @@ export default function PublicInvoiceViewPage() {
                 </table>
              </div>
 
-             <div className="p-4 bg-[#1E5F7A]/5 rounded-2xl border border-[#081621] space-y-0.5">
+             <div className="p-4 bg-[#1E5F7A]/5 rounded-2xl border border-[#081621] space-y-0.5 text-left">
                 <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest text-left">Amount in words:</p>
                 <p className="text-xs font-black text-[#081621] italic text-left">"{numberToWords(invoice.total)}"</p>
              </div>
@@ -212,8 +218,22 @@ export default function PublicInvoiceViewPage() {
                </p>
                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">We look forward to serving you again.</p>
              </div>
+          </div>
 
-             <div className="grid grid-cols-2 gap-24 pt-10 pb-8 items-end" style={{ pageBreakInside: 'avoid' }}>
+          {/* 🛡️ SERVICES WE PROVIDE (NEW FOOTER SECTION) */}
+          <div className="px-12 pt-8 pb-6 border-t border-gray-100 bg-gray-50/30 shrink-0" style={{ pageBreakInside: 'avoid' }}>
+            <p className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-4 text-left">Services We Provide</p>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+              {providedServicesList.map((service, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={8} className="text-primary" strokeWidth={4} /></div>
+                  <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-12 py-10 grid grid-cols-2 gap-24 items-end shrink-0" style={{ pageBreakInside: 'avoid' }}>
                 <div className="text-center space-y-4">
                    <div className="border-b border-gray-300 h-10 flex items-center justify-center">
                    </div>
@@ -233,9 +253,8 @@ export default function PublicInvoiceViewPage() {
                       <p className="text-[7px] font-bold text-primary uppercase tracking-widest">Smart Clean Bangladesh</p>
                    </div>
                 </div>
-             </div>
           </div>
-          <div className="absolute bottom-2 w-full text-center">
+          <div className="pb-4 w-full text-center shrink-0">
              <p className="text-[7px] text-gray-300 uppercase font-bold">{footerDisclaimer}</p>
           </div>
         </div>

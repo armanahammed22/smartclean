@@ -39,7 +39,8 @@ import {
   FileSignature,
   FileText,
   Printer,
-  Zap
+  Zap,
+  CheckSquare
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -122,12 +123,12 @@ export default function AdminSettingsPage() {
     otpEnabled: false,
     productsEnabled: true,
     servicesEnabled: true,
-    // New Invoice Customization Fields
     invoiceHeaderPhone: '+8801919640422',
     invoiceHeaderEmail: 'billing@smartclean.com.bd',
     invoiceHeaderAddress: 'Mohakhali, Dhaka, Bangladesh',
     invoiceFooterNote: 'Payment should be cleared at site upon completion. For any billing query, call +8801919640422.',
-    invoiceFooterDisclaimer: 'This is a computer generated document and does not require a physical stamp for internal processing.'
+    invoiceFooterDisclaimer: 'This is a computer generated document and does not require a physical stamp for internal processing.',
+    invoiceProvidedServices: 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control'
   });
 
   const [menuOrder, setMenuOrder] = useState<string[]>(DEFAULT_MENU_KEYS);
@@ -427,10 +428,25 @@ export default function AdminSettingsPage() {
                         <Textarea value={formData.invoiceFooterNote} onChange={e => setFormData({...formData, invoiceFooterNote: e.target.value})} className="h-24 bg-gray-50 border-none rounded-xl text-xs leading-relaxed" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">System Disclaimer (Small)</Label>
+                        <Label className="text-[10px] font-black uppercase">System Disclaimer (Small)</Label>
                         <Textarea value={formData.invoiceFooterDisclaimer} onChange={e => setFormData({...formData, invoiceFooterDisclaimer: e.target.value})} className="h-20 bg-gray-50 border-none rounded-xl text-[10px] leading-relaxed" />
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* 📋 NEW: SERVICES WE PROVIDE LIST */}
+                <div className="space-y-6 pt-6 border-t">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest border-b pb-2 flex items-center gap-2"><CheckSquare size={14}/> Services We Provide (Footer List)</h4>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">List of Services (Comma Separated)</Label>
+                    <Textarea 
+                      value={formData.invoiceProvidedServices} 
+                      onChange={e => setFormData({...formData, invoiceProvidedServices: e.target.value})} 
+                      placeholder="Home Cleaning, Deep Cleaning, Office Cleaning..."
+                      className="h-24 bg-gray-50 border-none rounded-xl text-sm font-medium leading-relaxed" 
+                    />
+                    <p className="text-[9px] text-muted-foreground italic">These services will appear in the invoice footer grid. Use commas to separate items.</p>
                   </div>
                 </div>
 
