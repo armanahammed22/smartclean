@@ -229,6 +229,11 @@ export interface Invoice {
     email?: string | null;
     address: string;
   };
+  headerInfo?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
   items: InvoiceItem[];
   subtotal: number;
   tax: number;

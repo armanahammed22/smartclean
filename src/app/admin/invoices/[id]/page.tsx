@@ -22,7 +22,8 @@ import {
   FileText,
   Info,
   CheckCircle2,
-  Printer
+  Printer,
+  Heart
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -54,10 +55,11 @@ export default function AdminInvoiceDetailPage() {
   const signatureUrl = settings?.signatureUrl;
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
 
-  // Dynamic Header Details
-  const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212';
+  // Dynamic Logic: Manual Overrides > Global Settings > Hardcoded Fallbacks
+  const headerPhone = invoice.headerInfo?.phone || settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
+  const headerEmail = invoice.headerInfo?.email || settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
+  const headerAddress = invoice.headerInfo?.address || settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  
   const websiteName = settings?.websiteName || 'Smart Clean';
   const footerNote = settings?.invoiceFooterNote || 'Payment should be cleared at site upon completion.';
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
@@ -93,7 +95,7 @@ export default function AdminInvoiceDetailPage() {
             className="bg-white shadow-2xl relative mx-auto"
             style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'hidden' }}
           >
-            {/* 🖼️ BRANDED HEADER (Matching User Image) */}
+            {/* 🖼️ CORPORATE HEADER */}
             <div className="pt-12 px-12 pb-8 flex justify-between items-start border-b-2 border-gray-100">
                <div className="flex gap-4">
                  <div className="w-20 h-20 relative shrink-0">
@@ -111,7 +113,7 @@ export default function AdminInvoiceDetailPage() {
 
                <div className="flex-1 text-right sm:text-left space-y-1">
                   <p className="text-[9px] font-bold text-gray-600 leading-relaxed uppercase">{headerAddress}</p>
-                  <p className="text-[9px] font-bold text-gray-600 uppercase">Mobile No.: {headerPhone}</p>
+                  <p className="text-[9px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
                   <p className="text-[9px] font-bold text-gray-600 uppercase">E-mail: {headerEmail}</p>
                   <p className="text-[9px] font-bold text-gray-600 uppercase">Web: smartclean.com.bd</p>
                </div>
@@ -119,7 +121,7 @@ export default function AdminInvoiceDetailPage() {
 
             <div className="px-12 pt-8 space-y-8 relative z-10">
                <div className="text-center space-y-1">
-                  <h3 className="text-2xl font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">Invoice/Bill</h3>
+                  <h3 className="text-2xl font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">Invoice / Bill</h3>
                   <p className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>
                     ({isDue ? 'DUE' : 'PAID'})
                   </p>
@@ -189,30 +191,23 @@ export default function AdminInvoiceDetailPage() {
                         </tr>
                       )}
 
-                      {invoice.deliveryCharge > 0 && (
-                        <tr className="border-t border-[#081621] bg-white">
-                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621]">Extra/Logistics (+)</td>
-                          <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.deliveryCharge.toLocaleString()}</td>
-                        </tr>
-                      )}
-
-                      {/* 💰 FINAL PAYABLE BOX */}
+                      {/* 💰 PROFESSIONAL PAYABLE BOX */}
                       <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                        <td colSpan={3} className="py-5 px-8 text-right font-black uppercase text-sm tracking-[0.1em] border-r border-white/10 italic">
+                        <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-xs tracking-widest border-r border-white/10 italic">
                           Final Amount Payable
                         </td>
-                        <td colSpan={2} className="py-5 px-4 text-center">
-                          <span className="text-3xl font-black tracking-tighter leading-none whitespace-nowrap inline-block">৳{invoice.total.toLocaleString()} /-</span>
+                        <td className="py-4 px-4 text-center">
+                          <span className="text-xl font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
                         </td>
                       </tr>
 
-                      <tr className="border-t border-[#081621] bg-gray-50/50">
-                        <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-emerald-600 italic">Total Paid Amount</td>
-                        <td className="py-2 px-4 text-center font-black text-xs text-emerald-600">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
+                      <tr className="border-t border-[#081621] bg-emerald-50/50">
+                        <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-emerald-700 italic">Total Received Amount</td>
+                        <td className="py-2 px-4 text-center font-black text-xs text-emerald-700">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
                       </tr>
 
                       <tr className="border-t border-[#081621] bg-rose-50/50">
-                        <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-rose-600 italic">Net Due Balance</td>
+                        <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-rose-700 italic">Net Due Balance</td>
                         <td className="py-2 px-4 text-center font-black text-sm text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                       </tr>
                     </tbody>
@@ -224,15 +219,22 @@ export default function AdminInvoiceDetailPage() {
                   <p className="text-xs font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
                </div>
 
-               <div className="grid grid-cols-2 gap-12 pt-4 items-start" style={{ pageBreakInside: 'avoid' }}>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                      <Info size={14} className="text-[#1E5F7A] shrink-0 mt-0.5" />
-                      <p className="text-[8px] font-bold text-blue-900 leading-normal uppercase">{footerNote}</p>
-                    </div>
+               <div className="pt-4 text-center space-y-2">
+                 <p className="text-sm font-black text-primary flex items-center justify-center gap-2">
+                   <Heart size={16} fill="currentColor" /> Thank you for your business!
+                 </p>
+                 <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">We look forward to serving you again.</p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-24 pt-10 pb-8 items-end" style={{ pageBreakInside: 'avoid' }}>
+                  <div className="text-center space-y-4">
+                     <div className="border-b border-gray-300 h-10 flex items-center justify-center">
+                       {/* Placeholder for actual signature if ever needed */}
+                     </div>
+                     <p className="text-[10px] font-black uppercase text-[#081621] tracking-tighter">Customer Signature</p>
                   </div>
 
-                  <div className="flex flex-col items-center justify-end text-center space-y-4 pb-4">
+                  <div className="flex flex-col items-center justify-end text-center space-y-4">
                      <div className="h-12 w-28 relative border-b border-gray-100 pb-1 flex items-center justify-center">
                         {signatureUrl ? (
                           <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized />
@@ -241,7 +243,7 @@ export default function AdminInvoiceDetailPage() {
                         )}
                      </div>
                      <div>
-                        <p className="font-black text-[10px] uppercase text-[#081621] tracking-tighter">COO / Authorized Signatory</p>
+                        <p className="font-black text-[10px] uppercase text-[#081621] tracking-tighter">Authorized Signatory</p>
                         <p className="text-[7px] font-bold text-primary uppercase tracking-widest">Smart Clean Bangladesh</p>
                      </div>
                   </div>
