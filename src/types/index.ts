@@ -214,6 +214,7 @@ export interface InvoiceItem {
   price: number;
   quantity: number;
   type: 'product' | 'service' | 'addon' | 'package' | 'project_work';
+  unit?: string;
 }
 
 export interface Invoice {
@@ -231,6 +232,7 @@ export interface Invoice {
   items: InvoiceItem[];
   subtotal: number;
   tax: number;
+  vatPercent?: number;
   discount: number;
   deliveryCharge: number;
   total: number;

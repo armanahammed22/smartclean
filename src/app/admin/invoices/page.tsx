@@ -1,8 +1,9 @@
+
 'use client';
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import {
   Loader2, 
   Filter, 
   ReceiptText, 
+  TrendingUp, 
   Wallet, 
   Calendar, 
   AlertCircle,
@@ -29,10 +31,7 @@ import {
   User,
   Save,
   Edit,
-  Info,
-  TrendingUp,
-  Package,
-  Smartphone
+  Info
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -49,7 +48,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { useRouter } from 'next/navigation';
 
 function InvoicesListContent() {
   const db = useFirestore();
@@ -67,12 +66,11 @@ function InvoicesListContent() {
   
   const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
-  const [pricing, setPricing] = useState({ discount: 0, delivery: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
+  const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
 
-  // Business Intelligence KPI Logic
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };
     return {
@@ -80,7 +78,7 @@ function InvoicesListContent() {
       paidCount: invoices.filter(i => i.paymentStatus === 'Paid').length,
       unpaidCount: invoices.filter(i => i.paymentStatus !== 'Paid').length,
       revenue: invoices.filter(i => i.paymentStatus === 'Paid').reduce((acc, i) => acc + (i.total || 0), 0),
-      due: invoices.filter(i => i.paymentStatus !== 'Paid').reduce((acc, i) => acc + (i.total || 0), 0)
+      due: invoices.reduce((acc, i) => acc + (i.dueAmount || 0), 0)
     };
   }, [invoices]);
 
@@ -119,7 +117,6 @@ function InvoicesListContent() {
     }
   };
 
-  // Form Item Management
   const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const removeManualItem = (idx: number) => setManualItems(manualItems.filter((_, i) => i !== idx));
   const updateManualItem = (idx: number, field: string, val: any) => {
@@ -145,6 +142,8 @@ function InvoicesListContent() {
     setPricing({
       discount: inv.discount || 0,
       delivery: inv.deliveryCharge || 0,
+      vatPercent: inv.vatPercent || 0,
+      paidAmount: inv.paidAmount || 0,
       paymentStatus: inv.paymentStatus || 'Unpaid',
       paymentMethod: inv.paymentMethod || 'Cash'
     });
@@ -155,7 +154,7 @@ function InvoicesListContent() {
     setEditingInvoiceId(null);
     setCustomer({ name: '', phone: '', address: '' });
     setManualItems([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
-    setPricing({ discount: 0, delivery: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
+    setPricing({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
     setIsFormOpen(true);
   };
 
@@ -167,7 +166,9 @@ function InvoicesListContent() {
     }, 0);
   }, [manualItems]);
 
-  const totalPayable = Number((currentSubtotal + pricing.delivery - pricing.discount).toFixed(2));
+  const vatAmount = Number(((currentSubtotal - pricing.discount) * (pricing.vatPercent / 100)).toFixed(2));
+  const totalPayable = Number((currentSubtotal + pricing.delivery + vatAmount - pricing.discount).toFixed(2));
+  const currentDue = Number((totalPayable - pricing.paidAmount).toFixed(2));
 
   const handleSaveInvoice = async () => {
     if (!db) return;
@@ -188,15 +189,16 @@ function InvoicesListContent() {
           type: i.type 
         })),
         subtotal: currentSubtotal,
-        tax: 0,
+        vatPercent: Number(pricing.vatPercent),
+        tax: vatAmount,
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
         total: totalPayable,
-        paymentStatus: pricing.paymentStatus,
+        paidAmount: Number(pricing.paidAmount),
+        dueAmount: currentDue,
+        paymentStatus: currentDue <= 0 ? 'Paid' : pricing.paidAmount > 0 ? 'Partial' : 'Unpaid',
         paymentMethod: pricing.paymentMethod,
-        updatedAt: new Date().toISOString(),
-        paidAmount: pricing.paymentStatus === 'Paid' ? totalPayable : 0,
-        dueAmount: pricing.paymentStatus === 'Paid' ? 0 : totalPayable
+        updatedAt: new Date().toISOString()
       };
 
       if (editingInvoiceId) {
@@ -204,12 +206,12 @@ function InvoicesListContent() {
         toast({ title: "Invoice Updated" });
       } else {
         const countSnap = await getDocs(collection(db, 'invoices'));
-        const invoiceNumber = `INV-MAN-${(countSnap.size + 1).toString().padStart(4, '0')}`;
-        const newInvoice = { ...invoiceData, invoiceNumber, createdAt: new Date().toISOString() };
+        const invoiceNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
+        const newInvoice = { ...invoiceData, invoiceNumber, createdAt: new Date().toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
         const docRef = await addDoc(collection(db, 'invoices'), newInvoice);
         const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
         await updateDoc(doc(db, 'invoices', docRef.id), { publicLink });
-        toast({ title: "Invoice Created" });
+        toast({ title: "Invoice Generated" });
       }
       setIsFormOpen(false);
     } catch (e) {
@@ -224,22 +226,20 @@ function InvoicesListContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">Billing Registry</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-1">Audit-ready documentation for all sales and services</p>
+          <p className="text-muted-foreground text-sm font-medium mt-1">Audit-ready documentation and receivable tracking</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl h-11 border-gray-200 gap-2"><Download size={16} /> Export Audit</Button>
           <Button onClick={handleOpenCreate} className="rounded-xl font-black h-11 px-8 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest bg-primary text-white">
             <Plus size={18} /> New Manual Invoice
           </Button>
         </div>
       </div>
 
-      {/* 📊 KPI CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: "Total Volume", val: stats.total, icon: FileText, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Net Revenue", val: `৳${stats.revenue.toLocaleString()}`, icon: TrendingUp, bg: "bg-emerald-50", color: "text-emerald-600" },
-          { label: "Total Due", val: `৳${stats.due.toLocaleString()}`, icon: AlertCircle, bg: "bg-rose-50", color: "text-rose-600" },
+          { label: "Total Receivable", val: `৳${stats.due.toLocaleString()}`, icon: AlertCircle, bg: "bg-rose-50", color: "text-rose-600" },
           { label: "Settled", val: stats.paidCount, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
           { label: "Outstanding", val: stats.unpaidCount, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" }
         ].map((s, i) => (
@@ -265,75 +265,74 @@ function InvoicesListContent() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto">
-          <div className="min-w-full">
-            <Table>
-              <TableHeader className="bg-gray-50/50">
-                <TableRow className="border-none">
-                  <TableHead className="w-12 pl-6">
-                    <Checkbox 
-                      checked={filtered?.length ? selectedIds.length === filtered.length : false}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Settlement</TableHead>
-                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-                ) : filtered?.length ? (
-                  filtered.map((inv) => (
-                    <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
-                      <TableCell className="pl-6">
-                        <Checkbox 
-                          checked={selectedIds.includes(inv.id)}
-                          onCheckedChange={() => toggleSelect(inv.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
-                      <TableCell>
-                        <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
-                        <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
-                      </TableCell>
-                      <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="secondary" className={cn(
-                          "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
-                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : "bg-rose-50 text-rose-700 shadow-sm"
-                        )}>
-                          {inv.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right pr-8">
-                        <div className="flex justify-end gap-1.5">
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
-                            <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
-                            <Edit size={18} />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
-                            <Trash2 size={18} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <Table>
+            <TableHeader className="bg-gray-50/50">
+              <TableRow className="border-none">
+                <TableHead className="w-12 pl-6">
+                  <Checkbox 
+                    checked={filtered?.length ? selectedIds.length === filtered.length : false}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
+                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Status</TableHead>
+                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+              ) : filtered?.length ? (
+                filtered.map((inv) => (
+                  <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
+                    <TableCell className="pl-6">
+                      <Checkbox 
+                        checked={selectedIds.includes(inv.id)}
+                        onCheckedChange={() => toggleSelect(inv.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
+                    <TableCell>
+                      <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
+                    </TableCell>
+                    <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="secondary" className={cn(
+                        "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
+                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : 
+                        inv.paymentStatus === 'Partial' ? "bg-blue-50 text-blue-700 shadow-sm" : 
+                        "bg-rose-50 text-rose-700 shadow-sm"
+                      )}>
+                        {inv.paymentStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right pr-8">
+                      <div className="flex justify-end gap-1.5">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
+                          <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
+                          <Edit size={18} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
+                          <Trash2 size={18} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -347,7 +346,6 @@ function InvoicesListContent() {
                   {editingInvoiceId ? 'Update Billing Document' : 'Authorize Manual Invoice'}
                 </DialogTitle>
               </div>
-              <DialogDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Enrollment of direct service or product sales</DialogDescription>
             </div>
             <button type="button" onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
@@ -356,7 +354,7 @@ function InvoicesListContent() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-8">
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><User size={14}/> Client Verification</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><User size={14}/> Client Identity</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
@@ -421,43 +419,50 @@ function InvoicesListContent() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Delivery/Extra (৳)</Label>
-                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
-                        </div>
-                        <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-gray-400">Discount (৳)</Label>
                           <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs text-rose-600" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-gray-400">VAT (%)</Label>
+                          <Input type="number" value={pricing.vatPercent} onChange={e => setPricing({...pricing, vatPercent: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Protocol</Label>
-                          <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
-                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                            <SelectContent>
-                              {['Cash', 'bKash', 'Nagad', 'Bank'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <Label className="text-[10px] font-black uppercase text-gray-400">Delivery/Extra (৳)</Label>
+                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Settlement</Label>
-                          <Select value={pricing.paymentStatus} onValueChange={v => setPricing({...pricing, paymentStatus: v})}>
-                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                            <SelectContent>
-                              {['Paid', 'Unpaid'].map(s => <SelectItem key={s} value={s} className="font-black text-[9px] uppercase">{s}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <Label className="text-[10px] font-black uppercase text-gray-400">Paid Amount (৳)</Label>
+                          <Input type="number" value={pricing.paidAmount} onChange={e => setPricing({...pricing, paidAmount: parseFloat(e.target.value) || 0})} className="h-11 bg-emerald-50 border-none rounded-xl font-black text-emerald-600" />
                         </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Payment Protocol</Label>
+                        <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
+                          <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
+                          <SelectContent>
+                            {['Cash', 'bKash', 'Nagad', 'Bank'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
-                    <div className="pt-8 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-1 uppercase">Grand Total Payable</span>
-                        <span className="text-4xl font-black text-primary tracking-tighter">৳{totalPayable.toLocaleString()}</span>
+                    <div className="pt-8 border-t-2 border-dashed border-gray-200 space-y-4">
+                      <div className="flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-1 uppercase">Total Payable</span>
+                          <span className="text-3xl font-black text-primary tracking-tighter leading-none whitespace-nowrap">৳{totalPayable.toLocaleString()}</span>
+                        </div>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-3 py-1.5 rounded-lg shadow-inner">{pricing.vatPercent}% VAT</Badge>
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-3 py-1.5 rounded-lg shadow-inner">0% VAT</Badge>
+
+                      <div className="flex justify-between items-center p-4 bg-[#081621] text-white rounded-2xl shadow-xl">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Remaining Due</span>
+                        <span className="text-xl font-black text-rose-400">৳{currentDue.toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -483,11 +488,6 @@ function InvoicesListContent() {
     </div>
   );
 }
-
-const useRouter = () => {
-  const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
-  return router;
-};
 
 export default function InvoicesListPage() {
   return (
