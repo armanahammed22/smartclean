@@ -583,7 +583,7 @@ function InvoicesListContent() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
             </Button>
           </DialogFooter>
-        </div>
+        </DialogContent>
       </Dialog>
     </div>
   );
