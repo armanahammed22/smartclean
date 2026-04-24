@@ -71,7 +71,6 @@ function InvoicesListContent() {
   
   const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
-  const [headerInfo, setHeaderInfo] = useState({ phone: '', email: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
@@ -138,11 +137,6 @@ function InvoicesListContent() {
       phone: inv.customerInfo?.phone || '',
       address: inv.customerInfo?.address || ''
     });
-    setHeaderInfo({
-      phone: inv.headerInfo?.phone || '',
-      email: inv.headerInfo?.email || '',
-      address: inv.headerInfo?.address || ''
-    });
     setManualItems(inv.items?.map((i: any) => ({
       name: i.name,
       price: i.price,
@@ -164,7 +158,6 @@ function InvoicesListContent() {
   const handleOpenCreate = () => {
     setEditingInvoiceId(null);
     setCustomer({ name: '', phone: '', address: '' });
-    setHeaderInfo({ phone: '', email: '', address: '' });
     setManualItems([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
     setPricing({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
     setIsFormOpen(true);
@@ -193,7 +186,6 @@ function InvoicesListContent() {
     try {
       const invoiceData = {
         customerInfo: { ...customer },
-        headerInfo: { ...headerInfo },
         items: manualItems.map(i => ({ 
           name: i.name, 
           price: parseFloat(i.price) || 0, 
@@ -278,6 +270,11 @@ function InvoicesListContent() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        {selectedIds.length > 0 && (
+          <Button variant="destructive" className="rounded-xl h-12 px-6 font-black uppercase text-xs" onClick={handleBulkDelete} disabled={isBulkProcessing}>
+            Delete Selected ({selectedIds.length})
+          </Button>
+        )}
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
@@ -368,25 +365,8 @@ function InvoicesListContent() {
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-8">
+                
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Globe size={14}/> Header Identification (Overrides)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Manual Phone</Label>
-                      <Input value={headerInfo.phone} onChange={e => setHeaderInfo({...headerInfo, phone: e.target.value})} placeholder="Uses Website Settings if blank" className="h-11 bg-gray-50 border-none rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Manual Email</Label>
-                      <Input value={headerInfo.email} onChange={e => setHeaderInfo({...headerInfo, email: e.target.value})} placeholder="Uses Website Settings if blank" className="h-11 bg-gray-50 border-none rounded-xl" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Manual Address</Label>
-                    <Input value={headerInfo.address} onChange={e => setHeaderInfo({...headerInfo, address: e.target.value})} placeholder="Uses Website Settings if blank" className="h-11 bg-gray-50 border-none rounded-xl" />
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 border-b pb-2"><User size={14}/> Client Identity</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -502,7 +482,7 @@ function InvoicesListContent() {
                   <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
                     <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
                     <p className="text-[9px] font-bold text-blue-900 leading-tight uppercase">
-                      Changes published here will update the live public invoice link and PDF metadata instantly.
+                      Header information (Phone, Email, Address) is automatically pulled from Invoice Config settings.
                     </p>
                   </div>
                 </div>
