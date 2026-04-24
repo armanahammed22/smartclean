@@ -27,7 +27,9 @@ import {
   Plus,
   X,
   Package,
-  Smartphone
+  Smartphone,
+  Eye,
+  Edit
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -128,12 +130,12 @@ function OrdersListContent() {
   };
 
   const calculateTotals = () => {
-    const subtotal = selectedItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-    const total = subtotal + pricing.delivery - pricing.discount;
-    return { subtotal, total };
+    const subtotalValue = selectedItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const totalValue = subtotalValue + pricing.delivery - pricing.discount;
+    return { subtotalValue, totalValue };
   };
 
-  const { subtotal, total } = calculateTotals();
+  const { subtotalValue, totalValue } = calculateTotals();
 
   const handleCreateOrder = async () => {
     if (!db) return;
@@ -150,10 +152,10 @@ function OrdersListContent() {
         customerPhone: customer.phone,
         address: customer.address,
         items: selectedItems.map(i => ({ ...i, itemType: 'product' })),
-        subtotal,
+        subtotal: subtotalValue,
         discount: pricing.discount,
         deliveryCharge: pricing.delivery,
-        totalPrice: total,
+        totalPrice: totalValue,
         paymentMethod: paymentCategory === 'cod' ? 'Cash on Delivery' : (selectedGateway?.name || 'Online'),
         status: 'New',
         createdAt: new Date().toISOString()
@@ -189,6 +191,19 @@ function OrdersListContent() {
       toast({ variant: "destructive", title: "Invoice Error" });
     } finally {
       setIsProcessingInvoice(null);
+    }
+  };
+
+  const handleDeleteSingle = async (id: string) => {
+    if (!db || !confirm("Delete this order?")) return;
+    setIsSubmitting(true);
+    try {
+      await deleteDoc(doc(db, 'orders', id));
+      toast({ title: "Order Removed" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Delete Failed" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -274,9 +289,9 @@ function OrdersListContent() {
                       </Select>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex justify-end gap-1 opacity-100">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(order)} disabled={isProcessingInvoice === order.id}><FileText size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'orders', order.id))}><Trash2 size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(order.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -368,7 +383,7 @@ function OrdersListContent() {
                   <div className="space-y-4">
                     <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><Plus size={16} /> Bill Calculation</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotal.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-gray-500 uppercase"><span>Subtotal</span><span>৳{subtotalValue.toLocaleString()}</span></div>
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[10px] font-black uppercase text-gray-400">Delivery Fee</Label>
                         <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-9 bg-white text-right font-black rounded-lg shadow-sm" />
@@ -380,7 +395,7 @@ function OrdersListContent() {
                       <div className="pt-4 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                         <div className="flex flex-col">
                           <span className="text-[10px] font-black uppercase text-gray-400">Net Payable</span>
-                          <span className="text-4xl font-black text-primary tracking-tighter">৳{total.toLocaleString()}</span>
+                          <span className="text-4xl font-black text-primary tracking-tighter">৳{totalValue.toLocaleString()}</span>
                         </div>
                         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px]">BDT</Badge>
                       </div>

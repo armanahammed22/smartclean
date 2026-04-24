@@ -469,7 +469,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={group.id}
                 href={group.href || '#'}
-                scroll={false}
+                scroll={false} // 🛡️ CRITICAL: Prevent jump to top
                 onClick={closeMobile}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
@@ -516,7 +516,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={item.name}
                       href={item.href}
-                      scroll={false}
+                      scroll={false} // 🛡️ CRITICAL: Prevent jump to top
                       onClick={closeMobile}
                       className={cn(
                         "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 

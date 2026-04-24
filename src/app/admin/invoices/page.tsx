@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -77,7 +76,7 @@ function InvoicesListContent() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
-  // 🛡️ Fixed Index Error: Removed cross-field orderBy from queries
+  // 🛡️ Optimized Queries to avoid index error
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
   const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
@@ -86,7 +85,7 @@ function InvoicesListContent() {
   const { data: customersRaw } = useCollection(usersQuery);
   const { data: serviceCatalogRaw } = useCollection(servicesQuery);
 
-  // 🧠 In-memory sorting to avoid index requirements
+  // 🧠 In-memory sorting
   const customers = useMemo(() => {
     if (!customersRaw) return [];
     return [...customersRaw].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -136,6 +135,20 @@ function InvoicesListContent() {
       await batch.commit();
       setSelectedIds([]);
       toast({ title: "Bulk Removal Successful" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Action Failed" });
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleDeleteSingle = async (id: string) => {
+    if (!db || !confirm("Purge this record?")) return;
+    setIsBulkProcessing(true);
+    try {
+      await deleteDoc(doc(db, 'invoices', id));
+      setSelectedIds(prev => prev.filter(i => i !== id));
+      toast({ title: "Invoice Removed" });
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
     } finally {
@@ -369,14 +382,14 @@ function InvoicesListContent() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right pr-8">
-                        <div className="flex justify-end gap-1.5">
+                        <div className="flex justify-end gap-1.5 opacity-100">
                           <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
                             <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
                           </Button>
                           <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
                             <Edit size={18} />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDeleteSingle(inv.id)} disabled={isBulkProcessing} title="Purge Record">
                             <Trash2 size={18} />
                           </Button>
                         </div>
@@ -410,13 +423,12 @@ function InvoicesListContent() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-8">
                 
-                {/* 👤 CLIENT SELECTOR & INFO */}
+                {/* 👤 CLIENT SELECTOR */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 border-b pb-2"><Users size={14} className="text-primary" /> Client Selection</h4>
-                  
                   <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Select Existing Customer</Label>
+                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Select Registered Customer</Label>
                       <Select onValueChange={handleCustomerSelect}>
                         <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold shadow-sm">
                           <SelectValue placeholder="Search registered customers..." />
@@ -430,7 +442,6 @@ function InvoicesListContent() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Client Name</Label>
@@ -448,7 +459,7 @@ function InvoicesListContent() {
                   </div>
                 </div>
 
-                {/* 🛠️ ITEM PICKER & SCOPE */}
+                {/* 🛠️ ITEM PICKER */}
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 flex items-center gap-2"><Wrench size={14} className="text-indigo-600" /> Scope of Items</h4>
@@ -474,7 +485,7 @@ function InvoicesListContent() {
                       <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
                         <div className="space-y-1 w-full">
                           <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
-                          <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="e.g. Sofa Cleaning (4 Seat)" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
+                          <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="e.g. Sofa Cleaning" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                           <div className="space-y-1">
@@ -491,7 +502,7 @@ function InvoicesListContent() {
                             <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 bg-white border-none rounded-lg text-xs font-black text-primary" />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">{item.unit === 'Sqft' ? 'Area' : 'Qty'}</Label>
+                            <Label className="text-[8px] font-black uppercase text-gray-400">Qty/Area</Label>
                             <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', e.target.value)} className="h-9 bg-white border-none rounded-lg text-xs font-black" />
                           </div>
                           <div className="flex justify-end">
@@ -508,7 +519,6 @@ function InvoicesListContent() {
                 <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit sticky top-0">
                   <div className="space-y-6">
                     <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><Calculator size={16} /> Calculations</h3>
-                    
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -520,7 +530,6 @@ function InvoicesListContent() {
                           <Input type="number" value={pricing.vatPercent} onChange={e => setPricing({...pricing, vatPercent: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-gray-400">Delivery/Extra (৳)</Label>
@@ -531,9 +540,8 @@ function InvoicesListContent() {
                           <Input type="number" value={pricing.paidAmount} onChange={e => setPricing({...pricing, paidAmount: parseFloat(e.target.value) || 0})} className="h-11 bg-emerald-50 border-none rounded-xl font-black text-emerald-600" />
                         </div>
                       </div>
-
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">Payment Protocol</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Payment Method</Label>
                         <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
                           <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
                           <SelectContent className="rounded-xl">
@@ -549,9 +557,8 @@ function InvoicesListContent() {
                           <span className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-1 uppercase">Total Payable</span>
                           <span className="text-3xl font-black text-primary tracking-tighter leading-none whitespace-nowrap">৳{totalPayable.toLocaleString()}</span>
                         </div>
-                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-3 py-1.5 rounded-lg shadow-inner">{pricing.vatPercent}% VAT</Badge>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-3 py-1.5 rounded-lg">{pricing.vatPercent}% VAT</Badge>
                       </div>
-
                       <div className="flex justify-between items-center p-4 bg-[#081621] text-white rounded-2xl shadow-xl">
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary">Remaining Due</span>
                         <span className="text-xl font-black text-rose-400">৳{currentDue.toLocaleString()}</span>
@@ -568,15 +575,15 @@ function InvoicesListContent() {
                 </div>
               </div>
             </div>
-
-            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
-              <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
-              </Button>
-            </DialogFooter>
           </div>
-        </DialogContent>
+
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+            <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+            <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
+            </Button>
+          </DialogFooter>
+        </div>
       </Dialog>
     </div>
   );
