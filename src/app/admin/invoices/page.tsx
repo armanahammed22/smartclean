@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,11 +33,13 @@ import {
   Info,
   Globe,
   Mail,
-  Phone
+  Phone,
+  Package,
+  Smartphone
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import Link from 'next/navigation';
+import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -52,6 +53,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRouter } from 'next/navigation';
+import { getOrCreateInvoice } from '@/lib/invoice-utils';
 
 function InvoicesListContent() {
   const db = useFirestore();
@@ -279,71 +281,73 @@ function InvoicesListContent() {
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-gray-50/50">
-              <TableRow className="border-none">
-                <TableHead className="w-12 pl-6">
-                  <Checkbox 
-                    checked={filtered?.length ? selectedIds.length === filtered.length : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Status</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-              ) : filtered?.length ? (
-                filtered.map((inv) => (
-                  <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
-                    <TableCell className="pl-6">
-                      <Checkbox 
-                        checked={selectedIds.includes(inv.id)}
-                        onCheckedChange={() => toggleSelect(inv.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
-                    <TableCell>
-                      <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
-                    </TableCell>
-                    <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary" className={cn(
-                        "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
-                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : 
-                        inv.paymentStatus === 'Partial' ? "bg-blue-50 text-blue-700 shadow-sm" : 
-                        "bg-rose-50 text-rose-700 shadow-sm"
-                      )}>
-                        {inv.paymentStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1.5">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
-                          <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
-                          <Edit size={18} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
-                          <Trash2 size={18} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
+        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
+          <div className="min-w-full">
+            <Table>
+              <TableHeader className="bg-gray-50/50">
+                <TableRow>
+                  <TableHead className="w-12 pl-6">
+                    <Checkbox 
+                      checked={filtered?.length ? selectedIds.length === filtered.length : false}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Status</TableHead>
+                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+                ) : filtered?.length ? (
+                  filtered.map((inv) => (
+                    <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
+                      <TableCell className="pl-6">
+                        <Checkbox 
+                          checked={selectedIds.includes(inv.id)}
+                          onCheckedChange={() => toggleSelect(inv.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
+                      <TableCell>
+                        <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
+                        <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
+                      </TableCell>
+                      <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className={cn(
+                          "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
+                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : 
+                          inv.paymentStatus === 'Partial' ? "bg-blue-50 text-blue-700 shadow-sm" : 
+                          "bg-rose-50 text-rose-700 shadow-sm"
+                        )}>
+                          {inv.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-8">
+                        <div className="flex justify-end gap-1.5">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
+                            <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
+                            <Edit size={18} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
+                            <Trash2 size={18} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -364,7 +368,6 @@ function InvoicesListContent() {
           <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-8">
-                {/* 🏷️ HEADER OVERRIDES */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary border-b pb-2 flex items-center gap-2"><Globe size={14}/> Header Identification (Overrides)</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -505,15 +508,15 @@ function InvoicesListContent() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-            <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
-            <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
-            </Button>
-          </DialogFooter>
-        </div>
+            <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+              <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
       </Dialog>
     </div>
   );
