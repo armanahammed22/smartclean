@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -39,7 +38,8 @@ import {
   CheckCircle2,
   FileSignature,
   FileText,
-  Printer
+  Printer,
+  Zap
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
