@@ -31,7 +31,8 @@ import {
   Edit,
   Info,
   TrendingUp,
-  CreditCard
+  Package,
+  Smartphone
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,8 @@ import { getOrCreateInvoice } from '@/lib/invoice-utils';
 function InvoicesListContent() {
   const db = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
@@ -61,6 +64,7 @@ function InvoicesListContent() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
@@ -68,7 +72,7 @@ function InvoicesListContent() {
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
 
-  // Dynamic KPI Engine
+  // Business Intelligence KPI Logic
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };
     return {
@@ -115,7 +119,7 @@ function InvoicesListContent() {
     }
   };
 
-  // Form Handlers
+  // Form Item Management
   const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const removeManualItem = (idx: number) => setManualItems(manualItems.filter((_, i) => i !== idx));
   const updateManualItem = (idx: number, field: string, val: any) => {
@@ -155,7 +159,7 @@ function InvoicesListContent() {
     setIsFormOpen(true);
   };
 
-  const subtotal = useMemo(() => {
+  const currentSubtotal = useMemo(() => {
     return manualItems.reduce((acc, item) => {
       const p = parseFloat(item.price) || 0;
       const q = parseFloat(item.quantity) || 1;
@@ -163,7 +167,7 @@ function InvoicesListContent() {
     }, 0);
   }, [manualItems]);
 
-  const totalAmount = Number((subtotal + pricing.delivery - pricing.discount).toFixed(2));
+  const totalPayable = Number((currentSubtotal + pricing.delivery - pricing.discount).toFixed(2));
 
   const handleSaveInvoice = async () => {
     if (!db) return;
@@ -183,16 +187,16 @@ function InvoicesListContent() {
           unit: i.unit,
           type: i.type 
         })),
-        subtotal,
+        subtotal: currentSubtotal,
         tax: 0,
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
-        total: totalAmount,
+        total: totalPayable,
         paymentStatus: pricing.paymentStatus,
         paymentMethod: pricing.paymentMethod,
         updatedAt: new Date().toISOString(),
-        paidAmount: pricing.paymentStatus === 'Paid' ? totalAmount : 0,
-        dueAmount: pricing.paymentStatus === 'Paid' ? 0 : totalAmount
+        paidAmount: pricing.paymentStatus === 'Paid' ? totalPayable : 0,
+        dueAmount: pricing.paymentStatus === 'Paid' ? 0 : totalPayable
       };
 
       if (editingInvoiceId) {
@@ -264,81 +268,74 @@ function InvoicesListContent() {
         <Button variant="outline" className="h-12 px-6 gap-2 rounded-xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
       </div>
 
-      {selectedIds.length > 0 && (
-        <div className="bg-[#081621] text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-          <span className="text-[10px] font-black uppercase px-2">{selectedIds.length} INVOICES SELECTED</span>
-          <Button variant="ghost" onClick={handleBulkDelete} disabled={isBulkProcessing} className="text-rose-400 hover:text-white hover:bg-rose-600 font-black uppercase text-[10px] gap-2">
-            <Trash2 size={14} /> Delete permanently
-          </Button>
-        </div>
-      )}
-
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
         <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-gray-50/50">
-              <TableRow className="border-none">
-                <TableHead className="w-12 pl-6">
-                  <Checkbox 
-                    checked={filtered?.length ? selectedIds.length === filtered.length : false}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
-                <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621] text-center">Settlement</TableHead>
-                <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-              ) : filtered?.length ? (
-                filtered.map((inv) => (
-                  <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
-                    <TableCell className="pl-6">
-                      <Checkbox 
-                        checked={selectedIds.includes(inv.id)}
-                        onCheckedChange={() => toggleSelect(inv.id)}
-                      />
-                    </TableCell>
-                    <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
-                    <TableCell>
-                      <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
-                    </TableCell>
-                    <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary" className={cn(
-                        "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
-                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : "bg-rose-50 text-rose-700 shadow-sm"
-                      )}>
-                        {inv.paymentStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1.5">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
-                          <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
-                          <Edit size={18} />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => deleteDoc(doc(db!, 'invoices', inv.id))} title="Purge Record">
-                          <Trash2 size={18} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
+          <div className="min-w-full">
+            <Table>
+              <TableHeader className="bg-gray-50/50">
+                <TableRow className="border-none">
+                  <TableHead className="w-12 pl-6">
+                    <Checkbox 
+                      checked={filtered?.length ? selectedIds.length === filtered.length : false}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
+                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Settlement</TableHead>
+                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+                ) : filtered?.length ? (
+                  filtered.map((inv) => (
+                    <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
+                      <TableCell className="pl-6">
+                        <Checkbox 
+                          checked={selectedIds.includes(inv.id)}
+                          onCheckedChange={() => toggleSelect(inv.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
+                      <TableCell>
+                        <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
+                        <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
+                      </TableCell>
+                      <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className={cn(
+                          "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
+                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : "bg-rose-50 text-rose-700 shadow-sm"
+                        )}>
+                          {inv.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-8">
+                        <div className="flex justify-end gap-1.5">
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
+                            <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
+                            <Edit size={18} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => { if(confirm("Purge this record?")) deleteDoc(doc(db!, 'invoices', inv.id)); }} title="Purge Record">
+                            <Trash2 size={18} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-4xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
@@ -458,7 +455,7 @@ function InvoicesListContent() {
                     <div className="pt-8 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
                       <div className="flex flex-col">
                         <span className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-1 uppercase">Grand Total Payable</span>
-                        <span className="text-4xl font-black text-primary tracking-tighter">৳{totalAmount.toLocaleString()}</span>
+                        <span className="text-4xl font-black text-primary tracking-tighter">৳{totalPayable.toLocaleString()}</span>
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-3 py-1.5 rounded-lg shadow-inner">0% VAT</Badge>
                     </div>
@@ -481,11 +478,16 @@ function InvoicesListContent() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
             </Button>
           </DialogFooter>
-        </div>
+        </DialogContent>
       </Dialog>
     </div>
   );
 }
+
+const useRouter = () => {
+  const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
+  return router;
+};
 
 export default function InvoicesListPage() {
   return (
