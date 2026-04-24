@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -16,19 +15,18 @@ import {
   Globe,
   Mail,
   MapPin,
-  Printer,
   Wallet,
-  CheckCircle2,
-  XCircle,
   Zap,
   MessageCircle,
   History,
   FileText,
-  Info
+  Info,
+  Layers,
+  Palette
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { downloadInvoicePDF } from '@/lib/invoice-utils';
+import { downloadInvoicePDF, numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -38,6 +36,7 @@ export default function AdminInvoiceDetailPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [template, setTemplate] = useState<'classic' | 'modern'>('classic');
 
   const invoiceRef = useMemoFirebase(() => (db && id) ? doc(db, 'invoices', id as string) : null, [db, id]);
   const { data: invoice, isLoading } = useDoc(invoiceRef);
@@ -69,6 +68,7 @@ export default function AdminInvoiceDetailPage() {
   if (!invoice) return <div className="p-20 text-center uppercase font-black opacity-20">Secure Invoice Not Found</div>;
 
   const signatureUrl = settings?.signatureUrl;
+  const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
 
   return (
     <div className="space-y-8 pb-20 max-w-6xl mx-auto">
@@ -83,8 +83,22 @@ export default function AdminInvoiceDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <div className="bg-white border rounded-xl p-1 flex mr-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setTemplate('classic')}
+              className={cn("text-[9px] font-black uppercase rounded-lg px-4 h-8", template === 'classic' ? "bg-primary text-white" : "text-gray-400")}
+            >Classic</Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setTemplate('modern')}
+              className={cn("text-[9px] font-black uppercase rounded-lg px-4 h-8", template === 'modern' ? "bg-primary text-white" : "text-gray-400")}
+            >Modern</Button>
+          </div>
           <Button variant="outline" className="gap-2 font-bold h-11 px-6 rounded-xl" onClick={shareWhatsApp}>
-            <MessageCircle size={18} className="text-green-600" /> Share via WhatsApp
+            <MessageCircle size={18} className="text-green-600" /> WhatsApp
           </Button>
           <Button 
             className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 bg-[#1E5F7A] hover:bg-[#15435a]" 
@@ -97,274 +111,255 @@ export default function AdminInvoiceDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* 📄 CORPORATE INVOICE RENDER AREA */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 overflow-x-auto no-scrollbar pb-10">
           <div 
             id="invoice-render-area" 
-            className="bg-white shadow-2xl overflow-hidden relative mx-auto"
+            className={cn(
+              "bg-white shadow-2xl relative mx-auto",
+              template === 'classic' ? "border-t-[15px] border-[#1E5F7A]" : "border-t-[10px] border-[#081621]"
+            )}
             style={{ width: '210mm', minHeight: '297mm', color: '#333' }}
           >
-            {/* Design Header Waves */}
-            <div className="absolute top-0 right-0 p-8 flex flex-col items-end gap-2 z-10 text-[10px] font-bold text-[#1E5F7A]">
-              <div className="flex items-center gap-2"><Phone size={12}/> 01919640422</div>
-              <div className="flex items-center gap-2"><Mail size={12}/> smartclean422@gmail.com</div>
-              <div className="flex items-center gap-2"><Globe size={12}/> www.smartclean.com.bd</div>
-            </div>
+            {/* Header Strategy */}
+            {template === 'classic' ? (
+              <div className="relative pt-10 px-12">
+                 <div className="flex items-start justify-between mb-12">
+                    <div className="flex items-start gap-4">
+                      <div className="w-20 h-20 relative bg-white rounded-2xl p-1 shadow-sm border border-gray-50">
+                         <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+                      </div>
+                      <div className="pt-2">
+                        <h2 className="text-3xl font-black text-[#1E5F7A] tracking-tighter italic leading-none">{settings?.websiteName || 'Smart Clean'}</h2>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Professional Cleaning Solutions</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1.5 text-[10px] font-bold text-[#1E5F7A]">
+                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border"><Phone size={12}/> {settings?.contactPhone}</div>
+                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border"><Mail size={12}/> {settings?.contactEmail}</div>
+                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border"><Globe size={12}/> {settings?.websiteUrl?.replace('https://', '')}</div>
+                    </div>
+                 </div>
+                 {/* Background Waves */}
+                 <div className="absolute top-0 left-0 right-0 h-40 pointer-events-none opacity-[0.03] z-0">
+                    <svg viewBox="0 0 1440 320" className="w-full h-full"><path fill="#1E5F7A" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
+                 </div>
+              </div>
+            ) : (
+              <div className="pt-16 px-16 flex justify-between items-center mb-20">
+                 <div className="space-y-1">
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">{settings?.websiteName}</h2>
+                    <p className="text-xs font-bold text-primary uppercase tracking-[0.3em]">Official Invoice</p>
+                 </div>
+                 <div className="w-24 h-24 relative">
+                    <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+                 </div>
+              </div>
+            )}
 
-            <div className="pt-8 px-12 relative">
-               <div className="flex items-start gap-4 mb-8">
-                  <div className="w-16 h-16 relative">
-                     <Image src="https://picsum.photos/seed/smartclean-logo/512/512" alt="Logo" fill className="object-contain" unoptimized />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-black text-[#1E5F7A] tracking-tighter italic leading-none">Smart Clean</h2>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Professional Cleaning Solutions</p>
-                  </div>
-               </div>
-
-               {/* Wave Decoration */}
-               <div className="absolute top-24 left-0 right-0 h-12 pointer-events-none opacity-20">
-                  <svg viewBox="0 0 1440 320" className="w-full h-full"><path fill="#22C55E" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,144C672,139,768,181,864,181.3C960,181,1056,139,1152,122.7C1248,107,1344,117,1392,122.7L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>
-               </div>
-            </div>
-
-            <div className="px-16 pt-16 space-y-12">
+            <div className="px-16 space-y-12 relative z-10">
                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <p className="text-xs font-black text-[#1E5F7A] uppercase tracking-widest">Billed To:</p>
-                    <div className="space-y-0.5">
-                        <p className="text-lg font-black text-[#081621] uppercase leading-none">{invoice.customerInfo.name}</p>
-                        <p className="text-xs font-bold text-gray-700">{invoice.customerInfo.phone}</p>
-                        <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-[250px]">{invoice.customerInfo.address}</p>
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-1 w-fit">Client Information</p>
+                    <div className="space-y-1">
+                        <p className="text-xl font-black text-[#081621] uppercase leading-tight">{invoice.customerInfo.name}</p>
+                        <p className="text-xs font-bold text-gray-700 flex items-center gap-2"><Phone size={10} className="text-primary"/> {invoice.customerInfo.phone}</p>
+                        <p className="text-[11px] text-gray-500 font-medium leading-relaxed max-w-[300px] flex items-start gap-2 mt-2">
+                           <MapPin size={10} className="text-primary mt-1 shrink-0"/> {invoice.customerInfo.address}
+                        </p>
                     </div>
                   </div>
-                  <div className="text-right space-y-2">
-                    <div className="space-y-0.5">
-                        <p className="text-[10px] font-black text-[#1E5F7A] uppercase">Invoice Number</p>
-                        <p className="text-sm font-black text-[#081621]">{invoice.invoiceNumber}</p>
+                  <div className="text-right space-y-6">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-widest">Tracking Number</p>
+                        <p className="text-lg font-black text-[#081621] font-mono">{invoice.invoiceNumber}</p>
                     </div>
-                    <div className="space-y-0.5">
-                        <p className="text-[10px] font-black text-[#1E5F7A] uppercase">Date of Issue</p>
-                        <p className="text-sm font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd/MM/yyyy')}</p>
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-widest">Date of Issue</p>
+                        <p className="text-sm font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
                     </div>
                   </div>
                </div>
 
-               <div className="text-center">
-                  <h3 className="text-xl font-black uppercase text-[#1E5F7A] border-b-2 border-[#1E5F7A] inline-block pb-1 tracking-tight">
+               <div className="text-center py-4 border-y border-gray-100 bg-gray-50/50 rounded-xl">
+                  <h3 className="text-lg font-black uppercase text-[#1E5F7A] tracking-[0.2em]">
                     {invoice.projectId ? 'OFFICIAL SERVICE QUOTATION' : 'OFFICIAL SALES INVOICE'}
                   </h3>
                </div>
 
-               {/* Professional Optimized Table */}
-               <div className="overflow-hidden border-2 border-black rounded-lg">
+               {/* Table with fixed columns */}
+               <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm">
                   <table className="w-full border-collapse">
                     <thead className="bg-[#00A8B5] text-white">
                       <tr>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase w-12 text-center">SL.</th>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-left">Service Description</th>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-center w-24">Qty</th>
-                        <th className="py-2 px-3 text-[10px] font-black border-r border-black uppercase text-center w-28">Rate (BDT)</th>
-                        <th className="py-2 px-3 text-[10px] font-black uppercase text-center w-28">Amount (BDT)</th>
+                        <th className="py-4 px-4 text-[10px] font-black border-r border-[#081621] uppercase w-14 text-center">SL.</th>
+                        <th className="py-4 px-4 text-[10px] font-black border-r border-[#081621] uppercase text-left">Scope of Work / Description</th>
+                        <th className="py-4 px-4 text-[10px] font-black border-r border-[#081621] uppercase text-center w-24">Qty/Unit</th>
+                        <th className="py-4 px-4 text-[10px] font-black border-r border-[#081621] uppercase text-center w-28">Rate (৳)</th>
+                        <th className="py-4 px-4 text-[10px] font-black uppercase text-center w-32">Total (৳)</th>
                       </tr>
                     </thead>
-                    <tbody className="text-[11px] font-medium">
+                    <tbody className="text-[11px] font-medium bg-white">
                       {invoice.items.map((item: any, i: number) => (
-                        <tr key={i} className="border-t border-black">
-                          <td className="py-4 text-center border-r border-black font-black">{i + 1}</td>
-                          <td className="py-4 px-3 border-r border-black font-black uppercase">
+                        <tr key={i} className="border-t border-[#081621]">
+                          <td className="py-4 text-center border-r border-[#081621] font-black text-gray-400">{i + 1}</td>
+                          <td className="py-4 px-4 border-r border-[#081621] font-black uppercase text-gray-800">
                             <span>{item.name}</span>
                           </td>
-                          <td className="py-4 text-center border-r border-black font-black uppercase">
-                            {item.quantity} {item.unit || (item.type === 'service' || item.type === 'addon' ? 'Pcs' : 'Qty')}
+                          <td className="py-4 text-center border-r border-[#081621] font-black text-gray-700">
+                            {item.quantity} <span className="text-[8px] font-bold text-gray-400 ml-0.5">{item.unit || 'Qty'}</span>
                           </td>
-                          <td className="py-4 text-center border-r border-black font-black">
-                            ৳{item.price?.toLocaleString()}
+                          <td className="py-4 text-center border-r border-[#081621] font-black text-gray-700">
+                            {item.price?.toLocaleString()}
                           </td>
-                          <td className="py-4 text-center font-black">
-                            ৳{(item.price * item.quantity).toLocaleString()}/-
+                          <td className="py-4 text-center font-black text-gray-900 bg-gray-50/30">
+                            {(item.price * item.quantity).toLocaleString()}/-
                           </td>
                         </tr>
                       ))}
                       
-                      {/* Pricing Calculation Section */}
-                      <tr className="border-t-2 border-black bg-gray-50">
-                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Subtotal</td>
-                        <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.subtotal.toLocaleString()} /-</td>
+                      {/* Price Summary Panel */}
+                      <tr className="border-t-2 border-[#081621] bg-gray-50/80">
+                        <td colSpan={4} className="py-3 px-6 text-right font-black uppercase text-[10px] border-r border-[#081621]">Subtotal Amount</td>
+                        <td className="py-3 px-4 text-center font-black text-sm">৳{invoice.subtotal.toLocaleString()}</td>
                       </tr>
                       {invoice.discount > 0 && (
-                        <tr className="border-t border-black">
-                          <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black text-rose-600">Discount</td>
-                          <td className="py-2 px-4 text-center font-black text-xs text-rose-600">-৳{invoice.discount.toLocaleString()} /-</td>
+                        <tr className="border-t border-[#081621] bg-white">
+                          <td colSpan={4} className="py-3 px-6 text-right font-black uppercase text-[10px] border-r border-[#081621] text-rose-600">Promo Discount (-)</td>
+                          <td className="py-3 px-4 text-center font-black text-sm text-rose-600">৳{invoice.discount.toLocaleString()}</td>
                         </tr>
                       )}
-                      <tr className="border-t border-black">
-                        <td colSpan={4} className="py-2 px-4 text-right font-black uppercase text-[10px] border-r border-black">Tax / VAT (0%)</td>
-                        <td className="py-2 px-4 text-center font-black text-xs">৳0 /-</td>
-                      </tr>
-                      <tr className="border-t-2 border-black bg-[#1E5F7A] text-white">
-                        <td colSpan={4} className="py-3 px-4 text-right font-black uppercase text-[12px] border-r border-black">Grand Total Payable</td>
-                        <td className="py-3 px-4 text-center font-black text-lg">৳{invoice.total.toLocaleString()} /-</td>
+                      {invoice.deliveryCharge > 0 && (
+                        <tr className="border-t border-[#081621] bg-white">
+                          <td colSpan={4} className="py-3 px-6 text-right font-black uppercase text-[10px] border-r border-[#081621]">Delivery / Extra Charge (+)</td>
+                          <td className="py-3 px-4 text-center font-black text-sm">৳{invoice.deliveryCharge.toLocaleString()}</td>
+                        </tr>
+                      )}
+                      <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
+                        <td colSpan={4} className="py-5 px-6 text-right font-black uppercase text-[14px] border-r border-white/20 tracking-widest italic">Net Payable Amount</td>
+                        <td className="py-5 px-4 text-center font-black text-2xl tracking-tighter">৳{invoice.total.toLocaleString()} /-</td>
                       </tr>
                     </tbody>
                   </table>
                </div>
 
-               {/* Payment Info Section */}
-               <div className="grid grid-cols-2 gap-8 items-start">
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                        <h4 className="text-[10px] font-black uppercase text-[#1E5F7A] border-b border-dashed border-[#1E5F7A] w-fit mb-2">Payment Info:</h4>
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-gray-400 uppercase w-20">Method:</span>
-                                <span className="text-xs font-black text-gray-800 uppercase">{invoice.paymentMethod || 'Cash / Online'}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-gray-400 uppercase w-20">Status:</span>
-                                <Badge className={cn(
-                                    "text-[9px] font-black uppercase border-none px-2 h-5",
-                                    invoice.paymentStatus === 'Paid' ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                                )}>
-                                    {invoice.paymentStatus}
-                                </Badge>
-                            </div>
-                        </div>
+               {/* Amount In Words Section */}
+               <div className="p-6 bg-gray-50 rounded-2xl border-2 border-[#081621] flex flex-col gap-1">
+                  <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Total Amount In Words:</p>
+                  <p className="text-sm font-black text-[#081621] italic">" {numberToWords(invoice.total)} "</p>
+               </div>
+
+               {/* Footing Info */}
+               <div className="grid grid-cols-2 gap-12 items-start">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-black uppercase text-[#1E5F7A] tracking-widest border-b border-dashed border-[#1E5F7A] w-fit mb-2">Terms & Conditions:</h4>
+                        <ul className="space-y-1.5 list-disc pl-4 text-[9px] font-bold text-gray-500 uppercase leading-tight">
+                            <li>Payment must be cleared at site.</li>
+                            <li>Water & electricity provided by client.</li>
+                            <li>Valid for 7 days from issue date.</li>
+                        </ul>
                     </div>
                   </div>
 
-                  <div className="text-center space-y-4">
-                     <div className="h-16 w-32 relative mx-auto">
+                  <div className="text-center space-y-6 flex flex-col items-center">
+                     <div className="h-20 w-40 relative flex items-center justify-center border-b border-gray-100 pb-2">
                         {signatureUrl ? (
-                          <Image src={signatureUrl} alt="Authorized Signature" fill className="object-contain" unoptimized />
+                          <Image src={signatureUrl} alt="Signature" fill className="object-contain" unoptimized />
                         ) : (
-                          <div className="h-full w-full border-2 border-dashed border-gray-200 flex items-center justify-center text-[8px] font-black text-gray-300 uppercase">NO SIG</div>
+                          <div className="text-[10px] font-black text-gray-200 border-2 border-dashed p-4 uppercase">NO SIGNATURE</div>
                         )}
                      </div>
-                     <div className="space-y-0.5">
-                        <p className="font-black text-sm uppercase">Authorized Signature</p>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Smart Clean Bangladesh</p>
+                     <div className="space-y-1">
+                        <p className="font-black text-sm uppercase text-[#081621]">Authorized Signature</p>
+                        <p className="text-[9px] font-bold text-primary uppercase tracking-widest">Smart Clean Bangladesh</p>
                      </div>
-                  </div>
-               </div>
-
-               <div className="pt-8 border-t border-gray-100">
-                  <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                    <Info size={16} className="text-[#1E5F7A] shrink-0 mt-0.5" />
-                    <p className="text-[9px] font-bold text-blue-900 leading-normal uppercase">
-                        This is a system generated document. For any query regarding this invoice, please contact our support team at 01919640422.
-                    </p>
                   </div>
                </div>
             </div>
 
-            {/* Bottom Address Bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-16 border-t-2 border-[#1E5F7A] px-12 flex items-center justify-between bg-white">
-               <div className="flex items-center gap-2">
-                  <MapPin size={14} className="text-[#1E5F7A]" />
-                  <p className="text-[10px] font-black text-gray-600 uppercase">GP.Ja-66/2, Wireless Gate, Mohakhali, Dhaka-1212</p>
+            {/* Footer Strip */}
+            <div className="absolute bottom-0 left-0 right-0 h-20 border-t-4 border-[#1E5F7A] px-12 flex items-center justify-between bg-white overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-full bg-[#1E5F7A] opacity-5 -skew-x-12 translate-x-10" />
+               <div className="flex items-center gap-3 relative z-10">
+                  <div className="p-2 bg-primary text-white rounded-lg"><MapPin size={14} /></div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-800 uppercase leading-none mb-1">Corporate Office</p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase">{settings?.address || 'Wireless Gate, Mohakhali, Dhaka'}</p>
+                  </div>
                </div>
-               <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-tighter italic">Clean Life, Smart Life.</p>
+               <p className="text-[11px] font-black text-primary uppercase tracking-widest italic relative z-10">Clean Life, Smart Life.</p>
             </div>
           </div>
         </div>
 
-        {/* 🛠️ MANAGEMENT SIDEBAR */}
+        {/* 🛠️ CONTROLS SIDEBAR */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-sm bg-[#081621] text-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-white/5 border-b border-white/5 p-6">
               <CardTitle className="text-base font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Wallet size={18} /> Payout Control
+                <Wallet size={18} /> Payout Actions
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase opacity-40">Current Payment Status</p>
-                <div className="flex items-center gap-3">
-                  <Badge className={cn(
-                    "h-10 px-4 text-xs font-black uppercase border-none",
-                    invoice.paymentStatus === 'Paid' ? "bg-green-50 text-white" : "bg-red-50 text-white"
-                  )}>
-                    {invoice.paymentStatus}
-                  </Badge>
-                  {invoice.paymentStatus !== 'Paid' && (
-                    <Button size="sm" onClick={() => handleUpdateStatus('Paid')} className="bg-white text-[#081621] hover:bg-gray-100 font-black h-10 px-4 rounded-xl uppercase text-[10px]">
-                      Mark as Paid
-                    </Button>
-                  )}
-                  {invoice.paymentStatus === 'Paid' && (
-                    <Button size="sm" variant="ghost" onClick={() => handleUpdateStatus('Unpaid')} className="text-rose-400 hover:text-rose-300 font-black uppercase text-[10px]">
-                      Revert
-                    </Button>
-                  )}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black uppercase opacity-40">Payment Status</p>
+                   <Badge className={cn(
+                    "text-[10px] font-black uppercase border-none px-3 h-7 rounded-lg",
+                    invoice.paymentStatus === 'Paid' ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                   )}>{invoice.paymentStatus}</Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button size="sm" onClick={() => handleUpdateStatus('Paid')} className="bg-emerald-600 hover:bg-emerald-700 font-black h-11 rounded-xl uppercase text-[10px]">
+                    Confirm Paid
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleUpdateStatus('Unpaid')} className="bg-white/5 border-white/10 text-white font-black h-11 rounded-xl uppercase text-[10px]">
+                    Reset
+                  </Button>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/5 space-y-4">
-                 <div className="flex justify-between items-center text-[10px] font-black uppercase opacity-60">
-                    <span>Subtotal:</span>
-                    <span>৳{invoice.subtotal.toLocaleString()}</span>
-                 </div>
-                 {invoice.discount > 0 && (
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-rose-400">
-                        <span>Discount:</span>
-                        <span>-৳{invoice.discount.toLocaleString()}</span>
-                    </div>
-                 )}
-                 <div className="flex justify-between items-center text-[10px] font-black uppercase opacity-60">
-                    <span>Tax (VAT):</span>
-                    <span>৳0</span>
-                 </div>
-                 <div className="flex justify-between items-center text-sm font-black uppercase text-primary border-t border-white/5 pt-4">
-                    <span>Net Payable:</span>
-                    <span>৳{invoice.total.toLocaleString()}</span>
-                 </div>
+              <div className="pt-6 border-t border-white/5">
+                <p className="text-[10px] font-black uppercase opacity-40 mb-4">Template Settings</p>
+                <div className="grid grid-cols-2 gap-3">
+                   <button 
+                    onClick={() => setTemplate('classic')}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all",
+                      template === 'classic' ? "border-primary bg-primary/10" : "border-white/5 hover:border-white/10"
+                    )}
+                   >
+                     <Palette size={18} className={template === 'classic' ? "text-primary" : "text-gray-500"}/>
+                     <span className="text-[9px] font-black uppercase">Classic</span>
+                   </button>
+                   <button 
+                    onClick={() => setTemplate('modern')}
+                    className={cn(
+                      "p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all",
+                      template === 'modern' ? "border-primary bg-primary/10" : "border-white/5 hover:border-white/10"
+                    )}
+                   >
+                     <Layers size={18} className={template === 'modern' ? "text-primary" : "text-gray-500"}/>
+                     <span className="text-[9px] font-black uppercase">Modern</span>
+                   </button>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
-             <CardHeader className="bg-gray-50/50 p-6 border-b flex items-center justify-between">
-                <CardTitle className="text-sm font-black uppercase">Document History</CardTitle>
-                <History size={16} className="text-primary"/>
-             </CardHeader>
-             <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><CalendarIcon size={14}/></div>
-                    <div><p className="text-[10px] font-black text-gray-400 uppercase">Created On</p><p className="text-xs font-bold">{format(new Date(invoice.createdAt), 'PP p')}</p></div>
+          <Card className="border-none shadow-sm bg-blue-50/50 rounded-3xl p-8 border border-blue-100">
+             <div className="flex items-start gap-4">
+                <div className="p-3 bg-white rounded-2xl shadow-sm text-blue-600"><Info size={24}/></div>
+                <div className="space-y-2">
+                   <h4 className="text-sm font-black uppercase text-blue-900 tracking-tight">Printing Hint</h4>
+                   <p className="text-[11px] text-blue-800/70 leading-relaxed font-medium uppercase">
+                      For best results, download as PDF first. This ensures the letterhead Waves and high-resolution logo are preserved correctly for client viewing.
+                   </p>
                 </div>
-                {invoice.updatedAt && (
-                   <div className="flex items-center gap-3">
-                       <div className="p-2 bg-amber-50 text-amber-600 rounded-lg"><Zap size={14}/></div>
-                       <div><p className="text-[10px] font-black text-gray-400 uppercase">Last Activity</p><p className="text-xs font-bold">{format(new Date(invoice.updatedAt), 'PP p')}</p></div>
-                   </div>
-                )}
-             </CardContent>
+             </div>
           </Card>
         </div>
       </div>
     </div>
-  );
-}
-
-function CalendarIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-      <line x1="16" x2="16" y1="2" y2="6" />
-      <line x1="8" x2="8" y1="2" y2="6" />
-      <line x1="3" x2="21" y1="10" y2="10" />
-    </svg>
   );
 }

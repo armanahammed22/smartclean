@@ -5,6 +5,31 @@ import { Firestore } from 'firebase/firestore';
 import { Invoice, InvoiceItem } from '@/types';
 
 /**
+ * Utility to convert number to English Words
+ */
+export function numberToWords(amount: number): string {
+  const words = [
+    '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'
+  ];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  const convert = (n: number): string => {
+    if (n < 20) return words[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + words[n % 10] : '');
+    if (n < 1000) return words[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + convert(n % 100) : '');
+    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + convert(n % 1000) : '');
+    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + convert(n % 100000) : '');
+    return n.toString();
+  };
+
+  const integerPart = Math.floor(amount);
+  if (integerPart === 0) return 'Zero Taka Only';
+  
+  return convert(integerPart) + ' Taka Only';
+}
+
+/**
  * Utility to generate Invoice from an Order or Booking
  */
 export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any): Promise<string> {
@@ -25,34 +50,12 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     name: i.name,
     price: i.price,
     quantity: i.quantity || 1,
-    type: i.itemType || 'product'
+    type: i.itemType || 'product',
+    unit: i.unit || 'Qty'
   })) || [];
 
-  // Service specific items
-  if (sourceData.package) {
-    items.push({
-      id: sourceData.package.id || 'pkg',
-      name: `Package: ${sourceData.package.name}`,
-      price: sourceData.package.price || 0,
-      quantity: 1,
-      type: 'package'
-    });
-  }
-
-  if (sourceData.selectedAddOns?.length) {
-    sourceData.selectedAddOns.forEach((a: any) => {
-      items.push({
-        id: a.id,
-        name: `Add-on: ${a.name}`,
-        price: a.price || 0,
-        quantity: 1,
-        type: 'addon'
-      });
-    });
-  }
-
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = 0; // VAT confirmed 0
+  const tax = 0; 
   const delivery = sourceData.deliveryCharge || sourceData.additionalCharge || 0;
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
   const total = subtotal + tax + delivery - discount;
@@ -77,7 +80,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     deliveryCharge: delivery,
     total,
     paymentStatus: sourceData.status === 'Delivered' || sourceData.status === 'Completed' ? 'Paid' : 'Unpaid',
-    paymentMethod: sourceData.paymentMethod,
+    paymentMethod: sourceData.paymentMethod || 'Cash',
     paidAmount: 0,
     dueAmount: total,
     createdAt: new Date().toISOString(),
@@ -103,7 +106,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
     margin: 0,
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
