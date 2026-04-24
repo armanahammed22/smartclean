@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -83,7 +82,7 @@ export default function PublicInvoiceViewPage() {
         <div 
           id="public-invoice-render" 
           className="bg-white shadow-2xl relative border-t-[15px] border-[#1E5F7A]"
-          style={{ width: '210mm', height: '297mm', color: '#333', overflow: 'hidden' }}
+          style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'hidden' }}
         >
           {/* Company Meta */}
           <div className="absolute top-0 right-0 p-10 flex flex-col items-end gap-1 z-10 text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">
@@ -154,30 +153,44 @@ export default function PublicInvoiceViewPage() {
                       <tr key={i} className="border-t border-[#081621]">
                         <td className="py-3 text-center border-r border-[#081621] font-black text-gray-400">{i + 1}</td>
                         <td className="py-3 px-4 border-r border-[#081621] font-black uppercase text-gray-800">{item.name}</td>
-                        <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">{item.quantity} <span className="text-[7px] uppercase opacity-50">{item.unit || 'Qty'}</span></td>
+                        <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">
+                          {item.quantity} <span className="text-[7px] uppercase opacity-40 font-bold ml-0.5">{item.unit || 'Qty'}</span>
+                        </td>
                         <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">{item.price?.toLocaleString()}</td>
                         <td className="py-3 text-center font-black text-gray-900 bg-gray-50/20">{(item.price * item.quantity).toLocaleString()}/-</td>
                       </tr>
                     ))}
+                    
                     <tr className="border-t border-[#081621] bg-gray-50/80">
                       <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621]">Gross Amount</td>
                       <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                     </tr>
+                    
                     {invoice.discount > 0 && (
                       <tr className="border-t border-[#081621] bg-white">
                         <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-rose-600">Promo Savings (-)</td>
                         <td className="py-2 px-4 text-center font-black text-xs text-rose-600">৳{invoice.discount.toLocaleString()}</td>
                       </tr>
                     )}
+                    
                     {invoice.deliveryCharge > 0 && (
                       <tr className="border-t border-[#081621] bg-white">
                         <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621]">Logistics / Extra (+)</td>
                         <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.deliveryCharge.toLocaleString()}</td>
                       </tr>
                     )}
+                    
+                    {/* 💰 FINAL PAYABLE BOX - Fixed Size and Style */}
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white shadow-inner">
-                      <td colSpan={4} className="py-4 px-6 text-right font-black uppercase text-[12px] border-r border-white/20 tracking-widest italic">Net Amount Payable</td>
-                      <td className="py-4 px-4 text-center font-black text-xl tracking-tighter shadow-lg">৳{invoice.total.toLocaleString()} /-</td>
+                      <td colSpan={3} className="py-5 px-8 text-right font-black uppercase text-sm tracking-[0.1em] border-r border-white/10 italic">
+                        Final Amount Payable
+                      </td>
+                      <td colSpan={2} className="py-5 px-4 text-center bg-[#1E5F7A]">
+                        <div className="flex flex-col items-center justify-center">
+                          <span className="text-3xl font-black tracking-tighter leading-none">৳{invoice.total.toLocaleString()}</span>
+                          <span className="text-[10px] font-black opacity-60 mt-1 uppercase tracking-widest">/- Only</span>
+                        </div>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -188,7 +201,7 @@ export default function PublicInvoiceViewPage() {
                 <p className="text-xs font-black text-[#081621] italic tracking-tight">" {numberToWords(invoice.total)} "</p>
              </div>
 
-             <div className="grid grid-cols-2 gap-12 pt-2 items-start" style={{ pageBreakInside: 'avoid' }}>
+             <div className="grid grid-cols-2 gap-12 pt-4 items-start" style={{ pageBreakInside: 'avoid' }}>
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <h4 className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-widest border-b border-dashed border-[#1E5F7A] w-fit mb-2">Billing Memo:</h4>
