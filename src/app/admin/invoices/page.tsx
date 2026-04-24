@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc, where } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +36,10 @@ import {
   Mail,
   Phone,
   Package,
-  Smartphone
+  Smartphone,
+  Users,
+  Wrench,
+  ChevronDown
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -73,8 +77,14 @@ function InvoicesListContent() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
+  // Master Data Queries
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
+  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('name', 'asc')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
+
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
+  const { data: customers } = useCollection(usersQuery);
+  const { data: serviceCatalog } = useCollection(servicesQuery);
 
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };
@@ -128,6 +138,29 @@ function InvoicesListContent() {
     const next = [...manualItems];
     next[idx][field] = val;
     setManualItems(next);
+  };
+
+  const addServiceFromCatalog = (serviceId: string) => {
+    const service = serviceCatalog?.find(s => s.id === serviceId);
+    if (!service) return;
+    setManualItems([...manualItems, { 
+      name: service.title, 
+      price: service.basePrice || 0, 
+      quantity: 1, 
+      type: 'service', 
+      unit: 'Qty' 
+    }]);
+  };
+
+  const handleCustomerSelect = (userId: string) => {
+    const selected = customers?.find(u => u.id === userId);
+    if (selected) {
+      setCustomer({
+        name: selected.name || '',
+        phone: selected.phone || '',
+        address: selected.address || ''
+      });
+    }
   };
 
   const handleOpenEdit = (inv: any) => {
@@ -366,29 +399,65 @@ function InvoicesListContent() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-7 space-y-8">
                 
+                {/* 👤 CLIENT SELECTOR & INFO */}
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 border-b pb-2"><User size={14}/> Client Identity</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 border-b pb-2"><Users size={14} className="text-primary" /> Client Selection</h4>
+                  
+                  <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Name</Label>
-                      <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Customer Label" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Select Existing Customer</Label>
+                      <Select onValueChange={handleCustomerSelect}>
+                        <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold shadow-sm">
+                          <SelectValue placeholder="Search registered customers..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                          {customers?.map(u => (
+                            <SelectItem key={u.id} value={u.id} className="py-3 font-bold text-xs">
+                              {u.name} ({u.phone})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Client Name</Label>
+                        <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Customer Label" className="h-11 bg-white border-none rounded-xl font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Phone Number</Label>
+                        <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-white border-none rounded-xl font-bold" />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Phone Number</Label>
-                      <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
+                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Work/Delivery Address</Label>
+                      <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="Site location details..." className="min-h-[80px] bg-white border-none rounded-2xl p-4 shadow-sm font-medium" />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Work/Delivery Address</Label>
-                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="Site location details..." className="min-h-[80px] bg-gray-50 border-none rounded-2xl p-4 shadow-inner" />
                   </div>
                 </div>
 
+                {/* 🛠️ ITEM PICKER & SCOPE */}
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 flex items-center gap-2"><Plus size={14}/> Scope of Items</h4>
-                    <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-8 text-[9px] font-black uppercase border-indigo-200 text-indigo-600">+ Add Item</Button>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 flex items-center gap-2"><Wrench size={14} className="text-indigo-600" /> Scope of Items</h4>
+                    <div className="flex gap-2">
+                      <Select onValueChange={addServiceFromCatalog}>
+                        <SelectTrigger className="h-9 w-48 bg-indigo-50 border-none rounded-xl font-black uppercase text-[9px] text-indigo-600">
+                          <SelectValue placeholder="Quick Add Service" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {serviceCatalog?.map(s => (
+                            <SelectItem key={s.id} value={s.id} className="py-2.5 font-bold text-[10px] uppercase">
+                              {s.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-9 text-[9px] font-black uppercase border-dashed border-2">+ Custom Item</Button>
+                    </div>
                   </div>
+
                   <div className="space-y-3">
                     {manualItems.map((item: any, idx: number) => (
                       <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
@@ -456,7 +525,7 @@ function InvoicesListContent() {
                         <Label className="text-[10px] font-black uppercase text-gray-400">Payment Protocol</Label>
                         <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
                           <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="rounded-xl">
                             {['Cash', 'bKash', 'Nagad', 'Bank'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
                           </SelectContent>
                         </Select>
