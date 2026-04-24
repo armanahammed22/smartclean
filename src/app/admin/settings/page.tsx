@@ -37,14 +37,16 @@ import {
   Link as LinkIcon,
   RefreshCw,
   CheckCircle2,
-  FileSignature
+  FileSignature,
+  FileText,
+  Printer
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-// Strict Default Order ID Mapping (18 Modules)
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
@@ -120,8 +122,12 @@ export default function AdminSettingsPage() {
     otpEnabled: false,
     productsEnabled: true,
     servicesEnabled: true,
-    playStoreLink: '',
-    apkDownloadLink: ''
+    // New Invoice Customization Fields
+    invoiceHeaderPhone: '+8801919640422',
+    invoiceHeaderEmail: 'billing@smartclean.com.bd',
+    invoiceHeaderAddress: 'Mohakhali, Dhaka, Bangladesh',
+    invoiceFooterNote: 'Payment should be cleared at site upon completion. For any billing query, call +8801919640422.',
+    invoiceFooterDisclaimer: 'This is a computer generated document and does not require a physical stamp for internal processing.'
   });
 
   const [menuOrder, setMenuOrder] = useState<string[]>(DEFAULT_MENU_KEYS);
@@ -255,6 +261,9 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="visibility" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Bell size={16} /> Feature Logic
           </TabsTrigger>
+          <TabsTrigger value="invoice" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Printer size={16} /> Invoice Config
+          </TabsTrigger>
           <TabsTrigger value="sidebar" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <List size={16} /> Navigation
           </TabsTrigger>
@@ -375,6 +384,64 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <Switch checked={formData.otpEnabled} onCheckedChange={(val) => setFormData({...formData, otpEnabled: val})} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="invoice">
+          <div className="space-y-6">
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-[#081621] text-white p-8">
+                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3">
+                  <FileText size={20} className="text-primary" /> Invoice & PDF Customization
+                </CardTitle>
+                <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Edit header, footer and professional notes</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2 flex items-center gap-2"><Layout size={14}/> Header Overrides</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Header Phone</Label>
+                        <Input value={formData.invoiceHeaderPhone} onChange={e => setFormData({...formData, invoiceHeaderPhone: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Header Email</Label>
+                        <Input value={formData.invoiceHeaderEmail} onChange={e => setFormData({...formData, invoiceHeaderEmail: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Header Address</Label>
+                        <Input value={formData.invoiceHeaderAddress} onChange={e => setFormData({...formData, invoiceHeaderAddress: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2 flex items-center gap-2"><Zap size={14}/> Legal & Notes</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">Terms & Conditions Note</Label>
+                        <Textarea value={formData.invoiceFooterNote} onChange={e => setFormData({...formData, invoiceFooterNote: e.target.value})} className="h-24 bg-gray-50 border-none rounded-xl text-xs leading-relaxed" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase">System Disclaimer (Small)</Label>
+                        <Textarea value={formData.invoiceFooterDisclaimer} onChange={e => setFormData({...formData, invoiceFooterDisclaimer: e.target.value})} className="h-20 bg-gray-50 border-none rounded-xl text-[10px] leading-relaxed" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
+                  <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={24} /></div>
+                  <div className="space-y-1">
+                    <h4 className="font-black uppercase text-xs text-blue-900">PDF Optimization Active</h4>
+                    <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
+                      The invoice layout is specifically tuned for A4 dimensions. Your custom text will automatically wrap or truncate to maintain a professional look.
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
