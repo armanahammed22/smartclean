@@ -77,14 +77,25 @@ function InvoicesListContent() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
-  // Master Data Queries
+  // 🛡️ Fixed Index Error: Removed cross-field orderBy from queries
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
-  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), orderBy('name', 'asc')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
+  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
 
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
-  const { data: customers } = useCollection(usersQuery);
-  const { data: serviceCatalog } = useCollection(servicesQuery);
+  const { data: customersRaw } = useCollection(usersQuery);
+  const { data: serviceCatalogRaw } = useCollection(servicesQuery);
+
+  // 🧠 In-memory sorting to avoid index requirements
+  const customers = useMemo(() => {
+    if (!customersRaw) return [];
+    return [...customersRaw].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [customersRaw]);
+
+  const serviceCatalog = useMemo(() => {
+    if (!serviceCatalogRaw) return [];
+    return [...serviceCatalogRaw].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }, [serviceCatalogRaw]);
 
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };
