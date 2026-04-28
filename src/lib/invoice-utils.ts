@@ -36,7 +36,6 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const collName = 'invoices';
   const fieldName = type === 'order' ? 'orderId' : 'bookingId';
   
-  // 1. Check if exists
   const q = query(collection(db, collName), where(fieldName, '==', sourceId));
   const snap = await getDocs(q);
   
@@ -44,7 +43,6 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     return snap.docs[0].id;
   }
 
-  // 2. Generate new if not found
   const items: InvoiceItem[] = sourceData.items?.map((i: any) => ({
     id: i.id,
     name: i.name,
@@ -95,7 +93,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * PDF Generation Logic - Optimized for single page and clean breaks
+ * PDF Generation Logic - Optimized for A4 multi-page layout and blank page prevention
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -103,7 +101,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
   if (!element) return;
 
   const opt = {
-    margin: [0, 0, 0, 0], // Controlled by container padding
+    margin: 0,
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { 
@@ -111,7 +109,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
       useCORS: true, 
       logging: false, 
       letterRendering: true,
-      windowWidth: 794 // Approx 210mm at 96dpi
+      windowWidth: 794 // 210mm at 96dpi
     },
     jsPDF: { 
       unit: 'mm', 
@@ -119,7 +117,12 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
       orientation: 'portrait',
       compress: true
     },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    pagebreak: { 
+      mode: ['avoid-all', 'css', 'legacy'],
+      before: '.page-break-before',
+      after: '.page-break-after',
+      avoid: ['thead', 'tfoot', 'tr', '.avoid-break']
+    }
   };
 
   await html2pdf().from(element).set(opt).save();
