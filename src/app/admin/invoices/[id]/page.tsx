@@ -67,7 +67,6 @@ export default function AdminInvoiceDetailPage() {
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   
   const websiteName = settings?.websiteName || 'Smart Clean';
-  const footerNote = settings?.invoiceFooterNote || 'Payment should be cleared at site upon completion.';
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
 
   const isDue = (invoice.dueAmount || 0) > 0;
@@ -99,7 +98,7 @@ export default function AdminInvoiceDetailPage() {
           <div 
             id="invoice-render-area" 
             className="bg-white shadow-2xl relative mx-auto"
-            style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+            style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'visible', display: 'flex', flexDirection: 'column' }}
           >
             {/* 🖼️ CORPORATE HEADER */}
             <div className="pt-12 px-12 pb-8 flex justify-between items-start border-b-2 border-gray-100 shrink-0">
@@ -223,29 +222,9 @@ export default function AdminInvoiceDetailPage() {
                   <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">In Words:</p>
                   <p className="text-xs font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
                </div>
-
-               <div className="pt-4 text-center space-y-2">
-                 <p className="text-sm font-black text-primary flex items-center justify-center gap-2">
-                   <Heart size={16} fill="currentColor" /> Thank you for your business!
-                 </p>
-                 <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">We look forward to serving you again.</p>
-               </div>
             </div>
 
-            {/* 🛡️ SERVICES WE PROVIDE (NEW FOOTER SECTION) */}
-            <div className="px-12 pt-8 pb-6 border-t border-gray-100 bg-gray-50/30" style={{ pageBreakInside: 'avoid' }}>
-              <p className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-4 text-left">Services We Provide</p>
-              <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-                {providedServicesList.map((service, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={8} className="text-primary" strokeWidth={4} /></div>
-                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 🖋️ SIGNATURES */}
+            {/* 🖋️ SIGNATURES (MOVED ABOVE SERVICES) */}
             <div className="px-12 py-10 grid grid-cols-2 gap-24 items-end shrink-0" style={{ pageBreakInside: 'avoid' }}>
                 <div className="text-center space-y-4">
                    <div className="border-b border-gray-300 h-10 flex items-center justify-center"></div>
@@ -265,6 +244,26 @@ export default function AdminInvoiceDetailPage() {
                       <p className="text-[7px] font-bold text-primary uppercase tracking-widest">Smart Clean Bangladesh</p>
                    </div>
                 </div>
+            </div>
+
+            {/* 🛡️ SERVICES WE PROVIDE (MOVED BELOW SIGNATURES) */}
+            <div className="px-12 pt-8 pb-6 border-t border-gray-100 bg-gray-50/30" style={{ pageBreakInside: 'avoid' }}>
+              <p className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-4 text-left">Services We Provide</p>
+              <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                {providedServicesList.map((service, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={8} className="text-primary" strokeWidth={4} /></div>
+                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 text-center space-y-2 mb-4">
+              <p className="text-sm font-black text-primary flex items-center justify-center gap-2">
+                <Heart size={16} fill="currentColor" /> Thank you for your business!
+              </p>
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">We look forward to serving you again.</p>
             </div>
 
             <div className="pb-4 w-full text-center shrink-0">

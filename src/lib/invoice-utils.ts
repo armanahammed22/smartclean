@@ -95,7 +95,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * PDF Generation Logic
+ * PDF Generation Logic - Optimized for single page and clean breaks
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -103,11 +103,24 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
   if (!element) return;
 
   const opt = {
-    margin: 0,
+    margin: [10, 10, 10, 10], // Top, Left, Bottom, Right margin in mm
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      logging: false, 
+      letterRendering: true,
+      scrollX: 0,
+      scrollY: 0
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait',
+      compress: true
+    },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
   await html2pdf().from(element).set(opt).save();
