@@ -94,11 +94,11 @@ export default function AdminInvoiceDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-8 overflow-x-auto no-scrollbar pb-10">
+        <div className="lg:col-span-12 overflow-x-auto no-scrollbar flex justify-center pb-10">
           <div 
             id="invoice-render-area" 
-            className="bg-white shadow-2xl relative mx-auto"
-            style={{ width: '210mm', minHeight: '297mm', color: '#333', overflow: 'visible', display: 'flex', flexDirection: 'column' }}
+            className="bg-white shadow-2xl relative"
+            style={{ width: '210mm', minHeight: '297mm', color: '#333', display: 'flex', flexDirection: 'column' }}
           >
             {/* 🖼️ CORPORATE HEADER */}
             <div className="pt-12 px-12 pb-8 flex justify-between items-start border-b-2 border-gray-100 shrink-0">
@@ -106,7 +106,7 @@ export default function AdminInvoiceDetailPage() {
                  <div className="w-20 h-20 relative shrink-0">
                     <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
                  </div>
-                 <div className="space-y-1">
+                 <div className="space-y-1 text-left">
                     <h2 className="text-3xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
                     <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Better Security, Better Solution</p>
                     <div className="h-0.5 bg-primary w-full mt-2" />
@@ -114,9 +114,9 @@ export default function AdminInvoiceDetailPage() {
                  </div>
                </div>
 
-               <div className="h-20 w-px bg-gray-300 mx-6 hidden sm:block" />
+               <div className="h-20 w-px bg-gray-300 mx-6" />
 
-               <div className="flex-1 text-right sm:text-left space-y-1">
+               <div className="flex-1 text-left space-y-1">
                   <p className="text-[9px] font-bold text-gray-600 leading-relaxed uppercase">{headerAddress}</p>
                   <p className="text-[9px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
                   <p className="text-[9px] font-bold text-gray-600 uppercase">E-mail: {headerEmail}</p>
@@ -159,9 +159,9 @@ export default function AdminInvoiceDetailPage() {
                       <tr>
                         <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase w-12 text-center">SL.</th>
                         <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase text-left">Description</th>
-                        <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase text-center w-24">Qty/Unit</th>
-                        <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase text-center w-28">Rate (৳)</th>
-                        <th className="py-2.5 px-4 text-[9px] font-black uppercase text-center w-32">Total (৳)</th>
+                        <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase text-center w-20">Qty</th>
+                        <th className="py-2.5 px-4 text-[9px] font-black border-r border-[#081621] uppercase text-right w-24">Rate (৳)</th>
+                        <th className="py-2.5 px-4 text-[9px] font-black uppercase text-right w-28">Total (৳)</th>
                       </tr>
                     </thead>
                     <tbody className="text-[10px] font-medium bg-white">
@@ -172,47 +172,47 @@ export default function AdminInvoiceDetailPage() {
                           <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">
                             {item.quantity} <span className="text-[7px] uppercase opacity-40 font-bold ml-0.5">{item.unit || 'Qty'}</span>
                           </td>
-                          <td className="py-3 text-center border-r border-[#081621] font-black text-gray-700">{item.price?.toLocaleString()}</td>
-                          <td className="py-3 text-center font-black text-gray-900 bg-gray-50/20">{(item.price * item.quantity).toLocaleString()}/-</td>
+                          <td className="py-3 px-4 border-r border-[#081621] font-black text-gray-700 text-right">{item.price?.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right font-black text-gray-900 bg-gray-50/20">{(item.price * item.quantity).toLocaleString()}/-</td>
                         </tr>
                       ))}
                       
                       <tr className="border-t border-[#081621] bg-gray-50/80">
                         <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621]">Gross Amount</td>
-                        <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
+                        <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                       </tr>
 
                       {invoice.discount > 0 && (
                         <tr className="border-t border-[#081621] bg-white">
                           <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-rose-600">Discount (-)</td>
-                          <td className="py-2 px-4 text-center font-black text-xs text-rose-600">৳{invoice.discount.toLocaleString()}</td>
+                          <td className="py-2 px-4 text-right font-black text-xs text-rose-600">৳{invoice.discount.toLocaleString()}</td>
                         </tr>
                       )}
 
                       {invoice.tax > 0 && (
                         <tr className="border-t border-[#081621] bg-white">
                           <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621]">VAT ({invoice.vatPercent || 0}%) (+)</td>
-                          <td className="py-2 px-4 text-center font-black text-xs">৳{invoice.tax.toLocaleString()}</td>
+                          <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.tax.toLocaleString()}</td>
                         </tr>
                       )}
 
                       <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                        <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-xs tracking-widest border-r border-white/10 italic">
+                        <td colSpan={4} className="py-3.5 px-8 text-right font-black uppercase text-[10px] tracking-widest border-r border-white/10 italic">
                           Final Amount Payable
                         </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="text-xl font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
+                        <td className="py-3.5 px-4 text-right">
+                          <span className="text-lg font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
                         </td>
                       </tr>
 
                       <tr className="border-t border-[#081621] bg-emerald-50/50">
                         <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-emerald-700 italic">Total Received Amount</td>
-                        <td className="py-2 px-4 text-center font-black text-xs text-emerald-700">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
+                        <td className="py-2 px-4 text-right font-black text-xs text-emerald-700">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
                       </tr>
 
                       <tr className="border-t border-[#081621] bg-rose-50/50">
                         <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] border-r border-[#081621] text-rose-700 italic">Net Due Balance</td>
-                        <td className="py-2 px-4 text-center font-black text-sm text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
+                        <td className="py-2 px-4 text-right font-black text-sm text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -224,10 +224,10 @@ export default function AdminInvoiceDetailPage() {
                </div>
             </div>
 
-            {/* 🖋️ SIGNATURES (MOVED ABOVE SERVICES) */}
+            {/* 🖋️ SIGNATURES */}
             <div className="px-12 py-10 grid grid-cols-2 gap-24 items-end shrink-0" style={{ pageBreakInside: 'avoid' }}>
                 <div className="text-center space-y-4">
-                   <div className="border-b border-gray-300 h-10 flex items-center justify-center"></div>
+                   <div className="border-b border-gray-300 h-10"></div>
                    <p className="text-[10px] font-black uppercase text-[#081621] tracking-tighter">Customer Signature</p>
                 </div>
 
@@ -246,20 +246,20 @@ export default function AdminInvoiceDetailPage() {
                 </div>
             </div>
 
-            {/* 🛡️ SERVICES WE PROVIDE (MOVED BELOW SIGNATURES) */}
-            <div className="px-12 pt-8 pb-6 border-t border-gray-100 bg-gray-50/30" style={{ pageBreakInside: 'avoid' }}>
-              <p className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-4 text-left">Services We Provide</p>
-              <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+            {/* 🛡️ SERVICES WE PROVIDE (Below Signatures) */}
+            <div className="px-12 pt-6 pb-4 border-t border-gray-100 bg-gray-50/30" style={{ pageBreakInside: 'avoid' }}>
+              <p className="text-[9px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-3 text-left">Services We Provide</p>
+              <div className="grid grid-cols-3 gap-x-4 gap-y-1.5">
                 {providedServicesList.map((service, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={8} className="text-primary" strokeWidth={4} /></div>
-                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
+                    <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={7} className="text-primary" strokeWidth={4} /></div>
+                    <span className="text-[7.5px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="pt-4 text-center space-y-2 mb-4">
+            <div className="pt-4 text-center space-y-2 mb-4 shrink-0" style={{ pageBreakInside: 'avoid' }}>
               <p className="text-sm font-black text-primary flex items-center justify-center gap-2">
                 <Heart size={16} fill="currentColor" /> Thank you for your business!
               </p>
@@ -270,25 +270,6 @@ export default function AdminInvoiceDetailPage() {
                <p className="text-[7px] text-gray-300 uppercase font-bold">{footerDisclaimer}</p>
             </div>
           </div>
-        </div>
-
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-sm bg-[#081621] text-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-white/5 border-b border-white/5 p-6">
-              <CardTitle className="text-base font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                <Wallet size={18} /> Settlements
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-               <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
-                  <p className="text-xs font-black uppercase">Outstanding Due</p>
-                  <span className="text-xl font-black text-rose-400">৳{invoice.dueAmount?.toLocaleString()}</span>
-               </div>
-               <div className="grid grid-cols-1 gap-3">
-                  <Button size="sm" onClick={() => updateDoc(invoiceRef!, { paymentStatus: 'Paid', dueAmount: 0, paidAmount: invoice.total })} className="bg-emerald-600 hover:bg-emerald-700 font-black h-11 rounded-xl uppercase text-[10px]">Mark as Fully Settled</Button>
-               </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

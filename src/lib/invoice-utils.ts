@@ -103,7 +103,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
   if (!element) return;
 
   const opt = {
-    margin: [10, 10, 10, 10], // Top, Left, Bottom, Right margin in mm
+    margin: [0, 0, 0, 0], // Controlled by container padding
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { 
@@ -111,8 +111,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
       useCORS: true, 
       logging: false, 
       letterRendering: true,
-      scrollX: 0,
-      scrollY: 0
+      windowWidth: 794 // Approx 210mm at 96dpi
     },
     jsPDF: { 
       unit: 'mm', 
