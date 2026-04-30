@@ -90,7 +90,7 @@ export default function ServiceBookingPage() {
 
   const addOnsTotal = useMemo(() => {
     if (!addOnOptions) return 0;
-    return addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).reduce((acc, a) => acc + (a.price || 0), 0);
+    return addOnOptions.filter(a => selectedAddOnIds.includes(a.id)).reduce((acc, a) => acc + (a.price || 0), 0) || 0;
   }, [addOnOptions, selectedAddOnIds]);
 
   const platformFee = 0; 
@@ -132,10 +132,10 @@ export default function ServiceBookingPage() {
         
         <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
           
-          {/* 🛡️ MAIN 3-COLUMN LAYOUT (UNCHANGED STRUCTURE) */}
+          {/* 🛡️ MAIN 3-COLUMN LAYOUT */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* COLUMN 1: IMAGE & BEFORE/AFTER (lg:col-span-5) */}
+            {/* COLUMN 1: IMAGE & BEFORE/AFTER */}
             <div className="lg:col-span-5 space-y-4">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 group">
@@ -171,7 +171,7 @@ export default function ServiceBookingPage() {
               )}
             </div>
 
-            {/* COLUMN 2: TITLE & DETAILS (lg:col-span-3) */}
+            {/* COLUMN 2: TITLE & DETAILS */}
             <div className="lg:col-span-3 space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -248,7 +248,7 @@ export default function ServiceBookingPage() {
               </div>
             </div>
 
-            {/* COLUMN 3: MODERN ADD-ONS (lg:col-span-4) - MAIN FOCUS */}
+            {/* COLUMN 3: MODERN ADD-ONS */}
             <div className="lg:col-span-4 space-y-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function ServiceBookingPage() {
             </div>
           </div>
 
-          {/* 🔍 SERVICE DETAILS SECTION (BELOW MAIN LAYOUT) */}
+          {/* 🔍 SERVICE DETAILS SECTION (FULL WIDE) */}
           <section className="pt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
              {/* Card A: Why Choose Us */}
              <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-xl transition-all duration-500">
