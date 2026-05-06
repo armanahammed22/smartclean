@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import NextImage from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, addDoc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, limit, addDoc, doc } from 'firebase/firestore';
 import { 
   ShieldCheck, 
   Loader2, 
@@ -16,7 +16,10 @@ import {
   Package,
   ShoppingCart,
   User,
-  X
+  X,
+  MapPin,
+  Phone,
+  Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,13 +42,17 @@ export default function DynamicLandingPage() {
   const [quantity, setQuantity] = useState(1);
   const [timeLeft, setTimeLeft] = useState({ h: 0, m: 11, s: 57 });
 
-  // 1. Fetch Landing Page Data
+  // 1. Fetch Global Settings for Branding
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  // 2. Fetch Landing Page Data
   const pageQuery = useMemoFirebase(() => 
     (db && slug) ? query(collection(db, 'landing_pages'), where('slug', '==', slug), limit(1)) : null, [db, slug]);
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  // 2. Timer Logic
+  // 3. Timer Logic
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => {
@@ -135,6 +142,28 @@ export default function DynamicLandingPage() {
                <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.s.toString().padStart(2, '0')}</div>
                <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">SECS</span>
              </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 🏢 BRAND HEADER */}
+      <div className="bg-white border-b border-gray-100 py-4 px-4 sticky top-[56px] z-[400] shadow-sm">
+        <div className="container mx-auto max-w-5xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative h-10 w-10 overflow-hidden rounded-lg">
+              {settings?.logoUrl ? (
+                <NextImage src={settings.logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+              ) : (
+                <div className="w-full h-full bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-xl">S</div>
+              )}
+            </div>
+            <span className="font-black text-xl uppercase tracking-tighter text-gray-900">{settings?.websiteName || 'Smart Clean'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-emerald-600 font-black">
+            <div className="p-2 bg-emerald-50 rounded-full">
+              <Phone size={18} fill="currentColor" />
+            </div>
+            <span className="text-sm md:text-lg">{settings?.contactPhone || '01919640422'}</span>
           </div>
         </div>
       </div>
@@ -346,9 +375,41 @@ export default function DynamicLandingPage() {
         </div>
       </section>
 
-      {/* 🏁 MINIMAL FOOTER */}
-      <footer className="py-10 text-center opacity-40">
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">Security Active • SSL Encrypted Checkout</p>
+      {/* 🏁 BRANDED FOOTER */}
+      <footer className="py-12 bg-white border-t border-gray-100 px-4 mt-12">
+        <div className="container mx-auto max-w-5xl text-center space-y-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20">
+            <div className="space-y-3 text-center md:text-left">
+              <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] flex items-center justify-center md:justify-start gap-2">
+                <MapPin size={14} className="text-emerald-600" /> অফিস ঠিকানা
+              </p>
+              <p className="text-sm font-bold text-gray-600 max-w-xs leading-relaxed">
+                {settings?.address || 'Wireless Gate, Mohakhali, Dhaka, Bangladesh'}
+              </p>
+            </div>
+            
+            <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-center gap-4 shadow-inner">
+              <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg">
+                <ShieldCheck size={28} />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase text-emerald-700 leading-none mb-1">Security Verified</p>
+                <p className="text-sm font-black text-gray-900 uppercase tracking-tight">নির্ভরযোগ্য সেবা</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-center md:text-left">
+              <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] flex items-center justify-center md:justify-start gap-2">
+                <Award size={14} className="text-emerald-600" /> সরকারি লাইসেন্সপ্রাপ্ত
+              </p>
+              <p className="text-sm font-bold text-gray-600">Smart Clean Bangladesh Ltd.</p>
+            </div>
+          </div>
+          
+          <div className="pt-8 border-t border-gray-50 opacity-40">
+            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">Security Active • SSL Encrypted Checkout</p>
+          </div>
+        </div>
       </footer>
 
     </div>
