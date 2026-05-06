@@ -116,54 +116,53 @@ export default function DynamicLandingPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-20">
       
-      {/* 🔴 URGENCY TOP BAR */}
-      <div className="bg-[#D60000] text-white py-3 px-4 sticky top-0 z-[500] shadow-xl">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-8 px-4 font-black uppercase text-[10px] animate-bounce shrink-0">
-            অফার প্রাইসে দ্রুত অর্ডার করুন 👉
-          </Button>
-          <div className="flex items-center gap-3">
-             <div className="flex gap-2 text-center">
-               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">00</div>
-               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">DAYS</span>
-             </div>
-             <span className="text-white/40">:</span>
-             <div className="flex gap-2 text-center">
-               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.h.toString().padStart(2, '0')}</div>
-               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">HRS</span>
-             </div>
-             <span className="text-white/40">:</span>
-             <div className="flex gap-2 text-center">
-               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.m.toString().padStart(2, '0')}</div>
-               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">MINS</span>
-             </div>
-             <span className="text-white/40">:</span>
-             <div className="flex gap-2 text-center">
-               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.s.toString().padStart(2, '0')}</div>
-               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">SECS</span>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 🏢 BRAND HEADER */}
-      <div className="bg-white border-b border-gray-100 py-4 px-4 sticky top-[56px] z-[400] shadow-sm">
-        <div className="container mx-auto max-w-5xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg">
+      {/* 🔴 URGENCY TOP BAR (Contains Branding) */}
+      <div className="bg-[#D60000] text-white py-2 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
+        <div className="container mx-auto flex items-center justify-between gap-4">
+          
+          {/* Left: Branding */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5 shadow-sm">
               {settings?.logoUrl ? (
                 <NextImage src={settings.logoUrl} alt="Logo" fill className="object-contain" unoptimized />
               ) : (
-                <div className="w-full h-full bg-emerald-600 rounded-lg flex items-center justify-center text-white font-black text-xl">S</div>
+                <div className="w-full h-full bg-emerald-600 rounded flex items-center justify-center text-white font-black text-sm">S</div>
               )}
             </div>
-            <span className="font-black text-xl uppercase tracking-tighter text-gray-900">{settings?.websiteName || 'Smart Clean'}</span>
+            <span className="font-black text-[10px] md:text-sm uppercase tracking-tighter hidden xs:block">
+              {settings?.websiteName || 'Smart Clean'}
+            </span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-600 font-black">
-            <div className="p-2 bg-emerald-50 rounded-full">
-              <Phone size={18} fill="currentColor" />
+
+          {/* Center: Promo & Timer (Hidden on very small screens to maintain layout) */}
+          <div className="hidden sm:flex items-center gap-6">
+            <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-7 px-4 font-black uppercase text-[9px] animate-bounce shrink-0 shadow-sm border-none">
+              অফার প্রাইসে দ্রুত অর্ডার করুন 👉
+            </Button>
+            <div className="hidden md:flex items-center gap-3">
+               <div className="flex gap-1.5 text-center items-center">
+                 <div className="bg-black/20 px-1.5 py-0.5 rounded font-mono font-bold text-xs">{timeLeft.h.toString().padStart(2, '0')}</div>
+                 <span className="text-[7px] font-black uppercase opacity-60">HRS</span>
+               </div>
+               <span className="text-white/40">:</span>
+               <div className="flex gap-1.5 text-center items-center">
+                 <div className="bg-black/20 px-1.5 py-0.5 rounded font-mono font-bold text-xs">{timeLeft.m.toString().padStart(2, '0')}</div>
+                 <span className="text-[7px] font-black uppercase opacity-60">MINS</span>
+               </div>
+               <span className="text-white/40">:</span>
+               <div className="flex gap-1.5 text-center items-center">
+                 <div className="bg-black/20 px-1.5 py-0.5 rounded font-mono font-bold text-xs">{timeLeft.s.toString().padStart(2, '0')}</div>
+                 <span className="text-[7px] font-black uppercase opacity-60">SECS</span>
+               </div>
             </div>
-            <span className="text-sm md:text-lg">{settings?.contactPhone || '01919640422'}</span>
+          </div>
+
+          {/* Right: Phone */}
+          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/20 group hover:bg-white/20 transition-all cursor-pointer">
+            <div className="p-1 bg-white rounded-full text-[#D60000] group-hover:scale-110 transition-transform">
+              <Phone size={12} fill="currentColor" />
+            </div>
+            <span className="text-xs md:text-sm font-black tracking-tight">{settings?.contactPhone || '01919640422'}</span>
           </div>
         </div>
       </div>
@@ -384,7 +383,7 @@ export default function DynamicLandingPage() {
                 <MapPin size={14} className="text-emerald-600" /> অফিস ঠিকানা
               </p>
               <p className="text-sm font-bold text-gray-600 max-w-xs leading-relaxed">
-                {settings?.address || 'Wireless Gate, Mohakhali, Dhaka, Bangladesh'}
+                {settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212'}
               </p>
             </div>
             
