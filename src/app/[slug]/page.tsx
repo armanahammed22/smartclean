@@ -10,16 +10,18 @@ import {
   Clock, 
   Loader2, 
   Zap, 
-  Command, 
+  Star, 
   Plus, 
   Minus, 
   ArrowRight, 
   CheckCircle2,
-  Wallet,
-  Smartphone,
+  Play,
+  Package,
+  ShoppingCart,
   MapPin,
-  Lock,
-  ChevronRight
+  Smartphone,
+  User,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,8 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function DynamicLandingPage() {
   const { slug } = useParams();
@@ -40,7 +41,7 @@ export default function DynamicLandingPage() {
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 11, s: 57 });
 
   // 1. Fetch Landing Page Data
   const pageQuery = useMemoFirebase(() => 
@@ -48,30 +49,26 @@ export default function DynamicLandingPage() {
   const { data: pages, isLoading } = useCollection(pageQuery);
   const page = pages?.[0];
 
-  // 2. Fetch Global Settings for Branding
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const { data: settings } = useDoc(settingsRef);
-
+  // 2. Timer Logic
   useEffect(() => {
     setMounted(true);
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.s > 0) return { ...prev, s: prev.s - 1 };
+        if (prev.m > 0) return { h: prev.h, m: prev.m - 1, s: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const calculations = useMemo(() => {
     if (!page) return { subtotal: 0, discount: 0, total: 0 };
-    // Simulated base rates for a high-end feel
     const basePrice = page.type === 'product' ? 1200 : 3500; 
     const subtotal = basePrice * quantity;
     let discount = page.discountType === 'percent' ? (subtotal * (page.discountValue || 0)) / 100 : (page.discountValue || 0);
     return { subtotal, discount, total: subtotal - discount };
   }, [page, quantity]);
-
-  const scrollToForm = () => {
-    const el = document.getElementById('fulfillment-terminal');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +80,7 @@ export default function DynamicLandingPage() {
     const address = formData.get('address') as string;
 
     if (!name || !phone || !address) {
-      toast({ variant: "destructive", title: "Missing Identification", description: "Required fields must be completed for fulfillment." });
+      toast({ variant: "destructive", title: "তথ্য অসম্পূর্ণ", description: "দয়া করে সব ফিল্ড পূরণ করুন।" });
       return;
     }
 
@@ -101,14 +98,10 @@ export default function DynamicLandingPage() {
 
     try {
       await addDoc(collection(db, targetCol), orderData);
-      toast({ title: "Authorized", description: "Deployment request has been logged." });
+      toast({ title: "সফল হয়েছে!", description: "আপনার অর্ডারটি গ্রহণ করা হয়েছে।" });
       router.push(`/order-success?id=success&type=${page.type}`);
     } catch (err: any) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: targetCol,
-        operation: 'create',
-        requestResourceData: orderData
-      }));
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
     } finally {
       setIsSubmitting(false);
     }
@@ -118,209 +111,244 @@ export default function DynamicLandingPage() {
   if (!page || !page.active) return <div className="h-screen flex items-center justify-center font-black uppercase text-gray-200 tracking-[0.5em]">Offline Protocol</div>;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-primary selection:text-white antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-20">
       
-      {/* 🌌 AMBIENT VISUAL LAYER */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-20%] -left-[10%] w-[80%] h-[80%] rounded-full bg-indigo-50/50 blur-[150px]" />
-        <div className="absolute bottom-[-10%] -right-[10%] w-[60%] h-[60%] rounded-full bg-blue-50/40 blur-[120px]" />
+      {/* 🔴 URGENCY TOP BAR */}
+      <div className="bg-[#D60000] text-white py-3 px-4 sticky top-0 z-[500] shadow-xl">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-8 px-4 font-black uppercase text-[10px] animate-bounce shrink-0">
+            অফার প্রাইসে দ্রুত অর্ডার করুন 👉
+          </Button>
+          <div className="flex items-center gap-3">
+             <div className="flex gap-2 text-center">
+               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">00</div>
+               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">DAYS</span>
+             </div>
+             <span className="text-white/40">:</span>
+             <div className="flex gap-2 text-center">
+               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.h.toString().padStart(2, '0')}</div>
+               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">HRS</span>
+             </div>
+             <span className="text-white/40">:</span>
+             <div className="flex gap-2 text-center">
+               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.m.toString().padStart(2, '0')}</div>
+               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">MINS</span>
+             </div>
+             <span className="text-white/40">:</span>
+             <div className="flex gap-2 text-center">
+               <div className="bg-black/20 px-2 py-0.5 rounded font-mono font-bold text-sm">{timeLeft.s.toString().padStart(2, '0')}</div>
+               <span className="text-[8px] font-black uppercase mt-1.5 opacity-60">SECS</span>
+             </div>
+          </div>
+        </div>
       </div>
 
-      {/* 🚀 ISOLATED PROTOCOL HEADER */}
-      <nav className={cn(
-        "fixed top-0 left-0 right-0 z-[500] transition-all duration-700 px-6",
-        isScrolled ? "bg-white/80 backdrop-blur-3xl py-4 border-b border-slate-100 shadow-sm" : "bg-transparent py-10"
-      )}>
-        <div className="container mx-auto flex items-center justify-between max-w-7xl">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#081621] rounded-2xl flex items-center justify-center text-white shadow-2xl border border-white/10">
-              <Command size={24} />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-black text-xl tracking-tighter uppercase leading-none">
-                {settings?.websiteName || 'Smart Clean'}
-              </span>
-              <Badge variant="outline" className="text-[7px] font-black uppercase tracking-[0.3em] text-primary border-primary/20 h-4 px-1.5 mt-1 bg-white/50">Service Engine v2.0</Badge>
+      {/* 🎯 HERO SECTION */}
+      <section className="bg-emerald-600 text-white pt-16 pb-12 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+        <div className="container mx-auto max-w-5xl text-center space-y-8 relative z-10">
+          <h1 className="text-3xl md:text-6xl font-black uppercase tracking-tighter leading-tight italic drop-shadow-2xl">
+            {page.heroTitle || page.title}
+          </h1>
+          <p className="text-emerald-100 text-sm md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
+            {page.heroSubtitle || "Achieving operational excellence through intelligent sanitization and professional care."}
+          </p>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="relative aspect-video md:aspect-[21/9] rounded-[2rem] md:rounded-[3rem] overflow-hidden border-8 border-white/20 shadow-2xl group">
+              {page.bannerImage ? (
+                <NextImage src={page.bannerImage} alt="Operation Banner" fill className="object-cover" unoptimized />
+              ) : (
+                <div className="w-full h-full bg-emerald-500 flex items-center justify-center text-emerald-200"><Zap size={120}/></div>
+              )}
             </div>
           </div>
 
           <Button 
-            onClick={scrollToForm}
-            className="rounded-full px-8 h-12 bg-[#081621] hover:bg-primary text-white font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95"
+            onClick={() => document.getElementById('order-terminal')?.scrollIntoView({ behavior: 'smooth' })}
+            className="h-16 md:h-20 px-12 md:px-20 rounded-full bg-[#22C55E] hover:bg-[#16a34a] text-white font-black uppercase text-xl md:text-3xl shadow-2xl shadow-green-900/40 border-b-8 border-green-800 active:border-b-0 active:translate-y-2 transition-all gap-4"
           >
-            Deploy Protocol
+            অর্ডার করুন <ArrowRight size={32} />
           </Button>
         </div>
-      </nav>
+      </section>
 
-      {/* 🎯 HERO SECTION */}
-      <section className="relative pt-44 pb-24 md:pt-64 md:pb-40 px-6">
-        <div className="container mx-auto max-w-7xl text-center space-y-16">
-          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            <Badge className="bg-primary/5 text-primary border border-primary/10 px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] mb-4 shadow-sm">
-              <Zap size={14} className="mr-2 inline fill-current" /> Premium Fulfillment Active
-            </Badge>
-            <h1 className="text-6xl md:text-9xl font-black text-slate-950 leading-[0.85] tracking-tighter uppercase italic">
-              {page.heroTitle || page.title}
-            </h1>
-            <p className="text-slate-500 text-lg md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed">
-              {page.heroSubtitle || "Achieving operational excellence through intelligent sanitization and professional care."}
-            </p>
+      {/* 🧩 WHY CHOOSE US (STARS) */}
+      <section className="py-16 px-4 bg-white border-b border-gray-100">
+        <div className="container mx-auto max-w-5xl">
+          <div className="bg-emerald-600 rounded-full py-4 px-10 w-fit mx-auto mb-10 shadow-lg">
+             <h2 className="text-white font-black text-sm md:text-xl uppercase tracking-widest text-center">আমাদের থেকে কেন সার্ভিস নিবেন?</h2>
           </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="border-none shadow-sm bg-gray-50 rounded-2xl p-6 text-center space-y-4 hover:shadow-xl transition-all duration-300">
+                <div className="flex justify-center text-amber-400 gap-1"><Star size={24} fill="currentColor" /></div>
+                <p className="text-[10px] md:text-xs font-bold text-gray-600 leading-relaxed uppercase tracking-tight">
+                  ১০০% হাইজিন মেইনটেইন করে প্রফেশনাল টিম দিয়ে আমরা কাজ সম্পন্ন করি।
+                </p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="relative group max-w-6xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-300">
-             <div className="absolute inset-0 bg-primary/10 blur-[120px] rounded-full scale-90 group-hover:scale-110 transition-transform duration-1000" />
-             <div className="relative aspect-video md:aspect-[21/9] rounded-[4rem] overflow-hidden border-8 border-white shadow-[0_40px_100px_rgba(0,0,0,0.1)]">
-                {page.bannerImage ? (
-                  <NextImage src={page.bannerImage} alt="Operation Banner" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" unoptimized />
-                ) : (
-                  <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-200"><Command size={120}/></div>
-                )}
+      {/* 🎥 VIDEO REVIEWS */}
+      <section className="py-20 px-4 bg-emerald-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent" />
+        <div className="container mx-auto max-w-5xl relative z-10 space-y-12">
+          <div className="text-center space-y-3">
+             <h2 className="text-white text-2xl md:text-4xl font-black uppercase tracking-tight italic">সম্মানিত কাস্টমার রিভিউ আলহামদুলিল্লাহ</h2>
+             <p className="text-emerald-100 font-bold uppercase tracking-widest text-[10px] md:text-sm">হাজার হাজার কাস্টমার সার্ভিস নিয়ে সন্তুষ্ট</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 group cursor-pointer bg-black/20">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-white shadow-xl transition-transform group-hover:scale-125">
+                    <Play size={24} fill="currentColor" className="ml-1" />
+                  </div>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                   <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden"><div className="w-1/3 h-full bg-red-600" /></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 💰 PRICING BLOCK */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-lg">
+          <Card className="border-2 border-dashed border-emerald-600 rounded-[3rem] p-8 text-center space-y-6 bg-white shadow-2xl">
+             <h3 className="text-xl font-black uppercase text-red-600 tracking-[0.2em] border-b pb-2">মূল্য</h3>
+             <div className="space-y-1">
+               <p className="text-gray-400 font-black text-sm uppercase line-through">রেগুলার মূল্য ৮২৫০৳</p>
+               <div className="flex items-center justify-center gap-2">
+                  <p className="text-4xl md:text-6xl font-black text-emerald-600 tracking-tighter italic">৳{calculations.total.toLocaleString()}</p>
+                  <Badge className="bg-red-600 text-white border-none font-black text-[10px] h-6">অফার মূল্য</Badge>
+               </div>
              </div>
-          </div>
+             <p className="bg-red-50 text-red-600 font-black py-2 rounded-xl text-sm uppercase tracking-widest shadow-inner">ডেলিভারি চার্জ সম্পূর্ণ ফ্রি</p>
+          </Card>
         </div>
       </section>
 
-      {/* 🧩 BENTO CORE FEATURES */}
-      <section className="py-32 bg-slate-50/30 border-y border-slate-100">
-        <div className="container mx-auto px-6 max-w-7xl">
-           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              <div className="md:col-span-7 h-full">
-                 <div className="h-full rounded-[4rem] bg-white border border-slate-100 p-12 md:p-20 space-y-8 shadow-sm group hover:shadow-3xl transition-all duration-700">
-                    <div className="p-5 bg-indigo-50 text-indigo-600 rounded-3xl w-fit shadow-sm"><ShieldCheck size={40} /></div>
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-black uppercase tracking-tight italic text-slate-950">Absolute Precision</h3>
-                      <p className="text-slate-500 font-medium text-xl leading-relaxed">Our protocol mandates a 100% adherence to hygiene standards. Every square inch is cross-verified by our logic engine.</p>
-                    </div>
-                    <div className="flex gap-4">
-                       <Badge className="bg-emerald-50 text-emerald-600 border-none px-4 py-1 rounded-full font-black text-[9px] uppercase">ISO Certified</Badge>
-                       <Badge className="bg-blue-50 text-blue-600 border-none px-4 py-1 rounded-full font-black text-[9px] uppercase">Verified Staff</Badge>
-                    </div>
-                 </div>
-              </div>
-              <div className="md:col-span-5 h-full">
-                 <div className="h-full rounded-[4rem] bg-[#081621] text-white p-12 md:p-16 space-y-8 shadow-2xl group transition-all duration-700 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12 scale-150"><Clock size={200}/></div>
-                    <div className="relative z-10 space-y-8">
-                      <div className="p-5 bg-white/5 rounded-3xl w-fit border border-white/10 shadow-xl"><Clock size={40} className="text-primary" /></div>
-                      <div className="space-y-4">
-                        <h3 className="text-3xl font-black uppercase tracking-tight italic">Rapid Response</h3>
-                        <p className="text-white/40 font-medium text-base leading-relaxed">Emergency deployment ready within 4 hours. Automated dispatch logic ensures your site is serviced on priority.</p>
-                      </div>
-                      <Button variant="ghost" className="p-0 text-primary hover:text-white font-black uppercase text-[10px] tracking-widest gap-2">Explore Timeline <ArrowRight size={14}/></Button>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </section>
-
-      {/* 📝 FULFILLMENT TERMINAL */}
-      <section id="fulfillment-terminal" className="py-40 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="bg-white rounded-[5rem] shadow-[0_50px_150px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden flex flex-col lg:flex-row">
-            
-            {/* Left: Financial Config */}
-            <div className="lg:w-1/2 p-12 md:p-24 bg-slate-50 flex flex-col justify-between border-r border-slate-100">
-              <div className="space-y-12">
-                <div className="space-y-4">
-                  <Badge className="bg-primary text-white border-none px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest">Configuration</Badge>
-                  <h2 className="text-5xl font-black text-slate-950 tracking-tighter uppercase italic leading-none">Scale Your <br/>Requirement.</h2>
-                </div>
-
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between p-8 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm transition-all hover:shadow-lg">
-                    <span className="font-black uppercase text-[10px] tracking-[0.2em] text-slate-400">Resource Load</span>
-                    <div className="flex items-center gap-8">
-                      <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 rounded-2xl border-2 border-slate-100 flex items-center justify-center font-black hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-90 shadow-sm">-</button>
-                      <span className="text-3xl font-black text-slate-950">{quantity}</span>
-                      <button onClick={() => setQuantity(quantity + 1)} className="w-12 h-12 rounded-2xl border-2 border-slate-100 flex items-center justify-center font-black hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-90 shadow-sm">+</button>
-                    </div>
-                  </div>
-
-                  <div className="p-10 bg-[#081621] rounded-[3rem] text-white space-y-6 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12"><Zap size={100} /></div>
-                    <div className="space-y-2 relative z-10">
-                      <p className="text-[11px] font-black uppercase tracking-[0.4em] text-primary">Settlement Total</p>
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-6xl font-black tracking-tighter text-white animate-in fade-in zoom-in-95 duration-500">৳{calculations.total.toLocaleString()}</span>
-                        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">BDT</span>
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t border-white/5 flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-emerald-500" />
-                      <p className="text-[9px] text-white/40 uppercase font-black tracking-widest">System Fees Included</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-16 flex items-center gap-4">
-                 <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 text-emerald-500"><ShieldCheck size={24} /></div>
-                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-950 leading-none">Security Active</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">End-to-end Encrypted Provisioning</p>
-                 </div>
-              </div>
-            </div>
-
-            {/* Right: Intake Terminal */}
-            <div className="lg:w-1/2 p-12 md:p-24 bg-white">
-              <div className="space-y-12">
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-black uppercase tracking-widest text-slate-950 italic">Provision Entry</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Fulfillment registration required</p>
-                </div>
-
-                <form onSubmit={handleOrder} className="space-y-8">
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-slate-400 ml-1 tracking-[0.2em]">Full Legal Identity</Label>
-                    <Input name="name" placeholder="RECIPIENT NAME" className="h-16 bg-slate-50 border-none rounded-2xl font-black text-sm px-8 shadow-inner focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-slate-400 ml-1 tracking-[0.2em]">Communication Port (Phone)</Label>
-                    <Input name="phone" placeholder="01XXXXXXXXX" className="h-16 bg-slate-50 border-none rounded-2xl font-black text-sm px-8 shadow-inner focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-slate-400 ml-1 tracking-[0.2em]">Deployment Destination</Label>
-                    <Textarea name="address" placeholder="EXACT LOCATION DETAILS..." className="min-h-[140px] bg-slate-50 border-none rounded-3xl p-8 font-bold text-sm shadow-inner focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all leading-relaxed" required />
-                  </div>
-                  
-                  <div className="pt-6">
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full h-20 rounded-[2.5rem] bg-primary hover:bg-[#15435a] text-white font-black text-lg uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(30,95,122,0.3)] transition-all active:scale-95 group"
-                    >
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : <><Zap size={20} className="mr-3 fill-current" /> Authorize Fulfillment</>}
-                    </Button>
-                  </div>
-                </form>
-
-                <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">Protocol Execution System © 2026</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 🏁 ISOLATED MINIMAL FOOTER */}
-      <footer className="py-20 border-t border-slate-100 bg-white">
-        <div className="container mx-auto px-6 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-12">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center text-white font-black">S</div>
-            <span className="font-black text-lg tracking-tighter uppercase">{settings?.websiteName || 'Smart Clean'} <span className="text-primary opacity-40">Protocol</span></span>
+      {/* 📝 ORDER TERMINAL */}
+      <section id="order-terminal" className="py-12 px-4">
+        <div className="container mx-auto max-w-5xl">
+          <div className="bg-emerald-600 rounded-t-[3rem] p-6 text-center shadow-lg border-b-2 border-emerald-500">
+             <h2 className="text-white font-black text-sm md:text-xl uppercase tracking-widest">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h2>
           </div>
           
-          <div className="flex gap-10">
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-primary cursor-pointer transition-colors">Documentation</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-primary cursor-pointer transition-colors">Privacy</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-primary cursor-pointer transition-colors">Security</span>
-          </div>
+          <div className="bg-white rounded-b-[3rem] shadow-2xl border border-gray-100 overflow-hidden">
+            <form onSubmit={handleOrder} className="flex flex-col lg:flex-row">
+               
+               {/* Left: Intake */}
+               <div className="lg:w-7/12 p-8 md:p-12 space-y-10 border-r border-gray-100">
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><User size={14} className="text-primary"/> Billing Details</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">নাম লিখুন *</Label>
+                        <Input name="name" placeholder="আপনার পূর্ণ নাম" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" required />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">মোবাইল নম্বর *</Label>
+                        <Input name="phone" placeholder="০১৮XXXXXXXX" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" required />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">পূর্ণ ঠিকানা লিখুন *</Label>
+                        <Textarea name="address" placeholder="বাসা নং, রোড নং, এলাকা, জেলা" className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4 font-medium shadow-inner" required />
+                      </div>
+                    </div>
+                  </div>
 
-          <p className="text-[9px] font-black text-slate-200 uppercase tracking-[0.5em]">SYSTEM_READY_STABLE_V2</p>
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary border-b pb-2 flex items-center gap-2"><Package size={14} className="text-primary" /> Your Products</h4>
+                    <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-inner">
+                       <Table>
+                         <TableHeader className="bg-gray-50">
+                           <TableRow>
+                             <TableHead className="font-black text-[9px] uppercase">Product</TableHead>
+                             <TableHead className="font-black text-[9px] uppercase text-center">Quantity</TableHead>
+                             <TableHead className="font-black text-[9px] uppercase text-right">Price</TableHead>
+                           </TableRow>
+                         </TableHeader>
+                         <TableBody>
+                           <TableRow>
+                             <TableCell className="py-4">
+                               <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><CheckCircle2 size={16} className="text-emerald-600" /></div>
+                                  <span className="text-[11px] font-black uppercase truncate max-w-[120px]">{page.title}</span>
+                               </div>
+                             </TableCell>
+                             <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-1 w-24 mx-auto">
+                                   <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-6 h-6 rounded bg-white shadow-sm flex items-center justify-center text-xs font-black">-</button>
+                                   <span className="text-xs font-black">{quantity}</span>
+                                   <button type="button" onClick={() => setQuantity(quantity + 1)} className="w-6 h-6 rounded bg-white shadow-sm flex items-center justify-center text-xs font-black">+</button>
+                                </div>
+                             </TableCell>
+                             <TableCell className="text-right font-black text-xs text-emerald-600">৳{calculations.subtotal}</TableCell>
+                           </TableRow>
+                         </TableBody>
+                       </Table>
+                    </div>
+                  </div>
+               </div>
+
+               {/* Right: Summary */}
+               <div className="lg:w-5/12 p-8 md:p-12 bg-gray-50/50 flex flex-col gap-8 h-full">
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#081621] border-b pb-2">Order Summary</h4>
+                    <div className="space-y-4">
+                       <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase">
+                         <span>Subtotal</span>
+                         <span>৳{calculations.subtotal.toLocaleString()}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-xs font-bold text-red-600 uppercase">
+                         <span>Savings</span>
+                         <span>-৳{calculations.discount.toLocaleString()}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-xs font-bold text-emerald-600 uppercase">
+                         <span>Shipping</span>
+                         <span>FREE</span>
+                       </div>
+                       
+                       <div className="pt-6 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                         <div className="flex flex-col">
+                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Payable</span>
+                           <span className="text-4xl font-black text-emerald-600 tracking-tighter">৳{calculations.total.toLocaleString()}</span>
+                         </div>
+                         <Badge className="bg-emerald-600 text-white border-none font-black text-[9px] px-3 py-1 rounded-lg">CASH ON DELIVERY</Badge>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-8">
+                     <div className="p-4 bg-white rounded-2xl border border-dashed border-gray-200 flex items-start gap-3">
+                        <ShieldCheck size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+                        <p className="text-[9px] font-bold text-gray-500 leading-tight uppercase">আপনার তথ্য আমাদের কাছে সম্পূর্ণ নিরাপদ। ডেলিভারি পাওয়ার পর টাকা পরিশোধ করবেন।</p>
+                     </div>
+                     <Button 
+                       type="submit" 
+                       disabled={isSubmitting}
+                       className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg uppercase tracking-tight shadow-xl shadow-green-600/30 gap-3 active:scale-95 transition-all"
+                     >
+                       {isSubmitting ? <Loader2 className="animate-spin" /> : <><ShoppingCart size={20} /> অর্ডার কনফার্ম করুন</>}
+                     </Button>
+                  </div>
+               </div>
+
+            </form>
+          </div>
         </div>
+      </section>
+
+      {/* 🏁 MINIMAL FOOTER */}
+      <footer className="py-10 text-center opacity-40">
+        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">Security Active • SSL Encrypted Checkout</p>
       </footer>
 
     </div>
