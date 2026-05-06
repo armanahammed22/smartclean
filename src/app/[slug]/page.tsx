@@ -124,29 +124,44 @@ export default function DynamicLandingPage() {
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-20">
       
       {/* 🔴 URGENCY TOP BAR (Integrated Branding) */}
-      <div className="bg-[#D60000] text-white py-2 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
+      <div className="bg-[#D60000] text-white py-3 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
         <div className="container mx-auto flex items-center justify-between gap-4">
           
-          {/* Left: Branding */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5 shadow-sm shrink-0">
+          {/* Left: Branding (Styled like the uploaded image) */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-white p-1 shadow-md shrink-0">
               {settings?.logoUrl ? (
                 <NextImage src={settings.logoUrl} alt="Logo" fill className="object-contain" unoptimized />
               ) : (
-                <div className="w-full h-full bg-emerald-600 rounded flex items-center justify-center text-white font-black text-xs">S</div>
+                <div className="w-full h-full bg-emerald-600 rounded flex items-center justify-center text-white font-black text-sm">S</div>
               )}
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-tighter block">
-              {settings?.websiteName || 'Smart Clean'}
-            </span>
+            <div className="flex flex-col relative px-1">
+              <div className="flex items-baseline font-black italic text-lg md:text-2xl tracking-tighter leading-none drop-shadow-sm">
+                <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#3498db] to-[#1a5276]">Smart</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#2ecc71] to-[#1d8348] ml-0.5">Clean</span>
+              </div>
+              {/* Green Swoosh Underline */}
+              <div className="absolute -bottom-1.5 left-0 w-full h-2 pointer-events-none opacity-90">
+                <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full">
+                  <path 
+                    d="M2,10 Q50,22 98,10" 
+                    stroke="#27ae60" 
+                    strokeWidth="5" 
+                    fill="none" 
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Center: Promo & Timer (Hidden on very small screens to maintain layout) */}
-          <div className="hidden sm:flex items-center gap-6">
-            <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-7 px-4 font-black uppercase text-[9px] animate-bounce shrink-0 shadow-sm border-none">
+          <div className="hidden lg:flex items-center gap-6">
+            <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-8 px-6 font-black uppercase text-[10px] animate-bounce shrink-0 shadow-sm border-none">
               অফার প্রাইসে দ্রুত অর্ডার করুন 👉
             </Button>
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-3">
                <div className="flex gap-1.5 text-center items-center">
                  <div className="bg-black/20 px-1.5 py-0.5 rounded font-mono font-bold text-xs">{timeLeft.h.toString().padStart(2, '0')}</div>
                  <span className="text-[7px] font-black uppercase opacity-60">HRS</span>
