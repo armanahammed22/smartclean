@@ -3,23 +3,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import NextImage from 'next/image';
-import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, where, limit, addDoc, doc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, limit, addDoc } from 'firebase/firestore';
 import { 
   ShieldCheck, 
-  Clock, 
   Loader2, 
   Zap, 
   Star, 
-  Plus, 
-  Minus, 
   ArrowRight, 
   CheckCircle2,
   Play,
   Package,
   ShoppingCart,
-  MapPin,
-  Smartphone,
   User,
   X
 } from 'lucide-react';
@@ -31,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DynamicLandingPage() {
   const { slug } = useParams();
@@ -182,10 +178,12 @@ export default function DynamicLandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i} className="border-none shadow-sm bg-gray-50 rounded-2xl p-6 text-center space-y-4 hover:shadow-xl transition-all duration-300">
-                <div className="flex justify-center text-amber-400 gap-1"><Star size={24} fill="currentColor" /></div>
-                <p className="text-[10px] md:text-xs font-bold text-gray-600 leading-relaxed uppercase tracking-tight">
-                  ১০০% হাইজিন মেইনটেইন করে প্রফেশনাল টিম দিয়ে আমরা কাজ সম্পন্ন করি।
-                </p>
+                <CardContent className="p-0 space-y-4">
+                  <div className="flex justify-center text-amber-400 gap-1"><Star size={24} fill="currentColor" /></div>
+                  <p className="text-[10px] md:text-xs font-bold text-gray-600 leading-relaxed uppercase tracking-tight">
+                    ১০০% হাইজিন মেইনটেইন করে প্রফেশনাল টিম দিয়ে আমরা কাজ সম্পন্ন করি।
+                  </p>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -204,7 +202,7 @@ export default function DynamicLandingPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 group cursor-pointer bg-black/20">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-white shadow-xl transition-transform group-hover:scale-125">
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-red-600 shadow-xl transition-transform group-hover:scale-125">
                     <Play size={24} fill="currentColor" className="ml-1" />
                   </div>
                 </div>
@@ -221,15 +219,17 @@ export default function DynamicLandingPage() {
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-lg">
           <Card className="border-2 border-dashed border-emerald-600 rounded-[3rem] p-8 text-center space-y-6 bg-white shadow-2xl">
-             <h3 className="text-xl font-black uppercase text-red-600 tracking-[0.2em] border-b pb-2">মূল্য</h3>
-             <div className="space-y-1">
-               <p className="text-gray-400 font-black text-sm uppercase line-through">রেগুলার মূল্য ৮২৫০৳</p>
-               <div className="flex items-center justify-center gap-2">
-                  <p className="text-4xl md:text-6xl font-black text-emerald-600 tracking-tighter italic">৳{calculations.total.toLocaleString()}</p>
-                  <Badge className="bg-red-600 text-white border-none font-black text-[10px] h-6">অফার মূল্য</Badge>
+             <CardContent className="p-0 space-y-6">
+               <h3 className="text-xl font-black uppercase text-red-600 tracking-[0.2em] border-b pb-2">মূল্য</h3>
+               <div className="space-y-1">
+                 <p className="text-gray-400 font-black text-sm uppercase line-through">রেগুলার মূল্য ৮২৫০৳</p>
+                 <div className="flex items-center justify-center gap-2">
+                    <p className="text-4xl md:text-6xl font-black text-emerald-600 tracking-tighter italic">৳{calculations.total.toLocaleString()}</p>
+                    <Badge className="bg-red-600 text-white border-none font-black text-[10px] h-6">অফার মূল্য</Badge>
+                 </div>
                </div>
-             </div>
-             <p className="bg-red-50 text-red-600 font-black py-2 rounded-xl text-sm uppercase tracking-widest shadow-inner">ডেলিভারি চার্জ সম্পূর্ণ ফ্রি</p>
+               <p className="bg-red-50 text-red-600 font-black py-2 rounded-xl text-sm uppercase tracking-widest shadow-inner">ডেলিভারি চার্জ সম্পূর্ণ ফ্রি</p>
+             </CardContent>
           </Card>
         </div>
       </section>
