@@ -22,7 +22,8 @@ import {
   Star,
   Play,
   Clock,
-  MapPin
+  MapPin,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -191,7 +200,6 @@ export default function DynamicLandingPage() {
   if (!page || !page.active) return <div className="h-screen flex items-center justify-center uppercase font-black tracking-widest text-gray-300">Page Not Available</div>;
 
   const isProduct = page.type === 'product';
-  const primaryColor = "#008000"; // Deep Green from reference
 
   return (
     <PublicLayout minimalMobile={true}>
