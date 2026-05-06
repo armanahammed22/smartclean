@@ -11,15 +11,15 @@ import {
   Zap, 
   Star, 
   ArrowRight, 
-  CheckCircle2,
-  Play,
-  Package,
-  ShoppingCart,
-  User,
-  X,
-  MapPin,
-  Phone,
-  Award
+  CheckCircle2, 
+  Play, 
+  Package, 
+  ShoppingCart, 
+  User, 
+  X, 
+  MapPin, 
+  Phone, 
+  Award 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function DynamicLandingPage() {
@@ -116,20 +123,20 @@ export default function DynamicLandingPage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-20">
       
-      {/* 🔴 URGENCY TOP BAR (Contains Branding) */}
+      {/* 🔴 URGENCY TOP BAR (Integrated Branding) */}
       <div className="bg-[#D60000] text-white py-2 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
         <div className="container mx-auto flex items-center justify-between gap-4">
           
           {/* Left: Branding */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5 shadow-sm">
+            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-white p-0.5 shadow-sm shrink-0">
               {settings?.logoUrl ? (
                 <NextImage src={settings.logoUrl} alt="Logo" fill className="object-contain" unoptimized />
               ) : (
-                <div className="w-full h-full bg-emerald-600 rounded flex items-center justify-center text-white font-black text-sm">S</div>
+                <div className="w-full h-full bg-emerald-600 rounded flex items-center justify-center text-white font-black text-xs">S</div>
               )}
             </div>
-            <span className="font-black text-[10px] md:text-sm uppercase tracking-tighter hidden xs:block">
+            <span className="font-black text-[10px] md:text-sm uppercase tracking-tighter block">
               {settings?.websiteName || 'Smart Clean'}
             </span>
           </div>
@@ -162,7 +169,7 @@ export default function DynamicLandingPage() {
             <div className="p-1 bg-white rounded-full text-[#D60000] group-hover:scale-110 transition-transform">
               <Phone size={12} fill="currentColor" />
             </div>
-            <span className="text-xs md:text-sm font-black tracking-tight">{settings?.contactPhone || '01919640422'}</span>
+            <span className="text-[10px] md:text-sm font-black tracking-tight">{settings?.contactPhone || '01919640422'}</span>
           </div>
         </div>
       </div>
