@@ -1,26 +1,33 @@
+
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  CheckCircle2, 
-  Star, 
-  Zap, 
-  ShieldCheck, 
-  Clock, 
-  Users, 
   ArrowRight, 
-  Sparkles,
-  Award,
+  Check, 
+  Zap, 
+  Shield, 
+  Smartphone, 
+  Globe, 
+  Activity,
+  Plus,
+  Minus,
+  Star,
   ChevronRight,
-  Shield,
-  ThumbsUp,
-  BadgeCheck
+  Monitor,
+  Command
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 
 export default function StandaloneLandingPage() {
@@ -33,109 +40,125 @@ export default function StandaloneLandingPage() {
   if (!mounted) return null;
 
   return (
-    <div className="bg-white min-h-screen font-sans text-gray-900 selection:bg-primary selection:text-white">
+    <div className="bg-[#F9FAFB] min-h-screen font-sans text-slate-900 selection:bg-slate-900 selection:text-white antialiased">
       
-      {/* 🚀 MINIMALIST NAVIGATION */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">S</div>
-            <span className="font-black text-xl tracking-tighter uppercase text-[#081621]">Smart<span className="text-primary">Clean</span></span>
+      {/* 🚀 GLASSMORPHISM NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-[200] border-b border-slate-200/40 bg-white/70 backdrop-blur-xl">
+        <div className="container mx-auto px-6 h-20 flex items-center justify-between max-w-7xl">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-xl rotate-3">
+              <Command size={20} />
+            </div>
+            <span className="font-black text-lg tracking-tighter uppercase text-slate-900">
+              Smart<span className="text-slate-400">Clean</span>
+            </span>
           </div>
-          <Button asChild className="rounded-full px-8 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20">
-            <Link href="/services">Get Started</Link>
-          </Button>
+          
+          <div className="hidden md:flex items-center gap-10">
+            {['Services', 'Platform', 'Pricing', 'Docs'].map((item) => (
+              <Link key={item} href="#" className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">
+                {item}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="hidden sm:block text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
+              Log In
+            </Link>
+            <Button asChild className="rounded-full px-6 h-10 bg-slate-900 text-white hover:bg-slate-800 font-black uppercase text-[9px] tracking-widest shadow-xl shadow-slate-200/50">
+              <Link href="/services">Start Cleaning</Link>
+            </Button>
+          </div>
         </div>
       </nav>
 
       {/* 🎯 HERO SECTION */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]" />
+      <section className="relative pt-40 pb-24 md:pt-56 md:pb-40 overflow-hidden">
+        <div className="container mx-auto px-6 max-w-7xl relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-10">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <Badge className="bg-white text-slate-500 border border-slate-200/60 px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-[0.3em] shadow-sm mb-6">
+                Now Integrated with AI
+              </Badge>
+              <h1 className="text-6xl md:text-9xl font-black text-slate-900 leading-[0.85] tracking-tighter uppercase">
+                The Future of <br />
+                <span className="text-slate-300">Clean is Here.</span>
+              </h1>
+            </div>
+            
+            <p className="text-slate-500 text-lg md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
+              Minimal effort. Maximal purity. Smart Clean reimagines hygiene for the modern era with precision technology.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+              <Button asChild size="lg" className="h-16 px-12 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 font-black text-sm uppercase tracking-widest shadow-2xl shadow-slate-300/50 group">
+                <Link href="/services" className="flex items-center gap-3">
+                  Deploy Professional Team <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Link href="/page/about-us" className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 flex items-center gap-2">
+                See How it Works <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8 text-center lg:text-left">
-              <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-[0.2em]">
-                Next-Gen Cleaning Solutions
-              </Badge>
-              <h1 className="text-5xl md:text-8xl font-black text-[#081621] leading-[0.9] tracking-tighter uppercase italic">
-                A Smarter Way <br />
-                <span className="text-primary">To Clean</span> Your Space.
-              </h1>
-              <p className="text-gray-500 text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Experience premium, tech-enabled cleaning services that give you back your time. Professional, reliable, and just a click away.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-                <Button asChild size="lg" className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-lg uppercase tracking-tight shadow-2xl shadow-primary/30 group">
-                  <Link href="/services" className="flex items-center gap-3">
-                    Book a Service <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
-                <div className="flex items-center gap-3 px-6 py-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
-                        <Image src={`https://picsum.photos/seed/user${i}/100/100`} alt="User" fill className="object-cover" unoptimized />
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-gray-400">Trusted by 5k+ Clients</span>
-                </div>
-              </div>
-            </div>
+        {/* Subtle Decorative elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] -z-10 opacity-[0.03] pointer-events-none">
+          <Grid size={800} className="text-slate-900" />
+        </div>
+      </section>
 
-            <div className="relative">
-              <div className="relative aspect-square rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700">
-                <Image 
-                  src="https://picsum.photos/seed/cleanlanding/800/800" 
-                  alt="Service Preview" 
-                  fill 
-                  className="object-cover" 
-                  unoptimized
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent" />
+      {/* 📊 SOCIAL PROOF / STATS */}
+      <section className="py-20 border-y border-slate-200/40 bg-white">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            {[
+              { label: 'Successful Deployments', val: '40k+' },
+              { label: 'Client Retention Rate', val: '98.2%' },
+              { label: 'Active Professionals', val: '500+' },
+              { label: 'System Uptime', val: '99.9%' }
+            ].map((stat, i) => (
+              <div key={i} className="text-center space-y-1 group">
+                <p className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter transition-transform group-hover:scale-105 duration-500">{stat.val}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{stat.label}</p>
               </div>
-              {/* Floating Badge - Fixed Ambiguous Utility Class */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 animate-bounce [animation-duration:3s]">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <div>
-                    <p className="text-xl font-black text-gray-900">100%</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Satisfaction</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 💎 FEATURES SECTION */}
-      <section className="py-24 bg-gray-50/50">
+      {/* 💎 FEATURES GRID */}
+      <section className="py-32 md:py-48">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-            <h2 className="text-4xl md:text-6xl font-black text-[#081621] uppercase tracking-tighter">Why We Are Different</h2>
-            <p className="text-gray-500 font-medium text-lg">We've reimagined cleaning from the ground up, focusing on quality, trust, and simplicity.</p>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+            <div className="max-w-2xl space-y-4">
+              <h2 className="text-4xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-[0.9]">
+                Engineered for <br /><span className="text-slate-300">Excellence.</span>
+              </h2>
+            </div>
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest pb-2">01 / Capabilities</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: "Smart Scheduling", desc: "Book your service in less than 60 seconds with our intuitive interface.", color: "text-blue-600", bg: "bg-blue-50" },
-              { icon: Shield, title: "Verified Pros", desc: "Every professional undergoes rigorous background checks and training.", color: "text-primary", bg: "bg-primary/10" },
-              { icon: Clock, title: "Punctuality", desc: "We value your time. Our team arrives exactly when promised, every time.", color: "text-amber-600", bg: "bg-amber-50" }
+              { icon: Zap, title: "Instant Booking", desc: "Automated scheduling system that matches you with the best available professional in 30 seconds." },
+              { icon: Shield, title: "Secure Chain", desc: "Every professional is background verified and follows a strict digital security protocol." },
+              { icon: Smartphone, title: "Live Updates", desc: "Real-time tracking of your service team from dispatch to completion via our portal." },
+              { icon: Globe, title: "Area Coverage", desc: "Our network spans all major zones with local hubs for rapid response times." },
+              { icon: Activity, title: "Data Driven", desc: "Using AI to optimize cleaning patterns and ensure resource efficiency at every site." },
+              { icon: Star, title: "Premium Quality", desc: "Industrial grade equipment combined with hospital-standard chemical formulations." }
             ].map((f, i) => (
-              <Card key={i} className="border-none shadow-sm rounded-[2.5rem] bg-white p-10 group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+              <Card key={i} className="border-none shadow-none bg-white rounded-[2.5rem] p-10 group hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-700">
                 <CardContent className="p-0 space-y-6">
-                  <div className={cn("p-5 rounded-2xl w-fit transition-transform group-hover:rotate-12", f.bg, f.color)}>
-                    <f.icon size={32} />
+                  <div className="p-4 rounded-2xl w-fit bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500">
+                    <f.icon size={28} />
                   </div>
-                  <h3 className="text-2xl font-black text-[#081621] uppercase tracking-tight">{f.title}</h3>
-                  <p className="text-gray-500 font-medium leading-relaxed">{f.desc}</p>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{f.title}</h3>
+                    <p className="text-slate-500 font-medium text-sm leading-relaxed">{f.desc}</p>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -143,45 +166,27 @@ export default function StandaloneLandingPage() {
         </div>
       </section>
 
-      {/* ⭐ TESTIMONIALS SECTION */}
-      <section className="py-24 overflow-hidden">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 text-center md:text-left">
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-6xl font-black text-[#081621] uppercase tracking-tighter">Voices of Trust</h2>
-              <p className="text-gray-500 font-bold uppercase tracking-widest text-xs flex items-center justify-center md:justify-start gap-2">
-                <Star size={16} fill="#1E5F7A" className="text-primary" /> Rated 4.9/5 by 1,000+ Households
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-4 bg-gray-50 px-8 py-5 rounded-[2rem] border">
-              <div className="text-right">
-                <p className="text-3xl font-black leading-none">4.9</p>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Average Score</p>
-              </div>
-              <div className="w-px h-12 bg-gray-200" />
-              <div className="flex gap-1 text-amber-400">
-                {[1,2,3,4,5].map(i => <Star key={i} size={20} fill="currentColor" />)}
-              </div>
-            </div>
+      {/* ⭐ TESTIMONIALS */}
+      <section className="py-32 bg-slate-900 text-white overflow-hidden rounded-[3rem] md:rounded-[5rem] mx-4 md:mx-10 mb-32 shadow-2xl">
+        <div className="container mx-auto px-6 max-w-7xl text-center space-y-20">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter">Trusted by the <br /><span className="text-slate-700">Discerning.</span></h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { name: "Tahsin Ahmed", text: "The most professional cleaning service I've ever used in Dhaka. Their attention to detail is unmatched.", role: "Home Owner" },
-              { name: "Nabila Kabir", text: "Finally, a service that understands the value of time and hygiene. My office has never looked better.", role: "Business Manager" },
-              { name: "Rafiqul Islam", text: "Great tech, great staff, and great results. The booking process was so smooth!", role: "Tech Professional" }
+              { name: "Adnan Sami", text: "The most precise cleaning service I've ever experienced. Their attention to corner details is remarkable.", role: "CEO, TechVision" },
+              { name: "Nabila Khan", text: "Finally, a platform that understands the intersection of technology and hospitality. Pure class.", role: "Creative Director" },
+              { name: "Rafat Ahmed", text: "Smart Clean has become an essential part of our office maintenance. Reliability is their core strength.", role: "Operations Lead" }
             ].map((rev, i) => (
-              <div key={i} className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-100/50 space-y-8 relative">
-                <div className="flex text-primary gap-0.5">
-                  {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" />)}
+              <div key={i} className="space-y-8 p-6">
+                <div className="flex justify-center text-slate-700 gap-1">
+                  {[1,2,3,4,5].map(j => <Star key={j} size={14} fill="currentColor" className="text-primary" />)}
                 </div>
-                <p className="text-gray-600 font-medium italic text-lg leading-relaxed">"{rev.text}"</p>
-                <div className="flex items-center gap-4 pt-6 border-t border-gray-50">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center font-black text-primary text-sm uppercase">{rev.name[0]}</div>
-                  <div>
-                    <p className="font-black text-sm text-[#081621] uppercase tracking-tight">{rev.name}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{rev.role}</p>
-                  </div>
+                <p className="text-lg md:text-xl font-medium italic leading-relaxed text-slate-300">"{rev.text}"</p>
+                <div className="space-y-1">
+                  <p className="font-black uppercase text-xs tracking-widest">{rev.name}</p>
+                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">{rev.role}</p>
                 </div>
               </div>
             ))}
@@ -189,47 +194,116 @@ export default function StandaloneLandingPage() {
         </div>
       </section>
 
-      {/* 📣 FINAL CTA SECTION */}
-      <section className="py-32 container mx-auto px-6 max-w-5xl">
-        <div className="bg-[#081621] rounded-[4rem] p-10 md:p-20 text-center space-y-10 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 p-20 opacity-5 -rotate-12 pointer-events-none">
-            <Sparkles size={300} className="text-primary" />
-          </div>
-          
-          <div className="relative z-10 space-y-6">
-            <div className="p-4 bg-white/5 w-fit mx-auto rounded-3xl border border-white/10 mb-8">
-              <ThumbsUp size={48} className="text-primary" />
-            </div>
-            <h2 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none italic">
-              Ready for a <br />
-              <span className="text-primary">Spotless</span> Experience?
-            </h2>
-            <p className="text-white/60 text-lg md:text-xl font-medium max-w-xl mx-auto">
-              Join thousands of happy customers and transform your space today. No hidden fees, just pure clean.
-            </p>
-            <div className="pt-6">
-              <Button asChild size="lg" className="h-20 px-16 rounded-3xl bg-primary hover:bg-primary/90 text-white font-black text-2xl uppercase tracking-tight shadow-3xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                <Link href="/services" className="flex items-center gap-4">
-                  Book Now <ArrowRight size={28} />
-                </Link>
+      {/* 💰 PRICING SECTION */}
+      <section className="py-32 container mx-auto px-6 max-w-7xl">
+        <div className="text-center mb-24 space-y-4">
+          <h2 className="text-4xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter">Simple <span className="text-slate-300">Pricing.</span></h2>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No hidden fees. Professional standards.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          {[
+            { name: "Essential", price: "৳1,500", desc: "For single rooms or focused deep cleaning tasks.", features: ["2 Professional Cleaners", "Standard Equipment", "Eco-friendly Solutions", "Live Support"] },
+            { name: "Standard", price: "৳4,500", desc: "Our most popular choice for full apartment cleaning.", featured: true, features: ["4 Senior Technicians", "Industrial Vacuuming", "Chemical Sanitization", "After-service Warranty"] },
+            { name: "Corporate", price: "Custom", desc: "Tailored recurring solutions for office and factories.", features: ["Dedicated Supervisor", "Shift-based Rotation", "Inventory Management", "Monthly Audit Reports"] }
+          ].map((plan, i) => (
+            <Card key={i} className={cn(
+              "border-none shadow-none bg-white p-10 rounded-[3rem] flex flex-col h-full transition-all duration-500",
+              plan.featured ? "ring-2 ring-slate-900 shadow-2xl shadow-slate-200" : "hover:bg-slate-50"
+            )}>
+              <div className="space-y-8 flex-1">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black uppercase text-slate-900 tracking-tight">{plan.name}</h3>
+                  <p className="text-xs text-slate-400 font-medium leading-relaxed">{plan.desc}</p>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-slate-900 tracking-tighter">{plan.price}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">/ session</span>
+                </div>
+                <ul className="space-y-4 pt-6 border-t border-slate-100">
+                  {plan.features.map(f => (
+                    <li key={f} className="flex items-center gap-3 text-[11px] font-bold text-slate-600 uppercase tracking-tight">
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-900" /> {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button className={cn(
+                "w-full h-14 rounded-2xl font-black uppercase text-[10px] tracking-widest mt-12 transition-all active:scale-95",
+                plan.featured ? "bg-slate-900 text-white shadow-xl" : "bg-white text-slate-900 border border-slate-200"
+              )}>
+                Choose Plan
               </Button>
-            </div>
-            <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.3em] pt-4">No Credit Card Required To Browse</p>
-          </div>
+            </Card>
+          ))}
         </div>
       </section>
 
-      {/* 🏁 MINIMAL FOOTER */}
-      <footer className="py-12 border-t border-gray-100">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2 grayscale opacity-50">
-            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white font-black text-sm">S</div>
-            <span className="font-black text-sm tracking-tighter uppercase">SmartClean</span>
+      {/* ❓ FAQ SECTION */}
+      <section className="py-32 md:py-48 bg-slate-50/50">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 uppercase tracking-tighter">Common Questions</h2>
+            <div className="w-12 h-1 bg-slate-200 mx-auto rounded-full" />
           </div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">© 2026 Smart Clean Bangladesh. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link href="/page/privacy-policy" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors">Privacy</Link>
-            <Link href="/page/terms-of-service" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors">Terms</Link>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {[
+              { q: "What chemicals do you use?", a: "We exclusively use hospital-standard, biodegradable solutions that are safe for pets and children while being lethal to bacteria and viruses." },
+              { q: "How long does a session take?", a: "An Essential session takes about 2 hours, while a full home Deep Clean can take between 4 to 7 hours depending on the total area." },
+              { q: "Is insurance included?", a: "Yes, every Smart Clean deployment is insured. Any accidental damage caused by our team is fully covered by our protection plan." },
+              { q: "Can I book on short notice?", a: "Absolutely. Our automated matching system can deploy a team in as little as 4 hours for most urban locations." }
+            ].map((item, i) => (
+              <AccordionItem key={i} value={`item-${i}`} className="border-none bg-white rounded-3xl px-8 shadow-sm group">
+                <AccordionTrigger className="hover:no-underline py-6">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-700 group-data-[state=open]:text-slate-900 transition-colors">{item.q}</span>
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-500 font-medium leading-relaxed pb-6">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* 🏁 CLEAN FOOTER */}
+      <footer className="py-20 border-t border-slate-200/60 bg-white">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start mb-20">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-sm">S</div>
+                <span className="font-black text-sm tracking-tighter uppercase">SmartClean</span>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-loose">
+                Professional hygiene infrastructure <br /> for modern living spaces.
+              </p>
+            </div>
+            
+            {[
+              { t: 'Product', links: ['Services', 'Add-ons', 'SaaS Platform'] },
+              { t: 'Company', links: ['About', 'Careers', 'Contact'] },
+              { t: 'Legal', links: ['Privacy', 'Terms', 'Security'] }
+            ].map((group) => (
+              <div key={group.t} className="space-y-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">{group.t}</h4>
+                <ul className="space-y-3">
+                  {group.links.map(l => (
+                    <li key={l}><Link href="#" className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">{l}</Link></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-12 border-t border-slate-100">
+            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">© 2026 Smart Clean. All rights reserved.</p>
+            <div className="flex gap-8">
+              {['Twitter', 'Instagram', 'LinkedIn'].map(s => (
+                <Link key={s} href="#" className="text-[9px] font-black text-slate-300 hover:text-slate-900 transition-colors uppercase tracking-[0.2em]">{s}</Link>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
