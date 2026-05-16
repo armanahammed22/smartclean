@@ -19,7 +19,8 @@ import {
   X, 
   MapPin, 
   Phone, 
-  Award 
+  Award,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -117,17 +118,23 @@ export default function DynamicLandingPage() {
     }
   };
 
+  const handleWhatsApp = () => {
+    const contactPhone = settings?.contactPhone || '01919640422';
+    const text = `আসসালামু আলাইকুম, আমি আপনার ${page?.title} সার্ভিস/প্রোডাক্টটি নিতে আগ্রহী।`;
+    window.open(`https://wa.me/${contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   if (!mounted || isLoading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={40} /></div>;
   if (!page || !page.active) return <div className="h-screen flex items-center justify-center font-black uppercase text-gray-200 tracking-[0.5em]">Offline Protocol</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-20">
+    <div className="min-h-screen bg-gray-50 font-sans text-slate-900 antialiased overflow-x-hidden pb-32">
       
       {/* 🔴 URGENCY TOP BAR (Integrated Branding) */}
       <div className="bg-[#D60000] text-white py-3 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
         <div className="container mx-auto flex items-center justify-between gap-4">
           
-          {/* Left: Branding (Styled like the uploaded image) */}
+          {/* Left: Branding (Matched to uploaded image) */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-white p-1 shadow-md shrink-0">
               {settings?.logoUrl ? (
@@ -156,7 +163,7 @@ export default function DynamicLandingPage() {
             </div>
           </div>
 
-          {/* Center: Promo & Timer (Hidden on very small screens to maintain layout) */}
+          {/* Center: Promo & Timer */}
           <div className="hidden lg:flex items-center gap-6">
             <Button className="bg-white text-[#D60000] hover:bg-gray-100 rounded-full h-8 px-6 font-black uppercase text-[10px] animate-bounce shrink-0 shadow-sm border-none">
               অফার প্রাইসে দ্রুত অর্ডার করুন 👉
@@ -395,6 +402,23 @@ export default function DynamicLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* 📱 MOBILE STICKY ACTIONS */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[600] pb-safe-offset-2 no-print">
+        <Button 
+          variant="outline"
+          onClick={handleWhatsApp}
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+        >
+          <MessageCircle size={18} /> WhatsApp
+        </Button>
+        <Button 
+          onClick={() => document.getElementById('order-terminal')?.scrollIntoView({ behavior: 'smooth' })}
+          className="flex-[1.5] h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-green-600/30 gap-2 active:scale-95 transition-all"
+        >
+          অর্ডার করুন <ArrowRight size={18} />
+        </Button>
+      </div>
 
       {/* 🏁 BRANDED FOOTER */}
       <footer className="py-12 bg-white border-t border-gray-100 px-4 mt-12">

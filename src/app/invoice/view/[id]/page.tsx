@@ -18,7 +18,8 @@ import {
   Printer,
   Wallet,
   Heart,
-  Check
+  Check,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,16 +50,22 @@ export default function PublicInvoiceViewPage() {
     return ['Home Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Sofa & Carpet', 'Kitchen Sanitization', 'Pest Control'];
   }, [settings]);
 
+  const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
+  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
+  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  
+  const handleWhatsApp = () => {
+    if (!invoice) return;
+    const text = `আসসালামু আলাইকুম, আমি আমার ইনভয়েস (${invoice.invoiceNumber}) সম্পর্কে জানতে চাই।`;
+    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Secure Document Not Found</div>;
 
   const signatureUrl = settings?.signatureUrl;
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
 
-  const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
-  
   const websiteName = settings?.websiteName || 'Smart Clean';
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
 
@@ -80,7 +87,7 @@ export default function PublicInvoiceViewPage() {
   ];
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white">
+    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white pb-32 md:pb-16">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
@@ -101,13 +108,22 @@ export default function PublicInvoiceViewPage() {
                 <Badge className="bg-emerald-100 text-emerald-700 border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1">Verified Document</Badge>
             </div>
           </div>
-          <Button 
-            className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all"
-            onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
-            disabled={isDownloading}
-          >
-            {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
-          </Button>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button 
+              variant="outline"
+              onClick={handleWhatsApp}
+              className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"
+            >
+              <MessageCircle size={18} /> WhatsApp
+            </Button>
+            <Button 
+              className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all"
+              onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
+              disabled={isDownloading}
+            >
+              {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
+            </Button>
+          </div>
         </div>
 
         <div 
@@ -315,6 +331,24 @@ export default function PublicInvoiceViewPage() {
             </tfoot>
           </table>
         </div>
+      </div>
+
+      {/* 📱 MOBILE STICKY ACTIONS */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[200] pb-safe-offset-2 no-print">
+        <Button 
+          variant="outline"
+          onClick={handleWhatsApp}
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+        >
+          <MessageCircle size={18} /> WhatsApp
+        </Button>
+        <Button 
+          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all"
+          onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
+          disabled={isDownloading}
+        >
+          {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download size={18} /> Download</>}
+        </Button>
       </div>
     </div>
   );

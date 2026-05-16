@@ -72,6 +72,11 @@ export default function AdminInvoiceDetailPage() {
   const isDue = (invoice.dueAmount || 0) > 0;
   const isQuotation = invoice.invoiceNumber?.startsWith('QTN');
 
+  const handleWhatsApp = () => {
+    const text = `আসসালামু আলাইকুম, ইনভয়েস (${invoice.invoiceNumber}) টি চেক করার জন্য অনুরোধ করা হলো।`;
+    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const terms = isQuotation ? [
     'Quotation valid for 7 days.',
     'Final cost may vary based on actual condition/work scope.',
@@ -87,7 +92,7 @@ export default function AdminInvoiceDetailPage() {
   ];
 
   return (
-    <div className="space-y-8 pb-24 max-w-6xl mx-auto min-w-0">
+    <div className="space-y-8 pb-32 md:pb-24 max-w-6xl mx-auto min-w-0">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
@@ -109,8 +114,8 @@ export default function AdminInvoiceDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2 font-bold h-11 px-6 rounded-xl border-emerald-200 text-emerald-700 bg-emerald-50" asChild>
-            <a href={`https://wa.me/${headerPhone.replace(/\D/g, '')}`} target="_blank"><MessageCircle size={18} /> Send to WhatsApp</a>
+          <Button variant="outline" onClick={handleWhatsApp} className="gap-2 font-bold h-11 px-6 rounded-xl border-emerald-200 text-emerald-700 bg-emerald-50">
+            <MessageCircle size={18} /> Send to WhatsApp
           </Button>
           <Button className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 bg-[#1E5F7A] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
             {isDownloading ? <Loader2 className="animate-spin" /> : <Download size={18} />} EXPORT PDF
@@ -324,6 +329,24 @@ export default function AdminInvoiceDetailPage() {
             </tfoot>
           </table>
         </div>
+      </div>
+
+      {/* 📱 MOBILE STICKY ACTIONS */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[200] pb-safe-offset-2 no-print">
+        <Button 
+          variant="outline"
+          onClick={handleWhatsApp}
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+        >
+          <MessageCircle size={18} /> WhatsApp
+        </Button>
+        <Button 
+          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all"
+          onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
+          disabled={isDownloading}
+        >
+          {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download size={18} /> Download</>}
+        </Button>
       </div>
     </div>
   );
