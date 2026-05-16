@@ -292,7 +292,6 @@ function InvoicesListContent() {
 
   return (
     <div className="space-y-10 pb-24 min-w-0">
-      {/* 💳 PREMIUM DASHBOARD HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><ReceiptText size={240} /></div>
         <div className="relative z-10 space-y-2">
@@ -309,7 +308,6 @@ function InvoicesListContent() {
         </div>
       </div>
 
-      {/* 📊 GLASSMORPHISM STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         {[
           { label: "Gross Volume", val: `৳${stats.revenue.toLocaleString()}`, icon: Banknote, bg: "bg-emerald-500/10", color: "text-emerald-500" },
@@ -332,7 +330,6 @@ function InvoicesListContent() {
         ))}
       </div>
 
-      {/* 🔍 FILTER & TABLE */}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[2rem] shadow-xl border border-gray-100">
           <div className="relative flex-1 w-full group">
@@ -444,7 +441,6 @@ function InvoicesListContent() {
         </Card>
       </div>
 
-      {/* 🛠️ PREMIUM MOBILE-FIRST INVOICE TERMINAL DIALOG */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-6xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] bg-white flex flex-col overflow-hidden">
           <header className="p-8 md:p-10 bg-[#081621] text-white flex justify-between items-center shrink-0 border-b border-white/5 relative overflow-hidden">
@@ -676,8 +672,8 @@ function InvoicesListContent() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}
             </Button>
           </DialogFooter>
-        </div>
-      </DialogContent>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
