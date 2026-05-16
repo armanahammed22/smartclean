@@ -38,7 +38,13 @@ import {
   Smartphone,
   Users,
   Wrench,
-  ChevronDown
+  ChevronDown,
+  Zap,
+  Layout,
+  Banknote,
+  ShieldCheck,
+  CreditCard,
+  ArrowUpRight
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -55,7 +61,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 
 function InvoicesListContent() {
@@ -76,7 +82,7 @@ function InvoicesListContent() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
-  // 🛡️ Optimized Queries to avoid index error
+  // Queries
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
   const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
@@ -85,7 +91,6 @@ function InvoicesListContent() {
   const { data: customersRaw } = useCollection(usersQuery);
   const { data: serviceCatalogRaw } = useCollection(servicesQuery);
 
-  // 🧠 In-memory sorting
   const customers = useMemo(() => {
     if (!customersRaw) return [];
     return [...customersRaw].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -135,20 +140,6 @@ function InvoicesListContent() {
       await batch.commit();
       setSelectedIds([]);
       toast({ title: "Bulk Removal Successful" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Action Failed" });
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  const handleDeleteSingle = async (id: string) => {
-    if (!db || !confirm("Purge this record?")) return;
-    setIsBulkProcessing(true);
-    try {
-      await deleteDoc(doc(db, 'invoices', id));
-      setSelectedIds(prev => prev.filter(i => i !== id));
-      toast({ title: "Invoice Removed" });
     } catch (e) {
       toast({ variant: "destructive", title: "Action Failed" });
     } finally {
@@ -284,292 +275,351 @@ function InvoicesListContent() {
   };
 
   return (
-    <div className="space-y-8 pb-24 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">Billing Registry</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-1">Audit-ready documentation and receivable tracking</p>
+    <div className="space-y-10 pb-24 min-w-0">
+      {/* 💳 PREMIUM DASHBOARD HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><ReceiptText size={240} /></div>
+        <div className="relative z-10 space-y-2">
+          <Badge className="bg-primary/20 text-primary border-none font-black text-[9px] uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg">Billing Hub v2.0</Badge>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none font-headline italic">
+            Invoice <span className="text-primary">Registry</span>
+          </h1>
+          <p className="text-white/40 text-xs md:text-sm font-medium tracking-wide">Enterprise-grade financial documentation & ledger</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleOpenCreate} className="rounded-xl font-black h-11 px-8 shadow-xl shadow-primary/20 gap-2 uppercase text-xs tracking-widest bg-primary text-white">
-            <Plus size={18} /> New Manual Invoice
+        <div className="relative z-10">
+          <Button onClick={handleOpenCreate} className="h-14 md:h-16 px-10 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 gap-3 border-none">
+            <Plus size={20} strokeWidth={3} /> Authorize New Invoice
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* 📊 GLASSMORPHISM STATS */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         {[
-          { label: "Total Volume", val: stats.total, icon: FileText, bg: "bg-blue-50", color: "text-blue-600" },
-          { label: "Net Revenue", val: `৳${stats.revenue.toLocaleString()}`, icon: TrendingUp, bg: "bg-emerald-50", color: "text-emerald-600" },
-          { label: "Total Receivable", val: `৳${stats.due.toLocaleString()}`, icon: AlertCircle, bg: "bg-rose-50", color: "text-rose-600" },
-          { label: "Settled", val: stats.paidCount, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
-          { label: "Outstanding", val: stats.unpaidCount, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" }
+          { label: "Gross Volume", val: `৳${stats.revenue.toLocaleString()}`, icon: Banknote, bg: "bg-emerald-500/10", color: "text-emerald-500" },
+          { label: "Receivables", val: `৳${stats.due.toLocaleString()}`, icon: Wallet, bg: "bg-rose-500/10", color: "text-rose-500" },
+          { label: "Settled Bills", val: stats.paidCount, icon: ShieldCheck, bg: "bg-blue-500/10", color: "text-blue-500" },
+          { label: "Active Subs", val: stats.total, icon: Zap, bg: "bg-amber-500/10", color: "text-amber-500" },
+          { label: "Outstanding", val: stats.unpaidCount, icon: Clock, bg: "bg-indigo-500/10", color: "text-indigo-500" }
         ].map((s, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
-                <h3 className="text-lg font-black text-gray-900 truncate">{s.val}</h3>
+          <Card key={i} className="border-none shadow-xl bg-white rounded-3xl overflow-hidden group transition-all hover:shadow-2xl">
+            <CardContent className="p-6 flex flex-col gap-4">
+              <div className={cn("p-3 rounded-2xl w-fit transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 shadow-sm", s.bg, s.color)}>
+                <s.icon size={22} />
               </div>
-              <div className={cn("p-2.5 rounded-xl transition-transform group-hover:scale-110", s.bg, s.color)}><s.icon size={18} /></div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1.5">{s.label}</p>
+                <h3 className="text-xl md:text-2xl font-black text-[#081621] truncate tracking-tight">{s.val}</h3>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <Input 
-            placeholder="Search Invoice #, Customer or Phone..." 
-            className="pl-12 h-12 border-none bg-gray-50 focus:bg-white rounded-xl transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* 🔍 FILTER & TABLE */}
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[2rem] shadow-xl border border-gray-100">
+          <div className="relative flex-1 w-full group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary transition-colors" size={20} />
+            <Input 
+              placeholder="Filter by ref number, customer, or phone..." 
+              className="pl-14 h-14 border-none bg-gray-50 focus:bg-white rounded-2xl transition-all font-medium text-sm shadow-inner"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 w-full md:w-auto">
+             <Button variant="outline" className="h-14 rounded-2xl px-6 gap-2 font-black uppercase text-[10px] border-gray-200">
+                <Filter size={18}/> Advanced
+             </Button>
+             {selectedIds.length > 0 && (
+              <Button variant="destructive" className="h-14 rounded-2xl px-8 font-black uppercase text-[10px] shadow-lg animate-in zoom-in-95" onClick={handleBulkDelete} disabled={isBulkProcessing}>
+                Purge ({selectedIds.length})
+              </Button>
+            )}
+          </div>
         </div>
-        {selectedIds.length > 0 && (
-          <Button variant="destructive" className="rounded-xl h-12 px-6 font-black uppercase text-xs" onClick={handleBulkDelete} disabled={isBulkProcessing}>
-            Delete Selected ({selectedIds.length})
-          </Button>
-        )}
+
+        <Card className="border-none shadow-2xl overflow-hidden bg-white rounded-[2.5rem]">
+          <CardContent className="p-0 overflow-x-auto custom-scrollbar">
+            <div className="min-w-full">
+              <Table>
+                <TableHeader className="bg-gray-50/50 border-b">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-16 pl-8">
+                      <Checkbox 
+                        checked={filtered?.length ? selectedIds.length === filtered.length : false}
+                        onCheckedChange={toggleSelectAll}
+                        className="rounded-lg h-5 w-5 border-gray-300"
+                      />
+                    </TableHead>
+                    <TableHead className="font-black py-6 pl-2 uppercase text-[10px] tracking-widest text-[#081621]">Ref. ID</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Customer Profile</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Bill Summary</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-center text-[#081621]">Protocol</TableHead>
+                    <TableHead className="text-right pr-10 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={6} className="text-center py-32"><Loader2 className="animate-spin text-primary inline" size={40} /></TableCell></TableRow>
+                  ) : filtered?.length ? (
+                    filtered.map((inv) => (
+                      <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
+                        <TableCell className="pl-8">
+                          <Checkbox 
+                            checked={selectedIds.includes(inv.id)}
+                            onCheckedChange={() => toggleSelect(inv.id)}
+                            className="rounded-lg h-5 w-5 border-gray-300"
+                          />
+                        </TableCell>
+                        <TableCell className="py-6 pl-2 font-black text-xs text-primary font-mono">{inv.invoiceNumber}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-black text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                              {inv.customerInfo?.name?.[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1.5">{inv.customerInfo?.name}</div>
+                              <div className="text-[9px] text-muted-foreground font-black uppercase tracking-tight flex items-center gap-1.5">
+                                <Phone size={10} className="text-primary"/> {inv.customerInfo?.phone}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <span className="font-black text-sm text-gray-900 tracking-tighter">৳{inv.total?.toLocaleString()}</span>
+                            <div className="text-[8px] font-bold text-gray-400 uppercase">{inv.items?.length || 0} Scope(s)</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className={cn(
+                            "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg shadow-sm",
+                            inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : 
+                            inv.paymentStatus === 'Partial' ? "bg-blue-50 text-blue-700" : 
+                            "bg-rose-50 text-rose-700"
+                          )}>
+                            {inv.paymentStatus}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right pr-10">
+                          <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-primary bg-primary/5 hover:bg-primary/10 rounded-xl" asChild>
+                              <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl" onClick={() => handleOpenEdit(inv)}>
+                              <Edit size={18} />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive bg-rose-50 hover:bg-rose-100 rounded-xl" onClick={() => handleDeleteSingle(inv.id)} disabled={isBulkProcessing}>
+                              <Trash2 size={18} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={6} className="text-center py-32 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records synchronized.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-        <CardContent className="p-0 overflow-x-auto custom-scrollbar">
-          <div className="min-w-full">
-            <Table>
-              <TableHeader className="bg-gray-50/50">
-                <TableRow>
-                  <TableHead className="w-12 pl-6">
-                    <Checkbox 
-                      checked={filtered?.length ? selectedIds.length === filtered.length : false}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="font-bold py-5 pl-4 uppercase text-[10px] tracking-widest text-[#081621]">Ref Number</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Client Identity</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-[#081621]">Net Amount</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest text-center text-[#081621]">Status</TableHead>
-                  <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-                ) : filtered?.length ? (
-                  filtered.map((inv) => (
-                    <TableRow key={inv.id} className={cn("hover:bg-gray-50/50 transition-colors group", selectedIds.includes(inv.id) && "bg-primary/5")}>
-                      <TableCell className="pl-6">
-                        <Checkbox 
-                          checked={selectedIds.includes(inv.id)}
-                          onCheckedChange={() => toggleSelect(inv.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 pl-4 font-black text-xs text-primary">{inv.invoiceNumber}</TableCell>
-                      <TableCell>
-                        <div className="text-xs font-bold text-gray-900 uppercase leading-none mb-1">{inv.customerInfo?.name}</div>
-                        <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">{inv.customerInfo?.phone}</div>
-                      </TableCell>
-                      <TableCell className="font-black text-sm text-gray-900">৳{inv.total?.toLocaleString()}</TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="secondary" className={cn(
-                          "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
-                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700 shadow-sm" : 
-                          inv.paymentStatus === 'Partial' ? "bg-blue-50 text-blue-700 shadow-sm" : 
-                          "bg-rose-50 text-rose-700 shadow-sm"
-                        )}>
-                          {inv.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right pr-8">
-                        <div className="flex justify-end gap-1.5 opacity-100">
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild title="Preview Document">
-                            <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleOpenEdit(inv)} title="Update Data">
-                            <Edit size={18} />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDeleteSingle(inv.id)} disabled={isBulkProcessing} title="Purge Record">
-                            <Trash2 size={18} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow><TableCell colSpan={6} className="text-center py-24 italic text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No active billing records found.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* 🛠️ PREMIUM INVOICE TERMINAL DIALOG */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
-          <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary rounded-xl shadow-lg"><ReceiptText size={20} /></div>
-                <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">
-                  {editingInvoiceId ? 'Update Billing Document' : 'Authorize Manual Invoice'}
-                </DialogTitle>
+        <DialogContent className="max-w-6xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] bg-white flex flex-col overflow-hidden">
+          <header className="p-8 md:p-10 bg-[#081621] text-white flex justify-between items-center shrink-0 border-b border-white/5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary to-transparent scale-150" />
+            <div className="space-y-1.5 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-primary rounded-2xl shadow-[0_10px_40px_rgba(30,95,122,0.4)]"><ReceiptText size={28} /></div>
+                <div>
+                   <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tight font-headline italic">
+                      Invoice <span className="text-primary">Terminal</span>
+                   </DialogTitle>
+                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Manual Ledger Provisioning • v2.0</p>
+                </div>
               </div>
             </div>
-            <button type="button" onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
+            <button type="button" onClick={() => setIsFormOpen(false)} className="p-3 hover:bg-white/10 rounded-full transition-all text-white/40 hover:text-white relative z-10"><X size={28}/></button>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar bg-white">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-7 space-y-8">
+          <div className="flex-1 overflow-y-auto p-6 md:p-12 space-y-12 custom-scrollbar bg-white">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              
+              {/* LEFT: INPUTS */}
+              <div className="lg:col-span-7 space-y-12">
                 
-                {/* 👤 CLIENT SELECTOR */}
-                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 border-b pb-2"><Users size={14} className="text-primary" /> Client Selection</h4>
-                  <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Select Registered Customer</Label>
+                {/* 👤 CLIENT ENGINE */}
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2"><Users size={16} /> Partner Identification</h4>
+                    <Badge variant="outline" className="text-[8px] font-bold uppercase border-gray-100 px-2 py-0.5">Database Sync Active</Badge>
+                  </div>
+                  <div className="space-y-6 bg-gray-50/50 p-8 rounded-[2.5rem] border border-gray-100 shadow-inner">
+                    <div className="space-y-2.5">
+                      <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Search Registry</Label>
                       <Select onValueChange={handleCustomerSelect}>
-                        <SelectTrigger className="h-12 bg-white border-none rounded-xl font-bold shadow-sm">
-                          <SelectValue placeholder="Search registered customers..." />
+                        <SelectTrigger className="h-14 bg-white border-none rounded-2xl font-bold shadow-sm focus:ring-4 ring-primary/5 transition-all text-sm">
+                          <SelectValue placeholder="Choose a registered customer..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                        <SelectContent className="rounded-2xl border-none shadow-2xl max-h-[300px]">
                           {customers?.map(u => (
-                            <SelectItem key={u.id} value={u.id} className="py-3 font-bold text-xs">
-                              {u.name} ({u.phone})
+                            <SelectItem key={u.id} value={u.id} className="py-3.5 font-bold text-xs uppercase tracking-tight">
+                              {u.name} — <span className="text-primary font-black">{u.phone}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Client Name</Label>
-                        <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Customer Label" className="h-11 bg-white border-none rounded-xl font-bold" />
+                        <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Client Name</Label>
+                        <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Label Display" className="h-12 bg-white border-none rounded-xl font-bold text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Phone Number</Label>
-                        <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-11 bg-white border-none rounded-xl font-bold" />
+                        <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Contact Phone</Label>
+                        <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-12 bg-white border-none rounded-xl font-bold text-sm" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Work/Delivery Address</Label>
-                      <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="Site location details..." className="min-h-[80px] bg-white border-none rounded-2xl p-4 shadow-sm font-medium" />
+                      <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Service/Site Address</Label>
+                      <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="Precise location details..." className="min-h-[100px] bg-white border-none rounded-2xl p-6 shadow-sm font-medium text-sm leading-relaxed" />
                     </div>
                   </div>
                 </div>
 
-                {/* 🛠️ ITEM PICKER */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 flex items-center gap-2"><Wrench size={14} className="text-indigo-600" /> Scope of Items</h4>
+                {/* 🛠️ ITEM MATRIX */}
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center border-b pb-3">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-600 flex items-center gap-2"><Wrench size={16} /> Item Matrix</h4>
                     <div className="flex gap-2">
                       <Select onValueChange={addServiceFromCatalog}>
-                        <SelectTrigger className="h-9 w-48 bg-indigo-50 border-none rounded-xl font-black uppercase text-[9px] text-indigo-600">
-                          <SelectValue placeholder="Quick Add Service" />
+                        <SelectTrigger className="h-10 w-52 bg-indigo-50 border-none rounded-xl font-black uppercase text-[10px] text-indigo-600 shadow-sm">
+                          <SelectValue placeholder="Catalog Quick-Add" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl">
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
                           {serviceCatalog?.map(s => (
-                            <SelectItem key={s.id} value={s.id} className="py-2.5 font-bold text-[10px] uppercase">
+                            <SelectItem key={s.id} value={s.id} className="py-3 font-bold text-[10px] uppercase">
                               {s.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-9 text-[9px] font-black uppercase border-dashed border-2">+ Custom Item</Button>
+                      <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-10 px-4 text-[10px] font-black uppercase border-dashed border-2 hover:bg-primary/5 transition-all">+ Custom Row</Button>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {manualItems.map((item: any, idx: number) => (
-                      <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 group animate-in slide-in-from-right-2">
-                        <div className="space-y-1 w-full">
-                          <Label className="text-[8px] font-black uppercase text-gray-400">Description</Label>
-                          <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="e.g. Sofa Cleaning" className="h-9 bg-white border-none rounded-lg text-xs font-bold" />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-                          <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">Unit Type</Label>
-                            <Select value={item.unit} onValueChange={v => updateManualItem(idx, 'unit', v)}>
-                              <SelectTrigger className="h-9 bg-white border-none rounded-lg text-[9px] font-black uppercase"><SelectValue /></SelectTrigger>
-                              <SelectContent className="rounded-lg">
-                                {['Qty', 'Sqft', 'Pcs', 'Kg', 'Feet'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">Rate (৳)</Label>
-                            <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-9 bg-white border-none rounded-lg text-xs font-black text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase text-gray-400">Qty/Area</Label>
-                            <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', e.target.value)} className="h-9 bg-white border-none rounded-lg text-xs font-black" />
-                          </div>
-                          <div className="flex justify-end">
-                            <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-9 w-9 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></Button>
-                          </div>
+                      <div key={idx} className="flex flex-col gap-4 p-6 bg-gray-50 rounded-[2rem] border border-gray-100 group animate-in slide-in-from-right-4 duration-300">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+                           <div className="lg:col-span-6 space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Description</Label>
+                              <Input value={item.name} onChange={e => updateManualItem(idx, 'name', e.target.value)} placeholder="Scope of work..." className="h-12 bg-white border-none rounded-xl text-sm font-bold shadow-sm" />
+                           </div>
+                           <div className="lg:col-span-2 space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Unit</Label>
+                              <Select value={item.unit} onValueChange={v => updateManualItem(idx, 'unit', v)}>
+                                <SelectTrigger className="h-12 bg-white border-none rounded-xl text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                  {['Qty', 'Sqft', 'Pcs', 'Kg', 'Feet'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase py-2.5">{u}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                           </div>
+                           <div className="lg:col-span-2 space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Rate</Label>
+                              <Input type="number" value={item.price} onChange={e => updateManualItem(idx, 'price', e.target.value)} placeholder="৳" className="h-12 bg-white border-none rounded-xl font-black text-primary shadow-sm text-center" />
+                           </div>
+                           <div className="lg:col-span-1 space-y-2">
+                              <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Qty</Label>
+                              <Input type="number" value={item.quantity} onChange={e => updateManualItem(idx, 'quantity', e.target.value)} className="h-12 bg-white border-none rounded-xl font-black shadow-sm text-center" />
+                           </div>
+                           <div className="lg:col-span-1 pb-1 flex justify-center">
+                              <Button variant="ghost" size="icon" onClick={() => removeManualItem(idx)} className="h-10 w-10 text-rose-400 hover:bg-rose-50 rounded-xl"><Trash2 size={20} /></Button>
+                           </div>
                         </div>
                       </div>
                     ))}
+                    {manualItems.length === 0 && (
+                      <div className="p-16 text-center border-2 border-dashed rounded-[3rem] bg-gray-50/50 flex flex-col items-center gap-4">
+                         <Zap size={40} className="text-gray-200" />
+                         <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">No Line Items Configured</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* RIGHT: SUMMARY TERMINAL */}
               <div className="lg:col-span-5">
-                <div className="bg-gray-50/50 p-6 md:p-8 rounded-[2rem] border border-gray-100 flex flex-col gap-8 h-fit sticky top-0">
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><Calculator size={16} /> Calculations</h3>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-8 md:p-10 rounded-[3rem] border border-gray-100 flex flex-col gap-10 h-fit sticky top-0 shadow-2xl">
+                  <div className="space-y-8">
+                    <h3 className="text-base font-black uppercase tracking-[0.3em] text-[#081621] flex items-center gap-3"><Calculator size={20} /> Fin-Engine Summary</h3>
+                    
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Discount (৳)</Label>
-                          <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs text-rose-600" />
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Yield (৳)</Label>
+                          <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-12 bg-white border-none rounded-xl font-black text-rose-600 shadow-sm" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">VAT (%)</Label>
-                          <Input type="number" value={pricing.vatPercent} onChange={e => setPricing({...pricing, vatPercent: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">VAT Percentage (%)</Label>
+                          <Input type="number" value={pricing.vatPercent} onChange={e => setPricing({...pricing, vatPercent: parseFloat(e.target.value) || 0})} className="h-12 bg-white border-none rounded-xl font-black shadow-sm" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Delivery/Extra (৳)</Label>
-                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Logistics / Extra (৳)</Label>
+                          <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-12 bg-white border-none rounded-xl font-black shadow-sm" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400">Paid Amount (৳)</Label>
-                          <Input type="number" value={pricing.paidAmount} onChange={e => setPricing({...pricing, paidAmount: parseFloat(e.target.value) || 0})} className="h-11 bg-emerald-50 border-none rounded-xl font-black text-emerald-600" />
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Received @ Source (৳)</Label>
+                          <Input type="number" value={pricing.paidAmount} onChange={e => setPricing({...pricing, paidAmount: parseFloat(e.target.value) || 0})} className="h-12 bg-emerald-50 border-none rounded-xl font-black text-emerald-600 shadow-sm" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">Payment Method</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Authorized Method</Label>
                         <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
-                          <SelectTrigger className="h-11 bg-white border-none rounded-xl font-black text-[9px] uppercase"><SelectValue/></SelectTrigger>
-                          <SelectContent className="rounded-xl">
-                            {['Cash', 'bKash', 'Nagad', 'Bank'].map(m => <SelectItem key={m} value={m} className="font-black text-[9px] uppercase">{m}</SelectItem>)}
+                          <SelectTrigger className="h-12 bg-white border-none rounded-xl font-black text-[10px] uppercase shadow-sm"><SelectValue/></SelectTrigger>
+                          <SelectContent className="rounded-xl border-none shadow-2xl">
+                            {['Cash', 'bKash', 'Nagad', 'Bank Transfer', 'A/C Payee Check'].map(m => <SelectItem key={m} value={m} className="font-black text-[10px] uppercase py-3">{m}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
-                    <div className="pt-8 border-t-2 border-dashed border-gray-200 space-y-4">
-                      <div className="flex justify-between items-end">
+                    <div className="pt-10 border-t-4 border-white flex flex-col gap-4">
+                      <div className="flex justify-between items-end px-2">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-gray-400 tracking-[0.2em] mb-1 uppercase">Total Payable</span>
-                          <span className="text-3xl font-black text-primary tracking-tighter leading-none whitespace-nowrap">৳{totalPayable.toLocaleString()}</span>
+                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Total Payable</span>
+                          <span className="text-5xl font-black text-[#081621] tracking-tighter leading-none whitespace-nowrap">৳{totalPayable.toLocaleString()}</span>
                         </div>
-                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-3 py-1.5 rounded-lg">{pricing.vatPercent}% VAT</Badge>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-4 py-1.5 rounded-lg shadow-sm">{pricing.vatPercent}% VAT ADJ.</Badge>
                       </div>
-                      <div className="flex justify-between items-center p-4 bg-[#081621] text-white rounded-2xl shadow-xl">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Remaining Due</span>
-                        <span className="text-xl font-black text-rose-400">৳{currentDue.toLocaleString()}</span>
+                      
+                      <div className={cn(
+                        "flex justify-between items-center p-6 rounded-[2rem] shadow-xl transition-all duration-500",
+                        currentDue > 0 ? "bg-[#081621] text-white ring-4 ring-rose-500/20" : "bg-emerald-600 text-white shadow-emerald-600/20"
+                      )}>
+                        <div className="space-y-0.5">
+                           <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{currentDue > 0 ? 'Remaining Liability' : 'Balance Settled'}</span>
+                           <p className={cn("text-2xl font-black tracking-tighter leading-none", currentDue > 0 ? "text-rose-400" : "text-white")}>
+                             {currentDue > 0 ? `৳${currentDue.toLocaleString()}` : 'FULL PAID'}
+                           </p>
+                        </div>
+                        {currentDue <= 0 ? <ShieldCheck size={32} /> : <AlertCircle size={32} className="text-rose-400 animate-pulse" />}
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
-                    <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
-                    <p className="text-[9px] font-bold text-blue-900 leading-tight uppercase">
-                      Header information (Phone, Email, Address) is automatically pulled from Invoice Config settings.
+                  <div className="p-6 bg-blue-50/80 rounded-[2rem] border border-blue-100 flex items-start gap-4">
+                    <Info size={24} className="text-blue-600 mt-1 shrink-0" />
+                    <p className="text-[10px] font-bold text-blue-900 leading-relaxed uppercase tracking-tight">
+                      Note: All billing credentials (address, phone, email) will be automatically mapped to the master invoice document upon authorization.
                     </p>
                   </div>
                 </div>
@@ -577,21 +627,21 @@ function InvoicesListContent() {
             </div>
           </div>
 
-          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-3">
-            <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-12 md:h-14 px-10 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
-            <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-12 md:h-14 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-tighter transition-all active:scale-95 text-xs">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Generate'}</>}
+          <DialogFooter className="p-8 md:p-10 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-4">
+            <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-14 md:h-16 px-12 rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all">Discard Changes</Button>
+            <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-14 md:h-16 rounded-2xl font-black bg-primary hover:bg-[#15435a] text-white shadow-2xl shadow-primary/30 uppercase tracking-[0.2em] transition-all active:scale-95 text-xs">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogContent>
     </div>
   );
 }
 
 export default function InvoicesListPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-32"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
       <InvoicesListContent />
     </Suspense>
   );

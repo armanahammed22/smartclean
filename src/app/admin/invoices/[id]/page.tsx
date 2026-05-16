@@ -23,7 +23,13 @@ import {
   CheckCircle2,
   Printer,
   Heart,
-  Check
+  Check,
+  Building2,
+  ShieldCheck,
+  CreditCard,
+  Share2,
+  MoreVertical,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -56,8 +62,8 @@ export default function AdminInvoiceDetailPage() {
     return ['Home Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Sofa & Carpet', 'Kitchen Sanitization', 'Pest Control'];
   }, [settings]);
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
-  if (!invoice) return <div className="p-20 text-center uppercase font-black opacity-20">Document Not Found</div>;
+  if (isLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48} /><p className="text-[10px] font-black uppercase text-gray-400">Loading Document...</p></div>;
+  if (!invoice) return <div className="p-32 text-center uppercase font-black opacity-20 tracking-[0.5em]">Secure Ledger Missing</div>;
 
   const signatureUrl = settings?.signatureUrl;
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
@@ -92,7 +98,7 @@ export default function AdminInvoiceDetailPage() {
   ];
 
   return (
-    <div className="space-y-8 pb-32 md:pb-24 max-w-6xl mx-auto min-w-0">
+    <div className="space-y-12 pb-32 md:pb-24 max-w-6xl mx-auto min-w-0">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
@@ -103,225 +109,209 @@ export default function AdminInvoiceDetailPage() {
         .invoice-table-wrapper tfoot { display: table-footer-group; }
       `}</style>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full bg-white shadow-sm border h-10 w-10">
-            <ArrowLeft size={20} />
+      {/* 🛠️ PREMIUM ADMIN ACTION BAR */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 no-print bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150"><FileText size={180} /></div>
+        <div className="flex items-center gap-6 relative z-10">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/invoices')} className="rounded-2xl bg-white/10 hover:bg-white/20 h-14 w-14 border border-white/5 shadow-xl transition-all active:scale-90">
+            <ArrowLeft size={24} />
           </Button>
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">{invoice.invoiceNumber}</h1>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1">Authorized Document Control</p>
+            <div className="flex items-center gap-3 mb-2">
+                <Badge className={cn("text-[9px] font-black uppercase tracking-widest border-none px-3 h-5", isQuotation ? "bg-amber-500 text-black" : "bg-primary text-white")}>
+                    {isQuotation ? 'OFFICIAL QUOTATION' : 'AUTHORIZED INVOICE'}
+                </Badge>
+                <Badge className={cn("text-[9px] font-black uppercase border-none px-3 h-5", isDue ? "bg-rose-500 text-white" : "bg-emerald-500 text-white")}>
+                    {isDue ? 'PAYMENT DUE' : 'FULL SETTLED'}
+                </Badge>
+            </div>
+            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none font-headline italic">{invoice.invoiceNumber}</h1>
+            <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Document Audit Context: {invoice.id}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleWhatsApp} className="gap-2 font-bold h-11 px-6 rounded-xl border-emerald-200 text-emerald-700 bg-emerald-50">
-            <MessageCircle size={18} /> Send to WhatsApp
+        <div className="flex flex-wrap gap-3 relative z-10">
+          <Button variant="outline" onClick={handleWhatsApp} className="gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-500/30 text-emerald-400 bg-white/5 hover:bg-emerald-500/10">
+            <MessageCircle size={18} /> WhatsApp Share
           </Button>
-          <Button className="gap-2 font-black h-11 px-8 rounded-xl shadow-xl shadow-primary/20 bg-[#1E5F7A] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
-            {isDownloading ? <Loader2 className="animate-spin" /> : <Download size={18} />} EXPORT PDF
+          <Button className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-2xl bg-primary hover:bg-[#15435a] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <Download size={18} />} Export Document
           </Button>
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl bg-white/5 text-white/40 hover:text-white"><MoreVertical size={20}/></Button>
         </div>
       </div>
 
-      <div className="overflow-x-auto no-scrollbar flex justify-center pb-10">
+      {/* 📄 THE ACTUAL INVOICE DOCUMENT */}
+      <div className="overflow-x-auto no-scrollbar flex justify-center pb-20 animate-in fade-in zoom-in-95 duration-700">
         <div 
           id="invoice-render-area" 
-          className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A]"
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.15)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]"
           style={{ width: '210mm', minHeight: 'auto', color: '#333' }}
         >
           <table className="invoice-table-wrapper">
-            {/* 🖼️ CORPORATE HEADER (Repeats on each page) */}
             <thead>
               <tr>
                 <td>
-                  <div className="pt-6 px-10 pb-4 flex justify-between items-start border-b-2 border-gray-100 mb-4">
-                    <div className="flex gap-4">
-                      <div className="w-14 h-14 relative shrink-0">
+                  <div className="pt-10 px-12 pb-6 flex justify-between items-start border-b-[3px] border-gray-50 mb-10">
+                    <div className="flex gap-6">
+                      <div className="w-16 h-16 relative shrink-0">
                         <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
                       </div>
-                      <div className="space-y-0.5 text-left">
-                        <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
-                        <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Better Security, Better Solution</p>
-                        <div className="h-0.5 bg-primary w-full mt-1" />
-                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest pt-0.5">Corporate Branch</p>
+                      <div className="space-y-1 text-left">
+                        <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
+                        <p className="text-[9px] font-bold text-primary uppercase tracking-[0.3em]">Professional Infrastructure</p>
+                        <div className="h-1 bg-primary w-full mt-2" />
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest pt-1">Operations Command</p>
                       </div>
                     </div>
-                    <div className="h-14 w-px bg-gray-300 mx-6" />
-                    <div className="flex-1 text-left space-y-0.5">
-                      <p className="text-[8px] font-bold text-gray-600 leading-normal uppercase">{headerAddress}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">E-mail: {headerEmail}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">Web: smartclean.com.bd</p>
+                    <div className="flex-1 text-right space-y-1">
+                      <p className="text-[9px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+                      <p className="text-[9px] font-bold text-[#081621] uppercase">Cell: <span className="font-black">{headerPhone}</span></p>
+                      <p className="text-[9px] font-bold text-gray-500 uppercase">{headerEmail}</p>
+                      <p className="text-[8px] font-black text-primary uppercase tracking-widest">www.smartclean.com.bd</p>
                     </div>
                   </div>
                 </td>
               </tr>
             </thead>
 
-            {/* 📝 MAIN CONTENT */}
             <tbody>
               <tr>
-                <td className="px-10 pb-6">
-                  <div className="text-center space-y-0.5 mb-6">
-                    <h3 className="text-lg font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">
-                      {isQuotation ? 'Quotation / Estimate' : 'Invoice / Bill'}
-                    </h3>
-                    <p className={cn("text-[8px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>
-                      ({isDue ? 'DUE' : 'PAID'})
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="space-y-1.5 text-left">
-                      <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Client Details:</p>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-black text-[#081621] uppercase leading-tight">{invoice.customerInfo.name}</p>
-                        <p className="text-[9px] font-bold text-gray-700">{invoice.customerInfo.phone}</p>
-                        <p className="text-[8px] text-gray-500 font-medium leading-normal max-w-[300px] mt-0.5">{invoice.customerInfo.address}</p>
+                <td className="px-12 pb-10">
+                  <div className="flex justify-between items-start mb-12">
+                    <div className="space-y-4 text-left">
+                      <div>
+                        <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.3em] mb-2 border-b border-primary/20 pb-1 w-fit">Bill Recipient</p>
+                        <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight">{invoice.customerInfo.name}</h4>
+                        <p className="text-[10px] font-black text-gray-600 mt-1">{invoice.customerInfo.phone}</p>
+                        <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] mt-1.5 uppercase italic">{invoice.customerInfo.address}</p>
                       </div>
                     </div>
-                    <div className="text-right space-y-2">
-                      <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">Doc Reference</p>
-                        <p className="text-xs font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
+                    <div className="text-right space-y-6">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
+                        <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
                       </div>
-                      <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">Date</p>
-                        <p className="text-[10px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMM yyyy')}</p>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issue Date</p>
+                        <p className="text-[11px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="overflow-hidden border border-[#081621] rounded-xl shadow-sm mb-4">
+                  <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm mb-6">
                     <table className="w-full border-collapse">
-                      <thead className="bg-[#1E5F7A] text-white">
+                      <thead className="bg-[#081621] text-white">
                         <tr>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase w-10 text-center">SL.</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Description</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-16">Qty</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-20">Rate (৳)</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Total (৳)</th>
+                          <th className="py-2 px-4 text-[9px] font-black uppercase w-12 text-center border-r border-white/10">#</th>
+                          <th className="py-2 px-4 text-[9px] font-black uppercase text-left border-r border-white/10">Description of Service/Items</th>
+                          <th className="py-2 px-4 text-[9px] font-black uppercase text-center w-24 border-r border-white/10">Qty/Scale</th>
+                          <th className="py-2 px-4 text-[9px] font-black uppercase text-right w-28 border-r border-white/10">Unit Rate (৳)</th>
+                          <th className="py-2 px-4 text-[9px] font-black uppercase text-right w-32">Amount (৳)</th>
                         </tr>
                       </thead>
-                      <tbody className="text-[9px] font-medium bg-white">
+                      <tbody className="text-[10px] font-bold bg-white">
                         {invoice.items.map((item: any, i: number) => (
-                          <tr key={i} className="border-t border-[#081621]">
-                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-400">{i + 1}</td>
-                            <td className="py-2 px-3 border-r border-[#081621] font-black uppercase text-gray-800 text-left">{item.name}</td>
-                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-700">
-                              {item.quantity} <span className="text-[6px] uppercase opacity-40 font-bold ml-0.5">{item.unit || 'Qty'}</span>
+                          <tr key={i} className="border-t-2 border-gray-50">
+                            <td className="py-3 text-center text-gray-400 border-r border-gray-50">{i + 1}</td>
+                            <td className="py-3 px-4 uppercase text-gray-900 text-left border-r border-gray-50">{item.name}</td>
+                            <td className="py-3 text-center text-gray-600 border-r border-gray-50">
+                              {item.quantity} <span className="text-[7px] uppercase font-black opacity-30 ml-1">{item.unit || 'Qty'}</span>
                             </td>
-                            <td className="py-2 px-3 border-r border-[#081621] font-black text-gray-700 text-right">৳{item.price?.toLocaleString()}/-</td>
-                            <td className="py-2 px-3 text-right font-black text-gray-900 bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}/-</td>
+                            <td className="py-3 px-4 text-right text-gray-600 border-r border-gray-50">৳{item.price?.toLocaleString()}</td>
+                            <td className="py-3 px-4 text-right text-[#081621] bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}</td>
                           </tr>
                         ))}
                         
-                        <tr className="border-t border-[#081621] bg-gray-50/80">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Gross Amount</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
+                        <tr className="border-t-2 border-[#081621] bg-gray-50/50">
+                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621]">Gross Subtotal</td>
+                          <td className="py-2 px-4 text-right font-black text-xs text-[#081621]">৳{invoice.subtotal.toLocaleString()}</td>
                         </tr>
 
                         {invoice.discount > 0 && (
                           <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Discount (-)</td>
-                            <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.discount.toLocaleString()}/-</td>
+                            <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621] text-rose-600">Savings / Promotional (-)</td>
+                            <td className="py-2 px-4 text-right font-black text-xs text-rose-600">৳{invoice.discount.toLocaleString()}</td>
                           </tr>
                         )}
 
                         {invoice.tax > 0 && (
                           <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">VAT ({invoice.vatPercent || 0}%) (+)</td>
-                            <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.tax.toLocaleString()}/-</td>
+                            <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621]">Value Added Tax (VAT) (+)</td>
+                            <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.tax.toLocaleString()}</td>
                           </tr>
                         )}
 
                         <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">
-                            Final Amount Payable
+                          <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] border-r border-white/10 italic">
+                            Net Amount Payable
                           </td>
-                          <td className="py-2 px-3 text-right">
-                            <span className="text-sm font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}/-</span>
+                          <td className="py-3 px-4 text-right">
+                            <span className="text-xl font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
                           </td>
                         </tr>
 
-                        <tr className="border-t border-[#081621] bg-emerald-50/50">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-emerald-700 italic">Received Amount</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px] text-emerald-700">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
+                        <tr className="border-t-2 border-[#081621] bg-emerald-50/50 text-emerald-800">
+                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621] italic">Amount Received</td>
+                          <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
                         </tr>
 
-                        <tr className="border-t border-[#081621] bg-rose-50/50">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-700 italic">Net Due Balance</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
+                        <tr className="border-t border-[#081621] bg-rose-50/50 text-rose-800">
+                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621] italic">Outstanding Balance</td>
+                          <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
-                  <div className="p-2.5 bg-[#1E5F7A]/5 rounded-xl border border-[#081621] flex flex-col gap-0.5 text-left mb-4">
-                    <p className="text-[6px] font-black uppercase text-gray-400 tracking-widest leading-none">In Words:</p>
-                    <p className="text-[10px] font-black text-[#081621] italic leading-tight">"{numberToWords(invoice.total)}"</p>
+                  <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left mb-8">
+                    <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Official Amount Proof:</p>
+                    <p className="text-[11px] font-black text-[#081621] italic leading-tight">"{numberToWords(invoice.total)}"</p>
                   </div>
                 </td>
               </tr>
             </tbody>
 
-            {/* 🖋️ FOOTER SECTIONS (Repeats at bottom of last page or each page depending on size) */}
             <tfoot>
               <tr>
-                <td className="px-10">
-                  <div className="avoid-break space-y-4 pb-4">
-                    {/* T&C Box */}
-                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      <p className="text-[8px] font-black uppercase text-[#1E5F7A] tracking-widest mb-1.5 border-b pb-0.5 border-primary/10">Terms & Conditions</p>
-                      <div className="grid grid-cols-1 gap-0.5">
+                <td className="px-12">
+                  <div className="avoid-break space-y-8 pb-10">
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <p className="text-[9px] font-black uppercase text-primary tracking-widest mb-3 border-b-2 border-primary/10 pb-1.5 w-fit">General Protocols</p>
+                      <div className="grid grid-cols-1 gap-1.5">
                         {terms.map((term, i) => (
-                          <div key={i} className="flex items-start gap-1.5 text-[7.5px] font-bold text-gray-500 leading-tight">
-                            <span className="text-primary">•</span>
+                          <div key={i} className="flex items-start gap-2.5 text-[8.5px] font-bold text-gray-600 leading-tight">
+                            <span className="text-primary mt-0.5">•</span>
                             <span>{term}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Signatures */}
-                    <div className="grid grid-cols-2 gap-20 items-end py-5">
-                      <div className="text-center space-y-3">
-                        <div className="border-b border-gray-300 h-6"></div>
-                        <p className="text-[8px] font-black uppercase text-[#081621] tracking-tighter">Customer Signature</p>
+                    <div className="grid grid-cols-2 gap-32 items-end pt-10">
+                      <div className="text-center space-y-4">
+                        <div className="border-b-[3px] border-gray-100 h-10"></div>
+                        <p className="text-[10px] font-black uppercase text-[#081621] tracking-tighter">Client Authorization</p>
                       </div>
-                      <div className="flex flex-col items-center justify-end text-center space-y-2">
-                        <div className="h-8 w-20 relative border-b border-gray-100 pb-1 flex items-center justify-center">
+                      <div className="flex flex-col items-center justify-end text-center space-y-4">
+                        <div className="h-16 w-32 relative border-b-[3px] border-primary/10 pb-2 flex items-center justify-center">
                           {signatureUrl ? (
                             <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized />
                           ) : (
-                            <div className="text-[6px] font-black text-gray-200 border border-dashed p-1 uppercase">Authorized</div>
+                            <div className="text-[8px] font-black text-gray-300 border-2 border-dashed rounded-lg p-2 uppercase">Official Sign</div>
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-[8px] uppercase text-[#081621] tracking-tighter leading-none">Authorized Signatory</p>
-                          <p className="text-[6px] font-bold text-primary uppercase tracking-widest mt-1">Smart Clean Bangladesh</p>
+                          <p className="font-black text-[10px] uppercase text-[#081621] tracking-tighter leading-none">Authorized Control</p>
+                          <p className="text-[7px] font-bold text-primary uppercase tracking-[0.2em] mt-2">Smart Clean Logistics</p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Services Grid */}
-                    <div className="pt-3 pb-3 border-t border-gray-100 bg-gray-50/30">
-                      <p className="text-[8px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-2 text-left">Services We Provide</p>
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                        {providedServicesList.map((service, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={5} className="text-primary" strokeWidth={4} /></div>
-                            <span className="text-[7px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 text-center space-y-0.5">
-                      <p className="text-[10px] font-black text-primary flex items-center justify-center gap-1">
-                        <Heart size={10} fill="currentColor" /> Thank you for your business!
+                    <div className="pt-8 border-t-2 border-gray-50 text-center space-y-1.5">
+                      <p className="text-xs font-black text-primary flex items-center justify-center gap-2">
+                        <Heart size={14} fill="currentColor" /> Strategic Partner for Professional Maintenance
                       </p>
-                      <p className="text-[7.5px] text-gray-300 uppercase font-bold text-center">{footerDisclaimer}</p>
+                      <p className="text-[8px] text-gray-300 uppercase font-black tracking-widest">{footerDisclaimer}</p>
                     </div>
                   </div>
                 </td>
@@ -332,20 +322,20 @@ export default function AdminInvoiceDetailPage() {
       </div>
 
       {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[200] pb-safe-offset-2 no-print">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-5 bg-white/95 backdrop-blur-3xl border-t border-gray-100 shadow-[0_-20px_60px_rgba(0,0,0,0.2)] flex items-center justify-between gap-4 z-[200] pb-safe-offset-4 no-print">
         <Button 
           variant="outline"
           onClick={handleWhatsApp}
-          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+          className="flex-1 h-16 rounded-2xl border-emerald-500/20 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95"
         >
-          <MessageCircle size={18} /> WhatsApp
+          <MessageCircle size={20} /> Support
         </Button>
         <Button 
-          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all"
+          className="flex-1 h-16 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-primary/20 gap-2 active:scale-95"
           onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
           disabled={isDownloading}
         >
-          {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download size={18} /> Download</>}
+          {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Download size={20} /> Print PDF</>}
         </Button>
       </div>
     </div>
