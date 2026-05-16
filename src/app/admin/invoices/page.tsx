@@ -147,6 +147,20 @@ function InvoicesListContent() {
     }
   };
 
+  const handleDeleteSingle = async (id: string) => {
+    if (!db || !confirm("Permanently delete this invoice?")) return;
+    setIsSubmitting(true);
+    try {
+      await deleteDoc(doc(db, 'invoices', id));
+      toast({ title: "Invoice Deleted" });
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    } catch (e) {
+      toast({ variant: "destructive", title: "Action Failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const addManualItem = () => setManualItems([...manualItems, { name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
   const removeManualItem = (idx: number) => setManualItems(manualItems.filter((_, i) => i !== idx));
   const updateManualItem = (idx: number, field: string, val: any) => {
@@ -633,8 +647,8 @@ function InvoicesListContent() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}
             </Button>
           </DialogFooter>
-        </div>
-      </DialogContent>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
