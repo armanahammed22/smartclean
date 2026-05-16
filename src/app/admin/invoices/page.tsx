@@ -64,6 +64,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import Image from 'next/image';
 
 function InvoicesListContent() {
   const db = useFirestore();
@@ -653,7 +654,7 @@ function InvoicesListContent() {
             </Button>
           </div>
 
-          <DialogFooter className="hidden md:flex p-8 md:p-10 bg-gray-50 border-t shrink-0 flex-col sm:flex-row gap-4">
+          <DialogFooter className="hidden md:flex p-8 md:p-10 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-4">
             <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-14 md:h-16 px-12 rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all">Discard Changes</Button>
             <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-14 md:h-16 rounded-2xl font-black bg-primary hover:bg-[#15435a] text-white shadow-2xl shadow-primary/30 uppercase tracking-[0.2em] transition-all active:scale-95 text-xs">
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}

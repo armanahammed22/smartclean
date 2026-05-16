@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -118,7 +119,7 @@ export default function AdminInvoiceDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3 mb-2">
-                <Badge className={cn("text-[9px] font-black uppercase tracking-widest border-none px-3 h-5", isQuotation ? "bg-amber-500 text-black" : "bg-primary text-white")}>
+                <Badge className={cn("text-[9px] font-black uppercase tracking-widest border-none px-3 h-5", isQuotation ? "bg-amber-50 text-black" : "bg-primary text-white")}>
                     {isQuotation ? 'OFFICIAL QUOTATION' : 'AUTHORIZED INVOICE'}
                 </Badge>
                 <Badge className={cn("text-[9px] font-black uppercase border-none px-3 h-5", isDue ? "bg-rose-500 text-white" : "bg-emerald-500 text-white")}>
