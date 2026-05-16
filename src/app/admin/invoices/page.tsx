@@ -464,7 +464,7 @@ function InvoicesListContent() {
           </header>
 
           <div className="flex-1 overflow-y-auto p-6 md:p-12 space-y-12 custom-scrollbar bg-white">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-24 md:pb-0">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32 md:pb-0">
               
               {/* LEFT: INPUTS */}
               <div className="lg:col-span-7 space-y-12">
@@ -643,15 +643,31 @@ function InvoicesListContent() {
             </div>
           </div>
 
-          {/* 📱 MOBILE STICKY FOOTER */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[210] pb-safe-offset-2">
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Final Total</span>
-              <span className="text-xl font-black text-primary tracking-tighter leading-none">৳{totalPayable.toLocaleString()}</span>
+          {/* 📱 MOBILE STICKY ACTION BAR */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex flex-col gap-3 z-[210] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <div className="flex justify-between items-end px-2">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Final Total</span>
+                <span className="text-2xl font-black text-primary tracking-tighter">৳{totalPayable.toLocaleString()}</span>
+              </div>
+              <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-2 py-0.5 rounded-md">VAT INC.</Badge>
             </div>
-            <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-14 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20">
-              {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={18} className="mr-2" /> Sync Terminal</>}
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsFormOpen(false)} 
+                className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] bg-gray-50 text-gray-500"
+              >
+                Discard Changes
+              </Button>
+              <Button 
+                onClick={handleSaveInvoice} 
+                disabled={isSubmitting} 
+                className="flex-[2] h-12 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch'}</>}
+              </Button>
+            </div>
           </div>
 
           <DialogFooter className="hidden md:flex p-8 md:p-10 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-4">
@@ -660,8 +676,8 @@ function InvoicesListContent() {
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogContent>
     </div>
   );
 }
