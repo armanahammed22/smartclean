@@ -134,7 +134,7 @@ export default function DynamicLandingPage() {
       <div className="bg-[#D60000] text-white py-3 px-4 sticky top-0 z-[500] shadow-xl border-b border-white/10">
         <div className="container mx-auto flex items-center justify-between gap-4">
           
-          {/* Left: Branding (Matched to uploaded image) */}
+          {/* Left: Branding */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-white p-1 shadow-md shrink-0">
               {settings?.logoUrl ? (
@@ -148,7 +148,6 @@ export default function DynamicLandingPage() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#3498db] to-[#1a5276]">Smart</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#2ecc71] to-[#1d8348] ml-0.5">Clean</span>
               </div>
-              {/* Green Swoosh Underline */}
               <div className="absolute -bottom-1.5 left-0 w-full h-2 pointer-events-none opacity-90">
                 <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full">
                   <path 
@@ -226,7 +225,7 @@ export default function DynamicLandingPage() {
         </div>
       </section>
 
-      {/* 🧩 WHY CHOOSE US (STARS) */}
+      {/* 🧩 WHY CHOOSE US */}
       <section className="py-16 px-4 bg-white border-b border-gray-100">
         <div className="container mx-auto max-w-5xl">
           <div className="bg-emerald-600 rounded-full py-4 px-10 w-fit mx-auto mb-10 shadow-lg">
@@ -404,17 +403,17 @@ export default function DynamicLandingPage() {
       </section>
 
       {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[600] pb-safe-offset-2 no-print">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))] no-print">
         <Button 
           variant="outline"
           onClick={handleWhatsApp}
-          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all px-2"
         >
           <MessageCircle size={18} /> WhatsApp
         </Button>
         <Button 
           onClick={() => document.getElementById('order-terminal')?.scrollIntoView({ behavior: 'smooth' })}
-          className="flex-[1.5] h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-green-600/30 gap-2 active:scale-95 transition-all"
+          className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-green-600/30 gap-2 active:scale-95 transition-all px-2"
         >
           অর্ডার করুন <ArrowRight size={18} />
         </Button>

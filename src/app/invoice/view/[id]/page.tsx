@@ -132,7 +132,6 @@ export default function PublicInvoiceViewPage() {
           style={{ width: '210mm', minHeight: 'auto', color: '#333' }}
         >
           <table className="invoice-table-wrapper">
-            {/* 🖼️ CORPORATE HEADER (Repeats on each page) */}
             <thead>
               <tr>
                 <td>
@@ -160,7 +159,6 @@ export default function PublicInvoiceViewPage() {
               </tr>
             </thead>
 
-            {/* 📝 MAIN CONTENT */}
             <tbody>
               <tr>
                 <td className="px-10 pb-6">
@@ -267,7 +265,6 @@ export default function PublicInvoiceViewPage() {
               </tr>
             </tbody>
 
-            {/* 🖋️ FOOTER SECTIONS (Repeats at bottom of last page or each page depending on size) */}
             <tfoot>
               <tr>
                 <td className="px-10">
@@ -334,16 +331,16 @@ export default function PublicInvoiceViewPage() {
       </div>
 
       {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-[200] pb-safe-offset-2 no-print">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))] no-print">
         <Button 
           variant="outline"
           onClick={handleWhatsApp}
-          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all"
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all px-2"
         >
           <MessageCircle size={18} /> WhatsApp
         </Button>
         <Button 
-          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all"
+          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all px-2"
           onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
           disabled={isDownloading}
         >

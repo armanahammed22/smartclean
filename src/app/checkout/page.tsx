@@ -317,7 +317,7 @@ function CheckoutContent() {
         </Form>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[100] pb-safe-offset-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="flex flex-col">
           <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Grand Total</span>
           <span className="text-2xl font-black text-primary tracking-tighter">৳{finalAmount.toLocaleString()}</span>

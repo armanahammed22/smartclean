@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -137,7 +136,6 @@ export default function AdminInvoiceDetailPage() {
           <Button className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-2xl bg-primary hover:bg-[#15435a] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
             {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <Download size={18} />} Export Document
           </Button>
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl bg-white/5 text-white/40 hover:text-white"><MoreVertical size={20}/></Button>
         </div>
       </div>
 
@@ -247,7 +245,7 @@ export default function AdminInvoiceDetailPage() {
                             Net Amount Payable
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <span className="text-xl font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
+                            <span className="text-sm font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
                           </td>
                         </tr>
 
@@ -291,7 +289,7 @@ export default function AdminInvoiceDetailPage() {
                     <div className="grid grid-cols-2 gap-32 items-end pt-10">
                       <div className="text-center space-y-4">
                         <div className="border-b-[3px] border-gray-100 h-10"></div>
-                        <p className="text-[10px] font-black uppercase text-[#081621] tracking-tighter">Client Authorization</p>
+                        <p className="text-[10px] font-black uppercase text-[#081621] tracking-tighter">Client Signature</p>
                       </div>
                       <div className="flex flex-col items-center justify-end text-center space-y-4">
                         <div className="h-16 w-32 relative border-b-[3px] border-primary/10 pb-2 flex items-center justify-center">
@@ -323,20 +321,20 @@ export default function AdminInvoiceDetailPage() {
       </div>
 
       {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-5 bg-white/95 backdrop-blur-3xl border-t border-gray-100 shadow-[0_-20px_60px_rgba(0,0,0,0.2)] flex items-center justify-between gap-4 z-[200] pb-safe-offset-4 no-print">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))] no-print">
         <Button 
           variant="outline"
           onClick={handleWhatsApp}
-          className="flex-1 h-16 rounded-2xl border-emerald-500/20 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95"
+          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all px-2"
         >
-          <MessageCircle size={20} /> Support
+          <MessageCircle size={18} /> Support
         </Button>
         <Button 
-          className="flex-1 h-16 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-primary/20 gap-2 active:scale-95"
+          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all px-2"
           onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
           disabled={isDownloading}
         >
-          {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Download size={20} /> Print PDF</>}
+          {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Download size={20} /> Download</>}
         </Button>
       </div>
     </div>
