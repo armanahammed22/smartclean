@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,7 +7,7 @@ import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc } from 'f
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Trash2, Edit, Globe, Loader2 } from 'lucide-react';
+import { MapPin, Plus, Trash2, Edit, Globe, Loader2, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -56,6 +57,9 @@ export default function ServiceAreasPage() {
     const newStatus = current === 'Active' ? 'Inactive' : 'Active';
     const docRef = doc(db, 'service_areas', id);
     updateDoc(docRef, { status: newStatus })
+      .then(() => {
+        toast({ title: `Area ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}` });
+      })
       .catch(async (err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: docRef.path,
@@ -138,20 +142,23 @@ export default function ServiceAreasPage() {
                              </Badge>
                           </div>
                        </div>
-                       <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg"
+                       <div className="flex items-center gap-1.5">
+                          <button 
                             onClick={() => toggleStatus(area.id, area.status)}
+                            className={cn(
+                              "p-1.5 rounded-lg transition-all",
+                              area.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                            )}
+                            title={area.status === 'Active' ? "Disable" : "Enable"}
                           >
-                            <Edit size={14} />
-                          </Button>
+                            <Zap size={14} fill={area.status === 'Active' ? "currentColor" : "none"} />
+                          </button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-destructive hover:bg-destructive/5 rounded-lg"
+                            className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100"
                             onClick={() => handleDelete(area.id)}
+                            title="Delete"
                           >
                             <Trash2 size={14} />
                           </Button>

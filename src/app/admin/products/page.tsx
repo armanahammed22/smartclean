@@ -20,7 +20,8 @@ import {
   XCircle,
   Eye,
   Settings2,
-  FolderTree
+  FolderTree,
+  Zap
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -37,6 +38,7 @@ import { Switch } from '@/components/ui/switch';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useLanguage } from '@/components/providers/language-provider';
+import Link from 'next/link';
 
 export default function ProductsManagementPage() {
   const { user } = useUser();
@@ -114,6 +116,13 @@ export default function ProductsManagementPage() {
     } catch (e) {} finally {
       setIsBulkProcessing(false);
     }
+  };
+
+  const toggleStatus = async (id: string, current: string) => {
+    if (!db) return;
+    const next = current === 'Active' ? 'Inactive' : 'Active';
+    await updateDoc(doc(db, 'products', id), { status: next });
+    toast({ title: `Product ${next === 'Active' ? 'Enabled' : 'Disabled'}` });
   };
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
@@ -271,14 +280,31 @@ export default function ProductsManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-[9px] font-black border-none", product.stockQuantity === 0 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700")}>
+                      <Badge variant="outline" className={cn("text-[9px] font-black border-none px-2 py-0.5", product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
                         {product.stockQuantity} {product.unitType || 'UNITS'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600" onClick={() => handleOpenEdit(product)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db!, 'products', product.id))}><Trash2 size={16} /></Button>
+                      <div className="flex justify-end items-center gap-1.5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => handleOpenEdit(product)} title="Edit">
+                          <Edit size={14} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary bg-primary/5 hover:bg-primary/10" asChild title="View">
+                          <Link href={`/product/${product.slug || product.id}`} target="_blank"><Eye size={14} /></Link>
+                        </Button>
+                        <button 
+                          onClick={() => toggleStatus(product.id, product.status)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-all",
+                            product.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                          )}
+                          title={product.status === 'Active' ? "Disable" : "Enable"}
+                        >
+                          <Zap size={14} fill={product.status === 'Active' ? "currentColor" : "none"} />
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100" onClick={() => deleteDoc(doc(db!, 'products', product.id))} title="Delete">
+                          <Trash2 size={14} />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, X, AlertTriangle, Zap, Settings2, Star } from 'lucide-react';
+import { Layers, Plus, Trash2, Edit, Loader2, Save, X, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -146,6 +147,13 @@ export default function SubServicesManagementPage() {
   const openEdit = (sub: any) => {
     setEditingSub(sub);
     setIsDialogOpen(true);
+  };
+
+  const toggleStatus = async (id: string, current: string) => {
+    if (!db) return;
+    const next = current === 'Active' ? 'Inactive' : 'Active';
+    await updateDoc(doc(db, 'sub_services', id), { status: next });
+    toast({ title: `Sub-service ${next === 'Active' ? 'Enabled' : 'Disabled'}` });
   };
 
   const handleDelete = async (id: string) => {
@@ -304,9 +312,23 @@ export default function SubServicesManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-xl" onClick={() => openEdit(sub)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(sub.id)}><Trash2 size={16} /></Button>
+                      <div className="flex justify-end items-center gap-1.5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => openEdit(sub)} title="Edit">
+                          <Edit size={14} />
+                        </Button>
+                        <button 
+                          onClick={() => toggleStatus(sub.id, sub.status)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-all",
+                            sub.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                          )}
+                          title={sub.status === 'Active' ? "Disable" : "Enable"}
+                        >
+                          <Zap size={14} fill={sub.status === 'Active' ? "currentColor" : "none"} />
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100" onClick={() => handleDelete(sub.id)} title="Delete">
+                          <Trash2 size={14} />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

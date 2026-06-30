@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,14 +12,15 @@ import {
   Plus, 
   Trash2, 
   Edit, 
-  Loader2, 
   Layers, 
   Clock, 
   CheckCircle2, 
   XCircle, 
   Eye, 
   Search,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -91,6 +93,13 @@ export default function ServicesManagementPage() {
     }
   };
 
+  const toggleStatus = async (id: string, current: string) => {
+    if (!db) return;
+    const next = current === 'Active' ? 'Inactive' : 'Active';
+    await updateDoc(doc(db, 'services', id), { status: next });
+    toast({ title: `Service ${next === 'Active' ? 'Enabled' : 'Disabled'}` });
+  };
+
   return (
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -122,7 +131,7 @@ export default function ServicesManagementPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
+      <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
         <div className="p-6 md:p-8 border-b bg-gray-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="relative w-full md:max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
@@ -189,17 +198,30 @@ export default function ServicesManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={cn("text-[8px] font-black uppercase border-none px-2 py-0.5", service.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
+                      <Badge className={cn("text-[8px] font-black uppercase border-none px-2 py-0.5", service.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400")}>
                         {service.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-blue-600 bg-blue-50/50 hover:bg-blue-100 rounded-xl" asChild>
-                          <Link href={`/admin/services/${service.id}`}><Edit size={18} /></Link>
+                      <div className="flex justify-end items-center gap-1.5">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50 hover:bg-blue-100" asChild title="Edit">
+                          <Link href={`/admin/services/${service.id}`}><Edit size={14} /></Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive bg-rose-50 hover:bg-rose-100 rounded-xl" onClick={() => deleteDoc(doc(db!, 'services', service.id))}>
-                          <Trash2 size={18} />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary bg-primary/5 hover:bg-primary/10" asChild title="View">
+                          <Link href={`/service/${service.slug || service.id}`} target="_blank"><Eye size={14} /></Link>
+                        </Button>
+                        <button 
+                          onClick={() => toggleStatus(service.id, service.status)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-all",
+                            service.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                          )}
+                          title={service.status === 'Active' ? "Disable" : "Enable"}
+                        >
+                          <Zap size={14} fill={service.status === 'Active' ? "currentColor" : "none"} />
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100" onClick={() => deleteDoc(doc(db!, 'services', service.id))} title="Delete">
+                          <Trash2 size={14} />
                         </Button>
                       </div>
                     </TableCell>

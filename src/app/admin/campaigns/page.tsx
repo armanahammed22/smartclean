@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -68,7 +69,7 @@ export default function CampaignsAdminPage() {
   const handleToggle = async (id: string, current: boolean) => {
     if (!db) return;
     await updateDoc(doc(db, 'campaigns', id), { isActive: !current });
-    toast({ title: "Campaign Status Updated" });
+    toast({ title: `Campaign ${!current ? 'Enabled' : 'Disabled'}` });
   };
 
   const handleDelete = async (id: string) => {
@@ -84,7 +85,7 @@ export default function CampaignsAdminPage() {
           <h1 className="text-2xl font-bold text-gray-900">Campaign Management</h1>
           <p className="text-muted-foreground text-sm">Create and manage Daraz-style Mega Sale events</p>
         </div>
-        <Button onClick={handleCreate} disabled={isSubmitting} className="gap-2 font-bold h-11 shadow-lg bg-red-600 hover:bg-red-700 text-white">
+        <Button onClick={handleCreate} disabled={isSubmitting} className="gap-2 font-bold h-11 px-8 rounded-xl shadow-lg bg-red-600 hover:bg-red-700 text-white">
           {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={18} />}
           New Mega Sale
         </Button>
@@ -166,16 +167,21 @@ export default function CampaignsAdminPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right pr-8">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:bg-primary/5 rounded-xl" asChild>
-                        <Link href={`/admin/campaigns/${c.id}`}>
-                          <Edit size={16} />
-                        </Link>
+                    <div className="flex justify-end items-center gap-1.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary bg-primary/5 hover:bg-primary/10" asChild title="Edit">
+                        <Link href={`/admin/campaigns/${c.id}`}><Edit size={16} /></Link>
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-red-600 hover:bg-red-50 rounded-xl" onClick={() => handleToggle(c.id, c.isActive)}>
-                        <Zap size={16} fill={c.isActive ? 'currentColor' : 'none'} />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(c.id)}>
+                      <button 
+                        onClick={() => handleToggle(c.id, c.isActive)}
+                        className={cn(
+                          "p-1.5 rounded-lg transition-all",
+                          c.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+                        )}
+                        title={c.isActive ? "Disable" : "Enable"}
+                      >
+                        <Zap size={14} fill={c.isActive ? "currentColor" : "none"} />
+                      </button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100" onClick={() => handleDelete(c.id)} title="Delete">
                         <Trash2 size={16} />
                       </Button>
                     </div>
