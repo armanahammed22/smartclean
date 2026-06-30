@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -122,7 +121,7 @@ export default function ServiceBookingPage() {
 
   if (!mounted || (slugLoading && idLoading)) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <Loader2 className="animate-spin text-primary" size(40) />
+      <Loader2 className="animate-spin text-primary" size={40} />
     </div>
   );
 
@@ -240,12 +239,9 @@ export default function ServiceBookingPage() {
 
             {/* COLUMN 3: ADD-ONS */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={20} fill="currentColor"/></div>
-                  <h3 className="text-sm font-black uppercase tracking-widest text-[#081621]">Power-Up Add-ons</h3>
-                </div>
-                <Badge variant="outline" className="bg-white border-primary/20 text-primary font-black text-[9px] uppercase">{addOnOptions?.length || 0} Optional</Badge>
+              <div className="flex items-center gap-2 px-2">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary"><Zap size={20} fill="currentColor"/></div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-[#081621]">Power-Up Add-ons</h3>
               </div>
 
               <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-4">
@@ -292,7 +288,7 @@ export default function ServiceBookingPage() {
                   );
                 }) : (
                   <div className="py-20 text-center opacity-30 border-2 border-dashed rounded-[3rem] bg-gray-50 flex flex-col items-center gap-4">
-                    <Sparkles size(40) className="text-gray-200" />
+                    <Sparkles size={40} className="text-gray-200" />
                     <p className="text-[10px] font-black uppercase tracking-widest">No Add-ons Available</p>
                   </div>
                 )}
@@ -300,7 +296,7 @@ export default function ServiceBookingPage() {
             </div>
           </div>
 
-          {/* 🔍 UNIFIED INFORMATION BLOCK - UPDATED LAYOUT */}
+          {/* 🔍 UNIFIED INFORMATION BLOCK */}
           <section className="pt-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
               <CardContent className="p-0 flex flex-col divide-y divide-gray-100">
