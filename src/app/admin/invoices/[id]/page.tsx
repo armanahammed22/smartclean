@@ -1,10 +1,9 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, updateDoc, collection, addDoc, serverTimestamp, query, where, orderBy } from 'firebase/firestore';
+import { useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
+import { doc, updateDoc, collection, addDoc, serverTimestamp, query, where, orderBy, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +43,7 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminInvoiceDetailPage() {
@@ -80,6 +80,7 @@ export default function AdminInvoiceDetailPage() {
   const isQuotation = invoice?.invoiceNumber?.startsWith('QTN');
 
   const handleWhatsApp = () => {
+    if (!invoice) return;
     const text = `আসসালামু আলাইকুম, ইনভয়েস (${invoice.invoiceNumber}) টি চেক করার জন্য অনুরোধ করা হলো।`;
     window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -432,4 +433,3 @@ export default function AdminInvoiceDetailPage() {
     </div>
   );
 }
-
