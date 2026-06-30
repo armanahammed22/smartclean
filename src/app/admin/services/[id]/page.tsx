@@ -40,14 +40,16 @@ import {
   Info,
   DollarSign,
   Briefcase,
-  Wrench,
+  Wrench
+} from 'lucide-react';
+import { 
   Table, 
   TableHeader, 
   TableBody, 
   TableCell, 
   TableHead, 
-  TableRow
-} from 'lucide-react';
+  TableRow 
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
