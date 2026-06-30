@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -19,7 +20,10 @@ import {
   Wallet,
   Heart,
   Check,
-  MessageCircle
+  MessageCircle,
+  History,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,8 +98,6 @@ export default function PublicInvoiceViewPage() {
           .no-print { display: none !important; }
         }
         .invoice-table-wrapper { width: 100%; border-collapse: collapse; }
-        .invoice-table-wrapper thead { display: table-header-group; }
-        .invoice-table-wrapper tfoot { display: table-footer-group; }
       `}</style>
 
       <div className="container mx-auto px-4 flex flex-col items-center">
@@ -144,7 +146,6 @@ export default function PublicInvoiceViewPage() {
                         <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
                         <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Better Security, Better Solution</p>
                         <div className="h-0.5 bg-primary w-full mt-1" />
-                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest pt-0.5">Corporate Branch</p>
                       </div>
                     </div>
                     <div className="h-14 w-px bg-gray-300 mx-6" />
@@ -152,7 +153,6 @@ export default function PublicInvoiceViewPage() {
                       <p className="text-[8px] font-bold text-gray-600 leading-normal uppercase">{headerAddress}</p>
                       <p className="text-[8px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
                       <p className="text-[8px] font-bold text-gray-600 uppercase">E-mail: {headerEmail}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">Web: smartclean.com.bd</p>
                     </div>
                   </div>
                 </td>
@@ -196,61 +196,46 @@ export default function PublicInvoiceViewPage() {
                     <table className="w-full border-collapse">
                       <thead className="bg-[#1E5F7A] text-white">
                         <tr>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase w-10 text-center">SL.</th>
                           <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Description</th>
                           <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-16">Qty</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-20">Rate (৳)</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Total (৳)</th>
+                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-20">Rate</th>
+                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Total</th>
                         </tr>
                       </thead>
                       <tbody className="text-[9px] font-medium bg-white">
                         {invoice.items.map((item: any, i: number) => (
                           <tr key={i} className="border-t border-[#081621]">
-                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-400">{i + 1}</td>
                             <td className="py-2 px-3 border-r border-[#081621] font-black uppercase text-gray-800 text-left">{item.name}</td>
-                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-700">
-                              {item.quantity} {item.unit}
-                            </td>
+                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-700">{item.quantity}</td>
                             <td className="py-2 px-3 border-r border-[#081621] font-black text-gray-700 text-right">৳{item.price?.toLocaleString()}/-</td>
                             <td className="py-2 px-3 text-right font-black text-gray-900 bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}/-</td>
                           </tr>
                         ))}
                         
                         <tr className="border-t border-[#081621] bg-gray-50/80">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Gross Amount</td>
+                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Gross Amount</td>
                           <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
                         </tr>
 
-                        {invoice.discount > 0 && (
+                        {invoice.previousDue > 0 && (
                           <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Savings/Promo (-)</td>
-                            <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.discount.toLocaleString()}/-</td>
-                          </tr>
-                        )}
-
-                        {invoice.tax > 0 && (
-                          <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">VAT ({invoice.vatPercent || 0}%) (+)</td>
-                            <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.tax.toLocaleString()}/-</td>
+                            <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Selected Arrears (+)</td>
+                            <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.previousDue.toLocaleString()}/-</td>
                           </tr>
                         )}
 
                         <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">
-                            Final Amount Payable
-                          </td>
-                          <td className="py-2 px-3 text-right">
-                            <span className="text-sm font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}/-</span>
-                          </td>
+                          <td colSpan={3} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">Grand Total</td>
+                          <td className="py-2 px-3 text-right font-black text-sm">৳{invoice.total.toLocaleString()}/-</td>
                         </tr>
 
-                        <tr className="border-t border-[#081621] bg-emerald-50/50">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-emerald-700 italic">Total Paid Amount</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px] text-emerald-700">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
+                        <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
+                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Received (-)</td>
+                          <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
                         </tr>
 
-                        <tr className="border-t border-[#081621] bg-rose-50/50">
-                          <td colSpan={4} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-700 italic">Net Due Balance</td>
+                        <tr className="border-t border-[#081621] bg-rose-50/50 text-rose-700">
+                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Net Due Balance</td>
                           <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                         </tr>
                       </tbody>
@@ -298,21 +283,7 @@ export default function PublicInvoiceViewPage() {
                         </div>
                         <div>
                           <p className="font-black text-[8px] uppercase text-[#081621] tracking-tighter leading-none">Authorized Signatory</p>
-                          <p className="text-[6px] font-bold text-primary uppercase tracking-widest mt-1">Smart Clean Bangladesh</p>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Services Grid */}
-                    <div className="pt-3 pb-3 border-t border-gray-100 bg-gray-50/30">
-                      <p className="text-[8px] font-black uppercase text-[#1E5F7A] tracking-[0.2em] mb-2 text-left">Services We Provide</p>
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-1">
-                        {providedServicesList.map((service, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <div className="p-0.5 bg-primary/10 rounded-sm"><Check size={5} className="text-primary" strokeWidth={4} /></div>
-                            <span className="text-[7px] font-bold text-gray-500 uppercase tracking-tight truncate">{service}</span>
-                          </div>
-                        ))}
                       </div>
                     </div>
 
@@ -328,24 +299,6 @@ export default function PublicInvoiceViewPage() {
             </tfoot>
           </table>
         </div>
-      </div>
-
-      {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))] no-print">
-        <Button 
-          variant="outline"
-          onClick={handleWhatsApp}
-          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all px-2"
-        >
-          <MessageCircle size={18} /> WhatsApp
-        </Button>
-        <Button 
-          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all px-2"
-          onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
-          disabled={isDownloading}
-        >
-          {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <><Download size={18} /> Download</>}
-        </Button>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -12,40 +13,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   FileText, 
   Search, 
-  Download, 
   Trash2, 
   Eye, 
   Loader2, 
   Filter, 
   ReceiptText, 
-  TrendingUp, 
-  Wallet, 
-  Calendar, 
-  AlertCircle,
-  CheckCircle2,
-  Clock,
+  Zap,
   Plus,
   X,
   Calculator,
-  User as UserIcon,
   Save,
   Edit,
   Info,
-  Globe,
-  Mail,
   Phone,
   Package,
-  Smartphone,
-  Users,
   Wrench,
-  ChevronDown,
-  Zap,
-  Layout,
   Banknote,
   ShieldCheck,
-  CreditCard,
-  ArrowUpRight,
-  UserPlus,
+  Clock,
   History
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
@@ -71,6 +56,7 @@ function InvoicesListContent() {
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -199,14 +185,14 @@ function InvoicesListContent() {
         totalInvoiced: selected.totalInvoiced || 0
       });
 
-      // 🛡️ REFIX: Fetch all invoices for customer and filter in-memory to avoid index error
       if (db) {
         try {
           const q = query(collection(db, 'invoices'), where('customerId', '==', userId));
           const snap = await getDocs(q);
           const docs = snap.docs
             .map(d => ({ ...d.data(), id: d.id }))
-            .filter((inv: any) => inv.paymentStatus !== 'Paid');
+            .filter((inv: any) => inv.paymentStatus !== 'Paid')
+            .sort((a: any, b: any) => a.createdAt.localeCompare(b.createdAt)); // FIFO Sort
           
           setUnpaidInvoices(docs);
           setSelectedUnpaidIds(docs.map(d => d.id));
@@ -333,6 +319,7 @@ function InvoicesListContent() {
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
         previousDue: selectedPreviousDue,
+        previousDueIds: selectedUnpaidIds, // 🛡️ CRITICAL: Save IDs for settlement logic
         total: grandTotal,
         paidAmount: Number(pricing.paidAmount),
         dueAmount: currentDue,
@@ -374,7 +361,7 @@ function InvoicesListContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><ReceiptText size={240} /></div>
         <div className="relative z-10 space-y-2">
-          <Badge className="bg-primary/20 text-primary border-none font-black text-[9px] uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg">Billing Hub v2.1</Badge>
+          <Badge className="bg-primary/20 text-primary border-none font-black text-[9px] uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg">Billing Hub v2.5</Badge>
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none font-headline italic">
             Invoice <span className="text-primary">Registry</span>
           </h1>
@@ -532,7 +519,7 @@ function InvoicesListContent() {
                    <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tight font-headline italic">
                       Invoice <span className="text-primary">Terminal</span>
                    </DialogTitle>
-                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Manual Ledger Provisioning • v2.1</p>
+                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Manual Ledger Provisioning • v2.5</p>
                 </div>
               </div>
             </div>
