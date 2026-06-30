@@ -27,7 +27,9 @@ import {
   AlertCircle,
   Award,
   ThumbsUp,
-  Info
+  Info,
+  Building2,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -132,26 +134,25 @@ export default function ServiceBookingPage() {
         
         <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
           
-          {/* 🛡️ MAIN 3-COLUMN LAYOUT */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* COLUMN 1: IMAGE & BEFORE/AFTER */}
             <div className="lg:col-span-5 space-y-4">
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+              <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
                 <div className="relative aspect-square w-full flex items-center justify-center bg-gray-50 group">
                   {baseService.imageUrl ? (
                     <Image src={baseService.imageUrl} alt={baseService.title} fill className="object-cover" unoptimized />
                   ) : (
                     <Wrench size={80} className="text-gray-200" />
                   )}
-                  <div className="absolute top-4 left-4">
-                     <Badge className="bg-primary/90 text-white border-none rounded-full px-4 py-1 font-black text-[10px] uppercase shadow-lg">Verified Service</Badge>
+                  <div className="absolute top-6 left-6">
+                     <Badge className="bg-primary text-white border-none rounded-full px-4 py-1.5 font-black text-[10px] uppercase shadow-lg tracking-widest">Verified Service</Badge>
                   </div>
                 </div>
               </Card>
 
               {baseService.beforeAfterImages?.length > 0 && (
-                <Card className="border-none shadow-sm rounded-3xl p-6 bg-white space-y-4">
+                <Card className="border-none shadow-sm rounded-[2rem] p-6 bg-white space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-widest text-[#081621]">Operational Results</h4>
                   <Carousel opts={{ align: "start", loop: true }} className="w-full">
                     <CarouselContent className="-ml-3">
@@ -171,7 +172,7 @@ export default function ServiceBookingPage() {
               )}
             </div>
 
-            {/* COLUMN 2: TITLE & DETAILS */}
+            {/* COLUMN 2: TITLE & BOOKING */}
             <div className="lg:col-span-3 space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -187,7 +188,7 @@ export default function ServiceBookingPage() {
                   </div>
                 </div>
 
-                <div className="p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm space-y-6 transition-all hover:shadow-md">
+                <div className="p-6 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6 transition-all hover:shadow-md">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Base Rate Starting</p>
                     <div className="flex items-baseline gap-2">
@@ -234,21 +235,10 @@ export default function ServiceBookingPage() {
                     </Button>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0"><Clock size={16}/></div>
-                    <div><p className="text-[8px] font-black text-gray-400 uppercase">Duration</p><p className="text-[10px] font-bold text-gray-700">{baseService.duration || '2-4 Hrs'}</p></div>
-                  </div>
-                  <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-                    <div className="p-2 bg-amber-50 text-amber-600 rounded-lg shrink-0"><Users size={16}/></div>
-                    <div><p className="text-[8px] font-black text-gray-400 uppercase">Team Size</p><p className="text-[10px] font-bold text-gray-700">{baseService.teamSize || '2-3 Pros'}</p></div>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* COLUMN 3: MODERN ADD-ONS */}
+            {/* COLUMN 3: ADD-ONS */}
             <div className="lg:col-span-4 space-y-6">
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
@@ -261,9 +251,6 @@ export default function ServiceBookingPage() {
               <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-4">
                 {addOnOptions?.length ? addOnOptions.map((addon, idx) => {
                   const isSelected = selectedAddOnIds.includes(addon.id);
-                  const isPopular = idx === 0;
-                  const isRecommended = idx === 1;
-
                   return (
                     <div 
                       key={addon.id} 
@@ -275,9 +262,6 @@ export default function ServiceBookingPage() {
                           : "border-transparent bg-white hover:border-primary/20 hover:shadow-xl hover:-translate-y-1"
                       )}
                     >
-                      {isRecommended && <Badge className="absolute -top-2 right-6 bg-emerald-500 text-white font-black text-[7px] uppercase h-5 z-10 border-none px-3 shadow-lg">Recommended</Badge>}
-                      {isPopular && <Badge className="absolute -top-2 left-6 bg-amber-400 text-black font-black text-[7px] uppercase h-5 z-10 border-none px-3 shadow-lg">Popular</Badge>}
-
                       <div className="flex items-start gap-4">
                         <div className={cn(
                           "relative w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-500 overflow-hidden",
@@ -299,7 +283,6 @@ export default function ServiceBookingPage() {
                           </p>
                         </div>
                       </div>
-
                       {isSelected && (
                         <div className="absolute bottom-4 right-4 bg-primary text-white rounded-full p-1 shadow-lg animate-in fade-in slide-in-from-right-2">
                            <Check size={12} strokeWidth={4} />
@@ -317,69 +300,104 @@ export default function ServiceBookingPage() {
             </div>
           </div>
 
-          {/* 🔍 SERVICE DETAILS SECTION (FULL WIDE) */}
-          <section className="pt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-             {/* Card A: Why Choose Us */}
-             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-xl transition-all duration-500">
-               <CardHeader className="bg-primary/5 p-8 border-b border-primary/10">
-                 <CardTitle className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
-                   <ThumbsUp size={18} /> Why Choose Us
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="p-8 space-y-6">
-                 {[
-                   { icon: ShieldCheck, title: "Verified Pros", desc: "Expert technicians with background verification." },
-                   { icon: Zap, title: "Modern Gear", desc: "Industrial-grade equipment for deep reach." },
-                   { icon: Award, title: "Guarantee", desc: "Free re-cleaning if not satisfied in 24 hrs." }
-                 ].map((item, i) => (
-                   <div key={i} className="flex gap-4 group/item">
-                     <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors"><item.icon size={18}/></div>
-                     <div className="space-y-0.5">
-                       <p className="text-[11px] font-black uppercase text-gray-800 tracking-tight">{item.title}</p>
-                       <p className="text-[10px] font-medium text-gray-500 leading-snug">{item.desc}</p>
-                     </div>
-                   </div>
-                 ))}
-               </CardContent>
-             </Card>
+          {/* 🔍 UNIFIED INFORMATION BLOCK */}
+          <section className="pt-8">
+            <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                  
+                  {/* Section 1: Service Profile */}
+                  <div className="p-8 space-y-8">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-3">
+                      <Info size={18} className="text-primary" /> Service Profile
+                    </h3>
+                    <div className="space-y-6">
+                       <div className="space-y-2">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</p>
+                          <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg px-3 py-1 font-bold text-[10px] uppercase">
+                             {baseService.categoryId || 'General'}
+                          </Badge>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
+                            <p className="text-xs font-bold text-gray-700">{baseService.duration || '2-4 Hours'}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Team Size</p>
+                            <p className="text-xs font-bold text-gray-700">{baseService.teamSize || '2-3 Pros'}</p>
+                          </div>
+                       </div>
+                       <div className="space-y-2">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Hours</p>
+                          <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                             <Clock size={14} className="text-primary" /> 8:00 AM - 8:00 PM
+                          </div>
+                       </div>
+                       <div className="space-y-2 pt-4 border-t border-gray-50">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</p>
+                          <p className="text-xs font-medium text-gray-500 leading-relaxed italic">
+                             {baseService.description?.substring(0, 150)}...
+                          </p>
+                       </div>
+                    </div>
+                  </div>
 
-             {/* Card B: What's Included */}
-             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-xl transition-all duration-500">
-               <CardHeader className="bg-emerald-50 p-8 border-b border-emerald-100">
-                 <CardTitle className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-3">
-                   <CheckCircle2 size={18} /> What's Included
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="p-8">
-                 <div className="grid grid-cols-1 gap-4">
-                   {(baseService.included?.length ? baseService.included : ["Industrial Vacuuming", "Chemical Scrubbing", "Spot Treatment", "Sanitization"]).map((item: string, i: number) => (
-                     <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2" style={{ animationDelay: `${i*100}ms` }}>
-                       <div className="p-1 bg-emerald-100 text-emerald-600 rounded-full"><Check size={10} strokeWidth={4}/></div>
-                       <span className="text-[11px] font-bold text-gray-600 uppercase tracking-tight">{item}</span>
-                     </div>
-                   ))}
-                 </div>
-               </CardContent>
-             </Card>
+                  {/* Section 2: Why Choose Us */}
+                  <div className="p-8 space-y-8">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
+                      <ThumbsUp size={18} /> Why Choose Us
+                    </h3>
+                    <div className="space-y-6">
+                      {[
+                        { icon: ShieldCheck, title: "Verified Pros", desc: "Expert technicians with background verification." },
+                        { icon: Zap, title: "Modern Gear", desc: "Industrial-grade equipment for deep reach." },
+                        { icon: Award, title: "Guarantee", desc: "Free re-cleaning if not satisfied in 24 hrs." }
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-4 group/item">
+                          <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors"><item.icon size={18}/></div>
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] font-black uppercase text-gray-800 tracking-tight">{item.title}</p>
+                            <p className="text-[9px] font-medium text-gray-500 leading-snug">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-             {/* Card C: Not Included */}
-             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden group hover:shadow-xl transition-all duration-500">
-               <CardHeader className="bg-rose-50 p-8 border-b border-rose-100">
-                 <CardTitle className="text-sm font-black uppercase tracking-widest text-rose-700 flex items-center gap-3">
-                   <AlertCircle size={18} /> Not Included
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="p-8">
-                 <div className="grid grid-cols-1 gap-4">
-                   {(baseService.notIncluded?.length ? baseService.notIncluded : ["Wall Painting", "Furniture Moving", "Deep Stain Removal", "Electronic Repair"]).map((item: string, i: number) => (
-                     <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2 opacity-60" style={{ animationDelay: `${i*100}ms` }}>
-                       <div className="p-1 bg-rose-100 text-rose-600 rounded-full"><X size={10} strokeWidth={4}/></div>
-                       <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{item}</span>
-                     </div>
-                   ))}
-                 </div>
-               </CardContent>
-             </Card>
+                  {/* Section 3: What's Included */}
+                  <div className="p-8 space-y-8">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-3">
+                      <CheckCircle2 size={18} /> Included
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {(baseService.included?.length ? baseService.included : ["Industrial Vacuuming", "Chemical Scrubbing", "Spot Treatment", "Sanitization"]).map((item: string, i: number) => (
+                        <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2" style={{ animationDelay: `${i*100}ms` }}>
+                          <div className="p-1 bg-emerald-100 text-emerald-600 rounded-full"><Check size={10} strokeWidth={4}/></div>
+                          <span className="text-[11px] font-bold text-gray-600 uppercase tracking-tight">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section 4: Not Included */}
+                  <div className="p-8 space-y-8">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-rose-700 flex items-center gap-3">
+                      <AlertCircle size={18} /> Not Included
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {(baseService.notIncluded?.length ? baseService.notIncluded : ["Wall Painting", "Furniture Moving", "Deep Stain Removal", "Electronic Repair"]).map((item: string, i: number) => (
+                        <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2 opacity-60" style={{ animationDelay: `${i*100}ms` }}>
+                          <div className="p-1 bg-rose-100 text-rose-600 rounded-full"><X size={10} strokeWidth={4}/></div>
+                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
         </div>

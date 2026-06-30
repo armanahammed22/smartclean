@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -201,7 +202,6 @@ export function CheckoutModal() {
                     )} />
                   </div>
 
-                  {/* Optimized Date & Time UI */}
                   {hasServices && (
                     <div className="space-y-4 pt-4 border-t">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2 border-b pb-2"><Clock size={14} className="text-primary" /> Arrival Schedule</h4>
@@ -218,7 +218,7 @@ export function CheckoutModal() {
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[300]" align="start" side="top" sideOffset={4} collisionPadding={20}>
+                              <PopoverContent className="w-auto p-0 border-none shadow-2xl rounded-2xl z-[300]" align="start" side="bottom" sideOffset={4} collisionPadding={20}>
                                 <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(d) => d < new Date()} initialFocus />
                               </PopoverContent>
                             </Popover>
@@ -285,7 +285,6 @@ export function CheckoutModal() {
                 </div>
               </div>
 
-              {/* Trust Badge */}
               <div className="p-4 bg-white/50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-3">
                 <ShieldCheck className="text-green-600" size={24} />
                 <p className="text-[9px] font-bold text-gray-500 uppercase leading-tight">Your payment and data are protected with SSL encryption.</p>
@@ -293,7 +292,6 @@ export function CheckoutModal() {
             </div>
           </div>
 
-          {/* 📱 Mobile Sticky Action Bar */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-between gap-4 z-[210] pb-safe-offset-2">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Final Amount</span>
