@@ -300,65 +300,66 @@ export default function ServiceBookingPage() {
             </div>
           </div>
 
-          {/* 🔍 UNIFIED INFORMATION BLOCK */}
+          {/* 🔍 UNIFIED INFORMATION BLOCK - IMPROVED READABILITY */}
           <section className="pt-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
               <CardContent className="p-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-100">
                   
-                  {/* Section 1: Service Profile */}
-                  <div className="p-8 space-y-8">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-3">
+                  {/* Section 1: Service Profile (Includes Full Description) */}
+                  <div className="p-6 md:p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
                       <Info size={18} className="text-primary" /> Service Profile
                     </h3>
                     <div className="space-y-6">
-                       <div className="space-y-2">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</p>
-                          <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg px-3 py-1 font-bold text-[10px] uppercase">
-                             {baseService.categoryId || 'General'}
-                          </Badge>
-                       </div>
                        <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</p>
+                            <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg px-3 py-1 font-bold text-[10px] uppercase">
+                               {baseService.categoryId || 'General'}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Hours</p>
+                            <p className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5"><Clock size={12} className="text-primary"/> 8AM-8PM</p>
+                          </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4 border-t border-gray-50 pt-4">
+                          <div className="space-y-1">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
-                            <p className="text-xs font-bold text-gray-700">{baseService.duration || '2-4 Hours'}</p>
+                            <p className="text-[11px] font-bold text-gray-700 uppercase">{baseService.duration || '2-4 Hours'}</p>
                           </div>
                           <div className="space-y-1">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Team Size</p>
-                            <p className="text-xs font-bold text-gray-700">{baseService.teamSize || '2-3 Pros'}</p>
+                            <p className="text-[11px] font-bold text-gray-700 uppercase">{baseService.teamSize || '2-3 Pros'}</p>
                           </div>
                        </div>
-                       <div className="space-y-2">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Hours</p>
-                          <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                             <Clock size={14} className="text-primary" /> 8:00 AM - 8:00 PM
-                          </div>
-                       </div>
-                       <div className="space-y-2 pt-4 border-t border-gray-50">
+                       
+                       <div className="space-y-3 pt-6 border-t border-gray-50">
                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</p>
-                          <p className="text-xs font-medium text-gray-500 leading-relaxed italic">
-                             {baseService.description?.substring(0, 150)}...
-                          </p>
+                          <div className="text-sm md:text-base font-medium text-gray-600 leading-loose whitespace-pre-wrap break-words">
+                             {baseService.description}
+                          </div>
                        </div>
                     </div>
                   </div>
 
                   {/* Section 2: Why Choose Us */}
-                  <div className="p-8 space-y-8">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-3">
-                      <ThumbsUp size={18} /> Why Choose Us
+                  <div className="p-6 md:p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <ThumbsUp size={18} /> Why Us
                     </h3>
                     <div className="space-y-6">
                       {[
-                        { icon: ShieldCheck, title: "Verified Pros", desc: "Expert technicians with background verification." },
-                        { icon: Zap, title: "Modern Gear", desc: "Industrial-grade equipment for deep reach." },
-                        { icon: Award, title: "Guarantee", desc: "Free re-cleaning if not satisfied in 24 hrs." }
+                        { icon: ShieldCheck, title: "Verified Pros", desc: "Background-checked and expert team." },
+                        { icon: Zap, title: "Modern Gear", desc: "Industrial equipment for superior clean." },
+                        { icon: Award, title: "Guarantee", desc: "24-hr re-cleaning if not satisfied." }
                       ].map((item, i) => (
                         <div key={i} className="flex gap-4 group/item">
-                          <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors"><item.icon size={18}/></div>
-                          <div className="space-y-0.5">
-                            <p className="text-[11px] font-black uppercase text-gray-800 tracking-tight">{item.title}</p>
-                            <p className="text-[9px] font-medium text-gray-500 leading-snug">{item.desc}</p>
+                          <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors shrink-0 h-fit"><item.icon size={18}/></div>
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-black uppercase text-gray-800 tracking-tight leading-none">{item.title}</p>
+                            <p className="text-[10px] font-medium text-gray-500 leading-relaxed">{item.desc}</p>
                           </div>
                         </div>
                       ))}
@@ -366,30 +367,30 @@ export default function ServiceBookingPage() {
                   </div>
 
                   {/* Section 3: What's Included */}
-                  <div className="p-8 space-y-8">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-3">
+                  <div className="p-6 md:p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-2">
                       <CheckCircle2 size={18} /> Included
                     </h3>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3.5">
                       {(baseService.included?.length ? baseService.included : ["Industrial Vacuuming", "Chemical Scrubbing", "Spot Treatment", "Sanitization"]).map((item: string, i: number) => (
-                        <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2" style={{ animationDelay: `${i*100}ms` }}>
-                          <div className="p-1 bg-emerald-100 text-emerald-600 rounded-full"><Check size={10} strokeWidth={4}/></div>
-                          <span className="text-[11px] font-bold text-gray-600 uppercase tracking-tight">{item}</span>
+                        <div key={i} className="flex items-start gap-3 animate-in slide-in-from-left-2">
+                          <div className="p-0.5 bg-emerald-100 text-emerald-600 rounded-full mt-1 shrink-0"><Check size={10} strokeWidth={4}/></div>
+                          <span className="text-[11px] md:text-xs font-bold text-gray-600 uppercase tracking-tight leading-tight">{item}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Section 4: Not Included */}
-                  <div className="p-8 space-y-8">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-rose-700 flex items-center gap-3">
+                  <div className="p-6 md:p-8 space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-rose-700 flex items-center gap-2">
                       <AlertCircle size={18} /> Not Included
                     </h3>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3.5">
                       {(baseService.notIncluded?.length ? baseService.notIncluded : ["Wall Painting", "Furniture Moving", "Deep Stain Removal", "Electronic Repair"]).map((item: string, i: number) => (
-                        <div key={i} className="flex items-center gap-3 animate-in slide-in-from-left-2 opacity-60" style={{ animationDelay: `${i*100}ms` }}>
-                          <div className="p-1 bg-rose-100 text-rose-600 rounded-full"><X size={10} strokeWidth={4}/></div>
-                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{item}</span>
+                        <div key={i} className="flex items-start gap-3 animate-in slide-in-from-left-2 opacity-70">
+                          <div className="p-0.5 bg-rose-100 text-rose-600 rounded-full mt-1 shrink-0"><X size={10} strokeWidth={4}/></div>
+                          <span className="text-[11px] md:text-xs font-bold text-gray-500 uppercase tracking-tight leading-tight">{item}</span>
                         </div>
                       ))}
                     </div>
@@ -407,7 +408,7 @@ export default function ServiceBookingPage() {
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-[155] bg-white border-t border-gray-100 h-20 px-4 flex items-center justify-between gap-4 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] pb-safe-offset-2">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Payable</span>
-              <span className="text-2xl font-black text-primary tracking-tighter leading-none animate-in fade-in zoom-in-95 duration-500">৳{totalPrice.toLocaleString()}</span>
+              <span className="text-2xl font-black text-primary tracking-tighter leading-none">৳{totalPrice.toLocaleString()}</span>
             </div>
             <Button onClick={handleContinue} disabled={baseService.isBookingEnabled === false} className="flex-1 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95">
               {baseService.bookingButtonText || 'Confirm Booking'}
