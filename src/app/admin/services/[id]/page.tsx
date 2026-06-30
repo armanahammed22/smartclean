@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, updateDoc, addDoc, deleteDoc, query, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, updateDoc, query, orderBy, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,16 +40,14 @@ import {
   Info,
   DollarSign,
   Briefcase,
-  Wrench
-} from 'lucide-react';
-import { 
+  Wrench,
   Table, 
+  TableHeader, 
   TableBody, 
   TableCell, 
   TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+  TableRow
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -198,8 +196,6 @@ export default function UnifiedServiceEditor() {
       <Tabs defaultValue="basic" className="space-y-8">
         <TabsList className="bg-white border p-1 h-14 w-full rounded-2xl overflow-x-auto no-scrollbar shadow-sm">
           <TabsTrigger value="basic" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Layout size={14}/> Basic Info</TabsTrigger>
-          <TabsTrigger value="media" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Camera size={14}/> Media Hub</TabsTrigger>
-          <TabsTrigger value="pricing" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><DollarSign size={14}/> Pricing & Add-ons</TabsTrigger>
           <TabsTrigger value="checklists" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><ListChecks size={14}/> Checklists</TabsTrigger>
           <TabsTrigger value="features" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Zap size={14}/> Features</TabsTrigger>
           {!isNew && <TabsTrigger value="reviews" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Star size={14}/> Feedback</TabsTrigger>}
@@ -207,115 +203,131 @@ export default function UnifiedServiceEditor() {
 
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           
-          {/* SECTION 1: BASIC INFO */}
+          {/* CONSOLIDATED BASIC INFO TAB */}
           <TabsContent value="basic" className="mt-0">
             <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-              <CardHeader className="p-8 border-b bg-gray-50/50">
-                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2"><Layout size={18} className="text-primary"/> Service Identity</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Full Name</Label>
-                    <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Corporate Deep Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+              <CardContent className="p-0 flex flex-col">
+                
+                {/* 1. SERVICE INFORMATION SECTION */}
+                <div className="p-8 space-y-8">
+                  <div className="flex items-center gap-3 border-b pb-4">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><Layout size={18}/></div>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Service Information</h3>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Market Category</Label>
-                    <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v})}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Category" /></SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
-                        {categories?.map(c => <SelectItem key={c.id} value={c.id} className="font-bold py-3 uppercase text-[10px]">{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Operation Duration</Label>
-                    <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 2-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Required Personnel</Label>
-                    <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="e.g. 3 Experts" className="h-12 bg-gray-50 border-none rounded-xl" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Detailed Description</Label>
-                  <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[200px] bg-gray-50 border-none rounded-[2rem] p-8 leading-loose focus:bg-white transition-all shadow-inner" placeholder="Explain the service scope in detail..." />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* SECTION 2: MEDIA HUB */}
-          <TabsContent value="media" className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8">
-                <ImageUploader label="Primary Listing Asset" hint="800 x 600 px (4:3 Ratio)" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
-              </Card>
-              <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 space-y-6">
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Gallery Logic</h3>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">Optional extra images</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.galleryImages?.map((img: string, i: number) => (
-                    <div key={i} className="relative group aspect-square rounded-2xl overflow-hidden border">
-                      <Image src={img} alt="Gallery" fill className="object-cover" />
-                      <button onClick={() => removeArrayItem('galleryImages', i)} className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14}/></button>
-                    </div>
-                  ))}
-                  <div className="flex items-center justify-center border-2 border-dashed rounded-2xl aspect-square hover:bg-gray-50 transition-colors">
-                    <ImageUploader initialUrl="" onUpload={url => addArrayItem('galleryImages', url)} label="" aspectRatio="aspect-square" className="border-none" />
-                  </div>
-                </div>
-                <div className="space-y-2 pt-4 border-t">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Promotional Video URL (YouTube)</Label>
-                  <div className="relative">
-                    <Video size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/..." className="h-12 pl-12 bg-gray-50 border-none rounded-xl font-mono text-xs" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* SECTION 3: PRICING & ADD-ONS */}
-          <TabsContent value="pricing" className="mt-0">
-            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-              <CardHeader className="p-8 border-b bg-gray-50/50">
-                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2"><DollarSign size={20} className="text-primary"/> Billing Configuration</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sale Price (৳)</Label>
-                        <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary text-lg" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
-                        <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400 line-through" />
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Title</Label>
+                      <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Corporate Deep Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Operational Extra Charge (৳)</Label>
-                      <Input type="number" value={formData.extraCharges} onChange={e => setFormData({...formData, extraCharges: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" placeholder="0.00" />
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
+                      <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Category" /></SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                          {categories?.map(c => <SelectItem key={c.id} value={c.id} className="font-bold py-3 uppercase text-[10px]">{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duration</Label>
+                      <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 2-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Number of Employees</Label>
+                      <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="e.g. 3 Experts" className="h-12 bg-gray-50 border-none rounded-xl" />
                     </div>
                   </div>
-                  <div className="space-y-6 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><Maximize size={14}/> Pricing Logic</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['fixed', 'sqft', 'quantity'].map(type => (
-                        <button key={type} type="button" onClick={() => setFormData({...formData, pricingType: type})} className={cn("py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all", formData.pricingType === type ? "bg-white border-primary text-primary shadow-md scale-105" : "bg-transparent border-transparent text-gray-400 hover:text-gray-600")}>
-                          {type}
-                        </button>
-                      ))}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Detailed Description</Label>
+                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[160px] bg-gray-50 border-none rounded-2xl p-6 leading-loose focus:bg-white transition-all shadow-inner" placeholder="Explain the service scope..." />
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100 mx-8" />
+
+                {/* 2. MEDIA HUB SECTION */}
+                <div className="p-8 space-y-8">
+                  <div className="flex items-center gap-3 border-b pb-4">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><Camera size={18}/></div>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Media Hub</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                      <ImageUploader label="Featured Listing Image" hint="800 x 600 px (4:3 Ratio)" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
+                      <div className="space-y-2 pt-4">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Video URL (YouTube/Vimeo)</Label>
+                        <div className="relative">
+                          <Video size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/..." className="h-12 pl-12 bg-gray-50 border-none rounded-xl font-mono text-xs" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-4 bg-white rounded-2xl text-[10px] font-medium text-gray-500 leading-relaxed italic border border-gray-100">
-                      <Info size={12} className="inline mr-1 mb-1 text-primary"/> Pricing logic defines how the total amount is calculated at checkout. "Sqft" allows for custom area slabs.
+                    <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
+                      <Label className="text-[10px] font-black uppercase text-primary tracking-widest">Gallery Images</Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {formData.galleryImages?.map((img: string, i: number) => (
+                          <div key={i} className="relative aspect-square rounded-xl overflow-hidden border bg-white group">
+                            <Image src={img} alt="Gallery" fill className="object-cover" unoptimized />
+                            <button onClick={() => removeArrayItem('galleryImages', i)} className="absolute inset-0 bg-red-600/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-center border-2 border-dashed rounded-xl aspect-square hover:bg-white transition-colors bg-white/50">
+                          <ImageUploader initialUrl="" onUpload={url => addArrayItem('galleryImages', url)} label="" aspectRatio="aspect-square" className="border-none p-0" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                <div className="h-px bg-gray-100 mx-8" />
+
+                {/* 3. PRICING & ADD-ONS SECTION */}
+                <div className="p-8 space-y-8">
+                  <div className="flex items-center gap-3 border-b pb-4">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><DollarSign size={18}/></div>
+                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Pricing & Add-ons</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Model</Label>
+                        <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-xl">
+                          {['fixed', 'quantity', 'sqft'].map(type => (
+                            <button key={type} type="button" onClick={() => setFormData({...formData, pricingType: type})} className={cn("py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all", formData.pricingType === type ? "bg-white border-primary text-primary shadow-sm" : "bg-transparent border-transparent text-gray-400 hover:text-gray-600")}>
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sale Price (৳)</Label>
+                          <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary text-lg" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
+                          <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Extra Operational Charges (৳)</Label>
+                        <Input type="number" value={formData.extraCharges} onChange={e => setFormData({...formData, extraCharges: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" placeholder="0.00" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                       <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-4">
+                        <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={20}/></div>
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black uppercase text-blue-900">Add-on Logic</h4>
+                          <p className="text-[10px] text-blue-800/70 leading-relaxed font-medium">
+                            পাওয়ারফুল এড-অন সার্ভিসের জন্য আলাদা করে "Sub-Services" সেকশন ব্যবহার করুন। এখানে আপনি শুধু বেস প্রাইসিং এবং সার্ভিস স্ট্র্যাটেজি সেট করতে পারবেন।
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </CardContent>
             </Card>
           </TabsContent>
@@ -326,8 +338,8 @@ export default function UnifiedServiceEditor() {
               {/* Included */}
               <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={16}/> Included</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('included')} className="rounded-xl bg-emerald-50 text-emerald-600"><Plus size={16}/></Button>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={16}/> Included Items</h3>
+                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('included')} className="rounded-xl bg-emerald-50 text-emerald-600 h-8 w-8"><Plus size={16}/></Button>
                 </div>
                 <div className="space-y-2">
                   {formData.included?.map((item: string, i: number) => (
@@ -343,7 +355,7 @@ export default function UnifiedServiceEditor() {
               <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
                   <h3 className="text-sm font-black uppercase tracking-widest text-rose-600 flex items-center gap-2"><XCircle size={16}/> Not Included</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('notIncluded')} className="rounded-xl bg-rose-50 text-rose-600"><Plus size={16}/></Button>
+                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('notIncluded')} className="rounded-xl bg-rose-50 text-rose-600 h-8 w-8"><Plus size={16}/></Button>
                 </div>
                 <div className="space-y-2">
                   {formData.notIncluded?.map((item: string, i: number) => (
@@ -355,11 +367,11 @@ export default function UnifiedServiceEditor() {
                 </div>
               </Card>
 
-              {/* Step Checklist */}
+              {/* Service Checklist */}
               <Card className="border-none shadow-sm rounded-3xl bg-[#081621] text-white p-8 space-y-6">
                 <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><ListChecks size={16}/> Step Logic</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('checklist')} className="rounded-xl bg-white/10 text-white"><Plus size={16}/></Button>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><ListChecks size={16}/> Service Checklist</h3>
+                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('checklist')} className="rounded-xl bg-white/10 text-white h-8 w-8"><Plus size={16}/></Button>
                 </div>
                 <div className="space-y-2">
                   {formData.checklist?.map((item: string, i: number) => (
@@ -375,7 +387,7 @@ export default function UnifiedServiceEditor() {
 
           {/* SECTION 5: FEATURES & HIGHLIGHTS */}
           <TabsContent value="features" className="mt-0 space-y-8">
-            <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+            <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
                <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-row items-center justify-between">
                   <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2"><Zap size={20} className="text-primary"/> Highlight Matrix</CardTitle>
                   <Button onClick={() => addArrayItem('features', { icon: 'Zap', title: 'Feature', desc: '' })} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">+ Add Highlight</Button>
@@ -465,7 +477,7 @@ export default function UnifiedServiceEditor() {
                   </div>
                </div>
                <div className="flex flex-col ml-4">
-                  <span className="text-[8px] font-black uppercase text-primary tracking-widest">Pricing</span>
+                  <span className="text-[8px] font-black uppercase text-primary tracking-widest">Base Rate</span>
                   <span className="text-xs font-black mt-0.5">৳{formData.basePrice || 0}</span>
                </div>
             </div>
