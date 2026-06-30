@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useAuth, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch, getDocs, where, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch, getDocs, where, setDoc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -105,6 +105,18 @@ export default function CustomersPage() {
     c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.id?.includes(searchTerm)
   );
+
+  const toggleSelectAll = () => {
+    if (filtered && selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered?.map(c => c.id) || []);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
 
   /**
    * 🚀 DATA MIGRATION & REGISTRY SYNC
@@ -291,7 +303,7 @@ export default function CustomersPage() {
   const getRoleBadge = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin': return <Badge className="bg-red-600 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 shadow-sm">Root Admin</Badge>;
-      case 'staff': return <Badge className="bg-orange-500 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 shadow-sm">Field Tech</Badge>;
+      case 'staff': return <Badge className="bg-orange-50 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 shadow-sm">Field Tech</Badge>;
       case 'manager': return <Badge className="bg-indigo-600 text-white border-none text-[8px] font-black uppercase px-2 py-0.5 shadow-sm">Manager</Badge>;
       default: return <Badge variant="secondary" className="text-[8px] font-black uppercase px-2 py-0.5 border-none bg-gray-100 text-gray-500">Customer</Badge>;
     }
@@ -424,7 +436,7 @@ export default function CustomersPage() {
                       </TableCell>
                       <TableCell className="text-center">
                          <Badge className={cn(
-                           "text-[8px] font-black uppercase border-none px-2.5 py-1 rounded-lg",
+                           "text-[8px] font-black uppercase border-none px-2.5 py-1 rounded-lg shadow-sm",
                            customer.status === 'active' ? "bg-emerald-50 text-emerald-700 shadow-sm" : "bg-red-50 text-red-700"
                          )}>
                            {customer.status || 'Active'}
@@ -531,4 +543,3 @@ export default function CustomersPage() {
     </div>
   );
 }
-
