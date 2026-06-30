@@ -31,7 +31,8 @@ import {
   ShieldCheck,
   Clock,
   History,
-  Wallet
+  Wallet,
+  Users
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
