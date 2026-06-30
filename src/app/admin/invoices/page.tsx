@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -31,7 +30,8 @@ import {
   Banknote,
   ShieldCheck,
   Clock,
-  History
+  History,
+  Wallet
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
