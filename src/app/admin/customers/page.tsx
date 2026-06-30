@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Search, 
   UserPlus, 
@@ -120,7 +121,6 @@ export default function CustomersPage() {
 
   /**
    * 🚀 DATA MIGRATION & REGISTRY SYNC
-   * Scans all invoices, groups by phone, and reconciles user profiles.
    */
   const handleSyncRegistry = async () => {
     if (!db) return;
@@ -128,14 +128,12 @@ export default function CustomersPage() {
     toast({ title: "Migration Started", description: "Scanning all ledger records..." });
 
     try {
-      // 1. Fetch all data
       const invoicesSnap = await getDocs(collection(db, 'invoices'));
       const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'customer')));
       
       const invoices = invoicesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
       const existingUsers = usersSnap.docs.map(d => ({ ...d.data(), id: d.id }));
 
-      // 2. Group aggregation by phone
       const phoneMap: Record<string, any> = {};
 
       invoices.forEach((inv: any) => {
@@ -160,7 +158,6 @@ export default function CustomersPage() {
         phoneMap[phone].invoiceIds.push(inv.id);
       });
 
-      // 3. Reconcile with write operations
       let updatedCount = 0;
       let createdCount = 0;
 
@@ -194,7 +191,6 @@ export default function CustomersPage() {
           createdCount++;
         }
 
-        // Link invoices to correct customer ID
         for (const invId of stats.invoiceIds) {
           await updateDoc(doc(db, 'invoices', invId), { 
             customerId: existing ? existing.id : null 
