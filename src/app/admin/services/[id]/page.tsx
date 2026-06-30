@@ -42,6 +42,14 @@ import {
   Briefcase,
   Wrench
 } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -153,6 +161,12 @@ export default function UnifiedServiceEditor() {
     setFormData({ ...formData, [key]: list });
   };
   const removeArrayItem = (key: string, idx: number) => setFormData({ ...formData, [key]: formData[key].filter((_: any, i: number) => i !== idx) });
+
+  async function handleDeleteReview(reviewId: string) {
+    if (!confirm("Remove feedback?")) return;
+    await deleteDoc(doc(db!, 'services', id as string, 'reviews', reviewId));
+    toast({ title: "Feedback Removed" });
+  }
 
   if (!isNew && sLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48} /><p className="text-xs font-black uppercase tracking-widest text-gray-400">Booting Unified Editor...</p></div>;
 
@@ -462,10 +476,4 @@ export default function UnifiedServiceEditor() {
       </div>
     </div>
   );
-
-  async function handleDeleteReview(reviewId: string) {
-    if (!confirm("Remove feedback?")) return;
-    await deleteDoc(doc(db!, 'services', id as string, 'reviews', reviewId));
-    toast({ title: "Feedback Removed" });
-  }
 }
