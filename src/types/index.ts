@@ -248,7 +248,7 @@ export interface Invoice {
   orderId?: string;
   bookingId?: string;
   projectId?: string;
-  customerId?: string; // Link to user profile
+  customerId?: string; 
   customerInfo: {
     name: string;
     phone: string;
@@ -261,8 +261,8 @@ export interface Invoice {
   vatPercent?: number;
   discount: number;
   deliveryCharge: number;
-  previousDue: number; // Carry forward due from customer profile
-  total: number; // Final Grand Total (Current + Prev Due)
+  previousDue: number; 
+  total: number; 
   paymentStatus: 'Unpaid' | 'Paid' | 'Partial' | 'Overdue';
   paymentMethod?: string;
   paidAmount: number;
@@ -282,10 +282,10 @@ export interface User {
   address?: string;
   role: 'customer' | 'admin' | 'staff' | 'manager' | 'accountant' | 'order_manager';
   status: 'active' | 'disabled';
-  totalEarnings?: number; // For affiliates
-  totalInvoiced?: number; // Total volume ever billed to this customer
-  totalPaid?: number; // Total collected from this customer
-  outstandingBalance?: number; // Current due across all invoices
+  totalEarnings?: number; 
+  totalInvoiced?: number; 
+  totalPaid?: number; 
+  outstandingBalance?: number; 
   referralCode?: string;
   createdAt: string;
   updatedAt: string;
