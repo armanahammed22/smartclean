@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -47,13 +46,6 @@ export default function PublicInvoiceViewPage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const providedServicesList = useMemo(() => {
-    if (settings?.invoiceProvidedServices) {
-      return settings.invoiceProvidedServices.split(',').map((s: string) => s.trim()).filter((s: string) => !!s);
-    }
-    return ['Home Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Sofa & Carpet', 'Kitchen Sanitization', 'Pest Control'];
-  }, [settings]);
-
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
   const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
@@ -76,20 +68,6 @@ export default function PublicInvoiceViewPage() {
   const isDue = (invoice.dueAmount || 0) > 0;
   const isQuotation = invoice.invoiceNumber?.startsWith('QTN');
 
-  const terms = isQuotation ? [
-    'Quotation valid for 7 days.',
-    'Final cost may vary based on actual condition/work scope.',
-    'Advance payment may be required for booking.',
-    'Extra services will incur additional charges.',
-    'Taxes/shipping not included unless mentioned.'
-  ] : [
-    'Payment is due upon completion or as agreed.',
-    'Service once delivered is non-refundable.',
-    'Any issues must be reported within 24 hours.',
-    'Client must provide access to service area on time.',
-    'Additional work will be charged separately.'
-  ];
-
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white pb-32 md:pb-16">
       <style jsx global>{`
@@ -111,48 +89,29 @@ export default function PublicInvoiceViewPage() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button 
-              variant="outline"
-              onClick={handleWhatsApp}
-              className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"
-            >
-              <MessageCircle size={18} /> WhatsApp
-            </Button>
-            <Button 
-              className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all"
-              onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
-              disabled={isDownloading}
-            >
+            <Button variant="outline" onClick={handleWhatsApp} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={18} /> WhatsApp</Button>
+            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
               {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
             </Button>
           </div>
         </div>
 
-        <div 
-          id="public-invoice-render" 
-          className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A]"
-          style={{ width: '210mm', minHeight: 'auto', color: '#333' }}
-        >
+        <div id="public-invoice-render" className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A]" style={{ width: '210mm', minHeight: 'auto', color: '#333' }}>
           <table className="invoice-table-wrapper">
             <thead>
               <tr>
                 <td>
                   <div className="pt-6 px-10 pb-4 flex justify-between items-start border-b-2 border-gray-100 mb-4">
                     <div className="flex gap-4">
-                      <div className="w-14 h-14 relative shrink-0">
-                        <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
-                      </div>
+                      <div className="w-14 h-14 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
                       <div className="space-y-0.5 text-left">
                         <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
                         <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Better Security, Better Solution</p>
-                        <div className="h-0.5 bg-primary w-full mt-1" />
                       </div>
                     </div>
-                    <div className="h-14 w-px bg-gray-300 mx-6" />
-                    <div className="flex-1 text-left space-y-0.5">
+                    <div className="text-left space-y-0.5 max-w-[250px]">
                       <p className="text-[8px] font-bold text-gray-600 leading-normal uppercase">{headerAddress}</p>
                       <p className="text-[8px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">E-mail: {headerEmail}</p>
                     </div>
                   </div>
                 </td>
@@ -166,9 +125,7 @@ export default function PublicInvoiceViewPage() {
                     <h3 className="text-lg font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">
                       {isQuotation ? 'Quotation / Estimate' : 'Invoice / Bill'}
                     </h3>
-                    <p className={cn("text-[8px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>
-                      ({isDue ? 'DUE' : 'PAID'})
-                    </p>
+                    <p className={cn("text-[8px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>({isDue ? 'DUE' : 'PAID'})</p>
                   </div>
 
                   <div className="flex justify-between items-start mb-6">
@@ -185,10 +142,6 @@ export default function PublicInvoiceViewPage() {
                         <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">Reference ID</p>
                         <p className="text-xs font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
                       </div>
-                      <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">Date Published</p>
-                        <p className="text-[10px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMM yyyy')}</p>
-                      </div>
                     </div>
                   </div>
 
@@ -198,8 +151,7 @@ export default function PublicInvoiceViewPage() {
                         <tr>
                           <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Description</th>
                           <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-16">Qty</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-20">Rate</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Total</th>
+                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Amount</th>
                         </tr>
                       </thead>
                       <tbody className="text-[9px] font-medium bg-white">
@@ -207,35 +159,34 @@ export default function PublicInvoiceViewPage() {
                           <tr key={i} className="border-t border-[#081621]">
                             <td className="py-2 px-3 border-r border-[#081621] font-black uppercase text-gray-800 text-left">{item.name}</td>
                             <td className="py-2 text-center border-r border-[#081621] font-black text-gray-700">{item.quantity}</td>
-                            <td className="py-2 px-3 border-r border-[#081621] font-black text-gray-700 text-right">৳{item.price?.toLocaleString()}/-</td>
-                            <td className="py-2 px-3 text-right font-black text-gray-900 bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}/-</td>
+                            <td className="py-2 px-3 text-right font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}/-</td>
                           </tr>
                         ))}
                         
                         <tr className="border-t border-[#081621] bg-gray-50/80">
-                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Gross Amount</td>
+                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Current Subtotal</td>
                           <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
                         </tr>
 
                         {invoice.previousDue > 0 && (
                           <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Selected Arrears (+)</td>
+                            <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Previous Arrears (B/F)</td>
                             <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.previousDue.toLocaleString()}/-</td>
                           </tr>
                         )}
 
                         <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                          <td colSpan={3} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">Grand Total</td>
+                          <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">Net Grand Total</td>
                           <td className="py-2 px-3 text-right font-black text-sm">৳{invoice.total.toLocaleString()}/-</td>
                         </tr>
 
                         <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Received (-)</td>
+                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Logged</td>
                           <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
                         </tr>
 
-                        <tr className="border-t border-[#081621] bg-rose-50/50 text-rose-700">
-                          <td colSpan={3} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Net Due Balance</td>
+                        <tr className="border-t-2 border-[#081621] bg-rose-50/50 text-rose-700">
+                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Net Due Balance</td>
                           <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                         </tr>
                       </tbody>
@@ -253,44 +204,21 @@ export default function PublicInvoiceViewPage() {
             <tfoot>
               <tr>
                 <td className="px-10">
-                  <div className="avoid-break space-y-4 pb-4">
-                    {/* T&C Box */}
-                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      <p className="text-[8px] font-black uppercase text-[#1E5F7A] tracking-widest mb-1.5 border-b pb-0.5 border-primary/10">Terms & Conditions</p>
-                      <div className="grid grid-cols-1 gap-0.5">
-                        {terms.map((term, i) => (
-                          <div key={i} className="flex items-start gap-1.5 text-[7.5px] font-bold text-gray-500 leading-tight">
-                            <span className="text-primary">•</span>
-                            <span>{term}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Signatures */}
+                  <div className="avoid-break space-y-4 pb-10">
                     <div className="grid grid-cols-2 gap-20 items-end py-5">
                       <div className="text-center space-y-3">
                         <div className="border-b border-gray-300 h-6"></div>
-                        <p className="text-[8px] font-black uppercase text-[#081621] tracking-tighter">Customer Signature</p>
+                        <p className="text-[8px] font-black uppercase text-[#081621]">Client Signature</p>
                       </div>
                       <div className="flex flex-col items-center justify-end text-center space-y-2">
                         <div className="h-8 w-20 relative border-b border-gray-100 pb-1 flex items-center justify-center">
-                          {signatureUrl ? (
-                            <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized />
-                          ) : (
-                            <div className="text-[6px] font-black text-gray-200 border border-dashed p-1 uppercase">Authorized</div>
-                          )}
+                          {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[6px] font-black text-gray-200 border border-dashed p-1 uppercase">Authorized</div>}
                         </div>
-                        <div>
-                          <p className="font-black text-[8px] uppercase text-[#081621] tracking-tighter leading-none">Authorized Signatory</p>
-                        </div>
+                        <p className="font-black text-[8px] uppercase text-[#081621]">Authorized Signatory</p>
                       </div>
                     </div>
-
                     <div className="pt-2 text-center space-y-0.5">
-                      <p className="text-[10px] font-black text-primary flex items-center justify-center gap-1">
-                        <Heart size={10} fill="currentColor" /> Thank you for your business!
-                      </p>
+                      <p className="text-[10px] font-black text-primary flex items-center justify-center gap-1"><Heart size={10} fill="currentColor" /> Thank you for your business!</p>
                       <p className="text-[7.5px] text-gray-300 uppercase font-bold text-center">{footerDisclaimer}</p>
                     </div>
                   </div>

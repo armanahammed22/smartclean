@@ -194,7 +194,7 @@ function InvoicesListContent() {
           const docs = snap.docs
             .map(d => ({ ...d.data(), id: d.id }))
             .filter((inv: any) => inv.paymentStatus !== 'Paid')
-            .sort((a: any, b: any) => a.createdAt.localeCompare(b.createdAt)); // FIFO Sort
+            .sort((a: any, b: any) => a.createdAt.localeCompare(b.createdAt));
           
           setUnpaidInvoices(docs);
           setSelectedUnpaidIds(docs.map(d => d.id));
@@ -258,8 +258,11 @@ function InvoicesListContent() {
       .reduce((sum, inv) => sum + (inv.dueAmount || 0), 0);
   }, [unpaidInvoices, selectedUnpaidIds]);
 
+  // CALCULATION ENGINE V2
   const vatAmount = Number(((currentSubtotal - pricing.discount) * (pricing.vatPercent / 100)).toFixed(2));
   const currentInvoiceTotal = Number((currentSubtotal + pricing.delivery + vatAmount - pricing.discount).toFixed(2));
+  
+  // NEW: Summing correctly
   const grandTotal = Number((currentInvoiceTotal + selectedPreviousDue).toFixed(2));
   const currentDue = Number((grandTotal - pricing.paidAmount).toFixed(2));
 
@@ -315,14 +318,15 @@ function InvoicesListContent() {
           unit: i.unit,
           type: i.type 
         })),
+        currentAmount: currentInvoiceTotal, // Explicitly naming current service amount
         subtotal: currentSubtotal,
         vatPercent: Number(pricing.vatPercent),
         tax: vatAmount,
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
         previousDue: selectedPreviousDue,
-        previousDueIds: selectedUnpaidIds, // 🛡️ CRITICAL: Save IDs for settlement logic
-        total: grandTotal,
+        previousDueIds: selectedUnpaidIds,
+        total: grandTotal, // subtotal + prevDue
         paidAmount: Number(pricing.paidAmount),
         dueAmount: currentDue,
         paymentStatus: currentDue <= 0 ? 'Paid' : pricing.paidAmount > 0 ? 'Partial' : 'Unpaid',
@@ -722,23 +726,27 @@ function InvoicesListContent() {
                       </div>
                     </div>
 
+                    {/* 📊 DYNAMIC SUMMARY BLOCK */}
                     <div className="pt-10 border-t-4 border-white flex flex-col gap-4">
                       <div className="flex justify-between items-center px-2">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Items</span>
-                        <span className="text-sm font-bold text-gray-700">৳{currentSubtotal.toLocaleString()}</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Services</span>
+                        <span className="text-sm font-bold text-gray-700">৳{currentInvoiceTotal.toLocaleString()}</span>
                       </div>
                       {selectedPreviousDue > 0 && (
                         <div className="flex justify-between items-center px-2">
-                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Selected Arrears</span>
+                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Previous Arrears</span>
                           <span className="text-sm font-black text-rose-700">৳{selectedPreviousDue.toLocaleString()}</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-end px-2">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Grand Total</span>
-                          <span className="text-5xl font-black text-[#081621] tracking-tighter leading-none whitespace-nowrap">৳{grandTotal.toLocaleString()}</span>
+                      
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="flex justify-between items-end px-2">
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Grand Total</span>
+                            <span className="text-5xl font-black text-[#081621] tracking-tighter leading-none whitespace-nowrap">৳{grandTotal.toLocaleString()}</span>
+                          </div>
+                          <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-4 py-1.5 rounded-lg shadow-sm">INC. PREV DUE</Badge>
                         </div>
-                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-4 py-1.5 rounded-lg shadow-sm">INC. PREV DUE</Badge>
                       </div>
                       
                       <div className={cn(
@@ -759,7 +767,7 @@ function InvoicesListContent() {
                   <div className="p-6 bg-blue-50/80 rounded-[2rem] border border-blue-100 flex items-start gap-4">
                     <Info size={24} className="text-blue-600 mt-1 shrink-0" />
                     <p className="text-[10px] font-bold text-blue-900 leading-relaxed uppercase tracking-tight">
-                      Note: All billing credentials (address, phone, email) will be automatically mapped to the master invoice document upon authorization.
+                      Note: Previous due invoices will be automatically adjusted in FIFO order upon finalizing this transaction.
                     </p>
                   </div>
                 </div>

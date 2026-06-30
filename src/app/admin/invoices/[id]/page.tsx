@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -75,10 +74,6 @@ export default function AdminInvoiceDetailPage() {
     window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  /**
-   * 🛡️ ADVANCED FIFO SETTLEMENT ENGINE
-   * Settles previous due invoices linked to this carried-forward invoice first.
-   */
   const handleRecordPayment = async () => {
     if (!db || !invoice || !paymentForm.amount) return;
     setIsProcessingPayment(true);
@@ -90,7 +85,6 @@ export default function AdminInvoiceDetailPage() {
     try {
       // 1. Settle Previous Invoices (FIFO)
       if (invoice.previousDueIds && invoice.previousDueIds.length > 0) {
-        // Fetch all previous invoices to settle them
         for (const prevId of invoice.previousDueIds) {
           if (paymentRemaining <= 0) break;
 
@@ -185,7 +179,7 @@ export default function AdminInvoiceDetailPage() {
         }
       `}</style>
 
-      {/* 🛠️ PREMIUM ADMIN ACTION BAR */}
+      {/* 🛠️ ACTION BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 no-print bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150"><FileText size={180} /></div>
         <div className="flex items-center gap-6 relative z-10">
@@ -201,7 +195,7 @@ export default function AdminInvoiceDetailPage() {
                     {isDue ? 'PAYMENT DUE' : 'FULL SETTLED'}
                 </Badge>
             </div>
-            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none font-headline italic">{invoice.invoiceNumber}</h1>
+            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none italic">{invoice.invoiceNumber}</h1>
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Document Audit Context: {invoice.id}</p>
           </div>
         </div>
@@ -222,7 +216,7 @@ export default function AdminInvoiceDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        {/* 📄 THE ACTUAL INVOICE DOCUMENT AREA */}
+        {/* 📄 DOCUMENT RENDER AREA */}
         <div className="lg:col-span-8 flex justify-center animate-in fade-in zoom-in-95 duration-700">
           <div 
             id="invoice-render-area" 
@@ -280,7 +274,7 @@ export default function AdminInvoiceDetailPage() {
                     ))}
                     
                     <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest">Subtotal</td>
+                      <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest">Subtotal (Current)</td>
                       <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                     </tr>
 
@@ -292,7 +286,7 @@ export default function AdminInvoiceDetailPage() {
                     )}
 
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                      <td colSpan={2} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Grand Total</td>
+                      <td colSpan={2} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Grand Total</td>
                       <td className="py-3 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
                     </tr>
 
@@ -330,11 +324,11 @@ export default function AdminInvoiceDetailPage() {
           </div>
         </div>
 
-        {/* 📊 AUDIT SIDEBAR (FIFO Settlement Progress) */}
+        {/* 📊 AUDIT SIDEBAR */}
         <div className="lg:col-span-4 no-print space-y-8">
            <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden border border-gray-100">
               <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-row items-center justify-between">
-                 <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><History size={18} /> Settlement History</CardTitle>
+                 <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><History size={18} /> Settlement Log</CardTitle>
                  <Badge className="bg-indigo-100 text-indigo-700 border-none font-black text-[8px]">{invoice.paymentHistory?.length || 0} TRX</Badge>
               </CardHeader>
               <CardContent className="p-8">
@@ -418,7 +412,7 @@ export default function AdminInvoiceDetailPage() {
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
                    <AlertCircle size={18} className="text-amber-600 mt-1" />
                    <p className="text-[10px] font-bold text-amber-700 leading-normal uppercase">
-                     FIFO Settlement Active: This payment will automatically set earlier unpaid invoices to "PAID" status before applying to the current bill.
+                     FIFO Settlement Active: Payment applies to oldest arrears first.
                    </p>
                 </div>
              </div>

@@ -91,7 +91,9 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
   
   const currentInvoiceTotal = subtotal + tax + delivery - discount;
-  const grandTotal = currentInvoiceTotal + previousDue;
+  
+  // NEW: Summing logic fix
+  const grandTotal = Number((currentInvoiceTotal + previousDue).toFixed(2));
 
   const countQuery = query(collection(db, collName));
   const countSnap = await getDocs(countQuery);
@@ -101,7 +103,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const initialPaid = isCompleted ? grandTotal : 0;
   const initialDue = grandTotal - initialPaid;
 
-  const invoiceData: Omit<Invoice, 'id'> = {
+  const invoiceData: any = {
     invoiceNumber: invNumber,
     [fieldName]: sourceId,
     customerId,
@@ -112,6 +114,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
       address: sourceData.address
     },
     items,
+    currentAmount: currentInvoiceTotal,
     subtotal,
     tax,
     discount,
@@ -140,7 +143,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     await updateDoc(doc(db, 'users', customerId), {
       totalInvoiced: increment(currentInvoiceTotal),
       totalPaid: increment(initialPaid),
-      outstandingBalance: increment(initialDue - previousDue), // Adjusting based on previous due already recorded
+      outstandingBalance: increment(initialDue - previousDue),
       updatedAt: new Date().toISOString()
     });
   }
