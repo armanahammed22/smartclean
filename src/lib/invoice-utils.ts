@@ -1,7 +1,7 @@
 
 'use client';
 
-import { collection, query, where, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { Invoice, InvoiceItem } from '@/types';
 
@@ -31,7 +31,7 @@ export function numberToWords(amount: number): string {
 }
 
 /**
- * Utility to generate Invoice from an Order or Booking
+ * Utility to generate Invoice from an Order or Booking with Customer Management
  */
 export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any): Promise<string> {
   const collName = 'invoices';
@@ -44,6 +44,38 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     return snap.docs[0].id;
   }
 
+  // 1. Customer Auto-Management
+  let customerId = sourceData.customerId || null;
+  let previousDue = 0;
+
+  if (!customerId && sourceData.customerPhone) {
+    const custQuery = query(collection(db, 'users'), where('phone', '==', sourceData.customerPhone), where('role', '==', 'customer'));
+    const custSnap = await getDocs(custQuery);
+    if (!custSnap.empty) {
+      const custDoc = custSnap.docs[0];
+      customerId = custDoc.id;
+      previousDue = custDoc.data().outstandingBalance || 0;
+    } else {
+      // Auto-enroll new customer
+      const newCustRef = doc(collection(db, 'users'));
+      await setDoc(newCustRef, {
+        uid: newCustRef.id,
+        name: sourceData.customerName,
+        phone: sourceData.customerPhone,
+        address: sourceData.address,
+        email: sourceData.customerEmail || '',
+        role: 'customer',
+        status: 'active',
+        totalInvoiced: 0,
+        totalPaid: 0,
+        outstandingBalance: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      customerId = newCustRef.id;
+    }
+  }
+
   const items: InvoiceItem[] = sourceData.items?.map((i: any) => ({
     id: i.id,
     name: i.name,
@@ -51,22 +83,27 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     quantity: i.quantity || 1,
     type: i.itemType || 'product',
     unit: i.unit || 'Qty',
-    subItems: i.subItems || [] // Handle package sub-services
+    subItems: i.subItems || []
   })) || [];
 
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = 0; 
+  const tax = sourceData.tax || 0; 
   const delivery = sourceData.deliveryCharge || sourceData.additionalCharge || 0;
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
-  const total = subtotal + tax + delivery - discount;
+  
+  const currentTotal = subtotal + tax + delivery - discount;
+  const grandTotal = currentTotal + previousDue;
 
   const countQuery = query(collection(db, collName));
   const countSnap = await getDocs(countQuery);
   const invNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
 
+  const isCompleted = sourceData.status === 'Delivered' || sourceData.status === 'Completed';
+
   const invoiceData: Omit<Invoice, 'id'> = {
     invoiceNumber: invNumber,
     [fieldName]: sourceId,
+    customerId,
     customerInfo: {
       name: sourceData.customerName,
       phone: sourceData.customerPhone,
@@ -78,16 +115,35 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     tax,
     discount,
     deliveryCharge: delivery,
-    total,
-    paymentStatus: sourceData.status === 'Delivered' || sourceData.status === 'Completed' ? 'Paid' : 'Unpaid',
+    previousDue,
+    total: grandTotal,
+    paymentStatus: isCompleted ? 'Paid' : 'Unpaid',
     paymentMethod: sourceData.paymentMethod || 'Cash',
-    paidAmount: 0,
-    dueAmount: total,
+    paidAmount: isCompleted ? grandTotal : 0,
+    dueAmount: isCompleted ? 0 : grandTotal,
+    paymentHistory: isCompleted ? [{
+      id: 'pay_init_' + Date.now(),
+      amount: grandTotal,
+      date: new Date().toISOString(),
+      method: sourceData.paymentMethod || 'Cash',
+      notes: 'Payment upon completion'
+    }] : [],
     createdAt: new Date().toISOString(),
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
   };
 
   const docRef = await addDoc(collection(db, collName), invoiceData);
+  
+  // 3. Update Customer Stats
+  if (customerId) {
+    await updateDoc(doc(db, 'users', customerId), {
+      totalInvoiced: increment(grandTotal),
+      totalPaid: increment(isCompleted ? grandTotal : 0),
+      outstandingBalance: increment(isCompleted ? 0 : grandTotal),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
   const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
   await setDoc(doc(db, collName, docRef.id), { publicLink }, { merge: true });
 
@@ -95,7 +151,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * PDF Generation Logic - Optimized for A4 multi-page layout and blank page prevention
+ * PDF Generation Logic
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -106,25 +162,8 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
     margin: 0,
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2, 
-      useCORS: true, 
-      logging: false, 
-      letterRendering: true,
-      windowWidth: 794 // 210mm at 96dpi
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'portrait',
-      compress: true
-    },
-    pagebreak: { 
-      mode: ['avoid-all', 'css', 'legacy'],
-      before: '.page-break-before',
-      after: '.page-break-after',
-      avoid: ['thead', 'tfoot', 'tr', '.avoid-break']
-    }
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   await html2pdf().from(element).set(opt).save();

@@ -184,8 +184,8 @@ export interface ServicePackage {
   description: string;
   price: number;
   regularPrice?: number;
-  serviceIds: string[]; // List of individual service IDs included
-  includedServiceNames?: string[]; // Cached names for fast invoice rendering
+  serviceIds: string[]; 
+  includedServiceNames?: string[]; 
   imageUrl?: string;
   status: 'Active' | 'Inactive';
   isPopular?: boolean;
@@ -221,7 +221,15 @@ export interface CartItem {
   category: string;
   quantity: number;
   itemType: 'product' | 'service' | 'package';
-  subItems?: string[]; // For packages
+  subItems?: string[]; 
+}
+
+export interface PaymentRecord {
+  id: string;
+  amount: number;
+  date: string;
+  method: string;
+  notes?: string;
 }
 
 export interface InvoiceItem {
@@ -231,7 +239,7 @@ export interface InvoiceItem {
   quantity: number;
   type: 'product' | 'service' | 'addon' | 'package' | 'project_work';
   unit?: string;
-  subItems?: string[]; // New: List of services in a bundle
+  subItems?: string[]; 
 }
 
 export interface Invoice {
@@ -240,16 +248,12 @@ export interface Invoice {
   orderId?: string;
   bookingId?: string;
   projectId?: string;
+  customerId?: string; // Link to user profile
   customerInfo: {
     name: string;
     phone: string;
     email?: string | null;
     address: string;
-  };
-  headerInfo?: {
-    phone?: string;
-    email?: string;
-    address?: string;
   };
   items: InvoiceItem[];
   subtotal: number;
@@ -257,15 +261,34 @@ export interface Invoice {
   vatPercent?: number;
   discount: number;
   deliveryCharge: number;
-  total: number;
-  paymentStatus: 'Unpaid' | 'Paid' | 'Partial';
+  previousDue: number; // Carry forward due from customer profile
+  total: number; // Final Grand Total (Current + Prev Due)
+  paymentStatus: 'Unpaid' | 'Paid' | 'Partial' | 'Overdue';
   paymentMethod?: string;
   paidAmount: number;
   dueAmount: number;
-  transactionId?: string;
+  paymentHistory: PaymentRecord[];
   createdAt: string;
   dueDate: string;
   publicLink?: string;
+}
+
+export interface User {
+  id: string;
+  uid: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  role: 'customer' | 'admin' | 'staff' | 'manager' | 'accountant' | 'order_manager';
+  status: 'active' | 'disabled';
+  totalEarnings?: number; // For affiliates
+  totalInvoiced?: number; // Total volume ever billed to this customer
+  totalPaid?: number; // Total collected from this customer
+  outstandingBalance?: number; // Current due across all invoices
+  referralCode?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AssignedEmployee {

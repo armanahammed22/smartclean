@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, addDoc, getDocs, updateDoc, where, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ import {
   Plus,
   X,
   Calculator,
-  User,
+  User as UserIcon,
   Save,
   Edit,
   Info,
@@ -45,7 +45,8 @@ import {
   Banknote,
   ShieldCheck,
   CreditCard,
-  ArrowUpRight
+  ArrowUpRight,
+  UserPlus
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -81,19 +82,19 @@ function InvoicesListContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
-  const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '', previousDue: 0 });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
 
   // Queries
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
-  const usersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
+  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
 
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
-  const { data: customersRaw } = useCollection(usersQuery);
+  const { data: customersRaw } = useCollection(customersQuery);
   const { data: serviceCatalogRaw } = useCollection(servicesQuery);
 
-  const customers = useMemo(() => {
+  const customersList = useMemo(() => {
     if (!customersRaw) return [];
     return [...customersRaw].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   }, [customersRaw]);
@@ -184,12 +185,14 @@ function InvoicesListContent() {
   };
 
   const handleCustomerSelect = (userId: string) => {
-    const selected = customers?.find(u => u.id === userId);
+    const selected = customersList?.find(u => u.id === userId);
     if (selected) {
       setCustomer({
+        id: selected.id,
         name: selected.name || '',
         phone: selected.phone || '',
-        address: selected.address || ''
+        address: selected.address || '',
+        previousDue: selected.outstandingBalance || 0
       });
     }
   };
@@ -197,9 +200,11 @@ function InvoicesListContent() {
   const handleOpenEdit = (inv: any) => {
     setEditingInvoiceId(inv.id);
     setCustomer({
+      id: inv.customerId || '',
       name: inv.customerInfo?.name || '',
       phone: inv.customerInfo?.phone || '',
-      address: inv.customerInfo?.address || ''
+      address: inv.customerInfo?.address || '',
+      previousDue: inv.previousDue || 0
     });
     setManualItems(inv.items?.map((i: any) => ({
       name: i.name,
@@ -221,7 +226,7 @@ function InvoicesListContent() {
 
   const handleOpenCreate = () => {
     setEditingInvoiceId(null);
-    setCustomer({ name: '', phone: '', address: '' });
+    setCustomer({ id: '', name: '', phone: '', address: '', previousDue: 0 });
     setManualItems([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
     setPricing({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
     setIsFormOpen(true);
@@ -236,8 +241,9 @@ function InvoicesListContent() {
   }, [manualItems]);
 
   const vatAmount = Number(((currentSubtotal - pricing.discount) * (pricing.vatPercent / 100)).toFixed(2));
-  const totalPayable = Number((currentSubtotal + pricing.delivery + vatAmount - pricing.discount).toFixed(2));
-  const currentDue = Number((totalPayable - pricing.paidAmount).toFixed(2));
+  const currentInvoiceTotal = Number((currentSubtotal + pricing.delivery + vatAmount - pricing.discount).toFixed(2));
+  const grandTotal = Number((currentInvoiceTotal + (customer.previousDue || 0)).toFixed(2));
+  const currentDue = Number((grandTotal - pricing.paidAmount).toFixed(2));
 
   const handleSaveInvoice = async () => {
     if (!db) return;
@@ -248,8 +254,43 @@ function InvoicesListContent() {
 
     setIsSubmitting(true);
     try {
+      let finalCustomerId = customer.id;
+
+      // 1. Auto-create or Update Customer Profile
+      if (!finalCustomerId) {
+        // Search if customer already exists by phone
+        const q = query(collection(db, 'users'), where('phone', '==', customer.phone), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          finalCustomerId = snap.docs[0].id;
+        } else {
+          const newCustomerRef = doc(collection(db, 'users'));
+          await setDoc(newCustomerRef, {
+            uid: newCustomerRef.id,
+            name: customer.name,
+            phone: customer.phone,
+            email: '',
+            address: customer.address,
+            role: 'customer',
+            status: 'active',
+            totalInvoiced: grandTotal,
+            totalPaid: pricing.paidAmount,
+            outstandingBalance: currentDue,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          finalCustomerId = newCustomerRef.id;
+        }
+      }
+
+      // 2. Prepare Invoice Data
       const invoiceData = {
-        customerInfo: { ...customer },
+        customerId: finalCustomerId,
+        customerInfo: {
+          name: customer.name,
+          phone: customer.phone,
+          address: customer.address
+        },
         items: manualItems.map(i => ({ 
           name: i.name, 
           price: parseFloat(i.price) || 0, 
@@ -262,11 +303,19 @@ function InvoicesListContent() {
         tax: vatAmount,
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
-        total: totalPayable,
+        previousDue: Number(customer.previousDue || 0),
+        total: grandTotal,
         paidAmount: Number(pricing.paidAmount),
         dueAmount: currentDue,
         paymentStatus: currentDue <= 0 ? 'Paid' : pricing.paidAmount > 0 ? 'Partial' : 'Unpaid',
         paymentMethod: pricing.paymentMethod,
+        paymentHistory: editingInvoiceId ? [] : [{
+          id: 'pay_' + Date.now(),
+          amount: pricing.paidAmount,
+          date: new Date().toISOString(),
+          method: pricing.paymentMethod,
+          notes: 'Initial Payment'
+        }],
         updatedAt: new Date().toISOString()
       };
 
@@ -370,7 +419,7 @@ function InvoicesListContent() {
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Customer Profile</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Bill Summary</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-center text-[#081621]">Protocol</TableHead>
-                    <TableHead className="text-right pr-10 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
+                    <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -403,7 +452,7 @@ function InvoicesListContent() {
                         <TableCell>
                           <div className="space-y-1">
                             <span className="font-black text-sm text-gray-900 tracking-tighter">৳{inv.total?.toLocaleString()}</span>
-                            <div className="text-[8px] font-bold text-gray-400 uppercase">{inv.items?.length || 0} Scope(s)</div>
+                            <div className="text-[8px] font-bold text-rose-500 uppercase">Due: ৳{inv.dueAmount?.toLocaleString()}</div>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
@@ -416,8 +465,8 @@ function InvoicesListContent() {
                             {inv.paymentStatus}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right pr-10">
-                          <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <TableCell className="text-right pr-8">
+                          <div className="flex justify-end gap-1.5 transition-all duration-300">
                             <Button variant="ghost" size="icon" className="h-10 w-10 text-primary bg-primary/5 hover:bg-primary/10 rounded-xl" asChild>
                               <Link href={`/admin/invoices/${inv.id}`}><Eye size={18} /></Link>
                             </Button>
@@ -441,6 +490,7 @@ function InvoicesListContent() {
         </Card>
       </div>
 
+      {/* INVOICE TERMINAL DIALOG */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-6xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] bg-white flex flex-col overflow-hidden">
           <header className="p-8 md:p-10 bg-[#081621] text-white flex justify-between items-center shrink-0 border-b border-white/5 relative overflow-hidden">
@@ -479,7 +529,7 @@ function InvoicesListContent() {
                           <SelectValue placeholder="Choose a registered customer..." />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl border-none shadow-2xl max-h-[300px]">
-                          {customers?.map(u => (
+                          {customersList?.map(u => (
                             <SelectItem key={u.id} value={u.id} className="py-3.5 font-bold text-xs uppercase tracking-tight">
                               {u.name} — <span className="text-primary font-black">{u.phone}</span>
                             </SelectItem>
@@ -556,12 +606,6 @@ function InvoicesListContent() {
                         </div>
                       </div>
                     ))}
-                    {manualItems.length === 0 && (
-                      <div className="p-16 text-center border-2 border-dashed rounded-[3rem] bg-gray-50/50 flex flex-col items-center gap-4">
-                         <Zap size={40} className="text-gray-200" />
-                         <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">No Line Items Configured</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -570,9 +614,18 @@ function InvoicesListContent() {
               <div className="lg:col-span-5">
                 <div className="bg-gray-50 p-8 md:p-10 rounded-[3rem] border border-gray-100 flex flex-col gap-10 h-fit sticky top-0 shadow-2xl">
                   <div className="space-y-8">
-                    <h3 className="text-base font-black uppercase tracking-[0.3em] text-[#081621] flex items-center gap-3"><Calculator size={20} /> Fin-Engine Summary</h3>
+                    <h3 className="text-base font-black uppercase tracking-[0.3em] text-[#081621] flex items-center gap-3"><Calculator size={20} /> Billing Strategy</h3>
                     
                     <div className="space-y-6">
+                      {customer.previousDue > 0 && (
+                        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
+                          <div>
+                            <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none">Carry Forward Due</p>
+                            <p className="text-lg font-black text-rose-700">৳{customer.previousDue.toLocaleString()}</p>
+                          </div>
+                          <AlertCircle className="text-rose-400 animate-pulse" />
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Yield (৳)</Label>
@@ -585,16 +638,16 @@ function InvoicesListContent() {
                       </div>
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Logistics / Extra (৳)</Label>
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Logistics Charge (৳)</Label>
                           <Input type="number" value={pricing.delivery} onChange={e => setPricing({...pricing, delivery: parseFloat(e.target.value) || 0})} className="h-12 bg-white border-none rounded-xl font-black shadow-sm" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Received @ Source (৳)</Label>
+                          <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Amount Received (৳)</Label>
                           <Input type="number" value={pricing.paidAmount} onChange={e => setPricing({...pricing, paidAmount: parseFloat(e.target.value) || 0})} className="h-12 bg-emerald-50 border-none rounded-xl font-black text-emerald-600 shadow-sm" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Authorized Method</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Settlement Method</Label>
                         <Select value={pricing.paymentMethod} onValueChange={v => setPricing({...pricing, paymentMethod: v})}>
                           <SelectTrigger className="h-12 bg-white border-none rounded-xl font-black text-[10px] uppercase shadow-sm"><SelectValue/></SelectTrigger>
                           <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -605,12 +658,16 @@ function InvoicesListContent() {
                     </div>
 
                     <div className="pt-10 border-t-4 border-white flex flex-col gap-4">
+                      <div className="flex justify-between items-center px-2">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Items</span>
+                        <span className="text-sm font-bold text-gray-700">৳{currentSubtotal.toLocaleString()}</span>
+                      </div>
                       <div className="flex justify-between items-end px-2">
                         <div className="flex flex-col">
-                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Total Payable</span>
-                          <span className="text-5xl font-black text-[#081621] tracking-tighter leading-none whitespace-nowrap">৳{totalPayable.toLocaleString()}</span>
+                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Grand Total</span>
+                          <span className="text-5xl font-black text-[#081621] tracking-tighter leading-none whitespace-nowrap">৳{grandTotal.toLocaleString()}</span>
                         </div>
-                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-4 py-1.5 rounded-lg shadow-sm">{pricing.vatPercent}% VAT ADJ.</Badge>
+                        <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[9px] px-4 py-1.5 rounded-lg shadow-sm">INC. PREV DUE</Badge>
                       </div>
                       
                       <div className={cn(
@@ -618,9 +675,9 @@ function InvoicesListContent() {
                         currentDue > 0 ? "bg-[#081621] text-white ring-4 ring-rose-500/20" : "bg-emerald-600 text-white shadow-emerald-600/20"
                       )}>
                         <div className="space-y-0.5">
-                           <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{currentDue > 0 ? 'Remaining Liability' : 'Balance Settled'}</span>
+                           <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{currentDue > 0 ? 'Remaining Balance' : 'Full Settlements'}</span>
                            <p className={cn("text-2xl font-black tracking-tighter leading-none", currentDue > 0 ? "text-rose-400" : "text-white")}>
-                             {currentDue > 0 ? `৳${currentDue.toLocaleString()}` : 'FULL PAID'}
+                             {currentDue > 0 ? `৳${currentDue.toLocaleString()}` : 'SETTLED'}
                            </p>
                         </div>
                         {currentDue <= 0 ? <ShieldCheck size={32} /> : <AlertCircle size={32} className="text-rose-400 animate-pulse" />}
@@ -639,34 +696,7 @@ function InvoicesListContent() {
             </div>
           </div>
 
-          {/* 📱 MOBILE STICKY ACTION BAR */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex flex-col gap-3 z-[210] pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <div className="flex justify-between items-end px-2">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Final Total</span>
-                <span className="text-2xl font-black text-primary tracking-tighter">৳{totalPayable.toLocaleString()}</span>
-              </div>
-              <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-2 py-0.5 rounded-md">VAT INC.</Badge>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="ghost" 
-                onClick={() => setIsFormOpen(false)} 
-                className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] bg-gray-50 text-gray-500"
-              >
-                Discard Changes
-              </Button>
-              <Button 
-                onClick={handleSaveInvoice} 
-                disabled={isSubmitting} 
-                className="flex-[2] h-12 rounded-xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20"
-              >
-                {isSubmitting ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save size={16} className="mr-2" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch'}</>}
-              </Button>
-            </div>
-          </div>
-
-          <DialogFooter className="hidden md:flex p-8 md:p-10 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-4">
+          <DialogFooter className="p-8 md:p-10 bg-gray-50 border-t shrink-0 flex flex-col sm:flex-row gap-4">
             <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="flex-1 sm:flex-none h-14 md:h-16 px-12 rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all">Discard Changes</Button>
             <Button onClick={handleSaveInvoice} disabled={isSubmitting} className="flex-1 h-14 md:h-16 rounded-2xl font-black bg-primary hover:bg-[#15435a] text-white shadow-2xl shadow-primary/30 uppercase tracking-[0.2em] transition-all active:scale-95 text-xs">
               {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={20} className="mr-3" /> {editingInvoiceId ? 'Sync Updates' : 'Authorize & Launch Document'}</>}
