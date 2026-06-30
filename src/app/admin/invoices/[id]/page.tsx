@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -259,45 +260,57 @@ export default function AdminInvoiceDetailPage() {
                 <table className="w-full border-collapse text-[10px]">
                   <thead className="bg-[#081621] text-white">
                     <tr>
-                      <th className="py-2 px-4 font-black uppercase text-left">Description</th>
-                      <th className="py-2 px-4 font-black uppercase text-center w-20">Qty</th>
-                      <th className="py-2 px-4 font-black uppercase text-right w-32">Amount</th>
+                      <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
+                      <th className="py-3 px-4 font-black uppercase text-left">Service & Description</th>
+                      <th className="py-3 px-4 font-black uppercase text-center w-32">Quantity / Area</th>
+                      <th className="py-3 px-4 font-black uppercase text-right w-32">Unit Price</th>
+                      <th className="py-3 px-4 font-black uppercase text-right w-32">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="font-bold bg-white">
                     {invoice.items.map((item: any, i: number) => (
-                      <tr key={i} className="border-t-2 border-gray-50">
-                        <td className="py-3 px-4 uppercase text-gray-900">{item.name}</td>
-                        <td className="py-3 text-center text-gray-600">{item.quantity}</td>
-                        <td className="py-3 px-4 text-right text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <tr key={i} className="border-t-2 border-gray-50 align-top">
+                        <td className="py-4 px-4 text-left text-gray-400">{i + 1}</td>
+                        <td className="py-4 px-4 text-left">
+                          <p className="font-black text-gray-900 uppercase leading-tight mb-1">{item.name}</p>
+                          {item.description && <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic">{item.description}</p>}
+                        </td>
+                        <td className="py-4 px-4 text-center text-gray-600 uppercase">
+                          {item.quantity} {item.unit || 'PCS'}
+                        </td>
+                        <td className="py-4 px-4 text-right text-gray-600">
+                          ৳{item.price.toLocaleString()} / <span className="text-[8px] uppercase">{item.unit || 'PCS'}</span>
+                        </td>
+                        <td className="py-4 px-4 text-right text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</td>
                       </tr>
                     ))}
                     
-                    <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest">Subtotal (Current)</td>
-                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
+                    {/* SUMMARY SECTION */}
+                    <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Subtotal (Current Services)</td>
+                      <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                     </tr>
 
                     {invoice.previousDue > 0 && (
                       <tr className="border-t border-gray-100 bg-white">
-                        <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Arrears (Selected)</td>
-                        <td className="py-2 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue.toLocaleString()}</td>
+                        <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Due Amount</td>
+                        <td className="py-2.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue.toLocaleString()}</td>
                       </tr>
                     )}
 
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                      <td colSpan={2} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Grand Total</td>
-                      <td className="py-3 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
+                      <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Grand Total</td>
+                      <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
                     </tr>
 
                     <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                      <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px]">Total Payments Received</td>
-                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
+                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px]">Payments Received (-)</td>
+                      <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
                     </tr>
 
-                    <tr className="border-t-2 border-[#081621] bg-rose-50/80 text-rose-700">
-                      <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[9px]">Net Outstanding Due</td>
-                      <td className="py-2 px-4 text-right font-black text-sm">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
+                    <tr className="border-t-[3px] border-[#081621] bg-rose-50/80 text-rose-700">
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Due Amount</td>
+                      <td className="py-3 px-4 text-right font-black text-base">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -357,7 +370,7 @@ export default function AdminInvoiceDetailPage() {
               <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><ShieldCheck size={120} /></div>
               <CardContent className="p-8 space-y-6 relative z-10">
                  <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">Outstanding Due</p>
+                    <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">Net Due Amount</p>
                     <h3 className="text-4xl font-black tracking-tighter italic">৳{invoice.dueAmount?.toLocaleString()}</h3>
                  </div>
                  <div className="p-4 bg-white/10 rounded-2xl border border-white/5 space-y-4">

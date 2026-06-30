@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -149,45 +150,56 @@ export default function PublicInvoiceViewPage() {
                     <table className="w-full border-collapse">
                       <thead className="bg-[#1E5F7A] text-white">
                         <tr>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Description</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-16">Qty</th>
-                          <th className="py-1.5 px-3 text-[8px] font-black uppercase text-right w-24">Amount</th>
+                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left w-10">SL</th>
+                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Service & Description</th>
+                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-24">Quantity / Area</th>
+                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-24">Unit Price</th>
+                          <th className="py-2 px-3 text-[8px] font-black uppercase text-right w-24">Amount</th>
                         </tr>
                       </thead>
                       <tbody className="text-[9px] font-medium bg-white">
                         {invoice.items.map((item: any, i: number) => (
-                          <tr key={i} className="border-t border-[#081621]">
-                            <td className="py-2 px-3 border-r border-[#081621] font-black uppercase text-gray-800 text-left">{item.name}</td>
-                            <td className="py-2 text-center border-r border-[#081621] font-black text-gray-700">{item.quantity}</td>
+                          <tr key={i} className="border-t border-[#081621] align-top">
+                            <td className="py-2 px-3 border-r border-[#081621] text-left text-gray-400">{i + 1}</td>
+                            <td className="py-2 px-3 border-r border-[#081621] text-left">
+                               <p className="font-black uppercase text-gray-800 leading-tight mb-1">{item.name}</p>
+                               {item.description && <p className="text-[8px] text-gray-500 italic leading-relaxed">{item.description}</p>}
+                            </td>
+                            <td className="py-2 px-3 text-center border-r border-[#081621] font-black text-gray-700 uppercase">
+                              {item.quantity} {item.unit || 'PCS'}
+                            </td>
+                            <td className="py-2 px-3 text-right border-r border-[#081621] font-black text-gray-700">
+                              ৳{item.price.toLocaleString()} / <span className="text-[7px] uppercase">{item.unit || 'PCS'}</span>
+                            </td>
                             <td className="py-2 px-3 text-right font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}/-</td>
                           </tr>
                         ))}
                         
                         <tr className="border-t border-[#081621] bg-gray-50/80">
-                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621]">Current Subtotal</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
+                          <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621]">Subtotal (Current Services)</td>
+                          <td className="py-1.5 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
                         </tr>
 
                         {invoice.previousDue > 0 && (
                           <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Previous Arrears (B/F)</td>
-                            <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.previousDue.toLocaleString()}/-</td>
+                            <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Previous Due Amount</td>
+                            <td className="py-1.5 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.previousDue.toLocaleString()}/-</td>
                           </tr>
                         )}
 
                         <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                          <td colSpan={2} className="py-2 px-6 text-right font-black uppercase text-[8px] tracking-widest border-r border-white/10 italic">Net Grand Total</td>
-                          <td className="py-2 px-3 text-right font-black text-sm">৳{invoice.total.toLocaleString()}/-</td>
+                          <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest border-r border-white/10 italic">Net Grand Total</td>
+                          <td className="py-3 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}/-</td>
                         </tr>
 
                         <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Logged</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px]">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
+                          <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Received (-)</td>
+                          <td className="py-1.5 px-3 text-right font-black text-[10px]">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
                         </tr>
 
                         <tr className="border-t-2 border-[#081621] bg-rose-50/50 text-rose-700">
-                          <td colSpan={2} className="py-1 px-4 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Net Due Balance</td>
-                          <td className="py-1 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
+                          <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] border-r border-[#081621] italic">Net Due Amount</td>
+                          <td className="py-2.5 px-3 text-right font-black text-[11px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                         </tr>
                       </tbody>
                     </table>

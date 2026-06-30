@@ -235,6 +235,7 @@ export interface PaymentRecord {
 export interface InvoiceItem {
   id: string;
   name: string;
+  description?: string;
   price: number;
   quantity: number;
   type: 'product' | 'service' | 'addon' | 'package' | 'project_work';
