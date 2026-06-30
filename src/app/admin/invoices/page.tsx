@@ -32,7 +32,8 @@ import {
   Clock,
   History,
   Wallet,
-  Users
+  Users,
+  AlertCircle
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -369,9 +370,9 @@ function InvoicesListContent() {
           <p className="text-white/40 text-xs md:text-sm font-medium tracking-wide">Enterprise-grade financial documentation & ledger</p>
         </div>
         <div className="relative z-10">
-          <Button onClick={handleOpenCreate} className="h-14 md:h-16 px-10 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 gap-3 border-none">
+          <button onClick={handleOpenCreate} className="h-14 md:h-16 px-10 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl bg-primary hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 gap-3 border-none flex items-center justify-center">
             <Plus size={20} strokeWidth={3} /> Authorize New Invoice
-          </Button>
+          </button>
         </div>
       </div>
 
