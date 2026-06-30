@@ -199,13 +199,20 @@ function InvoicesListContent() {
         totalInvoiced: selected.totalInvoiced || 0
       });
 
-      // Fetch unpaid invoices for this customer
+      // 🛡️ REFIX: Fetch all invoices for customer and filter in-memory to avoid index error
       if (db) {
-        const q = query(collection(db, 'invoices'), where('customerId', '==', userId), where('paymentStatus', '!=', 'Paid'), limit(10));
-        const snap = await getDocs(q);
-        const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-        setUnpaidInvoices(docs);
-        setSelectedUnpaidIds(docs.map(d => d.id));
+        try {
+          const q = query(collection(db, 'invoices'), where('customerId', '==', userId));
+          const snap = await getDocs(q);
+          const docs = snap.docs
+            .map(d => ({ ...d.data(), id: d.id }))
+            .filter((inv: any) => inv.paymentStatus !== 'Paid');
+          
+          setUnpaidInvoices(docs);
+          setSelectedUnpaidIds(docs.map(d => d.id));
+        } catch (e) {
+          console.warn('[Invoice Logic] Failed to fetch previous arrears:', e);
+        }
       }
     }
   };
@@ -332,7 +339,7 @@ function InvoicesListContent() {
         paymentStatus: currentDue <= 0 ? 'Paid' : pricing.paidAmount > 0 ? 'Partial' : 'Unpaid',
         paymentMethod: pricing.paymentMethod,
         paymentHistory: editingInvoiceId ? [] : (pricing.paidAmount > 0 ? [{
-          id: 'pay_' + Date.now(),
+          id: 'pay_init_' + Date.now(),
           amount: pricing.paidAmount,
           date: new Date().toISOString(),
           method: pricing.paymentMethod,
@@ -349,9 +356,6 @@ function InvoicesListContent() {
         const invoiceNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
         const newInvoice = { ...invoiceData, invoiceNumber, createdAt: new Date().toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
         const docRef = await addDoc(collection(db, 'invoices'), newInvoice);
-        
-        // 3. Mark selected previous invoices as 'Linked' or 'Adjusted' if necessary
-        // In a complex system, we would mark them as paid via this new invoice.
         
         const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
         await updateDoc(doc(db, 'invoices', docRef.id), { publicLink });
