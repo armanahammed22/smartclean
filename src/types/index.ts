@@ -63,7 +63,7 @@ export interface WorkEntry {
   employeeAssignments?: {
     uid: string;
     name: string;
-    cost: number; // Daily wage or per-entry cost for this personnel
+    cost: number;
   }[];
   notes?: string;
   createdAt: string;
@@ -177,6 +177,22 @@ export interface Service {
   updatedAt?: string;
 }
 
+export interface ServicePackage {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  regularPrice?: number;
+  serviceIds: string[]; // List of individual service IDs included
+  includedServiceNames?: string[]; // Cached names for fast invoice rendering
+  imageUrl?: string;
+  status: 'Active' | 'Inactive';
+  isPopular?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface SubService {
   id: string;
   mainServiceId: string;
@@ -204,8 +220,8 @@ export interface CartItem {
   imageUrl: string;
   category: string;
   quantity: number;
-  itemType: 'product' | 'service';
-  selectedAddOns?: any[];
+  itemType: 'product' | 'service' | 'package';
+  subItems?: string[]; // For packages
 }
 
 export interface InvoiceItem {
@@ -215,6 +231,7 @@ export interface InvoiceItem {
   quantity: number;
   type: 'product' | 'service' | 'addon' | 'package' | 'project_work';
   unit?: string;
+  subItems?: string[]; // New: List of services in a bundle
 }
 
 export interface Invoice {
@@ -274,6 +291,8 @@ export interface Booking {
   duration?: number;
   dateTime: string;
   createdAt: string;
+  isPackageBooking?: boolean;
+  packageId?: string;
 }
 
 export interface CustomRequest {
@@ -312,9 +331,10 @@ export interface LedgerEntry {
     | "Transport"
     | "Rent"
     | "Other"
-    | "Partner Project / Commission";
-  sourceId?: string; // orderId, serviceId, projectId
-  accountId?: string; // bank or cash account id
+    | "Partner Project / Commission"
+    | "Package Income";
+  sourceId?: string;
+  accountId?: string;
   partnerId?: string;
   partnerVendorId?: string;
   staffId?: string;
@@ -329,9 +349,9 @@ export interface StaffSalaryRecord {
   id: string;
   staffId: string;
   staffName: string;
-  date: string; // month/year or daily date
+  date: string;
   baseSalary: number;
-  adjustments: number; // bonus or penalty
+  adjustments: number;
   totalAmount: number;
   paidStatus: "Paid" | "Unpaid";
   source: "Staff Module" | "Expenses Module";
@@ -340,7 +360,7 @@ export interface StaffSalaryRecord {
 
 export interface FinancialAccount {
   id: string;
-  name: string; // Bank Name, Cash In Hand
+  name: string;
   type: "Bank" | "Cash" | "Mobile Wallet";
   accountNumber?: string;
   balance: number;
@@ -382,7 +402,7 @@ export interface PartnerProject {
   };
   commissionDirection: "TheyGiveMe" | "IGiveThem";
   commissionAmount: number;
-  commissionRate: number; // Percentage or fixed rate used for this project
+  commissionRate: number;
   paidStatus: "Paid" | "Unpaid";
   status: "Pending" | "In Progress" | "Completed" | "Cancelled";
   notes?: string;

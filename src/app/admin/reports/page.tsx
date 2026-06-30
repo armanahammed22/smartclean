@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -32,7 +33,8 @@ import {
   Briefcase,
   Users,
   List,
-  Package
+  Package,
+  Layers
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -88,16 +90,17 @@ export default function FinancialReportPage() {
     const salary = filteredLedger.filter(l => l.category === 'Staff Salary').reduce((acc, c) => acc + (c.amount || 0), 0);
     const commission = filteredLedger.filter(l => l.category === 'Partner Commission').reduce((acc, c) => acc + (c.amount || 0), 0);
     const projectCost = filteredLedger.filter(l => l.category === 'Project Cost').reduce((acc, c) => acc + (c.amount || 0), 0);
+    const packageIncome = filteredLedger.filter(l => l.category === 'Package Income').reduce((acc, c) => acc + (c.amount || 0), 0);
 
-    return { income, expense, profit: income - expense, unpaid, salary, commission, projectCost };
+    return { income, expense, profit: income - expense, unpaid, salary, commission, projectCost, packageIncome };
   }, [filteredLedger]);
 
   const chartData = useMemo(() => {
     return [
       { name: 'Income', value: metrics.income, color: '#22c55e' },
       { name: 'Expenses', value: metrics.expense, color: '#ef4444' },
-      { name: 'Payroll', value: metrics.salary, color: '#3b82f6' },
-      { name: 'Commission', value: metrics.commission, color: '#f59e0b' },
+      { name: 'Bundles', value: metrics.packageIncome, color: '#1E5F7A' },
+      { name: 'Projects', value: metrics.projectCost, color: '#3b82f6' },
     ];
   }, [metrics]);
 
@@ -119,16 +122,11 @@ export default function FinancialReportPage() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Financial Report</h1>
-          <p className="text-muted-foreground text-sm font-medium mt-1">Audit-ready income, expense and profit analysis</p>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Financial Intelligence</h1>
+          <p className="text-muted-foreground text-sm font-medium mt-1">Consolidated revenue stream including Package sales</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <div className="flex bg-white border rounded-xl p-1 gap-2">
-            <Input type="date" value={dateRange.start} onChange={e => setDateRange({...dateRange, start: e.target.value})} className="h-9 border-none bg-transparent text-[10px] w-32" />
-            <span className="flex items-center text-gray-300">to</span>
-            <Input type="date" value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} className="h-9 border-none bg-transparent text-[10px] w-32" />
-          </div>
-          <Button onClick={exportCSV} variant="outline" className="rounded-xl font-bold h-11 border-gray-200 gap-2"><Download size={16} /> Export CSV</Button>
+          <Button onClick={exportCSV} variant="outline" className="rounded-xl font-bold h-11 border-gray-200 gap-2"><Download size={16} /> Export Audit</Button>
         </div>
       </div>
 
@@ -136,22 +134,22 @@ export default function FinancialReportPage() {
         <Card className="border-none shadow-sm bg-emerald-50 text-emerald-700 rounded-3xl overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white rounded-2xl shadow-sm group-hover:scale-110 transition-transform"><TrendingUp size={24} /></div>
-              <Badge className="bg-emerald-100 text-emerald-700 border-none font-black text-[10px]">INCOME</Badge>
+              <div className="p-3 bg-white rounded-2xl shadow-sm"><TrendingUp size={24} /></div>
+              <Badge className="bg-emerald-100 text-emerald-700 border-none font-black text-[10px]">TOTAL</Badge>
             </div>
             <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Total Collections</p>
             <h3 className="text-3xl font-black tracking-tight">৳{metrics.income.toLocaleString()}</h3>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-rose-50 text-rose-700 rounded-3xl overflow-hidden group">
+        <Card className="border-none shadow-sm bg-blue-50 text-blue-700 rounded-3xl overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white rounded-2xl shadow-sm group-hover:scale-110 transition-transform"><TrendingDown size={24} /></div>
-              <Badge className="bg-rose-100 text-rose-700 border-none font-black text-[10px]">EXPENSE</Badge>
+              <div className="p-3 bg-white rounded-2xl shadow-sm"><Layers size={24} /></div>
+              <Badge className="bg-blue-100 text-blue-700 border-none font-black text-[10px]">BUNDLES</Badge>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Total Burn</p>
-            <h3 className="text-3xl font-black tracking-tight">৳{metrics.expense.toLocaleString()}</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Package Revenue</p>
+            <h3 className="text-3xl font-black tracking-tight">৳{metrics.packageIncome.toLocaleString()}</h3>
           </CardContent>
         </Card>
 
@@ -159,9 +157,9 @@ export default function FinancialReportPage() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-white/10 rounded-2xl group-hover:scale-110 transition-transform"><Zap size={24} fill="currentColor" /></div>
-              <Badge className="bg-white/20 text-white border-none font-black text-[10px]">NET PROFIT</Badge>
+              <Badge className="bg-white/20 text-white border-none font-black text-[10px]">PROFIT</Badge>
             </div>
-            <p className="text-[10px] font-black uppercase opacity-60 tracking-widest leading-none mb-1">Business Margin</p>
+            <p className="text-[10px] font-black uppercase opacity-60 tracking-widest leading-none mb-1">Net Margin</p>
             <h3 className="text-3xl font-black tracking-tight">৳{metrics.profit.toLocaleString()}</h3>
           </CardContent>
         </Card>
@@ -169,10 +167,10 @@ export default function FinancialReportPage() {
         <Card className="border-none shadow-sm bg-amber-50 text-amber-700 rounded-3xl overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white rounded-2xl shadow-sm group-hover:scale-110 transition-transform"><FileText size={24} /></div>
-              <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[10px]">PENDING</Badge>
+              <div className="p-3 bg-white rounded-2xl shadow-sm"><Wallet size={24} /></div>
+              <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[10px]">DUE</Badge>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Unpaid Balance</p>
+            <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Receivables</p>
             <h3 className="text-3xl font-black tracking-tight">৳{metrics.unpaid.toLocaleString()}</h3>
           </CardContent>
         </Card>
@@ -182,8 +180,8 @@ export default function FinancialReportPage() {
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
             <CardHeader className="bg-gray-50/50 border-b p-8">
-              <CardTitle className="text-lg font-bold">Category Distribution</CardTitle>
-              <CardDescription className="text-[10px] uppercase font-bold text-primary">Volume by transaction category</CardDescription>
+              <CardTitle className="text-lg font-bold">Revenue Breakdown</CardTitle>
+              <CardDescription className="text-[10px] uppercase font-bold text-primary">Contribution by service type</CardDescription>
             </CardHeader>
             <CardContent className="p-8 h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -201,47 +199,6 @@ export default function FinancialReportPage() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-
-          <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
-            <CardHeader className="bg-gray-50/50 border-b p-8">
-              <CardTitle className="text-base font-bold uppercase tracking-widest flex items-center gap-2"><List size={18} className="text-primary"/> Audit Trail</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-50/30">
-                  <TableRow>
-                    <TableHead className="pl-8 py-5 font-bold uppercase text-[9px] tracking-widest">Timeline</TableHead>
-                    <TableHead className="font-bold uppercase text-[9px] tracking-widest">Category</TableHead>
-                    <TableHead className="font-bold uppercase text-[9px] tracking-widest">Amount</TableHead>
-                    <TableHead className="font-bold uppercase text-[9px] tracking-widest text-center">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLedger.slice(0, 15).map((item) => (
-                    <TableRow key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                      <TableCell className="pl-8 py-4">
-                        <div className="text-[10px] font-bold text-gray-400">{format(parseISO(item.date), 'MMM dd, yyyy')}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-black text-gray-900 uppercase text-[10px]">{item.category}</div>
-                        <div className="text-[9px] text-muted-foreground truncate max-w-[150px]">{item.notes}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={cn("font-black text-xs", item.type === 'income' ? "text-emerald-600" : "text-rose-600")}>
-                          {item.type === 'income' ? '+' : '-'}৳{item.amount.toLocaleString()}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge className={cn("text-[7px] font-black uppercase border-none px-2", item.paidStatus === 'Paid' ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700")}>
-                          {item.paidStatus}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="lg:col-span-4 space-y-8">
@@ -253,9 +210,9 @@ export default function FinancialReportPage() {
             <CardContent className="relative z-10 p-8 pt-0 space-y-6">
               {[
                 { label: "Staff Payroll", val: metrics.salary, icon: Users, color: "text-blue-400" },
-                { label: "Partner Commission", val: metrics.commission, icon: Briefcase, color: "text-amber-400" },
-                { label: "Direct Project Cost", val: metrics.projectCost, icon: Package, color: "text-indigo-400" },
-                { label: "Misc Expenses", val: metrics.expense - (metrics.salary + metrics.commission + metrics.projectCost), icon: TrendingDown, color: "text-rose-400" }
+                { label: "Bundle Sales", val: metrics.packageIncome, icon: Layers, color: "text-indigo-400" },
+                { label: "Partner Comm", val: metrics.commission, icon: Briefcase, color: "text-amber-400" },
+                { label: "Other OpEx", val: metrics.expense - (metrics.salary + metrics.projectCost), icon: TrendingDown, color: "text-rose-400" }
               ].map((kpi, i) => (
                 <div key={i} className="flex justify-between items-end border-b border-white/5 pb-4 last:border-none">
                   <div className="space-y-1">
@@ -265,24 +222,6 @@ export default function FinancialReportPage() {
                       <span className="text-lg font-black tracking-tight">৳{Math.max(0, kpi.val).toLocaleString()}</span>
                     </div>
                   </div>
-                  <Badge variant="outline" className="border-white/10 text-white/40 text-[8px] font-black">{Math.round((kpi.val / (metrics.expense || 1)) * 100)}%</Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-base font-bold flex items-center gap-2"><Wallet size={18} className="text-primary" /> Liquidity Pool</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-4">
-              {accounts?.map(acc => (
-                <div key={acc.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl group hover:bg-primary/5 transition-all">
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase text-gray-400">{acc.name}</p>
-                    <p className="text-sm font-black text-gray-900">৳{acc.balance.toLocaleString()}</p>
-                  </div>
-                  <div className="p-2 bg-white rounded-xl shadow-sm text-primary opacity-40 group-hover:opacity-100"><ArrowUpRight size={14}/></div>
                 </div>
               ))}
             </CardContent>

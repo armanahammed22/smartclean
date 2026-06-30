@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -210,15 +211,28 @@ export default function AdminInvoiceDetailPage() {
                       </thead>
                       <tbody className="text-[10px] font-bold bg-white">
                         {invoice.items.map((item: any, i: number) => (
-                          <tr key={i} className="border-t-2 border-gray-50">
-                            <td className="py-3 text-center text-gray-400 border-r border-gray-50">{i + 1}</td>
-                            <td className="py-3 px-4 uppercase text-gray-900 text-left border-r border-gray-50">{item.name}</td>
-                            <td className="py-3 text-center text-gray-600 border-r border-gray-50">
-                              {item.quantity} <span className="text-[7px] uppercase font-black opacity-30 ml-1">{item.unit || 'Qty'}</span>
-                            </td>
-                            <td className="py-3 px-4 text-right text-gray-600 border-r border-gray-50">৳{item.price?.toLocaleString()}</td>
-                            <td className="py-3 px-4 text-right text-[#081621] bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}</td>
-                          </tr>
+                          <React.Fragment key={i}>
+                            <tr className="border-t-2 border-gray-50">
+                              <td className="py-3 text-center text-gray-400 border-r border-gray-50">{i + 1}</td>
+                              <td className="py-3 px-4 uppercase text-gray-900 text-left border-r border-gray-50">
+                                <div>{item.name}</div>
+                                {item.type === 'package' && (
+                                  <div className="mt-2 pl-2 space-y-1">
+                                    {item.subItems?.map((si: string, sidx: number) => (
+                                      <div key={sidx} className="flex items-center gap-2 text-[8px] font-bold text-primary">
+                                        <Check size={8} strokeWidth={4} /> {si}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3 text-center text-gray-600 border-r border-gray-50">
+                                {item.quantity} <span className="text-[7px] uppercase font-black opacity-30 ml-1">{item.unit || 'Qty'}</span>
+                              </td>
+                              <td className="py-3 px-4 text-right text-gray-600 border-r border-gray-50">৳{item.price?.toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right text-[#081621] bg-gray-50/20">৳{(item.price * item.quantity).toLocaleString()}</td>
+                            </tr>
+                          </React.Fragment>
                         ))}
                         
                         <tr className="border-t-2 border-[#081621] bg-gray-50/50">
@@ -233,13 +247,6 @@ export default function AdminInvoiceDetailPage() {
                           </tr>
                         )}
 
-                        {invoice.tax > 0 && (
-                          <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621]">Value Added Tax (VAT) (+)</td>
-                            <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.tax.toLocaleString()}</td>
-                          </tr>
-                        )}
-
                         <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
                           <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] border-r border-white/10 italic">
                             Net Amount Payable
@@ -247,16 +254,6 @@ export default function AdminInvoiceDetailPage() {
                           <td className="py-3 px-4 text-right">
                             <span className="text-sm font-black tracking-tight leading-none whitespace-nowrap">৳{invoice.total.toLocaleString()}</span>
                           </td>
-                        </tr>
-
-                        <tr className="border-t-2 border-[#081621] bg-emerald-50/50 text-emerald-800">
-                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621] italic">Amount Received</td>
-                          <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
-                        </tr>
-
-                        <tr className="border-t border-[#081621] bg-rose-50/50 text-rose-800">
-                          <td colSpan={4} className="py-2 px-6 text-right font-black uppercase text-[9px] tracking-widest border-r border-[#081621] italic">Outstanding Balance</td>
-                          <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -318,24 +315,6 @@ export default function AdminInvoiceDetailPage() {
             </tfoot>
           </table>
         </div>
-      </div>
-
-      {/* 📱 MOBILE STICKY ACTIONS */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-15px_50px_rgba(0,0,0,0.15)] flex items-center justify-center gap-3 z-[1000] pb-[calc(1rem+env(safe-area-inset-bottom))] no-print">
-        <Button 
-          variant="outline"
-          onClick={handleWhatsApp}
-          className="flex-1 h-14 rounded-2xl border-emerald-200 text-emerald-700 bg-emerald-50 font-black uppercase text-[10px] tracking-widest shadow-sm gap-2 active:scale-95 transition-all px-2"
-        >
-          <MessageCircle size={18} /> Support
-        </Button>
-        <Button 
-          className="flex-1 h-14 rounded-2xl bg-[#1E5F7A] text-white font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all px-2"
-          onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }}
-          disabled={isDownloading}
-        >
-          {isDownloading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Download size={20} /> Download</>}
-        </Button>
       </div>
     </div>
   );

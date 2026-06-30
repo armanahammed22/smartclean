@@ -1,3 +1,4 @@
+
 'use client';
 
 import { collection, query, where, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
@@ -49,7 +50,8 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     price: i.price,
     quantity: i.quantity || 1,
     type: i.itemType || 'product',
-    unit: i.unit || 'Qty'
+    unit: i.unit || 'Qty',
+    subItems: i.subItems || [] // Handle package sub-services
   })) || [];
 
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);

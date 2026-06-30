@@ -30,6 +30,20 @@
         "notes": { "type": "string" }
       }
     },
+    "ServicePackage": {
+      "title": "ServicePackage",
+      "description": "A bundle of multiple services sold at a fixed price.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "price": { "type": "number" },
+        "regularPrice": { "type": "number" },
+        "serviceIds": { "type": "array", "description": "List of IDs from services collection" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "imageUrl": { "type": "string" }
+      }
+    },
     "LandingPage": {
       "title": "LandingPage",
       "description": "Configuration for a dynamic product or service landing page.",
@@ -97,6 +111,7 @@
   "firestore": {
     "/cleaning_projects/{id}": { "schema": "CleaningProject", "description": "Main projects." },
     "/work_entries/{id}": { "schema": "WorkEntry", "description": "Daily logs." },
+    "/service_packages/{id}": { "schema": "ServicePackage", "description": "Bundled service deals." },
     "/landing_pages/{id}": { "schema": "LandingPage", "description": "Dynamic landing pages." },
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
     "/custom_grid_modules/{id}": { "schema": "CustomGridModule", "description": "Reusable grid layouts." },
