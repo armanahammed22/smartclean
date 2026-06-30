@@ -39,7 +39,8 @@ import {
   Video,
   Info,
   DollarSign,
-  Briefcase
+  Briefcase,
+  Wrench
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
