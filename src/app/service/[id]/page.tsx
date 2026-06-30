@@ -122,7 +122,7 @@ export default function ServiceBookingPage() {
 
   if (!mounted || (slugLoading && idLoading)) return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <Loader2 className="animate-spin text-primary" size={40} />
+      <Loader2 className="animate-spin text-primary" size(40) />
     </div>
   );
 
@@ -292,7 +292,7 @@ export default function ServiceBookingPage() {
                   );
                 }) : (
                   <div className="py-20 text-center opacity-30 border-2 border-dashed rounded-[3rem] bg-gray-50 flex flex-col items-center gap-4">
-                    <Sparkles size={40} className="text-gray-200" />
+                    <Sparkles size(40) className="text-gray-200" />
                     <p className="text-[10px] font-black uppercase tracking-widest">No Add-ons Available</p>
                   </div>
                 )}
@@ -300,103 +300,109 @@ export default function ServiceBookingPage() {
             </div>
           </div>
 
-          {/* 🔍 UNIFIED INFORMATION BLOCK - IMPROVED READABILITY */}
+          {/* 🔍 UNIFIED INFORMATION BLOCK - UPDATED LAYOUT */}
           <section className="pt-8">
             <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
-              <CardContent className="p-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+              <CardContent className="p-0 flex flex-col divide-y divide-gray-100">
+                
+                {/* TOP GRID: PROFILE, WHY US, INCLUDED, NOT INCLUDED */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 lg:divide-y-0 md:divide-x divide-gray-100">
                   
-                  {/* Section 1: Service Profile (Includes Full Description) */}
+                  {/* Column 1: Service Quick Stats */}
                   <div className="p-6 md:p-8 space-y-6">
                     <h3 className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
                       <Info size={18} className="text-primary" /> Service Profile
                     </h3>
-                    <div className="space-y-6">
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</p>
-                            <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg px-3 py-1 font-bold text-[10px] uppercase">
-                               {baseService.categoryId || 'General'}
-                            </Badge>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Hours</p>
-                            <p className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5"><Clock size={12} className="text-primary"/> 8AM-8PM</p>
-                          </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4 border-t border-gray-50 pt-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
-                            <p className="text-[11px] font-bold text-gray-700 uppercase">{baseService.duration || '2-4 Hours'}</p>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Team Size</p>
-                            <p className="text-[11px] font-bold text-gray-700 uppercase">{baseService.teamSize || '2-3 Pros'}</p>
-                          </div>
-                       </div>
-                       
-                       <div className="space-y-3 pt-6 border-t border-gray-50">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</p>
-                          <div className="text-sm md:text-base font-medium text-gray-600 leading-loose whitespace-pre-wrap break-words">
-                             {baseService.description}
-                          </div>
-                       </div>
+                    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Category</p>
+                        <Badge variant="secondary" className="bg-primary/5 text-primary border-none rounded-lg px-2.5 py-1 font-bold text-[9px] uppercase">
+                           {baseService.categoryId || 'General'}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Service Hours</p>
+                        <p className="text-[10px] font-black text-gray-700 flex items-center gap-1.5"><Clock size={12} className="text-primary"/> 8AM-8PM</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
+                        <p className="text-[10px] font-black text-gray-700 uppercase">{baseService.duration || '2-4 Hours'}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Team Size</p>
+                        <p className="text-[10px] font-black text-gray-700 uppercase">{baseService.teamSize || '2-3 Pros'}</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Section 2: Why Choose Us */}
+                  {/* Column 2: Why Choose Us */}
                   <div className="p-6 md:p-8 space-y-6">
                     <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
                       <ThumbsUp size={18} /> Why Us
                     </h3>
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                       {[
-                        { icon: ShieldCheck, title: "Verified Pros", desc: "Background-checked and expert team." },
-                        { icon: Zap, title: "Modern Gear", desc: "Industrial equipment for superior clean." },
-                        { icon: Award, title: "Guarantee", desc: "24-hr re-cleaning if not satisfied." }
+                        { icon: ShieldCheck, title: "Verified Pros", desc: "Expert, background-checked team." },
+                        { icon: Zap, title: "Modern Gear", desc: "Industrial high-grade equipment." },
+                        { icon: Award, title: "Guarantee", desc: "24-hr satisfaction re-cleaning." }
                       ].map((item, i) => (
-                        <div key={i} className="flex gap-4 group/item">
-                          <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors shrink-0 h-fit"><item.icon size={18}/></div>
-                          <div className="space-y-1">
-                            <p className="text-[11px] font-black uppercase text-gray-800 tracking-tight leading-none">{item.title}</p>
-                            <p className="text-[10px] font-medium text-gray-500 leading-relaxed">{item.desc}</p>
+                        <div key={i} className="flex gap-3 group/item">
+                          <div className="p-2 bg-gray-50 rounded-xl text-gray-400 group-hover/item:text-primary transition-colors shrink-0 h-fit"><item.icon size={16}/></div>
+                          <div className="space-y-0.5">
+                            <p className="text-[10px] font-black uppercase text-gray-800 leading-tight">{item.title}</p>
+                            <p className="text-[9px] font-medium text-gray-500 leading-normal">{item.desc}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Section 3: What's Included */}
+                  {/* Column 3: What's Included */}
                   <div className="p-6 md:p-8 space-y-6">
                     <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 flex items-center gap-2">
                       <CheckCircle2 size={18} /> Included
                     </h3>
-                    <div className="grid grid-cols-1 gap-3.5">
+                    <div className="grid grid-cols-1 gap-3">
                       {(baseService.included?.length ? baseService.included : ["Industrial Vacuuming", "Chemical Scrubbing", "Spot Treatment", "Sanitization"]).map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 animate-in slide-in-from-left-2">
-                          <div className="p-0.5 bg-emerald-100 text-emerald-600 rounded-full mt-1 shrink-0"><Check size={10} strokeWidth={4}/></div>
-                          <span className="text-[11px] md:text-xs font-bold text-gray-600 uppercase tracking-tight leading-tight">{item}</span>
+                        <div key={i} className="flex items-start gap-2.5 animate-in slide-in-from-left-2">
+                          <div className="p-0.5 bg-emerald-100 text-emerald-600 rounded-full mt-0.5 shrink-0"><Check size={9} strokeWidth={4}/></div>
+                          <span className="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-tight leading-tight">{item}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Section 4: Not Included */}
+                  {/* Column 4: Not Included */}
                   <div className="p-6 md:p-8 space-y-6">
                     <h3 className="text-sm font-black uppercase tracking-widest text-rose-700 flex items-center gap-2">
                       <AlertCircle size={18} /> Not Included
                     </h3>
-                    <div className="grid grid-cols-1 gap-3.5">
+                    <div className="grid grid-cols-1 gap-3">
                       {(baseService.notIncluded?.length ? baseService.notIncluded : ["Wall Painting", "Furniture Moving", "Deep Stain Removal", "Electronic Repair"]).map((item: string, i: number) => (
-                        <div key={i} className="flex items-start gap-3 animate-in slide-in-from-left-2 opacity-70">
-                          <div className="p-0.5 bg-rose-100 text-rose-600 rounded-full mt-1 shrink-0"><X size={10} strokeWidth={4}/></div>
-                          <span className="text-[11px] md:text-xs font-bold text-gray-500 uppercase tracking-tight leading-tight">{item}</span>
+                        <div key={i} className="flex items-start gap-2.5 animate-in slide-in-from-left-2 opacity-70">
+                          <div className="p-0.5 bg-rose-100 text-rose-600 rounded-full mt-0.5 shrink-0"><X size={9} strokeWidth={4}/></div>
+                          <span className="text-[10px] md:text-[11px] font-bold text-gray-500 uppercase tracking-tight leading-tight">{item}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                 </div>
+
+                {/* BOTTOM ROW: FULL WIDTH DESCRIPTION */}
+                <div className="p-8 md:p-12 space-y-6 bg-white w-full">
+                  <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+                    <h3 className="text-lg font-black uppercase tracking-tighter text-[#081621] font-headline">
+                      Detailed <span className="text-primary">Information</span>
+                    </h3>
+                  </div>
+                  <div className="w-full max-w-none">
+                    <div className="text-sm md:text-base font-medium text-gray-600 leading-[1.8] md:leading-[2] whitespace-pre-wrap break-words w-full">
+                      {baseService.description || "No detailed information provided for this service."}
+                    </div>
+                  </div>
+                </div>
+
               </CardContent>
             </Card>
           </section>
