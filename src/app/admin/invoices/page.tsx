@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -46,7 +45,8 @@ import {
   ShieldCheck,
   CreditCard,
   ArrowUpRight,
-  UserPlus
+  UserPlus,
+  History
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -82,8 +82,10 @@ function InvoicesListContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [manualItems, setManualItems] = useState<any[]>([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
-  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '', previousDue: 0 });
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '', previousDue: 0, totalPaid: 0, totalInvoiced: 0 });
   const [pricing, setPricing] = useState({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
+  const [unpaidInvoices, setUnpaidInvoices] = useState<any[]>([]);
+  const [selectedUnpaidIds, setSelectedUnpaidIds] = useState<string[]>([]);
 
   // Queries
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
@@ -184,7 +186,7 @@ function InvoicesListContent() {
     }]);
   };
 
-  const handleCustomerSelect = (userId: string) => {
+  const handleCustomerSelect = async (userId: string) => {
     const selected = customersList?.find(u => u.id === userId);
     if (selected) {
       setCustomer({
@@ -192,8 +194,19 @@ function InvoicesListContent() {
         name: selected.name || '',
         phone: selected.phone || '',
         address: selected.address || '',
-        previousDue: selected.outstandingBalance || 0
+        previousDue: selected.outstandingBalance || 0,
+        totalPaid: selected.totalPaid || 0,
+        totalInvoiced: selected.totalInvoiced || 0
       });
+
+      // Fetch unpaid invoices for this customer
+      if (db) {
+        const q = query(collection(db, 'invoices'), where('customerId', '==', userId), where('paymentStatus', '!=', 'Paid'), limit(10));
+        const snap = await getDocs(q);
+        const docs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        setUnpaidInvoices(docs);
+        setSelectedUnpaidIds(docs.map(d => d.id));
+      }
     }
   };
 
@@ -204,7 +217,9 @@ function InvoicesListContent() {
       name: inv.customerInfo?.name || '',
       phone: inv.customerInfo?.phone || '',
       address: inv.customerInfo?.address || '',
-      previousDue: inv.previousDue || 0
+      previousDue: inv.previousDue || 0,
+      totalPaid: 0,
+      totalInvoiced: 0
     });
     setManualItems(inv.items?.map((i: any) => ({
       name: i.name,
@@ -226,9 +241,11 @@ function InvoicesListContent() {
 
   const handleOpenCreate = () => {
     setEditingInvoiceId(null);
-    setCustomer({ id: '', name: '', phone: '', address: '', previousDue: 0 });
+    setCustomer({ id: '', name: '', phone: '', address: '', previousDue: 0, totalPaid: 0, totalInvoiced: 0 });
     setManualItems([{ name: '', price: '', quantity: 1, type: 'service', unit: 'Qty' }]);
     setPricing({ discount: 0, delivery: 0, vatPercent: 0, paidAmount: 0, paymentStatus: 'Unpaid', paymentMethod: 'Cash' });
+    setUnpaidInvoices([]);
+    setSelectedUnpaidIds([]);
     setIsFormOpen(true);
   };
 
@@ -240,9 +257,15 @@ function InvoicesListContent() {
     }, 0);
   }, [manualItems]);
 
+  const selectedPreviousDue = useMemo(() => {
+    return unpaidInvoices
+      .filter(inv => selectedUnpaidIds.includes(inv.id))
+      .reduce((sum, inv) => sum + (inv.dueAmount || 0), 0);
+  }, [unpaidInvoices, selectedUnpaidIds]);
+
   const vatAmount = Number(((currentSubtotal - pricing.discount) * (pricing.vatPercent / 100)).toFixed(2));
   const currentInvoiceTotal = Number((currentSubtotal + pricing.delivery + vatAmount - pricing.discount).toFixed(2));
-  const grandTotal = Number((currentInvoiceTotal + (customer.previousDue || 0)).toFixed(2));
+  const grandTotal = Number((currentInvoiceTotal + selectedPreviousDue).toFixed(2));
   const currentDue = Number((grandTotal - pricing.paidAmount).toFixed(2));
 
   const handleSaveInvoice = async () => {
@@ -258,7 +281,6 @@ function InvoicesListContent() {
 
       // 1. Auto-create or Update Customer Profile
       if (!finalCustomerId) {
-        // Search if customer already exists by phone
         const q = query(collection(db, 'users'), where('phone', '==', customer.phone), limit(1));
         const snap = await getDocs(q);
         if (!snap.empty) {
@@ -273,9 +295,9 @@ function InvoicesListContent() {
             address: customer.address,
             role: 'customer',
             status: 'active',
-            totalInvoiced: grandTotal,
-            totalPaid: pricing.paidAmount,
-            outstandingBalance: currentDue,
+            totalInvoiced: 0,
+            totalPaid: 0,
+            outstandingBalance: 0,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -303,19 +325,19 @@ function InvoicesListContent() {
         tax: vatAmount,
         discount: Number(pricing.discount),
         deliveryCharge: Number(pricing.delivery),
-        previousDue: Number(customer.previousDue || 0),
+        previousDue: selectedPreviousDue,
         total: grandTotal,
         paidAmount: Number(pricing.paidAmount),
         dueAmount: currentDue,
         paymentStatus: currentDue <= 0 ? 'Paid' : pricing.paidAmount > 0 ? 'Partial' : 'Unpaid',
         paymentMethod: pricing.paymentMethod,
-        paymentHistory: editingInvoiceId ? [] : [{
+        paymentHistory: editingInvoiceId ? [] : (pricing.paidAmount > 0 ? [{
           id: 'pay_' + Date.now(),
           amount: pricing.paidAmount,
           date: new Date().toISOString(),
           method: pricing.paymentMethod,
           notes: 'Initial Payment'
-        }],
+        }] : []),
         updatedAt: new Date().toISOString()
       };
 
@@ -327,6 +349,10 @@ function InvoicesListContent() {
         const invoiceNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
         const newInvoice = { ...invoiceData, invoiceNumber, createdAt: new Date().toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
         const docRef = await addDoc(collection(db, 'invoices'), newInvoice);
+        
+        // 3. Mark selected previous invoices as 'Linked' or 'Adjusted' if necessary
+        // In a complex system, we would mark them as paid via this new invoice.
+        
         const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
         await updateDoc(doc(db, 'invoices', docRef.id), { publicLink });
         toast({ title: "Invoice Generated" });
@@ -344,7 +370,7 @@ function InvoicesListContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 bg-[#081621] p-8 md:p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><ReceiptText size={240} /></div>
         <div className="relative z-10 space-y-2">
-          <Badge className="bg-primary/20 text-primary border-none font-black text-[9px] uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg">Billing Hub v2.0</Badge>
+          <Badge className="bg-primary/20 text-primary border-none font-black text-[9px] uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg">Billing Hub v2.1</Badge>
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none font-headline italic">
             Invoice <span className="text-primary">Registry</span>
           </h1>
@@ -502,7 +528,7 @@ function InvoicesListContent() {
                    <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tight font-headline italic">
                       Invoice <span className="text-primary">Terminal</span>
                    </DialogTitle>
-                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Manual Ledger Provisioning • v2.0</p>
+                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Manual Ledger Provisioning • v2.1</p>
                 </div>
               </div>
             </div>
@@ -519,7 +545,9 @@ function InvoicesListContent() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between border-b pb-3">
                     <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-2"><Users size={16} /> Partner Identification</h4>
-                    <Badge variant="outline" className="text-[8px] font-bold uppercase border-gray-100 px-2 py-0.5">Database Sync Active</Badge>
+                    {customer.id && (
+                      <Badge className="bg-emerald-50 text-emerald-700 border-none font-black text-[8px] px-3 py-1">SYNCED WITH PROFILE</Badge>
+                    )}
                   </div>
                   <div className="space-y-6 bg-gray-50/50 p-8 rounded-[2.5rem] border border-gray-100 shadow-inner">
                     <div className="space-y-2.5">
@@ -537,6 +565,24 @@ function InvoicesListContent() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {customer.id && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-in zoom-in-95">
+                        <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+                          <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Total Invoiced</p>
+                          <p className="text-xs font-black text-gray-900">৳{customer.totalInvoiced.toLocaleString()}</p>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm text-center">
+                          <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Total Paid</p>
+                          <p className="text-xs font-black text-emerald-600">৳{customer.totalPaid.toLocaleString()}</p>
+                        </div>
+                        <div className="p-3 bg-rose-50 rounded-xl border border-rose-100 shadow-sm text-center">
+                          <p className="text-[8px] font-black text-rose-500 uppercase mb-1">Outstanding Due</p>
+                          <p className="text-xs font-black text-rose-700">৳{customer.previousDue.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Client Name</Label>
@@ -571,7 +617,7 @@ function InvoicesListContent() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button onClick={addManualItem} variant="outline" size="sm" className="rounded-xl h-10 px-4 text-[10px] font-black uppercase border-dashed border-2 hover:bg-primary/5 transition-all">+ Custom Row</Button>
+                      <button type="button" onClick={addManualItem} className="rounded-xl h-10 px-4 text-[10px] font-black uppercase border-dashed border-2 border-primary/20 text-primary hover:bg-primary/5 transition-all">+ Custom Row</button>
                     </div>
                   </div>
 
@@ -616,16 +662,42 @@ function InvoicesListContent() {
                   <div className="space-y-8">
                     <h3 className="text-base font-black uppercase tracking-[0.3em] text-[#081621] flex items-center gap-3"><Calculator size={20} /> Billing Strategy</h3>
                     
-                    <div className="space-y-6">
-                      {customer.previousDue > 0 && (
-                        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
-                          <div>
-                            <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none">Carry Forward Due</p>
-                            <p className="text-lg font-black text-rose-700">৳{customer.previousDue.toLocaleString()}</p>
-                          </div>
-                          <AlertCircle className="text-rose-400 animate-pulse" />
+                    {/* Previous Due Selection */}
+                    {unpaidInvoices.length > 0 && (
+                      <div className="space-y-4">
+                        <Label className="text-[10px] font-black uppercase text-rose-600 flex items-center gap-2">
+                          <History size={14}/> Previous Arrears Found
+                        </Label>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto no-scrollbar pr-1">
+                          {unpaidInvoices.map((inv) => (
+                            <div 
+                              key={inv.id} 
+                              onClick={() => {
+                                const next = selectedUnpaidIds.includes(inv.id) 
+                                  ? selectedUnpaidIds.filter(id => id !== inv.id) 
+                                  : [...selectedUnpaidIds, inv.id];
+                                setSelectedUnpaidIds(next);
+                              }}
+                              className={cn(
+                                "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between",
+                                selectedUnpaidIds.includes(inv.id) ? "bg-rose-50 border-rose-500 shadow-sm" : "bg-white border-transparent"
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={cn("w-2 h-2 rounded-full", selectedUnpaidIds.includes(inv.id) ? "bg-rose-600" : "bg-gray-200")} />
+                                <div>
+                                  <p className="text-[10px] font-black text-gray-900 leading-none">{inv.invoiceNumber}</p>
+                                  <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">{format(new Date(inv.createdAt), 'MMM dd')}</p>
+                                </div>
+                              </div>
+                              <span className="text-xs font-black text-rose-600">৳{inv.dueAmount?.toLocaleString()}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
+
+                    <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Discount Yield (৳)</Label>
@@ -662,6 +734,12 @@ function InvoicesListContent() {
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Items</span>
                         <span className="text-sm font-bold text-gray-700">৳{currentSubtotal.toLocaleString()}</span>
                       </div>
+                      {selectedPreviousDue > 0 && (
+                        <div className="flex justify-between items-center px-2">
+                          <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Selected Arrears</span>
+                          <span className="text-sm font-black text-rose-700">৳{selectedPreviousDue.toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-end px-2">
                         <div className="flex flex-col">
                           <span className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mb-2 leading-none">Net Grand Total</span>

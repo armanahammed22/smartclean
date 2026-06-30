@@ -121,6 +121,7 @@ export default function CustomersPage() {
 
   /**
    * 🚀 DATA MIGRATION & REGISTRY SYNC
+   * Updated to calculate due correctly from unpaid balances
    */
   const handleSyncRegistry = async () => {
     if (!db) return;

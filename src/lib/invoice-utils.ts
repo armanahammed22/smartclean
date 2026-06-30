@@ -1,4 +1,3 @@
-
 'use client';
 
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
@@ -19,7 +18,7 @@ export function numberToWords(amount: number): string {
     if (n < 20) return words[n];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + words[n % 10] : '');
     if (n < 1000) return words[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + convert(n % 100) : '');
-    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + convert(n % 1000) : '');
+    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + convert(n % 100) : '');
     if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + convert(n % 100000) : '');
     return n.toString();
   };
@@ -91,14 +90,16 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const delivery = sourceData.deliveryCharge || sourceData.additionalCharge || 0;
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
   
-  const currentTotal = subtotal + tax + delivery - discount;
-  const grandTotal = currentTotal + previousDue;
+  const currentInvoiceTotal = subtotal + tax + delivery - discount;
+  const grandTotal = currentInvoiceTotal + previousDue;
 
   const countQuery = query(collection(db, collName));
   const countSnap = await getDocs(countQuery);
   const invNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
 
   const isCompleted = sourceData.status === 'Delivered' || sourceData.status === 'Completed';
+  const initialPaid = isCompleted ? grandTotal : 0;
+  const initialDue = grandTotal - initialPaid;
 
   const invoiceData: Omit<Invoice, 'id'> = {
     invoiceNumber: invNumber,
@@ -117,16 +118,16 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     deliveryCharge: delivery,
     previousDue,
     total: grandTotal,
-    paymentStatus: isCompleted ? 'Paid' : 'Unpaid',
+    paymentStatus: initialDue <= 0 ? 'Paid' : initialPaid > 0 ? 'Partial' : 'Unpaid',
     paymentMethod: sourceData.paymentMethod || 'Cash',
-    paidAmount: isCompleted ? grandTotal : 0,
-    dueAmount: isCompleted ? 0 : grandTotal,
-    paymentHistory: isCompleted ? [{
+    paidAmount: initialPaid,
+    dueAmount: initialDue,
+    paymentHistory: initialPaid > 0 ? [{
       id: 'pay_init_' + Date.now(),
-      amount: grandTotal,
+      amount: initialPaid,
       date: new Date().toISOString(),
       method: sourceData.paymentMethod || 'Cash',
-      notes: 'Payment upon completion'
+      notes: 'Initial Payment'
     }] : [],
     createdAt: new Date().toISOString(),
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -134,12 +135,12 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 
   const docRef = await addDoc(collection(db, collName), invoiceData);
   
-  // 3. Update Customer Stats
+  // 3. Update Customer Stats with atomic increments
   if (customerId) {
     await updateDoc(doc(db, 'users', customerId), {
-      totalInvoiced: increment(grandTotal),
-      totalPaid: increment(isCompleted ? grandTotal : 0),
-      outstandingBalance: increment(isCompleted ? 0 : grandTotal),
+      totalInvoiced: increment(currentInvoiceTotal),
+      totalPaid: increment(initialPaid),
+      outstandingBalance: increment(initialDue - previousDue), // Adjusting based on previous due already recorded
       updatedAt: new Date().toISOString()
     });
   }
