@@ -49,7 +49,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { getMockServices, getMockSubServices } from '@/lib/data';
 import { format } from 'date-fns';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
@@ -86,7 +85,6 @@ export default function AdminDashboard() {
   const servicesQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
   const usersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'users') : null, [db, isAuthorized]);
   
-  // Attendance Monitoring
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized]);
 
@@ -131,76 +129,59 @@ export default function AdminDashboard() {
   const STATS_CARDS = [
     { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
     { label: "Idle Personnel", val: metrics?.idleStaff || 0, icon: UserX, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/hrm/attendance" },
-    { label: "Pending Approvals", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Pending Items", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
     { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
   return (
-    <div className="space-y-8 pb-24 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1 md:px-0">
+    <div className="space-y-10 pb-24 min-w-0">
+      {/* 🔝 MINIMALIST DASHBOARD HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">Admin Overview</h1>
-          <div className="text-muted-foreground text-[10px] md:text-sm font-medium mt-2 flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            System Operational
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Admin Overview</h1>
+          <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            Core Systems Operational
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 md:gap-3 w-full md:w-auto">
-          <Button asChild className="flex-1 sm:flex-none rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-2 text-[10px] md:text-xs h-10 uppercase">
-            <Link href="/admin/bookings?create=true"><Plus size={16} /> New Booking</Link>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild className="h-10 px-6 rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/10 gap-2 text-[10px] uppercase tracking-widest">
+            <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> New Booking</Link>
+          </Button>
+          <Button asChild variant="outline" className="h-10 px-6 rounded-xl font-black gap-2 text-[10px] uppercase tracking-widest border-gray-200">
+            <Link href="/admin/invoices"><FileText size={16} /> Registry</Link>
           </Button>
         </div>
       </div>
 
+      {/* 📊 KPI GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {STATS_CARDS.map((stat, i) => (
           <Link key={i} href={stat.link || '#'}>
-            <Card className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all h-full">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex justify-between items-start mb-3 md:mb-4">
-                  <div className={cn("p-2 md:p-3 rounded-xl transition-transform group-hover:scale-110", stat.bg, stat.color)}>
-                    <stat.icon size={18} className="md:w-6 md:h-6" />
-                  </div>
+            <Card className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all border border-gray-100">
+              <CardContent className="p-6">
+                <div className={cn("p-2.5 rounded-xl transition-all group-hover:scale-110 group-hover:rotate-6 w-fit shadow-sm mb-4", stat.bg, stat.color)}>
+                  <stat.icon size={20} />
                 </div>
-                <p className="text-[8px] md:text-[10px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1">{stat.label}</p>
-                <h3 className="text-base md:text-2xl font-black text-gray-900 tracking-tight truncate">{stat.val}</h3>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.1em] leading-none mb-1.5">{stat.label}</p>
+                <h3 className="text-xl md:text-2xl font-black text-[#081621] tracking-tighter truncate">{stat.val}</h3>
               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
 
-      {/* ⚡ QUICK ACTIONS TERMINAL */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Master Ledger", href: "/admin/finance/ledger", icon: ReceiptText, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Attendance Logs", href: "/admin/hrm/attendance", icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "New Booking", href: "/admin/bookings/create", icon: Plus, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Service Bookings", href: "/admin/bookings", icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
-        ].map((action, i) => (
-          <Link key={i} href={action.href}>
-            <Card className="border-none shadow-sm hover:shadow-md transition-all bg-white rounded-2xl group cursor-pointer overflow-hidden border border-gray-100/50">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={cn("p-2.5 rounded-xl transition-all group-hover:scale-110 shadow-sm", action.bg, action.color)}>
-                  <action.icon size={18} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-700">{action.label}</span>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </section>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        <div className="lg:col-span-8 min-w-0 space-y-6 md:space-y-8">
-          <Card className="border-none shadow-sm bg-white rounded-2xl md:rounded-[2rem] overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b p-5 md:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* CHART AREA */}
+        <div className="lg:col-span-8">
+          <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
+            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base md:text-lg font-bold">Revenue Growth</CardTitle>
-                <CardDescription className="text-[9px] md:text-[10px] uppercase font-black tracking-widest mt-1 text-primary">Financial performance trends</CardDescription>
+                <CardTitle className="text-base font-black uppercase tracking-widest">Revenue Velocity</CardTitle>
+                <CardDescription className="text-[9px] font-bold uppercase tracking-[0.1em] mt-1 text-primary">7-Day performance analysis</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="p-3 md:p-8 h-[250px] md:h-[400px]">
+            <CardContent className="p-8 h-[380px]">
               {mounted && (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
@@ -211,10 +192,10 @@ export default function AdminDashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={9} fontStyle="bold" />
-                    <YAxis axisLine={false} tickLine={false} fontSize={9} fontStyle="bold" />
-                    <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
-                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                    <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
+                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -222,24 +203,25 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 space-y-6 md:gap-8 min-w-0">
-          <Card className="border-none shadow-xl bg-primary text-white rounded-2xl md:rounded-[2.5rem] overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><Zap size={120} /></div>
-            <CardHeader className="relative z-10 p-6 md:p-8 pb-4">
-              <CardTitle className="text-base md:text-lg font-black uppercase tracking-widest text-primary-foreground/60">Workforce Health</CardTitle>
+        {/* WORKFORCE SIDEBAR */}
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><Zap size={160} /></div>
+            <CardHeader className="relative z-10 p-8 pb-4">
+              <CardTitle className="text-base font-black uppercase tracking-[0.2em] text-primary">Workforce Health</CardTitle>
             </CardHeader>
-            <CardContent className="relative z-10 p-6 md:p-8 pt-0 space-y-3 md:space-y-6">
+            <CardContent className="relative z-10 p-8 pt-0 space-y-4">
               {[
-                { label: "Idle Today", val: metrics?.idleStaff || 0, icon: UserX },
-                { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck },
-                { label: "Total Personnel", val: dbUsers?.length || 0, icon: Users }
+                { label: "Idle Personnel", val: metrics?.idleStaff || 0, icon: UserX, color: "text-rose-400" },
+                { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck, color: "text-emerald-400" },
+                { label: "Staff Pool", val: dbUsers?.length || 0, icon: Users, color: "text-blue-400" }
               ].map((kpi, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-md p-3 md:p-5 rounded-xl md:rounded-2xl border border-white/10 flex justify-between items-center">
+                <div key={i} className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/5 flex justify-between items-center transition-all hover:bg-white/10 hover:-translate-y-1">
                   <div className="space-y-1">
-                    <p className="text-[8px] md:text-[10px] font-black uppercase opacity-60 leading-none">{kpi.label}</p>
-                    <span className="text-lg md:text-2xl font-black">{kpi.val}</span>
+                    <p className="text-[9px] font-black uppercase opacity-60 tracking-widest leading-none">{kpi.label}</p>
+                    <span className="text-2xl font-black tracking-tighter italic">{kpi.val}</span>
                   </div>
-                  <kpi.icon size={18} className="md:w-6 md:h-6 opacity-40" />
+                  <kpi.icon size={22} className={cn("opacity-40", kpi.color)} strokeWidth={2.5} />
                 </div>
               ))}
             </CardContent>
