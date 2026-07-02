@@ -458,14 +458,14 @@ function InvoicesListContent() {
                     <TableCell className="text-center">
                       <Badge className={cn(
                         "text-[7px] font-black uppercase border-none px-2 py-0.5 rounded-md",
-                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600"
                       )}>{inv.paymentStatus}</Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild><Link href={`/admin/invoices/${inv.id}`}><Eye size={16} /></Link></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => handleOpenEdit(inv)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)}><Trash2 size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -485,7 +485,7 @@ function InvoicesListContent() {
               <div>
                 <DialogTitle className="text-lg font-black uppercase tracking-tight">Invoice Terminal</DialogTitle>
                 <DialogDescription className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                  {editingInvoiceId ? 'UPDATING RECORD' : `CREATING ${invCounter.toString().padStart(4, '0')}`}
+                  {editingInvoiceId ? 'UPDATING RECORD' : `CREATING ${invoiceCounter.toString().padStart(4, '0')}`}
                 </DialogDescription>
               </div>
             </div>
