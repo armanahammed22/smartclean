@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -105,6 +105,9 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
 
+// Persist scroll position across client-side navigations
+let savedSidebarScrollTop = 0;
+
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
@@ -126,41 +129,11 @@ const DEFAULT_MENU_KEYS = [
   'support'
 ];
 
-const MENU_LABELS: Record<string, string> = {
-  dashboard_link: "Dashboard",
-  sales: "Sales Terminal",
-  orders: "Order & Booking",
-  inventory: "PRODUCT MENU",
-  services: "SERVICE MENU",
-  marketing: "MARKETING & PROMOTIONS",
-  offers: "OFFER & CAMPAIGN",
-  seo: "SEO & TRACKING",
-  hrm: "HRM",
-  customer_hub: "Customer Hub",
-  partners: "B2B PARTNERS",
-  vendors: "VENDOR HUB",
-  finance: "FINANCIAL HUB",
-  reports: "BUSINESS REPORT",
-  customize: "SITE CUSTOMIZE",
-  system: "SETTINGS",
-  ai_agents: "AI AGENTS (STAFF)",
-  support: "SUPPORT"
-};
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ 
-    sales: true, 
-    orders: true, 
-    hrm: true,
-    finance: true,
-    inventory: true,
-    services: true,
-    customize: true,
-    offers: true
-  });
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
   const pathname = usePathname();
@@ -169,6 +142,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  const sidebarScrollRef = useRef<HTMLDivElement>(null);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
@@ -440,6 +415,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       });
   }, [productsEnabled, servicesEnabled, sidebarConfig]);
 
+  // Handle auto-expansion of groups based on current path
+  useEffect(() => {
+    NAV_GROUPS.forEach(group => {
+      const isGroupActive = group.items.some((item: any) => pathname === item.href);
+      if (isGroupActive) {
+        setExpandedGroups(prev => ({ ...prev, [group.id]: true }));
+      }
+    });
+  }, [pathname, NAV_GROUPS]);
+
+  // Restore scroll position on pathname change
+  useEffect(() => {
+    if (sidebarScrollRef.current) {
+      sidebarScrollRef.current.scrollTop = savedSidebarScrollTop;
+    }
+  }, [pathname]);
+
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
@@ -461,7 +453,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar">
+      <div 
+        ref={sidebarScrollRef}
+        onScroll={(e) => { savedSidebarScrollTop = e.currentTarget.scrollTop; }}
+        className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar"
+      >
         {NAV_GROUPS.map((group) => {
           const isDirectLink = group.items.length === 0 && group.href;
           if (isDirectLink) {
@@ -469,7 +465,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={group.id}
                 href={group.href || '#'}
-                scroll={false} // 🛡️ CRITICAL: Prevent jump to top
+                scroll={false}
                 onClick={closeMobile}
                 className={cn(
                   "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
@@ -516,7 +512,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={item.name}
                       href={item.href}
-                      scroll={false} // 🛡️ CRITICAL: Prevent jump to top
+                      scroll={false}
                       onClick={closeMobile}
                       className={cn(
                         "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 
