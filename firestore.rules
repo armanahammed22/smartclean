@@ -24,40 +24,39 @@ service cloud.firestore {
     }
 
     // 🌍 PUBLIC ACCESS (Read for everyone, Write for Admin)
-    match /categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /subcategories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /childcategories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /master_attributes/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_packages/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /sub_services/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /advanced_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /smart_pricing_rules/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /brands/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /reusable_features/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /reusable_specs/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /variant_types/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /service_areas/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /subscription_plans/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /hero_banners/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /marketing_offers/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /top_nav_categories/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /homepage_sections/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /custom_grid_modules/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /pages_management/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /landing_pages/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_actions/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /quick_links/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /campaigns/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /campaigns/{campId}/products/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /invoices/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /coupons/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /delivery_options/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /cleaning_projects/{id} { allow read, write: if isAdmin(); }
-    match /work_entries/{id} { allow read, write: if isAdmin(); }
+    match /categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /subcategories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /childcategories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /master_attributes/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_packages/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /sub_services/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /advanced_offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /smart_pricing_rules/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /brands/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_features/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /reusable_specs/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /variant_types/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /service_areas/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /subscription_plans/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_settings/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /hero_banners/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /marketing_offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /top_nav_categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /homepage_sections/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /custom_grid_modules/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /pages_management/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /landing_pages/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_actions/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /quick_links/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /campaigns/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /invoices/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /coupons/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /delivery_options/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /cleaning_projects/{document=**} { allow read, write: if isAdmin(); }
+    match /work_entries/{document=**} { allow read, write: if isAdmin(); }
 
     // 🔒 USER/STAFF SPECIFIC (Requires Auth)
     match /users/{uid} { allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin()); }

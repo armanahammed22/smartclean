@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -292,6 +293,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
+  // 🛡️ Admin Portal Guard
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (!isUserLoading && !roleLoading && user && !isAdmin) {
+      toast({ variant: "destructive", title: "Access Denied", description: "Admin privileges required." });
+      router.replace('/');
+    }
+  }, [user, isAdmin, isUserLoading, roleLoading, router, toast]);
+
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
 
@@ -581,6 +596,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
+
+  // Final check: if user is logged out, children shouldn't render (auth guard handled by useEffect)
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
