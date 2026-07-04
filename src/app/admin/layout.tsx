@@ -105,8 +105,128 @@ const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
 
-// Persist scroll position across client-side navigations
+// Global variable to persist scroll position across client-side navigations
 let savedSidebarScrollTop = 0;
+
+/**
+ * 🛠️ SidebarContent Component (Moved outside to prevent re-mounting)
+ */
+const SidebarContent = React.memo(({ 
+  collapsed, 
+  closeMobile, 
+  pathname, 
+  NAV_GROUPS, 
+  expandedGroups, 
+  toggleGroup,
+  scrollRef,
+  displayLogo,
+  settings,
+  onLogout
+}: any) => {
+  return (
+    <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
+      <div className={cn("flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all duration-300", collapsed ? "justify-center px-0" : "px-6")}>
+        <div className="w-10 h-10 bg-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+          {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" unoptimized /> : <ShieldCheck size={20} className="text-primary" />}
+        </div>
+        {!collapsed && (
+          <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
+            <h1 className="font-black text-sm uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h1>
+            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
+          </div>
+        )}
+      </div>
+
+      <div 
+        ref={scrollRef}
+        onScroll={(e) => { savedSidebarScrollTop = e.currentTarget.scrollTop; }}
+        className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar"
+      >
+        {NAV_GROUPS.map((group: any) => {
+          const isDirectLink = group.items.length === 0 && group.href;
+          if (isDirectLink) {
+            return (
+              <Link
+                key={group.id}
+                href={group.href || '#'}
+                scroll={false}
+                onClick={closeMobile}
+                className={cn(
+                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
+                  collapsed ? "justify-center px-0 h-12" : "px-3 py-3",
+                  pathname === group.href && "bg-white/10 text-white border border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                )}
+              >
+                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center" : "gap-3 flex-1")}>
+                  <group.icon size={collapsed ? 22 : 18} className={cn("transition-colors duration-300", group.color, pathname === group.href && "text-white scale-110")} />
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
+                </div>
+              </Link>
+            );
+          }
+
+          const isGroupActive = group.items.some((item: any) => pathname === item.href);
+          const isExpanded = expandedGroups[group.id];
+
+          return (
+            <div key={group.id} className="space-y-1">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!collapsed) {
+                    toggleGroup(group.id);
+                  }
+                }}
+                className={cn(
+                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white", 
+                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2.5", 
+                  isGroupActive && !collapsed && "bg-white/5 text-white"
+                )}
+              >
+                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
+                  <group.icon size={collapsed ? 22 : 18} className={cn("shrink-0 transition-colors duration-300", group.color)} />
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{group.title}</span>}
+                </div>
+                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
+              </button>
+
+              {isExpanded && !collapsed && (
+                <div className="mt-1 space-y-1 pl-8 animate-in slide-in-from-top-2 duration-300">
+                  {group.items.map((item: any) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      scroll={false}
+                      onClick={closeMobile}
+                      className={cn(
+                        "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 
+                        pathname === item.href 
+                          ? "bg-white text-[#081621] shadow-xl scale-[1.05] z-10" 
+                          : "text-white/50 hover:text-white hover:translate-x-1"
+                      )}
+                    >
+                      <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary scale-110" : "opacity-40 group-hover/item:opacity-100")} />
+                      <span className="truncate whitespace-nowrap">{item.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all duration-300", collapsed && "flex justify-center")}>
+        <Button variant="ghost" onClick={onLogout} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 transition-all duration-300", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
+          <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
+          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout</span>}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+SidebarContent.displayName = 'SidebarContent';
 
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
@@ -425,10 +545,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
   }, [pathname, NAV_GROUPS]);
 
-  // Restore scroll position on pathname change
+  // Precise scroll restoration on pathname change
+  // We use requestAnimationFrame to ensure the DOM has finished applying the expandedGroups state.
   useEffect(() => {
     if (sidebarScrollRef.current) {
-      sidebarScrollRef.current.scrollTop = savedSidebarScrollTop;
+      const restoreScroll = () => {
+        if (sidebarScrollRef.current) {
+          sidebarScrollRef.current.scrollTop = savedSidebarScrollTop;
+        }
+      };
+      
+      requestAnimationFrame(restoreScroll);
+      // Fallback for slower renders
+      const timer = setTimeout(restoreScroll, 50);
+      return () => clearTimeout(timer);
     }
   }, [pathname]);
 
@@ -439,113 +569,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  const SidebarContent = ({ collapsed, closeMobile }: { collapsed?: boolean, closeMobile?: () => void }) => (
-    <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
-      <div className={cn("flex items-center gap-3 border-b border-white/5 h-20 shrink-0 transition-all duration-300", collapsed ? "justify-center px-0" : "px-6")}>
-        <div className="w-10 h-10 bg-white rounded-xl shadow-lg border border-white/10 flex items-center justify-center shrink-0 relative overflow-hidden">
-          {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" unoptimized /> : <ShieldCheck size={20} className="text-primary" />}
-        </div>
-        {!collapsed && (
-          <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
-            <h1 className="font-black text-sm uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h1>
-            <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
-          </div>
-        )}
-      </div>
-
-      <div 
-        ref={sidebarScrollRef}
-        onScroll={(e) => { savedSidebarScrollTop = e.currentTarget.scrollTop; }}
-        className="flex-1 overflow-y-auto py-6 px-3 space-y-2 custom-scrollbar"
-      >
-        {NAV_GROUPS.map((group) => {
-          const isDirectLink = group.items.length === 0 && group.href;
-          if (isDirectLink) {
-            return (
-              <Link
-                key={group.id}
-                href={group.href || '#'}
-                scroll={false}
-                onClick={closeMobile}
-                className={cn(
-                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white",
-                  collapsed ? "justify-center px-0 h-12" : "px-3 py-3",
-                  pathname === group.href && "bg-white/10 text-white border border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                )}
-              >
-                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center" : "gap-3 flex-1")}>
-                  <group.icon size={collapsed ? 22 : 18} className={cn("transition-colors duration-300", group.color, pathname === group.href && "text-white scale-110")} />
-                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
-                </div>
-              </Link>
-            );
-          }
-
-          const isGroupActive = group.items.some((item: any) => pathname === item.href);
-          const isExpanded = expandedGroups[group.id] || (isGroupActive && mounted);
-
-          return (
-            <div key={group.id} className="space-y-1">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!collapsed) {
-                    setExpandedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }));
-                  }
-                }}
-                className={cn(
-                  "flex items-center w-full rounded-xl transition-all duration-300 text-white/40 hover:bg-white/5 hover:text-white", 
-                  collapsed ? "justify-center px-0 h-10" : "px-3 py-2.5", 
-                  isGroupActive && !collapsed && "bg-white/5 text-white"
-                )}
-              >
-                <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
-                  <group.icon size={collapsed ? 22 : 18} className={cn("shrink-0 transition-colors duration-300", group.color)} />
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{group.title}</span>}
-                </div>
-                {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
-              </button>
-
-              {isExpanded && !collapsed && (
-                <div className="mt-1 space-y-1 pl-8 animate-in slide-in-from-top-2 duration-300">
-                  {group.items.map((item: any) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      scroll={false}
-                      onClick={closeMobile}
-                      className={cn(
-                        "flex items-center px-3 py-2 rounded-lg text-[11px] font-bold transition-all relative group/item", 
-                        pathname === item.href 
-                          ? "bg-white text-[#081621] shadow-xl scale-[1.05] z-10" 
-                          : "text-white/50 hover:text-white hover:translate-x-1"
-                      )}
-                    >
-                      <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary scale-110" : "opacity-40 group-hover/item:opacity-100")} />
-                      <span className="truncate whitespace-nowrap">{item.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all duration-300", collapsed && "flex justify-center")}>
-        <Button variant="ghost" onClick={() => setIsLogoutDialogOpen(true)} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 transition-all duration-300", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
-          <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
-          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout</span>}
-        </Button>
-      </div>
-    </div>
-  );
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   if (isUserLoading || roleLoading || !mounted) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Terminal...</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Loading Terminal...</p>
       </div>
     );
   }
@@ -553,7 +585,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <aside className={cn("hidden lg:flex flex-col h-full bg-[#08101b] transition-all duration-500 ease-in-out relative border-r border-white/5 shrink-0 z-50", isCollapsed ? "w-20" : "w-72")}>
-        <SidebarContent collapsed={isCollapsed} />
+        <SidebarContent 
+          collapsed={isCollapsed} 
+          pathname={pathname}
+          NAV_GROUPS={NAV_GROUPS}
+          expandedGroups={expandedGroups}
+          toggleGroup={toggleGroup}
+          scrollRef={sidebarScrollRef}
+          displayLogo={displayLogo}
+          settings={settings}
+          onLogout={() => setIsLogoutDialogOpen(true)}
+        />
         <button 
           onClick={handleToggleCollapse} 
           className="absolute -right-3.5 top-24 bg-primary text-white rounded-full h-7 w-7 shadow-xl z-[100] flex items-center justify-center hover:scale-110 border-2 border-[#F8FAFC] transition-all duration-300 active:scale-95"
@@ -576,7 +618,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <SheetTitle>Admin Navigation</SheetTitle>
                   <SheetDescription>Control System</SheetDescription>
                 </SheetHeader>
-                <SidebarContent collapsed={false} closeMobile={() => setIsMobileMenuOpen(false)} />
+                <SidebarContent 
+                  collapsed={false} 
+                  closeMobile={() => setIsMobileMenuOpen(false)} 
+                  pathname={pathname}
+                  NAV_GROUPS={NAV_GROUPS}
+                  expandedGroups={expandedGroups}
+                  toggleGroup={toggleGroup}
+                  displayLogo={displayLogo}
+                  settings={settings}
+                  onLogout={() => setIsLogoutDialogOpen(true)}
+                />
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
