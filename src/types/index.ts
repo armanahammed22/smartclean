@@ -201,6 +201,8 @@ export interface SubService {
   regularPrice?: number;
   description?: string;
   imageUrl?: string;
+  galleryImages?: string[];
+  videoUrl?: string;
   isAddOnEnabled: boolean;
   isDefaultAddOn: boolean;
   isStandaloneEnabled?: boolean;
@@ -208,6 +210,10 @@ export interface SubService {
   duration?: string;
   pricingType?: 'quantity' | 'sqft';
   rating?: number;
+  included?: string[];
+  notIncluded?: string[];
+  checklist?: string[];
+  features?: { icon: string; title: string; desc: string }[];
   createdAt?: string;
   updatedAt?: string;
 }

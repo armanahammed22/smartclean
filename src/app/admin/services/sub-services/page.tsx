@@ -1,49 +1,24 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Layers, Plus, Trash2, Edit, Loader2, Save, X, Zap } from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2, Zap, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
-import { ImageUploader } from '@/components/ui/image-uploader';
 import Image from 'next/image';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { useRouter } from 'next/navigation';
 
 export default function SubServicesManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSub, setEditingSub] = useState<any>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
-
-  const [formValues, setFormValues] = useState({
-    name: '',
-    mainServiceId: '',
-    price: '',
-    regularPrice: '',
-    duration: '',
-    description: '',
-    status: 'Active',
-    isAddOnEnabled: true,
-    isDefaultAddOn: false,
-    isStandaloneEnabled: true,
-    pricingType: 'quantity' as 'quantity' | 'sqft',
-    rating: '5.0'
-  });
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Data Queries
   const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), orderBy('name', 'asc')) : null, [db]);
@@ -52,102 +27,10 @@ export default function SubServicesManagementPage() {
   const { data: subServices, isLoading } = useCollection(subServicesQuery);
   const { data: services } = useCollection(servicesQuery);
 
-  useEffect(() => {
-    if (editingSub) {
-      setFormValues({
-        name: editingSub.name || '',
-        mainServiceId: editingSub.mainServiceId || '',
-        price: editingSub.price?.toString() || '',
-        regularPrice: editingSub.regularPrice?.toString() || '',
-        duration: editingSub.duration || '',
-        description: editingSub.description || '',
-        status: editingSub.status || 'Active',
-        isAddOnEnabled: editingSub.isAddOnEnabled ?? true,
-        isDefaultAddOn: editingSub.isDefaultAddOn ?? false,
-        isStandaloneEnabled: editingSub.isStandaloneEnabled ?? true,
-        pricingType: editingSub.pricingType || 'quantity',
-        rating: editingSub.rating?.toString() || '5.0'
-      });
-      setImageUrl(editingSub.imageUrl || '');
-    } else {
-      setFormValues({
-        name: '',
-        mainServiceId: '',
-        price: '',
-        regularPrice: '',
-        duration: '',
-        description: '',
-        status: 'Active',
-        isAddOnEnabled: true,
-        isDefaultAddOn: false,
-        isStandaloneEnabled: true,
-        pricingType: 'quantity',
-        rating: '5.0'
-      });
-      setImageUrl('');
-    }
-  }, [editingSub]);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!db) return;
-
-    if (!formValues.name.trim()) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Sub-service name is required." });
-      return;
-    }
-    if (!formValues.mainServiceId) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Please select a parent service." });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const subData = {
-      name: formValues.name.trim(),
-      mainServiceId: formValues.mainServiceId,
-      price: parseFloat(formValues.price) || 0,
-      regularPrice: parseFloat(formValues.regularPrice) || 0,
-      duration: formValues.duration.trim(),
-      description: formValues.description.trim(),
-      status: formValues.status,
-      isAddOnEnabled: formValues.isAddOnEnabled,
-      isDefaultAddOn: formValues.isDefaultAddOn,
-      isStandaloneEnabled: formValues.isStandaloneEnabled,
-      pricingType: formValues.pricingType,
-      rating: parseFloat(formValues.rating) || 5.0,
-      imageUrl: imageUrl,
-      updatedAt: serverTimestamp()
-    };
-
-    try {
-      if (editingSub) {
-        await updateDoc(doc(db, 'sub_services', editingSub.id), subData);
-        toast({ title: "Updated Successfully" });
-      } else {
-        await addDoc(collection(db, 'sub_services'), { 
-          ...subData, 
-          createdAt: serverTimestamp() 
-        });
-        toast({ title: "Created Successfully" });
-      }
-      setIsDialogOpen(false);
-      setEditingSub(null);
-    } catch (error: any) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: editingSub ? `sub_services/${editingSub.id}` : 'sub_services',
-        operation: editingSub ? 'update' : 'create',
-        requestResourceData: subData
-      }));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEdit = (sub: any) => {
-    setEditingSub(sub);
-    setIsDialogOpen(true);
-  };
+  const filteredSubs = useMemo(() => {
+    if (!subServices) return [];
+    return subServices.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [subServices, searchTerm]);
 
   const toggleStatus = async (id: string, current: string) => {
     if (!db) return;
@@ -162,122 +45,73 @@ export default function SubServicesManagementPage() {
       await deleteDoc(doc(db, 'sub_services', id));
       toast({ title: "Removed Successfully" });
     } catch (e: any) {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `sub_services/${id}`,
-        operation: 'delete'
-      }));
+      toast({ variant: "destructive", title: "Action Failed" });
     }
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 uppercase">Sub-Services Desk</h1>
-          <p className="text-muted-foreground text-sm">Configure task-based services and add-on pricing</p>
+          <p className="text-muted-foreground text-sm font-medium">Configure task-based services and add-on pricing</p>
         </div>
-        <Button className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary hover:bg-primary/90" onClick={() => { setEditingSub(null); setIsDialogOpen(true); }}>
+        <Button 
+          className="gap-2 font-black h-11 px-6 rounded-xl shadow-lg bg-primary hover:bg-primary/90 transition-all active:scale-95" 
+          onClick={() => router.push('/admin/services/sub-services/new')}
+        >
           <Plus size={18} /> Add New Sub-Service
         </Button>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if(!open) setEditingSub(null); }}>
-        <DialogContent className="max-w-2xl rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
-          <form onSubmit={handleSave} className="flex flex-col max-h-[90vh]">
-            <DialogHeader className="p-6 bg-[#081621] text-white">
-              <DialogTitle className="text-xl font-black uppercase tracking-tight">
-                {editingSub ? 'Edit Sub-Service' : 'Create Sub-Service'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar bg-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Name</Label>
-                    <Input value={formValues.name} onChange={e => setFormValues({...formValues, name: e.target.value})} placeholder="e.g. Sofa Shampoo" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Parent Service</Label>
-                    <Select value={formValues.mainServiceId} onValueChange={val => setFormValues({...formValues, mainServiceId: val})}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Select Parent" /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Offer Price (৳)</Label>
-                      <Input type="number" value={formValues.price} onChange={e => setFormValues({...formValues, price: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
-                      <Input type="number" value={formValues.regularPrice} onChange={e => setFormValues({...formValues, regularPrice: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl text-gray-400" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Rating</Label>
-                      <Input type="number" step="0.1" value={formValues.rating} onChange={e => setFormValues({...formValues, rating: e.target.value})} className="h-11 bg-gray-50 border-none font-black rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Logic</Label>
-                      <Select value={formValues.pricingType} onValueChange={v => setFormValues({...formValues, pricingType: v as any})}>
-                        <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          <SelectItem value="quantity">By Quantity</SelectItem>
-                          <SelectItem value="sqft">By Square Feet</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <ImageUploader label="Icon" hint="800 x 800 px" initialUrl={imageUrl} onUpload={setImageUrl} aspectRatio="aspect-square" />
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                      <Label className="text-[10px] font-black uppercase text-blue-900">Add-on Mode</Label>
-                      <Switch checked={formValues.isAddOnEnabled} onCheckedChange={val => setFormValues({...formValues, isAddOnEnabled: val})} />
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                      <Label className="text-[10px] font-black uppercase text-indigo-900">Show as Standalone</Label>
-                      <Switch checked={formValues.isStandaloneEnabled} onCheckedChange={val => setFormValues({...formValues, isStandaloneEnabled: val})} />
-                    </div>
-                  </div>
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[
+          { label: "Total Subs", val: subServices?.length || 0, icon: Layers, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Active", val: subServices?.filter(s => s.status === 'Active').length || 0, icon: Zap, bg: "bg-green-50", color: "text-green-600" },
+          { label: "Parent Links", val: services?.length || 0, icon: Zap, bg: "bg-amber-50", color: "text-amber-600" },
+          { label: "Global Status", val: "Operational", icon: Zap, bg: "bg-primary/5", color: "text-primary" }
+        ].map((s, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white rounded-2xl overflow-hidden group">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">{s.label}</p>
+                <h3 className="text-lg font-black text-gray-900">{s.val}</h3>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
-                <Textarea value={formValues.description} onChange={e => setFormValues({...formValues, description: e.target.value})} className="bg-gray-50 border-none min-h-[100px] rounded-xl p-4 font-medium" />
-              </div>
-            </div>
-            <DialogFooter className="p-6 bg-gray-50 border-t flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-bold">Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-black px-10 h-12 shadow-xl bg-primary text-white">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Sync Service</>}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <div className={cn("p-2.5 rounded-xl group-hover:scale-110 transition-transform", s.bg, s.color)}><s.icon size={18} /></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-2xl md:rounded-[2rem]">
+      <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2rem]">
+        <div className="p-6 md:p-8 border-b bg-gray-50/30">
+          <div className="relative max-w-md group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={18} />
+            <Input 
+              placeholder="Search by sub-service name..." 
+              className="pl-12 h-12 bg-white border-gray-100 rounded-2xl focus:ring-2 focus:ring-primary/10 transition-all font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
             <Table className="min-w-[900px]">
               <TableHeader className="bg-gray-50/50">
-                <TableRow>
-                  <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Sub-Service</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Pricing Type</TableHead>
-                  <TableHead className="font-bold uppercase text-[10px] tracking-widest">Price</TableHead>
-                  <TableHead className="font-bold text-center uppercase text-[10px] tracking-widest">Mode</TableHead>
+                <TableRow className="border-none">
+                  <TableHead className="py-5 pl-8 font-black uppercase text-[10px] tracking-widest">Sub-Service</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest">Parent Link</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest">Pricing Model</TableHead>
+                  <TableHead className="font-black uppercase text-[10px] tracking-widest">Price</TableHead>
+                  <TableHead className="font-black text-center uppercase text-[10px] tracking-widest">Status</TableHead>
                   <TableHead className="text-right pr-8 uppercase text-[10px] tracking-widest">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-                ) : subServices?.map((sub) => (
+                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+                ) : filteredSubs.map((sub) => (
                   <TableRow key={sub.id} className="hover:bg-gray-50/50 transition-colors group">
                     <TableCell className="py-5 pl-8">
                       <div className="flex items-center gap-3">
@@ -285,15 +119,18 @@ export default function SubServicesManagementPage() {
                           {sub.imageUrl && <Image src={sub.imageUrl} alt={sub.name} fill className="object-cover" unoptimized />}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-black text-gray-900 uppercase text-xs truncate leading-tight">{sub.name}</div>
-                          <p className="text-[9px] text-primary font-bold uppercase mt-0.5">{services?.find(s => s.id === sub.mainServiceId)?.title}</p>
+                          <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[200px] leading-tight">{sub.name}</div>
+                          <div className="text-[9px] text-muted-foreground font-bold mt-0.5 uppercase tracking-tighter">ID: {sub.id.slice(0, 8)}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[8px] font-black uppercase">
-                        {sub.pricingType === 'sqft' ? 'Square Feet' : 'Quantity'}
+                      <Badge variant="outline" className="text-[8px] font-black uppercase bg-primary/5 text-primary border-none">
+                        {services?.find(s => s.id === sub.mainServiceId)?.title || 'Unlinked'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{sub.pricingType === 'sqft' ? 'Per Square Feet' : 'Per Quantity'}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
@@ -302,31 +139,23 @@ export default function SubServicesManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex flex-col gap-1 items-center">
-                        <Badge className={cn("text-[7px] font-black uppercase border-none px-1.5", sub.isAddOnEnabled ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400")}>
-                          {sub.isAddOnEnabled ? 'ADD-ON' : 'NO ADD-ON'}
-                        </Badge>
-                        <Badge className={cn("text-[7px] font-black uppercase border-none px-1.5", sub.isStandaloneEnabled !== false ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400")}>
-                          {sub.isStandaloneEnabled !== false ? 'STANDALONE' : 'HIDDEN'}
-                        </Badge>
-                      </div>
+                       <Badge className={cn("text-[8px] font-black uppercase border-none px-2 py-0.5", sub.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400")}>
+                        {sub.status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end items-center gap-1.5">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50 hover:bg-blue-100" onClick={() => openEdit(sub)} title="Edit">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all" onClick={() => router.push(`/admin/services/sub-services/${sub.id}`)} title="Edit">
                           <Edit size={14} />
                         </Button>
                         <button 
                           onClick={() => toggleStatus(sub.id, sub.status)}
-                          className={cn(
-                            "p-1.5 rounded-lg transition-all",
-                            sub.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
-                          )}
+                          className={cn("p-1.5 rounded-lg transition-all", sub.status === 'Active' ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400")}
                           title={sub.status === 'Active' ? "Disable" : "Enable"}
                         >
                           <Zap size={14} fill={sub.status === 'Active' ? "currentColor" : "none"} />
                         </button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100" onClick={() => handleDelete(sub.id)} title="Delete">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-red-50 hover:bg-red-100 rounded-xl transition-all" onClick={() => handleDelete(sub.id)} title="Delete">
                           <Trash2 size={14} />
                         </Button>
                       </div>
