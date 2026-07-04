@@ -51,6 +51,82 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+/**
+ * 🔍 Reusable Searchable Single Select Component
+ */
+const SearchableSingleSelect = ({ 
+  label, 
+  value, 
+  onValueChange, 
+  options, 
+  placeholder, 
+  disabled = false 
+}: { 
+  label: string, 
+  value: string, 
+  onValueChange: (v: string) => void, 
+  options: any[], 
+  placeholder: string, 
+  disabled?: boolean 
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  
+  const selectedLabel = options.find(o => o.id === value)?.name || placeholder;
+  const filtered = options.filter(o => (o.name || '').toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">{label}</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild disabled={disabled}>
+          <Button variant="outline" className={cn(
+            "h-12 w-full justify-between rounded-xl border-none bg-gray-50 font-bold text-xs shadow-inner hover:bg-white border hover:border-gray-200 transition-all",
+            !value && "text-muted-foreground",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}>
+            <span className="truncate">{value ? selectedLabel : placeholder}</span>
+            <ChevronDown size={14} className="opacity-50 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[300px] p-0 border-none shadow-2xl rounded-2xl overflow-hidden z-[200]">
+          <div className="p-3 border-b bg-gray-50">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={12} />
+              <Input 
+                value={search} 
+                onChange={e => setSearch(e.target.value)} 
+                placeholder="Search..." 
+                className="h-9 pl-8 bg-white border-none rounded-lg text-xs"
+              />
+            </div>
+          </div>
+          <div className="max-h-[250px] overflow-y-auto custom-scrollbar p-2 space-y-1">
+            {filtered.map(opt => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onValueChange(opt.id);
+                  setOpen(false);
+                  setSearch('');
+                }}
+                className={cn(
+                  "w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all",
+                  value === opt.id ? "bg-primary text-white" : "hover:bg-gray-50 text-gray-600"
+                )}
+              >
+                {opt.name}
+              </button>
+            ))}
+            {filtered.length === 0 && <p className="text-center py-4 text-[10px] font-bold text-gray-400 uppercase">No results</p>}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 export default function UnifiedServiceEditor() {
   const { id } = useParams();
   const router = useRouter();
@@ -79,7 +155,7 @@ export default function UnifiedServiceEditor() {
     title: '',
     categoryId: '',
     subCategoryId: '',
-    childCategoryId: '',
+    subChildCategoryId: '',
     description: '',
     duration: '',
     teamSize: '',
@@ -117,18 +193,32 @@ export default function UnifiedServiceEditor() {
         checklist: service.checklist || [],
         features: service.features || [],
         galleryImages: service.galleryImages || [],
-        linkedSubServiceIds: service.linkedSubServiceIds || []
+        linkedSubServiceIds: service.linkedSubServiceIds || [],
+        subChildCategoryId: service.subChildCategoryId || service.childCategoryId || ''
       });
     }
   }, [service]);
 
-  // Taxonomy Filtering
-  const availableSubCats = useMemo(() => subcategories?.filter(s => s.categoryId === formData.categoryId) || [], [subcategories, formData.categoryId]);
+  // Taxonomy Filtering Logic
+  const availableSubCats = useMemo(() => 
+    subcategories?.filter(s => s.categoryId === formData.categoryId) || [], 
+    [subcategories, formData.categoryId]
+  );
   
+  const availableChildCats = useMemo(() => 
+    childcategories?.filter(c => c.subcategoryId === formData.subCategoryId) || [], 
+    [childcategories, formData.subCategoryId]
+  );
+
   const handleSave = async (statusOverride?: string) => {
     if (!db) return;
     if (!formData.title) {
       toast({ variant: "destructive", title: "Missing Information", description: "Service title is required." });
+      return;
+    }
+
+    if (!formData.categoryId || !formData.subCategoryId) {
+      toast({ variant: "destructive", title: "Hierarchy Required", description: "Category and Sub Category are mandatory." });
       return;
     }
 
@@ -299,29 +389,39 @@ export default function UnifiedServiceEditor() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5 md:p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2 md:col-span-2">
+                <div className="space-y-6">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Title</Label>
                     <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Master Deep Cleaning..." className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
-                    <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v, subCategoryId: '', childCategoryId: ''})}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold text-xs"><SelectValue placeholder="Select Category" /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {categories?.map(c => <SelectItem key={c.id} value={c.id} className="text-xs uppercase font-bold">{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sub Category</Label>
-                    <Select value={formData.subCategoryId} onValueChange={v => setFormData({...formData, subCategoryId: v, childCategoryId: ''})}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold text-xs"><SelectValue placeholder="Select Sub" /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {availableSubCats.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold">{s.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  {/* 3-Level Cascading Taxonomy Selectors */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <SearchableSingleSelect 
+                      label="Category (L1)"
+                      placeholder="Select Category"
+                      value={formData.categoryId}
+                      options={categories || []}
+                      onValueChange={v => setFormData({...formData, categoryId: v, subCategoryId: '', subChildCategoryId: ''})}
+                    />
+
+                    <SearchableSingleSelect 
+                      label="Sub Category (L2)"
+                      placeholder="Select Sub Category"
+                      value={formData.subCategoryId}
+                      options={availableSubCats}
+                      disabled={!formData.categoryId}
+                      onValueChange={v => setFormData({...formData, subCategoryId: v, subChildCategoryId: ''})}
+                    />
+
+                    <SearchableSingleSelect 
+                      label="Sub Child Category (L3)"
+                      placeholder="Select Sub Child"
+                      value={formData.subChildCategoryId}
+                      options={availableChildCats}
+                      disabled={!formData.subCategoryId}
+                      onValueChange={v => setFormData({...formData, subChildCategoryId: v})}
+                    />
                   </div>
                 </div>
 
