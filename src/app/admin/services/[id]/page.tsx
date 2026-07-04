@@ -1,11 +1,10 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, updateDoc, query, orderBy, deleteDoc, setDoc, serverTimestamp, where } from 'firebase/firestore';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -337,8 +336,8 @@ export default function UnifiedServiceEditor() {
                       <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl">
                         <SelectItem value="fixed">Fixed Rate</SelectItem>
-                        <SelectItem value="quantity">Per Unit</SelectItem>
-                        <SelectItem value="sqft">Per Sqft</SelectItem>
+                        <SelectItem value="quantity">By Quantity</SelectItem>
+                        <SelectItem value="sqft">By Square Feet</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
