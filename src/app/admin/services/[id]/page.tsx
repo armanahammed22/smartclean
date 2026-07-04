@@ -1,16 +1,16 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, updateDoc, query, orderBy, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { doc, collection, updateDoc, query, orderBy, deleteDoc, setDoc, serverTimestamp, where } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
@@ -20,7 +20,7 @@ import {
   Trash2, 
   Zap, 
   Star, 
-  ImageIcon, 
+  Image as ImageIcon, 
   Layout,
   CheckCircle2,
   XCircle,
@@ -40,7 +40,11 @@ import {
   Info,
   DollarSign,
   Briefcase,
-  Wrench
+  Wrench,
+  Search,
+  Check,
+  ChevronDown,
+  Upload
 } from 'lucide-react';
 import { 
   Table, 
@@ -68,23 +72,30 @@ export default function UnifiedServiceEditor() {
   const serviceRef = useMemoFirebase(() => (db && !isNew) ? doc(db, 'services', id as string) : null, [db, id, isNew]);
   const { data: service, isLoading: sLoading } = useDoc(serviceRef);
 
-  // 2. Auxiliary Data
-  const categoriesQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
-  const { data: categories } = useCollection(categoriesQuery);
+  // 2. Taxonomy & Master Data
+  const catsQuery = useMemoFirebase(() => db ? query(collection(db, 'categories'), orderBy('name', 'asc')) : null, [db]);
+  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'subcategories'), orderBy('name', 'asc')) : null, [db]);
+  const childsQuery = useMemoFirebase(() => db ? query(collection(db, 'childcategories'), orderBy('name', 'asc')) : null, [db]);
+  const allSubServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active')) : null, [db]);
 
-  const reviewsQuery = useMemoFirebase(() => (db && !isNew) ? query(collection(db, 'services', id as string, 'reviews'), orderBy('createdAt', 'desc')) : null, [db, id]);
-  const { data: reviews } = useCollection(reviewsQuery);
+  const { data: categories } = useCollection(catsQuery);
+  const { data: subcategories } = useCollection(subsQuery);
+  const { data: childcategories } = useCollection(childsQuery);
+  const { data: subServicesPool } = useCollection(allSubServicesQuery);
 
   // Unified State
   const [formData, setFormData] = useState<any>({
     title: '',
     categoryId: '',
+    subCategoryId: '',
+    childCategoryId: '',
     description: '',
     duration: '',
     teamSize: '',
     rating: 5.0,
     imageUrl: '',
     galleryImages: [],
+    beforeAfterImages: [],
     videoUrl: '',
     basePrice: '',
     regularPrice: '',
@@ -95,11 +106,13 @@ export default function UnifiedServiceEditor() {
     notIncluded: [],
     checklist: [],
     features: [],
-    highlights: [],
     status: 'Active',
     isPopular: false,
     isBookingEnabled: true,
+    linkedSubServiceIds: []
   });
+
+  const [addonSearch, setAddonSearch] = useState('');
 
   useEffect(() => {
     if (service) {
@@ -112,13 +125,18 @@ export default function UnifiedServiceEditor() {
         notIncluded: service.notIncluded || [],
         checklist: service.checklist || [],
         features: service.features || [],
-        highlights: service.highlights || [],
-        galleryImages: service.galleryImages || []
+        galleryImages: service.galleryImages || [],
+        beforeAfterImages: service.beforeAfterImages || [],
+        linkedSubServiceIds: service.linkedSubServiceIds || []
       });
     }
   }, [service]);
 
-  const handleSave = async () => {
+  // Taxonomy Filtering
+  const availableSubCats = useMemo(() => subcategories?.filter(s => s.categoryId === formData.categoryId) || [], [subcategories, formData.categoryId]);
+  const availableChildCats = useMemo(() => childcategories?.filter(c => c.subcategoryId === formData.subCategoryId) || [], [childcategories, formData.subCategoryId]);
+
+  const handleSave = async (statusOverride?: string) => {
     if (!db) return;
     if (!formData.title) {
       toast({ variant: "destructive", title: "Missing Information", description: "Service title is required." });
@@ -131,6 +149,7 @@ export default function UnifiedServiceEditor() {
     const payload = {
       ...formData,
       slug,
+      status: statusOverride || formData.status,
       basePrice: parseFloat(formData.basePrice) || 0,
       regularPrice: parseFloat(formData.regularPrice) || 0,
       extraCharges: parseFloat(formData.extraCharges) || 0,
@@ -162,331 +181,353 @@ export default function UnifiedServiceEditor() {
   };
   const removeArrayItem = (key: string, idx: number) => setFormData({ ...formData, [key]: formData[key].filter((_: any, i: number) => i !== idx) });
 
-  async function handleDeleteReview(reviewId: string) {
-    if (!confirm("Remove feedback?")) return;
-    await deleteDoc(doc(db!, 'services', id as string, 'reviews', reviewId));
-    toast({ title: "Feedback Removed" });
-  }
+  const toggleLinkedAddon = (id: string) => {
+    const current = formData.linkedSubServiceIds || [];
+    const next = current.includes(id) ? current.filter((i: string) => i !== id) : [...current, id];
+    setFormData({ ...formData, linkedSubServiceIds: next });
+  };
 
-  if (!isNew && sLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48} /><p className="text-xs font-black uppercase tracking-widest text-gray-400">Booting Unified Editor...</p></div>;
+  const filteredAddons = useMemo(() => {
+    if (!subServicesPool) return [];
+    return subServicesPool.filter(s => s.name.toLowerCase().includes(addonSearch.toLowerCase()));
+  }, [subServicesPool, addonSearch]);
+
+  if (!isNew && sLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48} /><p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Terminal...</p></div>;
 
   return (
-    <div className="space-y-8 pb-32 max-w-6xl mx-auto min-w-0">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12 scale-150"><Wrench size={120} /></div>
-        <div className="flex items-center gap-6 relative z-10">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/services')} className="rounded-2xl bg-gray-50 hover:bg-gray-100 h-12 w-12 border">
-            <ArrowLeft size={20} />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none">
-              {isNew ? 'Define New Logic' : formData.title}
-            </h1>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-2 flex items-center gap-2">
-               <ShieldCheck size={12} className="text-primary"/> Operational Service Terminal
-            </p>
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* 🚀 COMPACT HEADER */}
+      <header className="sticky top-0 z-[100] bg-white border-b border-gray-200 h-16 flex items-center px-4 md:px-8 shadow-sm">
+        <div className="container mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/admin/services')} className="rounded-xl h-10 w-10 border border-gray-100">
+              <ArrowLeft size={18} />
+            </Button>
+            <div>
+              <h1 className="text-base font-black text-gray-900 uppercase tracking-tight leading-none">
+                {isNew ? 'Create New Service' : 'Edit Service'}
+              </h1>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Operational Logic Terminal</p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3 relative z-10">
-          <Button onClick={handleSave} disabled={isSaving} className="h-12 px-10 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl shadow-primary/20 gap-3 bg-primary hover:bg-primary/90 transition-all">
-            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
-            {isNew ? 'Create Service' : 'Save Changes'}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => handleSave('Inactive')} disabled={isSaving} className="h-10 px-6 rounded-xl font-bold uppercase text-[10px] hidden sm:flex">
+              Save Draft
+            </Button>
+            <Button onClick={() => handleSave()} disabled={isSaving} className="h-10 px-8 rounded-xl font-black uppercase text-[10px] shadow-lg shadow-primary/20 bg-primary">
+              {isSaving ? <Loader2 className="animate-spin" /> : <Save size={16} className="mr-2" />}
+              {isNew ? 'Publish Service' : 'Sync Changes'}
+            </Button>
+          </div>
         </div>
       </header>
 
-      <Tabs defaultValue="basic" className="space-y-8">
-        <TabsList className="bg-white border p-1 h-14 w-full rounded-2xl overflow-x-auto no-scrollbar shadow-sm">
-          <TabsTrigger value="basic" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Layout size={14}/> Basic Info</TabsTrigger>
-          <TabsTrigger value="checklists" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><ListChecks size={14}/> Checklists</TabsTrigger>
-          <TabsTrigger value="features" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Zap size={14}/> Features</TabsTrigger>
-          {!isNew && <TabsTrigger value="reviews" className="flex-1 rounded-xl gap-2 font-black text-[10px] uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Star size={14}/> Feedback</TabsTrigger>}
-        </TabsList>
-
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="container mx-auto px-4 md:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
           
-          {/* CONSOLIDATED BASIC INFO TAB */}
-          <TabsContent value="basic" className="mt-0">
-            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-              <CardContent className="p-0 flex flex-col">
-                
-                {/* 1. SERVICE INFORMATION SECTION */}
-                <div className="p-8 space-y-8">
-                  <div className="flex items-center gap-3 border-b pb-4">
-                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><Layout size={18}/></div>
-                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Service Information</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* 🖼️ LEFT COLUMN: STICKY MEDIA PANEL (30-35%) */}
+          <aside className="w-full lg:w-[35%] lg:sticky lg:top-24 space-y-6">
+            <Card className="border-none shadow-sm rounded-[18px] bg-white overflow-hidden border border-gray-100">
+              <CardHeader className="bg-gray-50/50 p-6 border-b">
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
+                  <Camera size={16} className="text-primary" /> Media Assets
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-8">
+                {/* Main Image */}
+                <ImageUploader 
+                  label="Featured Listing Image" 
+                  hint="800 x 600 px" 
+                  initialUrl={formData.imageUrl} 
+                  onUpload={url => setFormData({...formData, imageUrl: url})} 
+                  aspectRatio="aspect-[4/3]" 
+                />
+
+                <div className="h-px bg-gray-100" />
+
+                {/* Before & After */}
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Operation Results (Before/After)</Label>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Title</Label>
-                      <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Corporate Deep Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                      <ImageUploader 
+                        label="" 
+                        hint="Before" 
+                        initialUrl={formData.beforeAfterImages?.find((i:any) => i.tag === 'Before')?.url || ''} 
+                        onUpload={url => {
+                          const others = formData.beforeAfterImages?.filter((i:any) => i.tag !== 'Before') || [];
+                          setFormData({...formData, beforeAfterImages: [...others, { url, tag: 'Before' }]});
+                        }} 
+                        aspectRatio="aspect-square" 
+                      />
+                      <p className="text-[8px] font-black text-center text-gray-400">BEFORE</p>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
-                      <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v})}>
-                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Choose Category" /></SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                          {categories?.map(c => <SelectItem key={c.id} value={c.id} className="font-bold py-3 uppercase text-[10px]">{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duration</Label>
-                      <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 2-4 Hours" className="h-12 bg-gray-50 border-none rounded-xl" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Number of Employees</Label>
-                      <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="e.g. 3 Experts" className="h-12 bg-gray-50 border-none rounded-xl" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Detailed Description</Label>
-                    <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[160px] bg-gray-50 border-none rounded-2xl p-6 leading-loose focus:bg-white transition-all shadow-inner" placeholder="Explain the service scope..." />
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-100 mx-8" />
-
-                {/* 2. MEDIA HUB SECTION */}
-                <div className="p-8 space-y-8">
-                  <div className="flex items-center gap-3 border-b pb-4">
-                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><Camera size={18}/></div>
-                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Media Hub</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-4">
-                      <ImageUploader label="Featured Listing Image" hint="800 x 600 px (4:3 Ratio)" initialUrl={formData.imageUrl} onUpload={url => setFormData({...formData, imageUrl: url})} aspectRatio="aspect-[4/3]" />
-                      <div className="space-y-2 pt-4">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Video URL (YouTube/Vimeo)</Label>
-                        <div className="relative">
-                          <Video size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                          <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="https://youtube.com/..." className="h-12 pl-12 bg-gray-50 border-none rounded-xl font-mono text-xs" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-4 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-inner">
-                      <Label className="text-[10px] font-black uppercase text-primary tracking-widest">Gallery Images</Label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {formData.galleryImages?.map((img: string, i: number) => (
-                          <div key={i} className="relative aspect-square rounded-xl overflow-hidden border bg-white group">
-                            <Image src={img} alt="Gallery" fill className="object-cover" unoptimized />
-                            <button onClick={() => removeArrayItem('galleryImages', i)} className="absolute inset-0 bg-red-600/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
-                          </div>
-                        ))}
-                        <div className="flex items-center justify-center border-2 border-dashed rounded-xl aspect-square hover:bg-white transition-colors bg-white/50">
-                          <ImageUploader initialUrl="" onUpload={url => addArrayItem('galleryImages', url)} label="" aspectRatio="aspect-square" className="border-none p-0" />
-                        </div>
-                      </div>
+                      <ImageUploader 
+                        label="" 
+                        hint="After" 
+                        initialUrl={formData.beforeAfterImages?.find((i:any) => i.tag === 'After')?.url || ''} 
+                        onUpload={url => {
+                          const others = formData.beforeAfterImages?.filter((i:any) => i.tag !== 'After') || [];
+                          setFormData({...formData, beforeAfterImages: [...others, { url, tag: 'After' }]});
+                        }} 
+                        aspectRatio="aspect-square" 
+                      />
+                      <p className="text-[8px] font-black text-center text-primary">AFTER</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="h-px bg-gray-100 mx-8" />
+                <div className="h-px bg-gray-100" />
 
-                {/* 3. PRICING & ADD-ONS SECTION */}
-                <div className="p-8 space-y-8">
-                  <div className="flex items-center gap-3 border-b pb-4">
-                    <div className="p-2 bg-primary/10 rounded-xl text-primary"><DollarSign size={18}/></div>
-                    <h3 className="text-lg font-black uppercase tracking-widest text-[#081621]">Pricing & Add-ons</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Model</Label>
-                        <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 rounded-xl">
-                          {['fixed', 'quantity', 'sqft'].map(type => (
-                            <button key={type} type="button" onClick={() => setFormData({...formData, pricingType: type})} className={cn("py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all", formData.pricingType === type ? "bg-white border-primary text-primary shadow-sm" : "bg-transparent border-transparent text-gray-400 hover:text-gray-600")}>
-                              {type}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sale Price (৳)</Label>
-                          <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary text-lg" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
-                          <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Extra Operational Charges (৳)</Label>
-                        <Input type="number" value={formData.extraCharges} onChange={e => setFormData({...formData, extraCharges: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                       <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-4">
-                        <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={20}/></div>
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-black uppercase text-blue-900">Add-on Logic</h4>
-                          <p className="text-[10px] text-blue-800/70 leading-relaxed font-medium">
-                            পাওয়ারফুল এড-অন সার্ভিসের জন্য আলাদা করে "Sub-Services" সেকশন ব্যবহার করুন। এখানে আপনি শুধু বেস প্রাইসিং এবং সার্ভিস স্ট্র্যাটেজি সেট করতে পারবেন।
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* SECTION 4: CHECKLISTS */}
-          <TabsContent value="checklists" className="mt-0 space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Included */}
-              <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
-                <div className="flex justify-between items-center border-b pb-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2"><CheckCircle2 size={16}/> Included Items</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('included')} className="rounded-xl bg-emerald-50 text-emerald-600 h-8 w-8"><Plus size={16}/></Button>
-                </div>
-                <div className="space-y-2">
-                  {formData.included?.map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
-                      <Input value={item} onChange={e => updateArrayItem('included', i, e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-bold" />
-                      <button onClick={() => removeArrayItem('included', i)} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Not Included */}
-              <Card className="border-none shadow-sm rounded-3xl bg-white p-8 space-y-6">
-                <div className="flex justify-between items-center border-b pb-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-rose-600 flex items-center gap-2"><XCircle size={16}/> Not Included</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('notIncluded')} className="rounded-xl bg-rose-50 text-rose-600 h-8 w-8"><Plus size={16}/></Button>
-                </div>
-                <div className="space-y-2">
-                  {formData.notIncluded?.map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
-                      <Input value={item} onChange={e => updateArrayItem('notIncluded', i, e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-bold" />
-                      <button onClick={() => removeArrayItem('notIncluded', i)} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Service Checklist */}
-              <Card className="border-none shadow-sm rounded-3xl bg-[#081621] text-white p-8 space-y-6">
-                <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2"><ListChecks size={16}/> Service Checklist</h3>
-                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('checklist')} className="rounded-xl bg-white/10 text-white h-8 w-8"><Plus size={16}/></Button>
-                </div>
-                <div className="space-y-2">
-                  {formData.checklist?.map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
-                      <Input value={item} onChange={e => updateArrayItem('checklist', i, e.target.value)} className="h-10 bg-white/10 border-none rounded-xl text-xs font-bold text-white placeholder:text-white/20" placeholder={`Step ${i+1}`} />
-                      <button onClick={() => removeArrayItem('checklist', i)} className="text-white/20 hover:text-red-400 transition-colors"><Trash2 size={14}/></button>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* SECTION 5: FEATURES & HIGHLIGHTS */}
-          <TabsContent value="features" className="mt-0 space-y-8">
-            <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden border border-gray-100">
-               <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2"><Zap size={20} className="text-primary"/> Highlight Matrix</CardTitle>
-                  <Button onClick={() => addArrayItem('features', { icon: 'Zap', title: 'Feature', desc: '' })} className="rounded-xl h-10 px-6 font-black uppercase text-[10px]">+ Add Highlight</Button>
-               </CardHeader>
-               <CardContent className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {formData.features?.map((f: any, i: number) => (
-                      <div key={i} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-4 relative group hover:bg-white hover:shadow-xl transition-all duration-500">
-                        <div className="flex gap-4">
-                          <div className="space-y-2 flex-1">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Icon Key</Label>
-                            <Input value={f.icon} onChange={e => updateArrayItem('features', i, { ...f, icon: e.target.value })} className="h-9 bg-white border-none rounded-lg text-[10px] font-black uppercase" />
-                          </div>
-                          <div className="space-y-2 flex-[2]">
-                            <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Title</Label>
-                            <Input value={f.title} onChange={e => updateArrayItem('features', i, { ...f, title: e.target.value })} className="h-9 bg-white border-none rounded-lg font-bold" />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase text-muted-foreground ml-1">Description</Label>
-                          <Input value={f.desc} onChange={e => updateArrayItem('features', i, { ...f, desc: e.target.value })} className="h-9 bg-white border-none rounded-lg text-xs" />
-                        </div>
-                        <button onClick={() => removeArrayItem('features', i)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors p-2"><X size={16}/></button>
+                {/* Gallery */}
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Gallery Feed</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {formData.galleryImages?.map((img: string, i: number) => (
+                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden border bg-gray-50 group">
+                        <Image src={img} alt="Gallery" fill className="object-cover" unoptimized />
+                        <button type="button" onClick={() => removeArrayItem('galleryImages', i)} className="absolute inset-0 bg-red-600/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Trash2 size={14}/>
+                        </button>
                       </div>
                     ))}
+                    <div className="flex items-center justify-center border-2 border-dashed rounded-xl aspect-square bg-gray-50/50 hover:bg-white transition-all">
+                      <ImageUploader initialUrl="" onUpload={url => addArrayItem('galleryImages', url)} label="" aspectRatio="aspect-square" className="border-none p-0" />
+                    </div>
                   </div>
-               </CardContent>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Video Overview</Label>
+                  <div className="relative">
+                    <Video size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="YouTube URL" className="h-10 pl-9 bg-gray-50 border-none rounded-xl text-[10px] font-mono" />
+                  </div>
+                </div>
+              </CardContent>
             </Card>
-          </TabsContent>
+          </aside>
 
-          {/* SECTION 6: REVIEWS */}
-          <TabsContent value="reviews" className="mt-0">
-             <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden">
-                <CardHeader className="bg-gray-50/50 p-8 border-b">
-                   <CardTitle className="text-lg font-black uppercase">Moderation Queue</CardTitle>
-                   <CardDescription>Approve or purge customer testimonials for this service</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                   <Table>
-                      <TableHeader className="bg-gray-100/50">
-                        <TableRow className="border-none">
-                          <TableHead className="pl-8 py-5">Customer</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead>Comment</TableHead>
-                          <TableHead className="text-right pr-8">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {reviews?.map(rev => (
-                          <TableRow key={rev.id} className="hover:bg-gray-50/50 transition-colors">
-                            <TableCell className="pl-8 py-5">
-                              <div className="font-bold text-sm uppercase">{rev.userName}</div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex text-amber-400"><Star size={12} fill="currentColor" className="mr-1" /> {rev.rating}</div>
-                            </TableCell>
-                            <TableCell className="max-w-[300px] truncate text-xs text-gray-600">"{rev.text}"</TableCell>
-                            <TableCell className="text-right pr-8">
-                               <div className="flex justify-end gap-2">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 bg-emerald-50 rounded-lg"><CheckCircle2 size={16}/></Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-600 bg-rose-50 rounded-lg" onClick={() => handleDeleteReview(rev.id)}><Trash2 size={16}/></Button>
-                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {(!reviews || reviews.length === 0) && (
-                          <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">Queue clear. No pending reviews.</TableCell></TableRow>
-                        )}
-                      </TableBody>
-                   </Table>
-                </CardContent>
-             </Card>
-          </TabsContent>
-
-        </div>
-      </Tabs>
-
-      {/* Global Status Footer */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-fit max-w-[90vw]">
-         <div className="bg-[#081621] text-white p-4 px-8 rounded-full shadow-2xl border border-white/10 flex items-center gap-10 animate-in slide-in-from-bottom-10 duration-700">
-            <div className="flex items-center gap-4 border-r border-white/10 pr-10">
-               <div className="flex flex-col">
-                  <span className="text-[8px] font-black uppercase text-primary tracking-widest">Public Visibility</span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Switch checked={formData.status === 'Active'} onCheckedChange={v => setFormData({...formData, status: v ? 'Active' : 'Inactive'})} />
-                    <span className="text-[10px] font-bold">{formData.status}</span>
+          {/* 📝 RIGHT COLUMN: FORM CONTENT (65-70%) */}
+          <main className="w-full lg:w-[65%] space-y-6">
+            
+            {/* SECTION 1: BASIC & PRICING */}
+            <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
+              <CardHeader className="bg-gray-50/50 p-6 border-b"><CardTitle className="text-xs font-black uppercase tracking-widest">Core Definitions & Pricing</CardTitle></CardHeader>
+              <CardContent className="p-6 md:p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Headline</Label>
+                    <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Master Deep Home Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
-               </div>
-               <div className="flex flex-col ml-4">
-                  <span className="text-[8px] font-black uppercase text-primary tracking-widest">Base Rate</span>
-                  <span className="text-xs font-black mt-0.5">৳{formData.basePrice || 0}</span>
-               </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary ml-1">Offer Price (৳)</Label>
+                    <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary text-lg shadow-inner" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Regular Price (৳)</Label>
+                    <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Model</Label>
+                    <Select value={formData.pricingType} onValueChange={v => setFormData({...formData, pricingType: v})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="fixed">Fixed Rate</SelectItem>
+                        <SelectItem value="quantity">Per Unit</SelectItem>
+                        <SelectItem value="sqft">Per Sqft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Qty Type</Label>
+                      <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 1 Job" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Unit</Label>
+                      <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="e.g. Hour" className="h-12 bg-gray-50 border-none rounded-xl" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Category (L1)</Label>
+                    <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v, subCategoryId: '', childCategoryId: ''})}>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl"><SelectValue placeholder="L1" /></SelectTrigger>
+                      <SelectContent>
+                        {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Sub Category (L2)</Label>
+                    <Select value={formData.subCategoryId} onValueChange={v => setFormData({...formData, subCategoryId: v, childCategoryId: ''})}>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl"><SelectValue placeholder="L2" /></SelectTrigger>
+                      <SelectContent>
+                        {availableSubCats.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground">Child Category (L3)</Label>
+                    <Select value={formData.childCategoryId} onValueChange={v => setFormData({...formData, childCategoryId: v})}>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl"><SelectValue placeholder="L3" /></SelectTrigger>
+                      <SelectContent>
+                        {availableChildCats.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Story (Description)</Label>
+                  <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[140px] bg-gray-50 border-none rounded-xl p-6 leading-relaxed" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 2: ADD-ONS ENGINE */}
+            <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
+              <CardHeader className="bg-gray-50/50 p-6 border-b flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-xs font-black uppercase tracking-widest">Operational Add-ons</CardTitle>
+                  <CardDescription className="text-[9px] font-bold uppercase mt-1">Link existing sub-services to this core logic</CardDescription>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">{formData.linkedSubServiceIds?.length || 0} LINKED</Badge>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8 space-y-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    value={addonSearch} 
+                    onChange={e => setAddonSearch(e.target.value)} 
+                    placeholder="Search sub-services inventory..." 
+                    className="h-11 pl-10 bg-gray-50 border-none rounded-xl text-xs"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                  {filteredAddons.map(s => {
+                    const isSelected = formData.linkedSubServiceIds?.includes(s.id);
+                    return (
+                      <div 
+                        key={s.id} 
+                        onClick={() => toggleLinkedAddon(s.id)}
+                        className={cn(
+                          "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                          isSelected ? "border-primary bg-primary/5" : "border-gray-50 bg-white hover:border-primary/20"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-lg", isSelected ? "bg-primary text-white" : "bg-gray-50 text-gray-400")}>
+                            <Zap size={14} fill={isSelected ? "currentColor" : "none"} />
+                          </div>
+                          <span className="text-[11px] font-bold uppercase text-gray-700">{s.name}</span>
+                        </div>
+                        {isSelected ? <CheckCircle2 size={16} className="text-primary" /> : <Plus size={16} className="text-gray-200 group-hover:text-primary" />}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {formData.linkedSubServiceIds?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-4 border-t">
+                    {formData.linkedSubServiceIds.map((sid: string) => (
+                      <Badge key={sid} variant="secondary" className="h-7 pl-3 pr-1 gap-2 rounded-lg border-none bg-gray-100 text-gray-700 font-bold text-[9px] uppercase">
+                        {subServicesPool?.find(s => s.id === sid)?.name}
+                        <button type="button" onClick={() => toggleLinkedAddon(sid)} className="p-0.5 hover:bg-gray-200 rounded-full text-red-500"><X size={10}/></button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SECTION 3: CHECKLISTS & FEATURES */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
+                <CardHeader className="bg-emerald-50/50 p-6 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-emerald-700 flex items-center gap-2"><Check size={14}/> Included</CardTitle>
+                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('included')} className="h-7 w-7 rounded-lg bg-white border text-emerald-600"><Plus size={14}/></Button>
+                </CardHeader>
+                <CardContent className="p-6 space-y-3">
+                  {formData.included?.map((item: string, i: number) => (
+                    <div key={i} className="flex gap-2 group">
+                      <Input value={item} onChange={e => updateArrayItem('included', i, e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-bold" />
+                      <button type="button" onClick={() => removeArrayItem('included', i)} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
+                <CardHeader className="bg-rose-50/50 p-6 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-rose-700 flex items-center gap-2"><X size={14}/> Not Included</CardTitle>
+                  <Button variant="ghost" size="icon" onClick={() => addArrayItem('notIncluded')} className="h-7 w-7 rounded-lg bg-white border text-rose-600"><Plus size={14}/></Button>
+                </CardHeader>
+                <CardContent className="p-6 space-y-3">
+                  {formData.notIncluded?.map((item: string, i: number) => (
+                    <div key={i} className="flex gap-2 group">
+                      <Input value={item} onChange={e => updateArrayItem('notIncluded', i, e.target.value)} className="h-10 bg-gray-50 border-none rounded-xl text-xs font-bold" />
+                      <button type="button" onClick={() => removeArrayItem('notIncluded', i)} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 size={14}/></button>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
-            <Button onClick={handleSave} disabled={isSaving} className="h-11 px-10 rounded-full font-black uppercase text-[10px] tracking-widest bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/40 gap-3">
-               {isSaving ? <Loader2 className="animate-spin h-3 w-3" /> : <Save size={16}/>} Sync & Publish
-            </Button>
-         </div>
+
+            <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
+              <CardHeader className="bg-indigo-50/50 p-6 border-b flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-2"><Zap size={14}/> Market Highlights</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => addArrayItem('features', { icon: 'Zap', title: 'Feature', desc: '' })} className="h-7 w-7 rounded-lg bg-white border text-indigo-600"><Plus size={14}/></Button>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.features?.map((f: any, i: number) => (
+                    <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3 relative group">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input value={f.icon} onChange={e => updateArrayItem('features', i, { ...f, icon: e.target.value })} placeholder="Icon Key" className="h-9 bg-white border-none rounded-lg text-[10px] font-black uppercase" />
+                        <Input value={f.title} onChange={e => updateArrayItem('features', i, { ...f, title: e.target.value })} placeholder="Title" className="h-9 bg-white border-none rounded-lg font-bold text-xs" />
+                      </div>
+                      <Input value={f.desc} onChange={e => updateArrayItem('features', i, { ...f, desc: e.target.value })} placeholder="Short description" className="h-9 bg-white border-none rounded-lg text-[10px]" />
+                      <button type="button" onClick={() => removeArrayItem('features', i)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12}/></button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 🏁 FOOTER ACTION SECTION */}
+            <section className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-6 border-r border-gray-100 pr-8">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase text-primary tracking-[0.2em]">Deployment State</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Switch checked={formData.status === 'Active'} onCheckedChange={v => setFormData({...formData, status: v ? 'Active' : 'Inactive'})} />
+                    <span className={cn("text-[10px] font-black uppercase", formData.status === 'Active' ? "text-emerald-600" : "text-gray-400")}>{formData.status}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 shadow-inner">
+                  <ShieldCheck size={18} className="text-indigo-600" />
+                  <span className="text-[10px] font-black uppercase text-indigo-700">Verification Protocol Active</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 w-full md:w-auto">
+                <Button variant="ghost" onClick={() => router.push('/admin/services')} className="flex-1 md:flex-none h-14 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+                <Button onClick={() => handleSave()} disabled={isSaving} className="flex-1 md:flex-none h-14 px-12 rounded-xl font-black bg-primary text-white shadow-2xl shadow-primary/30 uppercase tracking-tighter transition-all active:scale-95 text-xs">
+                  {isSaving ? <Loader2 className="animate-spin" /> : <><Check size={18} className="mr-2" /> Publish Intelligence</>}
+                </Button>
+              </div>
+            </section>
+
+          </main>
+        </div>
       </div>
     </div>
   );
