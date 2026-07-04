@@ -8,8 +8,7 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle, 
-  CardDescription 
+  CardTitle 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,13 +23,10 @@ import {
   Plus, 
   Trash2, 
   Zap, 
-  Star, 
   Image as ImageIcon, 
-  Layout,
   CheckCircle2,
   Clock,
   Users,
-  Settings2,
   Layers,
   X,
   ShieldCheck,
@@ -38,11 +34,9 @@ import {
   Wrench,
   Search,
   Check,
-  ChevronDown,
-  Upload,
   Globe,
   Camera,
-  Edit
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -179,87 +173,87 @@ export default function UnifiedServiceEditor() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* 🚀 COMPACT STICKY HEADER */}
-      <header className="sticky top-0 z-[100] bg-white border-b border-gray-200 h-14 flex items-center px-4 md:px-8 shadow-sm">
-        <div className="container mx-auto flex items-center justify-between gap-4">
+      {/* 🚀 PAGE HEADER (Natural Scrolling) */}
+      <div className="container mx-auto px-4 md:px-8 pt-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => router.push('/admin/services')} className="rounded-xl h-9 w-9 border border-gray-100">
               <ArrowLeft size={16} />
             </Button>
             <div>
-              <h1 className="text-sm font-black text-gray-900 uppercase tracking-tight leading-none">
+              <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">
                 {isNew ? 'Create New Service' : 'Edit Service'}
               </h1>
-              <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Operational Logic Terminal</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Management Terminal</p>
             </div>
           </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleSave('Inactive')} disabled={isSaving} className="h-10 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest border-gray-200">
+              Save Draft
+            </Button>
+            <Button onClick={() => handleSave()} disabled={isSaving} className="h-10 px-8 rounded-xl font-black bg-primary text-white shadow-lg shadow-primary/20 uppercase tracking-widest text-[10px] active:scale-95 transition-all">
+              {isSaving ? <Loader2 className="animate-spin" size={14} /> : <><ShieldCheck size={14} className="mr-2" /> Publish</>}
+            </Button>
+          </div>
         </div>
-      </header>
+      </div>
 
-      <div className="container mx-auto px-4 md:px-8 py-6">
+      <div className="container mx-auto px-4 md:px-8">
         <div className="flex flex-col lg:grid lg:grid-cols-10 gap-6 items-start">
           
           {/* 🖼️ LEFT COLUMN: COMPACT MEDIA PANEL (30%) */}
-          <aside className="w-full lg:col-span-3 lg:sticky lg:top-20 space-y-6">
+          <aside className="w-full lg:col-span-3 lg:sticky lg:top-6 space-y-6">
             <Card className="border-none shadow-sm rounded-[18px] bg-white overflow-hidden border border-gray-100">
-              <CardHeader className="bg-gray-50/50 p-5 border-b">
-                <CardTitle className="text-[11px] font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
+              <CardHeader className="bg-gray-50/50 p-4 border-b">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
                   <Camera size={14} className="text-primary" /> Media Assets
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5 space-y-8">
-                {/* Main Image */}
-                <ImageUploader 
-                  label="Featured Image" 
-                  hint="800 x 600 px" 
-                  initialUrl={formData.imageUrl} 
-                  onUpload={url => setFormData({...formData, imageUrl: url})} 
-                  aspectRatio="aspect-[4/3]" 
-                />
+              <CardContent className="p-4 space-y-6">
+                {/* Main Image - COMPACT VERSION */}
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-gray-400">Featured Image</Label>
+                  <ImageUploader 
+                    initialUrl={formData.imageUrl} 
+                    onUpload={url => setFormData({...formData, imageUrl: url})} 
+                    aspectRatio="aspect-[4/3]"
+                    className="shadow-inner rounded-xl overflow-hidden"
+                  />
+                </div>
 
                 <div className="h-px bg-gray-100" />
 
                 {/* 📸 COMPACT GALLERY MANAGER */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Gallery Feed</Label>
-                    <Badge variant="secondary" className="text-[8px] font-black uppercase bg-primary/5 text-primary border-none h-4 px-1.5">
-                      {formData.galleryImages?.length || 0} Images
-                    </Badge>
+                    <Label className="text-[9px] font-black uppercase text-gray-400">Gallery ({formData.galleryImages?.length || 0})</Label>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Add More Slot */}
-                    <div className="relative aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:bg-white hover:border-primary/50 transition-all flex flex-col items-center justify-center text-center cursor-pointer group overflow-hidden">
+                  <div className="grid grid-cols-4 gap-2">
+                    {/* Add More Slot - Small Circular or Square */}
+                    <div className="relative aspect-square rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-all overflow-hidden group">
                       <ImageUploader initialUrl="" onUpload={url => addArrayItem('galleryImages', url)} label="" aspectRatio="aspect-square" className="absolute inset-0 opacity-0 z-20 cursor-pointer" />
-                      <Plus size={18} className="text-gray-400 group-hover:text-primary transition-colors" />
-                      <span className="text-[8px] font-black uppercase text-gray-400 group-hover:text-primary mt-1">Add</span>
+                      <Plus size={16} className="text-gray-400 group-hover:text-primary" />
                     </div>
 
                     {formData.galleryImages?.map((img: string, i: number) => (
-                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 bg-white group shadow-xs">
-                        <Image src={img} alt="Gallery" fill className="object-cover" unoptimized />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                          <button type="button" onClick={() => removeArrayItem('galleryImages', i)} className="p-1.5 bg-white text-destructive rounded-lg shadow-sm hover:scale-110 transition-transform">
-                            <Trash2 size={12}/>
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-100 group">
+                        <Image src={img} alt="G" fill className="object-cover" unoptimized />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button type="button" onClick={() => removeArrayItem('galleryImages', i)} className="p-1 bg-white text-destructive rounded shadow-sm">
+                            <X size={10}/>
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {(!formData.galleryImages || formData.galleryImages.length === 0) && (
-                    <div className="p-4 bg-gray-50/50 rounded-xl border border-dashed border-gray-100 text-center">
-                       <p className="text-[9px] font-bold text-gray-300 uppercase italic">No gallery images yet.</p>
-                    </div>
-                  )}
                 </div>
 
-                <div className="space-y-2 pt-4 border-t border-gray-50">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Video Link</Label>
+                <div className="space-y-2 pt-2">
+                  <Label className="text-[9px] font-black uppercase text-gray-400">Video Promo</Label>
                   <div className="relative">
                     <Globe size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="YouTube URL" className="h-9 pl-9 bg-gray-50 border-none rounded-xl text-[10px] font-mono shadow-inner" />
+                    <Input value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} placeholder="URL" className="h-8 pl-8 bg-gray-50 border-none rounded-lg text-[9px] font-mono shadow-inner" />
                   </div>
                 </div>
               </CardContent>
@@ -267,65 +261,66 @@ export default function UnifiedServiceEditor() {
           </aside>
 
           {/* 📝 RIGHT COLUMN: FORM CONTENT (70%) */}
-          <main className="w-full lg:col-span-7 space-y-6">
+          <main className="w-full lg:col-span-7 space-y-6 pb-20">
             
-            {/* SECTION 1: BASIC INFO & TAXONOMY */}
+            {/* SECTION 1: IDENTITY & TAXONOMY */}
             <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
-              <CardHeader className="bg-gray-50/50 p-6 border-b">
-                <CardTitle className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
-                   <Package size={14} className="text-primary"/> Primary Identification & Rates
+              <CardHeader className="bg-gray-50/50 p-5 border-b">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                   <Package size={14} className="text-primary"/> Identity & Taxonomy
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 md:p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <CardContent className="p-5 md:p-6 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Title</Label>
-                    <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Master Deep Home Cleaning" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Service Title</Label>
+                    <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Master Deep Home Cleaning" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category (L1)</Label>
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Category (L1)</Label>
                     <Select value={formData.categoryId} onValueChange={v => setFormData({...formData, categoryId: v, subCategoryId: '', childCategoryId: ''})}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Primary Tier" /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs"><SelectValue placeholder="Primary" /></SelectTrigger>
                       <SelectContent className="rounded-xl">
                         {categories?.map(c => <SelectItem key={c.id} value={c.id} className="text-xs uppercase font-bold">{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sub Category (L2)</Label>
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Sub Category (L2)</Label>
                     <Select value={formData.subCategoryId} onValueChange={v => setFormData({...formData, subCategoryId: v, childCategoryId: ''})}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Secondary Tier" /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs"><SelectValue placeholder="Secondary" /></SelectTrigger>
                       <SelectContent className="rounded-xl">
                         {availableSubCats.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold">{s.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Sub-Child Category (L3)</Label>
-                    <Select value={formData.childCategoryId} onValueChange={v => setFormData({...formData, childCategoryId: v})}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue placeholder="Deepest Tier" /></SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {availableChildCats.map(c => <SelectItem key={c.id} value={c.id} className="text-xs uppercase font-bold">{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-emerald-600 ml-1">Offer Price (৳)</Label>
-                      <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-11 bg-emerald-50/50 border-none rounded-xl font-black text-emerald-700 shadow-inner" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Regular Price (৳)</Label>
-                      <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-black text-gray-400 shadow-inner" />
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Pricing Model</Label>
+                    <Label className="text-[9px] font-black uppercase text-emerald-600 ml-1">Offer Price</Label>
+                    <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-11 bg-emerald-50/50 border-none rounded-xl font-black text-emerald-700" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Reg. Price</Label>
+                    <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Team Size</Label>
+                    <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="2-3 Pros" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Duration</Label>
+                    <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="3 Hours" className="h-11 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Pricing Logic</Label>
                     <Select value={formData.pricingType} onValueChange={v => setFormData({...formData, pricingType: v})}>
-                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl">
                         <SelectItem value="fixed" className="text-xs uppercase font-bold">Fixed Rate</SelectItem>
                         <SelectItem value="quantity" className="text-xs uppercase font-bold">By Quantity</SelectItem>
@@ -334,49 +329,41 @@ export default function UnifiedServiceEditor() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duration Unit</Label>
-                    <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="e.g. 2 Hours" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Team Size</Label>
-                    <Input value={formData.teamSize} onChange={e => setFormData({...formData, teamSize: e.target.value})} placeholder="e.g. 2-3 Pros" className="h-11 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Visibility Status</Label>
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Status</Label>
                     <div className="flex items-center justify-between h-11 bg-gray-50 px-4 rounded-xl shadow-inner border border-gray-100">
-                       <span className={cn("text-[10px] font-black uppercase", formData.status === 'Active' ? "text-emerald-600" : "text-gray-400")}>{formData.status}</span>
-                       <Switch checked={formData.status === 'Active'} onCheckedChange={v => setFormData({...formData, status: v ? 'Active' : 'Inactive'})} />
+                       <span className={cn("text-[9px] font-black uppercase", formData.status === 'Active' ? "text-emerald-600" : "text-gray-400")}>{formData.status}</span>
+                       <Switch checked={formData.status === 'Active'} onCheckedChange={v => setFormData({...formData, status: v ? 'Active' : 'Inactive'})} className="scale-90" />
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-4 border-t border-gray-50">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
-                  <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[100px] bg-gray-50 border-none rounded-xl p-4 leading-relaxed shadow-inner" />
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Description</Label>
+                  <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[100px] bg-gray-50 border-none rounded-xl p-4 text-xs leading-relaxed" />
                 </div>
               </CardContent>
             </Card>
 
-            {/* SECTION 2: ADD-ONS SELECTOR */}
+            {/* SECTION 2: ADD-ONS (Compact Grid) */}
             <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
-              <CardHeader className="bg-gray-50/50 p-5 border-b flex flex-row items-center justify-between">
-                <CardTitle className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+              <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                    <Zap size={14} className="text-primary"/> Optional Add-ons
                 </CardTitle>
-                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase">{formData.linkedSubServiceIds?.length || 0} Linked</Badge>
+                <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black">{formData.linkedSubServiceIds?.length || 0} SELECTED</Badge>
               </CardHeader>
-              <CardContent className="p-6 md:p-8 space-y-4">
-                <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={14} />
+              <CardContent className="p-4 md:p-6 space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                   <Input 
                     value={addonSearch} 
                     onChange={e => setAddonSearch(e.target.value)} 
-                    placeholder="Search sub-services catalog..." 
-                    className="h-10 pl-9 bg-gray-50 border-none rounded-xl text-[11px] font-medium shadow-inner focus:bg-white"
+                    placeholder="Search sub-services..." 
+                    className="h-9 pl-9 bg-gray-50 border-none rounded-xl text-[10px] font-medium"
                   />
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {subServicesPool?.filter(s => s.name.toLowerCase().includes(addonSearch.toLowerCase())).map(s => {
                     const isSelected = formData.linkedSubServiceIds?.includes(s.id);
                     return (
@@ -385,11 +372,11 @@ export default function UnifiedServiceEditor() {
                         type="button"
                         onClick={() => toggleLinkedAddon(s.id)}
                         className={cn(
-                          "px-3 py-1.5 rounded-lg border-2 text-[10px] font-black uppercase transition-all flex items-center gap-2",
-                          isSelected ? "bg-primary border-primary text-white shadow-md" : "bg-white border-gray-100 text-gray-400 hover:border-primary/30"
+                          "px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase transition-all flex items-center gap-1.5",
+                          isSelected ? "bg-primary border-primary text-white" : "bg-white border-gray-100 text-gray-400 hover:border-primary/20"
                         )}
                       >
-                        {isSelected ? <CheckCircle2 size={12}/> : <Plus size={12}/>}
+                        {isSelected ? <Check size={10} strokeWidth={4}/> : <Plus size={10}/>}
                         {s.name}
                       </button>
                     );
@@ -398,50 +385,50 @@ export default function UnifiedServiceEditor() {
               </CardContent>
             </Card>
 
-            {/* SECTION 3: INCLUDED/EXCLUDED */}
+            {/* SECTION 3: INCLUDED/CHECKLIST (Two Column Grid) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
-                <CardHeader className="bg-emerald-50/30 p-5 border-b flex flex-row items-center justify-between">
-                  <CardTitle className="text-[10px] font-black uppercase text-emerald-700 tracking-widest flex items-center gap-2"><Check size={14}/> Included</CardTitle>
-                  <button type="button" onClick={() => addArrayItem('included')} className="text-emerald-600 hover:scale-110 transition-transform"><Plus size={16}/></button>
+                <CardHeader className="bg-emerald-50/30 p-4 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase text-emerald-700">Included</CardTitle>
+                  <button type="button" onClick={() => addArrayItem('included')} className="text-emerald-600"><Plus size={14}/></button>
                 </CardHeader>
-                <CardContent className="p-5 space-y-2">
+                <CardContent className="p-4 space-y-2">
                   {formData.included?.map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2">
-                      <Input value={item} onChange={e => updateArrayItem('included', i, e.target.value)} className="h-9 bg-gray-50 border-none rounded-lg text-xs font-bold" />
-                      <button type="button" onClick={() => removeArrayItem('included', i)} className="text-gray-300 hover:text-rose-500"><X size={14}/></button>
+                    <div key={i} className="flex gap-1.5">
+                      <Input value={item} onChange={e => updateArrayItem('included', i, e.target.value)} className="h-8 bg-gray-50 border-none rounded-lg text-[10px] font-bold" />
+                      <button type="button" onClick={() => removeArrayItem('included', i)} className="text-gray-300 hover:text-rose-500"><X size={12}/></button>
                     </div>
                   ))}
                 </CardContent>
               </Card>
 
               <Card className="border-none shadow-sm rounded-[18px] bg-white border border-gray-100">
-                <CardHeader className="bg-rose-50/30 p-5 border-b flex flex-row items-center justify-between">
-                  <CardTitle className="text-[10px] font-black uppercase text-rose-700 tracking-widest flex items-center gap-2"><X size={14}/> Excluded</CardTitle>
-                  <button type="button" onClick={() => addArrayItem('notIncluded')} className="text-rose-600 hover:scale-110 transition-transform"><Plus size={16}/></button>
+                <CardHeader className="bg-blue-50/30 p-4 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase text-blue-700">Work Checklist</CardTitle>
+                  <button type="button" onClick={() => addArrayItem('checklist')} className="text-blue-600"><Plus size={14}/></button>
                 </CardHeader>
-                <CardContent className="p-5 space-y-2">
-                  {formData.notIncluded?.map((item: string, i: number) => (
-                    <div key={i} className="flex gap-2">
-                      <Input value={item} onChange={e => updateArrayItem('notIncluded', i, e.target.value)} className="h-9 bg-gray-50 border-none rounded-lg text-xs font-bold" />
-                      <button type="button" onClick={() => removeArrayItem('notIncluded', i)} className="text-gray-300 hover:text-rose-500"><X size={14}/></button>
+                <CardContent className="p-4 space-y-2">
+                  {formData.checklist?.map((item: string, i: number) => (
+                    <div key={i} className="flex gap-1.5">
+                      <Input value={item} onChange={e => updateArrayItem('checklist', i, e.target.value)} className="h-8 bg-gray-50 border-none rounded-lg text-[10px] font-bold" />
+                      <button type="button" onClick={() => removeArrayItem('checklist', i)} className="text-gray-300 hover:text-rose-500"><X size={12}/></button>
                     </div>
                   ))}
                 </CardContent>
               </Card>
             </div>
 
-            {/* SECTION 4: UNIFIED FOOTER ACTION BAR */}
-            <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-6">
-              <Button variant="ghost" onClick={() => router.push('/admin/services')} className="w-full md:w-auto h-12 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest text-gray-400">
-                ← Discard
+            {/* FINAL ACTION BAR */}
+            <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              <Button variant="ghost" onClick={() => router.push('/admin/services')} className="w-full md:w-auto h-11 px-8 rounded-xl font-bold uppercase text-[10px] tracking-widest text-gray-400">
+                ← Discard Changes
               </Button>
               <div className="flex gap-3 w-full md:w-auto">
-                <Button variant="outline" onClick={() => handleSave('Inactive')} disabled={isSaving} className="flex-1 md:flex-none h-12 px-8 rounded-xl font-black uppercase text-[10px] tracking-widest border-gray-200">
-                  Save Draft
+                <Button variant="outline" onClick={() => handleSave('Inactive')} disabled={isSaving} className="flex-1 md:flex-none h-11 px-8 rounded-xl font-black uppercase text-[10px] tracking-widest border-gray-200">
+                  <RefreshCw size={14} className="mr-2"/> Draft
                 </Button>
-                <Button onClick={() => handleSave()} disabled={isSaving} className="flex-1 md:flex-none h-12 px-12 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-widest text-[10px] active:scale-95 transition-all">
-                  {isSaving ? <Loader2 className="animate-spin" /> : <><ShieldCheck size={16} className="mr-2" /> Publish Service</>}
+                <Button onClick={() => handleSave()} disabled={isSaving} className="flex-1 md:flex-none h-11 px-12 rounded-xl font-black bg-primary text-white shadow-xl shadow-primary/20 uppercase tracking-widest text-[10px] active:scale-95 transition-all">
+                  {isSaving ? <Loader2 className="animate-spin" size={14} /> : <><ShieldCheck size={14} className="mr-2" /> Publish Service</>}
                 </Button>
               </div>
             </div>
@@ -452,4 +439,3 @@ export default function UnifiedServiceEditor() {
     </div>
   );
 }
-
