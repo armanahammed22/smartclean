@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -31,7 +30,8 @@ import {
   Grid,
   Settings2,
   CheckCircle2,
-  Maximize
+  Maximize,
+  Check
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -379,4 +379,3 @@ export default function ServiceAttributesPage() {
     </div>
   );
 }
-
