@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -20,10 +19,11 @@ import {
   Users, 
   Star, 
   GripVertical,
-  CheckCircle2,
+  CheckCircle2, 
   X,
   PlusCircle,
   Smartphone,
+  MessageCircle,
   Facebook,
   Linkedin,
   Instagram,
@@ -212,7 +212,7 @@ export default function TeamManagementPage() {
                 <p className="text-white/40 font-bold uppercase text-[9px]">Public Identity Management</p>
               </div>
             </div>
-            <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={24}/></button>
+            <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"><X size={24}/></button>
           </header>
 
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
