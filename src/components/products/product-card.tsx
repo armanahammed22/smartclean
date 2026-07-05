@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -181,7 +182,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
               {product.badgeText && (
                 <Badge className={cn(
                   "border-none text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-sm",
-                  product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-primary text-white"
+                  product.badgeText === 'HOT' ? "bg-orange-50 text-white animate-pulse" : "bg-primary text-white"
                 )}>
                   {product.badgeText}
                 </Badge>
@@ -190,111 +191,111 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           </Link>
         </div>
 
-        {/* 🏷️ TITLE AREA */}
-        <div 
-          className="w-full" 
-          style={{ 
-            textAlign: style.textAlign as any,
-            paddingTop: `${style.titlePadding.top}px`,
-            paddingBottom: `${style.titlePadding.bottom}px`,
-            paddingLeft: `${style.titlePadding.left}px`,
-            paddingRight: `${style.titlePadding.right}px`,
-            marginTop: `${style.titleMargin.top}px`,
-            marginBottom: `${style.titleMargin.bottom}px`,
-            marginLeft: `${style.titleMargin.left}px`,
-            marginRight: `${style.titleMargin.right}px`,
-          }}
-        >
-          <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
-            <h3 
-              className={cn("font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors", style.titleSize)}
-              style={{ color: style.titleColor }}
-            >
-              {displayName}
-            </h3>
-          </Link>
-        </div>
-        
-        {/* 💰 PRICE AREA */}
-        <div 
-          className={cn("w-full flex flex-wrap items-baseline gap-1.5", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
-          style={{ 
-            paddingTop: `${style.pricePadding.top}px`,
-            paddingBottom: `${style.pricePadding.bottom}px`,
-            paddingLeft: `${style.pricePadding.left}px`,
-            paddingRight: `${style.pricePadding.right}px`,
-            marginTop: `${style.priceMargin.top}px`,
-            marginBottom: `${style.priceMargin.bottom}px`,
-            marginLeft: `${style.priceMargin.left}px`,
-            marginRight: `${style.priceMargin.right}px`,
-          }}
-        >
-          <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
-            ৳{displayPrice?.toLocaleString()}
-          </p>
-          {regularPrice && regularPrice > displayPrice && (
-            <span className="text-[9px] text-gray-400 line-through font-medium">
-              ৳{regularPrice.toLocaleString()}
-            </span>
-          )}
-        </div>
-        
-        {/* ⭐ RATING & COUNT AREA */}
-        <div 
-          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-1 mt-auto" 
-          style={{ 
-            color: style.metaColor,
-            paddingTop: `${style.metaPadding.top}px`,
-            paddingBottom: `${style.metaPadding.bottom}px`,
-            paddingLeft: `${style.metaPadding.left}px`,
-            paddingRight: `${style.metaPadding.right}px`,
-            marginTop: `${style.metaMargin.top}px`,
-            marginBottom: `${style.metaMargin.bottom}px`,
-            marginLeft: `${style.metaMargin.left}px`,
-            marginRight: `${style.metaMargin.right}px`,
-          }}
-        >
-          <div className="flex items-center gap-0.5 text-amber-500">
-            <Star size={10} fill="currentColor" />
-            <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
+        {/* 🏷️ CONTENT AREA */}
+        <div className="flex-1 flex flex-col w-full">
+          {/* 🏷️ TITLE AREA - FIXED HEIGHT FOR ALIGNMENT */}
+          <div 
+            className="w-full min-h-[2.5rem] flex flex-col justify-start" 
+            style={{ 
+              textAlign: style.textAlign as any,
+              paddingTop: `${style.titlePadding.top}px`,
+              paddingBottom: `${style.titlePadding.bottom}px`,
+              paddingLeft: `${style.titlePadding.left}px`,
+              paddingRight: `${style.titlePadding.right}px`,
+              marginTop: `${style.titleMargin.top}px`,
+              marginBottom: `${style.titleMargin.bottom}px`,
+              marginLeft: `${style.titleMargin.left}px`,
+              marginRight: `${style.titleMargin.right}px`,
+            }}
+          >
+            <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
+              <h3 
+                className={cn("font-bold line-clamp-2 leading-tight uppercase tracking-tight transition-colors", style.titleSize)}
+                style={{ color: style.titleColor }}
+              >
+                {displayName}
+              </h3>
+            </Link>
           </div>
-          <span className={cn("uppercase font-black", style.metaSize)}>{(isService ? bookingCount : soldCount).toLocaleString()} {style.metaLabelCount}</span>
-        </div>
+          
+          {/* 💰 PRICE AREA */}
+          <div 
+            className={cn("w-full flex flex-wrap items-baseline gap-1.5", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
+            style={{ 
+              paddingTop: `${style.pricePadding.top}px`,
+              paddingBottom: `${style.pricePadding.bottom}px`,
+              paddingLeft: `${style.pricePadding.left}px`,
+              paddingRight: `${style.pricePadding.right}px`,
+              marginTop: `${style.priceMargin.top}px`,
+              marginBottom: `${style.priceMargin.bottom}px`,
+              marginLeft: `${style.priceMargin.left}px`,
+              marginRight: `${style.priceMargin.right}px`,
+            }}
+          >
+            <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
+              ৳{displayPrice?.toLocaleString()}
+            </p>
+            {regularPrice && regularPrice > displayPrice && (
+              <span className="text-[9px] text-gray-400 line-through font-medium">
+                ৳{regularPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+          
+          {/* ⭐ RATING & COUNT AREA */}
+          <div 
+            className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-1 mt-2" 
+            style={{ 
+              color: style.metaColor,
+              paddingTop: `${style.metaPadding.top}px`,
+              paddingBottom: `${style.metaPadding.bottom}px`,
+              paddingLeft: `${style.metaPadding.left}px`,
+              paddingRight: `${style.metaPadding.right}px`,
+              marginTop: `${style.metaMargin.top}px`,
+              marginBottom: `${style.metaMargin.bottom}px`,
+              marginLeft: `${style.metaMargin.left}px`,
+              marginRight: `${style.metaMargin.right}px`,
+            }}
+          >
+            <div className="flex items-center gap-0.5 text-amber-500">
+              <Star size={10} fill="currentColor" />
+              <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
+            </div>
+            <span className={cn("uppercase font-black", style.metaSize)}>{(isService ? bookingCount : soldCount).toLocaleString()} {style.metaLabelCount}</span>
+          </div>
 
-        {/* 🛒 BUTTON AREA */}
-        <div 
-          className={cn(
-            "w-full flex items-center gap-2",
-            style.textAlign === 'center' ? 'justify-center' : 'justify-start'
-          )}
-          style={{ 
-            marginTop: `${style.btnMargin.top}px`,
-            marginBottom: `${style.btnMargin.bottom}px`,
-            marginLeft: `${style.btnMargin.left}px`,
-            marginRight: `${style.btnMargin.right}px`,
-          }}
-        >
-          <button 
-            onClick={handleOrderNow}
+          {/* 🛒 BUTTON AREA - PUSH TO BOTTOM */}
+          <div 
             className={cn(
-              "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-md", 
-              style.btnSize,
-              isFullWidthBtn && "flex-1"
+              "w-full flex items-center gap-2 mt-auto",
+              style.textAlign === 'center' ? 'justify-center' : 'justify-start'
             )}
             style={{ 
-              backgroundColor: style.btnBg, 
-              color: style.btnColor,
-              width: isFullWidthBtn ? 'auto' : style.btnWidth,
-              height: `${style.btnHeight}px`,
+              marginTop: 'auto',
               paddingTop: `${style.btnPadding.top}px`,
               paddingBottom: `${style.btnPadding.bottom}px`,
               paddingLeft: `${style.btnPadding.left}px`,
               paddingRight: `${style.btnPadding.right}px`,
             }}
           >
-            <Zap className="mr-1 size-3" fill="currentColor" />
-            {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
-          </button>
+            <button 
+              onClick={handleOrderNow}
+              className={cn(
+                "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-md", 
+                style.btnSize,
+                isFullWidthBtn && "flex-1"
+              )}
+              style={{ 
+                backgroundColor: style.btnBg, 
+                color: style.btnColor,
+                width: isFullWidthBtn ? 'auto' : style.btnWidth,
+                height: `${style.btnHeight}px`
+              }}
+            >
+              <Zap className="mr-1 size-3" fill="currentColor" />
+              {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
+            </button>
+          </div>
         </div>
       </div>
     </div>
