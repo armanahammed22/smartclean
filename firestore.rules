@@ -55,6 +55,7 @@ service cloud.firestore {
     match /invoices/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /coupons/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /delivery_options/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /team_members/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /cleaning_projects/{document=**} { allow read, write: if isAdmin(); }
     match /work_entries/{document=**} { allow read, write: if isAdmin(); }
 
