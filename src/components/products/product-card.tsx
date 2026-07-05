@@ -39,7 +39,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Styling Logic from Admin Config - Optimized for Compact View
+  // Styling Logic from Admin Config - Optimized for Maximum Compactness
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadiusTL: customStyle?.cardRadiusTL !== undefined ? customStyle.cardRadiusTL : 16,
@@ -47,7 +47,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     cardRadiusBL: customStyle?.cardRadiusBL !== undefined ? customStyle.cardRadiusBL : 16,
     cardRadiusBR: customStyle?.cardRadiusBR !== undefined ? customStyle.cardRadiusBR : 16,
     cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 10,
-    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 8,
+    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 4, // Reduced from 8 to 4
     
     imgHeight: customStyle?.imgHeight || 150,
     imgRadius: customStyle?.imgRadius !== undefined ? customStyle.imgRadius : 12,
@@ -58,8 +58,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     titleSize: customStyle?.titleSize || 'text-[11px] md:text-xs',
     titleColor: customStyle?.titleColor || '#1f2937',
     titlePadding: {
-      top: customStyle?.titlePaddingTop ?? 2,
-      bottom: customStyle?.titlePaddingBottom ?? 2,
+      top: customStyle?.titlePaddingTop ?? 0, // Reduced from 2 to 0
+      bottom: customStyle?.titlePaddingBottom ?? 1, // Reduced from 2 to 1
       left: customStyle?.titlePaddingLeft ?? 0,
       right: customStyle?.titlePaddingRight ?? 0
     },
@@ -73,8 +73,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     priceSize: customStyle?.priceSize || 'text-sm md:text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
     pricePadding: {
-      top: customStyle?.pricePaddingTop ?? 2,
-      bottom: customStyle?.pricePaddingBottom ?? 2,
+      top: customStyle?.pricePaddingTop ?? 0, // Reduced from 2 to 0
+      bottom: customStyle?.pricePaddingBottom ?? 1, // Reduced from 2 to 1
       left: customStyle?.pricePaddingLeft ?? 0,
       right: customStyle?.pricePaddingRight ?? 0
     },
@@ -88,8 +88,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
     metaPadding: {
-      top: customStyle?.metaPaddingTop ?? 2,
-      bottom: customStyle?.metaPaddingBottom ?? 2,
+      top: customStyle?.metaPaddingTop ?? 0, // Reduced from 2 to 0
+      bottom: customStyle?.metaPaddingBottom ?? 4, // Keep some gap before button
       left: customStyle?.metaPaddingLeft ?? 0,
       right: customStyle?.metaPaddingRight ?? 0
     },
@@ -106,7 +106,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
     btnWidth: customStyle?.btnWidth || '100%',
-    btnHeight: customStyle?.btnHeight || '42',
+    btnHeight: customStyle?.btnHeight || '40', // Reduced from 42 to 40
     btnPadding: {
       top: customStyle?.btnPaddingTop ?? 0,
       bottom: customStyle?.btnPaddingBottom ?? 0,
@@ -114,7 +114,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       right: customStyle?.btnPaddingRight ?? 12
     },
     btnMargin: {
-      top: customStyle?.btnMarginTop ?? 2,
+      top: customStyle?.btnMarginTop ?? 1, // Reduced from 2 to 1
       bottom: customStyle?.btnMarginBottom ?? 0,
       left: customStyle?.btnMarginLeft ?? 0,
       right: customStyle?.btnMarginRight ?? 0
@@ -126,12 +126,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     e.stopPropagation();
     addToCart(product as any, 1, false);
     setCheckoutOpen(true);
-  };
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart(product as any, 1);
   };
 
   if (!mounted) return null;
@@ -245,7 +239,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         
         {/* ⭐ RATING & COUNT AREA */}
         <div 
-          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2 mt-auto" 
+          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-1 mt-auto" 
           style={{ 
             color: style.metaColor,
             paddingTop: `${style.metaPadding.top}px`,
