@@ -133,9 +133,9 @@ export default function SmartCleanHomePage() {
     if (c === '2') return 'grid-cols-2';
     if (c === '3') return 'grid-cols-2 md:grid-cols-3';
     if (c === '4') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
-    if (c === '5') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
-    if (c === '6') return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6';
-    return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5';
+    if (c === '5') return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6';
+    if (c === '6') return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6';
+    return 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6';
   };
 
   const renderSection = (section: any) => {
@@ -232,13 +232,13 @@ export default function SmartCleanHomePage() {
         if (!filteredProducts.length) return null;
 
         return (
-          <section key={section.id} className="px-4 py-12">
+          <section key={section.id} className="px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
-              <div className="flex items-center justify-between mb-10 px-2">
-                <h2 className={cn("font-black uppercase tracking-tighter text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
-                <Link href="/products" className="text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">VIEW ALL <ChevronRight size={14}/></Link>
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h2 className={cn("font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+                <Link href="/products" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">VIEW ALL <ChevronRight size={14}/></Link>
               </div>
-              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
+              <div className={cn("grid gap-4 md:gap-4", getGridCols(config.gridColsDesktop))}>
                 {filteredProducts.map(p => <ProductCard key={p.id} product={p as any} customStyle={cardStyles?.productCard} />)}
               </div>
             </div>
@@ -257,10 +257,10 @@ export default function SmartCleanHomePage() {
         if (!filteredServices.length) return null;
 
         return (
-          <section key={section.id} className="px-4 py-12">
+          <section key={section.id} className="px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
-              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
+              <h2 className={cn("font-black uppercase tracking-tighter mb-8 text-[#081621] text-2xl md:text-4xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+              <div className={cn("grid gap-4 md:gap-4", getGridCols(config.gridColsDesktop))}>
                 {filteredServices.map(s => <div key={s.id}><ProductCard product={{...s, type: 'service'} as any} customStyle={cardStyles?.serviceCard} /></div>)}
               </div>
             </div>
@@ -277,10 +277,10 @@ export default function SmartCleanHomePage() {
         if (!filteredSubs.length) return null;
 
         return (
-          <section key={section.id} className="px-4 py-12">
+          <section key={section.id} className="px-4 py-8 md:py-12">
             <div className="container mx-auto max-w-7xl">
-              <h2 className={cn("font-black uppercase tracking-tighter mb-10 text-[#081621] text-3xl md:text-5xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
-              <div className={cn("grid gap-4 md:gap-6", getGridCols(config.gridColsDesktop))}>
+              <h2 className={cn("font-black uppercase tracking-tighter mb-8 text-[#081621] text-2xl md:text-4xl")} style={{ textAlign: config.titleAlign || 'left' }}>{section.title}</h2>
+              <div className={cn("grid gap-4 md:gap-4", getGridCols(config.gridColsDesktop))}>
                 {filteredSubs.map(s => (
                   <div key={s.id}>
                     <ProductCard 

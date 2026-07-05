@@ -39,27 +39,27 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   const rating = product.rating || 4.8;
   const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
 
-  // Styling Logic from Admin Config
+  // Styling Logic from Admin Config - Optimized for Compact View
   const style = {
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadiusTL: customStyle?.cardRadiusTL !== undefined ? customStyle.cardRadiusTL : 16,
     cardRadiusTR: customStyle?.cardRadiusTR !== undefined ? customStyle.cardRadiusTR : 16,
     cardRadiusBL: customStyle?.cardRadiusBL !== undefined ? customStyle.cardRadiusBL : 16,
     cardRadiusBR: customStyle?.cardRadiusBR !== undefined ? customStyle.cardRadiusBR : 16,
-    cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 12,
-    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 12,
+    cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 10,
+    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 8,
     
-    imgHeight: customStyle?.imgHeight || 180,
+    imgHeight: customStyle?.imgHeight || 150,
     imgRadius: customStyle?.imgRadius !== undefined ? customStyle.imgRadius : 12,
     imgPadding: customStyle?.imgPadding !== undefined ? customStyle.imgPadding : 0,
     
     textAlign: customStyle?.textAlign || 'left',
     
-    titleSize: customStyle?.titleSize || 'text-xs',
+    titleSize: customStyle?.titleSize || 'text-[11px] md:text-xs',
     titleColor: customStyle?.titleColor || '#1f2937',
     titlePadding: {
-      top: customStyle?.titlePaddingTop ?? 4,
-      bottom: customStyle?.titlePaddingBottom ?? 4,
+      top: customStyle?.titlePaddingTop ?? 2,
+      bottom: customStyle?.titlePaddingBottom ?? 2,
       left: customStyle?.titlePaddingLeft ?? 0,
       right: customStyle?.titlePaddingRight ?? 0
     },
@@ -70,11 +70,11 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       right: customStyle?.titleMarginRight ?? 0
     },
     
-    priceSize: customStyle?.priceSize || 'text-base',
+    priceSize: customStyle?.priceSize || 'text-sm md:text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
     pricePadding: {
-      top: customStyle?.pricePaddingTop ?? 4,
-      bottom: customStyle?.pricePaddingBottom ?? 4,
+      top: customStyle?.pricePaddingTop ?? 2,
+      bottom: customStyle?.pricePaddingBottom ?? 2,
       left: customStyle?.pricePaddingLeft ?? 0,
       right: customStyle?.pricePaddingRight ?? 0
     },
@@ -88,8 +88,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
     metaPadding: {
-      top: customStyle?.metaPaddingTop ?? 4,
-      bottom: customStyle?.metaPaddingBottom ?? 4,
+      top: customStyle?.metaPaddingTop ?? 2,
+      bottom: customStyle?.metaPaddingBottom ?? 2,
       left: customStyle?.metaPaddingLeft ?? 0,
       right: customStyle?.metaPaddingRight ?? 0
     },
@@ -99,23 +99,23 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       left: customStyle?.metaMarginLeft ?? 0,
       right: customStyle?.metaMarginRight ?? 0
     },
-    metaLabelRating: customStyle?.metaLabelRating || 'Rating',
+    metaLabelRating: customStyle?.metaLabelRating || '',
     metaLabelCount: customStyle?.metaLabelCount || (isService ? 'Booked' : 'Sold'),
     
     btnBg: customStyle?.primaryBtnBg || '#1E5F7A',
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
     btnWidth: customStyle?.btnWidth || '100%',
-    btnHeight: customStyle?.btnHeight || '40',
+    btnHeight: customStyle?.btnHeight || '42',
     btnPadding: {
-      top: customStyle?.btnPaddingTop ?? 8,
-      bottom: customStyle?.btnPaddingBottom ?? 8,
+      top: customStyle?.btnPaddingTop ?? 0,
+      bottom: customStyle?.btnPaddingBottom ?? 0,
       left: customStyle?.btnPaddingLeft ?? 12,
       right: customStyle?.btnPaddingRight ?? 12
     },
     btnMargin: {
-      top: customStyle?.btnMarginTop ?? 4,
-      bottom: customStyle?.btnMarginBottom ?? 4,
+      top: customStyle?.btnMarginTop ?? 2,
+      bottom: customStyle?.btnMarginBottom ?? 0,
       left: customStyle?.btnMarginLeft ?? 0,
       right: customStyle?.btnMarginRight ?? 0
     }
@@ -141,7 +141,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
   return (
     <div className="block h-full group active:scale-[0.98] transition-all">
       <div 
-        className="flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+        className="flex flex-col h-full border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
         style={{ 
           backgroundColor: style.cardBg, 
           borderTopLeftRadius: `${style.cardRadiusTL}px`, 
@@ -167,25 +167,25 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
                 src={product.imageUrl}
                 alt={displayName}
                 fill
-                className="object-contain transition-transform duration-500 group-hover:scale-110"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
                 unoptimized
               />
             ) : (
               <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200">
-                <Package size={32} />
+                <Package size={24} />
               </div>
             )}
             
-            <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+            <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10">
               {discountPercent && (
-                <Badge className="bg-red-600 text-white border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-lg">
+                <Badge className="bg-red-600 text-white border-none text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-sm">
                   {discountPercent}% OFF
                 </Badge>
               )}
               {product.badgeText && (
                 <Badge className={cn(
-                  "border-none text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-lg",
-                  product.badgeText === 'HOT' ? "bg-orange-50 text-white animate-pulse" : "bg-amber-50 text-white"
+                  "border-none text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase shadow-sm",
+                  product.badgeText === 'HOT' ? "bg-orange-500 text-white animate-pulse" : "bg-primary text-white"
                 )}>
                   {product.badgeText}
                 </Badge>
@@ -221,7 +221,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         
         {/* 💰 PRICE AREA */}
         <div 
-          className={cn("w-full flex flex-wrap items-baseline gap-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
+          className={cn("w-full flex flex-wrap items-baseline gap-1.5", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
           style={{ 
             paddingTop: `${style.pricePadding.top}px`,
             paddingBottom: `${style.pricePadding.bottom}px`,
@@ -237,7 +237,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             ৳{displayPrice?.toLocaleString()}
           </p>
           {regularPrice && regularPrice > displayPrice && (
-            <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">
+            <span className="text-[9px] text-gray-400 line-through font-medium">
               ৳{regularPrice.toLocaleString()}
             </span>
           )}
@@ -245,10 +245,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         
         {/* ⭐ RATING & COUNT AREA */}
         <div 
-          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" 
+          className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2 mt-auto" 
           style={{ 
             color: style.metaColor,
-            paddingTop: `${style.metaPadding.top + 2}px`,
+            paddingTop: `${style.metaPadding.top}px`,
             paddingBottom: `${style.metaPadding.bottom}px`,
             paddingLeft: `${style.metaPadding.left}px`,
             paddingRight: `${style.metaPadding.right}px`,
@@ -258,8 +258,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             marginRight: `${style.metaMargin.right}px`,
           }}
         >
-          <div className="flex items-center gap-1 text-amber-500">
-            <Star size={12} fill="currentColor" />
+          <div className="flex items-center gap-0.5 text-amber-500">
+            <Star size={10} fill="currentColor" />
             <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
           </div>
           <span className={cn("uppercase font-black", style.metaSize)}>{soldCount} {style.metaLabelCount}</span>
@@ -268,7 +268,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
         {/* 🛒 BUTTON AREA */}
         <div 
           className={cn(
-            "w-full flex items-center gap-2 mt-auto",
+            "w-full flex items-center gap-2",
             style.textAlign === 'center' ? 'justify-center' : 'justify-start'
           )}
           style={{ 
@@ -278,63 +278,27 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             marginRight: `${style.btnMargin.right}px`,
           }}
         >
-          {customStyle?.primaryBtnEnabled !== false && (
-            <button 
-              onClick={handleOrderNow}
-              className={cn(
-                "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-lg", 
-                style.btnSize,
-                isFullWidthBtn && "flex-1"
-              )}
-              style={{ 
-                backgroundColor: style.btnBg, 
-                color: style.btnColor,
-                width: isFullWidthBtn ? 'auto' : style.btnWidth,
-                height: `${style.btnHeight}px`,
-                paddingTop: `${style.btnPadding.top}px`,
-                paddingBottom: `${style.btnPadding.bottom}px`,
-                paddingLeft: `${style.btnPadding.left}px`,
-                paddingRight: `${style.btnPadding.right}px`,
-              }}
-            >
-              <Zap className="mr-1.5 size-3" fill="currentColor" />
-              {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
-            </button>
-          )}
-
-          {customStyle?.secondaryBtnEnabled === true && (
-            <button 
-              onClick={isService ? undefined : handleAddToCart}
-              className={cn(
-                "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-2", 
-                style.btnSize,
-                isFullWidthBtn && "flex-1"
-              )}
-              style={{ 
-                backgroundColor: '#f3f4f6', 
-                color: '#1f2937',
-                borderColor: 'rgba(0,0,0,0.05)',
-                width: isFullWidthBtn ? 'auto' : style.btnWidth,
-                height: `${style.btnHeight}px`,
-                paddingTop: `${style.btnPadding.top}px`,
-                paddingBottom: `${style.btnPadding.bottom}px`,
-                paddingLeft: `${style.btnPadding.left}px`,
-                paddingRight: `${style.btnPadding.right}px`,
-              }}
-            >
-              {isService ? (
-                <Link href={`/service/${product.slug || product.id}`} className="flex items-center justify-center w-full h-full">
-                  <Search className="mr-1.5 size-3" />
-                  {customStyle?.secondaryBtnText || 'View'}
-                </Link>
-              ) : (
-                <>
-                  <ShoppingCart className="mr-1.5 size-3" />
-                  {customStyle?.secondaryBtnText || 'Cart'}
-                </>
-              )}
-            </button>
-          )}
+          <button 
+            onClick={handleOrderNow}
+            className={cn(
+              "inline-flex items-center justify-center font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 border-none shadow-md", 
+              style.btnSize,
+              isFullWidthBtn && "flex-1"
+            )}
+            style={{ 
+              backgroundColor: style.btnBg, 
+              color: style.btnColor,
+              width: isFullWidthBtn ? 'auto' : style.btnWidth,
+              height: `${style.btnHeight}px`,
+              paddingTop: `${style.btnPadding.top}px`,
+              paddingBottom: `${style.btnPadding.bottom}px`,
+              paddingLeft: `${style.btnPadding.left}px`,
+              paddingRight: `${style.btnPadding.right}px`,
+            }}
+          >
+            <Zap className="mr-1 size-3" fill="currentColor" />
+            {customStyle?.primaryBtnText || (isService ? t('book_now') : t('buy_now'))}
+          </button>
         </div>
       </div>
     </div>
