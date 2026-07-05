@@ -83,6 +83,7 @@ const SECTION_TYPES = [
   { id: 'advanced_offers', label: 'Advanced Offers Row', icon: Gift, category: 'Marketing' },
   { id: 'coupons_grid', label: 'Coupons Grid', icon: TicketPercent, category: 'Marketing' },
   { id: 'section_banners', label: 'Section Banners', icon: ImageIcon, category: 'Marketing' },
+  { id: 'team_grid', label: 'Our Professional Team', icon: Users, category: 'Main' },
   { id: 'products_dynamic', label: 'Dynamic Products', icon: Package, category: 'Products' },
   { id: 'services_dynamic', label: 'Dynamic Services', icon: Wrench, category: 'Services' },
   { id: 'sub_services_custom', label: 'Sub-Services Grid', icon: Layers, category: 'Services' },
@@ -168,7 +169,7 @@ const DEFAULT_CARD_STYLES = {
   }
 };
 
-export default function HomepageBuilderPage() {
+export default function GridBuilderPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -494,6 +494,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
           { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
           { name: "Navigation Hub", href: '/admin/customize/navigation', icon: Compass },
+          { name: "Team Members", href: '/admin/customize/team', icon: Users },
           { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
           { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },

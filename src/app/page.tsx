@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -49,6 +50,7 @@ import {
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
+import { TeamSection } from '@/components/home/team-section';
 import { 
   Carousel, 
   CarouselContent, 
@@ -293,6 +295,9 @@ export default function SmartCleanHomePage() {
             </div>
           </section>
         );
+
+      case 'team_grid':
+        return <TeamSection key={section.id} />;
 
       case 'affiliate_promo':
         return (

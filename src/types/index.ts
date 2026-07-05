@@ -30,6 +30,32 @@ export interface Product {
   updatedAt?: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  designation: string;
+  department: string;
+  image: string;
+  bio?: string;
+  phone: string;
+  email: string;
+  whatsapp?: string;
+  experience: number;
+  joiningDate?: string;
+  serviceArea?: string;
+  languages?: string;
+  rating: number;
+  completedJobs: number;
+  facebook?: string;
+  linkedin?: string;
+  instagram?: string;
+  featured: boolean;
+  active: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface CleaningProject {
   id: string;
   clientName: string;
