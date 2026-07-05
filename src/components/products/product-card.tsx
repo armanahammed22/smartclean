@@ -36,8 +36,10 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
     : null;
 
-  const rating = product.rating || 4.8;
-  const soldCount = Math.floor((parseInt(product.id.slice(0, 3), 16) || 50) % 800);
+  // DYNAMIC RATING & BOOKING LOGIC
+  const rating = product.rating || 5.0;
+  const bookingCount = (product as any).bookingCount || 0;
+  const soldCount = product.salesCount || 0;
 
   // Styling Logic from Admin Config - Optimized for Maximum Compactness
   const style = {
@@ -47,7 +49,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     cardRadiusBL: customStyle?.cardRadiusBL !== undefined ? customStyle.cardRadiusBL : 16,
     cardRadiusBR: customStyle?.cardRadiusBR !== undefined ? customStyle.cardRadiusBR : 16,
     cardPadding: customStyle?.cardPadding !== undefined ? customStyle.cardPadding : 10,
-    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 4, // Reduced from 8 to 4
+    elementGap: customStyle?.elementGap !== undefined ? customStyle.elementGap : 4,
     
     imgHeight: customStyle?.imgHeight || 150,
     imgRadius: customStyle?.imgRadius !== undefined ? customStyle.imgRadius : 12,
@@ -58,8 +60,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     titleSize: customStyle?.titleSize || 'text-[11px] md:text-xs',
     titleColor: customStyle?.titleColor || '#1f2937',
     titlePadding: {
-      top: customStyle?.titlePaddingTop ?? 0, // Reduced from 2 to 0
-      bottom: customStyle?.titlePaddingBottom ?? 1, // Reduced from 2 to 1
+      top: customStyle?.titlePaddingTop ?? 0,
+      bottom: customStyle?.titlePaddingBottom ?? 1,
       left: customStyle?.titlePaddingLeft ?? 0,
       right: customStyle?.titlePaddingRight ?? 0
     },
@@ -73,8 +75,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     priceSize: customStyle?.priceSize || 'text-sm md:text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
     pricePadding: {
-      top: customStyle?.pricePaddingTop ?? 0, // Reduced from 2 to 0
-      bottom: customStyle?.pricePaddingBottom ?? 1, // Reduced from 2 to 1
+      top: customStyle?.pricePaddingTop ?? 0,
+      bottom: customStyle?.pricePaddingBottom ?? 1,
       left: customStyle?.pricePaddingLeft ?? 0,
       right: customStyle?.pricePaddingRight ?? 0
     },
@@ -88,8 +90,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
     metaPadding: {
-      top: customStyle?.metaPaddingTop ?? 0, // Reduced from 2 to 0
-      bottom: customStyle?.metaPaddingBottom ?? 4, // Keep some gap before button
+      top: customStyle?.metaPaddingTop ?? 0,
+      bottom: customStyle?.metaPaddingBottom ?? 4,
       left: customStyle?.metaPaddingLeft ?? 0,
       right: customStyle?.metaPaddingRight ?? 0
     },
@@ -106,7 +108,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
     btnWidth: customStyle?.btnWidth || '100%',
-    btnHeight: customStyle?.btnHeight || '40', // Reduced from 42 to 40
+    btnHeight: customStyle?.btnHeight || '40',
     btnPadding: {
       top: customStyle?.btnPaddingTop ?? 0,
       bottom: customStyle?.btnPaddingBottom ?? 0,
@@ -114,7 +116,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       right: customStyle?.btnPaddingRight ?? 12
     },
     btnMargin: {
-      top: customStyle?.btnMarginTop ?? 1, // Reduced from 2 to 1
+      top: customStyle?.btnMarginTop ?? 1,
       bottom: customStyle?.btnMarginBottom ?? 0,
       left: customStyle?.btnMarginLeft ?? 0,
       right: customStyle?.btnMarginRight ?? 0
@@ -256,7 +258,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             <Star size={10} fill="currentColor" />
             <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
           </div>
-          <span className={cn("uppercase font-black", style.metaSize)}>{soldCount} {style.metaLabelCount}</span>
+          <span className={cn("uppercase font-black", style.metaSize)}>{(isService ? bookingCount : soldCount).toLocaleString()} {style.metaLabelCount}</span>
         </div>
 
         {/* 🛒 BUTTON AREA */}

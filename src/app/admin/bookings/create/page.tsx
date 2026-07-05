@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, increment, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,10 +115,20 @@ export default function CreateManualBookingPage() {
         updatedAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+      const batch = writeBatch(db);
+      const bookingRef = doc(collection(db, 'bookings'));
+      batch.set(bookingRef, bookingData);
+
+      // INCREMENT COUNTER
+      batch.update(doc(db, 'services', selectedServiceId), { bookingCount: increment(1) });
+      selectedAddOnIds.forEach(addonId => {
+        batch.update(doc(db, 'sub_services', addonId), { bookingCount: increment(1) });
+      });
+
+      await batch.commit();
       
       // Auto-generate invoice
-      await getOrCreateInvoice(db, docRef.id, 'booking', bookingData);
+      await getOrCreateInvoice(db, bookingRef.id, 'booking', bookingData);
 
       toast({ title: "Booking Created", description: "Manual booking and invoice generated successfully." });
       router.push('/admin/bookings');

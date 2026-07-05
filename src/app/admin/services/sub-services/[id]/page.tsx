@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -35,7 +34,8 @@ import {
   RefreshCw,
   Layers,
   Settings2,
-  Check
+  Check,
+  Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -52,7 +52,7 @@ export default function SubServiceEditorPage() {
   const isNew = id === 'new';
 
   // 1. Core Data
-  const subServiceRef = useMemoFirebase(() => (db && !isNew) ? doc(db, 'sub_services', id as string) : null, [db, id, isNew]);
+  const subServiceRef = useMemoFirebase(() => (db && !isNew) ? doc(db, 'sub_services', id as string) : null, [db, id, iNew]);
   const { data: subService, isLoading: sLoading } = useDoc(subServiceRef);
 
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
@@ -87,6 +87,7 @@ export default function SubServiceEditorPage() {
         ...subService,
         price: subService.price?.toString() || '',
         regularPrice: subService.regularPrice?.toString() || '',
+        rating: subService.rating || 5.0,
         included: subService.included || [],
         notIncluded: subService.notIncluded || [],
         checklist: subService.checklist || [],
@@ -116,7 +117,7 @@ export default function SubServiceEditorPage() {
     try {
       if (isNew) {
         const newRef = doc(collection(db, 'sub_services'));
-        await setDoc(newRef, { ...payload, createdAt: serverTimestamp() });
+        await setDoc(newRef, { ...payload, createdAt: serverTimestamp(), bookingCount: 0 });
         toast({ title: "Sub-Service Created" });
       } else {
         await updateDoc(subServiceRef!, payload);
@@ -267,7 +268,7 @@ export default function SubServiceEditorPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-emerald-600 ml-1">Offer Price</Label>
                     <Input type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="h-12 bg-emerald-50/30 border-none rounded-xl font-black text-emerald-700" />
@@ -275,6 +276,10 @@ export default function SubServiceEditorPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Regular Price</Label>
                     <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-amber-500 ml-1 flex items-center gap-1">Rating <Star size={10} fill="currentColor" /></Label>
+                    <Input type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({...formData, rating: e.target.value})} className="h-12 bg-amber-50/30 border-none rounded-xl font-black text-amber-600" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Est. Duration</Label>

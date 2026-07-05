@@ -38,7 +38,8 @@ import {
   Globe,
   Camera,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -188,6 +189,7 @@ export default function UnifiedServiceEditor() {
         ...service,
         basePrice: service.basePrice?.toString() || '',
         regularPrice: service.regularPrice?.toString() || '',
+        rating: service.rating || 5.0,
         included: service.included || [],
         notIncluded: service.notIncluded || [],
         checklist: service.checklist || [],
@@ -232,13 +234,14 @@ export default function UnifiedServiceEditor() {
       basePrice: parseFloat(formData.basePrice) || 0,
       regularPrice: parseFloat(formData.regularPrice) || 0,
       extraCharges: parseFloat(formData.extraCharges) || 0,
+      rating: parseFloat(formData.rating) || 5.0,
       updatedAt: serverTimestamp()
     };
 
     try {
       if (isNew) {
         const newRef = doc(collection(db, 'services'));
-        await setDoc(newRef, { ...payload, createdAt: serverTimestamp() });
+        await setDoc(newRef, { ...payload, createdAt: serverTimestamp(), bookingCount: 0 });
         toast({ title: "Service Created Successfully" });
         router.push('/admin/services');
       } else {
@@ -352,21 +355,6 @@ export default function UnifiedServiceEditor() {
                       </div>
                     ))}
                   </div>
-                  
-                  {formData.galleryImages?.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2 mt-2">
-                      {formData.galleryImages.slice(1).map((img: string, i: number) => (
-                        <div key={i + 1} className="relative aspect-square rounded-lg overflow-hidden border border-gray-100 group">
-                          <Image src={img} alt="G" fill className="object-cover" unoptimized />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button type="button" onClick={() => removeArrayItem('galleryImages', i + 1)} className="p-1 bg-white text-destructive rounded shadow-sm">
-                              <X size={10}/>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-1.5 pt-2 border-t">
@@ -425,7 +413,7 @@ export default function UnifiedServiceEditor() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-emerald-600 ml-1">Selling Price</Label>
                     <Input type="number" value={formData.basePrice} onChange={e => setFormData({...formData, basePrice: e.target.value})} className="h-12 bg-emerald-50/30 border-none rounded-xl font-black text-emerald-700" />
@@ -433,6 +421,10 @@ export default function UnifiedServiceEditor() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Reg. Price</Label>
                     <Input type="number" value={formData.regularPrice} onChange={e => setFormData({...formData, regularPrice: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-black text-gray-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-amber-500 ml-1 flex items-center gap-1">Rating <Star size={10} fill="currentColor" /></Label>
+                    <Input type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({...formData, rating: e.target.value})} className="h-12 bg-amber-50/30 border-none rounded-xl font-black text-amber-600" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Team Size</Label>
@@ -462,7 +454,10 @@ export default function UnifiedServiceEditor() {
                 <div className="flex flex-col gap-4">
                   <Popover open={isAddonPopoverOpen} onOpenChange={setIsAddonPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="h-12 w-full justify-between rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-bold hover:bg-white">
+                      <Button variant="outline" className={cn(
+                        "h-12 w-full justify-between rounded-xl border-gray-200 bg-gray-50 text-gray-500 font-bold hover:bg-white",
+                        addonSearch && "text-gray-900"
+                      )}>
                         {addonSearch || "Search & Select Add-ons..."}
                         <ChevronDown size={16} className="opacity-50" />
                       </Button>

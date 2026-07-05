@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -37,7 +36,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { useFirestore, useUser, useMemoFirebase, useCollection } from '@/firebase';
-import { collection, addDoc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, doc, increment, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { trackEvent } from '@/lib/tracking';
@@ -130,7 +129,23 @@ function CheckoutContent() {
         status: 'New'
       };
 
-      const docRef = await addDoc(collection(db, collName), orderData);
+      const batch = writeBatch(db);
+      const orderRef = doc(collection(db, collName));
+      batch.set(orderRef, orderData);
+
+      // AUTOMATIC BOOKING/SALES COUNTER INCREMENT
+      items.forEach(item => {
+        if (item.itemType === 'service') {
+          // Attempt to increment in both main services and sub_services
+          // Firestore update on non-existent fields creates them, non-existent docs fail silently in batch
+          batch.update(doc(db, 'services', item.id), { bookingCount: increment(1) });
+          batch.update(doc(db, 'sub_services', item.id), { bookingCount: increment(1) });
+        } else if (item.itemType === 'product') {
+          batch.update(doc(db, 'products', item.id), { salesCount: increment(1) });
+        }
+      });
+
+      await batch.commit();
 
       trackEvent('Purchase', {
         value: finalAmount,
@@ -144,7 +159,7 @@ function CheckoutContent() {
       });
 
       clearCart();
-      router.push(`/order-success?id=${docRef.id}&type=${hasServices ? 'booking' : 'order'}`);
+      router.push(`/order-success?id=${orderRef.id}&type=${hasServices ? 'booking' : 'order'}`);
     } catch (e: any) {
       toast({ variant: "destructive", title: "Checkout Error", description: e.message });
     } finally {
