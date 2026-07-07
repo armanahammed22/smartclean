@@ -54,7 +54,8 @@ import {
   ClipboardList,
   ArrowLeft,
   Search,
-  BarChart,
+  BarChart, 
+  BarChart3,
   Wallet,
   Building2,
   UserCheck,
@@ -302,7 +303,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       toast({ variant: "destructive", title: "Access Denied", description: "Admin privileges required." });
       router.replace('/');
     }
-  }, [user, isAdmin, isUserLoading, roleLoading, router, toast]);
+  }, [user, isAdmin, iUserLoading, roleLoading, router, toast]);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
