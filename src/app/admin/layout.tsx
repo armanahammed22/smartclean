@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ShieldCheck,
   Loader2,
-  BarChart3,
   Menu,
   ShoppingCart,
   Truck,
@@ -77,7 +76,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth, useUser, useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, collection, query, orderBy } from 'firebase/firestore';
 import {
   Sheet,
   SheetContent,
@@ -106,13 +105,8 @@ const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
-
-// Global variable to persist scroll position across client-side navigations
 let savedSidebarScrollTop = 0;
 
-/**
- * 🛠️ SidebarContent Component
- */
 const SidebarContent = React.memo(({ 
   collapsed, 
   closeMobile, 
@@ -239,8 +233,13 @@ const DEFAULT_MENU_KEYS = [
   'services', 
   'marketing', 
   'offers',
+  'seo',
   'hrm',
+  'customer_hub',
+  'partners',
+  'vendors',
   'finance',
+  'reports',
   'customize', 
   'system',
   'ai_agents',
@@ -350,8 +349,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: productsEnabled,
         items: [
           { name: "All Products", key: "product_list", href: '/admin/products', icon: Package },
-          { name: "Products Attribute", key: "attributes", href: '/admin/products/attributes', icon: Settings2 },
-          { name: "Taxonomy (L1, L2, L3)", key: "taxonomy", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree },
+          { name: "Product Attributes", key: "attributes", href: '/admin/products/attributes', icon: Settings2 },
+          { name: "Taxonomy Levels", key: "taxonomy", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree },
           { name: "Brand Registry", key: "brands", href: '/admin/attributes/brands', icon: Award },
           { name: "Variant Rules", key: "variants", href: '/admin/attributes/variants', icon: Shapes },
           { name: "Stock Alerts", key: "stock_alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
@@ -365,8 +364,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         visible: servicesEnabled,
         items: [
           { name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench },
-          { name: "Sub-Services (Add-ons)", key: "sub_services", href: '/admin/services/sub-services', icon: Layers },
-          { name: "Service Attribute", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 },
+          { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Service Attributes", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 },
           { name: "Custom Requests", key: "custom_requests", href: '/admin/services/custom-requests', icon: ClipboardList },
           { name: "Service Areas", key: "areas", href: '/admin/areas', icon: Globe },
           { name: "Billing & Plan", key: "subscription", href: '/admin/subscription', icon: Wallet },
@@ -396,6 +395,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
+        id: 'seo',
+        title: "SEO & TRACKING",
+        icon: Globe,
+        color: "text-emerald-400",
+        items: [
+          { name: "SEO Settings", key: "seo_settings", href: '/admin/seo/settings', icon: Search },
+          { name: "Meta Verification", key: "meta_verification", href: '/admin/seo/meta-verification', icon: ShieldCheck },
+          { name: "Google Analytics", key: "analytics", href: '/admin/seo/analytics', icon: BarChart },
+          { name: "Tag Manager", key: "tag_manager", href: '/admin/seo/tag-manager', icon: Code },
+          { name: "Tracking Hub", key: "tracking_hub", href: '/admin/seo/tracking-hub', icon: Zap },
+          { name: "Event Logs", key: "event_logs", href: '/admin/seo/logs', icon: FileText },
+        ]
+      },
+      {
         id: 'hrm',
         title: "HRM",
         icon: HardHat,
@@ -410,6 +423,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ]
       },
       {
+        id: 'customer_hub',
+        title: "Customer Hub",
+        href: '/admin/customers',
+        icon: Users,
+        color: "text-cyan-400",
+        items: []
+      },
+      {
+        id: 'partners',
+        title: "B2B PARTNERS",
+        icon: Handshake,
+        color: "text-blue-500",
+        items: [
+          { name: "Partner Registry", key: "partner_registry", href: '/admin/partners', icon: Building2 },
+          { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase },
+          { name: "Commission Ledger", key: "commission_ledger", href: '/admin/partners/commissions', icon: Wallet },
+        ]
+      },
+      {
+        id: 'vendors',
+        title: "VENDOR HUB",
+        icon: Store,
+        color: "text-orange-500",
+        items: [
+          { name: "Vendor Registry", key: "vendor_registry", href: '/admin/vendors', icon: Building2 },
+          { name: "Product Approvals", key: "product_approvals", href: '/admin/products/approvals', icon: Package, visible: productsEnabled },
+          { name: "Service Approvals", key: "service_approvals", href: '/admin/services/approvals', icon: Wrench, visible: servicesEnabled },
+          { name: "Vendor Commissions", key: "vendor_commissions", href: '/admin/vendors/commissions', icon: Wallet },
+          { name: "Verification Queue", key: "verification_queue", href: '/admin/vendors/verifications', icon: ShieldCheck },
+        ].filter(i => i.visible !== false)
+      },
+      {
         id: 'finance',
         title: "FINANCIAL HUB",
         icon: Wallet,
@@ -421,6 +466,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Staff Salaries", key: "staff_salaries", href: '/admin/finance/salaries', icon: DollarSign },
           { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Target },
         ]
+      },
+      {
+        id: 'reports',
+        title: "BUSINESS REPORT",
+        href: '/admin/reports',
+        icon: BarChart3,
+        color: "text-red-400",
+        items: []
       },
       {
         id: 'customize',
@@ -450,7 +503,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       },
       {
         id: 'ai_agents',
-        title: "AI AGENTS",
+        title: "AI AGENTS (STAFF)",
         icon: Bot,
         color: "text-purple-400",
         items: [
@@ -476,7 +529,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return groups
       .filter(g => {
         if (g.visible === false) return false;
-        // If visibility is explicitly set to false, hide it. Otherwise show it.
         if (visibility[g.id] === false) return false;
         return g.items.length > 0 || g.href;
       })
@@ -489,7 +541,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       });
   }, [productsEnabled, servicesEnabled, sidebarConfig]);
 
-  // Handle auto-expansion of groups based on current path
   useEffect(() => {
     NAV_GROUPS.forEach(group => {
       const isGroupActive = group.items.some((item: any) => pathname === item.href);
@@ -499,7 +550,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
   }, [pathname, NAV_GROUPS]);
 
-  // Precise scroll restoration on pathname change
   useEffect(() => {
     if (sidebarScrollRef.current) {
       const restoreScroll = () => {
@@ -594,7 +644,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             
-            {/* 🌐 LANGUAGE TOGGLE */}
             <div className="flex items-center gap-2 mr-2 border-r pr-4 border-gray-100 h-10">
               <Button 
                 variant="ghost" 
