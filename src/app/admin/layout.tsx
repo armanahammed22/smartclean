@@ -239,13 +239,8 @@ const DEFAULT_MENU_KEYS = [
   'services', 
   'marketing', 
   'offers',
-  'seo',
   'hrm',
-  'customer_hub',
-  'partners',
-  'vendors',
   'finance',
-  'reports',
   'customize', 
   'system',
   'ai_agents',
@@ -451,6 +446,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Payment Gateways", key: "payment_gateways", href: '/admin/payments', icon: Wallet },
           { name: "Delivery Fees", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck },
           { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Languages },
+        ]
+      },
+      {
+        id: 'ai_agents',
+        title: "AI AGENTS",
+        icon: Bot,
+        color: "text-purple-400",
+        items: [
+          { name: "AI Sales Desk", key: "ai_sales", href: '/admin/ai/sales', icon: Sparkles },
+          { name: "AI Booking Asst", key: "ai_booking", href: '/admin/ai/booking', icon: Bot },
+        ]
+      },
+      {
+        id: 'support',
+        title: "SUPPORT",
+        icon: Headphones,
+        color: "text-teal-400",
+        items: [
+          { name: "Support Tickets", key: "tickets", href: '/admin/support', icon: MessageCircle },
+          { name: "Support Hub Config", key: "support_config", href: '/admin/support-hub', icon: Settings2 },
         ]
       }
     ];
