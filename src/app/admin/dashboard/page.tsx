@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -50,6 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -58,6 +60,7 @@ export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -127,34 +130,32 @@ export default function AdminDashboard() {
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
   const STATS_CARDS = [
-    { label: "Gross Revenue", val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Idle Personnel", val: metrics?.idleStaff || 0, icon: UserX, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/hrm/attendance" },
-    { label: "Pending Items", val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Total Orders", val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: t('admin.revenue'), val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: t('admin.idle_personnel'), val: metrics?.idleStaff || 0, icon: UserX, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/hrm/attendance" },
+    { label: t('admin.pending_items'), val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: t('admin.total_orders'), val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
   return (
     <div className="space-y-10 pb-24 min-w-0">
-      {/* 🔝 MINIMALIST DASHBOARD HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Admin Overview</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">{t('admin.dashboard_link')}</h1>
           <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Core Systems Operational
+            {t('admin.live_status')}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild className="h-10 px-6 rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/10 gap-2 text-[10px] uppercase tracking-widest">
-            <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> New Booking</Link>
+            <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> {t('admin.new_booking')}</Link>
           </Button>
           <Button asChild variant="outline" className="h-10 px-6 rounded-xl font-black gap-2 text-[10px] uppercase tracking-widest border-gray-200">
-            <Link href="/admin/invoices"><FileText size={16} /> Registry</Link>
+            <Link href="/admin/invoices"><FileText size={16} /> {t('admin.ledger')}</Link>
           </Button>
         </div>
       </div>
 
-      {/* 📊 KPI GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {STATS_CARDS.map((stat, i) => (
           <Link key={i} href={stat.link || '#'}>
@@ -172,12 +173,11 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* CHART AREA */}
         <div className="lg:col-span-8">
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
             <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base font-black uppercase tracking-widest">Revenue Velocity</CardTitle>
+                <CardTitle className="text-base font-black uppercase tracking-widest">{t('admin.revenue_velocity')}</CardTitle>
                 <CardDescription className="text-[9px] font-bold uppercase tracking-[0.1em] mt-1 text-primary">7-Day performance analysis</CardDescription>
               </div>
             </CardHeader>
@@ -203,18 +203,17 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* WORKFORCE SIDEBAR */}
         <div className="lg:col-span-4 space-y-8">
           <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><Zap size={160} /></div>
             <CardHeader className="relative z-10 p-8 pb-4">
-              <CardTitle className="text-base font-black uppercase tracking-[0.2em] text-primary">Workforce Health</CardTitle>
+              <CardTitle className="text-base font-black uppercase tracking-[0.2em] text-primary">{t('admin.workforce_health')}</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10 p-8 pt-0 space-y-4">
               {[
-                { label: "Idle Personnel", val: metrics?.idleStaff || 0, icon: UserX, color: "text-rose-400" },
+                { label: t('admin.idle_personnel'), val: metrics?.idleStaff || 0, icon: UserX, color: "text-rose-400" },
                 { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck, color: "text-emerald-400" },
-                { label: "Staff Pool", val: dbUsers?.length || 0, icon: Users, color: "text-blue-400" }
+                { label: t('admin.staff_directory'), val: dbUsers?.length || 0, icon: Users, color: "text-blue-400" }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/5 flex justify-between items-center transition-all hover:bg-white/10 hover:-translate-y-1">
                   <div className="space-y-1">

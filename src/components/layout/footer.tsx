@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -16,7 +17,8 @@ import {
   ArrowRight,
   ShieldCheck,
   TrendingUp,
-  Zap
+  Zap,
+  Linkedin
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
@@ -129,7 +131,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_services')}</h4>
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer.services')}</h4>
             <ul className="space-y-3 text-sm">
               {layout?.footer?.serviceLinks?.map((item: any, i: number) => {
                 const isProdLink = item.link === '/products';
@@ -148,23 +150,23 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_company')}</h4>
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer.company')}</h4>
             <ul className="space-y-3 text-sm">
               {layout?.footer?.companyLinks?.map((item: any, i: number) => (
                 <li key={i}><Link href={item.link} className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{item.label}</Link></li>
               )) || (
                 <>
-                  <li><Link href="/page/about-us" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_about')}</Link></li>
-                  <li><Link href="/page/careers" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">Work with us</Link></li>
-                  <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_privacy')}</Link></li>
-                  <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer_terms')}</Link></li>
+                  <li><Link href="/page/about-us" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer.about')}</Link></li>
+                  <li><Link href="/page/careers" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer.careers')}</Link></li>
+                  <li><Link href="/page/privacy-policy" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer.privacy')}</Link></li>
+                  <li><Link href="/page/terms-of-service" className="hover:text-primary transition-colors opacity-80 hover:opacity-100">{t('footer.terms')}</Link></li>
                 </>
               )}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer_contact')}</h4>
+            <h4 className="text-[10px] md:text-[11px] font-black mb-6 text-primary uppercase tracking-[0.2em]" style={headingStyles}>{t('footer.contact')}</h4>
             <div className="space-y-4 text-sm">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-white/5 rounded-lg text-primary"><MapPin size={16} className="shrink-0" /></div>

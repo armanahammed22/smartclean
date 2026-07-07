@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -111,7 +112,7 @@ export function Navbar() {
               value={searchQuery} 
               onFocus={() => setIsSearchFocused(true)}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('search_placeholder')}
+              placeholder={t('public.search_placeholder')}
               className="w-full bg-gray-100 border-none h-11 pl-10 rounded-xl focus:bg-white shadow-inner"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -134,11 +135,10 @@ export function Navbar() {
           {servicesEnabled && (
             <Link href="/account/custom-requests" className="flex items-center gap-3 px-5 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-lg hover:scale-105 active:scale-95 transition-all">
               <div className="relative w-5 h-5 shrink-0"><Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized /></div>
-              {layout?.header?.customRequestDesktopTitle || 'Request'}
+              {layout?.header?.customRequestDesktopTitle || t('admin.custom_requests')}
             </Link>
           )}
           
-          {/* 🛡️ CONDITIONALLY RENDER CART (Only if Products Enabled) */}
           {productsEnabled && (
             <Link href="/cart" className="relative p-2.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm text-gray-600 hover:text-primary active:scale-90">
               <ShoppingCart size={22} />

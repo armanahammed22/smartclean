@@ -34,10 +34,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('app_lang', lang);
   }, []);
 
+  /**
+   * 🛡️ Improved Translation Function with Resilient Fallback
+   */
   const t = useCallback((key: string) => {
     const keys = key.split('.');
     
-    // Attempt to get the value in the current language
+    // 1. Try to find key in current language
     let value = translations[language];
     for (const k of keys) {
       if (value && value[k]) {
@@ -48,7 +51,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Resilient Fallback: If not found in current language, try Bangla (Default)
+    // 2. Resilient Fallback: If not found in current, try Bangla (Default)
     if (typeof value !== 'string') {
       let fallbackValue = translations['bn'];
       for (const k of keys) {
@@ -62,7 +65,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (typeof fallbackValue === 'string') return fallbackValue;
     }
 
-    // Final Safety: Return humanized key part or the key itself instead of raw ADMIN.KEY
+    // 3. Final Safety: Return humanized label instead of raw key
     if (typeof value !== 'string') {
       const lastKey = keys[keys.length - 1];
       return lastKey.replace(/_/g, ' ').toUpperCase(); 
@@ -87,7 +90,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    // Default return to prevent crash if hook called outside provider during SSR/Hydration
+    return {
+      language: 'bn' as Language,
+      setLanguage: () => {},
+      t: (key: string) => {
+        const parts = key.split('.');
+        return parts[parts.length - 1].replace(/_/g, ' ').toUpperCase();
+      }
+    };
   }
   return context;
 }

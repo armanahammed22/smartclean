@@ -209,7 +209,7 @@ const SidebarContent = React.memo(({
                       )}
                     >
                       <item.icon size={14} className={cn("mr-3 transition-colors shrink-0", pathname === item.href ? "text-primary scale-110" : "opacity-40 group-hover/item:opacity-100")} />
-                      <span className="truncate whitespace-nowrap">{item.name}</span>
+                      <span className="truncate whitespace-nowrap">{t(`admin.${item.key || item.name.toLowerCase().replace(/\s+/g, '_')}`)}</span>
                     </Link>
                   ))}
                 </div>
@@ -303,7 +303,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, isUserLoading, router]);
 
   useEffect(() => {
-    if (!isUserLoading && !roleLoading && user && !isAdmin) {
+    if (isUserLoading || roleLoading) return;
+    if (user && !isAdmin) {
       toast({ variant: "destructive", title: "Access Denied", description: "Admin privileges required." });
       router.replace('/');
     }
@@ -328,9 +329,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Zap,
         color: "text-rose-400",
         items: [
-          { name: "New Order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
-          { name: "New Booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
-          { name: "Sales Leads", href: '/admin/leads', icon: TrendingUp },
+          { name: "New Order", key: "new_order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
+          { name: "New Booking", key: "new_booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
+          { name: "Sales Leads", key: "leads", href: '/admin/leads', icon: TrendingUp },
         ].filter(i => i.visible !== false)
       },
       {
@@ -339,11 +340,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: ShoppingCart,
         color: "text-blue-400",
         items: [
-          { name: "Product Orders", href: '/admin/orders', icon: Package, visible: productsEnabled },
-          { name: "Service Bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
-          { name: "Cleaning Projects", href: '/admin/projects', icon: Briefcase },
-          { name: "Invoices", href: '/admin/invoices', icon: ReceiptText },
-          { name: "Logistics", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
+          { name: "Product Orders", key: "orders", href: '/admin/orders', icon: Package, visible: productsEnabled },
+          { name: "Service Bookings", key: "bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled },
+          { name: "Cleaning Projects", key: "projects", href: '/admin/projects', icon: Briefcase },
+          { name: "Invoices", key: "invoices", href: '/admin/invoices', icon: ReceiptText },
+          { name: "Logistics", key: "couriers", href: '/admin/couriers', icon: Truck, visible: productsEnabled },
         ].filter(i => i.visible !== false)
       },
       {
@@ -353,12 +354,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-amber-400",
         visible: productsEnabled,
         items: [
-          { name: "All Products", href: '/admin/products', icon: Package },
-          { name: "Products Attribute", href: '/admin/products/attributes', icon: Settings2 },
-          { name: "Taxonomy (L1, L2, L3)", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree },
-          { name: "Brand Registry", href: '/admin/attributes/brands', icon: Award },
-          { name: "Variant Rules", href: '/admin/attributes/variants', icon: Shapes },
-          { name: "Stock Alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
+          { name: "All Products", key: "product_list", href: '/admin/products', icon: Package },
+          { name: "Products Attribute", key: "attributes", href: '/admin/products/attributes', icon: Settings2 },
+          { name: "Taxonomy (L1, L2, L3)", key: "taxonomy", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree },
+          { name: "Brand Registry", key: "brands", href: '/admin/attributes/brands', icon: Award },
+          { name: "Variant Rules", key: "variants", href: '/admin/attributes/variants', icon: Shapes },
+          { name: "Stock Alerts", key: "stock_alerts", href: '/admin/inventory/alerts', icon: AlertCircle },
         ]
       },
       {
@@ -368,12 +369,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         color: "text-sky-400",
         visible: servicesEnabled,
         items: [
-          { name: "Service List", href: '/admin/services', icon: Wrench },
-          { name: "Sub-Services (Add-ons)", href: '/admin/services/sub-services', icon: Layers },
-          { name: "Service Attribute", href: '/admin/services/attributes', icon: Settings2 },
-          { name: "Custom Requests", href: '/admin/services/custom-requests', icon: ClipboardList },
-          { name: "Service Areas", href: '/admin/areas', icon: Globe },
-          { name: "Billing & Plan", href: '/admin/subscription', icon: Wallet },
+          { name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench },
+          { name: "Sub-Services (Add-ons)", key: "sub_services", href: '/admin/services/sub-services', icon: Layers },
+          { name: "Service Attribute", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 },
+          { name: "Custom Requests", key: "custom_requests", href: '/admin/services/custom-requests', icon: ClipboardList },
+          { name: "Service Areas", key: "areas", href: '/admin/areas', icon: Globe },
+          { name: "Billing & Plan", key: "subscription", href: '/admin/subscription', icon: Wallet },
         ]
       },
       {
@@ -382,11 +383,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Target,
         color: "text-pink-400",
         items: [
-          { name: "Intel Overview", href: '/admin/marketing/overview', icon: Activity },
-          { name: "Landing Pages", href: '/admin/marketing/landing-pages', icon: Layout },
-          { name: "Campaign Mgmt", href: '/admin/campaigns', icon: Megaphone },
-          { name: "Tracking Hub", href: '/admin/seo/tracking-hub', icon: ShieldCheck },
-          { name: "Affiliate System", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
+          { name: "Landing Pages", key: "landing_pages", href: '/admin/marketing/landing-pages', icon: Layout },
+          { name: "Campaign Mgmt", key: "campaigns", href: '/admin/campaigns', icon: Megaphone },
+          { name: "Affiliate System", key: "referrals", href: '/admin/referrals', icon: Award, visible: servicesEnabled },
         ].filter(i => i.visible !== false)
       },
       {
@@ -395,26 +394,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: TicketPercent,
         color: "text-orange-400",
         items: [
-          { name: "Advanced Offers", href: '/admin/offers/advanced', icon: Gift },
-          { name: "Coupons", href: '/admin/offers/coupons', icon: TicketPercent },
-          { name: "Flash Sales", href: '/admin/offers/flash-sales', icon: Zap },
-          { name: "Smart Pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
-        ]
-      },
-      {
-        id: 'seo',
-        title: "SEO & TRACKING",
-        icon: Globe,
-        color: "text-emerald-400",
-        items: [
-          { name: "SEO Settings", href: '/admin/seo/settings', icon: Globe },
-          { name: "Google Analytics", href: '/admin/seo/analytics', icon: BarChart },
-          { name: "Facebook Pixel", href: '/admin/seo/pixel', icon: Code },
-          { name: "Conversion API", href: '/admin/seo/capi', icon: ShieldCheck },
-          { name: "Tracking Logs", href: '/admin/seo/logs', icon: History },
-          { name: "Search Console", href: '/admin/seo/search-console', icon: Search },
-          { name: "Meta Verification", href: '/admin/seo/meta-verification', icon: ShieldCheck },
-          { name: "Tag Manager", href: '/admin/seo/tag-manager', icon: Code },
+          { name: "Advanced Offers", key: "advanced_offers", href: '/admin/offers/advanced', icon: Gift },
+          { name: "Coupons", key: "coupons", href: '/admin/offers/coupons', icon: TicketPercent },
+          { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Zap },
+          { name: "Smart Pricing", key: "smart_pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp },
         ]
       },
       {
@@ -423,43 +406,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: HardHat,
         color: "text-yellow-400",
         items: [
-          { name: "Staff Directory", href: '/admin/employees', icon: Users },
-          { name: "Attendance Logs", href: '/admin/hrm/attendance', icon: Clock },
-          { name: "Payroll & Models", href: '/admin/hrm/payroll', icon: DollarSign },
-          { name: "Leave Requests", href: '/admin/hrm/leaves', icon: Calendar },
-          { name: "Expense Claims", href: '/admin/hrm/expenses', icon: Wallet },
-          { name: "Access Control", href: '/admin/roles', icon: ShieldCheck },
-        ]
-      },
-      {
-        id: 'customer_hub',
-        title: "Customer Hub",
-        icon: Users,
-        color: "text-cyan-400",
-        items: [
-          { name: "Customer Directory", href: '/admin/customers', icon: UserCheck },
-        ]
-      },
-      {
-        id: 'partners',
-        title: "B2B PARTNERS",
-        icon: Handshake,
-        color: "text-violet-400",
-        items: [
-          { name: "Partner Registry", href: '/admin/partners', icon: Building2 },
-          { name: "Partner Projects", href: '/admin/partners/projects', icon: Briefcase },
-          { name: "Commission Ledger", href: '/admin/partners/commissions', icon: Wallet },
-        ]
-      },
-      {
-        id: 'vendors',
-        title: "VENDOR HUB",
-        icon: Store,
-        color: "text-teal-400",
-        items: [
-          { name: "All Vendors", href: '/admin/vendors', icon: Store },
-          { name: "Pending Approvals", href: '/admin/vendors/verifications', icon: AlertCircle },
-          { name: "Vendor Commissions", href: '/admin/vendors/commissions', icon: Wallet },
+          { name: "Staff Directory", key: "staff_directory", href: '/admin/employees', icon: Users },
+          { name: "Attendance Logs", key: "attendance", href: '/admin/hrm/attendance', icon: Clock },
+          { name: "Payroll & Models", key: "payroll", href: '/admin/hrm/payroll', icon: DollarSign },
+          { name: "Leave Requests", key: "leaves", href: '/admin/hrm/leaves', icon: Calendar },
+          { name: "Expense Claims", key: "expenses", href: '/admin/hrm/expenses', icon: Wallet },
+          { name: "Access Control", key: "access_control", href: '/admin/roles', icon: ShieldCheck },
         ]
       },
       {
@@ -468,23 +420,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Wallet,
         color: "text-green-400",
         items: [
-          { name: "Finance Overview", href: '/admin/finance', icon: TrendingUp },
-          { name: "Master Ledger", href: '/admin/finance/ledger', icon: FileText },
-          { name: "Bank & Cash", href: '/admin/finance/accounts', icon: Building2 },
-          { name: "Staff Salaries", href: '/admin/finance/salaries', icon: DollarSign },
-          { name: "Project Costing", href: '/admin/finance/projects', icon: Target },
-        ]
-      },
-      {
-        id: 'reports',
-        title: "BUSINESS REPORT",
-        icon: BarChart3,
-        color: "text-purple-400",
-        items: [
-          { name: "Financial Report", href: '/admin/reports', icon: FileText },
-          { name: "HRM Analytics", href: '/admin/hrm/payroll', icon: Activity },
-          { name: "Marketing Analytics", href: '/admin/marketing/analytics', icon: TrendingUp },
-          { name: "Offers Analytics", href: '/admin/offers/analytics', icon: Activity },
+          { name: "Finance Overview", key: "finance_overview", href: '/admin/finance', icon: TrendingUp },
+          { name: "Master Ledger", key: "ledger", href: '/admin/finance/ledger', icon: FileText },
+          { name: "Bank & Cash", key: "accounts", href: '/admin/finance/accounts', icon: Building2 },
+          { name: "Staff Salaries", key: "staff_salaries", href: '/admin/finance/salaries', icon: DollarSign },
+          { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Target },
         ]
       },
       {
@@ -493,13 +433,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Palette,
         color: "text-fuchsia-400",
         items: [
-          { name: "Homepage Builder", href: '/admin/customize/homepage-builder', icon: Navigation },
-          { name: "Hero Banners", href: '/admin/customize/hero', icon: Layout },
-          { name: "Navigation Hub", href: '/admin/customize/navigation', icon: Compass },
-          { name: "Team Members", href: '/admin/customize/team', icon: Users },
-          { name: "Section Banners", href: '/admin/offers/homepage-banners', icon: ImageIcon },
-          { name: "Header & Footer", href: '/admin/customize/theme', icon: Layers },
-          { name: "Dynamic Pages", href: '/admin/pages', icon: FileText },
+          { name: "Homepage Builder", key: "homepage_builder", href: '/admin/customize/homepage-builder', icon: Navigation },
+          { name: "Hero Banners", key: "hero_banners", href: '/admin/customize/hero', icon: Layout },
+          { name: "Navigation Hub", key: "navigation_hub", href: '/admin/customize/navigation', icon: Compass },
+          { name: "Team Members", key: "team", href: '/admin/customize/team', icon: Users },
+          { name: "Header & Footer", key: "theme", href: '/admin/customize/theme', icon: Layers },
+          { name: "Dynamic Pages", key: "pages", href: '/admin/pages', icon: FileText },
         ]
       },
       {
@@ -508,31 +447,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Settings,
         color: "text-slate-300",
         items: [
-          { name: "Global Settings", href: '/admin/settings', icon: Settings },
-          { name: "Payment Gateways", href: '/admin/payments', icon: Wallet },
-          { name: "Delivery Fees", href: '/admin/settings/delivery', icon: Truck },
-          { name: "Localization", href: '/admin/settings/languages', icon: Languages },
-          { name: "API & Webhooks", href: '/admin/settings/api', icon: Code },
-        ]
-      },
-      {
-        id: 'ai_agents',
-        title: "AI AGENTS (STAFF)",
-        icon: Bot,
-        color: "text-blue-300",
-        items: [
-          { name: "AI Sales Desk", href: '/admin/ai/sales', icon: Sparkles },
-          { name: "AI Booking Assistant", href: '/admin/ai/booking', icon: Zap },
-        ]
-      },
-      {
-        id: 'support',
-        title: "SUPPORT",
-        icon: Headphones,
-        color: "text-rose-300",
-        items: [
-          { name: "Support Tickets", href: '/admin/support', icon: MessageCircle },
-          { name: "Support Hub Config", href: '/admin/support-hub', icon: Headphones },
+          { name: "Global Settings", key: "global_settings", href: '/admin/settings', icon: Settings },
+          { name: "Payment Gateways", key: "payment_gateways", href: '/admin/payments', icon: Wallet },
+          { name: "Delivery Fees", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck },
+          { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Languages },
         ]
       }
     ];
@@ -652,8 +570,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Command Center</span>
-              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">Live Status <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
+              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{t('admin.command_center')}</span>
+              <span className="text-xs font-bold text-gray-900 flex items-center gap-2">{t('admin.live_status')} <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
@@ -697,7 +615,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">Confirm session termination. You will be redirected to the login page.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 flex gap-3">
-            <AlertDialogCancel className="rounded-xl flex-1 font-bold">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl flex-1 font-bold">{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">{t('admin.logout')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
