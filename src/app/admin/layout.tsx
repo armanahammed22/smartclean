@@ -314,7 +314,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const servicesEnabled = settings?.servicesEnabled !== false;
 
   const NAV_GROUPS = useMemo(() => {
-    let groups = [
+    const groups = [
       {
         id: 'dashboard_link',
         title: "Dashboard",
@@ -329,8 +329,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         icon: Zap,
         color: "text-rose-400",
         items: [
-          { name: "New Order", key: "new_order", href: '/admin/orders?create=true', icon: Plus, visible: productsEnabled },
-          { name: "New Booking", key: "new_booking", href: '/admin/bookings?create=true', icon: Plus, visible: servicesEnabled },
+          { name: "New Order", key: "new_order", href: '/admin/orders/create', icon: Plus, visible: productsEnabled },
+          { name: "New Booking", key: "new_booking", href: '/admin/bookings/create', icon: Plus, visible: servicesEnabled },
           { name: "Sales Leads", key: "leads", href: '/admin/leads', icon: TrendingUp },
         ].filter(i => i.visible !== false)
       },
@@ -461,13 +461,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return groups
       .filter(g => {
         if (g.visible === false) return false;
+        // If visibility is explicitly set to false, hide it. Otherwise show it.
         if (visibility[g.id] === false) return false;
         return g.items.length > 0 || g.href;
       })
       .sort((a, b) => {
         const indexA = sidebarOrder.indexOf(a.id);
         const indexB = sidebarOrder.indexOf(b.id);
-        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+        const finalA = indexA === -1 ? 999 : indexA;
+        const finalB = indexB === -1 ? 999 : indexB;
+        return finalA - finalB;
       });
   }, [productsEnabled, servicesEnabled, sidebarConfig]);
 

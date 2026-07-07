@@ -95,7 +95,15 @@
     "pending_items": "Pending Items",
     "total_orders": "Total Orders",
     "workforce_health": "Workforce Health",
-    "revenue_velocity": "Revenue Velocity"
+    "revenue_velocity": "Revenue Velocity",
+    "finance_overview": "Finance Overview",
+    "staff_salaries": "Staff Salaries",
+    "cleaning_projects": "Cleaning Projects",
+    "invoices": "Invoices",
+    "couriers": "Logistics",
+    "product_attributes": "Product Attributes",
+    "referral_system": "Affiliate System",
+    "access_management": "Access Control"
   },
   "public": {
     "nav_home": "Home",

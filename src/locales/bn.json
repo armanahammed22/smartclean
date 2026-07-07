@@ -95,7 +95,15 @@
     "pending_items": "পেন্ডিং আইটেম",
     "total_orders": "মোট অর্ডার",
     "workforce_health": "জনবল অবস্থা",
-    "revenue_velocity": "রেভিনিউ গতিধারা"
+    "revenue_velocity": "রেভিনিউ গতিধারা",
+    "finance_overview": "ফিন্যান্স ওভারভিউ",
+    "staff_salaries": "স্টাফ স্যালারি",
+    "cleaning_projects": "ক্লিনিং প্রজেক্টস",
+    "invoices": "ইনভয়েস",
+    "couriers": "লজিস্টিকস",
+    "product_attributes": "পণ্য অ্যাট্রিবিউট",
+    "referral_system": "অ্যাফিলিয়েট সিস্টেম",
+    "access_management": "অ্যাক্সেস কন্ট্রোল"
   },
   "public": {
     "nav_home": "হোম",
