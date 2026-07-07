@@ -116,6 +116,7 @@
     "/employee_profiles/{id}": { "schema": "EmployeeProfile", "description": "Staff profiles." },
     "/custom_grid_modules/{id}": { "schema": "CustomGridModule", "description": "Reusable grid layouts." },
     "/homepage_sections/{id}": { "schema": "object", "description": "Homepage layout sequence." },
-    "/hero_banners/{id}": { "schema": "object", "description": "Homepage slider assets." }
+    "/hero_banners/{id}": { "schema": "object", "description": "Homepage slider assets." },
+    "/team_members/{id}": { "schema": "object", "description": "Team profiles." }
   }
 }
