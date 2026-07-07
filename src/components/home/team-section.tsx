@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { TeamMemberCard } from './team-member-card';
 import { Loader2, Users, Star, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,24 +15,30 @@ export function TeamSection() {
 
   const teamQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Querying active members, sorted by displayOrder
-    return query(
-      collection(db, 'team_members'), 
-      where('active', '==', true),
-      orderBy('displayOrder', 'asc')
-    );
+    // We fetch the whole collection to avoid Composite Index errors in prototyping.
+    // Filtering and sorting are handled in memory below.
+    return collection(db, 'team_members');
   }, [db]);
 
   const { data: team, isLoading } = useCollection(teamQuery);
 
   const sortedTeam = useMemo(() => {
     if (!team) return [];
-    // Secondary sort to ensure featured members appear first if order is same
-    return [...team].sort((a, b) => {
-      if (a.featured && !b.featured) return -1;
-      if (!a.featured && b.featured) return 1;
-      return a.displayOrder - b.displayOrder;
-    });
+    
+    // Filter active members and sort by displayOrder in memory
+    return team
+      .filter(m => m.active === true)
+      .sort((a, b) => {
+        const orderA = a.displayOrder ?? 999;
+        const orderB = b.displayOrder ?? 999;
+        
+        if (orderA !== orderB) return orderA - orderB;
+        
+        // Secondary sort: featured members first
+        if (a.featured && !b.featured) return -1;
+        if (!a.featured && b.featured) return 1;
+        return 0;
+      });
   }, [team]);
 
   if (isLoading) return (

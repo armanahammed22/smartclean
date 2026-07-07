@@ -1,8 +1,9 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,8 +54,13 @@ export default function TeamManagementPage() {
   const [editingMember, setEditingMember] = useState<any>(null);
 
   const teamQuery = useMemoFirebase(() => 
-    db ? query(collection(db, 'team_members'), orderBy('displayOrder', 'asc')) : null, [db]);
-  const { data: team, isLoading } = useCollection(teamQuery);
+    db ? collection(db, 'team_members') : null, [db]);
+  const { data: teamRaw, isLoading } = useCollection(teamQuery);
+
+  const team = useMemo(() => {
+    if (!teamRaw) return [];
+    return [...teamRaw].sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999));
+  }, [teamRaw]);
 
   const [formData, setFormData] = useState<any>({
     name: '',
@@ -174,7 +180,7 @@ export default function TeamManagementPage() {
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Users size={64} /></div>
               )}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {member.featured && <Badge className="bg-amber-500 text-white border-none uppercase font-black text-[8px] px-2 py-0.5">Featured</Badge>}
+                {member.featured && <Badge className="bg-primary text-white border-none uppercase font-black text-[8px] px-2 py-0.5">Featured</Badge>}
                 {!member.active && <Badge variant="destructive" className="uppercase font-black text-[8px] px-2 py-0.5">Inactive</Badge>}
               </div>
             </div>
