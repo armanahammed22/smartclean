@@ -36,17 +36,39 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback((key: string) => {
     const keys = key.split('.');
-    let value = translations[language];
     
+    // Attempt to get the value in the current language
+    let value = translations[language];
     for (const k of keys) {
       if (value && value[k]) {
         value = value[k];
       } else {
-        return key;
+        value = undefined;
+        break;
       }
     }
+
+    // Resilient Fallback: If not found in current language, try Bangla (Default)
+    if (typeof value !== 'string') {
+      let fallbackValue = translations['bn'];
+      for (const k of keys) {
+        if (fallbackValue && fallbackValue[k]) {
+          fallbackValue = fallbackValue[k];
+        } else {
+          fallbackValue = undefined;
+          break;
+        }
+      }
+      if (typeof fallbackValue === 'string') return fallbackValue;
+    }
+
+    // Final Safety: Return humanized key part or the key itself instead of raw ADMIN.KEY
+    if (typeof value !== 'string') {
+      const lastKey = keys[keys.length - 1];
+      return lastKey.replace(/_/g, ' ').toUpperCase(); 
+    }
     
-    return typeof value === 'string' ? value : key;
+    return value;
   }, [language]);
 
   const value = React.useMemo(() => ({
@@ -55,7 +77,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     t
   }), [language, setLanguage, t]);
 
-  // Always render provider to avoid context undefined errors
   return (
     <LanguageContext.Provider value={value}>
       {children}
