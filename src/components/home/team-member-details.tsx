@@ -71,18 +71,18 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
             <X size={24} />
           </button>
 
-          <div className="space-y-4">
+          <DialogHeader className="text-left space-y-4">
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-primary text-white border-none uppercase font-black text-[8px] tracking-widest px-3 py-1 rounded-full">
                 {member.department} Team
               </Badge>
-              {member.featured && <Badge className="bg-amber-500 text-white border-none uppercase font-black text-[8px] tracking-widest px-3 py-1 rounded-full">Pro Certified</Badge>}
+              {member.featured && <Badge className="bg-amber-50 text-white border-none uppercase font-black text-[8px] tracking-widest px-3 py-1 rounded-full">Pro Certified</Badge>}
             </div>
             <div className="space-y-1">
-              <h2 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter italic leading-none">{member.name}</h2>
+              <DialogTitle className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter italic leading-none">{member.name}</DialogTitle>
               <p className="text-primary font-black uppercase tracking-widest text-sm">{member.designation}</p>
             </div>
-          </div>
+          </DialogHeader>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
              <div className="p-4 bg-gray-50 rounded-3xl space-y-1">
