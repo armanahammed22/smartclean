@@ -2,6 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import bn from '@/locales/bn.json';
+import en from '@/locales/en.json';
 
 type Language = 'bn' | 'en';
 
@@ -13,275 +15,18 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations: Record<Language, Record<string, string>> = {
-  bn: {
-    nav_home: "হোম",
-    nav_services: "সেবাসমূহ",
-    nav_products: "পণ্যসমূহ",
-    nav_account: "অ্যাকাউন্ট",
-    search_placeholder: "পণ্য বা সার্ভিস খুঁজুন...",
-    nav_offers: "অফারসমূহ",
-    item_supporthub: "সাপোর্ট হাব",
-    footer_about: "আমাদের সম্পর্কে",
-    footer_services: "সার্ভিসসমূহ",
-    footer_company: "কোম্পানি",
-    footer_contact: "যোগাযোগ",
-    footer_privacy: "প্রাইভেসি পলিসি",
-    footer_terms: "শর্তাবলী",
-    all_services_title: "সব সেবা",
-    empty_cart: "আপনার তালিকা খালি",
-    empty_cart_desc: "আপনি এখনো কোনো পণ্য বা সার্ভিস যোগ করেননি।",
-    browse_catalog: "ক্যাটালগ দেখুন",
-    cart_added: "তালিকায় যোগ করা হয়েছে",
-    cart_desc: "আইটেমটি আপনার তালিকায় সফলভাবে যোগ করা হয়েছে।",
-    book_now: "বুক করুন",
-    flash_sale: "ফ্ল্যাশ সেল",
-    ends_in: "শেষ হতে বাকি",
-    sold: "টি বিক্রি",
-    booked: "টি বুকিং",
-    order_summary: "অর্ডার সারাংশ",
-    secure_checkout: "সুরক্ষিত চেকআউট",
-    subtotal: "সাব-টোটাল",
-    shipping: "শিপিং",
-    shipping_free: "ফ্রি",
-    total: "মোট",
-    proceed_to_checkout: "চেকআউট করুন",
-    delivery_info: "ডেলিভারি তথ্য",
-    full_name: "আপনার পূর্ণ নাম",
-    phone_number: "আপনার মোবাইল নম্বর",
-    email_address: "আপনার ইমেল ঠিকানা",
-    delivery_address: "আপনার বিস্তারিত ঠিকানা",
-    payment_method: "পেমেন্ট পদ্ধতি",
-    processing: "প্রক্রিয়াকরণ হচ্ছে...",
-    order_confirmed: "অর্ডার নিশ্চিত হয়েছে!",
-    thank_you_order: "আমাদের সাথে থাকার জন্য ধন্যবাদ।",
-    order_id: "অর্ডার আইডি",
-    back_to_shop: "শপে ফিরে যান",
-    login_info: "লগইন তথ্য",
-    temp_password: "অস্থায়ী পাসওয়ার্ড",
-    account_created: "অ্যাকাউন্ট তৈরি হয়েছে",
-    otp_sent: "ওটিপি পাঠানো হয়েছে",
-    otp_verified: "ওটিপি যাচাই করা হয়েছে",
-    invalid_otp: "ভুল ওটিপি",
-    send_otp: "ওটিপি পাঠান",
-    phone_exists_error: "এই নম্বরটি অলরেডি রেজিস্টার্ড।",
-    personal_dashboard: "ব্যক্তিগত ড্যাশবোর্ড",
-    portal_access: "পোর্টালে প্রবেশ",
-    view_all: "সব দেখুন",
-    cat_all: "সব ক্যাটাগরি",
-    cat_cleaning: "ক্লিনিং",
-    cat_maintenance: "মেইনটেন্যান্স",
-    cat_repair: "রিপেয়ার",
-    cat_tools: "সরঞ্জাম",
-    price_from: "থেকে শুরু",
-    find_service_placeholder: "পছন্দের সার্ভিসটি খুঁজুন...",
-    services_title: "সেবাসমূহ",
-    product: "প্রোডাক্ট",
-    service: "সার্ভিস",
-    no_match_found: "কিছু পাওয়া যায়নি",
-    view_all_results: "সব রেজাল্ট দেখুন",
-    search_suggestions: "সার্চ সাজেশন",
-    quantity: "পরিমাণ",
-    add_to_cart: "তালিকায় যোগ করুন",
-    management_terminal: "ম্যানেজমেন্ট টার্মিনাল",
-    server_status: "সার্ভার স্ট্যাটাস",
-    online: "অনলাইন",
-    live_site: "লাইভ সাইট",
-    admin_login_title: "অ্যাকাউন্ট লগইন",
-    admin_login_desc: "আপনার তথ্য প্রদান করুন",
-    enter_email: "ইমেইল অ্যাড্রেস লিখুন",
-    enter_password: "পাসওয়ার্ড লিখুন",
-    login_btn: "লগইন করুন",
-    registration_btn: "রেজিস্ট্রেশন",
-    back_to_site: "সাইটে ফিরে যান",
-    exit_terminal: "টার্মিনাল থেকে বের হোন",
-    new_service: "নতুন সার্ভিস",
-    new_order: "নতুন অর্ডার",
-    new_booking: "নতুন বুকিং",
-    new_sku: "নতুন এসকেইউ (SKU)",
-    back: "পেছনে",
-    professional_care: "পেশাদার সেবা",
-    reliable_cleaning: "নির্ভরযোগ্য ক্লিনিং",
-    hero_placeholder: "পেশাদার সেবা আপনার দোরগোড়ায়",
-    campaign_deals: "ক্যাম্পেইন অফার",
-    mega_sale: "মেগা সেল",
-    enter_sale: "অফার দেখুন",
-    happy_clients: "সন্তুষ্ট গ্রাহক",
-    trust_score: "ট্রাস্ট স্কোর",
-    verified_pros: "ভেরিফাইড প্রফেশনাল",
-    service_hours: "সেবা প্রদান (ঘণ্টা)",
-    welcome_back: "স্বাগতম",
-    client_portal: "ক্লায়েন্ট পোর্টাল",
-    premium_badge: "প্রিমিয়াম",
-    free_delivery: "ফ্রি ডেলিভারি",
-    ratings: "রেটিং",
-    reviews_count: "টি রিভিউ",
-    brand: "ব্র্যান্ড",
-    stock_status: "স্টক স্ট্যাটাস",
-    out_of_stock: "স্টক শেষ",
-    available_units: "টি ইউনিট আছে",
-    buy_now: "এখনই কিনুন",
-    delivery_options: "ডেলিভারি অপশন",
-    follow: "ফলো করুন",
-    follow_us: "আমাদের অনুসরণ করুন",
-    app_downloads: "অ্যাপ ডাউনলোড",
-    rights_reserved: "সর্বস্বত্ব সংরক্ষিত",
-    description: "বিস্তারিত",
-    specifications: "স্পেসিফিকেশন",
-    customer_qna: "গ্রাহক প্রশ্ন",
-    ask_question: "প্রশ্ন করুন",
-    no_questions: "এখনো কোনো প্রশ্ন নেই",
-    write_review: "রিভিউ লিখুন",
-    submit_review: "রিভিউ দিন",
-    sign_in_to_review: "রিভিউ দিতে লগইন করুন",
-    results_gallery: "কাজের গ্যালারি",
-    order_confirmed_success: "বুকিং নিশ্চিত হয়েছে!",
-    your_schedule: "আপনার শিডিউল নিশ্চিত করা হয়েছে",
-    go_to_dashboard: "ড্যাশবোর্ডে যান",
-    loading: "লোড হচ্ছে...",
-    fetching_data: "ডাটা লোড করা হচ্ছে...",
-    error_404_title: "৪০৪ - পেজ পাওয়া যায়নি",
-    go_home: "হোমে যান"
-  },
-  en: {
-    nav_home: "Home",
-    nav_services: "Services",
-    nav_products: "Products",
-    nav_account: "Account",
-    search_placeholder: "Search products or services...",
-    nav_offers: "Offers",
-    item_supporthub: "Support Hub",
-    footer_about: "About Us",
-    footer_services: "Services",
-    footer_company: "Company",
-    footer_contact: "Contact",
-    footer_privacy: "Privacy Policy",
-    footer_terms: "Terms & Conditions",
-    all_services_title: "All Services",
-    empty_cart: "Your cart is empty",
-    empty_cart_desc: "You haven't added any items or services yet.",
-    browse_catalog: "Browse Catalog",
-    cart_added: "Added to Cart",
-    cart_desc: "Item has been successfully added to your list.",
-    book_now: "Book Now",
-    flash_sale: "Flash Sale",
-    ends_in: "Ends In",
-    sold: "Sold",
-    booked: "Booked",
-    order_summary: "Order Summary",
-    secure_checkout: "Secure Checkout",
-    subtotal: "Subtotal",
-    shipping: "Shipping",
-    shipping_free: "Free",
-    total: "Total",
-    proceed_to_checkout: "Proceed to Checkout",
-    delivery_info: "Delivery Info",
-    full_name: "Your Full Name",
-    phone_number: "Mobile Number",
-    email_address: "Email Address",
-    delivery_address: "Full Address",
-    payment_method: "Payment Method",
-    processing: "Processing...",
-    order_confirmed: "Order Confirmed!",
-    thank_you_order: "Thank you for being with us.",
-    order_id: "Order ID",
-    back_to_shop: "Back to Shop",
-    login_info: "Login Info",
-    temp_password: "Temporary Password",
-    account_created: "Account Created",
-    otp_sent: "OTP Sent",
-    otp_verified: "OTP Verified",
-    invalid_otp: "Invalid OTP",
-    send_otp: "Send OTP",
-    phone_exists_error: "Number already registered.",
-    personal_dashboard: "Personal Dashboard",
-    portal_access: "Portal Access",
-    view_all: "View All",
-    cat_all: "All Categories",
-    cat_cleaning: "Cleaning",
-    cat_maintenance: "Maintenance",
-    cat_repair: "Repair",
-    cat_tools: "Tools",
-    price_from: "Starting From",
-    find_service_placeholder: "Search for a service...",
-    services_title: "Services",
-    product: "Product",
-    service: "Service",
-    no_match_found: "No Match Found",
-    view_all_results: "View All Results",
-    search_suggestions: "Search Suggestions",
-    quantity: "Quantity",
-    add_to_cart: "Add to Cart",
-    management_terminal: "Management Terminal",
-    server_status: "Server Status",
-    online: "Online",
-    live_site: "Live Site",
-    admin_login_title: "Account Login",
-    admin_login_desc: "Enter your credentials",
-    enter_email: "Enter Email Address",
-    enter_password: "Enter Password",
-    login_btn: "Login",
-    registration_btn: "Registration",
-    back_to_site: "Back to Site",
-    exit_terminal: "Exit Terminal",
-    new_service: "New Service",
-    new_order: "New Order",
-    new_booking: "New Booking",
-    new_sku: "New SKU",
-    back: "Back",
-    professional_care: "Professional Care",
-    reliable_cleaning: "Reliable Cleaning",
-    hero_placeholder: "Pro Services at Your Doorstep",
-    campaign_deals: "Campaign Deals",
-    mega_sale: "MEGA SALE",
-    enter_sale: "Enter Sale",
-    happy_clients: "Happy Clients",
-    trust_score: "Trust Score",
-    verified_pros: "Verified Pros",
-    service_hours: "Service Hours",
-    welcome_back: "Welcome Back",
-    client_portal: "Client Portal",
-    premium_badge: "Premium",
-    free_delivery: "Free Delivery",
-    ratings: "Ratings",
-    reviews_count: "Reviews",
-    brand: "Brand",
-    stock_status: "Stock Status",
-    out_of_stock: "Out of Stock",
-    available_units: "Units Available",
-    buy_now: "Buy Now",
-    delivery_options: "Delivery Options",
-    follow: "Follow",
-    follow_us: "Follow Us",
-    app_downloads: "App Downloads",
-    rights_reserved: "All Rights Reserved",
-    description: "Description",
-    specifications: "Specifications",
-    customer_qna: "Customer Q&A",
-    ask_question: "Ask a Question",
-    no_questions: "No questions yet",
-    write_review: "Write Review",
-    submit_review: "Submit Review",
-    sign_in_to_review: "Sign in to review",
-    results_gallery: "Operational Results",
-    order_confirmed_success: "Booking Confirmed!",
-    your_schedule: "Your schedule has been confirmed",
-    go_to_dashboard: "Go to Dashboard",
-    loading: "Loading...",
-    fetching_data: "Fetching data...",
-    error_404_title: "404 - Not Found",
-    go_home: "Go Home"
-  }
-};
+const translations: Record<Language, any> = { bn, en };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('bn');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('app_lang');
     if (saved === 'en' || saved === 'bn') {
       setLanguageState(saved as Language);
     }
+    setMounted(true);
   }, []);
 
   const setLanguage = useCallback((lang: Language) => {
@@ -290,11 +35,29 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback((key: string) => {
-    return translations[language][key] || key;
+    const keys = key.split('.');
+    let value = translations[language];
+    
+    for (const k of keys) {
+      if (value && value[k]) {
+        value = value[k];
+      } else {
+        return key;
+      }
+    }
+    
+    return typeof value === 'string' ? value : key;
   }, [language]);
 
+  const value = React.useMemo(() => ({
+    language,
+    setLanguage,
+    t
+  }), [language, setLanguage, t]);
+
+  // Always render provider to avoid context undefined errors
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

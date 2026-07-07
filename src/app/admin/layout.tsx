@@ -100,6 +100,7 @@ import {
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useLanguage } from '@/components/providers/language-provider';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -110,7 +111,7 @@ const STORAGE_KEY = 'admin_sidebar_collapsed';
 let savedSidebarScrollTop = 0;
 
 /**
- * 🛠️ SidebarContent Component (Moved outside to prevent re-mounting)
+ * 🛠️ SidebarContent Component
  */
 const SidebarContent = React.memo(({ 
   collapsed, 
@@ -122,7 +123,8 @@ const SidebarContent = React.memo(({
   scrollRef,
   displayLogo,
   settings,
-  onLogout
+  onLogout,
+  t
 }: any) => {
   return (
     <div className="flex flex-col h-full bg-[#08101b] text-white overflow-hidden transition-all duration-300">
@@ -160,7 +162,7 @@ const SidebarContent = React.memo(({
               >
                 <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center" : "gap-3 flex-1")}>
                   <group.icon size={collapsed ? 22 : 18} className={cn("transition-colors duration-300", group.color, pathname === group.href && "text-white scale-110")} />
-                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">{group.title}</span>}
+                  {!collapsed && <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">{t(`admin.${group.id}`)}</span>}
                 </div>
               </Link>
             );
@@ -186,7 +188,7 @@ const SidebarContent = React.memo(({
               >
                 <div className={cn("flex items-center transition-all duration-300", collapsed ? "justify-center w-full" : "flex-1 gap-3")}>
                   <group.icon size={collapsed ? 22 : 18} className={cn("shrink-0 transition-colors duration-300", group.color)} />
-                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{group.title}</span>}
+                  {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest text-left whitespace-nowrap">{t(`admin.${group.id}`)}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
               </button>
@@ -220,7 +222,7 @@ const SidebarContent = React.memo(({
       <div className={cn("p-4 border-t border-white/5 shrink-0 transition-all duration-300", collapsed && "flex justify-center")}>
         <Button variant="ghost" onClick={onLogout} className={cn("justify-start text-white/40 hover:text-red-400 hover:bg-white/5 rounded-xl h-12 transition-all duration-300", collapsed ? "w-10 px-0 flex justify-center" : "w-full px-4")}>
           <LogOut size={18} className={cn("text-red-400 shrink-0", !collapsed && "mr-3")} />
-          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">Logout</span>}
+          {!collapsed && <span className="font-black text-[10px] uppercase tracking-widest">{t('admin.logout')}</span>}
         </Button>
       </div>
     </div>
@@ -263,14 +265,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const { t, language, setLanguage } = useLanguage();
 
   const sidebarScrollRef = useRef<HTMLDivElement>(null);
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const sidebarConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
-  const { data: sidebarConfig } = useDoc(sidebarConfigRef);
+  const layoutConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
+  const { data: sidebarConfig } = useDoc(layoutConfigRef);
 
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
@@ -293,7 +296,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   const isAdmin = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
 
-  // 🛡️ Admin Portal Guard
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.replace('/login');
@@ -562,7 +564,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname, NAV_GROUPS]);
 
   // Precise scroll restoration on pathname change
-  // We use requestAnimationFrame to ensure the DOM has finished applying the expandedGroups state.
   useEffect(() => {
     if (sidebarScrollRef.current) {
       const restoreScroll = () => {
@@ -572,7 +573,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       };
       
       requestAnimationFrame(restoreScroll);
-      // Fallback for slower renders
       const timer = setTimeout(restoreScroll, 50);
       return () => clearTimeout(timer);
     }
@@ -598,7 +598,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Final check: if user is logged out, children shouldn't render (auth guard handled by useEffect)
   if (!user || !isAdmin) return null;
 
   return (
@@ -614,6 +613,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           displayLogo={displayLogo}
           settings={settings}
           onLogout={() => setIsLogoutDialogOpen(true)}
+          t={t}
         />
         <button 
           onClick={handleToggleCollapse} 
@@ -647,6 +647,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   displayLogo={displayLogo}
                   settings={settings}
                   onLogout={() => setIsLogoutDialogOpen(true)}
+                  t={t}
                 />
               </SheetContent>
             </Sheet>
@@ -656,10 +657,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
+            
+            {/* 🌐 LANGUAGE TOGGLE */}
+            <div className="flex items-center gap-2 mr-2 border-r pr-4 border-gray-100 h-10">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
+                className="text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary/5 rounded-xl h-9"
+              >
+                <Globe size={14} className="text-primary" />
+                <span className="hidden sm:inline">{language === 'bn' ? 'English' : 'বাংলা'}</span>
+                <span className="sm:hidden">{language === 'bn' ? 'EN' : 'BN'}</span>
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-3 pl-0 h-10">
               <div className="text-right hidden sm:block">
                 <p className="text-[10px] font-black uppercase text-gray-900 leading-none">{user?.displayName || 'Admin'}</p>
-                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Authorized</p>
+                <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">{t('admin.profile')}</p>
               </div>
               <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm shadow-md">
                 {user?.email?.[0]?.toUpperCase() || 'A'}
@@ -677,12 +693,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
         <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2"><LogOut size={20} /> Logout Admin?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2"><LogOut size={20} /> {t('admin.logout')}?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm font-medium leading-relaxed">Confirm session termination. You will be redirected to the login page.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 flex gap-3">
-            <AlertDialogCancel className="rounded-xl flex-1 font-bold">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">Logout</AlertDialogAction>
+            <AlertDialogCancel className="rounded-xl flex-1 font-bold">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="rounded-xl flex-1 bg-red-600 hover:bg-red-700 font-black uppercase text-xs tracking-widest">{t('admin.logout')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

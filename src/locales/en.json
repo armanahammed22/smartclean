@@ -1,0 +1,40 @@
+
+{
+  "admin": {
+    "dashboard": "Dashboard",
+    "sales_terminal": "Sales Terminal",
+    "order_booking": "Order & Booking",
+    "product_menu": "Product Menu",
+    "service_menu": "Service Menu",
+    "marketing": "Marketing & Promotions",
+    "offers": "Offer & Campaign",
+    "seo": "SEO & Tracking",
+    "hrm": "HRM",
+    "customer_hub": "Customer Hub",
+    "partners": "B2B Partners",
+    "vendors": "Vendor Hub",
+    "finance": "Financial Hub",
+    "reports": "Business Report",
+    "customize": "Site Customize",
+    "system": "Settings",
+    "ai_agents": "AI Agents",
+    "support": "Support",
+    "logout": "Logout",
+    "search_placeholder": "Search...",
+    "language": "Language",
+    "profile": "Profile",
+    "back_to_site": "Back to Site",
+    "management_access": "Management Access",
+    "admin_portal": "Admin Portal",
+    "staff_portal": "Staff Portal"
+  },
+  "common": {
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "view_all": "View All"
+  }
+}

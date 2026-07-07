@@ -1,0 +1,40 @@
+
+{
+  "admin": {
+    "dashboard": "ড্যাশবোর্ড",
+    "sales_terminal": "সেলস টার্মিনাল",
+    "order_booking": "অর্ডার ও বুকিং",
+    "product_menu": "পণ্য মেনু",
+    "service_menu": "সার্ভিস মেনু",
+    "marketing": "মার্কেটিং ও প্রমোশন",
+    "offers": "অফার ও ক্যাম্পেইন",
+    "seo": "এসইও ও ট্র্যাকিং",
+    "hrm": "এইচআরএম (HRM)",
+    "customer_hub": "কাস্টমার হাব",
+    "partners": "পার্টনার (B2B)",
+    "vendors": "ভেন্ডর হাব",
+    "finance": "ফিন্যান্সিয়াল হাব",
+    "reports": "বিজনেস রিপোর্ট",
+    "customize": "সাইট কাস্টমাইজ",
+    "system": "সেটিংস",
+    "ai_agents": "এআই এজেন্ট",
+    "support": "সাপোর্ট",
+    "logout": "লগআউট",
+    "search_placeholder": "খুঁজুন...",
+    "language": "ভাষা",
+    "profile": "প্রোফাইল",
+    "back_to_site": "সাইটে ফিরে যান",
+    "management_access": "ম্যানেজমেন্ট অ্যাক্সেস",
+    "admin_portal": "অ্যাডমিন পোর্টাল",
+    "staff_portal": "স্টাফ পোর্টাল"
+  },
+  "common": {
+    "save": "সেভ করুন",
+    "delete": "ডিলিট",
+    "edit": "এডিট",
+    "cancel": "বাতিল",
+    "confirm": "নিশ্চিত করুন",
+    "loading": "লোড হচ্ছে...",
+    "view_all": "সব দেখুন"
+  }
+}

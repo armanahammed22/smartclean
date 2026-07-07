@@ -107,7 +107,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+    // Return empty services if used outside provider instead of throwing,
+    // this handles hydration edges and allows components to fail gracefully.
+    return {
+      firebaseApp: null,
+      firestore: null,
+      auth: null,
+      user: null,
+      isUserLoading: false,
+      userError: null
+    };
   }
   return {
     firebaseApp: context.firebaseApp,
@@ -138,8 +147,6 @@ type MemoFirebase <T> = T & {__memo?: boolean};
 
 /**
  * 🔒 Production Memoization Helper
- * Ensures that Firestore queries are NOT recreated on every render.
- * Re-creating queries is the primary cause of internal assertion failures.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
