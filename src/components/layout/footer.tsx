@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -28,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { FooterLiveChat } from './footer-live-chat';
 
 export function Footer() {
   const { t } = useLanguage();
@@ -179,6 +179,11 @@ export function Footer() {
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/5 rounded-lg text-primary"><Mail size={16} className="shrink-0" /></div>
                 <span className="truncate opacity-80">{settings?.contactEmail || 'smartclean422@gmail.com'}</span>
+              </div>
+              
+              {/* FIXED CHAT BUTTON BELOW EMAIL */}
+              <div className="pt-2">
+                <FooterLiveChat />
               </div>
             </div>
           </div>

@@ -10,7 +10,8 @@ import { usePathname } from 'next/navigation';
 
 /**
  * Dynamic Footer Live Chat Button
- * Controlled entirely from the Admin Dashboard
+ * Controlled entirely from the Admin Dashboard.
+ * Now modified to be an inline element instead of floating.
  */
 export function FooterLiveChat() {
   const db = useFirestore();
@@ -59,17 +60,11 @@ export function FooterLiveChat() {
     borderRadius: `${config.borderRadius}px`,
     padding: `${config.paddingY}px ${config.paddingX}px`,
     boxShadow: config.showShadow ? (isHovered ? '0 20px 40px rgba(0,0,0,0.3)' : '0 10px 25px rgba(0,0,0,0.2)') : 'none',
-    marginTop: `${config.marginTop}px`,
-    marginBottom: `${config.marginBottom}px`,
+    marginTop: `12px`, // Forced spacing for footer placement
   };
 
   return (
-    <div 
-      className={cn(
-        "fixed bottom-20 md:bottom-10 right-4 md:right-10 z-[150] transition-all duration-300",
-        config.isFullWidth ? "left-4 right-4 md:left-auto md:right-10" : ""
-      )}
-    >
+    <div className={cn("w-fit transition-all duration-300", config.isFullWidth ? "w-full" : "")}>
       <button
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
@@ -97,7 +92,7 @@ export function FooterLiveChat() {
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+          50% { transform: translateY(-4px); }
         }
         .animate-float {
           animation: float 3s ease-in-out infinite;
