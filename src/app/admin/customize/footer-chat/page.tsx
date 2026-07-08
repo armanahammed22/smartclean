@@ -68,8 +68,10 @@ export default function FooterChatManagementPage() {
     mobileVisible: true,
     paddingX: 20,
     paddingY: 10,
-    marginTop: 0,
-    marginBottom: 0
+    marginTop: 12,
+    marginBottom: 0,
+    btnWidth: 'auto',
+    btnHeight: 48
   });
 
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function FooterChatManagementPage() {
             <TabsContent value="style" className="space-y-6 mt-0">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gray-50/50 p-8 border-b">
-                  <CardTitle className="text-base font-black uppercase">Color & Style Matrix</CardTitle>
+                  <CardTitle className="text-base font-black uppercase">Color & Dimension Matrix</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-10">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -206,19 +208,28 @@ export default function FooterChatManagementPage() {
                           <Input type="number" value={formData.borderRadius} onChange={e => updateField('borderRadius', parseInt(e.target.value))} className="h-10 bg-gray-50" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Btn Size</Label>
-                          <Select value={formData.btnSize} onValueChange={v => updateField('btnSize', v)}>
-                            <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue/></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="sm">Small</SelectItem>
-                              <SelectItem value="md">Medium</SelectItem>
-                              <SelectItem value="lg">Large</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Label className="text-[9px] font-black uppercase">Icon Size</Label>
+                          <Input type="number" value={formData.iconSize} onChange={e => updateField('iconSize', parseInt(e.target.value))} className="h-10 bg-gray-50" />
                         </div>
                       </div>
                     </div>
 
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Dimensions</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Width (px/%)</Label>
+                          <Input value={formData.btnWidth} onChange={e => updateField('btnWidth', e.target.value)} placeholder="auto, 200px, 100%" className="h-10 bg-gray-50" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Height (px)</Label>
+                          <Input type="number" value={formData.btnHeight} onChange={e => updateField('btnHeight', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-50">
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Interaction</h4>
                       <div className="grid grid-cols-2 gap-4">
@@ -229,6 +240,20 @@ export default function FooterChatManagementPage() {
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Hover Text</Label>
                           <Input type="color" value={formData.hoverTextColor} onChange={e => updateField('hoverTextColor', e.target.value)} className="h-10 p-1" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Spacing</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Pad X (px)</Label>
+                          <Input type="number" value={formData.paddingX} onChange={e => updateField('paddingX', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase">Pad Y (px)</Label>
+                          <Input type="number" value={formData.paddingY} onChange={e => updateField('paddingY', parseInt(e.target.value))} className="h-10 bg-gray-50" />
                         </div>
                       </div>
                     </div>
@@ -333,6 +358,8 @@ export default function FooterChatManagementPage() {
                   border: `1px solid ${formData.borderColor}`,
                   borderRadius: `${formData.borderRadius}px`,
                   padding: `${formData.paddingY}px ${formData.paddingX}px`,
+                  width: formData.btnWidth,
+                  height: formData.btnHeight ? `${formData.btnHeight}px` : 'auto',
                   boxShadow: formData.showShadow ? '0 10px 30px rgba(0,0,0,0.2)' : 'none'
                 }}
                >

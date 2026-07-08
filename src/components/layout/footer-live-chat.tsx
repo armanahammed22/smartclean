@@ -11,7 +11,6 @@ import { usePathname } from 'next/navigation';
 /**
  * Dynamic Footer Live Chat Button
  * Controlled entirely from the Admin Dashboard.
- * Now modified to be an inline element instead of floating.
  */
 export function FooterLiveChat() {
   const db = useFirestore();
@@ -59,12 +58,15 @@ export function FooterLiveChat() {
     border: `1px solid ${isHovered ? config.hoverBorderColor : config.borderColor}`,
     borderRadius: `${config.borderRadius}px`,
     padding: `${config.paddingY}px ${config.paddingX}px`,
+    width: config.btnWidth || 'auto',
+    height: config.btnHeight ? `${config.btnHeight}px` : 'auto',
     boxShadow: config.showShadow ? (isHovered ? '0 20px 40px rgba(0,0,0,0.3)' : '0 10px 25px rgba(0,0,0,0.2)') : 'none',
-    marginTop: `12px`, // Forced spacing for footer placement
+    marginTop: `${config.marginTop || 12}px`,
+    marginBottom: `${config.marginBottom || 0}px`
   };
 
   return (
-    <div className={cn("w-fit transition-all duration-300", config.isFullWidth ? "w-full" : "")}>
+    <div className={cn("transition-all duration-300", config.isFullWidth ? "w-full" : "w-fit")}>
       <button
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
