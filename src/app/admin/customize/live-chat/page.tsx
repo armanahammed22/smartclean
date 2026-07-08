@@ -21,7 +21,8 @@ import {
   Smartphone,
   ExternalLink,
   Bot,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
