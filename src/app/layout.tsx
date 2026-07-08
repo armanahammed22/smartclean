@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -6,6 +7,7 @@ import {SupportProvider} from '@/components/providers/support-provider';
 import {Toaster} from '@/components/ui/toaster';
 import {FirebaseClientProvider} from '@/firebase';
 import {TrackingProvider} from '@/components/providers/tracking-provider';
+import {LiveChatLoader} from '@/components/providers/live-chat-loader';
 import {GlobalErrorBoundary} from '@/components/providers/error-boundary';
 import { db } from '@/lib/firebaseAdmin';
 import Script from 'next/script';
@@ -200,6 +202,7 @@ export default async function RootLayout({
               <SupportProvider>
                 <CartProvider>
                   <TrackingProvider>
+                    <LiveChatLoader />
                     <main className="flex flex-col min-h-screen">
                       {children}
                     </main>

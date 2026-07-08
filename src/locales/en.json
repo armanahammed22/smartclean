@@ -109,6 +109,7 @@
     "tickets": "Support Tickets",
     "support_config": "Support Hub Config",
     "invoices": "Invoices",
-    "couriers": "Logistics"
+    "couriers": "Logistics",
+    "live_chat": "Live Chat"
   }
 }

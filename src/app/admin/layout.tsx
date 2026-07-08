@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -487,6 +488,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Team Members", key: "team", href: '/admin/customize/team', icon: Users },
           { name: "Header & Footer", key: "theme", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", key: "pages", href: '/admin/pages', icon: FileText },
+          { name: "Live Chat", key: "live_chat", href: '/admin/customize/live-chat', icon: MessageCircle },
         ]
       },
       {
