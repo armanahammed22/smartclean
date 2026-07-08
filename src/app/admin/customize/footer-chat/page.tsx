@@ -339,7 +339,7 @@ export default function FooterChatManagementPage() {
                  <ActiveIcon size={formData.iconSize} style={{ order: formData.iconPosition === 'left' ? 0 : 2 }} />
                  <div className="flex flex-col text-left" style={{ order: 1 }}>
                    <span className="text-xs font-black uppercase tracking-tight leading-none">{formData.btnText}</span>
-                   {formData.description && <span className="text-[8px] font-bold opacity-70 uppercase tracking-widest mt-0.5 whitespace-nowrap">{formData.description}</span>}
+                   {formData.description && <span className="text-[7px] md:text-[9px] font-bold opacity-70 uppercase tracking-widest mt-0.5 whitespace-nowrap">{formData.description}</span>}
                  </div>
                </div>
 
@@ -368,26 +368,5 @@ export default function FooterChatManagementPage() {
         }
       `}</style>
     </div>
-  );
-}
-
-function Monitor(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="20" height="14" x="2" y="3" rx="2" />
-      <line x1="8" x2="16" y1="21" y2="21" />
-      <line x1="12" x2="12" y1="17" y2="21" />
-    </svg>
   );
 }
