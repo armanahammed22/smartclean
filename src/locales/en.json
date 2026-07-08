@@ -110,6 +110,7 @@
     "support_config": "Support Hub Config",
     "invoices": "Invoices",
     "couriers": "Logistics",
-    "live_chat": "Live Chat"
+    "live_chat": "Live Chat",
+    "footer_chat": "Footer Live Chat"
   }
 }

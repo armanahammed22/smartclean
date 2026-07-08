@@ -7,6 +7,7 @@ import { Footer } from './footer';
 import { BottomNav } from './bottom-nav';
 import { WhatsAppContact } from './whatsapp-contact';
 import { CheckoutModal } from '@/components/checkout/checkout-modal';
+import { FooterLiveChat } from './footer-live-chat';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -130,7 +131,12 @@ export function PublicLayout({ children, minimalMobile = false }: PublicLayoutPr
         <div className="hidden lg:block"><Footer /></div>
       </main>
       
-      {mounted && !minimalMobile && <div className="lg:hidden"><BottomNav /></div>}
+      {mounted && !minimalMobile && (
+        <>
+          <div className="lg:hidden"><BottomNav /></div>
+          <FooterLiveChat />
+        </>
+      )}
       <WhatsAppContact />
       <CheckoutModal />
     </div>

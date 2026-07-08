@@ -74,7 +74,7 @@
     "analytics": "গুগল অ্যানালিটিক্স",
     "tag_manager": "ট্যাগ ম্যানেজার",
     "tracking_hub": "ট্র্যাকিং হাব",
-    "event_logs": "ইভেন্ট লগস",
+    "event_logs": "イভেন্ট লগস",
     "staff_directory": "স্টাফ ডিরেক্টরি",
     "attendance": "অ্যাটেনডেন্স লগ",
     "payroll": "পেরোল ও মডেল",
@@ -110,6 +110,7 @@
     "support_config": "সাপোর্ট হাব কনফিগ",
     "invoices": "ইনভয়েস",
     "couriers": "লজিস্টিকস",
-    "live_chat": "লাইভ চ্যাট"
+    "live_chat": "লাইভ চ্যাট",
+    "footer_chat": "ফুটার লাইভ চ্যাট"
   }
 }

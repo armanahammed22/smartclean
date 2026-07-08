@@ -489,6 +489,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { name: "Header & Footer", key: "theme", href: '/admin/customize/theme', icon: Layers },
           { name: "Dynamic Pages", key: "pages", href: '/admin/pages', icon: FileText },
           { name: "Live Chat", key: "live_chat", href: '/admin/customize/live-chat', icon: MessageCircle },
+          { name: "Footer Live Chat", key: "footer_chat", href: '/admin/customize/footer-chat', icon: Bot },
         ]
       },
       {
