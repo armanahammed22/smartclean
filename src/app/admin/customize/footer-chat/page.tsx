@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -26,13 +25,16 @@ import {
   Info,
   Layers,
   ArrowRight,
-  Plus
+  Plus,
+  X,
+  Monitor
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
-const ICON_LIST = ['MessageCircle', 'MessageSquare', 'HelpCircle', 'Headphones', 'Zap', 'Star', 'Smile', 'Heart', 'Phone', 'Send'];
+const ICON_LIST = ['MessageCircle', 'MessageSquare', 'HelpCircle', 'Headphones', 'Zap', 'Star', 'Smile', 'Heart', 'Phone', 'Send', 'Activity', 'Award'];
 
 export default function FooterChatManagementPage() {
   const db = useFirestore();
@@ -106,7 +108,7 @@ export default function FooterChatManagementPage() {
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase">Footer Live Chat</h1>
           <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
-            <MessageCircle className="text-primary" size={16}/> Professional CTA for chat engagement
+            <MessageCircle className="text-primary" size={16}/> Build a high-conversion chat trigger
           </p>
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="h-11 px-8 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2">
@@ -127,13 +129,13 @@ export default function FooterChatManagementPage() {
             <TabsContent value="content" className="space-y-6 mt-0">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gray-50/50 p-8 border-b">
-                  <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621]">Button Text & Identity</CardTitle>
+                  <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621]">Identity & Text</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-6">
                   <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10 mb-4">
                     <div className="space-y-1">
-                      <Label className="text-xs font-black uppercase">Enable Chat Component</Label>
-                      <p className="text-[9px] font-bold text-primary/60 uppercase">Visible at the bottom of public pages</p>
+                      <Label className="text-xs font-black uppercase">Enable Component</Label>
+                      <p className="text-[9px] font-bold text-primary/60 uppercase">Visible on public pages when enabled</p>
                     </div>
                     <Switch checked={formData.isEnabled} onCheckedChange={v => updateField('isEnabled', v)} />
                   </div>
@@ -144,14 +146,14 @@ export default function FooterChatManagementPage() {
                       <Input value={formData.btnText} onChange={e => updateField('btnText', e.target.value)} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Short Tagline</Label>
+                      <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Short Description</Label>
                       <Input value={formData.description} onChange={e => updateField('description', e.target.value)} className="h-12 bg-gray-50 border-none rounded-xl font-medium" />
                     </div>
                   </div>
 
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-[10px] font-black uppercase text-muted-foreground">Select Icon</Label>
-                    <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
+                    <div className="grid grid-cols-6 md:grid-cols-12 gap-3">
                       {ICON_LIST.map(icon => {
                         const Icon = (LucideIcons as any)[icon];
                         return (
@@ -177,7 +179,7 @@ export default function FooterChatManagementPage() {
             <TabsContent value="style" className="space-y-6 mt-0">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gray-50/50 p-8 border-b">
-                  <CardTitle className="text-base font-black uppercase">Visual Aesthetics</CardTitle>
+                  <CardTitle className="text-base font-black uppercase">Color & Style Matrix</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-10">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -200,7 +202,7 @@ export default function FooterChatManagementPage() {
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Geometry</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black uppercase">Rounding (px)</Label>
+                          <Label className="text-[9px] font-black uppercase">Radius (px)</Label>
                           <Input type="number" value={formData.borderRadius} onChange={e => updateField('borderRadius', parseInt(e.target.value))} className="h-10 bg-gray-50" />
                         </div>
                         <div className="space-y-2">
@@ -218,7 +220,7 @@ export default function FooterChatManagementPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Hover State</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Interaction</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Hover Bg</Label>
@@ -234,19 +236,19 @@ export default function FooterChatManagementPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-50">
                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Entry Animation</Label>
+                        <Label className="text-[9px] font-black uppercase">Animation Protocol</Label>
                         <Select value={formData.animation} onValueChange={v => updateField('animation', v)}>
                           <SelectTrigger className="h-10 bg-gray-50 border-none"><SelectValue/></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="none">Disabled</SelectItem>
                             <SelectItem value="pulse">Pulse (Glow)</SelectItem>
-                            <SelectItem value="bounce">Bounce</SelectItem>
-                            <SelectItem value="float">Floating</SelectItem>
+                            <SelectItem value="bounce">Bounce (Playful)</SelectItem>
+                            <SelectItem value="float">Floating (Premium)</SelectItem>
                           </SelectContent>
                         </Select>
                      </div>
-                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                        <Label className="text-[9px] font-black uppercase">Box Shadow</Label>
+                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl h-10 mt-6">
+                        <Label className="text-[9px] font-black uppercase">Shadow Depth</Label>
                         <Switch checked={formData.showShadow} onCheckedChange={v => updateField('showShadow', v)} />
                      </div>
                   </div>
@@ -257,25 +259,24 @@ export default function FooterChatManagementPage() {
             <TabsContent value="advanced" className="space-y-6 mt-0">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gray-50/50 p-8 border-b">
-                  <CardTitle className="text-base font-black uppercase">Behavior & Visibility</CardTitle>
+                  <CardTitle className="text-base font-black uppercase">Visibility & Layout</CardTitle>
                 </CardHeader>
-                <CardContent className="p-8 space-y-6">
+                <CardContent className="p-8 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase">Action Protocol</Label>
+                      <Label className="text-[10px] font-black uppercase">Action Type</Label>
                       <Select value={formData.actionType} onValueChange={v => updateField('actionType', v)}>
                         <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="popup">Open Site Support Hub</SelectItem>
-                          <SelectItem value="existing_widget">Trigger Third-Party Widget</SelectItem>
+                          <SelectItem value="popup">Open System Support Hub</SelectItem>
+                          <SelectItem value="existing_widget">Trigger Existing Chat Widget</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-[8px] text-muted-foreground italic px-1">Note: "Existing Widget" requires a provider script in Live Chat settings.</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase">Full Width Mode</Label>
                       <div className="h-12 flex items-center justify-between px-4 bg-gray-50 rounded-xl">
-                        <span className="text-[10px] font-bold text-gray-400">Expand to edges</span>
+                        <span className="text-[10px] font-bold text-gray-400">Expand to edge</span>
                         <Switch checked={formData.isFullWidth} onCheckedChange={v => updateField('isFullWidth', v)} />
                       </div>
                     </div>
@@ -283,16 +284,16 @@ export default function FooterChatManagementPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t">
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                         <LucideIcons.Monitor size={16} className="text-gray-400"/>
-                         <Label className="text-[10px] font-black uppercase">Desktop View</Label>
+                      <div className="flex items-center gap-3 text-gray-400">
+                         <Monitor size={18}/>
+                         <Label className="text-[10px] font-black uppercase">Desktop Device</Label>
                       </div>
                       <Switch checked={formData.desktopVisible} onCheckedChange={v => updateField('desktopVisible', v)} />
                     </div>
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                         <LucideIcons.Smartphone size={16} className="text-gray-400"/>
-                         <Label className="text-[10px] font-black uppercase">Mobile View</Label>
+                      <div className="flex items-center gap-3 text-gray-400">
+                         <Smartphone size={18}/>
+                         <Label className="text-[10px] font-black uppercase">Mobile Device</Label>
                       </div>
                       <Switch checked={formData.mobileVisible} onCheckedChange={v => updateField('mobileVisible', v)} />
                     </div>
@@ -309,49 +310,47 @@ export default function FooterChatManagementPage() {
             <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
               <div className="flex items-center gap-3">
                 <Eye size={20} className="text-primary"/>
-                <CardTitle className="text-lg font-black uppercase tracking-tight">Live Simulation</CardTitle>
+                <CardTitle className="text-lg font-black uppercase tracking-tight">Real-time Simulation</CardTitle>
               </div>
               <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase px-3 py-1">WYSIWYG</Badge>
             </CardHeader>
-            <CardContent className="p-10 flex items-center justify-center min-h-[400px] bg-white relative">
+            <CardContent className="p-10 flex flex-col items-center justify-center min-h-[400px] bg-white relative">
                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                
-               <div className="w-full flex flex-col items-center gap-8">
-                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-10">Simulation Area</p>
-                 
-                 <div 
-                  className={cn(
-                    "flex items-center gap-3 shadow-2xl transition-all duration-300",
-                    formData.isFullWidth ? "w-full" : "w-fit",
-                    formData.animation === 'pulse' && "animate-pulse",
-                    formData.animation === 'bounce' && "animate-bounce",
-                    formData.animation === 'float' && "animate-float"
-                  )}
-                  style={{ 
-                    backgroundColor: formData.bgColor,
-                    color: formData.textColor,
-                    border: `1px solid ${formData.borderColor}`,
-                    borderRadius: `${formData.borderRadius}px`,
-                    padding: `${formData.paddingY}px ${formData.paddingX}px`,
-                    boxShadow: formData.showShadow ? '0 10px 30px rgba(0,0,0,0.2)' : 'none'
-                  }}
-                 >
-                   <ActiveIcon size={formData.iconSize} style={{ order: formData.iconPosition === 'left' ? 0 : 2 }} />
-                   <div className="flex flex-col text-left" style={{ order: 1 }}>
-                     <span className="text-xs font-black uppercase tracking-tight leading-none">{formData.btnText}</span>
-                     {formData.description && <span className="text-[8px] font-bold opacity-60 uppercase tracking-widest mt-0.5">{formData.description}</span>}
-                   </div>
+               <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-12">Visual Simulation Area</p>
+               
+               <div 
+                className={cn(
+                  "flex items-center gap-3 transition-all duration-300",
+                  formData.isFullWidth ? "w-full" : "w-fit",
+                  formData.animation === 'pulse' && "animate-pulse",
+                  formData.animation === 'bounce' && "animate-bounce",
+                  formData.animation === 'float' && "animate-float"
+                )}
+                style={{ 
+                  backgroundColor: formData.bgColor,
+                  color: formData.textColor,
+                  border: `1px solid ${formData.borderColor}`,
+                  borderRadius: `${formData.borderRadius}px`,
+                  padding: `${formData.paddingY}px ${formData.paddingX}px`,
+                  boxShadow: formData.showShadow ? '0 10px 30px rgba(0,0,0,0.2)' : 'none'
+                }}
+               >
+                 <ActiveIcon size={formData.iconSize} style={{ order: formData.iconPosition === 'left' ? 0 : 2 }} />
+                 <div className="flex flex-col text-left" style={{ order: 1 }}>
+                   <span className="text-xs font-black uppercase tracking-tight leading-none">{formData.btnText}</span>
+                   {formData.description && <span className="text-[8px] font-bold opacity-70 uppercase tracking-widest mt-0.5 whitespace-nowrap">{formData.description}</span>}
                  </div>
+               </div>
 
-                 <div className="mt-12 p-6 bg-gray-50 rounded-2xl border border-gray-100 max-w-[280px]">
-                    <div className="flex items-center gap-2 mb-2">
-                       <Info size={14} className="text-blue-600"/>
-                       <span className="text-[9px] font-black uppercase text-gray-400">Integration Hub</span>
-                    </div>
-                    <p className="text-[10px] font-medium text-gray-600 leading-relaxed uppercase">
-                      "Popup" মোডটি আপনার কাস্টম সাপোর্ট হাব খুলে দেবে। "Existing Widget" মোডটি Tawk.to বা Tidio-র মতো প্রোভাইডারকে ট্রিগার করবে।
-                    </p>
-                 </div>
+               <div className="mt-16 p-6 bg-blue-50/50 rounded-2xl border border-blue-100/50 max-w-[280px]">
+                  <div className="flex items-center gap-2 mb-2">
+                     <Info size={14} className="text-blue-600"/>
+                     <span className="text-[9px] font-black uppercase text-gray-400">Behavior Note</span>
+                  </div>
+                  <p className="text-[10px] font-medium text-gray-600 leading-relaxed uppercase">
+                    এই বাটনটি ওয়েবসাইটের ফুটারে ফিক্সড থাকবে। এটি ইউজারকে সাপোর্ট নিতে উৎসাহিত করে।
+                  </p>
                </div>
             </CardContent>
           </Card>
@@ -369,5 +368,26 @@ export default function FooterChatManagementPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+function Monitor(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="20" height="14" x="2" y="3" rx="2" />
+      <line x1="8" x2="16" y1="21" y2="21" />
+      <line x1="12" x2="12" y1="17" y2="21" />
+    </svg>
   );
 }

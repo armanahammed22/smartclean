@@ -1,4 +1,3 @@
-
 {
   "common": {
     "save": "সেভ করুন",
@@ -74,7 +73,7 @@
     "analytics": "গুগল অ্যানালিটিক্স",
     "tag_manager": "ট্যাগ ম্যানেজার",
     "tracking_hub": "ট্র্যাকিং হাব",
-    "event_logs": "イভেন্ট লগস",
+    "event_logs": "ইভেন্ট লগস",
     "staff_directory": "স্টাফ ডিরেক্টরি",
     "attendance": "অ্যাটেনডেন্স লগ",
     "payroll": "পেরোল ও মডেল",
