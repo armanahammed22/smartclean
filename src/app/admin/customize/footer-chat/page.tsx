@@ -27,7 +27,8 @@ import {
   ArrowRight,
   Plus,
   X,
-  Monitor
+  Monitor,
+  BadgeCheck
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -100,6 +101,11 @@ export default function FooterChatManagementPage() {
     setFormData(prev => ({ ...prev, [field]: val }));
   };
 
+  const handleNumericChange = (field: string, val: string) => {
+    const parsed = parseInt(val);
+    updateField(field, isNaN(parsed) ? 0 : parsed);
+  };
+
   const ActiveIcon = (LucideIcons as any)[formData.iconName] || MessageCircle;
 
   if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
@@ -157,7 +163,7 @@ export default function FooterChatManagementPage() {
                     <Label className="text-[10px] font-black uppercase text-muted-foreground">Select Icon</Label>
                     <div className="grid grid-cols-6 md:grid-cols-12 gap-3">
                       {ICON_LIST.map(icon => {
-                        const Icon = (LucideIcons as any)[icon];
+                        const Icon = (LucideIcons as any)[icon] || LucideIcons.Zap;
                         return (
                           <button 
                             key={icon} 
@@ -205,11 +211,21 @@ export default function FooterChatManagementPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Radius (px)</Label>
-                          <Input type="number" value={formData.borderRadius} onChange={e => updateField('borderRadius', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                          <Input 
+                            type="number" 
+                            value={isNaN(formData.borderRadius) ? "" : formData.borderRadius} 
+                            onChange={e => handleNumericChange('borderRadius', e.target.value)} 
+                            className="h-10 bg-gray-50" 
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Icon Size</Label>
-                          <Input type="number" value={formData.iconSize} onChange={e => updateField('iconSize', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                          <Input 
+                            type="number" 
+                            value={isNaN(formData.iconSize) ? "" : formData.iconSize} 
+                            onChange={e => handleNumericChange('iconSize', e.target.value)} 
+                            className="h-10 bg-gray-50" 
+                          />
                         </div>
                       </div>
                     </div>
@@ -223,7 +239,12 @@ export default function FooterChatManagementPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Height (px)</Label>
-                          <Input type="number" value={formData.btnHeight} onChange={e => updateField('btnHeight', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                          <Input 
+                            type="number" 
+                            value={isNaN(formData.btnHeight) ? "" : formData.btnHeight} 
+                            onChange={e => handleNumericChange('btnHeight', e.target.value)} 
+                            className="h-10 bg-gray-50" 
+                          />
                         </div>
                       </div>
                     </div>
@@ -249,11 +270,21 @@ export default function FooterChatManagementPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Pad X (px)</Label>
-                          <Input type="number" value={formData.paddingX} onChange={e => updateField('paddingX', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                          <Input 
+                            type="number" 
+                            value={isNaN(formData.paddingX) ? "" : formData.paddingX} 
+                            onChange={e => handleNumericChange('paddingX', e.target.value)} 
+                            className="h-10 bg-gray-50" 
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[9px] font-black uppercase">Pad Y (px)</Label>
-                          <Input type="number" value={formData.paddingY} onChange={e => updateField('paddingY', parseInt(e.target.value))} className="h-10 bg-gray-50" />
+                          <Input 
+                            type="number" 
+                            value={isNaN(formData.paddingY) ? "" : formData.paddingY} 
+                            onChange={e => handleNumericChange('paddingY', e.target.value)} 
+                            className="h-10 bg-gray-50" 
+                          />
                         </div>
                       </div>
                     </div>
@@ -310,7 +341,7 @@ export default function FooterChatManagementPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t">
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
                       <div className="flex items-center gap-3 text-gray-400">
-                         <Monitor size={18}/>
+                         <LucideIcons.Monitor size={18}/>
                          <Label className="text-[10px] font-black uppercase">Desktop Device</Label>
                       </div>
                       <Switch checked={formData.desktopVisible} onCheckedChange={v => updateField('desktopVisible', v)} />
@@ -356,14 +387,17 @@ export default function FooterChatManagementPage() {
                   backgroundColor: formData.bgColor,
                   color: formData.textColor,
                   border: `1px solid ${formData.borderColor}`,
-                  borderRadius: `${formData.borderRadius}px`,
-                  padding: `${formData.paddingY}px ${formData.paddingX}px`,
+                  borderRadius: `${isNaN(formData.borderRadius) ? 24 : formData.borderRadius}px`,
+                  padding: `${isNaN(formData.paddingY) ? 10 : formData.paddingY}px ${isNaN(formData.paddingX) ? 20 : formData.paddingX}px`,
                   width: formData.btnWidth,
-                  height: formData.btnHeight ? `${formData.btnHeight}px` : 'auto',
+                  height: !isNaN(formData.btnHeight) ? `${formData.btnHeight}px` : 'auto',
                   boxShadow: formData.showShadow ? '0 10px 30px rgba(0,0,0,0.2)' : 'none'
                 }}
                >
-                 <ActiveIcon size={formData.iconSize} style={{ order: formData.iconPosition === 'left' ? 0 : 2 }} />
+                 <ActiveIcon 
+                   size={isNaN(formData.iconSize) ? 20 : formData.iconSize} 
+                   style={{ order: formData.iconPosition === 'left' ? 0 : 2 }} 
+                 />
                  <div className="flex flex-col text-left" style={{ order: 1 }}>
                    <span className="text-xs font-black uppercase tracking-tight leading-none">{formData.btnText}</span>
                    {formData.description && <span className="text-[7px] md:text-[9px] font-bold opacity-70 uppercase tracking-widest mt-0.5 whitespace-nowrap">{formData.description}</span>}

@@ -52,17 +52,26 @@ export function FooterLiveChat() {
     }
   };
 
+  // Safe parsing of numeric values
+  const borderRadius = isNaN(parseInt(config.borderRadius)) ? 24 : parseInt(config.borderRadius);
+  const paddingX = isNaN(parseInt(config.paddingX)) ? 20 : parseInt(config.paddingX);
+  const paddingY = isNaN(parseInt(config.paddingY)) ? 10 : parseInt(config.paddingY);
+  const marginTop = isNaN(parseInt(config.marginTop)) ? 12 : parseInt(config.marginTop);
+  const marginBottom = isNaN(parseInt(config.marginBottom)) ? 0 : parseInt(config.marginBottom);
+  const iconSize = isNaN(parseInt(config.iconSize)) ? 20 : parseInt(config.iconSize);
+  const btnHeight = isNaN(parseInt(config.btnHeight)) ? 48 : parseInt(config.btnHeight);
+
   const dynamicStyles = {
     backgroundColor: isHovered ? config.hoverBgColor : config.bgColor,
     color: isHovered ? config.hoverTextColor : config.textColor,
     border: `1px solid ${isHovered ? config.hoverBorderColor : config.borderColor}`,
-    borderRadius: `${config.borderRadius}px`,
-    padding: `${config.paddingY}px ${config.paddingX}px`,
+    borderRadius: `${borderRadius}px`,
+    padding: `${paddingY}px ${paddingX}px`,
     width: config.btnWidth || 'auto',
-    height: config.btnHeight ? `${config.btnHeight}px` : 'auto',
+    height: `${btnHeight}px`,
     boxShadow: config.showShadow ? (isHovered ? '0 20px 40px rgba(0,0,0,0.3)' : '0 10px 25px rgba(0,0,0,0.2)') : 'none',
-    marginTop: `${config.marginTop || 12}px`,
-    marginBottom: `${config.marginBottom || 0}px`
+    marginTop: `${marginTop}px`,
+    marginBottom: `${marginBottom}px`
   };
 
   return (
@@ -81,7 +90,7 @@ export function FooterLiveChat() {
         )}
       >
         <ActiveIcon 
-          size={config.iconSize} 
+          size={iconSize} 
           style={{ order: config.iconPosition === 'left' ? 0 : 2 }} 
           className="transition-transform duration-500 group-hover:rotate-12"
         />
