@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -21,10 +20,22 @@ import {
   Type, 
   Zap,
   CheckCircle2,
-  Columns
+  Columns,
+  LayoutDashboard,
+  ShoppingCart,
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const DEFAULT_APPEARANCE = {
   bgColor: '#08101b',
@@ -255,9 +266,9 @@ export default function SidebarAppearancePage() {
           </Card>
 
           <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-4">
-             <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Info size={20}/></div>
+             <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Monitor size={20}/></div>
              <p className="text-[10px] font-medium text-blue-800 leading-relaxed uppercase">
-                টিপস: বাংলা টেক্সটের জন্য **Font Weight 700** এবং **Font Size 16px** সবচেয়ে ভালো দেখায়। এই সেটিংটি শুধুমাত্র অ্যাডমিন ড্যাশবোর্ডের জন্য প্রযোজ্য।
+                টিপস: বাংলা টেক্সটের জন্য **Font Weight 700** এবং **Font Size 16px** সবচেয়ে ভালো দেখায়। এই সেটিংটি শুধুমাত্র অ্যাডমিন ড্যাশবোর্ড এবং সাইডবার এর জন্য প্রযোজ্য।
              </p>
           </div>
         </div>
