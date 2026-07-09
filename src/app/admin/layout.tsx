@@ -134,6 +134,12 @@ const SidebarContent = React.memo(({
     color: appearance?.activeTextColor || '#ffffff',
   };
 
+  const textStyle = {
+    fontSize: appearance?.fontSize || '15px',
+    fontWeight: appearance?.fontWeight || '600',
+    fontFamily: appearance?.fontFamily || "'Hind Siliguri', sans-serif"
+  };
+
   const hoverClass = appearance?.hoverBgColor ? "" : "hover:bg-white/5";
 
   return (
@@ -181,7 +187,7 @@ const SidebarContent = React.memo(({
                     className={cn("transition-colors duration-300", !isActive && group.color, isActive && "text-white scale-110")} 
                     style={appearance?.iconColor && !isActive ? { color: appearance.iconColor } : {}}
                   />
-                  {!collapsed && <span className="text-[15px] md:text-[16px] font-bold font-bangla uppercase tracking-tight whitespace-nowrap">{t(`admin.${group.id}`)}</span>}
+                  {!collapsed && <span className="uppercase tracking-tight whitespace-nowrap" style={textStyle}>{t(`admin.${group.id}`)}</span>}
                 </div>
               </Link>
             );
@@ -211,7 +217,7 @@ const SidebarContent = React.memo(({
                     className={cn("shrink-0 transition-colors duration-300", !isGroupActive && group.color)} 
                     style={appearance?.iconColor && !isGroupActive ? { color: appearance.iconColor } : {}}
                   />
-                  {!collapsed && <span className="text-[14px] md:text-[15px] font-bold font-bangla uppercase tracking-tight text-left whitespace-nowrap">{t(`admin.${group.id}`)}</span>}
+                  {!collapsed && <span className="uppercase tracking-tight text-left whitespace-nowrap" style={textStyle}>{t(`admin.${group.id}`)}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
               </button>
@@ -227,7 +233,7 @@ const SidebarContent = React.memo(({
                         scroll={false}
                         onClick={closeMobile}
                         className={cn(
-                          "flex items-center px-3 py-2 rounded-lg text-[13px] md:text-[14px] font-semibold font-bangla transition-all relative group/item", 
+                          "flex items-center px-3 py-2 rounded-lg transition-all relative group/item", 
                           isItemActive 
                             ? "bg-white text-[#081621] shadow-xl scale-[1.05] z-10" 
                             : "opacity-50 hover:opacity-100 hover:translate-x-1"
@@ -235,7 +241,7 @@ const SidebarContent = React.memo(({
                         style={isItemActive ? activeStyles : {}}
                       >
                         <item.icon size={16} className={cn("mr-3 transition-colors shrink-0", isItemActive ? "scale-110" : "opacity-40 group-hover/item:opacity-100")} />
-                        <span className="truncate whitespace-nowrap">{t(`admin.${item.key || item.name.toLowerCase().replace(/\s+/g, '_')}`)}</span>
+                        <span className="truncate whitespace-nowrap" style={{ ...textStyle, fontSize: `calc(${textStyle.fontSize} - 2px)` }}>{t(`admin.${item.key || item.name.toLowerCase().replace(/\s+/g, '_')}`)}</span>
                       </Link>
                     )
                   })}
@@ -357,7 +363,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'marketing', title: "MARKETING & PROMOTIONS", icon: Target, color: "text-pink-400", items: [{ name: "Landing Pages", key: "landing_pages", href: '/admin/marketing/landing-pages', icon: Layout }, { name: "Campaign Mgmt", key: "campaigns", href: '/admin/campaigns', icon: Megaphone }, { name: "Affiliate System", key: "referrals", href: '/admin/referrals', icon: Award, visible: servicesEnabled }].filter(i => i.visible !== false) },
       { id: 'offers', title: "OFFER & CAMPAIGN", icon: TicketPercent, color: "text-orange-400", items: [{ name: "Advanced Offers", key: "advanced_offers", href: '/admin/offers/advanced', icon: Gift }, { name: "Coupons", key: "coupons", href: '/admin/offers/coupons', icon: TicketPercent }, { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Zap }, { name: "Smart Pricing", key: "smart_pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp }] },
       { id: 'seo', title: "SEO & TRACKING", icon: Globe, color: "text-emerald-400", items: [{ name: "SEO Settings", key: "seo_settings", href: '/admin/seo/settings', icon: Search }, { name: "Meta Verification", key: "meta_verification", href: '/admin/seo/meta-verification', icon: ShieldCheck }, { name: "Google Analytics", key: "analytics", href: '/admin/seo/analytics', icon: BarChart }, { name: "Tag Manager", key: "tag_manager", href: '/admin/seo/tag-manager', icon: Code }, { name: "Tracking Hub", key: "tracking_hub", href: '/admin/seo/tracking-hub', icon: Zap }, { name: "Event Logs", key: "event_logs", href: '/admin/seo/logs', icon: FileText }] },
-      { id: 'hrm', title: "HRM", icon: HardHat, color: "text-yellow-400", items: [{ name: "Staff Directory", key: "staff_directory", href: '/admin/employees', icon: Users }, { name: "Attendance Logs", key: "attendance", href: '/admin/hrm/attendance', icon: Clock }, { name: "Payroll & Models", key: "payroll", href: '/admin/hrm/payroll', icon: DollarSign }, { name: "Leave Requests", key: "leaves", href: '/admin/hrm/leaves', icon: Calendar }, { name: "Expense Claims", key: "expenses", href: '/admin/hrm/expenses', icon: Wallet }, { name: "Access Control", key: "access_control", href: '/admin/roles', icon: ShieldCheck }] },
+      { id: 'hrm', title: "HRM", icon: HardHat, color: "text-yellow-400", items: [{ name: "Staff Directory", key: "staff_directory", href: '/admin/employees', icon: Users }, { name: "Attendance Logs", key: "attendance", href: '/admin/hrm/attendance', icon: Clock }, { name: "Payroll & Models", key: "payroll", href: '/admin/hrm/payroll', icon: DollarSign }, { name: "Leaves", key: "leaves", href: '/admin/hrm/leaves', icon: Calendar }, { name: "Expenses", key: "expenses", href: '/admin/hrm/expenses', icon: Wallet }, { name: "Access Control", key: "access_control", href: '/admin/roles', icon: ShieldCheck }] },
       { id: 'customer_hub', title: "Customer Hub", href: '/admin/customers', icon: Users, color: "text-cyan-400", items: [] },
       { id: 'partners', title: "B2B PARTNERS", icon: Handshake, color: "text-blue-500", items: [{ name: "Partner Registry", key: "partner_registry", href: '/admin/partners', icon: Building2 }, { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase }, { name: "Commission Ledger", key: "commission_ledger", href: '/admin/partners/commissions', icon: Wallet }] },
       { id: 'vendors', title: "VENDOR HUB", icon: Store, color: "text-orange-500", items: [{ name: "Vendor Registry", key: "vendor_registry", href: '/admin/vendors', icon: Building2 }, { name: "Product Approvals", key: "product_approvals", href: '/admin/products/approvals', icon: Package, visible: productsEnabled }, { name: "Service Approvals", key: "service_approvals", href: '/admin/services/approvals', icon: Wrench, visible: servicesEnabled }, { name: "Vendor Commissions", key: "vendor_commissions", href: '/admin/vendors/commissions', icon: Wallet }, { name: "Verification Queue", key: "verification_queue", href: '/admin/vendors/verifications', icon: ShieldCheck }].filter(i => i.visible !== false) },

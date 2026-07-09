@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { 
   Palette, 
   Save, 
@@ -15,7 +15,6 @@ import {
   Loader2, 
   Layout, 
   Eye, 
-  Smartphone, 
   Monitor, 
   Type, 
   Zap,
@@ -48,8 +47,16 @@ const DEFAULT_APPEARANCE = {
   expandedWidth: '288px',
   collapsedWidth: '80px',
   fontSize: '15px',
-  fontWeight: '600'
+  fontWeight: '600',
+  fontFamily: "'Hind Siliguri', sans-serif"
 };
+
+const BENGALI_FONTS = [
+  { label: 'Hind Siliguri (Modern)', value: "'Hind Siliguri', sans-serif" },
+  { label: 'Noto Sans Bengali (Classic)', value: "'Noto Sans Bengali', sans-serif" },
+  { label: 'Tiro Bangla (Serif)', value: "'Tiro Bangla', serif" },
+  { label: 'Mina (Playful)', value: "'Mina', sans-serif" }
+];
 
 const PRESETS = [
   { id: 'dark', label: 'Classic Dark', colors: { bgColor: '#08101b', textColor: '#ffffff', activeBgColor: 'rgba(255,255,255,0.1)', activeTextColor: '#ffffff', hoverBgColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.05)' } },
@@ -185,25 +192,28 @@ export default function SidebarAppearancePage() {
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="bg-gray-50/50 p-8 border-b">
               <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621] flex items-center gap-2">
-                <Columns size={18} className="text-primary" /> Dimensions & Layout
+                <Type size={18} className="text-primary" /> Typography & Layout
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
                <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Expanded Width (px/rem)</Label>
-                    <Input value={formData.expandedWidth} onChange={e => setFormData({...formData, expandedWidth: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    <Label className="text-[10px] font-black uppercase text-gray-400">Bangla Font Family</Label>
+                    <Select value={formData.fontFamily} onValueChange={v => setFormData({...formData, fontFamily: v})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                      <SelectContent>
+                        {BENGALI_FONTS.map(f => (
+                          <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Collapsed Width (px/rem)</Label>
-                    <Input value={formData.collapsedWidth} onChange={e => setFormData({...formData, collapsedWidth: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    <Label className="text-[10px] font-black uppercase text-gray-400">Font Size (px)</Label>
+                    <Input value={formData.fontSize} onChange={e => setFormData({...formData, fontSize: e.target.value})} placeholder="15px" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                   </div>
                </div>
                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400">Bangla Font Size (px)</Label>
-                    <Input value={formData.fontSize} onChange={e => setFormData({...formData, fontSize: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                  </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-gray-400">Font Weight</Label>
                     <Select value={formData.fontWeight} onValueChange={v => setFormData({...formData, fontWeight: v})}>
@@ -212,6 +222,16 @@ export default function SidebarAppearancePage() {
                         {['400', '500', '600', '700', '800', '900'].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-gray-400">Expanded Width</Label>
+                      <Input value={formData.expandedWidth} onChange={e => setFormData({...formData, expandedWidth: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-gray-400">Collapsed Width</Label>
+                      <Input value={formData.collapsedWidth} onChange={e => setFormData({...formData, collapsedWidth: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                    </div>
                   </div>
                </div>
             </CardContent>
@@ -241,7 +261,7 @@ export default function SidebarAppearancePage() {
                   style={{ backgroundColor: formData.activeBgColor, color: formData.activeTextColor }}
                  >
                     <LayoutDashboard size={18} />
-                    <span className="text-[14px] font-bold font-bangla uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight }}>ড্যাশবোর্ড</span>
+                    <span className="font-bold uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight, fontFamily: formData.fontFamily }}>ড্যাশবোর্ড</span>
                  </div>
 
                  {/* Mock Normal Item */}
@@ -250,7 +270,7 @@ export default function SidebarAppearancePage() {
                   style={{ color: formData.textColor }}
                  >
                     <Zap size={18} className="text-rose-400" style={formData.iconColor ? { color: formData.iconColor } : {}}/>
-                    <span className="text-[14px] font-bold font-bangla uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight }}>সেলস টার্মিনাল</span>
+                    <span className="font-bold uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight, fontFamily: formData.fontFamily }}>সেলস টার্মিনাল</span>
                  </div>
 
                  {/* Mock Hover Item */}
@@ -259,18 +279,11 @@ export default function SidebarAppearancePage() {
                   style={{ backgroundColor: formData.hoverBgColor, color: formData.textColor }}
                  >
                     <ShoppingCart size={18} className="text-blue-400" style={formData.iconColor ? { color: formData.iconColor } : {}}/>
-                    <span className="text-[14px] font-bold font-bangla uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight }}>অর্ডার ও বুকিং</span>
+                    <span className="font-bold uppercase tracking-tight" style={{ fontSize: formData.fontSize, fontWeight: formData.fontWeight, fontFamily: formData.fontFamily }}>অর্ডার ও বুকিং</span>
                  </div>
                </div>
             </CardContent>
           </Card>
-
-          <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100 flex items-start gap-4">
-             <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Monitor size={20}/></div>
-             <p className="text-[10px] font-medium text-blue-800 leading-relaxed uppercase">
-                টিপস: বাংলা টেক্সটের জন্য **Font Weight 700** এবং **Font Size 16px** সবচেয়ে ভালো দেখায়। এই সেটিংটি শুধুমাত্র অ্যাডমিন ড্যাশবোর্ড এবং সাইডবার এর জন্য প্রযোজ্য।
-             </p>
-          </div>
         </div>
 
       </div>
