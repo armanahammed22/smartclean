@@ -2,6 +2,20 @@ import { MetadataRoute } from 'next';
 import { db } from '@/lib/firebaseAdmin';
 
 /**
+ * Helper to safely convert Firestore Timestamp or string to Date.
+ * Prevents "Invalid time value" errors during build/prerendering.
+ */
+function toDate(val: any): Date {
+  if (!val) return new Date();
+  // Check if it's a Firestore Timestamp
+  if (typeof val.toDate === 'function') return val.toDate();
+  
+  const date = new Date(val);
+  // Fallback to current date if parsing fails
+  return isNaN(date.getTime()) ? new Date() : date;
+}
+
+/**
  * Dynamic Sitemap Generator (Server-Side)
  * Fetches the base URL from Firestore settings to ensure URL validity in Search Console.
  */
@@ -48,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = doc.data();
       return {
         url: `${baseUrl}/product/${data.slug || doc.id}`,
-        lastModified: new Date(data.updatedAt || new Date()),
+        lastModified: toDate(data.updatedAt),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       };
@@ -60,7 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = doc.data();
       return {
         url: `${baseUrl}/service/${data.slug || doc.id}`,
-        lastModified: new Date(data.updatedAt || new Date()),
+        lastModified: toDate(data.updatedAt),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       };
@@ -72,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = doc.data();
       return {
         url: `${baseUrl}/${data.slug}`,
-        lastModified: new Date(data.updatedAt || new Date()),
+        lastModified: toDate(data.updatedAt),
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       };
@@ -84,7 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = doc.data();
       return {
         url: `${baseUrl}/page/${data.slug}`,
-        lastModified: new Date(data.updatedAt || new Date()),
+        lastModified: toDate(data.updatedAt),
         changeFrequency: 'monthly' as const,
         priority: 0.5,
       };
