@@ -21,9 +21,6 @@ export const viewport: Viewport = {
   themeColor: '#1E5F7A',
 };
 
-/**
- * Server-side helper to fetch global settings for script injection and icons
- */
 async function getGlobalSettings() {
   try {
     if (!db) return null;
@@ -34,17 +31,11 @@ async function getGlobalSettings() {
   }
 }
 
-/**
- * Generate Dynamic Metadata for SEO and Verification
- * This handles the <meta name="facebook-domain-verification" ... /> injection
- */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
   const baseUrl = settings?.websiteUrl ? settings.websiteUrl.replace(/\/$/, '') : 'https://smartclean.com.bd';
   
-  // Favicon Priority: Custom Favicon > Website Logo > Default
   const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
-  // Apple Touch Icon Priority: Custom App Icon > Website Logo > Default
   const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
   return {
@@ -117,7 +108,6 @@ export default async function RootLayout({
   const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
   const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
-  // Helper to clean scripts for next/script
   const cleanScript = (script: string) => {
     if (!script) return '';
     return script
@@ -132,9 +122,7 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-        
-        {/* Dynamic Verification Tokens are handled via Metadata API */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet" />
         
         <link rel="icon" href={favicon} />
         <link rel="apple-touch-icon" href={appleIcon} />

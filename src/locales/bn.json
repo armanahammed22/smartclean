@@ -1,3 +1,4 @@
+
 {
   "common": {
     "save": "সেভ করুন",
@@ -118,6 +119,7 @@
     "theme": "হেডার ও ফুটার",
     "pages": "ডাইনামিক পেজ",
     "global_settings": "গ্লোবাল সেটিংস",
+    "sidebar_appearance": "সাইডবার ডিজাইন",
     "payment_gateways": "পেমেন্ট গেটওয়ে",
     "delivery_fees": "ডেলিভারি ফি",
     "localization": "লোকালাইজেশন",

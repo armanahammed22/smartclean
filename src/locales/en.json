@@ -1,3 +1,4 @@
+
 {
   "common": {
     "save": "Save",
@@ -118,6 +119,7 @@
     "theme": "Header & Footer",
     "pages": "Dynamic Pages",
     "global_settings": "Global Settings",
+    "sidebar_appearance": "Sidebar Design",
     "payment_gateways": "Payment Gateways",
     "delivery_fees": "Delivery Fees",
     "localization": "Localization",
