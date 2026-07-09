@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
@@ -96,7 +95,7 @@ export function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black font-headline uppercase leading-none" style={{ color: layout?.header?.textColor }}>{companyName}</span>
-            <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mt-1">Professional Care</span>
+            <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mt-1">{t('public.service_tagline')}</span>
           </div>
         </Link>
 
