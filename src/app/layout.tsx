@@ -38,6 +38,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
   const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
+  // Dynamic verification tags
+  const verification: any = {
+    google: settings?.googleSearchConsoleToken,
+  };
+
+  if (settings?.metaDomainVerification) {
+    verification.other = {
+      'facebook-domain-verification': settings.metaDomainVerification,
+    };
+  }
+
   return {
     metadataBase: new URL(baseUrl),
     title: {
@@ -49,12 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: 'Smart Clean Team' }],
     creator: 'Smart Clean',
     publisher: 'Smart Clean Bangladesh',
-    verification: {
-      google: settings?.googleSearchConsoleToken,
-      other: {
-        'facebook-domain-verification': settings?.metaDomainVerification ? [settings.metaDomainVerification] : [],
-      }
-    },
+    verification,
     icons: {
       icon: [
         { url: favicon },
