@@ -20,6 +20,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/:path*.html',
+        destination: '/api/verify-file/:path*',
+      },
+    ]
+  },
 };
 
 export default nextConfig;

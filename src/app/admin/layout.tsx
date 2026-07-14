@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -70,7 +69,8 @@ import {
   ListChecks,
   Settings2,
   FolderTree,
-  Video
+  Video,
+  FileCode
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -362,7 +362,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'services', title: "SERVICE MENU", icon: Wrench, color: "text-sky-400", visible: servicesEnabled, items: [{ name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench }, { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers }, { name: "Service Attributes", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 }, { name: "Custom Requests", key: "custom_requests", href: '/admin/services/custom-requests', icon: ClipboardList }, { name: "Service Areas", key: "areas", href: '/admin/areas', icon: Globe }, { name: "Billing & Plan", key: "subscription", href: '/admin/subscription', icon: Wallet }] },
       { id: 'marketing', title: "MARKETING & PROMOTIONS", icon: Target, color: "text-pink-400", items: [{ name: "Landing Pages", key: "landing_pages", href: '/admin/marketing/landing-pages', icon: Layout }, { name: "Campaign Mgmt", key: "campaigns", href: '/admin/campaigns', icon: Megaphone }, { name: "Affiliate System", key: "referrals", href: '/admin/referrals', icon: Award, visible: servicesEnabled }].filter(i => i.visible !== false) },
       { id: 'offers', title: "OFFER & CAMPAIGN", icon: TicketPercent, color: "text-orange-400", items: [{ name: "Advanced Offers", key: "advanced_offers", href: '/admin/offers/advanced', icon: Gift }, { name: "Coupons", key: "coupons", href: '/admin/offers/coupons', icon: TicketPercent }, { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Zap }, { name: "Smart Pricing", key: "smart_pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp }] },
-      { id: 'seo', title: "SEO & TRACKING", icon: Globe, color: "text-emerald-400", items: [{ name: "SEO Settings", key: "seo_settings", href: '/admin/seo/settings', icon: Search }, { name: "Meta Verification", key: "meta_verification", href: '/admin/seo/meta-verification', icon: ShieldCheck }, { name: "Google Analytics", key: "analytics", href: '/admin/seo/analytics', icon: BarChart }, { name: "Tag Manager", key: "tag_manager", href: '/admin/seo/tag-manager', icon: Code }, { name: "Tracking Hub", key: "tracking_hub", href: '/admin/seo/tracking-hub', icon: Zap }, { name: "Event Logs", key: "event_logs", href: '/admin/seo/logs', icon: FileText }] },
+      { id: 'seo', title: "SEO & TRACKING", icon: Globe, color: "text-emerald-400", items: [{ name: "SEO Settings", key: "seo_settings", href: '/admin/seo/settings', icon: Search }, { name: "Meta Verification", key: "meta_verification", href: '/admin/seo/meta-verification', icon: ShieldCheck }, { name: "Root Files", key: "verification_files", href: '/admin/seo/verification-files', icon: FileCode }, { name: "Google Analytics", key: "analytics", href: '/admin/seo/analytics', icon: BarChart }, { name: "Tag Manager", key: "tag_manager", href: '/admin/seo/tag-manager', icon: Code }, { name: "Tracking Hub", key: "tracking_hub", href: '/admin/seo/tracking-hub', icon: Zap }, { name: "Event Logs", key: "event_logs", href: '/admin/seo/logs', icon: FileText }] },
       { id: 'hrm', title: "HRM", icon: HardHat, color: "text-yellow-400", items: [{ name: "Staff Directory", key: "staff_directory", href: '/admin/employees', icon: Users }, { name: "Attendance Logs", key: "attendance", href: '/admin/hrm/attendance', icon: Clock }, { name: "Payroll & Models", key: "payroll", href: '/admin/hrm/payroll', icon: DollarSign }, { name: "Leaves", key: "leaves", href: '/admin/hrm/leaves', icon: Calendar }, { name: "Expenses", key: "expenses", href: '/admin/hrm/expenses', icon: Wallet }, { name: "Access Control", key: "access_control", href: '/admin/roles', icon: ShieldCheck }] },
       { id: 'customer_hub', title: "Customer Hub", href: '/admin/customers', icon: Users, color: "text-cyan-400", items: [] },
       { id: 'partners', title: "B2B PARTNERS", icon: Handshake, color: "text-blue-500", items: [{ name: "Partner Registry", key: "partner_registry", href: '/admin/partners', icon: Building2 }, { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase }, { name: "Commission Ledger", key: "commission_ledger", href: '/admin/partners/commissions', icon: Wallet }] },

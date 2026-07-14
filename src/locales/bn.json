@@ -1,4 +1,3 @@
-
 {
   "common": {
     "save": "সেভ করুন",
@@ -89,6 +88,7 @@
     "smart_pricing": "স্মার্ট প্রাইসিং",
     "seo_settings": "এসইও সেটিংস",
     "meta_verification": "মেটা ভেরিফিকেশন",
+    "verification_files": "রুট ফাইল আপলোড",
     "analytics": "গুগল অ্যানালিটিক্স",
     "tag_manager": "ট্যাগ ম্যানেজার",
     "tracking_hub": "ট্র্যাকিং হাব",

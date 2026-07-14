@@ -1,4 +1,3 @@
-
 {
   "common": {
     "save": "Save",
@@ -89,6 +88,7 @@
     "smart_pricing": "Smart Pricing",
     "seo_settings": "SEO Settings",
     "meta_verification": "Meta Verification",
+    "verification_files": "Root File Upload",
     "analytics": "Google Analytics",
     "tag_manager": "Tag Manager",
     "tracking_hub": "Tracking Hub",
