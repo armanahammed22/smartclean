@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -38,14 +37,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const favicon = settings?.faviconUrl || settings?.logoUrl || '/favicon.ico';
   const appleIcon = settings?.appIconUrl || settings?.logoUrl || '/apple-icon.png';
 
-  // Dynamic verification tags
-  const verification: any = {
-    google: settings?.googleSearchConsoleToken,
-  };
+  // Dynamic verification tags logic
+  const verification: any = {};
+  
+  if (settings?.googleSearchConsoleToken) {
+    verification.google = settings.googleSearchConsoleToken;
+  }
 
   if (settings?.metaDomainVerification) {
+    let fbToken = settings.metaDomainVerification.trim();
+    // 🛡️ Auto-Correction: If user pasted the whole tag, extract only the content attribute
+    const metaMatch = fbToken.match(/content=["']([^"']+)["']/);
+    if (metaMatch && metaMatch[1]) {
+      fbToken = metaMatch[1];
+    }
+    
     verification.other = {
-      'facebook-domain-verification': settings.metaDomainVerification,
+      'facebook-domain-verification': fbToken,
     };
   }
 

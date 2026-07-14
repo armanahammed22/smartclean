@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldCheck, Save, Loader2, Info, CheckCircle2, Zap, Globe, Search } from 'lucide-react';
+import { ShieldCheck, Save, Loader2, Info, CheckCircle2, Zap, Globe, Search, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function MetaVerificationSettingsPage() {
@@ -58,15 +58,16 @@ export default function MetaVerificationSettingsPage() {
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 tracking-widest">Verification Token (content attribute)</Label>
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1 tracking-widest">Verification Token or HTML Tag</Label>
                 <Input 
                   value={token} 
                   onChange={(e) => setToken(e.target.value)}
-                  placeholder="Paste only the token value..."
+                  placeholder="Paste code here..."
                   className="h-14 bg-gray-50 border-none rounded-xl font-mono text-sm focus:bg-white transition-all px-6"
                 />
-                <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100 text-[10px] font-bold text-amber-700 mt-2">
-                  <Info size={14} /> Only enter the alphanumeric code provided by Meta.
+                <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100 text-[10px] font-bold text-amber-700 mt-2">
+                  <AlertCircle size={14} className="shrink-0" /> 
+                  <span>আপনি চাইলে ফেসবুক থেকে পাওয়া পুরো মেটা ট্যাগটি এখানে পেস্ট করতে পারেন। সিস্টেম নিজে থেকেই প্রয়োজনীয় অংশটুকু নিয়ে নেবে।</span>
                 </div>
               </div>
 
@@ -75,7 +76,7 @@ export default function MetaVerificationSettingsPage() {
                 <div className="space-y-1">
                   <h4 className="font-black uppercase text-xs text-blue-900">Facebook Business Security</h4>
                   <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
-                    Domain verification provides a way for you to claim ownership of your domain in Business Manager.
+                    এই কোডটি সেভ করার পর ফেসবুক বিজনেস ম্যানেজারে গিয়ে "Verify Domain" বাটনে ক্লিক করুন। ভেরিফিকেশন মেথড হিসেবে "Add a meta-tag to your HTML source code" সিলেক্ট করতে ভুলবেন না।
                   </p>
                 </div>
               </div>
@@ -90,15 +91,15 @@ export default function MetaVerificationSettingsPage() {
 
         <div className="space-y-6">
           <div className="bg-gray-100 rounded-3xl p-8 border border-gray-200">
-            <h3 className="font-black uppercase text-xs text-gray-900 tracking-widest mb-4 flex items-center gap-2"><Search size={16} /> Meta Tooltip</h3>
+            <h3 className="font-black uppercase text-xs text-gray-900 tracking-widest mb-4 flex items-center gap-2"><Search size={16} /> সঠিক ইনপুট গাইড</h3>
             <p className="text-[11px] text-gray-600 leading-relaxed">
-              When Meta asks to verify using <strong>"Meta-tag Verification"</strong>, you will see a line like:
+              ফেসবুক থেকে আপনাকে নিচের মতো একটি কোড দেওয়া হবে:
               <br /><br />
-              <code className="bg-white p-2 rounded block border text-[9px] break-all">
-                &lt;meta name="facebook-domain-verification" content="<strong>YOUR_CODE_HERE</strong>" /&gt;
+              <code className="bg-white p-3 rounded-lg block border text-[9px] break-all leading-normal text-primary">
+                &lt;meta name="facebook-domain-verification" content="<strong>abc123xyz4567890</strong>" /&gt;
               </code>
               <br />
-              Copy <strong>only</strong> the code inside the content attribute and paste it in the field.
+              আপনি উপরের পুরো লাইনটি এখানে পেস্ট করতে পারেন, অথবা শুধুমাত্র বোল্ড করা <strong>abc123xyz4567890</strong> অংশটুকু দিতে পারেন।
             </p>
           </div>
         </div>
