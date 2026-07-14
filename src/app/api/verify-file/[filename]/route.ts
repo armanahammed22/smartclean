@@ -11,22 +11,28 @@ export async function GET(
 ) {
   try {
     if (!db) {
-      return new Response('Database not connected', { status: 503 });
+      return new Response('Database not available', { status: 503 });
     }
 
     const { filename } = await params;
     // Normalize filename by removing .html if the proxy didn't already
     const cleanName = filename.replace(/\.html$/, '');
     
-    // Search in Firestore
-    const filesRef = db.collection('verification_files');
-    const query = await filesRef.where('filename', 'in', [filename, cleanName, `${cleanName}.html`]).limit(1).get();
+    // Search in Firestore with fail-safe
+    let querySnapshot;
+    try {
+      const filesRef = db.collection('verification_files');
+      querySnapshot = await filesRef.where('filename', 'in', [filename, cleanName, `${cleanName}.html`]).limit(1).get();
+    } catch (e: any) {
+      console.warn('[Verify File API] DB Read Failed:', e.message);
+      return new Response('Verification Service Temporarily Unavailable', { status: 500 });
+    }
 
-    if (query.empty) {
+    if (!querySnapshot || querySnapshot.empty) {
       return new Response('File not found', { status: 404 });
     }
 
-    const fileData = query.docs[0].data();
+    const fileData = querySnapshot.docs[0].data();
 
     return new Response(fileData.content, {
       status: 200,

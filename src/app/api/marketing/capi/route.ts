@@ -18,18 +18,28 @@ function hashData(data: string | undefined): string | null {
 export async function POST(req: NextRequest) {
   try {
     if (!db) {
-      return NextResponse.json({ status: 'Database not initialized' }, { status: 500 });
+      return NextResponse.json({ status: 'Database not available' }, { status: 200 });
     }
 
     const body = await req.json();
     const { eventName, eventId, payload } = body;
 
-    // 1. Get Marketing & Global Config
-    const settingsSnap = await db.collection('site_settings').doc('marketing').get();
-    const globalSnap = await db.collection('site_settings').doc('global').get();
-    
-    const config = settingsSnap.data();
-    const global = globalSnap.data();
+    // 1. Get Marketing & Global Config with graceful fail
+    let config: any = null;
+    let global: any = null;
+
+    try {
+      const [settingsSnap, globalSnap] = await Promise.all([
+        db.collection('site_settings').doc('marketing').get(),
+        db.collection('site_settings').doc('global').get()
+      ]);
+      
+      config = settingsSnap.data();
+      global = globalSnap.data();
+    } catch (dbError: any) {
+      console.warn('[CAPI Admin SDK Error]:', dbError.message);
+      return NextResponse.json({ success: false, status: 'Permission Denied', error: dbError.message });
+    }
 
     if (!config?.trackingEnabled || !config?.pixelId || !config?.accessToken) {
       return NextResponse.json({ status: 'Tracking Disabled or Config Missing' });
@@ -94,20 +104,22 @@ export async function POST(req: NextRequest) {
     const result = await fbResponse.json();
 
     // 6. Audit Log (Include full results for debugging)
-    await db.collection('tracking_logs').add({
-      eventName,
-      eventId,
-      method: 'Server',
-      status: fbResponse.ok ? 'Success' : 'Failed',
-      metaResponse: result,
-      requestPayload: body,
-      timestamp: new Date().toISOString(),
-    });
+    try {
+      await db.collection('tracking_logs').add({
+        eventName,
+        eventId,
+        method: 'Server',
+        status: fbResponse.ok ? 'Success' : 'Failed',
+        metaResponse: result,
+        requestPayload: body,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e) {}
 
     return NextResponse.json({ success: fbResponse.ok, result });
 
   } catch (error: any) {
     console.error('[CAPI Proxy Error]:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 200 }); // Keep 200 to prevent noisy UI errors
   }
 }
