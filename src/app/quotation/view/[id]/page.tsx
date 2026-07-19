@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -140,7 +140,7 @@ export default function PublicQuotationViewPage() {
               <div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
               <div className="space-y-1 text-left">
                 <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h2>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-[0.3em]">Professional Excellence</p>
+                <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
               </div>
             </div>
             <div className="text-right max-w-[280px]">
