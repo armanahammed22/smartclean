@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
  * - Fetches chat configuration from Firestore.
  * - Injects the embed script reliably on all public pages.
  * - Prevents script execution in the admin/staff dashboard.
- * - Fixes "i18next is not a function" error by preventing redundant re-init.
+ * - Fixed: Prevent destructive cleanup of global objects that causes 'onBeforeLoaded' TypeErrors.
  */
 export function LiveChatLoader() {
   const db = useFirestore();
@@ -24,7 +24,10 @@ export function LiveChatLoader() {
 
   useEffect(() => {
     // 🛡️ Security & Performance Guard:
-    if (!config || !config.isEnabled || !config.embedScript || isAdminPath || isStaffPath) {
+    // Only load on public pages and if enabled
+    const shouldLoad = config?.isEnabled && config?.embedScript && !isAdminPath && !isStaffPath;
+
+    if (!shouldLoad) {
       cleanup();
       return;
     }
@@ -44,7 +47,6 @@ export function LiveChatLoader() {
       document.body.appendChild(scriptContainer);
       
       // 2. Use Range to execute scripts within the string reliably
-      // This is safer than manually creating elements for complex vendor scripts
       const range = document.createRange();
       range.selectNode(scriptContainer);
       const fragment = range.createContextualFragment(config.embedScript);
@@ -62,7 +64,7 @@ export function LiveChatLoader() {
       if (config.customJs) {
         const customJs = document.createElement('script');
         customJs.id = 'sc-live-chat-custom-js';
-        customJs.innerHTML = config.customJs;
+        customJs.innerHTML = customJs.innerHTML;
         document.body.appendChild(customJs);
       }
 
@@ -71,7 +73,8 @@ export function LiveChatLoader() {
     }
 
     /**
-     * Deep Cleanup Function
+     * Safe Cleanup Function
+     * Removes DOM elements but avoids destroying global objects that cause runtime crashes.
      */
     function cleanup() {
       const container = document.getElementById('sc-live-chat-container');
@@ -83,19 +86,16 @@ export function LiveChatLoader() {
       const js = document.getElementById('sc-live-chat-custom-js');
       if (js) js.remove();
 
-      // 🧹 Global Object Cleanup (Specific to Tawk.to and similar)
+      // 🧹 Safe Global Object Management
       if (typeof window !== 'undefined') {
-        if ((window as any).Tawk_API) {
+        const win = window as any;
+        if (win.Tawk_API && typeof win.Tawk_API.hideWidget === 'function') {
           try {
-            if (typeof (window as any).Tawk_API.hideWidget === 'function') {
-              (window as any).Tawk_API.hideWidget();
-            }
+            win.Tawk_API.hideWidget();
           } catch (e) {}
-          // Use assignment to undefined instead of delete to avoid non-configurable property errors
-          (window as any).Tawk_API = undefined;
         }
-        // Also clear common vendor global variables to prevent re-init bugs
-        if ((window as any).Tawk_LoadStart) (window as any).Tawk_LoadStart = undefined;
+        // NOTE: We no longer set Tawk_API to undefined here because it leads to 
+        // "Cannot read properties of undefined (reading 'onBeforeLoaded')" in the underlying script.
       }
       
       lastScriptRef.current = '';

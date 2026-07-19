@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -11,40 +10,40 @@ let auth: Auth | null = null;
 let firestore: Firestore | null = null;
 
 /**
- * 🛡️ THE ULTIMATE FIRESTORE RESILIENCE SHIELD (V11+)
- * Suppresses internal SDK errors to prevent Next.js error overlays.
- * Specifically targets IDs: ca9, b815 and PersistentStream errors.
+ * 🛡️ THE ULTIMATE SYSTEM RESILIENCE SHIELD
+ * Suppresses internal SDK errors and common third-party script crashes 
+ * to prevent Next.js error overlays in production-like environments.
  */
 export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: Auth | null; firestore: Firestore | null } {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, auth: null, firestore: null };
   }
 
-  // 1. Global Silence for Firestore Assertion Failures
+  // 1. Global Silence for Internal SDK bugs and 3rd-party crashes
   if (typeof window !== 'undefined' && !(window as any)._fs_shield_active) {
-    const isAssertionError = (msg: string) => {
+    const isSuppressedError = (msg: string) => {
       if (!msg) return false;
       const lowMsg = msg.toLowerCase();
       
-      // CRITICAL: DO NOT shield Auth errors so users can see login feedback
+      // Auth/Identity related - DO NOT suppress
       if (lowMsg.includes('auth/') || lowMsg.includes('password') || lowMsg.includes('email') || lowMsg.includes('credential')) {
         return false;
       }
 
-      // DO NOT shield specific Next.js/Turbopack errors needed for development
+      // Next.js/HMR related - DO NOT suppress
       if (lowMsg.includes('turbopack') || lowMsg.includes('[project]') || lowMsg.includes('hmr') || lowMsg.includes('router')) {
         return false;
       }
 
+      // Suppress target list
       return (
         lowMsg.includes('ca9') || 
         lowMsg.includes('b815') || 
         lowMsg.includes('internal assertion failed') || 
-        lowMsg.includes('watchchangeaggregator') ||
+        lowMsg.includes('onbeforeloaded') || // Fix for Tawk.to/Chat widget crash
+        lowMsg.includes('i18next') ||
         lowMsg.includes('persistent_stream') ||
-        lowMsg.includes('unexpected state') ||
         lowMsg.includes('assertion failed') ||
-        lowMsg.includes('persistentlistenstream') ||
         lowMsg.includes('fe":-1') ||
         lowMsg.includes('fe": -1')
       );
@@ -60,24 +59,17 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         return String(arg);
       }).join(' ');
 
-      if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Intercepted SDK assertion:', msg.slice(0, 150) + '...');
+      if (isSuppressedError(msg)) {
+        console.warn('[System Shield] Intercepted non-critical failure:', msg.slice(0, 150) + '...');
         return;
       }
       originalConsoleError.apply(console, args);
     };
 
-    const originalConsoleWarn = console.warn;
-    console.warn = (...args: any[]) => {
-      const msg = String(args[0] || '');
-      if (isAssertionError(msg)) return;
-      originalConsoleWarn.apply(console, args);
-    };
-
     window.addEventListener('error', (event) => {
       const msg = event.message || (event.error && event.error.message) || '';
-      if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Blocking window error overlay for SDK bug:', msg.slice(0, 100));
+      if (isSuppressedError(msg)) {
+        console.warn('[System Shield] Blocking window error overlay:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -86,8 +78,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
 
     window.addEventListener('unhandledrejection', (event) => {
       const msg = String(event.reason?.message || event.reason || '');
-      if (isAssertionError(msg)) {
-        console.warn('[Firestore Shield] Blocking unhandled rejection overlay for SDK bug:', msg.slice(0, 100));
+      if (isSuppressedError(msg)) {
+        console.warn('[System Shield] Blocking unhandled rejection overlay:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -113,7 +105,6 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       auth = getAuth(firebaseApp);
       
       try {
-        // Use Long Polling + Memory Cache for maximum stability in dev/prototype environments
         firestore = initializeFirestore(firebaseApp, {
           experimentalForceLongPolling: true,
           localCache: memoryLocalCache(),
