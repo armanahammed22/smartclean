@@ -91,8 +91,6 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const discount = sourceData.discount || sourceData.couponDiscount || 0;
   
   const currentInvoiceTotal = subtotal + tax + delivery - discount;
-  
-  // NEW: Summing logic fix
   const grandTotal = Number((currentInvoiceTotal + previousDue).toFixed(2));
 
   const countQuery = query(collection(db, collName));
@@ -148,7 +146,8 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     });
   }
 
-  const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
+  const publicLink = `${baseUrl}/invoice/${invNumber}`;
   await setDoc(doc(db, collName, docRef.id), { publicLink }, { merge: true });
 
   return docRef.id;

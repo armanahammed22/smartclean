@@ -3,38 +3,33 @@ import { db } from '@/lib/firebaseAdmin';
 
 /**
  * Helper to safely convert Firestore Timestamp or string to Date.
- * Prevents "Invalid time value" errors during build/prerendering.
  */
 function toDate(val: any): Date {
   if (!val) return new Date();
-  // Check if it's a Firestore Timestamp
   if (typeof val.toDate === 'function') return val.toDate();
-  
   const date = new Date(val);
-  // Fallback to current date if parsing fails
   return isNaN(date.getTime()) ? new Date() : date;
 }
 
 /**
  * Dynamic Sitemap Generator (Server-Side)
- * Fetches the base URL from Firestore settings to ensure URL validity in Search Console.
+ * Generates SEO-friendly URLs for all public records.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let baseUrl = 'https://smartclean.com.bd'; // Hardcoded fallback
+  let baseUrl = 'https://smartclean.com.bd';
 
   try {
     if (db) {
       const settingsSnap = await db.collection('site_settings').doc('global').get();
       const settings = settingsSnap.data();
       if (settings?.websiteUrl) {
-        baseUrl = settings.websiteUrl.replace(/\/$/, ''); // Remove trailing slash
+        baseUrl = settings.websiteUrl.replace(/\/$/, '');
       }
     }
   } catch (e) {
-    console.warn('[Sitemap] Could not fetch dynamic domain, using fallback.');
+    console.warn('[Sitemap] Could not fetch dynamic domain.');
   }
 
-  // 1. Define Static Base Routes
   const staticRoutes = [
     '',
     '/services',
@@ -50,66 +45,68 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1.0 : 0.8,
   }));
 
-  // Safe check for DB connection
-  if (!db) {
-    return staticRoutes;
-  }
+  if (!db) return staticRoutes;
 
   try {
-    // 2. Fetch Active Products
-    const productSnap = await db.collection('products').where('status', '==', 'Active').get();
-    const productRoutes = productSnap.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        url: `${baseUrl}/product/${data.slug || doc.id}`,
-        lastModified: toDate(data.updatedAt),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      };
-    });
+    const [productSnap, serviceSnap, landingSnap, cmsSnap, quoteSnap, invoiceSnap] = await Promise.all([
+      db.collection('products').where('status', '==', 'Active').get(),
+      db.collection('services').where('status', '==', 'Active').get(),
+      db.collection('landing_pages').where('active', '==', true).get(),
+      db.collection('pages_management').where('isPublished', '==', true).get(),
+      db.collection('quotations').where('status', 'not-in', ['Draft', 'Rejected']).get(),
+      db.collection('invoices').get()
+    ]);
 
-    // 3. Fetch Active Services
-    const serviceSnap = await db.collection('services').where('status', '==', 'Active').get();
-    const serviceRoutes = serviceSnap.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        url: `${baseUrl}/service/${data.slug || doc.id}`,
-        lastModified: toDate(data.updatedAt),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      };
-    });
+    const productRoutes = productSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/product/${doc.data().slug || doc.id}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
 
-    // 4. Fetch Dynamic Landing Pages
-    const landingSnap = await db.collection('landing_pages').where('active', '==', true).get();
-    const landingRoutes = landingSnap.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        url: `${baseUrl}/${data.slug}`,
-        lastModified: toDate(data.updatedAt),
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
-      };
-    });
+    const serviceRoutes = serviceSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/service/${doc.data().slug || doc.id}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
 
-    // 5. Fetch CMS Managed Pages
-    const cmsSnap = await db.collection('pages_management').where('isPublished', '==', true).get();
-    const cmsRoutes = cmsSnap.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        url: `${baseUrl}/page/${data.slug}`,
-        lastModified: toDate(data.updatedAt),
-        changeFrequency: 'monthly' as const,
-        priority: 0.5,
-      };
-    });
+    const landingRoutes = landingSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/${doc.data().slug}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }));
+
+    const cmsRoutes = cmsSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/page/${doc.data().slug}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }));
+
+    const quoteRoutes = quoteSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/quotation/${doc.data().quoteNumber || doc.id}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.4,
+    }));
+
+    const invoiceRoutes = invoiceSnap.docs.map((doc: any) => ({
+      url: `${baseUrl}/invoice/${doc.data().invoiceNumber || doc.id}`,
+      lastModified: toDate(doc.data().updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.3,
+    }));
 
     return [
       ...staticRoutes,
       ...productRoutes,
       ...serviceRoutes,
       ...landingRoutes,
-      ...cmsRoutes
+      ...cmsRoutes,
+      ...quoteRoutes,
+      ...invoiceRoutes
     ];
   } catch (e) {
     console.error('[Sitemap Generator] Fetch failed:', e);

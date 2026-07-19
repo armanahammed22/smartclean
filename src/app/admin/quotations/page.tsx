@@ -22,7 +22,6 @@ import {
   MessageCircle,
   Share2,
   Download,
-  MoreVertical,
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -80,14 +79,14 @@ export default function QuotationsListPage() {
       toast({ variant: "destructive", title: "Missing Phone", description: "Customer phone number is required for WhatsApp share." });
       return;
     }
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${quote.publicLink || baseUrl + '/quotation/view/' + quote.id}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
+    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${baseUrl}/quotation/${quote.quoteNumber}`;
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleCopyLink = (quote: any) => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const link = quote.publicLink || `${baseUrl}/quotation/view/${quote.id}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
+    const link = `${baseUrl}/quotation/${quote.quoteNumber}`;
     navigator.clipboard.writeText(link);
     toast({ title: "Link Copied", description: "Quotation URL saved to clipboard." });
   };
@@ -189,7 +188,7 @@ export default function QuotationsListPage() {
                           <Link href={`/admin/quotations/${quote.id}`}><Edit size={16} /></Link>
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-emerald-600 bg-emerald-50 rounded-xl" asChild title="Public Portal">
-                          <Link href={`/quotation/view/${quote.id}`} target="_blank"><Eye size={16} /></Link>
+                          <Link href={`/quotation/${quote.quoteNumber}`} target="_blank"><Eye size={16} /></Link>
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 bg-indigo-50 rounded-xl" onClick={() => handleWhatsApp(quote)} title="Share on WhatsApp">
                           <MessageCircle size={16} />

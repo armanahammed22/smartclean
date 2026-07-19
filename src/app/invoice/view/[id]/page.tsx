@@ -1,245 +1,29 @@
-
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import Image from 'next/image';
-import { 
-  CheckCircle2, 
-  Download, 
-  Loader2, 
-  MapPin, 
-  Phone, 
-  Globe,
-  Mail,
-  ShieldCheck,
-  Info,
-  Printer,
-  Wallet,
-  Heart,
-  Check,
-  MessageCircle,
-  History,
-  Zap,
-  Clock
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { downloadInvoicePDF, numberToWords } from '@/lib/invoice-utils';
-import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
-export default function PublicInvoiceViewPage() {
+/**
+ * 🛡️ LEGACY REDIRECT: Redirects old ID-based links to clean SEO URLs.
+ */
+export default function LegacyInvoiceRedirect() {
   const { id } = useParams();
-  const db = useFirestore();
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const invoiceRef = useMemoFirebase(() => (db && id) ? doc(db, 'invoices', id as string) : null, [db, id]);
-  const { data: invoice, isLoading } = useDoc(invoiceRef);
-
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const { data: settings } = useDoc(settingsRef);
-
-  const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
-  
-  const handleWhatsApp = () => {
-    if (!invoice) return;
-    const text = `আসসালামু আলাইকুম, আমি আমার ইনভয়েস (${invoice.invoiceNumber}) সম্পর্কে জানতে চাই।`;
-    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
-  if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Secure Document Not Found</div>;
-
-  const signatureUrl = settings?.signatureUrl;
-  const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
-
-  const websiteName = settings?.websiteName || 'Smart Clean';
-  const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
-
-  const isDue = (invoice.dueAmount || 0) > 0;
-  const isQuotation = invoice.invoiceNumber?.startsWith('QTN');
+    if (id) {
+      const timer = setTimeout(() => {
+        router.replace(`/invoice/${id}`);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [id, router]);
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white pb-32 md:pb-16">
-      <style jsx global>{`
-        @media print {
-          body { background: white !important; }
-          .no-print { display: none !important; }
-        }
-        .invoice-table-wrapper { width: 100%; border-collapse: collapse; }
-      `}</style>
-
-      <div className="container mx-auto px-4 flex flex-col items-center">
-        
-        <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-10 gap-6 px-4 text-center sm:text-left no-print">
-          <div className="flex items-center gap-4 text-left">
-            <div className="w-12 h-12 bg-[#081621] rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl border border-white/10">SC</div>
-            <div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-[#081621] block">Secure Billing Portal</span>
-                <Badge className="bg-emerald-100 text-emerald-700 border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1">Verified Document</Badge>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={handleWhatsApp} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={18} /> WhatsApp</Button>
-            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadInvoicePDF('public-invoice-render', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
-              {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
-            </Button>
-          </div>
-        </div>
-
-        <div id="public-invoice-render" className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A]" style={{ width: '210mm', minHeight: 'auto', color: '#333' }}>
-          <table className="invoice-table-wrapper">
-            <thead>
-              <tr>
-                <td>
-                  <div className="pt-6 px-10 pb-4 flex justify-between items-start border-b-2 border-gray-100 mb-4">
-                    <div className="flex gap-4">
-                      <div className="w-14 h-14 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
-                      <div className="space-y-0.5 text-left">
-                        <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
-                        <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Better Security, Better Solution</p>
-                      </div>
-                    </div>
-                    <div className="text-left space-y-0.5 max-w-[250px]">
-                      <p className="text-[8px] font-bold text-gray-600 leading-normal uppercase">{headerAddress}</p>
-                      <p className="text-[8px] font-bold text-gray-600 uppercase">Mobile: {headerPhone}</p>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <td className="px-10 pb-6">
-                  <div className="text-center space-y-0.5 mb-6">
-                    <h3 className="text-lg font-black uppercase text-[#081621] tracking-tighter underline underline-offset-4 decoration-primary/30">
-                      {isQuotation ? 'Quotation / Estimate' : 'Invoice / Bill'}
-                    </h3>
-                    <p className={cn("text-[8px] font-black uppercase tracking-[0.2em]", isDue ? "text-rose-600" : "text-emerald-600")}>({isDue ? 'DUE' : 'PAID'})</p>
-                  </div>
-
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="space-y-1.5 text-left">
-                      <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Client Details:</p>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-black text-[#081621] uppercase leading-tight">{invoice.customerInfo.name}</p>
-                        <p className="text-[9px] font-bold text-gray-700">{invoice.customerInfo.phone}</p>
-                        <p className="text-[8px] text-gray-500 font-medium leading-normal max-w-[300px] mt-0.5">{invoice.customerInfo.address}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-2">
-                      <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-[#1E5F7A] uppercase tracking-widest">Reference ID</p>
-                        <p className="text-xs font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="overflow-hidden border border-[#081621] rounded-xl shadow-sm mb-4">
-                    <table className="w-full border-collapse">
-                      <thead className="bg-[#1E5F7A] text-white">
-                        <tr>
-                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left w-10">SL</th>
-                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-left">Service & Description</th>
-                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-center w-24">Quantity / Area</th>
-                          <th className="py-2 px-3 text-[8px] font-black border-r border-[#081621] uppercase text-right w-24">Unit Price</th>
-                          <th className="py-2 px-3 text-[8px] font-black uppercase text-right w-24">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-[9px] font-medium bg-white">
-                        {invoice.items.map((item: any, i: number) => (
-                          <tr key={i} className="border-t border-[#081621] align-top">
-                            <td className="py-2 px-3 border-r border-[#081621] text-left text-gray-400">{i + 1}</td>
-                            <td className="py-2 px-3 border-r border-[#081621] text-left">
-                               <p className="font-black uppercase text-gray-800 leading-tight mb-1">{item.name}</p>
-                               {item.description && <p className="text-[8px] text-gray-500 italic leading-relaxed">{item.description}</p>}
-                            </td>
-                            <td className="py-2 px-3 text-center border-r border-[#081621] font-black text-gray-700 uppercase">
-                              {item.quantity} {item.unit || 'PCS'}
-                            </td>
-                            <td className="py-2 px-3 text-right border-r border-[#081621] font-black text-gray-700">
-                              ৳{item.price.toLocaleString()} / <span className="text-[7px] uppercase">{item.unit || 'PCS'}</span>
-                            </td>
-                            <td className="py-2 px-3 text-right font-black text-gray-900">৳{(item.price * item.quantity).toLocaleString()}/-</td>
-                          </tr>
-                        ))}
-                        
-                        <tr className="border-t border-[#081621] bg-gray-50/80">
-                          <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621]">Subtotal (Current Services)</td>
-                          <td className="py-1.5 px-3 text-right font-black text-[10px]">৳{invoice.subtotal.toLocaleString()}/-</td>
-                        </tr>
-
-                        {invoice.previousDue > 0 && (
-                          <tr className="border-t border-[#081621] bg-white">
-                            <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621] text-rose-600">Previous Due Amount</td>
-                            <td className="py-1.5 px-3 text-right font-black text-[10px] text-rose-600">৳{invoice.previousDue.toLocaleString()}/-</td>
-                          </tr>
-                        )}
-
-                        <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                          <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest border-r border-white/10 italic">Net Grand Total</td>
-                          <td className="py-3 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}/-</td>
-                        </tr>
-
-                        <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                          <td colSpan={4} className="py-1.5 px-6 text-right font-black uppercase text-[8px] border-r border-[#081621] italic">Payments Received (-)</td>
-                          <td className="py-1.5 px-3 text-right font-black text-[10px]">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
-                        </tr>
-
-                        <tr className="border-t-2 border-[#081621] bg-rose-50/50 text-rose-700">
-                          <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] border-r border-[#081621] italic">Net Due Amount</td>
-                          <td className="py-2.5 px-3 text-right font-black text-[11px] text-rose-600">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="p-2.5 bg-[#1E5F7A]/5 rounded-xl border border-[#081621] space-y-0.5 text-left mb-4">
-                    <p className="text-[6px] font-black uppercase text-gray-400 tracking-widest leading-none">Amount in words:</p>
-                    <p className="text-[10px] font-black text-[#081621] italic leading-tight">"{numberToWords(invoice.total)}"</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-
-            <tfoot>
-              <tr>
-                <td className="px-10">
-                  <div className="avoid-break space-y-4 pb-10">
-                    <div className="grid grid-cols-2 gap-20 items-end py-5">
-                      <div className="text-center space-y-3">
-                        <div className="border-b border-gray-300 h-6"></div>
-                        <p className="text-[8px] font-black uppercase text-[#081621]">Client Signature</p>
-                      </div>
-                      <div className="flex flex-col items-center justify-end text-center space-y-2">
-                        <div className="h-8 w-20 relative border-b border-gray-100 pb-1 flex items-center justify-center">
-                          {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[6px] font-black text-gray-200 border border-dashed p-1 uppercase">Authorized</div>}
-                        </div>
-                        <p className="font-black text-[8px] uppercase text-[#081621]">Authorized Signatory</p>
-                      </div>
-                    </div>
-                    <div className="pt-2 text-center space-y-0.5">
-                      <p className="text-[10px] font-black text-primary flex items-center justify-center gap-1"><Heart size={10} fill="currentColor" /> Thank you for your business!</p>
-                      <p className="text-[7.5px] text-gray-300 uppercase font-bold text-center">{footerDisclaimer}</p>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
+      <Loader2 className="animate-spin text-primary" size={48} />
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Upgrading Billing URL...</p>
     </div>
   );
 }

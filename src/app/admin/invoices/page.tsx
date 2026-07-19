@@ -14,6 +14,7 @@ import {
   Search, 
   Trash2, 
   Eye, 
+  Edit, 
   Loader2, 
   Filter, 
   ReceiptText, 
@@ -22,7 +23,6 @@ import {
   X,
   Calculator,
   Save,
-  Edit,
   Info,
   Phone,
   Package,
@@ -348,7 +348,8 @@ function InvoicesListContent() {
         const newInvoice = { ...invoiceData, invoiceNumber, createdAt: new Date().toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
         const docRef = await addDoc(collection(db, 'invoices'), newInvoice);
         
-        const publicLink = `${window.location.origin}/invoice/view/${docRef.id}`;
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
+        const publicLink = `${baseUrl}/invoice/${invoiceNumber}`;
         await updateDoc(doc(db, 'invoices', docRef.id), { publicLink });
         toast({ title: "Invoice Generated" });
       }
@@ -423,55 +424,57 @@ function InvoicesListContent() {
 
         <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[1.5rem] border border-gray-100">
           <CardContent className="p-0 overflow-x-auto custom-scrollbar">
-            <Table>
-              <TableHeader className="bg-gray-50/50">
-                <TableRow>
-                  <TableHead className="w-12 pl-6">
-                    <Checkbox checked={filtered?.length ? selectedIds.length === filtered.length : false} onCheckedChange={toggleSelectAll} />
-                  </TableHead>
-                  <TableHead className="font-black py-4 pl-2 uppercase text-[9px] tracking-widest text-[#081621]">Ref ID</TableHead>
-                  <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Customer</TableHead>
-                  <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Total Bill</TableHead>
-                  <TableHead className="font-black uppercase text-[9px] tracking-widest text-center text-[#081621]">Status</TableHead>
-                  <TableHead className="text-right pr-8 uppercase text-[9px] tracking-widest text-[#081621]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
-                ) : filtered?.map((inv) => (
-                  <TableRow key={inv.id} className="hover:bg-gray-50/50 transition-colors">
-                    <TableCell className="pl-6"><Checkbox checked={selectedIds.includes(inv.id)} onCheckedChange={() => toggleSelect(inv.id)} /></TableCell>
-                    <TableCell className="py-4 pl-2 font-black text-xs text-primary font-mono">{inv.invoiceNumber}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-900 uppercase">{inv.customerInfo?.name}</span>
-                        <span className="text-[9px] text-muted-foreground">{inv.customerInfo?.phone}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-black text-xs">৳{inv.total?.toLocaleString()}</span>
-                        {inv.dueAmount > 0 && <span className="text-[8px] font-black text-rose-500 uppercase">Due: ৳{inv.dueAmount}</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge className={cn(
-                        "text-[7px] font-black uppercase border-none px-2 py-0.5 rounded-md",
-                        inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600"
-                      )}>{inv.paymentStatus}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild><Link href={`/admin/invoices/${inv.id}`}><Eye size={16} /></Link></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => handleOpenEdit(inv)}><Edit size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
-                      </div>
-                    </TableCell>
+            <div className="min-w-full">
+              <Table>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow>
+                    <TableHead className="w-12 pl-6">
+                      <Checkbox checked={filtered?.length ? selectedIds.length === filtered.length : false} onCheckedChange={toggleSelectAll} />
+                    </TableHead>
+                    <TableHead className="font-black py-4 pl-2 uppercase text-[9px] tracking-widest text-[#081621]">Ref ID</TableHead>
+                    <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Customer</TableHead>
+                    <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Total Bill</TableHead>
+                    <TableHead className="font-black uppercase text-[9px] tracking-widest text-center text-[#081621]">Status</TableHead>
+                    <TableHead className="text-right pr-8 uppercase text-[9px] tracking-widest text-[#081621]">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow><TableCell colSpan={6} className="text-center py-20"><Loader2 className="animate-spin text-primary inline" /></TableCell></TableRow>
+                  ) : filtered?.map((inv) => (
+                    <TableRow key={inv.id} className="hover:bg-gray-50/50 transition-colors">
+                      <TableCell className="pl-6"><Checkbox checked={selectedIds.includes(inv.id)} onCheckedChange={() => toggleSelect(inv.id)} /></TableCell>
+                      <TableCell className="py-4 pl-2 font-black text-xs text-primary font-mono">{inv.invoiceNumber}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-gray-900 uppercase">{inv.customerInfo?.name}</span>
+                          <span className="text-[9px] text-muted-foreground">{inv.customerInfo?.phone}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-black text-xs">৳{inv.total?.toLocaleString()}</span>
+                          {inv.dueAmount > 0 && <span className="text-[8px] font-black text-rose-500 uppercase">Due: ৳{inv.dueAmount}</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge className={cn(
+                          "text-[7px] font-black uppercase border-none px-2 py-0.5 rounded-md",
+                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600"
+                        )}>{inv.paymentStatus}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-8">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild><Link href={`/invoice/${inv.invoiceNumber}`}><Eye size={16} /></Link></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => handleOpenEdit(inv)}><Edit size={16} /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
