@@ -372,6 +372,52 @@ export interface CustomRequest {
   updatedAt?: string;
 }
 
+export interface Quotation {
+  id: string;
+  quoteNumber: string;
+  customerId?: string;
+  customerInfo: {
+    name: string;
+    phone: string;
+    email: string;
+    company?: string;
+    address: string;
+  };
+  items: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    quantity: number;
+    unit: string;
+  }[];
+  addOns: {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
+  subtotal: number;
+  discount: number;
+  discountType: 'percentage' | 'fixed';
+  additionalCharges: number;
+  vatPercent: number;
+  tax: number;
+  total: number;
+  status: 'Draft' | 'Sent' | 'Approved' | 'Rejected' | 'Expired' | 'Converted';
+  issueDate: string;
+  expiryDate: string;
+  terms: string;
+  customerNotes?: string;
+  internalNotes?: string;
+  salesPerson?: string;
+  convertedTo?: 'booking' | 'invoice';
+  convertedId?: string;
+  publicLink?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LedgerEntry {
   id: string;
   type: "income" | "expense";

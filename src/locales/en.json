@@ -1,3 +1,4 @@
+
 {
   "common": {
     "save": "Save",
@@ -138,7 +139,11 @@
     "revenue_velocity": "Revenue Velocity",
     "workforce_health": "Workforce Health",
     "ledger_audit": "Audit Ledger",
-    "new_sku": "New SKU Entry"
+    "new_sku": "New SKU Entry",
+    "quotations": "Quotations",
+    "new_quotation": "New Quotation",
+    "quotation_list": "All Quotations",
+    "quotation_settings": "Quotation Settings"
   },
   "public": {
     "search_placeholder": "Find products or services...",

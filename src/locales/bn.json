@@ -1,3 +1,4 @@
+
 {
   "common": {
     "save": "সেভ করুন",
@@ -138,7 +139,11 @@
     "revenue_velocity": "রেভিনিউ ভেলোসিটি",
     "workforce_health": "ওয়ার্কফোর্স হেলথ",
     "ledger_audit": "লেজার অডিট",
-    "new_sku": "নতুন SKU যুক্ত করুন"
+    "new_sku": "নতুন SKU যুক্ত করুন",
+    "quotations": "কোটেশনসমূহ",
+    "new_quotation": "নতুন কোটিশন",
+    "quotation_list": "সব কোটিশন",
+    "quotation_settings": "কোটিশন সেটিংস"
   },
   "public": {
     "search_placeholder": "পণ্য বা সার্ভিস খুঁজুন...",
