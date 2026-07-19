@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
-import { doc, updateDoc, collection, addDoc, serverTimestamp, writeBatch, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,8 +30,6 @@ import {
   FileSpreadsheet,
   Layers,
   Download,
-  Printer,
-  Share2,
   Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

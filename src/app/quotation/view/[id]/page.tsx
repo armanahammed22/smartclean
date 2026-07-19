@@ -160,10 +160,10 @@ export default function PublicQuotationViewPage() {
               <div className="text-left space-y-4">
                 <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
                 <div className="space-y-1">
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{quote.customerInfo.name}</h4>
-                  {quote.customerInfo.company && <p className="text-[11px] font-black text-primary uppercase">{quote.customerInfo.company}</p>}
-                  <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo.phone}</p>
-                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{quote.customerInfo.address}</p>
+                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{quote.customerInfo?.name}</h4>
+                  {quote.customerInfo?.company && <p className="text-[11px] font-black text-primary uppercase">{quote.customerInfo.company}</p>}
+                  <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
+                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{quote.customerInfo?.address}</p>
                 </div>
               </div>
               <div className="text-right space-y-6">
@@ -192,7 +192,7 @@ export default function PublicQuotationViewPage() {
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
-                  {quote.items.map((item: any, i: number) => (
+                  {quote.items?.map((item: any, i: number) => (
                     <tr key={i} className="border-t-2 border-gray-50 align-top">
                       <td className="py-4 px-4 text-left text-gray-400">{i + 1}</td>
                       <td className="py-4 px-4 text-left">
@@ -227,7 +227,7 @@ export default function PublicQuotationViewPage() {
 
             <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
-              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(quote.total)}"</p>
+              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
             </div>
 
             <div className="space-y-4">
@@ -242,7 +242,7 @@ export default function PublicQuotationViewPage() {
             <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-12">
               <div className="text-center space-y-4">
                 <div className="border-b-[3px] border-gray-100 h-10"></div>
-                <p className="text-[10px] font-black uppercase text-[#081621]">Client Acceptance</p>
+                <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
               <div className="flex flex-col items-center justify-end text-center space-y-4">
                 <div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center">
@@ -252,7 +252,6 @@ export default function PublicQuotationViewPage() {
               </div>
             </div>
 
-            {/* 📋 SERVICES PROVIDED GRID FOOTER */}
             <div className="pt-10 border-t border-gray-50 space-y-8">
                <div className="text-center space-y-1">
                   <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2">Smart Cleaning, Better Living. <Star size={10} fill="currentColor"/></p>
