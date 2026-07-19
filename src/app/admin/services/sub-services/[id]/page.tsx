@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useDoc, useCollection, useMemoFirebase, useUser, useFirestore } from '@/firebase';
 import { doc, collection, updateDoc, query, orderBy, setDoc, serverTimestamp } from 'firebase/firestore';
 import { 
   Card, 
@@ -52,7 +53,7 @@ export default function SubServiceEditorPage() {
   const isNew = id === 'new';
 
   // 1. Core Data
-  const subServiceRef = useMemoFirebase(() => (db && !isNew) ? doc(db, 'sub_services', id as string) : null, [db, id, iNew]);
+  const subServiceRef = useMemoFirebase(() => (db && id && id !== 'new') ? doc(db, 'sub_services', id as string) : null, [db, id]);
   const { data: subService, isLoading: sLoading } = useDoc(subServiceRef);
 
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);

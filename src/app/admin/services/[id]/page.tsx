@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -137,7 +138,7 @@ export default function UnifiedServiceEditor() {
   const isNew = id === 'new';
 
   // 1. Core Service Data
-  const serviceRef = useMemoFirebase(() => (db && !isNew) ? doc(db, 'services', id as string) : null, [db, id, isNew]);
+  const serviceRef = useMemoFirebase(() => (db && id && id !== 'new') ? doc(db, 'services', id as string) : null, [db, id]);
   const { data: service, isLoading: sLoading } = useDoc(serviceRef);
 
   // 2. Taxonomy & Master Data
