@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { collection, addDoc, query, orderBy, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,12 +35,14 @@ import {
   Building2,
   Layers,
   ChevronRight,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getNextQuotationNumber } from '@/lib/quotation-utils';
+import Link from 'next/link';
 
 export default function CreateQuotationPage() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function CreateQuotationPage() {
   }, [db]);
 
   useEffect(() => {
-    if (quoteSettings && !isNew) {
+    if (quoteSettings) {
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + (quoteSettings.defaultValidityDays || 7));
       setConfig(prev => ({ 
@@ -88,18 +89,10 @@ export default function CreateQuotationPage() {
     }
   }, [quoteSettings, user]);
 
-  const isNew = true;
-
   const addItem = () => setItems([...items, { id: 'manual-' + Date.now(), name: '', description: '', price: '', quantity: 1, unit: 'Qty' }]);
   const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
   const updateItem = (id: string, field: string, val: any) => {
     setItems(items.map(i => i.id === id ? { ...i, [field]: val } : i));
-  };
-
-  const addAddOn = () => setAddOns([...addOns, { id: 'addon-' + Date.now(), name: '', price: '', quantity: 1 }]);
-  const removeAddOn = (id: string) => setAddOns(addOns.filter(a => a.id !== id));
-  const updateAddOn = (id: string, field: string, val: any) => {
-    setAddOns(addOns.map(a => a.id === id ? { ...a, [field]: val } : a));
   };
 
   const handleClientSelect = (clientId: string) => {
@@ -120,7 +113,7 @@ export default function CreateQuotationPage() {
     const service = services?.find(s => s.id === serviceId);
     if (service) {
       const nextItems = [...items];
-      nextIdx: nextItems[itemIdx] = {
+      nextItems[itemIdx] = {
         ...nextItems[itemIdx],
         name: service.title,
         description: service.shortDescription || service.description?.substring(0, 100),
@@ -214,7 +207,6 @@ export default function CreateQuotationPage() {
         
         <div className="lg:col-span-8 space-y-10">
           
-          {/* CLIENT CONFIG */}
           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
             <CardHeader className="bg-[#081621] text-white p-8">
               <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2"><User size={18} className="text-primary"/> Client Identity</CardTitle>
@@ -256,7 +248,6 @@ export default function CreateQuotationPage() {
             </CardContent>
           </Card>
 
-          {/* SERVICE MATRIX */}
           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
             <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-row items-center justify-between">
               <div>
@@ -314,7 +305,6 @@ export default function CreateQuotationPage() {
             </CardContent>
           </Card>
 
-          {/* DYNAMIC TERMS */}
           <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
              <CardHeader className="p-8 bg-gray-50/50 border-b flex items-center justify-between">
                 <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621]">Terms & Conditions</CardTitle>
@@ -322,15 +312,10 @@ export default function CreateQuotationPage() {
              </CardHeader>
              <CardContent className="p-8 space-y-6">
                 <Textarea value={config.terms} onChange={e => setConfig({...config, terms: e.target.value})} className="min-h-[150px] bg-gray-50 border-none rounded-2xl p-6 font-medium text-sm leading-loose" />
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Customer Notes (Visible on Print)</Label>
-                  <Input value={config.customerNotes} onChange={e => setConfig({...config, customerNotes: (e.target as any).value})} placeholder="e.g. Validity strictly 7 days." className="h-12 bg-gray-50 border-none rounded-xl font-medium" />
-                </div>
              </CardContent>
           </Card>
         </div>
 
-        {/* SUMMARY SIDEBAR */}
         <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
           <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden">
              <CardHeader className="p-8 border-b border-white/5 bg-black/10 flex flex-row items-center justify-between">
@@ -396,11 +381,11 @@ export default function CreateQuotationPage() {
              <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2"><Settings2 size={14}/> Validity Logic</h4>
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                   <Label className="text-[9px] font-black uppercase text-gray-400">Issue Date</Label>
+                   <Label className="text-[9px] font-black text-gray-400 uppercase">Issue Date</Label>
                    <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                   <Label className="text-[9px] font-black uppercase text-gray-400">Expiry Date</Label>
+                   <Label className="text-[9px] font-black text-gray-400 uppercase">Expiry Date</Label>
                    <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
                 </div>
              </div>
