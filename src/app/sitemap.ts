@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (e) {
-    console.warn('[Sitemap] Could not fetch dynamic domain.');
+    console.warn('[Robots] Could not fetch dynamic domain.');
   }
 
   const staticRoutes = [
@@ -57,44 +57,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       db.collection('invoices').get()
     ]);
 
-    const productRoutes = productSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/product/${doc.data().slug || doc.id}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const productRoutes = productSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/product/${record.data().slug || record.id}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
 
-    const serviceRoutes = serviceSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/service/${doc.data().slug || doc.id}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const serviceRoutes = serviceSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/service/${record.data().slug || record.id}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));
 
-    const landingRoutes = landingSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/${doc.data().slug}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const landingRoutes = landingSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/${record.data().slug}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
     }));
 
-    const cmsRoutes = cmsSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/page/${doc.data().slug}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const cmsRoutes = cmsSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/page/${record.data().slug}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'monthly' as const,
       priority: 0.5,
     }));
 
-    const quoteRoutes = quoteSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/quotation/${doc.data().quoteNumber || doc.id}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const quoteRoutes = quoteSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/quotation/${record.data().quoteNumber || record.id}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'monthly' as const,
       priority: 0.4,
     }));
 
-    const invoiceRoutes = invoiceSnap.docs.map((doc: any) => ({
-      url: `${baseUrl}/invoice/${doc.data().invoiceNumber || doc.id}`,
-      lastModified: toDate(doc.data().updatedAt),
+    const invoiceRoutes = invoiceSnap.docs.map((record: any) => ({
+      url: `${baseUrl}/invoice/${record.data().invoiceNumber || record.id}`,
+      lastModified: toDate(record.data().updatedAt),
       changeFrequency: 'monthly' as const,
       priority: 0.3,
     }));

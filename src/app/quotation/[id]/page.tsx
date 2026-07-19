@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
   CheckCircle2, 
@@ -92,7 +92,6 @@ export default function PublicQuotationViewPage() {
     fetchQuote();
   }, [db, id, router]);
 
-  const settingsQuery = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   // Fetching global settings via standard Firestore hook
   const [settings, setSettings] = useState<any>(null);
   useEffect(() => {
@@ -108,6 +107,7 @@ export default function PublicQuotationViewPage() {
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
+  const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
     if (!settings?.invoiceProvidedServices) return [];

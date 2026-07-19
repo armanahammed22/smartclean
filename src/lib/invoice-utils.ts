@@ -51,9 +51,9 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     const custQuery = query(collection(db, 'users'), where('phone', '==', sourceData.customerPhone), where('role', '==', 'customer'));
     const custSnap = await getDocs(custQuery);
     if (!custSnap.empty) {
-      const custDoc = custSnap.docs[0];
-      customerId = custDoc.id;
-      previousDue = custDoc.data().outstandingBalance || 0;
+      const customerRecord = custSnap.docs[0];
+      customerId = customerRecord.id;
+      previousDue = customerRecord.data().outstandingBalance || 0;
     } else {
       // Auto-enroll new customer
       const newCustRef = doc(collection(db, 'users'));

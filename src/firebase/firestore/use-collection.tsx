@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -79,7 +78,7 @@ export function useCollection<T = any>(
           memoizedTarget,
           (snapshot: QuerySnapshot<DocumentData>) => {
             if (activeToken.current !== token) return;
-            const results = snapshot.docs.map(doc => ({ ...(doc.data() as T), id: doc.id }));
+            const results = snapshot.docs.map(record => ({ ...(record.data() as T), id: record.id }));
             setData(results);
             setError(null);
             setIsLoading(false);
