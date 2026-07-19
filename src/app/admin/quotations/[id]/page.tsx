@@ -61,11 +61,20 @@ export default function QuotationEditorPage() {
   const quoteRef = useMemoFirebase(() => (db && id) ? doc(db, 'quotations', id as string) : null, [db, id]);
   const { data: quote, isLoading: qLoading } = useDoc(quoteRef);
 
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
-  const clientsQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
+  // Fetching full collections to avoid Index Errors in prototype
+  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const clientsRef = useMemoFirebase(() => db ? collection(db, 'users') : null, [db]);
 
-  const { data: services } = useCollection(servicesQuery);
-  const { data: clients } = useCollection(clientsQuery);
+  const { data: servicesRaw } = useCollection(servicesRef);
+  const { data: clientsRaw } = useCollection(clientsRef);
+
+  const services = useMemo(() => {
+    return servicesRaw?.filter(s => s.status === 'Active').sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
+  }, [servicesRaw]);
+
+  const clients = useMemo(() => {
+    return clientsRaw?.filter(c => c.role === 'customer').sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [];
+  }, [clientsRaw]);
 
   const [customer, setCustomer] = useState<any>({ name: '', phone: '', email: '', company: '', address: '' });
   const [items, setItems] = useState<any[]>([]);
@@ -372,7 +381,7 @@ export default function QuotationEditorPage() {
                    <Button 
                     onClick={handleUpdate}
                     disabled={isSaving}
-                    className="w-full h-16 md:h-20 rounded-[2.5rem] bg-primary hover:bg-[#15435a] font-black text-2xl uppercase tracking-tight shadow-2xl shadow-primary/20 gap-4 active:scale-95 transition-all"
+                    className="w-full h-16 md:h-20 rounded-[2.5rem] bg-primary hover:bg-[#15435a] font-black text-2xl uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 active:scale-95 transition-all"
                    >
                      {isSaving ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save size={28} /> Synchronize Record</>}
                    </Button>
@@ -401,7 +410,7 @@ export default function QuotationEditorPage() {
                     <Input value={config.salesPerson} onChange={e => setConfig({...config, salesPerson: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
                  </div>
                  <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
-                   <Info size={20} className="text-blue-600 mt-0.5 shrink-0" />
+                   <Info size={12} className="text-blue-600 mt-0.5 shrink-0" />
                    <p className="text-[10px] font-medium text-blue-800 leading-relaxed uppercase">
                      Changes to the rate matrix will reflect instantly on the customer's live view.
                    </p>

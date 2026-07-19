@@ -61,14 +61,23 @@ export default function CreateQuotationPage() {
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', additional: 0, vatPercent: 0 });
   const [config, setConfig] = useState({ issueDate: new Date().toISOString().split('T')[0], expiryDate: '', terms: '', salesPerson: user?.displayName || '' });
 
-  // Data Fetch
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
+  // Data Fetch - Fetching full collections to sort/filter in memory to avoid index requirements
+  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
+  const customersRef = useMemoFirebase(() => db ? collection(db, 'users') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'quotation') : null, [db]);
 
-  const { data: services } = useCollection(servicesQuery);
-  const { data: clients } = useCollection(customersQuery);
+  const { data: servicesRaw } = useCollection(servicesRef);
+  const { data: customersRaw } = useCollection(customersRef);
   const { data: quoteSettings } = useDoc(settingsRef);
+
+  // In-memory sorting and filtering
+  const services = useMemo(() => {
+    return servicesRaw?.filter(s => s.status === 'Active').sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
+  }, [servicesRaw]);
+
+  const clients = useMemo(() => {
+    return customersRaw?.filter(c => c.role === 'customer').sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [];
+  }, [customersRaw]);
 
   useEffect(() => {
     if (db) {
