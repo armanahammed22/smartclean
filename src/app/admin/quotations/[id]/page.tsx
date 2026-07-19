@@ -30,7 +30,8 @@ import {
   FileSpreadsheet,
   Layers,
   Download,
-  Eye
+  Eye,
+  ListChecks
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -60,7 +61,7 @@ export default function QuotationEditorPage() {
   const [customer, setCustomer] = useState<any>({ name: '', phone: '', email: '', company: '', address: '' });
   const [items, setItems] = useState<any[]>([]);
   const [pricing, setPricing] = useState<any>({ discount: 0, discountType: 'percentage', additional: 0, vatPercent: 0 });
-  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: '', status: 'Draft', salesPerson: '' });
+  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: [] as string[], status: 'Draft', salesPerson: '', footerServices: '' });
 
   useEffect(() => {
     if (quote) {
@@ -75,9 +76,10 @@ export default function QuotationEditorPage() {
       setConfig({ 
         issueDate: quote.issueDate || '', 
         expiryDate: quote.expiryDate || '', 
-        terms: quote.terms || '', 
+        terms: Array.isArray(quote.terms) ? quote.terms : [quote.terms || ''], 
         status: quote.status || 'Draft',
-        salesPerson: quote.salesPerson || ''
+        salesPerson: quote.salesPerson || '',
+        footerServices: quote.footerServices || ''
       });
     }
   }, [quote]);
@@ -87,6 +89,14 @@ export default function QuotationEditorPage() {
   const updateItem = (itemId: string, field: string, val: any) => {
     setItems(items.map(i => i.id === itemId ? { ...i, [field]: val } : i));
   };
+
+  const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
+  const updateTerm = (idx: number, val: string) => {
+    const next = [...config.terms];
+    next[idx] = val;
+    setConfig({ ...config, terms: next });
+  };
+  const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
 
   const handleServiceSelect = (serviceId: string, itemIdx: number) => {
     const service = services?.find(s => s.id === serviceId);
@@ -178,7 +188,7 @@ export default function QuotationEditorPage() {
         </div>
         <div className="flex flex-wrap gap-3">
            <Button variant="outline" className="h-12 px-6 rounded-xl font-black uppercase text-[10px] bg-white border-primary/20 text-primary gap-2 shadow-sm" asChild>
-             <Link href={`/quotation/view/${id}`} target="_blank"><Eye size={16}/> View Portal</Link>
+             <Link href={`/quotation/${quote?.quoteNumber}`} target="_blank"><Eye size={16}/> View Portal</Link>
            </Button>
            <Button variant="outline" onClick={handleDownload} disabled={isDownloading} className="h-12 px-6 rounded-xl font-black uppercase text-[10px] bg-white border-primary/20 text-indigo-600 gap-2 shadow-sm">
              <Download size={16}/> Download PDF
@@ -223,7 +233,7 @@ export default function QuotationEditorPage() {
                   <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Site / Billing Address</Label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-4 text-primary" size={20} />
-                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="min-h-[100px] pl-12 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
+                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Block, Area..." className="min-h-[100px] pl-12 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
                   </div>
                 </div>
               </CardContent>
@@ -295,16 +305,22 @@ export default function QuotationEditorPage() {
           </section>
 
           <section className="space-y-6">
-             <div className="flex items-center gap-3 border-b pb-3">
-                <Layers size={18} className="text-amber-500" />
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#081621]">Contract Terms & Conditions</h3>
+             <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex items-center gap-3">
+                   <ListChecks size={18} className="text-amber-500" />
+                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#081621]">Contract Terms & conditions</h3>
+                </div>
+                <Button type="button" onClick={addTerm} variant="ghost" size="sm" className="h-9 px-4 rounded-xl border border-gray-100 text-[9px] font-black uppercase">+ Add Condition</Button>
              </div>
              <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
-               <CardContent className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Level Agreement (SLA)</Label>
-                    <Textarea value={config.terms} onChange={e => setConfig({...config, terms: e.target.value})} className="min-h-[250px] bg-gray-50 border-none rounded-3xl p-8 font-medium text-sm leading-loose shadow-inner focus:bg-white transition-all" />
-                  </div>
+               <CardContent className="p-8 space-y-4">
+                  {config.terms.map((term: string, i: number) => (
+                    <div key={i} className="flex gap-3 group animate-in slide-in-from-top-1">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-xs text-primary shrink-0 shadow-inner">{i + 1}</div>
+                      <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl text-xs font-medium" />
+                      <button type="button" onClick={() => removeTerm(i)} className="p-2 text-rose-300 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={16}/></button>
+                    </div>
+                  ))}
                </CardContent>
              </Card>
           </section>

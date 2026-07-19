@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
@@ -35,10 +35,6 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { numberToWords } from '@/lib/invoice-utils';
 
-/**
- * Clean SEO URL Public Quotation View
- * Handles both Document ID and Quote Number for backward compatibility.
- */
 export default function PublicQuotationViewPage() {
   const { id } = useParams();
   const db = useFirestore();
@@ -53,20 +49,17 @@ export default function PublicQuotationViewPage() {
     setMounted(true);
   }, []);
 
-  // Fetch Logic (Handle ID or Number)
   useEffect(() => {
     async function fetchQuote() {
       if (!db || !id) return;
       setIsLoading(true);
       try {
-        // 1. Try fetching by Document ID
         const docRef = collection(db, 'quotations');
         const qById = query(docRef, where('__name__', '==', id), limit(1));
         const snapById = await getDocs(qById);
 
         if (!snapById.empty) {
           const data = snapById.docs[0].data();
-          // Redirect to clean URL if this was an ID request
           if (data.quoteNumber && id !== data.quoteNumber) {
             router.replace(`/quotation/${data.quoteNumber}`);
             return;
@@ -76,7 +69,6 @@ export default function PublicQuotationViewPage() {
           return;
         }
 
-        // 2. Try fetching by Quote Number (SEO URL)
         const qByNum = query(docRef, where('quoteNumber', '==', id), limit(1));
         const snapByNum = await getDocs(qByNum);
 
@@ -92,7 +84,6 @@ export default function PublicQuotationViewPage() {
     fetchQuote();
   }, [db, id, router]);
 
-  // Fetching global settings via standard Firestore hook
   const [settings, setSettings] = useState<any>(null);
   useEffect(() => {
     if (db) {
@@ -103,16 +94,20 @@ export default function PublicQuotationViewPage() {
   }, [db]);
 
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
-    if (!settings?.invoiceProvidedServices) return [];
-    return settings.invoiceProvidedServices.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-  }, [settings]);
+    const list = quote?.footerServices || settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
+    return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+  }, [settings, quote]);
+
+  const terms = useMemo(() => {
+    if (!quote?.terms) return ["Standard service terms apply."];
+    return Array.isArray(quote.terms) ? quote.terms : [quote.terms];
+  }, [quote]);
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!quote) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Quotation Document Not Found</div>;
@@ -148,7 +143,7 @@ export default function PublicQuotationViewPage() {
             <div className="flex gap-6">
               <div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
               <div className="space-y-1 text-left">
-                <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h2>
+                <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
                 <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
               </div>
             </div>
@@ -231,8 +226,13 @@ export default function PublicQuotationViewPage() {
             <div className="space-y-4">
                <h5 className="text-[10px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-1 w-fit">General Terms & Conditions</h5>
                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-inner">
-                  <div className="text-[10px] md:text-[11px] font-medium text-gray-600 leading-loose whitespace-pre-wrap">
-                    {quote.terms || "Standard service terms apply. Payment should be cleared upon service completion."}
+                  <div className="space-y-3">
+                    {terms.map((term, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="text-[10px] font-black text-primary min-w-[20px]">{i + 1}.</span>
+                        <p className="text-[10px] md:text-[11px] font-medium text-gray-600 leading-relaxed">{term}</p>
+                      </div>
+                    ))}
                   </div>
                </div>
             </div>
@@ -250,9 +250,26 @@ export default function PublicQuotationViewPage() {
               </div>
             </div>
 
-            <div className="pt-10 border-t border-gray-50 text-center space-y-2">
-               <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2">Smart Cleaning, Better Living. <Star size={10} fill="currentColor"/></p>
-               <p className="text-[7.5px] text-gray-300 font-bold uppercase">This document is electronically verified and ready for activation.</p>
+            <div className="pt-10 border-t-2 border-gray-100">
+               <div className="text-center space-y-3 mb-8">
+                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">Smart Cleaning, Better Living. <Star size={10} fill="currentColor"/></p>
+                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
+               </div>
+               
+               <div className="grid grid-cols-3 gap-6">
+                  {Array.from({ length: 3 }).map((_, colIdx) => (
+                    <div key={colIdx} className="space-y-2">
+                       {providedServices.filter((_, i) => i % 3 === colIdx).map((service, sIdx) => (
+                         <div key={sIdx} className="flex items-center gap-2">
+                            <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                            <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                         </div>
+                       ))}
+                    </div>
+                  ))}
+               </div>
+
+               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-10 tracking-[0.3em]">This document is electronically verified and ready for activation.</p>
             </div>
           </div>
         </div>
