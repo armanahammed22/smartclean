@@ -23,7 +23,8 @@ import {
   Plus,
   Trash2,
   ListChecks,
-  Wrench
+  Wrench,
+  Type
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
@@ -39,8 +40,10 @@ export default function QuotationSettingsPage() {
   const [formData, setFormData] = useState({
     prefix: 'QTN',
     lastNumber: 1000,
+    tagline: 'Smart Cleaning, Better Living.',
     defaultTerms: ['Quotation is valid for 7 days.', '50% advance for materials if required.'],
     defaultFooterServices: 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control',
+    footerDisclaimer: 'This document is electronically verified and ready for activation.',
     defaultValidityDays: 7,
     signatureUrl: '',
     sealUrl: '',
@@ -53,8 +56,10 @@ export default function QuotationSettingsPage() {
       setFormData({
         prefix: config.prefix || 'QTN',
         lastNumber: config.lastNumber || 1000,
+        tagline: config.tagline || 'Smart Cleaning, Better Living.',
         defaultTerms: Array.isArray(config.defaultTerms) ? config.defaultTerms : [config.defaultTerms || ''],
         defaultFooterServices: config.defaultFooterServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control',
+        footerDisclaimer: config.footerDisclaimer || 'This document is electronically verified and ready for activation.',
         defaultValidityDays: config.defaultValidityDays || 7,
         signatureUrl: config.signatureUrl || '',
         sealUrl: config.sealUrl || '',
@@ -107,10 +112,27 @@ export default function QuotationSettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         <div className="lg:col-span-8 space-y-8">
+          {/* Brand & Identity */}
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+            <CardHeader className="bg-primary/5 p-8 border-b">
+              <CardTitle className="text-base font-black uppercase tracking-widest flex items-center gap-3 text-primary"><Type size={18} /> Branding & Taglines</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Main Tagline</Label>
+                <Input value={formData.tagline} onChange={e => setFormData({...formData, tagline: e.target.value})} placeholder="Smart Cleaning, Better Living." className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary italic" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Footer Verification Disclaimer</Label>
+                <Input value={formData.footerDisclaimer} onChange={e => setFormData({...formData, footerDisclaimer: e.target.value})} placeholder="E-verified document text..." className="h-12 bg-gray-50 border-none rounded-xl" />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Sequence Config */}
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
-            <CardHeader className="bg-[#081621] text-white p-8">
-              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3"><Layers className="text-primary" /> Sequence & Numbering</CardTitle>
+            <CardHeader className="bg-gray-50/50 p-8 border-b">
+              <CardTitle className="text-base font-black uppercase tracking-widest flex items-center gap-3"><Layers className="text-primary" /> Sequence & Numbering</CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -207,7 +229,7 @@ export default function QuotationSettingsPage() {
               <CardContent className="p-8 relative z-10 space-y-6">
                  <h4 className="text-base font-black uppercase tracking-tight text-primary flex items-center gap-2"><Zap size={16}/> Protocol Active</h4>
                  <p className="text-white/60 text-xs font-medium leading-relaxed">
-                   আপনার কোটিশন পোর্টালে ট্যাগলাইন হিসেবে <span className="text-white font-black italic">"Smart Cleaning, Better Living."</span> সেট করা হয়েছে যা সকল ডকুমেন্টে অটোমেটিক দেখাবে।
+                   আপনার কোটিশন পোর্টালে ট্যাগলাইন হিসেবে <span className="text-white font-black italic">"{formData.tagline}"</span> সেট করা হয়েছে যা সকল ডকুমেন্টে অটোমেটিক দেখাবে।
                  </p>
               </CardContent>
            </Card>

@@ -85,10 +85,15 @@ export default function PublicQuotationViewPage() {
   }, [db, id, router]);
 
   const [settings, setSettings] = useState<any>(null);
+  const [quoteSettings, setQuoteSettings] = useState<any>(null);
+
   useEffect(() => {
     if (db) {
       getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
         if (!snap.empty) setSettings(snap.docs[0].data());
+      });
+      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'quotation'), limit(1))).then(snap => {
+        if (!snap.empty) setQuoteSettings(snap.docs[0].data());
       });
     }
   }, [db]);
@@ -96,18 +101,22 @@ export default function PublicQuotationViewPage() {
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
-  const signatureUrl = settings?.signatureUrl;
+  const signatureUrl = quoteSettings?.signatureUrl || settings?.signatureUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
-    const list = quote?.footerServices || settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
+    const list = quote?.footerServices || quoteSettings?.defaultFooterServices || settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
     return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-  }, [settings, quote]);
+  }, [settings, quote, quoteSettings]);
 
   const terms = useMemo(() => {
-    if (!quote?.terms) return ["Standard service terms apply."];
-    return Array.isArray(quote.terms) ? quote.terms : [quote.terms];
-  }, [quote]);
+    const currentTerms = quote?.terms || quoteSettings?.defaultTerms;
+    if (!currentTerms) return ["Standard service terms apply."];
+    return Array.isArray(currentTerms) ? currentTerms : [currentTerms];
+  }, [quote, quoteSettings]);
+
+  const tagline = quote?.tagline || quoteSettings?.tagline || "Smart Cleaning, Better Living.";
+  const footerDisclaimer = quoteSettings?.footerDisclaimer || "This document is electronically verified and ready for activation.";
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!quote) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Quotation Document Not Found</div>;
@@ -139,7 +148,7 @@ export default function PublicQuotationViewPage() {
         </div>
 
         <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
-          <header className="pt-10 px-12 pb-6 flex justify-between items-start border-b-[3px] border-gray-100 mb-10">
+          <header className="pt-10 px-12 pb-4 flex justify-between items-start border-b-[3px] border-gray-100 mb-8">
             <div className="flex gap-6">
               <div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
               <div className="space-y-1 text-left">
@@ -153,7 +162,7 @@ export default function PublicQuotationViewPage() {
             </div>
           </header>
 
-          <div className="px-12 pb-10 space-y-10">
+          <div className="px-12 pb-10 space-y-8">
             <div className="text-center space-y-1">
                 <h3 className="text-3xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
                 <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
@@ -223,11 +232,11 @@ export default function PublicQuotationViewPage() {
               <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                <h5 className="text-[10px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-1 w-fit">General Terms & Conditions</h5>
                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-inner">
-                  <div className="space-y-3">
-                    {terms.map((term, i) => (
+                  <div className="space-y-2">
+                    {terms.map((term: string, i: number) => (
                       <div key={i} className="flex gap-3 items-start">
                         <span className="text-[10px] font-black text-primary min-w-[20px]">{i + 1}.</span>
                         <p className="text-[10px] md:text-[11px] font-medium text-gray-600 leading-relaxed">{term}</p>
@@ -237,7 +246,7 @@ export default function PublicQuotationViewPage() {
                </div>
             </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-12 pb-10">
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-6 pb-6">
               <div className="text-center space-y-4">
                 <div className="border-b-[3px] border-gray-100 h-10"></div>
                 <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
@@ -250,16 +259,16 @@ export default function PublicQuotationViewPage() {
               </div>
             </div>
 
-            <div className="pt-10 border-t-2 border-gray-100">
-               <div className="text-center space-y-3 mb-8">
-                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">Smart Cleaning, Better Living. <Star size={10} fill="currentColor"/></p>
+            <div className="pt-6 border-t-2 border-gray-100">
+               <div className="text-center space-y-2 mb-6">
+                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
                   <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
                </div>
                
-               <div className="grid grid-cols-3 gap-6">
+               <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
                   {Array.from({ length: 3 }).map((_, colIdx) => (
-                    <div key={colIdx} className="space-y-2">
-                       {providedServices.filter((_, i) => i % 3 === colIdx).map((service, sIdx) => (
+                    <div key={colIdx} className="space-y-1.5">
+                       {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
                          <div key={sIdx} className="flex items-center gap-2">
                             <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
                             <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
@@ -269,7 +278,7 @@ export default function PublicQuotationViewPage() {
                   ))}
                </div>
 
-               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-10 tracking-[0.3em]">This document is electronically verified and ready for activation.</p>
+               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-8 tracking-[0.3em]">{footerDisclaimer}</p>
             </div>
           </div>
         </div>

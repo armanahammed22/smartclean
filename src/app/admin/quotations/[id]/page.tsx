@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
-import { doc, updateDoc, collection, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, orderBy, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,7 @@ export default function QuotationEditorPage() {
   const [customer, setCustomer] = useState<any>({ name: '', phone: '', email: '', company: '', address: '' });
   const [items, setItems] = useState<any[]>([]);
   const [pricing, setPricing] = useState<any>({ discount: 0, discountType: 'percentage', additional: 0, vatPercent: 0 });
-  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: [] as string[], status: 'Draft', salesPerson: '', footerServices: '' });
+  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: [] as string[], status: 'Draft', salesPerson: '', footerServices: '', tagline: '' });
 
   useEffect(() => {
     if (quote) {
@@ -79,7 +79,8 @@ export default function QuotationEditorPage() {
         terms: Array.isArray(quote.terms) ? quote.terms : [quote.terms || ''], 
         status: quote.status || 'Draft',
         salesPerson: quote.salesPerson || '',
-        footerServices: quote.footerServices || ''
+        footerServices: quote.footerServices || '',
+        tagline: quote.tagline || ''
       });
     }
   }, [quote]);
@@ -137,7 +138,7 @@ export default function QuotationEditorPage() {
         tax: totals.taxAmt,
         total: totals.total,
         ...config,
-        updatedAt: new Date().toISOString()
+        updatedAt: serverTimestamp()
       });
       toast({ title: "Quotation Updated" });
     } catch (e) {
