@@ -4,12 +4,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, updateDoc, collection, query, where, orderBy, deleteDoc, setDoc, serverTimestamp, addDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -23,31 +22,22 @@ import {
   CheckCircle2, 
   ShoppingCart,
   X,
-  Search,
-  Check,
   Wrench,
   Info,
-  Calendar,
   Calculator,
-  User,
-  Building2,
-  Layers,
-  ArrowRight,
-  ExternalLink,
-  Printer,
-  Smartphone,
-  CheckSquare,
-  FileSpreadsheet,
-  Settings2,
   Users,
   MapPin,
-  Clock,
-  Wallet
+  Settings2,
+  FileSpreadsheet,
+  Layers,
+  Download,
+  Printer,
+  Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { convertQuotationToBooking } from '@/lib/quotation-utils';
+import { convertQuotationToBooking, downloadQuotationPDF } from '@/lib/quotation-utils';
 import Link from 'next/link';
 
 export default function QuotationEditorPage() {
@@ -57,24 +47,17 @@ export default function QuotationEditorPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const quoteRef = useMemoFirebase(() => (db && id) ? doc(db, 'quotations', id as string) : null, [db, id]);
   const { data: quote, isLoading: qLoading } = useDoc(quoteRef);
 
-  // Fetching full collections to avoid Index Errors in prototype
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
-  const clientsRef = useMemoFirebase(() => db ? collection(db, 'users') : null, [db]);
-
   const { data: servicesRaw } = useCollection(servicesRef);
-  const { data: clientsRaw } = useCollection(clientsRef);
 
   const services = useMemo(() => {
     return servicesRaw?.filter(s => s.status === 'Active').sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
   }, [servicesRaw]);
-
-  const clients = useMemo(() => {
-    return clientsRaw?.filter(c => c.role === 'customer').sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [];
-  }, [clientsRaw]);
 
   const [customer, setCustomer] = useState<any>({ name: '', phone: '', email: '', company: '', address: '' });
   const [items, setItems] = useState<any[]>([]);
@@ -160,14 +143,23 @@ export default function QuotationEditorPage() {
     if (!db || !quote) return;
     setIsConverting(true);
     try {
-      const bookingId = await convertQuotationToBooking(db, { ...quote, ...config, customerInfo: customer, items, total: totals.total } as any);
-      toast({ title: "Converted to Booking", description: "The estimate is now a scheduled job." });
+      await convertQuotationToBooking(db, { ...quote, ...config, customerInfo: customer, items, total: totals.total } as any);
+      toast({ title: "Converted to Job", description: "The quote is now an active booking." });
       router.push(`/admin/bookings`);
     } catch (e) {
       toast({ variant: "destructive", title: "Conversion Failed" });
     } finally {
       setIsConverting(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!quote) return;
+    setIsDownloading(true);
+    // Redirect to public view or use hidden container to download
+    // Since we want standard PDF, redirecting to public view is best or use utils
+    window.open(`/quotation/view/${id}?download=true`, '_blank');
+    setIsDownloading(false);
   };
 
   if (qLoading) return <div className="p-32 text-center"><Loader2 className="animate-spin text-primary mx-auto" size={48}/><p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Protocol...</p></div>;
@@ -191,7 +183,10 @@ export default function QuotationEditorPage() {
         </div>
         <div className="flex flex-wrap gap-3">
            <Button variant="outline" className="h-12 px-6 rounded-xl font-black uppercase text-[10px] bg-white border-primary/20 text-primary gap-2 shadow-sm" asChild>
-             <Link href={`/quotation/view/${id}`} target="_blank"><ExternalLink size={16}/> Public Portal</Link>
+             <Link href={`/quotation/view/${id}`} target="_blank"><Eye size={16}/> View Portal</Link>
+           </Button>
+           <Button variant="outline" onClick={handleDownload} disabled={isDownloading} className="h-12 px-6 rounded-xl font-black uppercase text-[10px] bg-white border-primary/20 text-indigo-600 gap-2 shadow-sm">
+             <Download size={16}/> Download PDF
            </Button>
            {quote?.status === 'Approved' && (
              <Button onClick={handleConvertToBooking} disabled={isConverting} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 gap-2 active:scale-95 transition-all">
@@ -206,10 +201,9 @@ export default function QuotationEditorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
-        {/* LEFT: FORM (70%) */}
+        {/* LEFT: FORM AREA */}
         <div className="lg:col-span-8 space-y-10">
           
-          {/* CLIENT SECTION */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 border-b pb-3">
               <Users size={18} className="text-primary" />
@@ -244,7 +238,6 @@ export default function QuotationEditorPage() {
             </Card>
           </section>
 
-          {/* WORK MATRIX SECTION */}
           <section className="space-y-6">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-3">
@@ -304,7 +297,6 @@ export default function QuotationEditorPage() {
             </div>
           </section>
 
-          {/* TERMS SECTION */}
           <section className="space-y-6">
              <div className="flex items-center gap-3 border-b pb-3">
                 <Layers size={18} className="text-amber-500" />

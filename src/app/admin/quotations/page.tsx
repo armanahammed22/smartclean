@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc, writeBatch, limit, addDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { collection, query, orderBy, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,25 +19,24 @@ import {
   Filter, 
   Plus, 
   Zap, 
-  FileText, 
   CheckCircle2, 
   Clock, 
-  XCircle, 
   Copy, 
   TrendingUp,
-  History,
   FileDown,
-  ExternalLink,
-  ChevronRight,
+  MessageCircle,
   MoreVertical,
-  Banknote,
-  Smartphone
+  Calendar,
+  Share2,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { downloadQuotationPDF } from '@/lib/quotation-utils';
 
 export default function QuotationsListPage() {
   const db = useFirestore();
@@ -91,6 +91,23 @@ export default function QuotationsListPage() {
     }
   };
 
+  const handleUpdateStatus = async (id: string, status: string) => {
+    if (!db) return;
+    await updateDoc(doc(db, 'quotations', id), { status, updatedAt: new Date().toISOString() });
+    toast({ title: "Status Updated" });
+  };
+
+  const handleWhatsApp = (quote: any) => {
+    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${quote.publicLink || window.location.origin + '/quotation/view/' + quote.id}`;
+    window.open(`https://wa.me/${quote.customerInfo.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleCopyLink = (quote: any) => {
+    const link = quote.publicLink || `${window.location.origin}/quotation/view/${quote.id}`;
+    navigator.clipboard.writeText(link);
+    toast({ title: "Link Copied", description: "Share it with your customer." });
+  };
+
   return (
     <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -103,7 +120,6 @@ export default function QuotationsListPage() {
         </Button>
       </div>
 
-      {/* 📊 KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
           { label: "Total Estimates", val: stats.total, icon: FileSpreadsheet, bg: "bg-blue-50", color: "text-blue-600" },
@@ -133,7 +149,6 @@ export default function QuotationsListPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-12 px-6 gap-2 rounded-2xl font-bold border-gray-200"><Filter size={18} /> Filters</Button>
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden bg-white rounded-[2.5rem] border border-gray-100">
@@ -153,7 +168,7 @@ export default function QuotationsListPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-24"><Loader2 className="animate-spin text-primary inline" size={32} /></TableCell></TableRow>
               ) : filtered?.length ? (
                 filtered.map((quote) => (
-                  <TableRow key={quote.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <TableRow key={quote.id} className="hover:bg-gray-50/50 transition-colors">
                     <TableCell className="py-6 pl-10">
                       <div className="font-black text-gray-900 text-xs font-mono uppercase tracking-tighter">{quote.quoteNumber}</div>
                       <div className="text-[9px] text-muted-foreground font-bold mt-1.5 uppercase">Issued: {format(new Date(quote.issueDate), 'MMM dd, yyyy')}</div>
@@ -169,27 +184,36 @@ export default function QuotationsListPage() {
                        <div className="text-[9px] text-muted-foreground font-bold uppercase">{quote.items?.length || 0} Components</div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge className={cn(
-                        "text-[8px] font-black uppercase border-none px-3 py-1 rounded-lg",
-                        quote.status === 'Approved' ? "bg-emerald-50 text-emerald-700" :
-                        quote.status === 'Sent' ? "bg-blue-50 text-blue-700" :
-                        quote.status === 'Draft' ? "bg-gray-100 text-gray-500" :
-                        quote.status === 'Rejected' ? "bg-red-50 text-red-700" :
-                        quote.status === 'Converted' ? "bg-indigo-50 text-indigo-700" :
-                        "bg-rose-50 text-rose-700"
-                      )}>
-                        {quote.status}
-                      </Badge>
+                      <Select defaultValue={quote.status} onValueChange={(v) => handleUpdateStatus(quote.id, v)}>
+                        <SelectTrigger className={cn(
+                          "h-8 text-[8px] font-black uppercase border-none px-2 rounded-lg w-[110px] mx-auto",
+                          quote.status === 'Approved' ? "bg-emerald-50 text-emerald-700" :
+                          quote.status === 'Sent' ? "bg-blue-50 text-blue-700" :
+                          quote.status === 'Draft' ? "bg-gray-100 text-gray-500" :
+                          "bg-rose-50 text-rose-700"
+                        )}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
+                          {['Draft', 'Sent', 'Approved', 'Rejected', 'Expired'].map(s => <SelectItem key={s} value={s} className="text-[10px] font-black uppercase">{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right pr-10">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-xl" asChild>
+                      <div className="flex justify-end gap-1.5">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-600 bg-blue-50 rounded-xl" asChild title="Edit Details">
                           <Link href={`/admin/quotations/${quote.id}`}><Edit size={16} /></Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 hover:bg-indigo-50 rounded-xl" onClick={() => handleDuplicate(quote)}>
-                          <Copy size={16} />
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-emerald-600 bg-emerald-50 rounded-xl" asChild title="Public Portal">
+                          <Link href={`/quotation/view/${quote.id}`} target="_blank"><Eye size={16} /></Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-red-50 rounded-xl" onClick={() => handleDelete(quote.id)}>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-indigo-600 bg-indigo-50 rounded-xl" onClick={() => handleWhatsApp(quote)} title="Share on WhatsApp">
+                          <MessageCircle size={16} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-amber-600 bg-amber-50 rounded-xl" onClick={() => handleCopyLink(quote)} title="Copy Public Link">
+                          <Share2 size={16} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive bg-rose-50 rounded-xl" onClick={() => handleDelete(quote.id)} title="Delete Record">
                           <Trash2 size={16} />
                         </Button>
                       </div>
