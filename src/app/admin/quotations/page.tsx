@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,12 +19,10 @@ import {
   Zap, 
   CheckCircle2, 
   Clock, 
-  Copy, 
-  TrendingUp,
   MessageCircle,
   Share2,
-  Calendar,
-  X
+  Download,
+  MoreVertical
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -153,7 +151,7 @@ export default function QuotationsListPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-24"><Loader2 className="animate-spin text-primary inline" size={32} /></TableCell></TableRow>
               ) : filtered?.length ? (
                 filtered.map((quote) => (
-                  <TableRow key={quote.id} className="hover:bg-gray-50/50 transition-colors">
+                  <TableRow key={quote.id} className="hover:bg-gray-50/50 transition-colors group">
                     <TableCell className="py-6 pl-10">
                       <div className="font-black text-gray-900 text-xs font-mono uppercase tracking-tighter">{quote.quoteNumber}</div>
                       <div className="text-[9px] text-muted-foreground font-bold mt-1.5 uppercase">Issued: {quote.issueDate ? format(new Date(quote.issueDate), 'MMM dd, yyyy') : 'N/A'}</div>

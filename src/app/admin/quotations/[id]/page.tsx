@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { useDoc, useMemoFirebase, useFirestore, useCollection } from '@/firebase';
 import { doc, updateDoc, collection, addDoc, serverTimestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,8 @@ import {
   Layers,
   Download,
   Printer,
-  Share2
+  Share2,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,7 +49,7 @@ export default function QuotationEditorPage() {
   const [isConverting, setIsConverting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const quoteRef = useMemoFirebase(() => (db && id) ? doc(db, 'quotations', id as string) : null, [db, id]);
+  const quoteRef = useMemoFirebase(() => (db && id && id !== 'new') ? doc(db, 'quotations', id as string) : null, [db, id]);
   const { data: quote, isLoading: qLoading } = useDoc(quoteRef);
 
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
@@ -154,10 +154,8 @@ export default function QuotationEditorPage() {
   };
 
   const handleDownload = () => {
-    if (!quote) return;
+    if (!id) return;
     setIsDownloading(true);
-    // Redirect to public view or use hidden container to download
-    // Since we want standard PDF, redirecting to public view is best or use utils
     window.open(`/quotation/view/${id}?download=true`, '_blank');
     setIsDownloading(false);
   };
@@ -167,7 +165,6 @@ export default function QuotationEditorPage() {
   return (
     <div className="space-y-8 pb-32 min-w-0 bg-[#FBFBFB] -mt-10 -mx-10 p-10 min-h-screen">
       
-      {/* HEADER ACTION BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
         <div className="flex items-center gap-6">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl bg-white shadow-sm border h-12 w-12 hover:bg-gray-50">
@@ -200,10 +197,7 @@ export default function QuotationEditorPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* LEFT: FORM AREA */}
         <div className="lg:col-span-8 space-y-10">
-          
           <section className="space-y-6">
             <div className="flex items-center gap-3 border-b pb-3">
               <Users size={18} className="text-primary" />
@@ -313,7 +307,6 @@ export default function QuotationEditorPage() {
           </section>
         </div>
 
-        {/* RIGHT: BILLING SUMMARY (30%) */}
         <div className="lg:col-span-4 lg:sticky lg:top-10 space-y-8">
            <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden border-t-[12px] border-primary">
              <CardHeader className="p-8 border-b border-white/5 bg-black/10 flex flex-row items-center justify-between">
@@ -401,16 +394,9 @@ export default function QuotationEditorPage() {
                     <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Sales Agent</Label>
                     <Input value={config.salesPerson} onChange={e => setConfig({...config, salesPerson: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
                  </div>
-                 <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
-                   <Info size={12} className="text-blue-600 mt-0.5 shrink-0" />
-                   <p className="text-[10px] font-medium text-blue-800 leading-relaxed uppercase">
-                     Changes to the rate matrix will reflect instantly on the customer's live view.
-                   </p>
-                 </div>
               </div>
            </Card>
         </div>
-
       </div>
     </div>
   );
