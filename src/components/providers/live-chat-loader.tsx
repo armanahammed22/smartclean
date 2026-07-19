@@ -91,10 +91,11 @@ export function LiveChatLoader() {
               (window as any).Tawk_API.hideWidget();
             }
           } catch (e) {}
-          delete (window as any).Tawk_API;
+          // Use assignment to undefined instead of delete to avoid non-configurable property errors
+          (window as any).Tawk_API = undefined;
         }
         // Also clear common vendor global variables to prevent re-init bugs
-        if ((window as any).Tawk_LoadStart) delete (window as any).Tawk_LoadStart;
+        if ((window as any).Tawk_LoadStart) (window as any).Tawk_LoadStart = undefined;
       }
       
       lastScriptRef.current = '';
