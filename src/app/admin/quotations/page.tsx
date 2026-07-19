@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -16,18 +15,15 @@ import {
   Eye, 
   Edit,
   Loader2, 
-  Filter, 
   Plus, 
   Zap, 
   CheckCircle2, 
   Clock, 
   Copy, 
   TrendingUp,
-  FileDown,
   MessageCircle,
-  MoreVertical,
-  Calendar,
   Share2,
+  Calendar,
   X
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -36,7 +32,6 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { downloadQuotationPDF } from '@/lib/quotation-utils';
 
 export default function QuotationsListPage() {
   const db = useFirestore();
@@ -65,29 +60,12 @@ export default function QuotationsListPage() {
   );
 
   const handleDelete = async (id: string) => {
-    if (!db || !confirm("Delete this quotation?")) return;
+    if (!db || !confirm("Delete this quotation permanently?")) return;
     try {
       await deleteDoc(doc(db, 'quotations', id));
       toast({ title: "Quotation Removed" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error deleting" });
-    }
-  };
-
-  const handleDuplicate = async (quote: any) => {
-    if (!db) return;
-    try {
-      const { id, quoteNumber, createdAt, updatedAt, ...rest } = quote;
-      await addDoc(collection(db, 'quotations'), {
-        ...rest,
-        quoteNumber: quoteNumber + '-COPY',
-        status: 'Draft',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      toast({ title: "Quotation Duplicated" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Duplicate Failed" });
     }
   };
 
@@ -98,14 +76,21 @@ export default function QuotationsListPage() {
   };
 
   const handleWhatsApp = (quote: any) => {
-    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${quote.publicLink || window.location.origin + '/quotation/view/' + quote.id}`;
-    window.open(`https://wa.me/${quote.customerInfo.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+    const phone = quote.customerInfo?.phone;
+    if (!phone) {
+      toast({ variant: "destructive", title: "Missing Phone", description: "Customer phone number is required for WhatsApp share." });
+      return;
+    }
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${quote.publicLink || baseUrl + '/quotation/view/' + quote.id}`;
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleCopyLink = (quote: any) => {
-    const link = quote.publicLink || `${window.location.origin}/quotation/view/${quote.id}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const link = quote.publicLink || `${baseUrl}/quotation/view/${quote.id}`;
     navigator.clipboard.writeText(link);
-    toast({ title: "Link Copied", description: "Share it with your customer." });
+    toast({ title: "Link Copied", description: "Quotation URL saved to clipboard." });
   };
 
   return (
@@ -159,7 +144,7 @@ export default function QuotationsListPage() {
                 <TableHead className="font-black py-6 pl-10 uppercase text-[10px] tracking-widest text-[#081621]">Quote Ref</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Recipient</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Value</TableHead>
-                <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621] text-center">Status</TableHead>
+                <TableHead className="font-black uppercase text-[10px] tracking-widest text-center text-[#081621]">Status</TableHead>
                 <TableHead className="text-right pr-10 uppercase text-[10px] tracking-widest text-[#081621]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -171,12 +156,12 @@ export default function QuotationsListPage() {
                   <TableRow key={quote.id} className="hover:bg-gray-50/50 transition-colors">
                     <TableCell className="py-6 pl-10">
                       <div className="font-black text-gray-900 text-xs font-mono uppercase tracking-tighter">{quote.quoteNumber}</div>
-                      <div className="text-[9px] text-muted-foreground font-bold mt-1.5 uppercase">Issued: {format(new Date(quote.issueDate), 'MMM dd, yyyy')}</div>
+                      <div className="text-[9px] text-muted-foreground font-bold mt-1.5 uppercase">Issued: {quote.issueDate ? format(new Date(quote.issueDate), 'MMM dd, yyyy') : 'N/A'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="min-w-0">
-                        <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[150px] leading-tight mb-1">{quote.customerInfo.name}</div>
-                        <div className="text-[10px] text-muted-foreground font-bold">{quote.customerInfo.phone}</div>
+                        <div className="font-black text-gray-900 uppercase text-xs truncate max-w-[150px] leading-tight mb-1">{quote.customerInfo?.name || 'Unknown'}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold">{quote.customerInfo?.phone || 'No Phone'}</div>
                       </div>
                     </TableCell>
                     <TableCell>
