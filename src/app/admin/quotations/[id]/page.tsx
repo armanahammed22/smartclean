@@ -272,12 +272,17 @@ export default function QuotationEditorPage() {
                          <Input type="number" value={item.price} onChange={e => updateItem(item.id, 'price', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm text-primary shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Work Quantity</Label>
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Unit/Area Qty</Label>
                          <Input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Scale (Unit)</Label>
-                         <Input value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-[10px] uppercase shadow-inner" />
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Scale/Unit Type</Label>
+                         <Select value={item.unit} onValueChange={v => updateItem(item.id, 'unit', v)}>
+                           <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl text-[10px] font-black uppercase shadow-inner"><SelectValue/></SelectTrigger>
+                           <SelectContent className="rounded-xl">
+                             {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
+                           </SelectContent>
+                         </Select>
                        </div>
                        <div className="space-y-1.5">
                          <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Total Result</Label>

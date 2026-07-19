@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -61,7 +60,7 @@ export default function CreateQuotationPage() {
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', additional: 0, vatPercent: 0 });
   const [config, setConfig] = useState({ issueDate: new Date().toISOString().split('T')[0], expiryDate: '', terms: '', salesPerson: user?.displayName || '' });
 
-  // Data Fetch - Fetching full collections to sort/filter in memory to avoid index requirements
+  // Data Fetch
   const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
   const customersRef = useMemoFirebase(() => db ? collection(db, 'users') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'quotation') : null, [db]);
@@ -70,7 +69,7 @@ export default function CreateQuotationPage() {
   const { data: customersRaw } = useCollection(customersRef);
   const { data: quoteSettings } = useDoc(settingsRef);
 
-  // In-memory sorting and filtering
+  // In-memory processing
   const services = useMemo(() => {
     return servicesRaw?.filter(s => s.status === 'Active').sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
   }, [servicesRaw]);
@@ -217,11 +216,7 @@ export default function CreateQuotationPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* LEFT: MAIN FORM AREA */}
         <div className="lg:col-span-8 space-y-10">
-          
-          {/* CLIENT SECTION */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 border-b pb-3">
               <Users size={18} className="text-primary" />
@@ -263,7 +258,6 @@ export default function CreateQuotationPage() {
             </Card>
           </section>
 
-          {/* SERVICE MATRIX SECTION */}
           <section className="space-y-6">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-3">
@@ -304,12 +298,17 @@ export default function CreateQuotationPage() {
                          <Input type="number" value={item.price} onChange={e => updateItem(item.id, 'price', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm text-primary shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Quantity</Label>
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Unit/Area Qty</Label>
                          <Input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Scale / Unit</Label>
-                         <Input value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-[10px] uppercase shadow-inner" />
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Scale/Unit Type</Label>
+                         <Select value={item.unit} onValueChange={v => updateItem(item.id, 'unit', v)}>
+                           <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl text-[10px] font-black uppercase shadow-inner"><SelectValue/></SelectTrigger>
+                           <SelectContent className="rounded-xl">
+                             {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
+                           </SelectContent>
+                         </Select>
                        </div>
                        <div className="space-y-1.5">
                          <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Total Result</Label>
@@ -323,7 +322,6 @@ export default function CreateQuotationPage() {
             </div>
           </section>
 
-          {/* TERMS SECTION */}
           <section className="space-y-6">
              <div className="flex items-center gap-3 border-b pb-3">
                 <Layers size={18} className="text-amber-500" />
@@ -340,7 +338,6 @@ export default function CreateQuotationPage() {
           </section>
         </div>
 
-        {/* RIGHT: STICKY BILLING SIDEBAR */}
         <div className="lg:col-span-4 lg:sticky lg:top-10 space-y-8">
            <Card className="border-none shadow-2xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden border-t-[12px] border-primary">
              <CardHeader className="p-8 border-b border-white/5 bg-black/10 flex flex-row items-center justify-between">
@@ -397,7 +394,7 @@ export default function CreateQuotationPage() {
                    <Button 
                     onClick={() => handleSave('Sent')}
                     disabled={isSubmitting}
-                    className="w-full h-16 md:h-20 rounded-[2rem] bg-primary hover:bg-[#15435a] font-black text-2xl uppercase tracking-tight shadow-2xl shadow-primary/20 gap-4 active:scale-95 transition-all"
+                    className="w-full h-16 md:h-20 rounded-[2rem] bg-primary hover:bg-[#15435a] font-black text-2xl uppercase tracking-tight shadow-xl shadow-primary/20 gap-4 active:scale-95 transition-all"
                    >
                      {isSubmitting ? <Loader2 className="animate-spin h-8 w-8" /> : <><Zap size={28} fill="currentColor" /> Deploy Estimate</>}
                    </Button>

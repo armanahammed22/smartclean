@@ -24,7 +24,8 @@ import {
   Layers,
   Award,
   Star,
-  MessageCircle
+  MessageCircle,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,12 @@ export default function PublicQuotationViewPage() {
   const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
+  const signatureUrl = settings?.signatureUrl;
+
+  const providedServices = useMemo(() => {
+    if (!settings?.invoiceProvidedServices) return [];
+    return settings.invoiceProvidedServices.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+  }, [settings]);
 
   const handleAction = async (status: 'Approved' | 'Rejected') => {
     if (!db || !id) return;
@@ -137,9 +144,9 @@ export default function PublicQuotationViewPage() {
               </div>
             </div>
             <div className="text-right max-w-[280px]">
-              <p className="text-[9px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
-              <p className="text-[9px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
-              <p className="text-[9px] font-bold text-[#081621] lowercase">{headerEmail}</p>
+              <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+              <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
+              <p className="text-[8px] font-bold text-[#081621] lowercase">{headerEmail}</p>
             </div>
           </header>
 
@@ -179,7 +186,7 @@ export default function PublicQuotationViewPage() {
                   <tr>
                     <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
                     <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-3 px-4 font-black uppercase text-center w-28">Quantity</th>
+                    <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
                     <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
                     <th className="py-3 px-4 font-black uppercase text-right w-32">Subtotal</th>
                   </tr>
@@ -211,8 +218,8 @@ export default function PublicQuotationViewPage() {
                   )}
 
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                    <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                    <td className="py-3 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
                   </tr>
                 </tbody>
               </table>
@@ -239,15 +246,29 @@ export default function PublicQuotationViewPage() {
               </div>
               <div className="flex flex-col items-center justify-end text-center space-y-4">
                 <div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center">
-                  <Badge variant="outline" className="text-[8px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>
+                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[8px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>}
                 </div>
                 <p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p>
               </div>
             </div>
 
-            <div className="pt-10 border-t border-gray-50 text-center space-y-1">
-               <p className="text-[11px] font-black text-primary flex items-center justify-center gap-2">Better Security, Better Solution <Star size={10} fill="currentColor"/></p>
-               <p className="text-[8px] text-gray-300 font-bold uppercase">This document is electronically verified and ready for activation.</p>
+            {/* 📋 SERVICES PROVIDED GRID FOOTER */}
+            <div className="pt-10 border-t border-gray-50 space-y-8">
+               <div className="text-center space-y-1">
+                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2">Smart Cleaning, Better Living. <Star size={10} fill="currentColor"/></p>
+                  <p className="text-[7.5px] text-gray-300 font-bold uppercase">This document is electronically verified and ready for activation.</p>
+               </div>
+               
+               {providedServices.length > 0 && (
+                 <div className="grid grid-cols-3 gap-y-2 gap-x-8 px-6">
+                    {providedServices.map((service, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/20" />
+                        <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">{service}</span>
+                      </div>
+                    ))}
+                 </div>
+               )}
             </div>
           </div>
         </div>
