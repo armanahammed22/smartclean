@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { collection, addDoc, query, orderBy, where, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, where, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +37,8 @@ import {
   Layers,
   ChevronRight,
   Info,
-  X
+  X,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -61,12 +63,10 @@ export default function CreateQuotationPage() {
 
   // Data Fetch
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
-  const subServicesQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active')) : null, [db]);
   const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'quotation') : null, [db]);
 
   const { data: services } = useCollection(servicesQuery);
-  const { data: allSubs } = useCollection(subServicesQuery);
   const { data: clients } = useCollection(customersQuery);
   const { data: quoteSettings } = useDoc(settingsRef);
 
@@ -170,7 +170,6 @@ export default function CreateQuotationPage() {
 
       const docRef = await addDoc(collection(db, 'quotations'), finalData);
       
-      // Update Public Link
       const publicLink = `${window.location.origin}/quotation/view/${docRef.id}`;
       await updateDoc(docRef, { publicLink });
 
@@ -184,216 +183,247 @@ export default function CreateQuotationPage() {
   };
 
   return (
-    <div className="space-y-8 pb-32 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full bg-white shadow-sm border h-10 w-10">
+    <div className="space-y-8 pb-32 min-w-0 bg-[#FBFBFB] -mt-10 -mx-10 p-10 min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
+        <div className="flex items-center gap-6">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl bg-white shadow-sm border h-12 w-12 hover:bg-gray-50">
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none italic">New Quotation</h1>
-            <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mt-1">Authorized Sales Protocol</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 bg-primary/10 rounded-lg text-primary"><FileSpreadsheet size={16}/></div>
+              <span className="text-[10px] font-black uppercase text-primary tracking-widest">Protocol: QUOTATION v2</span>
+            </div>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none italic">
+              {quoteNumber === '...' ? <Loader2 className="animate-spin h-6 w-6 inline" /> : quoteNumber}
+            </h1>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-           <Button variant="outline" onClick={() => handleSave('Draft')} disabled={isSubmitting} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-white border-primary/20 text-primary">Save Draft</Button>
-           <Button onClick={() => handleSave('Sent')} disabled={isSubmitting} className="h-12 px-10 rounded-xl font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2">
-             {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={18} /> Publish & Share</>}
+        <div className="flex flex-wrap gap-3">
+           <Button variant="outline" onClick={() => handleSave('Draft')} disabled={isSubmitting} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-white border-gray-200 hover:bg-gray-50 shadow-sm">Save Draft</Button>
+           <Button onClick={() => handleSave('Sent')} disabled={isSubmitting} className="h-12 px-10 rounded-xl font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
+             {isSubmitting ? <Loader2 className="animate-spin" /> : <><Zap size={18} /> Authorize & Publish</>}
            </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         
+        {/* LEFT: MAIN FORM AREA */}
         <div className="lg:col-span-8 space-y-10">
           
-          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
-            <CardHeader className="bg-[#081621] text-white p-8">
-              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2"><User size={18} className="text-primary"/> Client Identity</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* CLIENT SECTION */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 border-b pb-3">
+              <Users size={18} className="text-primary" />
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#081621]">Client Identification</h3>
+            </div>
+            <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
+              <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Search Registry</Label>
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Registry Quick-Find</Label>
                   <Select onValueChange={handleClientSelect}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner">
-                      <SelectValue placeholder="Existing Customer..." />
+                    <SelectTrigger className="h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner">
+                      <SelectValue placeholder="Search existing customer..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl">
-                      {clients?.map(c => <SelectItem key={c.id} value={c.id} className="font-bold py-3 uppercase text-[10px]">{c.name} ({c.phone})</SelectItem>)}
+                    <SelectContent className="rounded-2xl border-none shadow-2xl z-[300]">
+                      {clients?.map(c => <SelectItem key={c.id} value={c.id} className="py-3 uppercase font-bold text-xs">{c.name} — {c.phone}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Legal Name</Label>
-                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Legal Full Name</Label>
+                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Recipient Name" className="h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Mobile Contact</Label>
-                  <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Contact Matrix (Phone)</Label>
+                  <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email Address</Label>
-                  <Input value={customer.email} onChange={e => setCustomer({...customer, email: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Organization / Branch</Label>
+                  <Input value={customer.company} onChange={e => setCustomer({...customer, company: e.target.value})} placeholder="Company Name (Optional)" className="h-14 bg-gray-50 border-none rounded-2xl font-bold shadow-inner" />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Company / Branch</Label>
-                <Input value={customer.company} onChange={e => setCustomer({...customer, company: e.target.value})} placeholder="Organization Name (Optional)" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Site / Billing Address</Label>
-                <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="min-h-[80px] bg-gray-50 border-none rounded-2xl p-4 shadow-inner" />
-              </div>
-            </CardContent>
-          </Card>
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Full Service Address</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-4 text-primary" size={20} />
+                    <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Block, Area..." className="min-h-[100px] pl-12 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
-            <CardHeader className="bg-gray-50/50 p-8 border-b flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621]">Service & Workload Matrix</CardTitle>
-                <CardDescription className="text-[9px] font-bold uppercase text-primary">Component based pricing structure</CardDescription>
+          {/* SERVICE MATRIX SECTION */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-3">
+                <Wrench size={18} className="text-indigo-600" />
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#081621]">Service & Workload Matrix</h3>
               </div>
-              <Button onClick={addItem} variant="ghost" size="sm" className="h-9 px-4 rounded-xl border-2 border-dashed border-primary/20 text-primary font-black uppercase text-[10px]">+ Add Manual Item</Button>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="space-y-4">
-                {items.map((item, idx) => (
-                  <div key={item.id} className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 space-y-6 group">
+              <Button onClick={addItem} variant="ghost" size="sm" className="h-10 px-6 rounded-xl border-2 border-dashed border-primary/20 text-primary font-black uppercase text-[10px] hover:bg-primary/5">+ Add Manual Row</Button>
+            </div>
+
+            <div className="space-y-4">
+              {items.map((item, idx) => (
+                <Card key={item.id} className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100 group transition-all hover:shadow-md">
+                  <CardContent className="p-8 space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
                       <div className="md:col-span-5 space-y-2">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Select From Catalog</Label>
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Link From Catalog</Label>
                          <Select onValueChange={(v) => handleServiceSelect(v, idx)}>
-                            <SelectTrigger className="h-11 bg-white border-none rounded-xl font-bold shadow-sm">
-                               <SelectValue placeholder="Link to service..." />
+                            <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner">
+                               <SelectValue placeholder="Choose standard service..." />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-none shadow-2xl">
-                               {services?.map(s => <SelectItem key={s.id} value={s.id} className="py-2.5 font-bold text-[10px] uppercase">{s.title}</SelectItem>)}
+                            <SelectContent className="rounded-xl border-none shadow-2xl z-[300]">
+                               {services?.map(s => <SelectItem key={s.id} value={s.id} className="py-3 font-bold text-xs uppercase">{s.title}</SelectItem>)}
                             </SelectContent>
                          </Select>
                       </div>
-                      <div className="md:col-span-4 space-y-2">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Custom Label</Label>
-                         <Input value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} className="h-11 bg-white border-none rounded-xl font-black text-xs" />
+                      <div className="md:col-span-6 space-y-2">
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Custom Display Title</Label>
+                         <Input value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} className="h-12 bg-gray-50 border-none rounded-xl font-black text-xs shadow-inner" />
                       </div>
-                      <div className="md:col-span-3 flex justify-end">
-                         <button type="button" onClick={() => removeItem(item.id)} className="p-2.5 text-rose-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={18}/></button>
+                      <div className="md:col-span-1 flex justify-center pb-1">
+                         <button type="button" onClick={() => removeItem(item.id)} className="p-3 text-rose-300 hover:text-rose-600 hover:bg-rose-50 rounded-2xl transition-all"><Trash2 size={20}/></button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Rate</Label>
-                         <Input type="number" value={item.price} onChange={e => updateItem(item.id, 'price', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-xs text-primary" />
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Unit Rate (৳)</Label>
+                         <Input type="number" value={item.price} onChange={e => updateItem(item.id, 'price', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm text-primary shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Qty</Label>
-                         <Input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-xs" />
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Quantity</Label>
+                         <Input type="number" value={item.quantity} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-sm shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Unit</Label>
-                         <Input value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="h-10 bg-white border-none rounded-xl font-black text-xs" />
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Scale / Unit</Label>
+                         <Input value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl font-black text-[10px] uppercase shadow-inner" />
                        </div>
                        <div className="space-y-1.5">
-                         <Label className="text-[9px] font-black uppercase text-gray-400">Total</Label>
-                         <div className="h-10 bg-gray-100 rounded-xl flex items-center px-4 font-black text-xs text-gray-400">৳{( (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 1) ).toLocaleString()}</div>
+                         <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Total Result</Label>
+                         <div className="h-11 bg-gray-100 rounded-xl flex items-center px-4 font-black text-sm text-gray-400 shadow-inner">৳{( (parseFloat(item.price) || 0) * (parseFloat(item.quantity) || 1) ).toLocaleString()}</div>
                        </div>
                     </div>
-                    <Textarea value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Technical specification for this item..." className="bg-white border-none rounded-2xl min-h-[60px] text-[10px]" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    <Textarea value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Specify technical scope or customized inclusions for this item..." className="bg-gray-50 border-none rounded-2xl min-h-[60px] text-xs font-medium p-4 shadow-inner" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
 
-          <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
-             <CardHeader className="p-8 bg-gray-50/50 border-b flex items-center justify-between">
-                <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621]">Terms & Conditions</CardTitle>
-                <Layers size={18} className="text-primary"/>
-             </CardHeader>
-             <CardContent className="p-8 space-y-6">
-                <Textarea value={config.terms} onChange={e => setConfig({...config, terms: e.target.value})} className="min-h-[150px] bg-gray-50 border-none rounded-2xl p-6 font-medium text-sm leading-loose" />
-             </CardContent>
-          </Card>
+          {/* TERMS SECTION */}
+          <section className="space-y-6">
+             <div className="flex items-center gap-3 border-b pb-3">
+                <Layers size={18} className="text-amber-500" />
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#081621]">Contract Terms & Notes</h3>
+             </div>
+             <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
+               <CardContent className="p-8 space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Level Agreement (Terms)</Label>
+                    <Textarea value={config.terms} onChange={e => setConfig({...config, terms: e.target.value})} className="min-h-[200px] bg-gray-50 border-none rounded-3xl p-8 font-medium text-sm leading-loose shadow-inner focus:bg-white transition-all" />
+                  </div>
+               </CardContent>
+             </Card>
+          </section>
         </div>
 
-        <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
-          <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden">
+        {/* RIGHT: STICKY BILLING SIDEBAR */}
+        <div className="lg:col-span-4 lg:sticky lg:top-10 space-y-8">
+           <Card className="border-none shadow-2xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden border-t-[12px] border-primary">
              <CardHeader className="p-8 border-b border-white/5 bg-black/10 flex flex-row items-center justify-between">
                 <div>
-                   <CardTitle className="text-lg font-black uppercase tracking-tight text-primary">Bill Protocol</CardTitle>
-                   <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mt-0.5">REF: {quoteNumber}</p>
+                   <CardTitle className="text-xl font-black uppercase tracking-tight text-primary">Bill Protocol</CardTitle>
+                   <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Real-time valuation</p>
                 </div>
-                <div className="p-3 bg-primary rounded-2xl shadow-xl"><Calculator size={20}/></div>
+                <div className="p-3 bg-primary rounded-2xl shadow-xl shadow-primary/20"><Calculator size={22}/></div>
              </CardHeader>
-             <CardContent className="p-8 space-y-8">
-                <div className="space-y-4">
-                   <div className="flex justify-between text-xs font-bold text-white/40 uppercase"><span>Subtotal (Base)</span><span>৳{totals.subtotal.toLocaleString()}</span></div>
+             <CardContent className="p-8 space-y-10">
+                <div className="space-y-5">
+                   <div className="flex justify-between text-xs font-bold text-white/40 uppercase tracking-widest">
+                     <span>Base Estimate</span>
+                     <span>৳{totals.subtotal.toLocaleString()}</span>
+                   </div>
                    
-                   <div className="grid grid-cols-2 gap-4 items-center pt-2">
-                      <Label className="text-[9px] font-black uppercase text-white/40">Discount</Label>
+                   <div className="grid grid-cols-2 gap-6 items-center">
+                      <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">Discount</Label>
                       <div className="flex gap-2">
                          <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
-                            <SelectTrigger className="h-10 bg-white/5 border-white/10 rounded-xl text-[9px] font-black uppercase w-16"><SelectValue/></SelectTrigger>
-                            <SelectContent className="rounded-xl border-none shadow-2xl z-[300]"><SelectItem value="percentage" className="text-[10px] font-black">%</SelectItem><SelectItem value="fixed" className="text-[10px] font-black">৳</SelectItem></SelectContent>
+                            <SelectTrigger className="h-10 bg-white/5 border-white/10 rounded-xl text-[10px] font-black uppercase w-16"><SelectValue/></SelectTrigger>
+                            <SelectContent className="rounded-xl border-none shadow-2xl z-[500]"><SelectItem value="percentage" className="text-[10px] font-black">%</SelectItem><SelectItem value="fixed" className="text-[10px] font-black">৳</SelectItem></SelectContent>
                          </Select>
                          <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-10 bg-white/5 border-white/10 rounded-xl text-right font-black text-rose-400" />
                       </div>
                    </div>
 
-                   <div className="grid grid-cols-2 gap-4 items-center">
-                      <Label className="text-[9px] font-black uppercase text-white/40">Other Charges</Label>
-                      <Input type="number" value={pricing.additional} onChange={e => setPricing({...pricing, additional: parseFloat(e.target.value) || 0})} className="h-10 bg-white/5 border-white/10 rounded-xl text-right font-black" />
+                   <div className="grid grid-cols-2 gap-6 items-center">
+                      <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">Other Charges</Label>
+                      <Input type="number" value={pricing.additional} onChange={e => setPricing({...pricing, additional: parseFloat(e.target.value) || 0})} className="h-10 bg-white/5 border-white/10 rounded-xl text-right font-black text-primary" />
                    </div>
 
-                   <div className="grid grid-cols-2 gap-4 items-center pb-4 border-b border-white/5">
-                      <Label className="text-[9px] font-black uppercase text-white/40">VAT (%)</Label>
+                   <div className="grid grid-cols-2 gap-6 items-center pb-6 border-b border-white/5">
+                      <Label className="text-[10px] font-black uppercase text-white/40 tracking-widest">Tax / VAT (%)</Label>
                       <Input type="number" value={pricing.vatPercent} onChange={e => setPricing({...pricing, vatPercent: parseFloat(e.target.value) || 0})} className="h-10 bg-white/5 border-white/10 rounded-xl text-right font-black" />
                    </div>
 
-                   <div className="pt-6 flex flex-col gap-1">
-                      <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">Estimated Total</p>
+                   <div className="pt-8 flex flex-col gap-2">
+                      <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] leading-none mb-2">Grand Estimated Value</p>
                       <div className="flex items-baseline gap-2">
                          <span className="text-6xl font-black tracking-tighter text-primary italic">৳{totals.total.toLocaleString()}</span>
-                         <Badge className="bg-primary/20 text-primary border-none font-black text-[9px]">BDT</Badge>
+                         <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] uppercase">BDT</Badge>
                       </div>
                    </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-white/5">
-                   <div className="p-5 bg-white/5 rounded-3xl border border-white/5 flex items-start gap-4">
-                      <ShieldCheck size={24} className="text-primary mt-1 shrink-0" />
+                <div className="space-y-5 pt-8 border-t border-white/5">
+                   <div className="p-6 bg-white/5 rounded-[2rem] border border-white/5 flex items-start gap-4">
+                      <ShieldCheck size={28} className="text-primary mt-1 shrink-0" />
                       <p className="text-[11px] font-bold text-white/60 leading-relaxed uppercase">
-                         This estimation is valid for <span className="text-white">7 days</span>. Final bill may vary based on actual on-site measurements.
+                         Authorized quote status: <span className="text-white">DRAFT</span>. Publish to generate a unique public link for the customer.
                       </p>
                    </div>
                    <Button 
                     onClick={() => handleSave('Sent')}
                     disabled={isSubmitting}
-                    className="w-full h-16 rounded-[2.5rem] bg-primary hover:bg-[#15435a] font-black text-lg uppercase tracking-tight shadow-2xl shadow-primary/20 gap-3 active:scale-95 transition-all"
+                    className="w-full h-16 md:h-20 rounded-[2rem] bg-primary hover:bg-[#15435a] font-black text-2xl uppercase tracking-tight shadow-2xl shadow-primary/20 gap-4 active:scale-95 transition-all"
                    >
-                     {isSubmitting ? <Loader2 className="animate-spin" /> : <><Zap size={20} /> Authorize & Launch</>}
+                     {isSubmitting ? <Loader2 className="animate-spin h-8 w-8" /> : <><Zap size={28} fill="currentColor" /> Deploy Estimate</>}
                    </Button>
                 </div>
              </CardContent>
-          </Card>
+           </Card>
 
-          <Card className="border-none shadow-sm bg-white rounded-3xl p-8 border border-gray-100 space-y-6">
-             <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2"><Settings2 size={14}/> Validity Logic</h4>
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                   <Label className="text-[9px] font-black text-gray-400 uppercase">Issue Date</Label>
-                   <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
-                </div>
-                <div className="space-y-1.5">
-                   <Label className="text-[9px] font-black text-gray-400 uppercase">Expiry Date</Label>
-                   <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
-                </div>
-             </div>
-             <div className="space-y-1.5">
-                <Label className="text-[9px] font-black uppercase text-gray-400">Sales Assigned</Label>
-                <Input value={config.salesPerson} onChange={e => setConfig({...config, salesPerson: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold" />
-             </div>
-          </Card>
+           <Card className="border-none shadow-sm bg-white rounded-[2rem] p-8 border border-gray-100 space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="p-3 bg-gray-50 text-gray-400 rounded-2xl"><Settings2 size={24}/></div>
+                 <h4 className="text-base font-black uppercase tracking-tight text-[#081621]">Validation Control</h4>
+              </div>
+              <div className="space-y-6">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <Label className="text-[9px] font-black text-gray-400 uppercase ml-1">Issue Protocol</Label>
+                       <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
+                    </div>
+                    <div className="space-y-2">
+                       <Label className="text-[9px] font-black text-gray-400 uppercase ml-1">Expiry Protocol</Label>
+                       <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Assigned Sales Agent</Label>
+                    <Input value={config.salesPerson} onChange={e => setConfig({...config, salesPerson: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
+                 </div>
+                 <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
+                   <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
+                   <p className="text-[10px] font-medium text-blue-800 leading-relaxed uppercase">
+                     Expired estimates are automatically hidden from the public portal.
+                   </p>
+                 </div>
+              </div>
+           </Card>
         </div>
 
       </div>
