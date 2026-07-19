@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc, writeBatch, limit } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, updateDoc, writeBatch, limit, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ import {
   Search, 
   Trash2, 
   Eye, 
+  Edit,
   Loader2, 
   Filter, 
   Plus, 
@@ -117,7 +117,7 @@ export default function QuotationsListPage() {
                 <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1.5">{s.label}</p>
                 <h3 className="text-2xl font-black text-[#081621]">{s.val}</h3>
               </div>
-              <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110 shadow-inner", s.bg, s.color)}><s.icon size={22} /></div>
+              <div className={cn("p-2.5 rounded-xl transition-transform group-hover:scale-110 shadow-inner", s.bg, s.color)}><s.icon size={22} /></div>
             </CardContent>
           </Card>
         ))}
@@ -140,7 +140,7 @@ export default function QuotationsListPage() {
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <Table>
             <TableHeader className="bg-gray-50/30">
-              <TableRow className="border-none">
+              <TableRow>
                 <TableHead className="font-black py-6 pl-10 uppercase text-[10px] tracking-widest text-[#081621]">Quote Ref</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Recipient</TableHead>
                 <TableHead className="font-black uppercase text-[10px] tracking-widest text-[#081621]">Value</TableHead>
