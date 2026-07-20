@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -96,11 +97,12 @@ export default function AdminDashboard() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
-  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
+  // 🚀 OPTIMIZATION: Metrics restricted to recent set to avoid heavy reads
+  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)) : null, [db, isAuthorized]);
+  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, isAuthorized]);
   
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized]);
+  const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized, todayStr]);
 
   const { data: orders, isLoading: oLoading } = useCollection(ordersQuery);
   const { data: products, isLoading: pLoading } = useCollection(productsQuery);

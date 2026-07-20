@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -84,12 +85,13 @@ function OrdersListContent() {
     }
   }, [searchParams]);
 
+  // 🚀 OPTIMIZATION: Limited to 100 most recent orders
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, user]);
 
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc')) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc'), limit(100)) : null, [db]);
   const gatewaysQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   
   const { data: orders, isLoading } = useCollection(ordersQuery);
@@ -108,7 +110,8 @@ function OrdersListContent() {
 
   const filteredOrders = orders?.filter(o => 
     o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.id?.includes(searchTerm)
+    o.id?.includes(searchTerm) ||
+    o.customerPhone?.includes(searchTerm)
   );
 
   const filteredProducts = useMemo(() => {
@@ -116,7 +119,7 @@ function OrdersListContent() {
     return allProducts?.filter(p => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
       p.id.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5);
+    ).slice(0, 10);
   }, [searchQuery, allProducts]);
 
   const addItem = (p: any) => {
@@ -305,7 +308,7 @@ function OrdersListContent() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-            <header className="p-6 md:p-8 bg-[#081621] text-white flex justify-between items-center shrink-0">
+            <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center shrink-0">
               <div className="space-y-1">
                 <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                   <ShoppingCart className="text-primary" size={24} /> Manual Order Terminal

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -78,10 +79,10 @@ function InvoicesListContent() {
   const [selectedUnpaidIds, setSelectedUnpaidIds] = useState<string[]>([]);
   const [invoiceCounter, setInvoiceCounter] = useState(1);
 
-  // Queries
-  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc')) : null, [db]);
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer')) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
+  // 🚀 OPTIMIZATION: Queries limited to 100 docs
+  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(100)) : null, [db]);
+  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
 
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
   const { data: customersRaw } = useCollection(customersQuery);
@@ -99,6 +100,7 @@ function InvoicesListContent() {
 
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };
+    // Estimate counter based on loaded set (or better: server-side aggregate which isn't available in current hooks)
     setInvoiceCounter(invoices.length + 1);
     return {
       total: invoices.length,
@@ -193,7 +195,7 @@ function InvoicesListContent() {
 
       if (db) {
         try {
-          const q = query(collection(db, 'invoices'), where('customerId', '==', userId));
+          const q = query(collection(db, 'invoices'), where('customerId', '==', userId), limit(10));
           const snap = await getDocs(q);
           const docs = snap.docs
             .map(d => ({ ...d.data(), id: d.id }))
@@ -363,7 +365,6 @@ function InvoicesListContent() {
 
   return (
     <div className="space-y-8 min-w-0">
-      {/* 🔝 PREMIUM HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Billing Registry</h1>
@@ -376,7 +377,6 @@ function InvoicesListContent() {
         </div>
       </div>
 
-      {/* 📊 MINI STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
         {[
           { label: "Gross Volume", val: `৳${stats.revenue.toLocaleString()}`, icon: Banknote, bg: "bg-emerald-500/10", color: "text-emerald-500" },
@@ -488,7 +488,7 @@ function InvoicesListContent() {
               <div>
                 <DialogTitle className="text-lg font-black uppercase tracking-tight">Invoice Terminal</DialogTitle>
                 <DialogDescription className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                  {editingInvoiceId ? 'UPDATING RECORD' : `CREATING ${invoiceCounter.toString().padStart(4, '0')}`}
+                  {editingInvoiceId ? 'UPDATING RECORD' : `CREATING NEW RECORD`}
                 </DialogDescription>
               </div>
             </div>
@@ -498,10 +498,7 @@ function InvoicesListContent() {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
-              {/* LEFT: FORM (70%) */}
               <div className="lg:col-span-8 space-y-10 pb-20">
-                
-                {/* 👤 CUSTOMER SECTION */}
                 <section className="space-y-6">
                   <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
                     <Users size={16} className="text-primary" />
@@ -536,7 +533,6 @@ function InvoicesListContent() {
                   </div>
                 </section>
 
-                {/* 📑 PREVIOUS DUE SECTION */}
                 {unpaidInvoices.length > 0 && (
                   <section className="space-y-4 animate-in slide-in-from-top-2">
                     <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
@@ -570,7 +566,6 @@ function InvoicesListContent() {
                   </section>
                 )}
 
-                {/* 🛠️ SERVICE ITEMS */}
                 <section className="space-y-6">
                   <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                     <div className="flex items-center gap-3">
@@ -624,7 +619,6 @@ function InvoicesListContent() {
                 </div>
               </div>
 
-              {/* RIGHT: STICKY SUMMARY (30%) */}
               <div className="lg:col-span-4 lg:sticky lg:top-0 space-y-6">
                 <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2rem] overflow-hidden">
                   <CardHeader className="p-8 border-b border-white/5 bg-black/10">
@@ -632,7 +626,7 @@ function InvoicesListContent() {
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
                     <div className="space-y-4">
-                      <div className="flex justify-between text-xs font-bold text-white/40 uppercase"><span>Current Services</span><span>৳{currentSubtotal.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-xs font-bold text-white/40 uppercase tracking-widest"><span>Current Services</span><span>৳{currentSubtotal.toLocaleString()}</span></div>
                       {selectedPreviousDue > 0 && <div className="flex justify-between text-xs font-bold text-rose-400 uppercase"><span>Previous Arrears</span><span>৳{selectedPreviousDue.toLocaleString()}</span></div>}
                       <div className="grid grid-cols-2 gap-4 items-center">
                         <Label className="text-[9px] font-black uppercase text-white/40">Manual Discount</Label>

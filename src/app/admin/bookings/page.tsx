@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -60,9 +61,10 @@ function BookingsListContent() {
     setMounted(true);
   }, []);
 
+  // 🚀 OPTIMIZATION: Limited to 100 most recent bookings
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'));
+    return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'), limit(100));
   }, [db, user]);
 
   const { data: bookings, isLoading } = useCollection(bookingsQuery);
@@ -79,7 +81,8 @@ function BookingsListContent() {
 
   const filteredBookings = bookings?.filter(b => 
     b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase())
+    b.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.customerPhone?.includes(searchTerm)
   );
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -130,7 +133,7 @@ function BookingsListContent() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "Total Bookings", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Recent Bookings", val: stats.total, icon: Calendar, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Unassigned", val: stats.pending, icon: Clock, bg: "bg-amber-50", color: "text-amber-600" },
           { label: "Jobs Done", val: stats.completed, icon: CheckCircle2, bg: "bg-green-50", color: "text-green-600" },
           { label: "Cancelled", val: stats.cancelled, icon: XCircle, bg: "bg-red-50", color: "text-red-600" }

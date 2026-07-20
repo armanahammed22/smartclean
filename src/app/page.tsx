@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -47,7 +48,6 @@ const ICONS: Record<string, any> = {
   Award, TicketPercent, Gift, Users, Clock
 };
 
-// ⚡ PERFORMANCE: Skeleton placeholder for home sections
 const SectionSkeleton = () => (
   <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
     <Skeleton className="h-10 w-64 rounded-xl" />
@@ -68,13 +68,14 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // Registry Queries
+  // 🚀 OPTIMIZATION: Catalog reads limited to 50 items for Home
+  const productsRef = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), limit(50)) : null, [db]);
+  const servicesRef = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(50)) : null, [db]);
+  const subServicesRef = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active'), limit(50)) : null, [db]);
+
   const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
   const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
-  const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
-  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
-  const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const advancedOffersRef = useMemoFirebase(() => db ? collection(db, 'advanced_offers') : null, [db]);
@@ -202,8 +203,6 @@ export default function SmartCleanHomePage() {
           filteredProducts = filteredProducts.filter(p => p.brand === config.sourceId);
         } else if (config.sourceType === 'vendor' && config.sourceId) {
           filteredProducts = filteredProducts.filter(p => p.vendorId === config.sourceId);
-        } else if (config.sourceType === 'category' && config.sourceId) {
-          filteredProducts = filteredProducts.filter(p => p.categoryId === config.sourceId);
         } else if (config.sourceType === 'manual' && config.manualIds?.length) {
           filteredProducts = filteredProducts.filter(p => config.manualIds.includes(p.id));
         }
@@ -403,7 +402,6 @@ export default function SmartCleanHomePage() {
   return (
     <PublicLayout>
       <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24">
-        {/* ⚡ PERFORMANCE: Replace blocking loader with Skeletons */}
         {layoutLoading ? (
           <div className="w-full space-y-12">
             <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
@@ -420,7 +418,6 @@ export default function SmartCleanHomePage() {
           </div>
         ) : (
           <>
-            {/* Standard Hero Section */}
             <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
               <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[200px] sm:h-[280px] md:h-[320px] max-h-[320px] overflow-hidden">
                 <div className="relative overflow-hidden bg-gray-100 shadow-sm rounded-xl md:rounded-2xl lg:rounded-3xl h-full w-[70%]">

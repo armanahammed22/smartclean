@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase, useAuth, useUser } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch, getDocs, where, setDoc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, addDoc, updateDoc, writeBatch, getDocs, where, setDoc, getDoc, limit } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -80,9 +81,10 @@ export default function CustomersPage() {
   const [removalTarget, setRemovalTarget] = useState<any>(null);
   const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
+  // 🚀 OPTIMIZATION: Limited to 100 recent customers
   const customersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, user]);
 
   const { data: customers, isLoading } = useCollection(customersQuery);
@@ -119,10 +121,6 @@ export default function CustomersPage() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  /**
-   * 🚀 DATA MIGRATION & REGISTRY SYNC
-   * Updated to calculate due correctly from unpaid balances
-   */
   const handleSyncRegistry = async () => {
     if (!db) return;
     setIsSyncing(true);
@@ -130,7 +128,7 @@ export default function CustomersPage() {
 
     try {
       const invoicesSnap = await getDocs(collection(db, 'invoices'));
-      const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'customer')));
+      const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'customer'), limit(500)));
       
       const invoices = invoicesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
       const existingUsers = usersSnap.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -334,7 +332,7 @@ export default function CustomersPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {[
-          { label: "Total Partners", val: stats.total, icon: Users, bg: "bg-blue-50", color: "text-blue-600" },
+          { label: "Active Pool", val: stats.total, icon: Users, bg: "bg-blue-50", color: "text-blue-600" },
           { label: "Active Session", val: stats.active, icon: UserCheck, bg: "bg-green-50", color: "text-green-600" },
           { label: "Growth (MTD)", val: stats.new, icon: Clock, bg: "bg-purple-50", color: "text-purple-600" },
           { label: "Verified Data", val: customers?.filter(c => !!c.phone).length || 0, icon: ShieldCheck, bg: "bg-primary/5", color: "text-primary" }

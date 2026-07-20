@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,9 +33,10 @@ function ServicesContent() {
     }
   }, [searchParams]);
 
-  const servicesRef = useMemoFirebase(() => db ? collection(db, 'services') : null, [db]);
-  const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
-  const subServicesRef = useMemoFirebase(() => db ? collection(db, 'sub_services') : null, [db]);
+  // 🚀 OPTIMIZATION: Limited to 100 items per catalog read
+  const servicesRef = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
+  const productsRef = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), limit(100)) : null, [db]);
+  const subServicesRef = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
 
   const { data: services, isLoading: sLoading } = useCollection(servicesRef);
   const { data: products, isLoading: pLoading } = useCollection(productsRef);
@@ -51,28 +53,19 @@ function ServicesContent() {
   const filteredOfferings = useMemo(() => {
     let combined: any[] = [];
     if (services) {
-      combined = [...combined, ...services
-        .filter(s => s.status === 'Active')
-        .map(s => ({ ...s, itemType: 'service' }))
-      ];
+      combined = [...combined, ...services.map(s => ({ ...s, itemType: 'service' }))];
     }
     if (products) {
-      combined = [...combined, ...products
-        .filter(p => p.status === 'Active')
-        .map(p => ({ ...p, itemType: 'product' }))
-      ];
+      combined = [...combined, ...products.map(p => ({ ...p, itemType: 'product' }))];
     }
     if (subServices) {
-      combined = [...combined, ...subServices
-        .filter(sub => sub.status === 'Active')
-        .map(sub => ({ 
-          ...sub, 
-          title: sub.name, 
-          basePrice: sub.price, 
-          itemType: 'service',
-          isAddOn: true 
-        }))
-      ];
+      combined = [...combined, ...subServices.map(sub => ({ 
+        ...sub, 
+        title: sub.name, 
+        basePrice: sub.price, 
+        itemType: 'service',
+        isAddOn: true 
+      }))];
     }
 
     return combined.filter(item => {
