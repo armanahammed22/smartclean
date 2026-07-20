@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -119,7 +120,7 @@ export const ProductCard = memo(({ product, isDark = false, customStyle }: Produ
                 alt={displayName}
                 fill
                 className="object-contain transition-transform duration-500 group-hover:scale-105"
-                unoptimized
+                sizes="(max-width: 768px) 50vw, 200px"
               />
             ) : (
               <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-200">

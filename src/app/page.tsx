@@ -160,7 +160,7 @@ export default function SmartCleanHomePage() {
                     <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-2 group">
                       <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
                         {link.imageUrl ? (
-                          <Image src={link.imageUrl} alt={link.label} fill className="object-cover" unoptimized />
+                          <Image src={link.imageUrl} alt={link.label} fill className="object-cover" sizes="(max-width: 768px) 48px, 64px" />
                         ) : (
                           <LinkIcon size={24} className="text-primary" />
                         )}
@@ -424,10 +424,17 @@ export default function SmartCleanHomePage() {
                   {mainBanners.length > 0 ? (
                     <Carousel className="w-full h-full" opts={{ loop: true }}>
                       <CarouselContent className="h-full -ml-0">
-                        {mainBanners.map((banner) => (
+                        {mainBanners.map((banner, i) => (
                           <CarouselItem key={banner.id} className="h-full basis-full relative pl-0">
                             <Link href={banner.buttonLink || '#'} className="block w-full h-full relative">
-                              <Image src={banner.imageUrl || ''} alt={banner.title} fill className="object-cover" priority unoptimized />
+                              <Image 
+                                src={banner.imageUrl || ''} 
+                                alt={banner.title} 
+                                fill 
+                                className="object-cover" 
+                                priority={i === 0} 
+                                sizes="(max-width: 1024px) 70vw, 982px"
+                              />
                               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-3 sm:p-6 md:p-12 text-left">
                                 <h2 className="text-white text-xs sm:text-2xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl line-clamp-1">{banner.title}</h2>
                                 <p className="text-white/90 text-[8px] sm:text-sm md:text-lg font-medium mb-2 md:mb-4 max-w-md line-clamp-2">{banner.subtitle}</p>
@@ -444,9 +451,16 @@ export default function SmartCleanHomePage() {
                 </div>
                 {sidePromos.length > 0 && (
                   <div className="flex w-[30%] min-w-[80px] shrink-0 flex-col gap-2 md:gap-4 h-full">
-                    {sidePromos.slice(0, 2).map(promo => (
+                    {sidePromos.slice(0, 2).map((promo, i) => (
                       <Link key={promo.id} href={promo.buttonLink || '#'} className="flex-1 relative rounded-xl md:rounded-2xl lg:rounded-3xl overflow-hidden shadow-sm group">
-                        <Image src={promo.imageUrl} alt={promo.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                        <Image 
+                          src={promo.imageUrl} 
+                          alt={promo.title} 
+                          fill 
+                          className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                          priority={i === 0}
+                          sizes="(max-width: 1024px) 30vw, 600px"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 md:p-6 flex flex-col justify-end text-left">
                           <h3 className="text-white text-[7px] sm:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
                           <div className="mt-1 md:mt-2 text-primary flex items-center gap-1 text-[6px] sm:text-[10px] font-black uppercase">

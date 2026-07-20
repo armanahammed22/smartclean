@@ -31,7 +31,7 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
             alt={member.name} 
             fill 
             className="object-cover transition-transform duration-700 group-hover:scale-110"
-            unoptimized
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#081621]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
