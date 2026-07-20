@@ -25,7 +25,9 @@ import {
   TicketPercent,
   Gift,
   ChevronRight,
-  Loader2
+  Loader2,
+  Users,
+  Clock
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
@@ -42,7 +44,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const ICONS: Record<string, any> = {
   Smartphone, Zap, Wrench, Package, Layers, Star,
   Activity: TrendingUp, Calendar, Grid, ShieldCheck,
-  Award, TicketPercent, Gift
+  Award, TicketPercent, Gift, Users, Clock
 };
 
 // ⚡ PERFORMANCE: Skeleton placeholder for home sections
@@ -200,8 +202,8 @@ export default function SmartCleanHomePage() {
           filteredProducts = filteredProducts.filter(p => p.brand === config.sourceId);
         } else if (config.sourceType === 'vendor' && config.sourceId) {
           filteredProducts = filteredProducts.filter(p => p.vendorId === config.sourceId);
-        } else if (config.sourceType === 'campaign' && config.sourceId) {
-          filteredProducts = filteredProducts.filter(p => p.campaignId === config.sourceId);
+        } else if (config.sourceType === 'category' && config.sourceId) {
+          filteredProducts = filteredProducts.filter(p => p.categoryId === config.sourceId);
         } else if (config.sourceType === 'manual' && config.manualIds?.length) {
           filteredProducts = filteredProducts.filter(p => config.manualIds.includes(p.id));
         }
