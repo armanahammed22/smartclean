@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { PublicLayout } from '@/components/layout/public-layout';
@@ -85,7 +85,7 @@ function ServicesContent() {
   if (!mounted) return null;
 
   return (
-    <div className="bg-[#F9FAFB] min-h-screen pb-24">
+    <div className="bg-[#F9FAFB] min-h-screen pb-24 page-transition-fade">
       <header className="bg-white border-b py-10 md:py-12">
         <div className="container mx-auto px-4 max-w-7xl text-center space-y-6">
           <div className="space-y-2">
@@ -167,7 +167,13 @@ function ServicesContent() {
 export default function ServicesListPage() {
   return (
     <PublicLayout>
-      <Suspense fallback={<div className="container mx-auto p-20 text-center"><Loader2 className="animate-spin inline" /></div>}>
+      <Suspense fallback={
+        <div className="container mx-auto px-4 py-16 max-w-7xl">
+           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />)}
+          </div>
+        </div>
+      }>
         <ServicesContent />
       </Suspense>
     </PublicLayout>

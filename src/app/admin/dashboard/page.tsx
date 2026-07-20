@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -126,7 +127,7 @@ export default function AdminDashboard() {
   ];
 
   if (!mounted) return null;
-  if (isUserLoading || roleLoading || oLoading || pLoading) return <DashboardSkeleton />;
+  if (isUserLoading || roleLoading || oLoading || pLoading) return <div className="p-8"><DashboardSkeleton /></div>;
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
@@ -138,7 +139,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-10 pb-24 min-w-0 animate-in fade-in duration-700">
+    <div className="space-y-10 pb-24 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">{t('admin.dashboard_link')}</h1>

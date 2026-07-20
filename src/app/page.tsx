@@ -59,6 +59,18 @@ const SectionSkeleton = () => (
   </div>
 );
 
+const HeroSkeleton = () => (
+  <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
+    <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[200px] sm:h-[320px] overflow-hidden">
+      <Skeleton className="h-full w-[70%] rounded-xl md:rounded-3xl" />
+      <div className="flex w-[30%] flex-col gap-2 md:gap-4 h-full">
+        <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
+        <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
+      </div>
+    </div>
+  </section>
+);
+
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
   const db = useFirestore();
@@ -401,18 +413,10 @@ export default function SmartCleanHomePage() {
 
   return (
     <PublicLayout>
-      <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24">
+      <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24 page-transition-fade">
         {layoutLoading ? (
           <div className="w-full space-y-12">
-            <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
-              <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[200px] sm:h-[320px] overflow-hidden">
-                <Skeleton className="h-full w-[70%] rounded-xl md:rounded-3xl" />
-                <div className="flex w-[30%] flex-col gap-2 md:gap-4 h-full">
-                  <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
-                  <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
-                </div>
-              </div>
-            </section>
+            <HeroSkeleton />
             <SectionSkeleton />
             <SectionSkeleton />
           </div>

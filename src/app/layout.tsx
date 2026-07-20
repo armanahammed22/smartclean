@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {CartProvider} from '@/components/providers/cart-provider';
@@ -132,7 +133,7 @@ export default async function RootLayout({
   };
 
   return (
-    <html lang="bn" className="h-full">
+    <html lang="bn" className="h-full bg-[#F8FAFC]">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -161,7 +162,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="font-body antialiased min-h-screen">
+      <body className="font-body antialiased min-h-screen bg-[#F8FAFC]">
         {settings?.gtmBodyScript && (
           <div
             id="gtm-body-noscript"
