@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from 'next/image';
@@ -9,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useCart } from '@/components/providers/cart-provider';
 
 interface ProductCardProps {
@@ -18,7 +17,8 @@ interface ProductCardProps {
   customStyle?: any;
 }
 
-export function ProductCard({ product, isDark = false, customStyle }: ProductCardProps) {
+// ⚡ PERFORMANCE: Wrapped in memo to prevent re-renders in large grids
+export const ProductCard = memo(({ product, isDark = false, customStyle }: ProductCardProps) => {
   const { t } = useLanguage();
   const { addToCart, setCheckoutOpen } = useCart();
   const [mounted, setMounted] = useState(false);
@@ -27,7 +27,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     setMounted(true);
   }, []);
 
-  // 🛡️ UNIFIED FIELD LOGIC: Support Product, Main Service, and Sub-Service schemas
   const isService = (product as any).type === 'service' || 'basePrice' in product || 'mainServiceId' in product;
   const displayPrice = (product as any).basePrice !== undefined ? (product as any).basePrice : product.price;
   const regularPrice = (product as any).regularPrice !== undefined ? (product as any).regularPrice : product.regularPrice;
@@ -37,13 +36,11 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
     : null;
 
-  // DYNAMIC RATING & BOOKING LOGIC
   const rating = product.rating || 5.0;
   const bookingCount = (product as any).bookingCount || 0;
   const soldCount = product.salesCount || 0;
 
-  // Styling Logic from Admin Config - Optimized for Maximum Compactness
-  const style = {
+  const style = useMemo(() => ({
     cardBg: customStyle?.cardBg || '#ffffff',
     cardRadiusTL: customStyle?.cardRadiusTL !== undefined ? customStyle.cardRadiusTL : 16,
     cardRadiusTR: customStyle?.cardRadiusTR !== undefined ? customStyle.cardRadiusTR : 16,
@@ -66,42 +63,12 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       left: customStyle?.titlePaddingLeft ?? 0,
       right: customStyle?.titlePaddingRight ?? 0
     },
-    titleMargin: {
-      top: customStyle?.titleMarginTop ?? 0,
-      bottom: customStyle?.titleMarginBottom ?? 0,
-      left: customStyle?.titleMarginLeft ?? 0,
-      right: customStyle?.titleMarginRight ?? 0
-    },
     
     priceSize: customStyle?.priceSize || 'text-sm md:text-base',
     priceColor: customStyle?.priceColor || '#1E5F7A',
-    pricePadding: {
-      top: customStyle?.pricePaddingTop ?? 0,
-      bottom: customStyle?.pricePaddingBottom ?? 1,
-      left: customStyle?.pricePaddingLeft ?? 0,
-      right: customStyle?.pricePaddingRight ?? 0
-    },
-    priceMargin: {
-      top: customStyle?.priceMarginTop ?? 0,
-      bottom: customStyle?.priceMarginBottom ?? 0,
-      left: customStyle?.priceMarginLeft ?? 0,
-      right: customStyle?.priceMarginRight ?? 0
-    },
     
     metaSize: customStyle?.metaSize || 'text-[9px]',
     metaColor: customStyle?.metaColor || '#9ca3af',
-    metaPadding: {
-      top: customStyle?.metaPaddingTop ?? 0,
-      bottom: customStyle?.metaPaddingBottom ?? 4,
-      left: customStyle?.metaPaddingLeft ?? 0,
-      right: customStyle?.metaPaddingRight ?? 0
-    },
-    metaMargin: {
-      top: customStyle?.metaMarginTop ?? 0,
-      bottom: customStyle?.metaMarginBottom ?? 0,
-      left: customStyle?.metaMarginLeft ?? 0,
-      right: customStyle?.metaMarginRight ?? 0
-    },
     metaLabelRating: customStyle?.metaLabelRating || '',
     metaLabelCount: customStyle?.metaLabelCount || (isService ? 'Booked' : 'Sold'),
     
@@ -109,20 +76,8 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     btnColor: customStyle?.primaryBtnColor || '#ffffff',
     btnSize: customStyle?.primaryBtnSize || 'text-[10px]',
     btnWidth: customStyle?.btnWidth || '100%',
-    btnHeight: customStyle?.btnHeight || '40',
-    btnPadding: {
-      top: customStyle?.btnPaddingTop ?? 0,
-      bottom: customStyle?.btnPaddingBottom ?? 0,
-      left: customStyle?.btnPaddingLeft ?? 12,
-      right: customStyle?.btnPaddingRight ?? 12
-    },
-    btnMargin: {
-      top: customStyle?.btnMarginTop ?? 1,
-      bottom: customStyle?.btnMarginBottom ?? 0,
-      left: customStyle?.btnMarginLeft ?? 0,
-      right: customStyle?.btnMarginRight ?? 0
-    }
-  };
+    btnHeight: customStyle?.btnHeight || '40'
+  }), [customStyle, isService]);
 
   const handleOrderNow = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -131,7 +86,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
     setCheckoutOpen(true);
   };
 
-  if (!mounted) return null;
+  if (!mounted) return <div className="aspect-[3/4] bg-gray-50 rounded-2xl animate-pulse" />;
 
   const isFullWidthBtn = style.btnWidth === '100%';
 
@@ -149,7 +104,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           gap: `${style.elementGap}px`
         }}
       >
-        {/* 🖼️ IMAGE AREA */}
         <div 
           className="w-full shrink-0"
           style={{ padding: `${style.imgPadding}px` }}
@@ -191,21 +145,13 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
           </Link>
         </div>
 
-        {/* 🏷️ CONTENT AREA */}
         <div className="flex-1 flex flex-col w-full">
-          {/* 🏷️ TITLE AREA - FIXED HEIGHT FOR ALIGNMENT */}
           <div 
             className="w-full min-h-[2.5rem] flex flex-col justify-start" 
             style={{ 
               textAlign: style.textAlign as any,
               paddingTop: `${style.titlePadding.top}px`,
-              paddingBottom: `${style.titlePadding.bottom}px`,
-              paddingLeft: `${style.titlePadding.left}px`,
-              paddingRight: `${style.titlePadding.right}px`,
-              marginTop: `${style.titleMargin.top}px`,
-              marginBottom: `${style.titleMargin.bottom}px`,
-              marginLeft: `${style.titleMargin.left}px`,
-              marginRight: `${style.titleMargin.right}px`,
+              paddingBottom: `${style.titlePadding.bottom}px`
             }}
           >
             <Link href={`/${isService ? 'service' : 'product'}/${product.slug || product.id}`}>
@@ -218,20 +164,7 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             </Link>
           </div>
           
-          {/* 💰 PRICE AREA */}
-          <div 
-            className={cn("w-full flex flex-wrap items-baseline gap-1.5", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}
-            style={{ 
-              paddingTop: `${style.pricePadding.top}px`,
-              paddingBottom: `${style.pricePadding.bottom}px`,
-              paddingLeft: `${style.pricePadding.left}px`,
-              paddingRight: `${style.pricePadding.right}px`,
-              marginTop: `${style.priceMargin.top}px`,
-              marginBottom: `${style.priceMargin.bottom}px`,
-              marginLeft: `${style.priceMargin.left}px`,
-              marginRight: `${style.priceMargin.right}px`,
-            }}
-          >
+          <div className={cn("w-full flex flex-wrap items-baseline gap-1.5 mb-2", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}>
             <p className={cn("font-black tracking-tighter leading-none", style.priceSize)} style={{ color: style.priceColor }}>
               ৳{displayPrice?.toLocaleString()}
             </p>
@@ -242,42 +175,15 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
             )}
           </div>
           
-          {/* ⭐ RATING & COUNT AREA */}
-          <div 
-            className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-1 mt-2" 
-            style={{ 
-              color: style.metaColor,
-              paddingTop: `${style.metaPadding.top}px`,
-              paddingBottom: `${style.metaPadding.bottom}px`,
-              paddingLeft: `${style.metaPadding.left}px`,
-              paddingRight: `${style.metaPadding.right}px`,
-              marginTop: `${style.metaMargin.top}px`,
-              marginBottom: `${style.metaMargin.bottom}px`,
-              marginLeft: `${style.metaMargin.left}px`,
-              marginRight: `${style.metaMargin.right}px`,
-            }}
-          >
+          <div className="w-full flex items-center justify-between font-bold border-t border-gray-50 pt-2" style={{ color: style.metaColor }}>
             <div className="flex items-center gap-0.5 text-amber-500">
               <Star size={10} fill="currentColor" />
-              <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)} {style.metaLabelRating}</span>
+              <span className={cn("font-black", style.metaSize)}>{rating.toFixed(1)}</span>
             </div>
             <span className={cn("uppercase font-black", style.metaSize)}>{(isService ? bookingCount : soldCount).toLocaleString()} {style.metaLabelCount}</span>
           </div>
 
-          {/* 🛒 BUTTON AREA - PUSH TO BOTTOM */}
-          <div 
-            className={cn(
-              "w-full flex items-center gap-2 mt-auto",
-              style.textAlign === 'center' ? 'justify-center' : 'justify-start'
-            )}
-            style={{ 
-              marginTop: 'auto',
-              paddingTop: `${style.btnPadding.top}px`,
-              paddingBottom: `${style.btnPadding.bottom}px`,
-              paddingLeft: `${style.btnPadding.left}px`,
-              paddingRight: `${style.btnPadding.right}px`,
-            }}
-          >
+          <div className={cn("w-full flex items-center gap-2 mt-4", style.textAlign === 'center' ? 'justify-center' : 'justify-start')}>
             <button 
               onClick={handleOrderNow}
               className={cn(
@@ -300,4 +206,6 @@ export function ProductCard({ product, isDark = false, customStyle }: ProductCar
       </div>
     </div>
   );
-}
+});
+
+ProductCard.displayName = 'ProductCard';

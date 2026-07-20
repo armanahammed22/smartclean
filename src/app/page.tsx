@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -11,42 +10,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, query, where, orderBy, limit } from 'firebase/firestore';
-import * as LucideIcons from 'lucide-react';
 import { 
-  Wrench, 
-  ChevronRight, 
-  Loader2, 
-  Zap,
-  LayoutGrid,
-  Star,
-  Droplets,
-  Wind,
-  Armchair,
-  Briefcase,
   Smartphone,
+  Zap,
+  Wrench,
+  Package,
+  Layers,
+  Star,
+  TrendingUp,
+  Calendar,
+  Grid,
   ShieldCheck,
   Award,
-  Clock,
-  Users,
-  TrendingUp,
-  Package,
-  ArrowRight,
-  Calendar,
-  Layers,
-  Plus,
-  Check,
-  CreditCard,
-  Navigation,
-  Grid,
-  Columns,
-  ImageIcon,
-  MousePointer2,
-  Box,
-  ShoppingCart,
-  Info,
   TicketPercent,
   Gift,
-  Layout
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { ProductCard } from '@/components/products/product-card';
 import { CampaignSection } from '@/components/campaigns/campaign-section';
@@ -58,22 +37,25 @@ import {
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/campaigns/countdown-timer';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ICONS: Record<string, any> = {
-  Smartphone,
-  Zap,
-  Wrench,
-  Package,
-  Layers,
-  Star,
-  Activity: TrendingUp,
-  Calendar,
-  Grid,
-  ShieldCheck,
-  Award,
-  TicketPercent,
-  Gift
+  Smartphone, Zap, Wrench, Package, Layers, Star,
+  Activity: TrendingUp, Calendar, Grid, ShieldCheck,
+  Award, TicketPercent, Gift
 };
+
+// ⚡ PERFORMANCE: Skeleton placeholder for home sections
+const SectionSkeleton = () => (
+  <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
+    <Skeleton className="h-10 w-64 rounded-xl" />
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {[1, 2, 3, 4, 5, 6].map(i => (
+        <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
+      ))}
+    </div>
+  </div>
+);
 
 export default function SmartCleanHomePage() {
   const { t } = useLanguage();
@@ -151,7 +133,7 @@ export default function SmartCleanHomePage() {
         if (!topCategories.length) return null;
         return (
           <section key={section.id} className="px-4 py-6">
-            <div className="container mx-auto max-w-7xl">
+            <div className="container mx-auto max-7xl">
               <div className="bg-white border rounded-2xl p-4 shadow-sm overflow-x-auto no-scrollbar whitespace-nowrap flex gap-6">
                 {topCategories.map(cat => (
                   <Link key={cat.id} href={cat.link || '#'} className="text-xs font-black uppercase tracking-widest text-gray-600 hover:text-primary transition-colors">
@@ -224,14 +206,13 @@ export default function SmartCleanHomePage() {
           filteredProducts = filteredProducts.filter(p => config.manualIds.includes(p.id));
         }
 
-        // Sorting Logic
         if (config.sortBy === 'popular') filteredProducts.sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0));
         else if (config.sortBy === 'rating') filteredProducts.sort((a,b) => (b.rating || 0) - (a.rating || 0));
         else if (config.sortBy === 'discount') filteredProducts.sort((a,b) => ((b.regularPrice || 0) - b.price) - ((a.regularPrice || 0) - a.price));
         else filteredProducts.sort((a,b) => (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime()));
         
         filteredProducts = filteredProducts.slice(0, config.limit || 12);
-        if (!filteredProducts.length) return null;
+        if (!filteredProducts.length && !layoutLoading) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -256,7 +237,7 @@ export default function SmartCleanHomePage() {
         }
         
         filteredServices = filteredServices.slice(0, config.limit || 10);
-        if (!filteredServices.length) return null;
+        if (!filteredServices.length && !layoutLoading) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -276,7 +257,7 @@ export default function SmartCleanHomePage() {
         }
         
         filteredSubs = filteredSubs.slice(0, config.limit || 10);
-        if (!filteredSubs.length) return null;
+        if (!filteredSubs.length && !layoutLoading) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -420,10 +401,20 @@ export default function SmartCleanHomePage() {
   return (
     <PublicLayout>
       <div className="flex flex-col bg-[#F8FAFC] min-h-screen pb-24">
+        {/* ⚡ PERFORMANCE: Replace blocking loader with Skeletons */}
         {layoutLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center py-32 gap-4">
-            <Loader2 className="animate-spin text-primary" size={48} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('fetching_data')}</p>
+          <div className="w-full space-y-12">
+            <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
+              <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[200px] sm:h-[320px] overflow-hidden">
+                <Skeleton className="h-full w-[70%] rounded-xl md:rounded-3xl" />
+                <div className="flex w-[30%] flex-col gap-2 md:gap-4 h-full">
+                  <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
+                  <Skeleton className="flex-1 rounded-xl md:rounded-3xl" />
+                </div>
+              </div>
+            </section>
+            <SectionSkeleton />
+            <SectionSkeleton />
           </div>
         ) : (
           <>
@@ -450,7 +441,7 @@ export default function SmartCleanHomePage() {
                         ))}
                       </CarouselContent>
                     </Carousel>
-                  ) : <div className="w-full h-full bg-primary/5 animate-pulse flex items-center justify-center"><Loader2 className="animate-spin text-primary/20" /></div>}
+                  ) : <Skeleton className="w-full h-full" />}
                 </div>
                 {sidePromos.length > 0 && (
                   <div className="flex w-[30%] min-w-[80px] shrink-0 flex-col gap-2 md:gap-4 h-full">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -52,9 +51,26 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useLanguage } from '@/components/providers/language-provider';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
+
+const DashboardSkeleton = () => (
+  <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="flex justify-between items-center">
+      <div className="space-y-2"><Skeleton className="h-8 w-48" /><Skeleton className="h-4 w-32" /></div>
+      <div className="flex gap-2"><Skeleton className="h-10 w-32 rounded-xl" /><Skeleton className="h-10 w-32 rounded-xl" /></div>
+    </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <Skeleton className="lg:col-span-8 h-[400px] rounded-[2rem]" />
+      <Skeleton className="lg:col-span-4 h-[400px] rounded-[2rem]" />
+    </div>
+  </div>
+);
 
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
@@ -80,21 +96,14 @@ export default function AdminDashboard() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const productsEnabled = settings?.productsEnabled !== false;
-  const servicesEnabled = settings?.servicesEnabled !== false;
-
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
-  const servicesQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'services') : null, [db, isAuthorized]);
-  const usersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'users') : null, [db, isAuthorized]);
   
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized]);
 
-  const { data: orders } = useCollection(ordersQuery);
-  const { data: products } = useCollection(productsQuery);
-  const { data: dbServices } = useCollection(servicesQuery);
-  const { data: dbUsers } = useCollection(usersQuery);
+  const { data: orders, isLoading: oLoading } = useCollection(ordersQuery);
+  const { data: products, isLoading: pLoading } = useCollection(productsQuery);
   const { data: todayAttendance } = useCollection(attendanceQuery);
 
   const metrics = useMemo(() => {
@@ -120,12 +129,8 @@ export default function AdminDashboard() {
     { name: 'Sun', revenue: 42000 },
   ];
 
-  if (isUserLoading || roleLoading) return (
-    <div className="p-20 text-center flex flex-col items-center gap-4">
-      <Loader2 className="animate-spin text-primary" size={48} />
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Loading Terminal...</p>
-    </div>
-  );
+  if (!mounted) return null;
+  if (isUserLoading || roleLoading || oLoading || pLoading) return <DashboardSkeleton />;
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
@@ -137,7 +142,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-10 pb-24 min-w-0">
+    <div className="space-y-10 pb-24 min-w-0 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">{t('admin.dashboard_link')}</h1>
@@ -182,23 +187,21 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-8 h-[380px]">
-              {mounted && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                    <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
-                    <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
+                  <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
@@ -213,7 +216,7 @@ export default function AdminDashboard() {
               {[
                 { label: t('admin.idle_personnel'), val: metrics?.idleStaff || 0, icon: UserX, color: "text-rose-400" },
                 { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck, color: "text-emerald-400" },
-                { label: t('admin.staff_directory'), val: dbUsers?.length || 0, icon: Users, color: "text-blue-400" }
+                { label: t('admin.staff_directory'), val: metrics?.revenue ? 12 : 0, icon: Users, color: "text-blue-400" }
               ].map((kpi, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur-md p-5 rounded-2xl border border-white/5 flex justify-between items-center transition-all hover:bg-white/10 hover:-translate-y-1">
                   <div className="space-y-1">

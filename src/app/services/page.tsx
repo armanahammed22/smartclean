@@ -14,6 +14,7 @@ import { useLanguage } from '@/components/providers/language-provider';
 import { ProductCard } from '@/components/products/product-card';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function ServicesContent() {
   const db = useFirestore();
@@ -95,7 +96,7 @@ function ServicesContent() {
       <header className="bg-white border-b py-10 md:py-12">
         <div className="container mx-auto px-4 max-w-7xl text-center space-y-6">
           <div className="space-y-2">
-            <Badge className="bg-primary/10 text-primary border-none uppercase tracking-widest font-black py-1 px-4 rounded-full text-[9px]">
+            <Badge className="bg-primary/10 text-primary border-none uppercase tracking-widest font-black py-1 px-4 rounded-full text-[10px]">
               Marketplace Catalog
             </Badge>
             <h1 className="text-3xl md:text-5xl font-black text-[#081621] font-headline tracking-tighter uppercase">
@@ -145,12 +146,13 @@ function ServicesContent() {
 
       <div className="container mx-auto px-4 max-w-7xl py-10">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="animate-spin text-primary" size={40} />
-            <p className="text-muted-foreground font-black uppercase tracking-widest text-[9px]">Syncing Catalog...</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
+              <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
+            ))}
           </div>
         ) : filteredOfferings.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 animate-in fade-in duration-500">
             {filteredOfferings.map((item) => (
               <div key={item.id} className="h-full">
                 <ProductCard product={item as any} />
@@ -172,7 +174,7 @@ function ServicesContent() {
 export default function ServicesListPage() {
   return (
     <PublicLayout>
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-primary" /></div>}>
+      <Suspense fallback={<div className="container mx-auto p-20 text-center"><Loader2 className="animate-spin inline" /></div>}>
         <ServicesContent />
       </Suspense>
     </PublicLayout>
