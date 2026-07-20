@@ -1,7 +1,7 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,9 +25,7 @@ import {
   XCircle,
   Plus,
   Search,
-  Users,
-  Eye,
-  Edit
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -43,7 +41,12 @@ import {
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { BookingAssignDialog } from '@/components/admin/BookingAssignDialog';
+
+// 🚀 LAZY LOAD DIALOGS
+const BookingAssignDialog = dynamic(() => import('@/components/admin/BookingAssignDialog').then(mod => mod.BookingAssignDialog), {
+  ssr: false,
+  loading: () => <Loader2 className="animate-spin text-primary" />
+});
 
 function BookingsListContent() {
   const { user } = useUser();
@@ -61,7 +64,6 @@ function BookingsListContent() {
     setMounted(true);
   }, []);
 
-  // 🚀 OPTIMIZATION: Limited to 100 most recent bookings
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'), limit(100));
@@ -227,11 +229,13 @@ function BookingsListContent() {
         </CardContent>
       </Card>
 
-      <BookingAssignDialog 
-        booking={assignBooking} 
-        isOpen={!!assignBooking} 
-        onClose={() => setAssignBooking(null)} 
-      />
+      {assignBooking && (
+        <BookingAssignDialog 
+          booking={assignBooking} 
+          isOpen={!!assignBooking} 
+          onClose={() => setAssignBooking(null)} 
+        />
+      )}
     </div>
   );
 }

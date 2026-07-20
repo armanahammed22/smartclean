@@ -1,9 +1,9 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Table, 
@@ -15,41 +15,45 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { 
-  BarChart3, 
   Download, 
-  Calendar, 
   TrendingUp, 
-  ArrowUpRight, 
-  Wallet,
-  ArrowDownRight,
-  TrendingDown,
-  PieChart,
-  Filter,
-  Loader2,
-  FileText,
-  Zap,
-  Briefcase,
-  Users,
-  List,
-  Package,
+  Wallet, 
+  TrendingDown, 
+  PieChart, 
+  Loader2, 
+  Zap, 
+  Briefcase, 
+  Users, 
   Layers
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
+import { parseISO, isWithinInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
-} from 'recharts';
+
+// 🚀 DYNAMIC IMPORT FOR HEAVY CHARTS
+const PerformanceChart = dynamic(() => import('recharts').then((mod) => {
+  const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = mod;
+  return function Chart({ data }: { data: any[] }) {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={{ left: 40, right: 40 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
+          <XAxis type="number" hide />
+          <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+          <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
+          <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={40}>
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+}), { 
+  ssr: false, 
+  loading: () => <div className="h-full w-full flex items-center justify-center bg-gray-50/50 rounded-2xl"><Loader2 className="animate-spin text-primary/20" /></div> 
+});
 
 export default function FinancialReportPage() {
   const db = useFirestore();
@@ -63,11 +67,8 @@ export default function FinancialReportPage() {
 
   const ledgerQuery = useMemoFirebase(() => 
     (db && user) ? query(collection(db, 'finance_ledger'), orderBy('date', 'desc')) : null, [db, user]);
-  const accountsQuery = useMemoFirebase(() => 
-    (db && user) ? collection(db, 'finance_accounts') : null, [db, user]);
   
   const { data: ledger, isLoading: lLoading } = useCollection(ledgerQuery);
-  const { data: accounts, isLoading: aLoading } = useCollection(accountsQuery);
 
   const filteredLedger = useMemo(() => {
     if (!ledger) return [];
@@ -116,7 +117,7 @@ export default function FinancialReportPage() {
     link.click();
   };
 
-  if (lLoading || aLoading || !mounted) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
+  if (lLoading || !mounted) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-20">
@@ -184,19 +185,7 @@ export default function FinancialReportPage() {
               <CardDescription className="text-[10px] uppercase font-bold text-primary">Contribution by service type</CardDescription>
             </CardHeader>
             <CardContent className="p-8 h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 40, right: 40 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                  <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)'}} />
-                  <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={40}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <PerformanceChart data={chartData} />
             </CardContent>
           </Card>
         </div>

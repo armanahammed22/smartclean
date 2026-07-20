@@ -1,58 +1,57 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useUser, useCollection, useMemoFirebase, useDoc, useFirestore } from '@/firebase';
-import { collection, doc, query, orderBy, limit, where, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, doc, query, orderBy, limit, where } from 'firebase/firestore';
 import { 
   Users, 
   Loader2,
-  TrendingUp,
   ShoppingCart,
-  Calendar,
-  Package,
-  Wrench,
-  Zap,
-  CheckCircle2,
-  ArrowUpRight,
-  DollarSign,
-  Store,
   Box,
-  LayoutDashboard,
-  Database,
   ShieldCheck,
-  RefreshCw,
   Plus,
-  ClipboardList,
-  Tags,
   FileText,
-  Clock,
-  Wallet,
-  Activity,
-  History,
-  ReceiptText,
-  ArrowRight,
+  DollarSign,
+  Zap,
   UserX,
   UserCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// 🚀 DYNAMIC IMPORT FOR HEAVY CHART LIBRARY
+const DashboardChart = dynamic(() => import('recharts').then((mod) => {
+  const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = mod;
+  return function Chart({ data }: { data: any[] }) {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
+              <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+          <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
+          <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
+          <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
+}), { 
+  ssr: false, 
+  loading: () => <div className="h-full w-full flex items-center justify-center bg-gray-50/50 rounded-2xl"><Loader2 className="animate-spin text-primary/20" /></div> 
+});
 
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
@@ -76,7 +75,6 @@ const DashboardSkeleton = () => (
 export default function AdminDashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
-  const { toast } = useToast();
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
@@ -94,10 +92,6 @@ export default function AdminDashboard() {
            user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
   }, [adminRole, user]);
 
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const { data: settings } = useDoc(settingsRef);
-
-  // 🚀 OPTIMIZATION: Metrics restricted to recent set to avoid heavy reads
   const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)) : null, [db, isAuthorized]);
   const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, isAuthorized]);
   
@@ -189,21 +183,7 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-8 h-[380px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2263C0" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#2263C0" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                  <YAxis axisLine={false} tickLine={false} fontSize={10} fontStyle="bold" />
-                  <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', fontSize: '10px'}} />
-                  <Area type="monotone" dataKey="revenue" stroke="#2263C0" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <DashboardChart data={chartData} />
             </CardContent>
           </Card>
         </div>
