@@ -163,9 +163,10 @@ export default function QuotationEditorPage() {
   };
 
   const handleDownload = () => {
-    if (!id) return;
+    if (!quote?.quoteNumber) return;
     setIsDownloading(true);
-    window.open(`/quotation/view/${id}?download=true`, '_blank');
+    // Direct link to public view with download trigger
+    window.open(`/quotation/${quote.quoteNumber}?download=true`, '_blank');
     setIsDownloading(false);
   };
 

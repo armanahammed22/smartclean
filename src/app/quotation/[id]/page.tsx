@@ -1,59 +1,59 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
   CheckCircle2, 
   Download, 
   Loader2, 
   MapPin, 
-  Phone, 
   Globe,
-  Mail,
   ShieldCheck,
-  Info,
   Printer,
-  Wallet,
-  Check,
-  X,
-  Zap,
-  Calendar,
-  Layers,
-  Award,
-  Star,
   MessageCircle,
-  Heart
+  Star,
+  Check,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { downloadQuotationPDF } from '@/lib/quotation-utils';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { numberToWords } from '@/lib/invoice-utils';
+import { cn } from '@/lib/utils';
 
-export default function PublicQuotationViewPage() {
+/**
+ * Clean SEO URL Public Quotation View
+ * Handles both Document ID and Quotation Number.
+ */
+function QuotationViewContent() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
   const db = useFirestore();
   const router = useRouter();
-  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [quote, setQuote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [settings, setSettings] = useState<any>(null);
+  const [quoteSettings, setQuoteSettings] = useState<any>(null);
+
+  const isAutoDownload = searchParams.get('download') === 'true';
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Fetch Logic (Handle ID or Number)
   useEffect(() => {
     async function fetchQuote() {
       if (!db || !id) return;
       setIsLoading(true);
       try {
+        // 1. Try fetching by Document ID
         const docRef = collection(db, 'quotations');
         const qById = query(docRef, where('__name__', '==', id), limit(1));
         const snapById = await getDocs(qById);
@@ -69,6 +69,7 @@ export default function PublicQuotationViewPage() {
           return;
         }
 
+        // 2. Try fetching by Quote Number (SEO URL)
         const qByNum = query(docRef, where('quoteNumber', '==', id), limit(1));
         const snapByNum = await getDocs(qByNum);
 
@@ -84,9 +85,7 @@ export default function PublicQuotationViewPage() {
     fetchQuote();
   }, [db, id, router]);
 
-  const [settings, setSettings] = useState<any>(null);
-  const [quoteSettings, setQuoteSettings] = useState<any>(null);
-
+  // Fetch Branding Settings
   useEffect(() => {
     if (db) {
       getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
@@ -97,6 +96,17 @@ export default function PublicQuotationViewPage() {
       });
     }
   }, [db]);
+
+  // Auto-Download Effect
+  useEffect(() => {
+    if (quote && isAutoDownload && !isDownloading) {
+      const timer = setTimeout(() => {
+        setIsDownloading(true);
+        downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [quote, isAutoDownload, isDownloading]);
 
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
@@ -118,15 +128,38 @@ export default function PublicQuotationViewPage() {
   const tagline = quote?.tagline || quoteSettings?.tagline || "Smart Cleaning, Better Living.";
   const footerDisclaimer = quoteSettings?.footerDisclaimer || "This document is electronically verified and ready for activation.";
 
-  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
-  if (!quote) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Quotation Document Not Found</div>;
+  const handleWhatsApp = () => {
+    if (!quote) return;
+    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${window.location.href}`;
+    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  if (!mounted || isLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center space-y-4">
+        <Loader2 className="animate-spin text-primary mx-auto" size={48} />
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Quotation...</p>
+      </div>
+    </div>
+  );
+
+  if (!quote) return (
+    <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50">
+      <div className="space-y-4">
+        <X size={64} className="mx-auto text-gray-200" />
+        <h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em]">Document Not Found</h1>
+        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Back to Home</Button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 selection:bg-primary selection:text-white pb-32 md:pb-16">
+    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 pb-32 md:pb-16">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
+          #quote-render-area { shadow: none !important; border-top: none !important; }
         }
       `}</style>
 
@@ -140,7 +173,7 @@ export default function PublicQuotationViewPage() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50"><MessageCircle size={18} /> Chat</Button>
+            <Button variant="outline" onClick={handleWhatsApp} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={18} /> WhatsApp</Button>
             <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
               {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
             </Button>
@@ -220,8 +253,8 @@ export default function PublicQuotationViewPage() {
                     <td className="py-3 px-4 text-right font-black text-xs">৳{quote.subtotal?.toLocaleString()}/-</td>
                   </tr>
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                    <td className="py-3 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
+                    <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                    <td className="py-4 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
                   </tr>
                 </tbody>
               </table>
@@ -285,4 +318,12 @@ export default function PublicQuotationViewPage() {
       </div>
     </div>
   );
+}
+
+export default function PublicQuotationViewPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
+      <QuotationViewContent />
+    </Suspense>
+  )
 }
