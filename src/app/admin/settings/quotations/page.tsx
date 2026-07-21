@@ -38,7 +38,7 @@ export default function QuotationSettingsPage() {
   const { data: config, isLoading } = useDoc(configRef);
 
   const [formData, setFormData] = useState({
-    prefix: 'QTN',
+    prefix: 'QTN/SM/2026',
     lastNumber: 1000,
     tagline: 'Smart Cleaning, Better Living.',
     defaultTerms: ['Quotation is valid for 7 days.', '50% advance for materials if required.'],
@@ -54,7 +54,7 @@ export default function QuotationSettingsPage() {
   useEffect(() => {
     if (config) {
       setFormData({
-        prefix: config.prefix || 'QTN',
+        prefix: config.prefix || 'QTN/SM/2026',
         lastNumber: config.lastNumber || 1000,
         tagline: config.tagline || 'Smart Cleaning, Better Living.',
         defaultTerms: Array.isArray(config.defaultTerms) ? config.defaultTerms : [config.defaultTerms || ''],
@@ -138,7 +138,7 @@ export default function QuotationSettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Reference Prefix</Label>
-                  <Input value={formData.prefix} onChange={e => setFormData({...formData, prefix: e.target.value})} placeholder="QTN" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
+                  <Input value={formData.prefix} onChange={e => setFormData({...formData, prefix: e.target.value})} placeholder="QTN/SM/2026" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Last Sequence ID</Label>

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, updateDoc, limit } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +29,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function QuotationsListPage() {
@@ -39,7 +40,7 @@ export default function QuotationsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const quotesQuery = useMemoFirebase(() => 
-    (db && user) ? query(collection(db, 'quotations'), orderBy('createdAt', 'desc')) : null, [db, user]);
+    (db && user) ? query(collection(db, 'quotations'), orderBy('createdAt', 'desc'), limit(100)) : null, [db, user]);
   const { data: quotations, isLoading } = useCollection(quotesQuery);
 
   const stats = useMemo(() => {

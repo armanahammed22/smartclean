@@ -5,7 +5,8 @@ import { Firestore } from 'firebase/firestore';
 import { Quotation } from '@/types';
 
 /**
- * Generates the next quotation number based on settings
+ * Generates the next quotation number based on settings.
+ * Supports complex prefixes with slashes (e.g., QTN/SM/2026)
  */
 export async function getNextQuotationNumber(db: Firestore): Promise<string> {
   try {
@@ -38,7 +39,7 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
       address: quotation.customerInfo.address,
       items: [
         ...quotation.items.map(i => ({ ...i, itemType: 'service' })),
-        ...quotation.addOns.map(a => ({ ...a, itemType: 'service' }))
+        ...(quotation.addOns || []).map(a => ({ ...a, itemType: 'service' }))
       ],
       totalPrice: quotation.total,
       subtotal: quotation.subtotal,
@@ -46,7 +47,7 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
       status: 'New',
       source: `quotation_${quotation.quoteNumber}`,
       createdAt: new Date().toISOString(),
-      dateTime: quotation.issueDate, // Default to issue date, admin should update
+      dateTime: quotation.issueDate, 
       timeSlot: 'Morning'
     };
 
@@ -76,7 +77,7 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
 
   const opt = {
     margin: 0,
-    filename: `${fileName}.pdf`,
+    filename: `${fileName.replace(/\//g, '_')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
