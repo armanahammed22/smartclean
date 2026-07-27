@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -27,9 +28,8 @@ import { numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
 /**
- * Clean SEO URL Public Quotation View (Catch-all for slashes)
- * Supports numbers like QTN/SM/2026-1001
- * Optimized for Single Page PDF Export with consistent font sizes
+ * Optimized Public Quotation View
+ * Restored Font Sizes and Bottom Layout while keeping Top Gaps minimal.
  */
 function QuotationViewContent() {
   const params = useParams();
@@ -43,7 +43,6 @@ function QuotationViewContent() {
   const [settings, setSettings] = useState<any>(null);
   const [quoteSettings, setQuoteSettings] = useState<any>(null);
 
-  // Extract ID from catch-all array
   const quoteIdFromUrl = useMemo(() => {
     if (params.id && Array.isArray(params.id)) {
       return params.id.join('/');
@@ -57,15 +56,12 @@ function QuotationViewContent() {
     setMounted(true);
   }, []);
 
-  // Fetch Logic
   useEffect(() => {
     async function fetchQuote() {
       if (!db || !quoteIdFromUrl) return;
       setIsLoading(true);
       try {
         const docRef = collection(db, 'quotations');
-        
-        // 1. Try fetching by Invoice Number (SEO URL)
         const qByNum = query(docRef, where('quoteNumber', '==', quoteIdFromUrl), limit(1));
         const snapByNum = await getDocs(qByNum);
 
@@ -75,7 +71,6 @@ function QuotationViewContent() {
           return;
         }
 
-        // 2. Try fetching by Document ID (Legacy)
         const qById = query(docRef, where('__name__', '==', quoteIdFromUrl), limit(1));
         const snapById = await getDocs(qById);
 
@@ -96,7 +91,6 @@ function QuotationViewContent() {
     fetchQuote();
   }, [db, quoteIdFromUrl, router]);
 
-  // Fetch Branding Settings
   useEffect(() => {
     if (db) {
       getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
@@ -108,7 +102,6 @@ function QuotationViewContent() {
     }
   }, [db]);
 
-  // Auto-Download Effect
   useEffect(() => {
     if (quote && isAutoDownload && !isDownloading) {
       const timer = setTimeout(() => {
@@ -154,16 +147,6 @@ function QuotationViewContent() {
     </div>
   );
 
-  if (!quote) return (
-    <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50">
-      <div className="space-y-4">
-        <X size={64} className="mx-auto text-gray-200" />
-        <h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em]">Document Not Found</h1>
-        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Back to Home</Button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
       <style jsx global>{`
@@ -191,10 +174,8 @@ function QuotationViewContent() {
           </div>
         </div>
 
-        {/* 📄 DOCUMENT CONTENT: OPTIMIZED FOR A4 SINGLE PAGE WITH READABLE FONT */}
         <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A] rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
           
-          {/* Header Section (Balanced Spacing) */}
           <header className="pt-6 px-12 pb-3 flex justify-between items-start border-b-2 border-gray-50 mb-4">
             <div className="flex gap-5">
               <div className="w-14 h-14 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
@@ -209,14 +190,14 @@ function QuotationViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-6 space-y-5">
+          <div className="px-12 pb-6 space-y-6">
             <div className="text-center space-y-1">
                 <h3 className="text-3xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
                 <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="text-left space-y-3">
+              <div className="text-left space-y-4">
                 <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
                 <div className="space-y-1">
                   <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
@@ -224,25 +205,20 @@ function QuotationViewContent() {
                   <p className="text-[10px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                 </div>
               </div>
-              <div className="text-right space-y-5">
+              <div className="text-right space-y-6">
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
                   <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
-                    <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Valid Until</p>
-                    <p className="text-[11px] font-black text-rose-600">{quote.expiryDate ? format(new Date(quote.expiryDate), 'dd MMM yyyy') : 'N/A'}</p>
-                  </div>
+                <div>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
+                  <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Valid Until</p>
+                  <p className="text-[11px] font-black text-rose-600">{quote.expiryDate ? format(new Date(quote.expiryDate), 'dd MMM yyyy') : 'N/A'}</p>
                 </div>
               </div>
             </div>
 
-            {/* Table (Readable font with optimized row padding) */}
             <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm">
               <table className="w-full border-collapse text-[11px]">
                 <thead className="bg-[#081621] text-white">
@@ -286,7 +262,7 @@ function QuotationViewContent() {
 
             <div className="space-y-3">
                <h5 className="text-[11px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-1 w-fit">General Terms & Conditions</h5>
-               <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-inner">
+               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-inner">
                   <div className="space-y-2">
                     {terms.map((term: string, i: number) => (
                       <div key={i} className="flex gap-3 items-start">
@@ -298,8 +274,7 @@ function QuotationViewContent() {
                </div>
             </div>
 
-            {/* Signature Area (Original Prominent Style) */}
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-8 pb-4">
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-10 pb-10">
               <div className="text-center space-y-4">
                 <div className="border-b-[3px] border-gray-100 h-10"></div>
                 <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
@@ -312,11 +287,10 @@ function QuotationViewContent() {
               </div>
             </div>
 
-            {/* Footer Section (Consistent Style) */}
             <div className="pt-6 border-t-2 border-gray-100">
                <div className="text-center space-y-2 mb-6">
                   <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
-                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
+                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
                </div>
                
                <div className="grid grid-cols-3 gap-x-8 gap-y-2">
