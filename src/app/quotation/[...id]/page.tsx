@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
@@ -28,8 +27,8 @@ import { numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
 /**
- * Optimized Public Quotation View
- * Minimized vertical gaps to ensure 10+ rows fit on a single A4 page.
+ * Visual-Designer Integrated Quotation View
+ * Respects dynamic styles from Admin Document Designer.
  */
 function QuotationViewContent() {
   const params = useParams();
@@ -51,6 +50,10 @@ function QuotationViewContent() {
   }, [params.id]);
 
   const isAutoDownload = searchParams.get('download') === 'true';
+
+  // 1. Fetch Dynamic Design
+  const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
+  const { data: design } = useDoc(designRef);
 
   useEffect(() => {
     setMounted(true);
@@ -147,6 +150,26 @@ function QuotationViewContent() {
     </div>
   );
 
+  // Apply Default Design if not set
+  const d = design || {
+    primaryColor: '#1E5F7A',
+    headerPaddingTop: 10,
+    headerPaddingBottom: 10,
+    sectionSpacing: 16,
+    tableFontSize: 11,
+    tableRowPadding: 6,
+    headerFontSize: 24,
+    bodyFontSize: 12,
+    logoSize: 56,
+    showGridLines: true,
+    footerMarginTop: 20,
+    signatureSpacing: 40,
+    taglineFontSize: 12,
+    disclaimerFontSize: 8,
+    customTopText: '',
+    customBottomText: ''
+  };
+
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
       <style jsx global>{`
@@ -174,14 +197,19 @@ function QuotationViewContent() {
           </div>
         </div>
 
-        <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A] rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
+        <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333', borderTop: `14px solid ${d.primaryColor}` }}>
           
-          <header className="pt-4 px-12 pb-2 flex justify-between items-start border-b-2 border-gray-50 mb-3">
+          <header 
+            className="px-12 flex justify-between items-start border-b-2 border-gray-50 mb-3"
+            style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
+          >
             <div className="flex gap-4">
-              <div className="w-12 h-12 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
-              <div className="space-y-0.5 text-left">
-                <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
-                <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
+              <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
+                <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+              </div>
+              <div className="space-y-0.5 text-left flex flex-col justify-center">
+                <h2 className="font-black text-[#081621] tracking-tighter uppercase leading-none" style={{ fontSize: `${d.headerFontSize}px` }}>{websiteName}</h2>
+                <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: d.primaryColor }}>Professional Excellence</p>
               </div>
             </div>
             <div className="text-right max-w-[280px]">
@@ -190,17 +218,24 @@ function QuotationViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-6 space-y-4">
+          <div className="px-12 pb-6 space-y-4" style={{ marginTop: `${d.sectionSpacing}px` }}>
+            
+            {d.customTopText && (
+              <div className="p-3 text-center rounded-xl font-black uppercase text-[10px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
+                {d.customTopText}
+              </div>
+            )}
+
             <div className="text-center space-y-0.5">
                 <h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
-                <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
+                <div className="h-1 w-20 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
             </div>
 
             <div className="flex justify-between items-start">
               <div className="text-left space-y-2">
-                <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Recipient Profile</p>
                 <div className="space-y-0.5">
-                  <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
+                  <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{quote.customerInfo?.name}</h4>
                   <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
                   <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                 </div>
@@ -213,41 +248,39 @@ function QuotationViewContent() {
                 <div>
                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
                   <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-2">Valid Until</p>
-                  <p className="text-[11px] font-black text-rose-600">{quote.expiryDate ? format(new Date(quote.expiryDate), 'dd MMM yyyy') : 'N/A'}</p>
                 </div>
               </div>
             </div>
 
-            <div className="overflow-hidden border-2 border-[#081621] rounded-xl shadow-sm">
-              <table className="w-full border-collapse text-[11px]">
+            <div className={cn("overflow-hidden rounded-xl", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+              <table className="w-full border-collapse">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-2.5 px-4 font-black uppercase text-left w-12">SL</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-center w-28">Unit/Area</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-28">Unit Price</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-32">Subtotal</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left w-12 text-[11px]">SL</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left text-[11px]">Service Components</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-center w-28 text-[11px]">Unit/Area</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-28 text-[11px]">Unit Price</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-32 text-[11px]">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
                   {quote.items?.map((item: any, i: number) => (
                     <tr key={i} className="border-t-2 border-gray-50 align-top">
-                      <td className="py-1.5 px-4 text-left text-gray-400">{i + 1}</td>
-                      <td className="py-1.5 px-4 text-left">
+                      <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
+                      <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
                         <p className="font-black text-gray-900 uppercase leading-tight mb-0.5">{item.name}</p>
                         {item.description && <p className="text-[9px] text-gray-500 font-medium leading-tight italic">{item.description}</p>}
                       </td>
-                      <td className="py-1.5 px-4 text-center text-gray-600 uppercase font-black">{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="py-1.5 px-4 text-right text-gray-600">৳{item.price?.toLocaleString()}</td>
-                      <td className="py-1.5 px-4 text-right text-[#081621] font-black">৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{item.price?.toLocaleString()}</td>
+                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
                   <tr className="border-t-[2px] border-[#081621] bg-gray-50/50">
                     <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[10px] tracking-widest">Base Estimate Total</td>
                     <td className="py-2 px-4 text-right font-black text-sm">৳{quote.subtotal?.toLocaleString()}/-</td>
                   </tr>
-                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
+                  <tr className="border-t-2 border-[#081621] text-white" style={{ backgroundColor: d.primaryColor }}>
                     <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[11px] tracking-[0.2em] italic">Net Proposed Amount</td>
                     <td className="py-3 px-4 text-right font-black text-lg">৳{quote.total?.toLocaleString()}/-</td>
                   </tr>
@@ -255,26 +288,26 @@ function QuotationViewContent() {
               </table>
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left">
+            <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
               <p className="text-[11px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
             </div>
 
             <div className="space-y-2">
-               <h5 className="text-[11px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-0.5 w-fit">General Terms & Conditions</h5>
+               <h5 className="text-[11px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>General Terms & Conditions</h5>
                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-inner">
                   <div className="space-y-1">
                     {terms.map((term: string, i: number) => (
                       <div key={i} className="flex gap-2 items-start">
-                        <span className="text-[10px] font-black text-primary min-w-[15px]">{i + 1}.</span>
-                        <p className="text-[9px] md:text-[10px] font-medium text-gray-600 leading-relaxed">{term}</p>
+                        <span className="text-[10px] font-black min-w-[15px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                        <p className="font-medium text-gray-600 leading-relaxed" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
                       </div>
                     ))}
                   </div>
                </div>
             </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-4 pb-4">
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-4 pb-4" style={{ marginTop: `${d.signatureSpacing}px` }}>
               <div className="text-center space-y-2">
                 <div className="border-b-[3px] border-gray-100 h-8"></div>
                 <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
@@ -287,11 +320,17 @@ function QuotationViewContent() {
               </div>
             </div>
 
-            <div className="pt-4 border-t-2 border-gray-100">
+            <div className="pt-4 border-t-2 border-gray-100" style={{ marginTop: `${d.footerMarginTop}px` }}>
                <div className="text-center space-y-1.5 mb-4">
-                  <p className="text-[11px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
+                  <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={10} fill="currentColor"/></p>
                   <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
                </div>
+
+               {d.customBottomText && (
+                 <div className="mb-6 p-4 bg-gray-50 rounded-2xl text-center text-[10px] font-medium text-gray-500 italic border border-gray-100">
+                   {d.customBottomText}
+                 </div>
+               )}
                
                <div className="grid grid-cols-3 gap-x-6 gap-y-1">
                   {Array.from({ length: 3 }).map((_, colIdx) => (
@@ -306,7 +345,7 @@ function QuotationViewContent() {
                   ))}
                </div>
 
-               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-6 tracking-[0.3em]">{footerDisclaimer}</p>
+               <p className="font-bold uppercase text-center mt-6 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
             </div>
           </div>
         </div>
