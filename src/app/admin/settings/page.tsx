@@ -122,13 +122,7 @@ export default function AdminSettingsPage() {
     footerContent: '© 2026 Smart Clean Bangladesh. All rights reserved.',
     otpEnabled: false,
     productsEnabled: true,
-    servicesEnabled: true,
-    invoiceHeaderPhone: '+8801919640422',
-    invoiceHeaderEmail: 'billing@smartclean.com.bd',
-    invoiceHeaderAddress: 'Mohakhali, Dhaka, Bangladesh',
-    invoiceFooterNote: 'Payment should be cleared at site upon completion. For any billing query, call +8801919640422.',
-    invoiceFooterDisclaimer: 'This is a computer generated document and does not require a physical stamp for internal processing.',
-    invoiceProvidedServices: 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control'
+    servicesEnabled: true
   });
 
   const [menuOrder, setMenuOrder] = useState<string[]>(DEFAULT_MENU_KEYS);
@@ -262,9 +256,6 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="visibility" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <Bell size={16} /> Feature Logic
           </TabsTrigger>
-          <TabsTrigger value="invoice" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Printer size={16} /> Invoice Config
-          </TabsTrigger>
           <TabsTrigger value="sidebar" className="rounded-lg gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
             <List size={16} /> Navigation
           </TabsTrigger>
@@ -285,21 +276,6 @@ export default function AdminSettingsPage() {
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Website Name</Label>
                       <Input value={formData.websiteName} onChange={(e) => setFormData({...formData, websiteName: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                    </div>
-
-                    <div className="space-y-6 pt-6 border-t">
-                      <div className="flex items-center gap-3 mb-2">
-                        <FileSignature className="text-primary" size={20} />
-                        <Label className="text-xs font-black uppercase text-gray-900 tracking-widest">Digital Authentication</Label>
-                      </div>
-                      <ImageUploader 
-                        label="Official Signature" 
-                        hint="200 x 100 px (Transparent PNG Recommended)" 
-                        initialUrl={formData.signatureUrl} 
-                        onUpload={(url) => setFormData({...formData, signatureUrl: url})} 
-                        aspectRatio="aspect-[2/1] w-48"
-                      />
-                      <p className="text-[10px] text-muted-foreground italic leading-relaxed">This signature will appear on all generated invoices and quotations.</p>
                     </div>
                   </div>
                   <div className="space-y-8">
@@ -385,79 +361,6 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <Switch checked={formData.otpEnabled} onCheckedChange={(val) => setFormData({...formData, otpEnabled: val})} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="invoice">
-          <div className="space-y-6">
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardHeader className="bg-[#081621] text-white p-8">
-                <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3">
-                  <FileText size={20} className="text-primary" /> Invoice & PDF Customization
-                </CardTitle>
-                <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Edit header, footer and professional notes</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2 flex items-center gap-2"><Layout size={14}/> Header Overrides</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Header Phone</Label>
-                        <Input value={formData.invoiceHeaderPhone} onChange={e => setFormData({...formData, invoiceHeaderPhone: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Header Email</Label>
-                        <Input value={formData.invoiceHeaderEmail} onChange={e => setFormData({...formData, invoiceHeaderEmail: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Header Address</Label>
-                        <Input value={formData.invoiceHeaderAddress} onChange={e => setFormData({...formData, invoiceHeaderAddress: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2 flex items-center gap-2"><Zap size={14}/> Legal & Notes</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-[9px] font-black uppercase">Terms & Conditions Note</Label>
-                        <Textarea value={formData.invoiceFooterNote} onChange={e => setFormData({...formData, invoiceFooterNote: e.target.value})} className="h-24 bg-gray-50 border-none rounded-xl text-xs leading-relaxed" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase">System Disclaimer (Small)</Label>
-                        <Textarea value={formData.invoiceFooterDisclaimer} onChange={e => setFormData({...formData, invoiceFooterDisclaimer: e.target.value})} className="h-20 bg-gray-50 border-none rounded-xl text-[10px] leading-relaxed" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 📋 NEW: SERVICES WE PROVIDE LIST */}
-                <div className="space-y-6 pt-6 border-t">
-                  <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest border-b pb-2 flex items-center gap-2"><CheckSquare size={14}/> Services We Provide (Footer List)</h4>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">List of Services (Comma Separated)</Label>
-                    <Textarea 
-                      value={formData.invoiceProvidedServices} 
-                      onChange={e => setFormData({...formData, invoiceProvidedServices: e.target.value})} 
-                      placeholder="Home Cleaning, Deep Cleaning, Office Cleaning..."
-                      className="h-24 bg-gray-50 border-none rounded-xl text-sm font-medium leading-relaxed" 
-                    />
-                    <p className="text-[9px] text-muted-foreground italic">These services will appear in the invoice footer grid. Use commas to separate items.</p>
-                  </div>
-                </div>
-
-                <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
-                  <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={24} /></div>
-                  <div className="space-y-1">
-                    <h4 className="font-black uppercase text-xs text-blue-900">PDF Optimization Active</h4>
-                    <p className="text-xs text-blue-800/70 leading-relaxed font-medium">
-                      The invoice layout is specifically tuned for A4 dimensions. Your custom text will automatically wrap or truncate to maintain a professional look.
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>

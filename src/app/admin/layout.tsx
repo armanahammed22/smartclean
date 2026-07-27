@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -72,7 +71,8 @@ import {
   FolderTree,
   Video,
   FileCode,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Printer
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -372,7 +372,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'finance', title: "FINANCIAL HUB", icon: Wallet, color: "text-green-400", items: [{ name: "Finance Overview", key: "finance_overview", href: '/admin/finance', icon: TrendingUp }, { name: "Master Ledger", key: "ledger", href: '/admin/finance/ledger', icon: FileText }, { name: "Bank & Cash", key: "accounts", href: '/admin/finance/accounts', icon: Building2 }, { name: "Staff Salaries", key: "staff_salaries", href: '/admin/finance/salaries', icon: DollarSign }, { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Target }] },
       { id: 'reports', title: "BUSINESS REPORT", href: '/admin/reports', icon: BarChart3, color: "text-red-400", items: [] },
       { id: 'customize', title: "SITE CUSTOMIZE", icon: Palette, color: "text-fuchsia-400", items: [{ name: "Homepage Builder", key: "homepage_builder", href: '/admin/customize/homepage-builder', icon: Navigation }, { name: "Hero Banners", key: "hero_banners", href: '/admin/customize/hero', icon: Layout }, { name: "Navigation Hub", key: "navigation_hub", href: '/admin/customize/navigation', icon: Compass }, { name: "Team Members", key: "team", href: '/admin/customize/team', icon: Users }, { name: "Header & Footer", key: "theme", href: '/admin/customize/theme', icon: Layers }, { name: "Dynamic Pages", key: "pages", href: '/admin/pages', icon: FileText }, { name: "Live Chat", key: "live_chat", href: '/admin/customize/live-chat', icon: MessageCircle }, { name: "Footer Live Chat", key: "footer_chat", href: '/admin/customize/footer-chat', icon: Bot }] },
-      { id: 'system', title: "SETTINGS", icon: Settings, color: "text-slate-300", items: [{ name: "Global Settings", key: "global_settings", href: '/admin/settings', icon: Settings }, { name: "Sidebar Design", key: "sidebar_appearance", href: '/admin/settings/appearance/sidebar', icon: Palette }, { name: "Quotation Rules", key: "quotation_settings", href: '/admin/settings/quotations', icon: FileSpreadsheet }, { name: "Payment Gateways", key: "payment_gateways", href: '/admin/payments', icon: Wallet }, { name: "Delivery Fees", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck }, { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Languages }] },
+      { id: 'system', title: "SETTINGS", icon: Settings, color: "text-slate-300", items: [{ name: "Global Settings", key: "global_settings", href: '/admin/settings', icon: Settings }, { name: "Document Engine", key: "documents", href: '/admin/settings/documents', icon: Printer }, { name: "Sidebar Design", key: "sidebar_appearance", href: '/admin/settings/appearance/sidebar', icon: Palette }, { name: "Payment Gateways", key: "payment_gateways", href: '/admin/payments', icon: Wallet }, { name: "Delivery Fees", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck }, { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Languages }] },
       { id: 'ai_agents', title: "AI AGENTS (STAFF)", icon: Bot, color: "text-purple-400", items: [{ name: "AI Sales Desk", key: "ai_sales", href: '/admin/ai/sales', icon: Sparkles }, { name: "AI Booking Asst", key: "ai_booking", href: '/admin/ai/booking', icon: Bot }] },
       { id: 'support', title: "SUPPORT", icon: Headphones, color: "text-teal-400", items: [{ name: "Support Tickets", key: "tickets", href: '/admin/support', icon: MessageCircle }, { name: "Support Hub Config", key: "support_config", href: '/admin/support-hub', icon: Settings2 }] }
     ];
