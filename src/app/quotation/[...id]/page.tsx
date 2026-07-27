@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Optimized Public Quotation View
- * Restored Font Sizes and Bottom Layout while keeping Top Gaps minimal.
+ * Minimized vertical gaps to ensure 10+ rows fit on a single A4 page.
  */
 function QuotationViewContent() {
   const params = useParams();
@@ -176,137 +176,137 @@ function QuotationViewContent() {
 
         <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[10px] border-[#1E5F7A] rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
           
-          <header className="pt-6 px-12 pb-3 flex justify-between items-start border-b-2 border-gray-50 mb-4">
-            <div className="flex gap-5">
-              <div className="w-14 h-14 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
+          <header className="pt-4 px-12 pb-2 flex justify-between items-start border-b-2 border-gray-50 mb-3">
+            <div className="flex gap-4">
+              <div className="w-12 h-12 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
               <div className="space-y-0.5 text-left">
-                <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
+                <h2 className="text-xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
                 <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
               </div>
             </div>
             <div className="text-right max-w-[280px]">
-              <p className="text-[9px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
-              <p className="text-[9px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
+              <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+              <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
             </div>
           </header>
 
-          <div className="px-12 pb-6 space-y-6">
-            <div className="text-center space-y-1">
-                <h3 className="text-3xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
-                <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
+          <div className="px-12 pb-6 space-y-4">
+            <div className="text-center space-y-0.5">
+                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
+                <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="text-left space-y-4">
-                <p className="text-[10px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
-                <div className="space-y-1">
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
-                  <p className="text-[11px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
-                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
+              <div className="text-left space-y-2">
+                <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
+                <div className="space-y-0.5">
+                  <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
+                  <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
+                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                 </div>
               </div>
-              <div className="text-right space-y-6">
+              <div className="text-right space-y-3">
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
                   <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
                 </div>
                 <div>
                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
                   <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Valid Until</p>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-2">Valid Until</p>
                   <p className="text-[11px] font-black text-rose-600">{quote.expiryDate ? format(new Date(quote.expiryDate), 'dd MMM yyyy') : 'N/A'}</p>
                 </div>
               </div>
             </div>
 
-            <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm">
+            <div className="overflow-hidden border-2 border-[#081621] rounded-xl shadow-sm">
               <table className="w-full border-collapse text-[11px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
-                    <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-32">Subtotal</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left w-12">SL</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left">Service Components</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-center w-28">Unit/Area</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-28">Unit Price</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-32">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
                   {quote.items?.map((item: any, i: number) => (
                     <tr key={i} className="border-t-2 border-gray-50 align-top">
-                      <td className="py-2 px-4 text-left text-gray-400">{i + 1}</td>
-                      <td className="py-2 px-4 text-left">
+                      <td className="py-1.5 px-4 text-left text-gray-400">{i + 1}</td>
+                      <td className="py-1.5 px-4 text-left">
                         <p className="font-black text-gray-900 uppercase leading-tight mb-0.5">{item.name}</p>
                         {item.description && <p className="text-[9px] text-gray-500 font-medium leading-tight italic">{item.description}</p>}
                       </td>
-                      <td className="py-2 px-4 text-center text-gray-600 uppercase font-black">{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="py-2 px-4 text-right text-gray-600">৳{item.price?.toLocaleString()}</td>
-                      <td className="py-2 px-4 text-right text-[#081621] font-black">৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="py-1.5 px-4 text-center text-gray-600 uppercase font-black">{item.quantity} {item.unit || 'Qty'}</td>
+                      <td className="py-1.5 px-4 text-right text-gray-600">৳{item.price?.toLocaleString()}</td>
+                      <td className="py-1.5 px-4 text-right text-[#081621] font-black">৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
-                  <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">Base Estimate Total</td>
-                    <td className="py-3 px-4 text-right font-black text-sm">৳{quote.subtotal?.toLocaleString()}/-</td>
+                  <tr className="border-t-[2px] border-[#081621] bg-gray-50/50">
+                    <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[10px] tracking-widest">Base Estimate Total</td>
+                    <td className="py-2 px-4 text-right font-black text-sm">৳{quote.subtotal?.toLocaleString()}/-</td>
                   </tr>
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                    <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[11px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-lg">৳{quote.total?.toLocaleString()}/-</td>
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[11px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                    <td className="py-3 px-4 text-right font-black text-lg">৳{quote.total?.toLocaleString()}/-</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left">
+            <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
               <p className="text-[11px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
             </div>
 
-            <div className="space-y-3">
-               <h5 className="text-[11px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-1 w-fit">General Terms & Conditions</h5>
-               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-inner">
-                  <div className="space-y-2">
+            <div className="space-y-2">
+               <h5 className="text-[11px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-0.5 w-fit">General Terms & Conditions</h5>
+               <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-inner">
+                  <div className="space-y-1">
                     {terms.map((term: string, i: number) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <span className="text-[11px] font-black text-primary min-w-[20px]">{i + 1}.</span>
-                        <p className="text-[10px] md:text-[11px] font-medium text-gray-600 leading-relaxed">{term}</p>
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="text-[10px] font-black text-primary min-w-[15px]">{i + 1}.</span>
+                        <p className="text-[9px] md:text-[10px] font-medium text-gray-600 leading-relaxed">{term}</p>
                       </div>
                     ))}
                   </div>
                </div>
             </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-10 pb-10">
-              <div className="text-center space-y-4">
-                <div className="border-b-[3px] border-gray-100 h-10"></div>
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-4 pb-4">
+              <div className="text-center space-y-2">
+                <div className="border-b-[3px] border-gray-100 h-8"></div>
                 <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-4">
-                <div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center">
+              <div className="flex flex-col items-center justify-end text-center space-y-2">
+                <div className="h-14 w-28 relative border-b-[3px] border-primary/10 flex items-center justify-center">
                    {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[8px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>}
                 </div>
                 <p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p>
               </div>
             </div>
 
-            <div className="pt-6 border-t-2 border-gray-100">
-               <div className="text-center space-y-2 mb-6">
-                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
+            <div className="pt-4 border-t-2 border-gray-100">
+               <div className="text-center space-y-1.5 mb-4">
+                  <p className="text-[11px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
                   <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
                </div>
                
-               <div className="grid grid-cols-3 gap-x-8 gap-y-2">
+               <div className="grid grid-cols-3 gap-x-6 gap-y-1">
                   {Array.from({ length: 3 }).map((_, colIdx) => (
-                    <div key={colIdx} className="space-y-2">
+                    <div key={colIdx} className="space-y-1">
                        {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
                          <div key={sIdx} className="flex items-center gap-2">
                             <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                            <span className="text-[10px] font-bold text-gray-500 uppercase truncate">{service}</span>
+                            <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
                          </div>
                        ))}
                     </div>
                   ))}
                </div>
 
-               <p className="text-[8px] text-gray-300 font-bold uppercase text-center mt-10 tracking-[0.4em]">{footerDisclaimer}</p>
+               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-6 tracking-[0.3em]">{footerDisclaimer}</p>
             </div>
           </div>
         </div>
