@@ -11,6 +11,7 @@ import {LiveChatLoader} from '@/components/providers/live-chat-loader';
 import {GlobalErrorBoundary} from '@/components/providers/error-boundary';
 import { db } from '@/lib/firebaseAdmin';
 import Script from 'next/script';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -216,6 +217,7 @@ export default async function RootLayout({
             </LanguageProvider>
           </FirebaseClientProvider>
         </GlobalErrorBoundary>
+        <SpeedInsights />
       </body>
     </html>
   );
