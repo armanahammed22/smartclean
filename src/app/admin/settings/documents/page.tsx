@@ -37,7 +37,8 @@ import {
   X,
   Plus,
   Trash2,
-  CheckSquare
+  CheckSquare,
+  MoveVertical
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -55,8 +56,9 @@ const DEFAULT_DESIGN = {
   bodyFontSize: 12,
   logoSize: 56,
   showGridLines: true,
-  footerMarginTop: 20,
-  signatureSpacing: 40,
+  footerMarginTop: 10,
+  footerPaddingBottom: 10,
+  signatureSpacing: 30,
   taglineFontSize: 12,
   disclaimerFontSize: 8,
   customTopText: '',
@@ -163,9 +165,11 @@ export default function DocumentEnginePage() {
             <Settings2 className="text-primary" size={16}/> Centralized logic and design for Quotations & Invoices
           </p>
         </div>
-        <Button onClick={handleSaveAll} disabled={isSaving} className="h-11 px-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2">
-          {isSaving ? <Loader2 className="animate-spin" /> : <><Save size={18} /> Publish Protocols</>}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleSaveAll} disabled={isSaving} className="h-11 px-10 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 gap-2">
+            {isSaving ? <Loader2 className="animate-spin" /> : <><Save size={18} /> Publish Protocols</>}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="design" className="w-full space-y-8">
@@ -198,6 +202,19 @@ export default function DocumentEnginePage() {
                       <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase">Signature Area Gap</Label><span className="text-[10px] font-bold text-primary">{designForm.signatureSpacing}px</span></div>
                       <Slider value={[designForm.signatureSpacing]} max={100} step={1} onValueChange={([v]) => updateDesign('signatureSpacing', v)} />
                     </div>
+                    
+                    <div className="space-y-6 pt-4 border-t border-gray-100">
+                      <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><MoveVertical size={14}/> Footer Spacing</h4>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase">Footer Top Gap</Label><span className="text-[10px] font-bold text-primary">{designForm.footerMarginTop}px</span></div>
+                        <Slider value={[designForm.footerMarginTop]} max={100} step={1} onValueChange={([v]) => updateDesign('footerMarginTop', v)} />
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase">Footer Bottom Padding</Label><span className="text-[10px] font-bold text-primary">{designForm.footerPaddingBottom}px</span></div>
+                        <Slider value={[designForm.footerPaddingBottom]} max={100} step={1} onValueChange={([v]) => updateDesign('footerPaddingBottom', v)} />
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
                       <Label className="text-[10px] font-black uppercase">Table Grid Lines</Label>
                       <Switch checked={designForm.showGridLines} onCheckedChange={v => updateDesign('showGridLines', v)} />
@@ -240,7 +257,9 @@ export default function DocumentEnginePage() {
                       width: '210mm', 
                       minHeight: '297mm',
                       borderTop: `14px solid ${designForm.primaryColor}`,
-                      borderRadius: '0 0 1.5rem 1.5rem'
+                      borderRadius: '0 0 1.5rem 1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                   >
                     {/* SIMULATED CONTENT */}
@@ -251,7 +270,7 @@ export default function DocumentEnginePage() {
                        </div>
                        <div className="text-right space-y-1"><p className="text-[10px] font-bold text-gray-600 uppercase">MOHAKHALI, DHAKA, BD</p></div>
                     </header>
-                    <div className="px-12 py-10 space-y-8" style={{ marginTop: `${designForm.sectionSpacing}px` }}>
+                    <div className="px-12 py-10 space-y-8 flex-1" style={{ marginTop: `${designForm.sectionSpacing}px` }}>
                        <div className="flex justify-between items-end border-b pb-4">
                          <div className="space-y-1"><p className="text-[10px] font-black uppercase text-gray-400">Bill Recipient</p><h4 className="text-xl font-black uppercase text-[#081621]">MR. SAMPLE CUSTOMER</h4></div>
                          <div className="text-right"><p className="text-[10px] font-black text-gray-400">Reference</p><p className="text-lg font-black text-[#081621] font-mono">QTN/SM/2026-1001</p></div>
@@ -262,7 +281,7 @@ export default function DocumentEnginePage() {
                                 <tr><th className="py-3 px-4 text-left font-black uppercase text-[11px]">Component</th><th className="py-3 px-4 text-center font-black uppercase text-[11px]">Qty</th><th className="py-3 px-4 text-right font-black uppercase text-[11px]">Price</th><th className="py-3 px-4 text-right font-black uppercase text-[11px]">Total</th></tr>
                              </thead>
                              <tbody>
-                                {[1, 2].map(i => (
+                                {[1, 2, 3].map(i => (
                                   <tr key={i} className="border-b border-gray-100">
                                     <td className="px-4 font-bold text-gray-900" style={{ fontSize: `${designForm.tableFontSize}px`, paddingTop: `${designForm.tableRowPadding}px`, paddingBottom: `${designForm.tableRowPadding}px` }}>Premium Service Item Sample #{i}</td>
                                     <td className="px-4 text-center font-black text-gray-500" style={{ fontSize: `${designForm.tableFontSize}px` }}>1000 Sqft</td>
@@ -270,7 +289,7 @@ export default function DocumentEnginePage() {
                                     <td className="px-4 text-right font-black text-[#081621]" style={{ fontSize: `${designForm.tableFontSize}px` }}>৳12,000</td>
                                   </tr>
                                 ))}
-                                <tr style={{ backgroundColor: `${designForm.primaryColor}10` }}><td colSpan={3} className="py-4 px-8 text-right font-black uppercase text-[12px]">Net Total</td><td className="py-4 px-4 text-right font-black text-xl" style={{ color: designForm.primaryColor }}>৳24,000/-</td></tr>
+                                <tr style={{ backgroundColor: `${designForm.primaryColor}10` }}><td colSpan={3} className="py-4 px-8 text-right font-black uppercase text-[12px]">Net Total</td><td className="py-4 px-4 text-right font-black text-xl" style={{ color: designForm.primaryColor }}>৳36,000/-</td></tr>
                              </tbody>
                           </table>
                        </div>
@@ -279,6 +298,10 @@ export default function DocumentEnginePage() {
                           <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px]">Authorized Sign</div>
                        </div>
                     </div>
+                    <footer className="pt-6 border-t-2 border-gray-100 px-12" style={{ marginTop: `${designForm.footerMarginTop}px`, paddingBottom: `${designForm.footerPaddingBottom}px` }}>
+                       <p className="text-center font-black uppercase tracking-widest mb-4" style={{ fontSize: `${designForm.taglineFontSize}px`, color: designForm.primaryColor }}>SMART CLEANING, BETTER LIVING. <Star size={10} fill="currentColor" className="inline ml-1"/></p>
+                       <p className="font-bold uppercase text-center tracking-[0.3em] text-gray-300" style={{ fontSize: `${designForm.disclaimerFontSize}px` }}>ELECTRONICALLY VERIFIED DOCUMENT</p>
+                    </footer>
                   </div>
                </div>
             </div>

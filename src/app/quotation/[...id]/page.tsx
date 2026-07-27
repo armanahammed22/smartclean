@@ -162,7 +162,8 @@ function QuotationViewContent() {
     bodyFontSize: 12,
     logoSize: 56,
     showGridLines: true,
-    footerMarginTop: 20,
+    footerMarginTop: 10,
+    footerPaddingBottom: 10,
     signatureSpacing: 40,
     taglineFontSize: 12,
     disclaimerFontSize: 8,
@@ -197,7 +198,7 @@ function QuotationViewContent() {
           </div>
         </div>
 
-        <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333', borderTop: `14px solid ${d.primaryColor}` }}>
+        <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
           <header 
             className="px-12 flex justify-between items-start border-b-2 border-gray-50 mb-3"
@@ -218,7 +219,7 @@ function QuotationViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-6 space-y-4" style={{ marginTop: `${d.sectionSpacing}px` }}>
+          <div className="px-12 pb-6 space-y-4 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
             
             {d.customTopText && (
               <div className="p-3 text-center rounded-xl font-black uppercase text-[10px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
@@ -319,35 +320,35 @@ function QuotationViewContent() {
                 <p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p>
               </div>
             </div>
-
-            <div className="pt-4 border-t-2 border-gray-100" style={{ marginTop: `${d.footerMarginTop}px` }}>
-               <div className="text-center space-y-1.5 mb-4">
-                  <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={10} fill="currentColor"/></p>
-                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
-               </div>
-
-               {d.customBottomText && (
-                 <div className="mb-6 p-4 bg-gray-50 rounded-2xl text-center text-[10px] font-medium text-gray-500 italic border border-gray-100">
-                   {d.customBottomText}
-                 </div>
-               )}
-               
-               <div className="grid grid-cols-3 gap-x-6 gap-y-1">
-                  {Array.from({ length: 3 }).map((_, colIdx) => (
-                    <div key={colIdx} className="space-y-1">
-                       {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
-                         <div key={sIdx} className="flex items-center gap-2">
-                            <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                            <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
-                         </div>
-                       ))}
-                    </div>
-                  ))}
-               </div>
-
-               <p className="font-bold uppercase text-center mt-6 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
-            </div>
           </div>
+
+          <footer className="pt-4 border-t-2 border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+             <div className="text-center space-y-1.5 mb-4">
+                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={10} fill="currentColor"/></p>
+                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
+             </div>
+
+             {d.customBottomText && (
+               <div className="mb-6 p-4 bg-gray-50 rounded-2xl text-center text-[10px] font-medium text-gray-500 italic border border-gray-100">
+                 {d.customBottomText}
+               </div>
+             )}
+             
+             <div className="grid grid-cols-3 gap-x-6 gap-y-1">
+                {Array.from({ length: 3 }).map((_, colIdx) => (
+                  <div key={colIdx} className="space-y-1">
+                     {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
+                       <div key={sIdx} className="flex items-center gap-2">
+                          <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                          <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                       </div>
+                     ))}
+                  </div>
+                ))}
+             </div>
+
+             <p className="font-bold uppercase text-center mt-6 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
+          </footer>
         </div>
       </div>
     </div>
