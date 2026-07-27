@@ -150,23 +150,22 @@ function QuotationViewContent() {
     </div>
   );
 
-  // Apply Default Design if not set
   const d = design || {
     primaryColor: '#1E5F7A',
-    headerPaddingTop: 10,
-    headerPaddingBottom: 10,
-    sectionSpacing: 16,
-    tableFontSize: 11,
-    tableRowPadding: 6,
-    headerFontSize: 24,
-    bodyFontSize: 12,
-    logoSize: 56,
+    headerPaddingTop: 5,
+    headerPaddingBottom: 5,
+    sectionSpacing: 10,
+    tableFontSize: 10.5,
+    tableRowPadding: 2,
+    headerFontSize: 22,
+    bodyFontSize: 11,
+    logoSize: 52,
     showGridLines: true,
-    footerMarginTop: 10,
-    footerPaddingBottom: 10,
-    signatureSpacing: 40,
-    taglineFontSize: 12,
-    disclaimerFontSize: 8,
+    footerMarginTop: 5,
+    footerPaddingBottom: 5,
+    signatureSpacing: 25,
+    taglineFontSize: 11,
+    disclaimerFontSize: 7.5,
     customTopText: '',
     customBottomText: ''
   };
@@ -198,10 +197,10 @@ function QuotationViewContent() {
           </div>
         </div>
 
-        <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
+        <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
           <header 
-            className="px-12 flex justify-between items-start border-b-2 border-gray-50 mb-3"
+            className="px-12 flex justify-between items-start border-b-2 border-gray-50"
             style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
           >
             <div className="flex gap-4">
@@ -219,135 +218,134 @@ function QuotationViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-6 space-y-4 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
+          <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
             
             {d.customTopText && (
-              <div className="p-3 text-center rounded-xl font-black uppercase text-[10px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
+              <div className="p-2 text-center rounded-xl font-black uppercase text-[9px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
                 {d.customTopText}
               </div>
             )}
 
             <div className="text-center space-y-0.5">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
-                <div className="h-1 w-20 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
+                <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
+                <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="text-left space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Recipient Profile</p>
+              <div className="text-left space-y-1.5">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Recipient Profile</p>
                 <div className="space-y-0.5">
-                  <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{quote.customerInfo?.name}</h4>
-                  <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
-                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
+                  <h4 className="font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 1}px` }}>{quote.customerInfo?.name}</h4>
+                  <p className="text-[9px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
+                  <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                 </div>
               </div>
-              <div className="text-right space-y-3">
+              <div className="text-right space-y-2">
                 <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
-                  <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
+                  <p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
-                  <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
+                  <p className="text-[10px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
                 </div>
               </div>
             </div>
 
             <div className={cn("overflow-hidden rounded-xl", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse text-[10px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-2.5 px-4 font-black uppercase text-left w-12 text-[11px]">SL</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-left text-[11px]">Service Components</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-center w-28 text-[11px]">Unit/Area</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-28 text-[11px]">Unit Price</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-32 text-[11px]">Subtotal</th>
+                    <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
+                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service Components</th>
+                    <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Unit Price</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
                   {quote.items?.map((item: any, i: number) => (
-                    <tr key={i} className="border-t-2 border-gray-50 align-top">
+                    <tr key={i} className="border-t border-gray-100 align-top">
                       <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                       <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
-                        <p className="font-black text-gray-900 uppercase leading-tight mb-0.5">{item.name}</p>
-                        {item.description && <p className="text-[9px] text-gray-500 font-medium leading-tight italic">{item.description}</p>}
+                        <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
+                        {item.description && <p className="text-[8px] text-gray-500 font-medium leading-tight italic">{item.description}</p>}
                       </td>
                       <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
                       <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{item.price?.toLocaleString()}</td>
                       <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
-                  <tr className="border-t-[2px] border-[#081621] bg-gray-50/50">
-                    <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[10px] tracking-widest">Base Estimate Total</td>
-                    <td className="py-2 px-4 text-right font-black text-sm">৳{quote.subtotal?.toLocaleString()}/-</td>
+                  <tr className="border-t border-[#081621] bg-gray-50/50">
+                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Estimate Total</td>
+                    <td className="py-1.5 px-4 text-right font-black text-xs">৳{quote.subtotal?.toLocaleString()}/-</td>
                   </tr>
                   <tr className="border-t-2 border-[#081621] text-white" style={{ backgroundColor: d.primaryColor }}>
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[11px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                    <td className="py-3 px-4 text-right font-black text-lg">৳{quote.total?.toLocaleString()}/-</td>
+                    <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                    <td className="py-2 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
+            <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
-              <p className="text-[11px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
+              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
             </div>
 
-            <div className="space-y-2">
-               <h5 className="text-[11px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>General Terms & Conditions</h5>
-               <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-inner">
-                  <div className="space-y-1">
+            <div className="space-y-1.5">
+               <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
+               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-inner">
+                  <div className="grid grid-cols-1 gap-0.5">
                     {terms.map((term: string, i: number) => (
                       <div key={i} className="flex gap-2 items-start">
-                        <span className="text-[10px] font-black min-w-[15px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
-                        <p className="font-medium text-gray-600 leading-relaxed" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
+                        <span className="text-[9px] font-black min-w-[12px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                        <p className="font-medium text-gray-600 leading-tight" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
                       </div>
                     ))}
                   </div>
                </div>
             </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-4 pb-4" style={{ marginTop: `${d.signatureSpacing}px` }}>
-              <div className="text-center space-y-2">
-                <div className="border-b-[3px] border-gray-100 h-8"></div>
-                <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-2 pb-2" style={{ marginTop: `${d.signatureSpacing}px` }}>
+              <div className="text-center space-y-1.5">
+                <div className="border-b-[2px] border-gray-100 h-6"></div>
+                <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-2">
-                <div className="h-14 w-28 relative border-b-[3px] border-primary/10 flex items-center justify-center">
-                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[8px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>}
+              <div className="flex flex-col items-center justify-end text-center space-y-1.5">
+                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center">
+                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
                 </div>
-                <p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p>
+                <p className="font-black text-[9px] uppercase text-[#081621]">Smart Clean Authority</p>
               </div>
             </div>
           </div>
 
-          <footer className="pt-4 border-t-2 border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
-             <div className="text-center space-y-1.5 mb-4">
-                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={10} fill="currentColor"/></p>
-                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
+          <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+             <div className="text-center space-y-0.5 mb-2">
+                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p>
              </div>
 
              {d.customBottomText && (
-               <div className="mb-6 p-4 bg-gray-50 rounded-2xl text-center text-[10px] font-medium text-gray-500 italic border border-gray-100">
+               <div className="mb-2 p-2 bg-gray-50 rounded-lg text-center text-[9px] font-medium text-gray-500 italic">
                  {d.customBottomText}
                </div>
              )}
              
-             <div className="grid grid-cols-3 gap-x-6 gap-y-1">
+             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
                 {Array.from({ length: 3 }).map((_, colIdx) => (
-                  <div key={colIdx} className="space-y-1">
+                  <div key={colIdx} className="space-y-0.5">
                      {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
-                       <div key={sIdx} className="flex items-center gap-2">
-                          <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                          <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                       <div key={sIdx} className="flex items-center gap-1.5">
+                          <CheckCircle2 size={8} className="text-emerald-500 shrink-0" />
+                          <span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span>
                        </div>
                      ))}
                   </div>
                 ))}
              </div>
 
-             <p className="font-bold uppercase text-center mt-6 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
+             <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
           </footer>
         </div>
       </div>

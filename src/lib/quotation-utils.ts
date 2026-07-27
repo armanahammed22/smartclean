@@ -69,6 +69,7 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 
 /**
  * Downloads a quotation as PDF
+ * Optimized for single-page export.
  */
 export async function downloadQuotationPDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -79,8 +80,14 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
     margin: 0,
     filename: `${fileName.replace(/\//g, '_')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true,
+      logging: false,
+      letterRendering: true
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all'] } // Forces content to avoid breaking if possible
   };
 
   await html2pdf().from(element).set(opt).save();

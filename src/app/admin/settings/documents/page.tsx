@@ -38,7 +38,8 @@ import {
   Plus,
   Trash2,
   CheckSquare,
-  MoveVertical
+  MoveVertical,
+  Star
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -47,23 +48,23 @@ import Image from 'next/image';
 
 const DEFAULT_DESIGN = {
   primaryColor: '#1E5F7A',
-  headerPaddingTop: 10,
-  headerPaddingBottom: 10,
-  sectionSpacing: 16,
-  tableFontSize: 11,
-  tableRowPadding: 6,
-  headerFontSize: 24,
-  bodyFontSize: 12,
-  logoSize: 56,
+  headerPaddingTop: 5,
+  headerPaddingBottom: 5,
+  sectionSpacing: 10,
+  tableFontSize: 10.5,
+  tableRowPadding: 2,
+  headerFontSize: 22,
+  bodyFontSize: 11,
+  logoSize: 52,
   showGridLines: true,
-  footerMarginTop: 10,
-  footerPaddingBottom: 10,
-  signatureSpacing: 30,
-  taglineFontSize: 12,
-  disclaimerFontSize: 8,
+  footerMarginTop: 5,
+  footerPaddingBottom: 5,
+  signatureSpacing: 25,
+  taglineFontSize: 11,
+  disclaimerFontSize: 7.5,
   customTopText: '',
   customBottomText: '',
-  isCompactMode: false
+  isCompactMode: true
 };
 
 export default function DocumentEnginePage() {
@@ -157,7 +158,7 @@ export default function DocumentEnginePage() {
   if (!mounted || dLoading || qLoading || gLoading) return <div className="p-32 text-center"><Loader2 className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Booting Document Engine...</p></div>;
 
   return (
-    <div className="space-y-8 pb-32 min-w-0">
+    <div className="space-y-8 pb-24 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase">Document Control Engine</h1>
@@ -179,7 +180,6 @@ export default function DocumentEnginePage() {
           <TabsTrigger value="invoice" className="flex-1 rounded-xl gap-2 text-[11px] font-black uppercase data-[state=active]:bg-primary data-[state=active]:text-white transition-all"><Printer size={16}/> Invoice Logic</TabsTrigger>
         </TabsList>
 
-        {/* 🎨 TAB 1: DESIGN STUDIO (Visual Editor) */}
         <TabsContent value="design" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-4 space-y-6">
@@ -252,10 +252,11 @@ export default function DocumentEnginePage() {
                   </div>
                   
                   <div 
-                    className="bg-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative origin-top scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] transition-all duration-300"
+                    className="bg-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative origin-top scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] transition-all duration-300 overflow-hidden"
                     style={{ 
                       width: '210mm', 
-                      minHeight: '297mm',
+                      minHeight: '296mm',
+                      maxHeight: '296mm',
                       borderTop: `14px solid ${designForm.primaryColor}`,
                       borderRadius: '0 0 1.5rem 1.5rem',
                       display: 'flex',
