@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -40,7 +41,11 @@ import {
   FileText,
   Printer,
   Zap,
-  CheckSquare
+  CheckSquare,
+  Edit2,
+  Languages,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -127,6 +132,8 @@ export default function AdminSettingsPage() {
 
   const [menuOrder, setMenuOrder] = useState<string[]>(DEFAULT_MENU_KEYS);
   const [menuVisibility, setMenuVisibility] = useState<Record<string, boolean>>({});
+  const [customLabels, setCustomLabels] = useState<Record<string, { en: string, bn: string }>>({});
+  const [expandedLabelEdit, setExpandedLabelEdit] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -149,6 +156,9 @@ export default function AdminSettingsPage() {
       }
       if (sidebarConfig.visibility) {
         setMenuVisibility(sidebarConfig.visibility);
+      }
+      if (sidebarConfig.customLabels) {
+        setCustomLabels(sidebarConfig.customLabels);
       }
       setIsInitialized(true);
     }
@@ -190,6 +200,16 @@ export default function AdminSettingsPage() {
     setMenuVisibility(prev => ({ ...prev, [key]: nextVal }));
   };
 
+  const updateCustomLabel = (key: string, lang: 'en' | 'bn', value: string) => {
+    setCustomLabels(prev => ({
+      ...prev,
+      [key]: {
+        ...(prev[key] || { en: '', bn: '' }),
+        [lang]: value
+      }
+    }));
+  };
+
   const handleSyncSidebar = async () => {
     if (!db || !user) return;
     setIsSavingLayout(true);
@@ -201,10 +221,12 @@ export default function AdminSettingsPage() {
 
       setMenuOrder(DEFAULT_MENU_KEYS);
       setMenuVisibility(fullVisibility);
+      setCustomLabels({});
 
       await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {
         order: DEFAULT_MENU_KEYS,
         visibility: fullVisibility,
+        customLabels: {},
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
@@ -223,9 +245,10 @@ export default function AdminSettingsPage() {
       await setDoc(doc(db, 'site_settings', 'admin_sidebar'), {
         order: menuOrder,
         visibility: menuVisibility,
+        customLabels: customLabels,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      toast({ title: "Layout Published", description: "Custom sidebar order is now active." });
+      toast({ title: "Layout Published", description: "Custom sidebar order and labels are now active." });
     } catch (e) {
       toast({ variant: "destructive", title: "Publication Failed" });
     } finally {
@@ -375,48 +398,105 @@ export default function AdminSettingsPage() {
                   <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
                     <List className="text-primary" size={20} /> Navigation Management
                   </CardTitle>
-                  <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle Visibility and Order of Menu Groups</CardDescription>
+                  <CardDescription className="text-white/40 uppercase font-bold text-[9px]">Toggle Visibility, Order and Custom Labels of Menu Groups</CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   <Button onClick={handleSyncSidebar} disabled={isSavingLayout} variant="outline" className="flex-1 sm:flex-none rounded-xl font-black bg-white/10 border-white/20 text-white hover:bg-white/20 px-6 h-11 gap-2">
-                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />} Sync Sidebar
+                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />} Sync Defaults
                   </Button>
                   <Button onClick={handleSaveCustomLayout} disabled={isSavingLayout} className="flex-1 sm:flex-none rounded-xl font-black bg-primary px-8 h-11 shadow-lg gap-2">
-                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />} Public Change
+                    {isSavingLayout ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />} Publish Layout
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-8">
-              <div className="space-y-3 max-w-2xl mx-auto">
+              <div className="space-y-4 max-w-3xl mx-auto">
                 {menuOrder.map((key, index) => {
                   const isHidden = menuVisibility[key] === false;
+                  const labels = customLabels[key] || { en: '', bn: '' };
+                  const isExpanded = expandedLabelEdit === key;
+
                   return (
                     <div key={key} className={cn(
-                      "flex items-center justify-between p-4 bg-white rounded-2xl border transition-all group",
-                      isHidden ? "opacity-50 border-gray-100 bg-gray-50/50" : "border-gray-100 hover:border-primary/30 hover:shadow-md"
+                      "flex flex-col bg-white rounded-2xl border transition-all overflow-hidden",
+                      isHidden ? "opacity-50 border-gray-100 bg-gray-50/50" : "border-gray-100 hover:border-primary/20 shadow-sm"
                     )}>
-                      <div className="flex items-center gap-4">
-                        <div className="text-[10px] font-black text-primary/40 w-4">{index + 1}</div>
-                        <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40 cursor-grab active:cursor-grabbing"><GripVertical size={16} /></div>
-                        <span className="font-black uppercase text-xs tracking-widest text-gray-700">
-                          {MENU_LABELS[key] || key.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-1 border-r pr-3 border-gray-100">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveMenu(index, 'up')} disabled={index === 0}><ArrowUp size={16} /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveMenu(index, 'down')} disabled={index === menuOrder.length - 1}><ArrowDown size={16} /></Button>
+                      {/* Row Item */}
+                      <div className="flex items-center justify-between p-4 px-6 group">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="text-[10px] font-black text-primary/40 w-4">{index + 1}</div>
+                          <div className="p-2 bg-gray-50 rounded-lg text-primary opacity-40 cursor-grab active:cursor-grabbing"><GripVertical size={16} /></div>
+                          <div className="flex flex-col">
+                            <span className="font-black uppercase text-xs tracking-widest text-gray-700">
+                              {labels.en || labels.bn || MENU_LABELS[key] || key.replace(/_/g, ' ')}
+                            </span>
+                            {(labels.en || labels.bn) && (
+                              <div className="flex gap-2 mt-1">
+                                {labels.en && <Badge className="text-[7px] bg-blue-50 text-blue-600 border-none px-1 h-3.5">EN: {labels.en}</Badge>}
+                                {labels.bn && <Badge className="text-[7px] bg-green-50 text-green-600 border-none px-1 h-3.5">BN: {labels.bn}</Badge>}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full">
-                          <Label className="text-[8px] font-black uppercase text-muted-foreground">{isHidden ? 'OFF' : 'ON'}</Label>
-                          <Switch 
-                            checked={!isHidden} 
-                            onCheckedChange={() => toggleVisibility(key)}
-                            className="scale-75"
-                          />
+
+                        <div className="flex items-center gap-3">
+                          <div className="flex gap-1 border-r pr-3 border-gray-100">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveMenu(index, 'up')} disabled={index === 0}><ArrowUp size={16} /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => moveMenu(index, 'down')} disabled={index === menuOrder.length - 1}><ArrowDown size={16} /></Button>
+                          </div>
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={cn("rounded-lg font-black text-[9px] uppercase h-8 gap-2", isExpanded ? "bg-primary/10 text-primary" : "text-gray-400")}
+                            onClick={() => setExpandedLabelEdit(isExpanded ? null : key)}
+                          >
+                            <Languages size={14}/> {isExpanded ? 'CLOSE' : 'RENAME'}
+                          </Button>
+
+                          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full">
+                            <Label className="text-[8px] font-black uppercase text-muted-foreground">{isHidden ? 'OFF' : 'ON'}</Label>
+                            <Switch 
+                              checked={!isHidden} 
+                              onCheckedChange={() => toggleVisibility(key)}
+                              className="scale-75"
+                            />
+                          </div>
                         </div>
                       </div>
+
+                      {/* 🛠️ BILINGUAL LABEL EDITOR (Expanded) */}
+                      {isExpanded && (
+                        <div className="px-6 pb-6 pt-2 bg-gray-50/50 border-t border-gray-100 animate-in slide-in-from-top-2 duration-300">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                            <div className="space-y-1.5">
+                              <Label className="text-[9px] font-black uppercase text-blue-600 ml-1">Menu Label (English)</Label>
+                              <Input 
+                                value={labels.en} 
+                                onChange={e => updateCustomLabel(key, 'en', e.target.value)}
+                                placeholder={MENU_LABELS[key] || "Enter English name"}
+                                className="h-10 bg-white border-none rounded-xl text-xs font-bold shadow-inner"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-[9px] font-black uppercase text-green-600 ml-1">মেনু নাম (বাংলা)</Label>
+                              <Input 
+                                value={labels.bn} 
+                                onChange={e => updateCustomLabel(key, 'bn', e.target.value)}
+                                placeholder="বাংলা নাম লিখুন"
+                                className="h-10 bg-white border-none rounded-xl text-xs font-bold font-bangla shadow-inner"
+                              />
+                            </div>
+                          </div>
+                          <div className="mt-3 p-3 bg-white rounded-xl border border-gray-100 flex items-center gap-3">
+                            <Info size={14} className="text-primary shrink-0" />
+                            <p className="text-[9px] font-medium text-gray-500 uppercase leading-relaxed">
+                              Language অনুযায়ী সাইডবার মেনু অটোমেটিক আপডেট হবে। ফাঁকা রাখলে ডিফল্ট নাম ব্যবহৃত হবে।
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

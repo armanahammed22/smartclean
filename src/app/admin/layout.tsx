@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -120,9 +121,11 @@ const SidebarContent = React.memo(({
   scrollRef,
   displayLogo,
   settings,
+  sidebarConfig,
   appearance,
   onLogout,
-  t
+  t,
+  language
 }: any) => {
   const sidebarStyles = {
     backgroundColor: appearance?.bgColor || '#08101b',
@@ -143,6 +146,16 @@ const SidebarContent = React.memo(({
   };
 
   const hoverClass = appearance?.hoverBgColor ? "" : "hover:bg-white/5";
+
+  // Helper to get bilingual custom label
+  const getLabel = (groupId: string) => {
+    const customLabels = sidebarConfig?.customLabels || {};
+    const itemLabels = customLabels[groupId];
+    if (itemLabels && itemLabels[language]) {
+      return itemLabels[language];
+    }
+    return t(`admin.${groupId}`);
+  };
 
   return (
     <div 
@@ -189,7 +202,7 @@ const SidebarContent = React.memo(({
                     className={cn("transition-colors duration-300", !isActive && group.color, isActive && "text-white scale-110")} 
                     style={appearance?.iconColor && !isActive ? { color: appearance.iconColor } : {}}
                   />
-                  {!collapsed && <span className="uppercase tracking-tight whitespace-nowrap" style={textStyle}>{t(`admin.${group.id}`)}</span>}
+                  {!collapsed && <span className="uppercase tracking-tight whitespace-nowrap" style={textStyle}>{getLabel(group.id)}</span>}
                 </div>
               </Link>
             );
@@ -219,7 +232,7 @@ const SidebarContent = React.memo(({
                     className={cn("shrink-0 transition-colors duration-300", !isGroupActive && group.color)} 
                     style={appearance?.iconColor && !isGroupActive ? { color: appearance.iconColor } : {}}
                   />
-                  {!collapsed && <span className="uppercase tracking-tight text-left whitespace-nowrap" style={textStyle}>{t(`admin.${group.id}`)}</span>}
+                  {!collapsed && <span className="uppercase tracking-tight text-left whitespace-nowrap" style={textStyle}>{getLabel(group.id)}</span>}
                 </div>
                 {!collapsed && <ChevronRight size={14} className={cn("transition-transform duration-300 ml-auto opacity-40", isExpanded ? "rotate-90" : "")} />}
               </button>
@@ -443,9 +456,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           scrollRef={sidebarScrollRef}
           displayLogo={displayLogo}
           settings={settings}
+          sidebarConfig={sidebarConfig}
           appearance={appearance}
           onLogout={() => setIsLogoutDialogOpen(true)}
           t={t}
+          language={language}
         />
         <button 
           onClick={handleToggleCollapse} 
@@ -478,9 +493,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   toggleGroup={toggleGroup}
                   displayLogo={displayLogo}
                   settings={settings}
+                  sidebarConfig={sidebarConfig}
                   appearance={appearance}
                   onLogout={() => setIsLogoutDialogOpen(true)}
                   t={t}
+                  language={language}
                 />
               </SheetContent>
             </Sheet>
