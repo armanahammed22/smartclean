@@ -2,35 +2,35 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, addDoc, query, orderBy, serverTimestamp, doc, increment, writeBatch } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, increment, writeBatch, where, getDocs, limit, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { 
   ArrowLeft, 
   Plus, 
   Trash2, 
   Loader2, 
   Save, 
-  Calendar, 
-  Search, 
-  User, 
-  MapPin, 
+  Calendar as CalendarIcon, 
+  User as UserIcon, 
   Wrench, 
   Zap,
   CheckCircle2,
   Clock,
   Check,
-  ChevronRight,
   Wallet,
+  Calculator,
   ShieldCheck,
-  Package,
-  Layers,
-  Star
+  X,
+  PackagePlus,
+  UserPlus,
+  ShoppingCart
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -40,40 +40,42 @@ import { getOrCreateInvoice } from '@/lib/invoice-utils';
 export default function CreateManualBookingPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Customer & Schedule Data
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    phone: '', 
-    address: '', 
-    date: '', 
-    time: '8AM - 12PM',
-    notes: '' 
-  });
+  // Feature Modes
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [isManualItem, setIsManualItem] = useState(false);
+
+  // Form State
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
+  const [schedule, setSchedule] = useState({ date: '', time: '8AM - 12PM' });
   
-  // Selection
+  // Selection state
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
   const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
-  const [manualDiscount, setManualDiscount] = useState(0);
+  const [manualPrice, setManualPrice] = useState('');
+  const [manualTitle, setManualTitle] = useState('');
 
   // DB Fetch
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), orderBy('title', 'asc')) : null, [db]);
-  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
+  const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active')) : null, [db]);
+  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
   
-  const { data: services, isLoading: sLoading } = useCollection(servicesQuery);
+  const { data: services } = useCollection(servicesQuery);
   const { data: allSubs } = useCollection(subsQuery);
+  const { data: customersRaw } = useCollection(customersQuery);
 
+  const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')), [customersRaw]);
   const selectedService = useMemo(() => services?.find(s => s.id === selectedServiceId), [services, selectedServiceId]);
   const addOnOptions = useMemo(() => allSubs?.filter(sub => sub.mainServiceId === selectedServiceId && sub.isAddOnEnabled), [allSubs, selectedServiceId]);
 
-  const basePrice = selectedService?.basePrice || 0;
+  const basePrice = isManualItem ? (parseFloat(manualPrice) || 0) : (selectedService?.basePrice || 0);
   const addOnPrice = addOnOptions?.filter(a => selectedAddOnIds.includes(a.id)).reduce((acc, a) => acc + (a.price || 0), 0) || 0;
   
   const subtotal = basePrice + addOnPrice;
-  const tax = 0; // VAT confirmed 0
-  const total = subtotal + tax - manualDiscount;
+  const total = subtotal;
 
   const toggleAddOn = (id: string) => {
     setSelectedAddOnIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -82,252 +84,244 @@ export default function CreateManualBookingPage() {
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db) return;
-    if (!selectedServiceId) {
+    
+    if (isManualItem && !manualTitle) {
+        toast({ variant: "destructive", title: "Missing Title", description: "Manual service name is required." });
+        return;
+    }
+
+    if (!isManualItem && !selectedServiceId) {
       toast({ variant: "destructive", title: "Service Required", description: "Please select a main service." });
       return;
     }
-    if (!formData.name || !formData.phone || !formData.address || !formData.date) {
-      toast({ variant: "destructive", title: "Incomplete Form", description: "Customer name, phone, address and date are required." });
+
+    if (!customer.name || !customer.phone || !customer.address || !schedule.date) {
+      toast({ variant: "destructive", title: "Incomplete Form", description: "Client details and date are required." });
       return;
     }
 
     setIsSubmitting(true);
     try {
+      let currentCustomerId = customer.id;
+
+      if (isNewCustomer || !currentCustomerId) {
+        const phone = customer.phone.replace(/\D/g, '');
+        const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          const newRef = doc(collection(db, 'users'));
+          await setDoc(newRef, {
+            uid: newRef.id,
+            name: customer.name,
+            phone: phone,
+            address: customer.address,
+            role: 'customer',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          currentCustomerId = newRef.id;
+        } else {
+          currentCustomerId = snap.docs[0].id;
+        }
+      }
+
       const bookingData = {
-        customerName: formData.name,
-        customerPhone: formData.phone,
-        address: formData.address,
-        serviceId: selectedServiceId,
-        serviceTitle: selectedService?.title,
+        customerId: currentCustomerId,
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        address: customer.address,
+        serviceId: isManualItem ? 'manual' : selectedServiceId,
+        serviceTitle: isManualItem ? manualTitle : selectedService?.title,
         items: [
-          { id: selectedServiceId, name: selectedService?.title, price: basePrice, quantity: 1, itemType: 'service' },
+          { id: isManualItem ? 'manual' : selectedServiceId, name: isManualItem ? manualTitle : selectedService?.title, price: basePrice, quantity: 1, itemType: 'service' },
           ...addOnOptions?.filter(a => selectedAddOnIds.includes(a.id)).map(a => ({ id: a.id, name: a.name, price: a.price, quantity: 1, itemType: 'service' })) || []
         ],
-        dateTime: formData.date,
-        timeSlot: formData.time,
+        dateTime: schedule.date,
+        timeSlot: schedule.time,
         subtotal,
-        tax,
-        discount: manualDiscount,
+        tax: 0,
         totalPrice: total,
-        status: 'Assigned',
+        status: 'New',
         paymentMethod: 'Manual Enrollment',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
 
-      const batch = writeBatch(db);
-      const bookingRef = doc(collection(db, 'bookings'));
-      batch.set(bookingRef, bookingData);
-
-      // INCREMENT COUNTER
-      batch.update(doc(db, 'services', selectedServiceId), { bookingCount: increment(1) });
-      selectedAddOnIds.forEach(addonId => {
-        batch.update(doc(db, 'sub_services', addonId), { bookingCount: increment(1) });
-      });
-
-      await batch.commit();
+      const bookingRef = await addDoc(collection(db, 'bookings'), bookingData);
       
       // Auto-generate invoice
       await getOrCreateInvoice(db, bookingRef.id, 'booking', bookingData);
 
-      toast({ title: "Booking Created", description: "Manual booking and invoice generated successfully." });
+      toast({ title: "Booking Created", description: "Professional record synced to ledger." });
       router.push('/admin/bookings');
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to create booking." });
+      toast({ variant: "destructive", title: "Process Error" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-8 pb-24 min-w-0">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full bg-white shadow-sm border h-10 w-10">
-          <ArrowLeft size={20} />
-        </Button>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight leading-none">Service Intake</h1>
-          <p className="text-muted-foreground text-[10px] md:text-sm font-bold uppercase tracking-widest mt-1">Manual Enrollment Terminal</p>
+    <div className="space-y-4 pb-24 min-w-0 -mt-6">
+      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border">
+            <ArrowLeft size={16} />
+          </Button>
+          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">Service Intake</h1>
         </div>
+        <Button onClick={handleCreateBooking} disabled={isSubmitting} className="h-9 px-10 rounded-lg font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
+          {isSubmitting ? <Loader2 className="animate-spin h-3 w-3" /> : <><Save size={14} /> Deploy Booking</>}
+        </Button>
       </div>
 
-      <form onSubmit={handleCreateBooking} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-7 space-y-8">
-          {/* 🛠️ SERVICE CONFIGURATION */}
-          <Card className="border-none shadow-sm rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-[#081621] text-white p-8">
-              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                <Wrench size={18} className="text-primary" /> Service Definition
-              </CardTitle>
-              <CardDescription className="text-white/40 font-bold uppercase text-[9px]">Select primary service and optional add-ons</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Choose Main Service</Label>
-                <Select value={selectedServiceId} onValueChange={v => { setSelectedServiceId(v); setSelectedAddOnIds([]); }}>
-                  <SelectTrigger className="h-14 bg-gray-50 border-none rounded-2xl font-bold text-sm shadow-inner">
-                    <SelectValue placeholder="Search service catalog..." />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl">
-                    {services?.map(s => (
-                      <SelectItem key={s.id} value={s.id} className="py-3 px-4 font-black uppercase text-[10px]">{s.title}</SelectItem>
-                    ))}
+      <div className="space-y-4">
+        {/* Customer Identity Row */}
+        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
+          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><UserIcon size={12}/> Client Registry</CardTitle>
+            <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
+               <Label className="text-[8px] font-black uppercase text-primary">New Client</Label>
+               <Switch checked={isNewCustomer} onCheckedChange={setIsNewCustomer} className="scale-75" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-1 space-y-1.5">
+                <Label className="text-[9px] font-bold text-gray-400 uppercase">Customer Name</Label>
+                {isNewCustomer ? (
+                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-9 font-bold" placeholder="Full Name" />
+                ) : (
+                  <Select value={customer.id} onValueChange={(val) => {
+                    const c = clients?.find(i => i.id === val);
+                    if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', email: c.email || '', company: c.company || '', address: c.address || '' });
+                  }}>
+                    <SelectTrigger className="h-9 bg-white border-gray-200">
+                      <SelectValue placeholder="Search existing..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-bold text-gray-400 uppercase">Mobile Number</Label>
+                <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-9" placeholder="01XXXXXXXXX" disabled={!isNewCustomer && customer.id !== ''} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-bold text-gray-400 uppercase">Service Date</Label>
+                <Input type="date" value={schedule.date} onChange={e => setSchedule({...schedule, date: e.target.value})} className="h-9" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-bold text-gray-400 uppercase">Arrival Window</Label>
+                <Select value={schedule.time} onValueChange={v => setSchedule({...schedule, time: v})}>
+                  <SelectTrigger className="h-9 bg-white border-gray-200 text-xs font-black uppercase"><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="8AM - 12PM" className="text-xs uppercase font-bold">Morning (8-12)</SelectItem>
+                    <SelectItem value="12PM - 4PM" className="text-xs uppercase font-bold">Afternoon (12-4)</SelectItem>
+                    <SelectItem value="4PM - 8PM" className="text-xs uppercase font-bold">Evening (4-8)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div className="md:col-span-4 space-y-1.5">
+                <Label className="text-[9px] font-bold text-gray-400 uppercase">Site Address</Label>
+                <Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="h-9" placeholder="House, Road, Area" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {selectedServiceId && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-500 space-y-6">
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <Zap size={14} fill="currentColor" /> Available Customizations
-                    </h4>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase h-5">{addOnOptions?.length || 0} Options</Badge>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Service Matrix Row */}
+        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
+          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><Wrench size={12}/> Service Definition</CardTitle>
+            <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
+               <Label className="text-[8px] font-black uppercase text-primary">Manual Price</Label>
+               <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-5 space-y-6">
+             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded-2xl border">
+               {!isManualItem ? (
+                 <div className="md:col-span-12 space-y-2">
+                   <Label className="text-[10px] font-black uppercase text-gray-400">Main Service</Label>
+                   <Select value={selectedServiceId} onValueChange={v => { setSelectedServiceId(v); setSelectedAddOnIds([]); }}>
+                     <SelectTrigger className="h-11 md:h-12 bg-white border-gray-200 rounded-xl font-bold">
+                       <SelectValue placeholder="Search service catalog..." />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {services?.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold py-3">{s.title}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+               ) : (
+                 <>
+                   <div className="md:col-span-8 space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-gray-400">Manual Service Name</Label>
+                     <Input value={manualTitle} onChange={e => setManualTitle(e.target.value)} className="h-11 md:h-12 bg-white rounded-xl font-bold" />
+                   </div>
+                   <div className="md:col-span-4 space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-gray-400">Price Override (৳)</Label>
+                     <Input type="number" value={manualPrice} onChange={e => setManualPrice(e.target.value)} className="h-11 md:h-12 bg-white rounded-xl font-black text-primary shadow-inner" />
+                   </div>
+                 </>
+               )}
+             </div>
+
+             {selectedServiceId && (
+               <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2"><Zap size={14} fill="currentColor"/> Power-Up Add-ons</h4>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {addOnOptions?.map(addon => (
                       <div 
                         key={addon.id} 
                         onClick={() => toggleAddOn(addon.id)}
                         className={cn(
-                          "p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group",
-                          selectedAddOnIds.includes(addon.id) ? "border-primary bg-primary/5 shadow-inner" : "border-gray-50 bg-white hover:border-primary/20"
+                          "p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                          selectedAddOnIds.includes(addon.id) ? "border-primary bg-primary/5 shadow-md" : "border-transparent bg-gray-50/50 hover:border-gray-200"
                         )}
                       >
                         <div className="min-w-0">
-                          <p className="font-black text-[11px] uppercase truncate leading-tight text-gray-900">{addon.name}</p>
-                          <p className="font-black text-primary text-[10px] mt-1">+৳{addon.price}</p>
+                          <p className="font-black text-[10px] uppercase truncate leading-tight">{addon.name}</p>
+                          <p className="font-black text-primary text-[9px] mt-1">+৳{addon.price}</p>
                         </div>
-                        <div className={cn(
-                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0",
-                          selectedAddOnIds.includes(addon.id) ? "bg-primary border-primary text-white" : "border-gray-200"
-                        )}>
-                          {selectedAddOnIds.includes(addon.id) && <Check size={14} strokeWidth={4} />}
-                        </div>
+                        {selectedAddOnIds.includes(addon.id) && <CheckCircle2 size={16} className="text-primary" />}
                       </div>
                     ))}
-                    {addOnOptions?.length === 0 && <p className="col-span-full py-6 text-center text-[10px] font-bold text-gray-400 uppercase italic">No add-ons available for this service.</p>}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    {addOnOptions?.length === 0 && <p className="col-span-full py-6 text-center text-[10px] font-bold text-gray-300 uppercase">No add-ons for this category.</p>}
+                 </div>
+               </div>
+             )}
+          </CardContent>
+        </Card>
 
-          {/* 👤 CLIENT & LOGISTICS */}
-          <Card className="border-none shadow-sm rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="bg-gray-50 border-b p-8">
-              <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
-                <User size={18} className="text-primary" /> Client & Logistics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Full Legal Name</Label>
-                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Recipient Name" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Contact Phone</Label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Date</Label>
-                  <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold shadow-inner" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Arrival Window</Label>
-                  <Select value={formData.time} onValueChange={v => setFormData({...formData, time: v})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-black text-[10px] uppercase shadow-inner">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl">
-                      <SelectItem value="8AM - 12PM" className="font-bold text-[10px] uppercase">Morning (8AM - 12PM)</SelectItem>
-                      <SelectItem value="12PM - 4PM" className="font-bold text-[10px] uppercase">Afternoon (12PM - 4PM)</SelectItem>
-                      <SelectItem value="4PM - 8PM" className="font-bold text-[10px] uppercase">Evening (4PM - 8PM)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Billing Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+           <div className="lg:col-span-7 space-y-2">
+              <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Work Instructions</Label>
+              <Textarea placeholder="Specific scope or notes for field staff..." className="h-32 bg-white rounded-xl border-gray-100 shadow-inner p-4" />
+           </div>
+           <div className="lg:col-span-5 bg-slate-50 border border-gray-100 p-6 rounded-2xl space-y-5">
+              <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <span>Base Service</span>
+                <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Service Address</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-4 text-primary" size={18} />
-                  <Textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="House, Road, Block, Area..." className="min-h-[120px] pl-12 bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all" />
-                </div>
+              <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <span>Total Add-ons</span>
+                <span className="text-gray-900">৳{addOnPrice.toLocaleString()}</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="pt-6 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                 <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Net Final Bill</span>
+                    <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{total.toLocaleString()}</span>
+                 </div>
+                 <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
+              </div>
+           </div>
         </div>
-
-        {/* 💰 REAL-TIME BILLING SIDEBAR */}
-        <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-8">
-          <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white border-t-[12px] border-indigo-600">
-            <CardHeader className="p-8 border-b bg-gray-50/50 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-black uppercase tracking-tight text-[#081621]">Bill Calculation</CardTitle>
-                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Live configuration metrics</CardDescription>
-              </div>
-              <div className="p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-600/20"><Wallet size={20}/></div>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="space-y-4">
-                <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>Base Premium Service</span>
-                  <span className="text-gray-900">৳{basePrice.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>Selected Add-ons</span>
-                  <span className="text-gray-900">৳{addOnPrice.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <span>VAT (0%)</span>
-                  <span className="text-gray-900">৳{tax.toLocaleString()}</span>
-                </div>
-                
-                <div className="pt-4 mt-4 border-t border-dashed border-gray-200">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-rose-600 ml-1">Manual Discount Override (৳)</Label>
-                    <div className="relative">
-                      <Zap className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-600" size={14} />
-                      <Input 
-                        type="number" 
-                        value={manualDiscount} 
-                        onChange={e => setManualDiscount(parseFloat(e.target.value) || 0)} 
-                        className="h-12 pl-10 bg-rose-50/50 border-rose-100 border-2 font-black text-lg text-rose-600 rounded-2xl shadow-inner"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-8 border-t-4 border-dashed border-gray-100 flex flex-col gap-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] leading-none mb-1">Total Authorized Payable</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-black text-indigo-600 tracking-tighter">৳{total.toLocaleString()}</span>
-                    <Badge className="bg-indigo-100 text-indigo-700 border-none font-black text-[10px]">BDT</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-5 bg-indigo-50 rounded-[2rem] border border-indigo-100 flex items-start gap-4">
-                  <ShieldCheck size={24} className="text-indigo-600 shrink-0 mt-0.5" />
-                  <p className="text-[11px] font-bold text-indigo-800 leading-relaxed uppercase">
-                    Verification Protocol Active. This booking will be created with "Assigned" status and an immediate professional invoice.
-                  </p>
-                </div>
-                <Button 
-                  onClick={handleCreateBooking}
-                  disabled={isSubmitting}
-                  className="w-full h-16 md:h-20 rounded-[2rem] font-black text-2xl bg-indigo-600 hover:bg-indigo-700 text-white uppercase tracking-tight shadow-2xl shadow-indigo-600/30 gap-4 active:scale-95 transition-all"
-                >
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={28} /> Deploy Booking</>}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

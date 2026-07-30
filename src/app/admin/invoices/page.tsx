@@ -32,12 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
 
-// 🚀 LAZY LOAD THE HEAVY INVOICE TERMINAL DIALOG
-const InvoiceTerminalDialog = dynamic(() => import('@/components/admin/InvoiceTerminalDialog').then(mod => mod.InvoiceTerminalDialog), {
-  ssr: false,
-  loading: () => <Loader2 className="animate-spin text-primary" />
-});
-
 function InvoicesListContent() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -47,19 +41,12 @@ function InvoicesListContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-
-  // Manual Invoice / Edit State
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (searchParams.get('create') === 'true') {
-      setIsFormOpen(true);
-    }
-  }, [searchParams]);
+  }, []);
 
   const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(100)) : null, [db]);
   const { data: invoices, isLoading } = useCollection(invoicesQuery);
@@ -124,16 +111,6 @@ function InvoicesListContent() {
     }
   };
 
-  const handleOpenInvoice = async (order: any) => {
-    if (!db) return;
-    try {
-      const invId = await getOrCreateInvoice(db, order.id, 'order', order);
-      router.push(`/admin/invoices/${invId}`);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Invoice Error" });
-    }
-  };
-
   if (!mounted) return null;
 
   return (
@@ -144,8 +121,8 @@ function InvoicesListContent() {
           <p className="text-muted-foreground text-sm font-medium">Enterprise financial documentation & history</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => { setEditingInvoice(null); setIsFormOpen(true); }} className="h-11 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10 gap-2">
-            <Plus size={16} strokeWidth={3} /> New Invoice
+          <Button asChild className="h-11 px-6 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10 gap-2">
+            <Link href="/admin/invoices/new"><Plus size={16} strokeWidth={3} /> New Invoice</Link>
           </Button>
         </div>
       </div>
@@ -239,7 +216,7 @@ function InvoicesListContent() {
                       <TableCell className="text-right pr-8">
                         <div className="flex justify-end gap-1 opacity-100">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild><Link href={`/invoice/${inv.invoiceNumber}`}><Eye size={16} /></Link></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => { setEditingInvoice(inv); setIsFormOpen(true); }}><Edit size={16} /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" asChild><Link href={`/admin/invoices/${inv.id}/edit`}><Edit size={16} /></Link></Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
                         </div>
                       </TableCell>
@@ -251,14 +228,6 @@ function InvoicesListContent() {
           </CardContent>
         </Card>
       </div>
-
-      {isFormOpen && (
-        <InvoiceTerminalDialog 
-          isOpen={isFormOpen} 
-          onClose={() => setIsFormOpen(false)} 
-          editingInvoice={editingInvoice}
-        />
-      )}
     </div>
   );
 }
