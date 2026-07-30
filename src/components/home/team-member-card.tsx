@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Star, MessageCircle, Phone, Award, MapPin, ArrowRight, Info } from 'lucide-react';
+import { MessageCircle, Phone, ArrowRight } from 'lucide-react';
 import { TeamMember } from '@/types';
 import { CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ interface TeamMemberCardProps {
  * Optimized Team Member Card
  * Dimensions: 3" High x 2" Wide (approx 288px x 192px)
  * Top 2" (192px): Image with Watermark and Protection
- * Bottom 1" (96px): Content
+ * Bottom 1" (96px): Content (Name, Designation, Phone, Button)
  */
 export function TeamMemberCard({ member }: TeamMemberCardProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -34,11 +34,13 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
   return (
     <>
       <div 
-        className="group relative bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-[288px] w-full max-w-[192px] mx-auto cursor-pointer select-none"
-        onClick={() => setIsOpen(true)}
+        className="group relative bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-[288px] w-full max-w-[192px] mx-auto select-none"
       >
         {/* Photo Container (2 Inches / 192px) */}
-        <div className="relative h-[192px] w-full overflow-hidden bg-gray-50 shrink-0 pointer-events-none select-none">
+        <div 
+          className="relative h-[192px] w-full overflow-hidden bg-gray-50 shrink-0 cursor-pointer"
+          onClick={() => setIsOpen(true)}
+        >
           <Image 
             src={member.image || 'https://picsum.photos/seed/staff/200/200'} 
             alt={member.name} 
@@ -51,16 +53,14 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
           
           {/* 💧 WATERMARK LAYER */}
           {watermarkUrl && (
-            <div className="absolute top-2 right-2 w-8 h-8 opacity-40 z-20 pointer-events-none grayscale brightness-200">
+            <div className="absolute top-2 right-2 w-8 h-8 opacity-30 z-20 pointer-events-none grayscale brightness-200">
                <Image src={watermarkUrl} alt="Watermark" fill className="object-contain" unoptimized />
             </div>
           )}
 
-          {/* 🛡️ PROTECTION OVERLAY (Prevents simple right-click/drag) */}
+          {/* 🛡️ PROTECTION OVERLAY */}
           <div className="absolute inset-0 bg-transparent z-10" onContextMenu={(e) => e.preventDefault()} />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-          
           {member.featured && (
             <div className="absolute top-2 left-2 z-20">
               <Badge className="bg-primary text-white border-none px-2 py-0.5 rounded-md font-black text-[7px] uppercase tracking-widest shadow-lg">
@@ -68,50 +68,40 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
               </Badge>
             </div>
           )}
-
-          <div className="absolute bottom-2 left-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 z-30 pointer-events-auto">
-             <div className="flex gap-1.5 justify-center">
-                {member.phone && (
-                  <button className="h-7 w-7 rounded-lg bg-white text-primary flex items-center justify-center shadow-lg active:scale-90" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}>
-                    <Phone size={12} />
-                  </button>
-                )}
-                {member.whatsapp && (
-                  <button className="h-7 w-7 rounded-lg bg-[#25D366] text-white flex items-center justify-center shadow-lg active:scale-90" onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${member.whatsapp.replace(/\D/g, '')}`, '_blank'); }}>
-                    <MessageCircle size={12} fill="currentColor" />
-                  </button>
-                )}
-             </div>
-          </div>
         </div>
 
         {/* Content Section (1 Inch / 96px) */}
-        <CardContent className="p-3 flex flex-col justify-center h-[96px] bg-white text-center">
-          <div className="space-y-0.5">
-            <h3 className="font-black text-[12px] md:text-[13px] text-gray-900 uppercase tracking-tight truncate leading-none">
+        <CardContent className="p-2.5 flex flex-col justify-between h-[96px] bg-white text-center">
+          <div className="space-y-0">
+            <h3 className="font-black text-[12px] text-gray-900 uppercase tracking-tight truncate leading-tight">
               {member.name}
             </h3>
-            <p className="text-[9px] font-black text-primary uppercase tracking-tighter truncate opacity-90">
+            <p className="text-[9px] font-black text-primary uppercase tracking-tighter truncate opacity-90 leading-tight">
               {member.designation}
             </p>
           </div>
 
-          <div className="mt-2 pt-2 border-t border-gray-50 flex flex-col gap-1">
-             <div className="flex items-center justify-center gap-1.5 text-gray-400 group/link" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}>
-                <Phone size={8} className="text-primary/60 shrink-0" />
-                <span className="text-[9px] font-black tracking-tighter truncate group-hover/link:text-primary transition-colors">{member.phone || '01XXXXXXXXX'}</span>
+          <div className="flex flex-col gap-1.5 mt-1">
+             <div className="flex items-center justify-center gap-3">
+                {member.phone && (
+                  <a href={`tel:${member.phone}`} className="text-gray-400 hover:text-primary transition-colors">
+                    <Phone size={11} fill="currentColor" />
+                  </a>
+                )}
+                {member.whatsapp && (
+                  <a href={`https://wa.me/${member.whatsapp.replace(/\D/g, '')}`} target="_blank" className="text-[#25D366] hover:scale-110 transition-transform">
+                    <MessageCircle size={12} fill="currentColor" />
+                  </a>
+                )}
              </div>
-             <div className="flex items-center justify-center gap-1.5 text-gray-400">
-                <MapPin size={8} className="text-primary/60 shrink-0" />
-                <span className="text-[9px] font-bold tracking-tighter truncate uppercase">{member.serviceArea || 'Dhaka North'}</span>
-             </div>
-          </div>
-          
-          <div className="mt-1 flex items-center justify-center gap-1">
-             <div className="flex text-amber-500">
-                <Star size={8} fill="currentColor" />
-             </div>
-             <span className="text-[9px] font-black text-gray-900">{member.rating?.toFixed(1) || '5.0'}</span>
+             
+             <Button 
+              size="sm" 
+              onClick={() => setIsOpen(true)}
+              className="h-6 w-full rounded-lg bg-gray-50 hover:bg-primary hover:text-white text-[8px] font-black uppercase text-primary transition-all border-none"
+             >
+               বিস্তারিত / Details
+             </Button>
           </div>
         </CardContent>
       </div>

@@ -9,9 +9,6 @@ import {
   MessageCircle, 
   Phone, 
   Mail, 
-  Briefcase, 
-  Calendar, 
-  Languages, 
   MapPin, 
   ShieldCheck, 
   Award,
@@ -21,9 +18,7 @@ import {
   Zap,
   CheckCircle2,
   TrendingUp,
-  User,
-  Heart,
-  Globe
+  Heart
 } from 'lucide-react';
 import { TeamMember } from '@/types';
 import { 
@@ -87,6 +82,7 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
             </div>
           </DialogHeader>
 
+          {/* 📊 Ratings & Stats (Moved here from card) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
              <div className="p-4 bg-gray-50 rounded-3xl space-y-1">
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Experience</p>
@@ -96,8 +92,8 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
                 <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Jobs Done</p>
                 <p className="text-lg font-black text-gray-900">{member.completedJobs || '150'}+</p>
              </div>
-             <div className="p-4 bg-primary/5 rounded-3xl space-y-1 col-span-2 sm:col-span-1">
-                <p className="text-[8px] font-black text-primary uppercase tracking-widest">Rating</p>
+             <div className="p-4 bg-primary/5 rounded-3xl space-y-1 col-span-2 sm:col-span-1 border border-primary/10">
+                <p className="text-[8px] font-black text-primary uppercase tracking-widest">Trust Rating</p>
                 <div className="flex items-center gap-1 text-primary">
                   <Star size={16} fill="currentColor" />
                   <span className="text-lg font-black">{member.rating?.toFixed(1) || '5.0'}</span>
@@ -122,10 +118,6 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
                      <div className="p-2 bg-primary/5 text-primary rounded-xl"><Phone size={14}/></div>
                      {member.phone}
                    </div>
-                   <div className="flex items-center gap-3 text-xs font-bold text-gray-700 cursor-pointer hover:text-primary transition-colors" onClick={() => window.location.href = `mailto:${member.email}`}>
-                     <div className="p-2 bg-primary/5 text-primary rounded-xl"><Mail size={14}/></div>
-                     {member.email}
-                   </div>
                    <div className="flex items-center gap-3 text-xs font-bold text-gray-700">
                      <div className="p-2 bg-primary/5 text-primary rounded-xl"><MapPin size={14}/></div>
                      {member.serviceArea || 'Dhaka North'}
@@ -133,12 +125,7 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
                 </div>
              </div>
              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Skills & Languages</h4>
-                <div className="flex flex-wrap gap-2">
-                   {member.languages?.split(',').map((l, i) => (
-                     <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-600 border-none font-bold text-[8px] uppercase">{l.trim()}</Badge>
-                   )) || <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-none font-bold text-[8px] uppercase">Bengali, English</Badge>}
-                </div>
+                <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Connect Online</h4>
                 <div className="flex gap-2">
                    {member.facebook && <a href={member.facebook} target="_blank" className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-blue-600 transition-colors"><Facebook size={18}/></a>}
                    {member.linkedin && <a href={member.linkedin} target="_blank" className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-blue-700 transition-colors"><Linkedin size={18}/></a>}
@@ -149,7 +136,7 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
 
           <div className="pt-8 border-t flex flex-col sm:flex-row gap-4">
              <Button asChild className="flex-1 h-14 rounded-2xl bg-primary hover:bg-[#15435a] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
-                <Link href="/services">Book Service</Link>
+                <Link href="/services">Book Appointment</Link>
              </Button>
              {member.whatsapp && (
                <Button variant="outline" asChild className="flex-1 h-14 rounded-2xl border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5 font-black uppercase tracking-widest text-[10px]">
