@@ -73,7 +73,8 @@ import {
   FileCode,
   FileSpreadsheet,
   Printer,
-  X
+  X,
+  UserX
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -300,14 +301,99 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Quotations", key: "quotations", href: '/admin/quotations', icon: FileSpreadsheet }, 
         { name: "Leads", key: "leads", href: '/admin/leads', icon: TrendingUp }
       ]},
-      { id: 'inventory', icon: Box, color: "text-amber-400", items: [{ name: "Product List", key: "product_list", href: '/admin/products', icon: Package }, { name: "Brands", key: "brands", href: '/admin/attributes/brands', icon: Award }] },
-      { id: 'services', icon: Wrench, color: "text-sky-400", items: [{ name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench }, { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers }] },
-      { id: 'finance', icon: Wallet, color: "text-green-400", items: [{ name: "Finance Overview", key: "finance_overview", href: '/admin/finance', icon: TrendingUp }, { name: "Master Ledger", key: "ledger", href: '/admin/finance/ledger', icon: FileText }] },
-      { id: 'customize', icon: Palette, color: "text-fuchsia-400", items: [{ name: "Homepage", key: "homepage_builder", href: '/admin/customize/homepage-builder', icon: Navigation }, { name: "Banners", key: "hero_banners", href: '/admin/customize/hero', icon: Layout }] },
-      { id: 'system', icon: Settings, color: "text-slate-300", items: [{ name: "Global", key: "global_settings", href: '/admin/settings', icon: Settings }, { name: "Documents", key: "documents", href: '/admin/settings/documents', icon: Printer }] }
+      { id: 'inventory', icon: Box, color: "text-amber-400", items: [
+        { name: "Product List", key: "product_list", href: '/admin/products', icon: Package }, 
+        { name: "Attributes", key: "attributes", href: '/admin/products/attributes', icon: Tags },
+        { name: "Brands", key: "brands", href: '/admin/attributes/brands', icon: Award },
+        { name: "Variants", key: "variants", href: '/admin/attributes/variants', icon: Shapes },
+        { name: "Stock Alerts", key: "stock_alerts", href: '/admin/inventory/alerts', icon: AlertCircle }
+      ]},
+      { id: 'services', icon: Wrench, color: "text-sky-400", items: [
+        { name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench }, 
+        { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers },
+        { name: "Attributes", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 },
+        { name: "Custom Requests", key: "custom_requests", href: '/admin/services/custom-requests', icon: MessageCircle },
+        { name: "Service Areas", key: "areas", href: '/admin/areas', icon: MapPin },
+        { name: "Packages", key: "packages", href: '/admin/services/packages', icon: Box },
+        { name: "Subscription", key: "subscription", href: '/admin/subscription', icon: CreditCard }
+      ]},
+      { id: 'marketing', icon: Megaphone, color: "text-orange-400", items: [
+        { name: "Landing Pages", key: "landing_pages", href: '/admin/marketing/landing-pages', icon: Layout },
+        { name: "Campaigns", key: "campaigns", href: '/admin/campaigns', icon: Zap },
+        { name: "Referrals", key: "referrals", href: '/admin/referrals', icon: Users }
+      ]},
+      { id: 'offers', icon: Gift, color: "text-red-400", items: [
+        { name: "Advanced Offers", key: "advanced_offers", href: '/admin/offers/advanced', icon: Sparkles },
+        { name: "Coupons", key: "coupons", href: '/admin/offers/coupons', icon: TicketPercent },
+        { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Clock },
+        { name: "Smart Pricing", key: "smart_pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp }
+      ]},
+      { id: 'seo', icon: Search, color: "text-blue-400", items: [
+        { name: "SEO Settings", key: "seo_settings", href: '/admin/marketing/seo', icon: Globe },
+        { name: "Meta Verification", key: "meta_verification", href: '/admin/seo/meta-verification', icon: ShieldCheck },
+        { name: "Verification Files", key: "verification_files", href: '/admin/seo/verification-files', icon: FileCode },
+        { name: "Google Analytics", key: "analytics", href: '/admin/seo/analytics', icon: BarChart3 },
+        { name: "Tag Manager", key: "tag_manager", href: '/admin/seo/tag-manager', icon: Code },
+        { name: "Tracking Hub", key: "tracking_hub", href: '/admin/seo/tracking-hub', icon: Activity },
+        { name: "Event Logs", key: "event_logs", href: '/admin/seo/logs', icon: History }
+      ]},
+      { id: 'hrm', icon: HardHat, color: "text-amber-500", items: [
+        { name: "Staff Directory", key: "staff_directory", href: '/admin/employees', icon: Users },
+        { name: "Attendance", key: "attendance", href: '/admin/hrm/attendance', icon: ClipboardList },
+        { name: "Payroll", key: "payroll", href: '/admin/hrm/payroll', icon: Wallet },
+        { name: "Leaves", key: "leaves", href: '/admin/hrm/leaves', icon: Calendar },
+        { name: "Expenses", key: "expenses", href: '/admin/hrm/expenses', icon: DollarSign },
+        { name: "Access Control", key: "access_control", href: '/admin/roles', icon: ShieldCheck }
+      ]},
+      { id: 'customer_hub', href: '/admin/customers', icon: Users, color: "text-purple-400", items: [] },
+      { id: 'partners', icon: Handshake, color: "text-indigo-400", items: [
+        { name: "Partner Registry", key: "partner_registry", href: '/admin/partners', icon: Building2 },
+        { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase },
+        { name: "Commission Ledger", key: "commission_ledger", href: '/admin/partners/commissions', icon: FileText }
+      ]},
+      { id: 'vendors', icon: Store, color: "text-pink-400", items: [
+        { name: "Vendor Registry", key: "vendor_registry", href: '/admin/vendors', icon: Store },
+        { name: "Product Approvals", key: "product_approvals", href: '/admin/products/approvals', icon: CheckCircle2 },
+        { name: "Service Approvals", key: "service_approvals", href: '/admin/services/approvals', icon: CheckCircle2 },
+        { name: "Vendor Commissions", key: "vendor_commissions", href: '/admin/vendors/commissions', icon: Wallet },
+        { name: "Verification Queue", key: "verification_queue", href: '/admin/vendors/verifications', icon: ShieldCheck }
+      ]},
+      { id: 'finance', icon: Wallet, color: "text-green-400", items: [
+        { name: "Finance Overview", key: "finance_overview", href: '/admin/finance', icon: TrendingUp },
+        { name: "Master Ledger", key: "ledger", href: '/admin/finance/ledger', icon: FileText },
+        { name: "Bank & Cash", key: "accounts", href: '/admin/finance/accounts', icon: Building2 },
+        { name: "Staff Salaries", key: "staff_salaries", href: '/admin/finance/salaries', icon: Users },
+        { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Calculator }
+      ]},
+      { id: 'reports', href: '/admin/reports', icon: BarChart3, color: "text-emerald-400", items: [] },
+      { id: 'customize', icon: Palette, color: "text-fuchsia-400", items: [
+        { name: "Home Builder", key: "homepage_builder", href: '/admin/customize/homepage-builder', icon: Navigation },
+        { name: "Banners", key: "hero_banners", href: '/admin/customize/hero', icon: Layout },
+        { name: "Navigation", key: "navigation_hub", href: '/admin/customize/navigation', icon: Compass },
+        { name: "Team", key: "team", href: '/admin/customize/team', icon: Users },
+        { name: "Theme", key: "theme", href: '/admin/customize/theme', icon: Palette },
+        { name: "Pages", key: "pages", href: '/admin/pages', icon: FileCode }
+      ]},
+      { id: 'system', icon: Settings, color: "text-slate-300", items: [
+        { name: "Global", key: "global_settings", href: '/admin/settings', icon: Settings },
+        { name: "Sidebar", key: "sidebar_appearance", href: '/admin/settings/appearance/sidebar', icon: List },
+        { name: "API & Webhooks", key: "api_settings", href: '/admin/settings/api', icon: Code },
+        { name: "Payments", key: "payment_gateways", href: '/admin/payments', icon: Wallet },
+        { name: "Delivery", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck },
+        { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Globe },
+        { name: "Documents", key: "documents", href: '/admin/settings/documents', icon: Printer }
+      ]},
+      { id: 'ai_agents', icon: Bot, color: "text-cyan-400", items: [
+        { name: "AI Sales Desk", key: "ai_sales", href: '/admin/ai/sales', icon: Zap },
+        { name: "AI Booking Assistant", key: "ai_booking", href: '/admin/ai/booking', icon: Clock }
+      ]},
+      { id: 'support', icon: Headphones, color: "text-rose-300", items: [
+        { name: "Tickets", key: "tickets", href: '/admin/support', icon: MessageCircle },
+        { name: "Hub Config", key: "support_config", href: '/admin/support-hub', icon: Zap }
+      ]}
     ];
     return groups;
-  }, [sidebarConfig]);
+  }, [sidebarConfig, t]);
 
   if (isUserLoading || roleLoading || !mounted) return <div className="h-screen flex flex-col items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!user || !isAdmin) return null;
