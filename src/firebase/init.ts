@@ -46,7 +46,8 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('assertion failed') ||
         lowMsg.includes('fe":-1') ||
-        lowMsg.includes('fe": -1')
+        lowMsg.includes('fe": -1') ||
+        lowMsg.includes('fe":-1')
       );
     };
 
