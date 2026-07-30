@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { 
   ArrowLeft, 
   Plus, 
@@ -131,6 +132,14 @@ export default function CreateQuotationPage() {
     }));
   };
 
+  const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
+  const updateTerm = (idx: number, val: string) => {
+    const next = [...config.terms];
+    next[idx] = val;
+    setConfig({ ...config, terms: next });
+  };
+  const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
+
   const totals = useMemo(() => {
     const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
     const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
@@ -168,7 +177,7 @@ export default function CreateQuotationPage() {
         updatedAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'quotations'), finalData);
+      await addDoc(collection(db, 'quotations'), finalData);
       router.push('/admin/quotations');
       toast({ title: "Quotation Generated" });
     } catch (e) {
@@ -253,7 +262,7 @@ export default function CreateQuotationPage() {
                 <Label className="text-[10px] font-bold text-gray-500 uppercase">Select Products</Label>
                 <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                   <SelectTrigger className="h-10 bg-white border-gray-200 rounded-lg">
-                    <SelectValue placeholder="Choose product/service..." />
+                    <SelectValue placeholder="Choose product..." />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     {services.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold">{s.title}</SelectItem>)}
@@ -317,7 +326,7 @@ export default function CreateQuotationPage() {
                         ৳{item.total?.toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <button onClick={() => removeItem(item.id)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={16}/></button>
+                        <button type="button" onClick={() => removeItem(item.id)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={16}/></button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -351,7 +360,9 @@ export default function CreateQuotationPage() {
                     <button type="button" onClick={() => removeTerm(i)} className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
                   </div>
                 ))}
-                <Button type="button" variant="ghost" onClick={addTerm} className="w-full border-dashed border-2 h-9 text-[10px] font-bold uppercase">+ Add Term</Button>
+                <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-xl h-10 text-[10px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary transition-all">
+                  <Plus size={14}/> Add Term
+                </button>
               </div>
             </div>
           </div>
