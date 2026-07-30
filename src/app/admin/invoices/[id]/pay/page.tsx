@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useMemoFirebase, useFirestore } from '@/firebase';
 import { doc, updateDoc, increment, writeBatch, serverTimestamp } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -14,13 +14,14 @@ import {
   CheckCircle2, 
   Save, 
   Banknote, 
-  ShieldCheck, 
-  AlertCircle,
   FileText,
   User,
   History,
   Zap,
-  Check
+  Calculator,
+  Calendar,
+  CreditCard,
+  MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function InvoicePaymentPage() {
   const { id } = useParams();
@@ -72,7 +74,7 @@ export default function InvoicePaymentPage() {
         amount: amt,
         date: new Date().toISOString(),
         method: paymentForm.method,
-        notes: paymentForm.notes || 'Settled via Payment Terminal'
+        notes: paymentForm.notes || 'Settled via Terminal'
       };
 
       batch.update(invRef, {
@@ -93,178 +95,174 @@ export default function InvoicePaymentPage() {
       }
 
       await batch.commit();
-      toast({ title: "Payment Recorded", description: `৳${amt} successfully adjusted in ledger.` });
+      toast({ title: "পেমেন্ট সম্পন্ন হয়েছে", description: `৳${amt} লেজারে যুক্ত করা হয়েছে।` });
       router.push('/admin/invoices');
     } catch (e) {
-      toast({ variant: "destructive", title: "Process Error", description: "Failed to update financial records." });
-    } finally {
+      toast({ variant: "destructive", title: "ব্যর্থ হয়েছে" });
       setIsSubmitting(false);
     }
   };
 
-  if (!mounted || isLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48}/><p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Terminal...</p></div>;
+  if (!mounted || isLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48}/><p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Terminal...</p></div>;
   if (!invoice) return <div className="p-32 text-center uppercase font-black opacity-20 tracking-[0.5em]">Invoice Not Found</div>;
 
   return (
-    <div className="space-y-8 pb-24 max-w-5xl mx-auto min-w-0">
-      <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] border shadow-sm">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl h-12 w-12 border hover:bg-gray-50 transition-all">
-            <ArrowLeft size={24} />
+    <div className="space-y-4 pb-20 max-w-6xl mx-auto min-w-0 -mt-6">
+      {/* 🛠️ HEADER ACTION BAR */}
+      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border hover:bg-gray-50">
+            <ArrowLeft size={16} />
           </Button>
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none">Payment Terminal</h1>
-            <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1.5 flex items-center gap-2">
-               <FileText size={12}/> Ref: {invoice.invoiceNumber}
-            </p>
-          </div>
+          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight">Payment Settlement</h1>
         </div>
-        <Badge className={cn("h-8 px-4 rounded-full font-black text-[9px] uppercase border-none tracking-[0.2em]", invoice.dueAmount > 0 ? "bg-rose-500 text-white" : "bg-emerald-500 text-white")}>
-           {invoice.dueAmount > 0 ? 'PAYMENT DUE' : 'FULLY SETTLED'}
-        </Badge>
+        <div className="flex items-center gap-2">
+           <Badge className={cn("h-7 px-3 rounded-lg font-black text-[9px] uppercase border-none", invoice.dueAmount > 0 ? "bg-rose-500 text-white" : "bg-emerald-500 text-white")}>
+              {invoice.dueAmount > 0 ? 'DUE PENDING' : 'SETTLED'}
+           </Badge>
+           <Button onClick={handleRecordPayment} disabled={isSubmitting || !paymentForm.amount} className="h-9 px-8 rounded-lg font-black uppercase text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 gap-2 active:scale-95 transition-all">
+             {isSubmitting ? <Loader2 className="animate-spin h-3 w-3" /> : <><Save size={14} /> Authorize Payment</>}
+           </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left: Form */}
-        <div className="lg:col-span-7 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-            <CardHeader className="bg-[#081621] text-white p-8">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary rounded-2xl shadow-xl shadow-primary/20"><Wallet size={24} /></div>
-                <div>
-                  <CardTitle className="text-xl font-black uppercase tracking-tight">Record Collection</CardTitle>
-                  <CardDescription className="text-white/40 font-bold uppercase text-[9px]">Authorize financial settlement</CardDescription>
-                </div>
+      <div className="space-y-4">
+        {/* 📋 INVOICE & CUSTOMER INFO ROW */}
+        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
+          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
+              <FileText size={12} /> Document Context
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="space-y-1">
+                <Label className="text-[8px] font-bold text-gray-400 uppercase">Invoice Ref</Label>
+                <p className="text-xs font-black text-primary font-mono">{invoice.invoiceNumber}</p>
               </div>
-            </CardHeader>
-            <CardContent className="p-8">
-              <form onSubmit={handleRecordPayment} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Settlement Amount (৳)</Label>
-                    <div className="relative">
-                       <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-emerald-600">৳</span>
-                       <Input 
-                        type="number" 
-                        value={paymentForm.amount} 
-                        onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
-                        className="h-14 pl-10 border-none bg-gray-50 rounded-2xl font-black text-xl text-emerald-700 shadow-inner focus:bg-white transition-all" 
-                        required
-                       />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Payment Channel</Label>
-                    <Select value={paymentForm.method} onValueChange={v => setPaymentForm({...paymentForm, method: v})}>
-                      <SelectTrigger className="h-14 bg-gray-50 border-none rounded-2xl font-black text-xs uppercase shadow-inner">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        {['Cash', 'bKash', 'Nagad', 'Bank Transfer', 'A/C Payee Check'].map(m => (
-                          <SelectItem key={m} value={m} className="py-3 font-black text-[10px] uppercase">{m}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <Label className="text-[8px] font-bold text-gray-400 uppercase">Client Name</Label>
+                <p className="text-xs font-bold text-gray-900 uppercase truncate">{invoice.customerInfo?.name}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[8px] font-bold text-gray-400 uppercase">Grand Total</Label>
+                <p className="text-xs font-black text-gray-900">৳{invoice.total?.toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[8px] font-bold text-gray-400 uppercase">Total Settled</Label>
+                <p className="text-xs font-black text-emerald-600">৳{invoice.paidAmount?.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Reference Memo</Label>
-                  <Textarea 
-                    value={paymentForm.notes} 
-                    onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} 
-                    placeholder="e.g. Transaction ID, Check Number or Received By..." 
-                    className="min-h-[120px] bg-gray-50 border-none rounded-[2rem] p-6 font-medium shadow-inner focus:bg-white transition-all"
+        {/* 💰 PAYMENT ENTRY ROW */}
+        <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
+          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
+            <CardTitle className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
+              <CreditCard size={12} /> Transaction Entry
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded-xl border">
+              <div className="md:col-span-3 space-y-1.5">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Receive Amount (৳)</Label>
+                <div className="relative">
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" size={14} />
+                  <Input 
+                    type="number" 
+                    value={paymentForm.amount} 
+                    onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
+                    className="h-10 pl-9 font-black text-emerald-700 bg-white border-none shadow-sm rounded-lg" 
                   />
                 </div>
+              </div>
+              <div className="md:col-span-3 space-y-1.5">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Payment Method</Label>
+                <Select value={paymentForm.method} onValueChange={v => setPaymentForm({...paymentForm, method: v})}>
+                  <SelectTrigger className="h-10 bg-white border-none rounded-lg font-bold text-[11px] uppercase shadow-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {['Cash', 'bKash', 'Nagad', 'Bank Transfer', 'Cheque'].map(m => (
+                      <SelectItem key={m} value={m} className="text-[10px] font-bold uppercase">{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-6 space-y-1.5">
+                <Label className="text-[9px] font-black uppercase text-gray-400 ml-1">Memo / Reference</Label>
+                <Input 
+                  value={paymentForm.notes} 
+                  onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} 
+                  placeholder="e.g. Transaction ID or Short Note"
+                  className="h-10 bg-white border-none rounded-lg font-medium text-xs shadow-sm"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex items-start gap-4">
-                  <AlertCircle size={24} className="text-amber-600 mt-1 shrink-0" />
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black uppercase text-amber-900">Audit Trail Active</h4>
-                    <p className="text-[10px] font-medium text-amber-800/70 leading-relaxed uppercase">
-                      This transaction will be logged in the Master Ledger and update the global cash balance automatically.
-                    </p>
-                  </div>
+        {/* 📊 HISTORY & CALCULATION BOX */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 space-y-3">
+             <div className="flex items-center gap-2 px-1">
+                <History size={14} className="text-primary"/>
+                <Label className="text-[10px] font-black uppercase text-gray-400">Payment Log History</Label>
+             </div>
+             <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="text-[9px] font-black uppercase py-2 pl-5">Date</TableHead>
+                      <TableHead className="text-[9px] font-black uppercase text-center">Method</TableHead>
+                      <TableHead className="text-[9px] font-black uppercase text-right pr-5">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoice.paymentHistory?.map((pay: any, idx: number) => (
+                      <TableRow key={idx} className="hover:bg-gray-50/50">
+                        <TableCell className="py-2 pl-5 text-[10px] font-bold text-gray-500">{format(new Date(pay.date), 'MMM dd, yyyy')}</TableCell>
+                        <TableCell className="text-center"><Badge variant="outline" className="text-[8px] font-black border-none bg-blue-50 text-blue-600 uppercase">{pay.method}</Badge></TableCell>
+                        <TableCell className="text-right pr-5 font-black text-xs text-gray-900">৳{pay.amount.toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                    {!invoice.paymentHistory?.length && (
+                      <TableRow><TableCell colSpan={3} className="py-8 text-center text-gray-300 text-[10px] uppercase tracking-widest font-black italic">No records found</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+             </Card>
+          </div>
+
+          <div className="lg:col-span-5">
+            <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
+              <CardContent className="p-6 md:p-8 space-y-6">
+                <div className="space-y-3">
+                   <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                     <span>Current Arrears</span>
+                     <span className="text-rose-500">৳{invoice.dueAmount?.toLocaleString()}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                     <span>Entering Payment</span>
+                     <span className="text-emerald-600">+৳{(parseFloat(paymentForm.amount) || 0).toLocaleString()}</span>
+                   </div>
                 </div>
 
-                <div className="pt-4 flex gap-4">
-                  <Button type="button" variant="ghost" onClick={() => router.back()} className="flex-1 h-16 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Discard</Button>
-                  <Button type="submit" disabled={isSubmitting || !paymentForm.amount} className="flex-[2] h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-600/20 gap-3 active:scale-95 transition-all">
-                    {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : <><CheckCircle2 size={20} /> Authorize & Sync</>}
-                  </Button>
+                <div className="pt-6 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">New Net Due</span>
+                    <span className="text-4xl font-black text-[#081621] tracking-tighter italic">
+                      ৳{Math.max(0, invoice.dueAmount - (parseFloat(paymentForm.amount) || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: Summary */}
-        <div className="lg:col-span-5 space-y-8">
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-            <CardHeader className="bg-gray-50/50 p-8 border-b">
-               <CardTitle className="text-base font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><FileText size={18} /> Billing Context</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-               <div className="flex items-start gap-4">
-                 <div className="p-3 bg-primary/5 text-primary rounded-2xl shrink-0"><User size={24}/></div>
-                 <div className="min-w-0">
-                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Customer</p>
-                    <p className="text-lg font-black text-gray-900 uppercase truncate">{invoice.customerInfo?.name}</p>
-                    <p className="text-xs font-bold text-gray-500 mt-1">{invoice.customerInfo?.phone}</p>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-4 border-y border-gray-50 py-8">
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase text-gray-400">Grand Total</p>
-                    <p className="text-2xl font-black text-gray-900 tracking-tighter">৳{invoice.total?.toLocaleString()}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase text-gray-400">Total Settled</p>
-                    <p className="text-2xl font-black text-emerald-600 tracking-tighter">৳{invoice.paidAmount?.toLocaleString()}</p>
-                  </div>
-               </div>
-
-               <div className="p-6 bg-rose-50 rounded-[2rem] border border-rose-100 space-y-1">
-                  <p className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Balance Pending</p>
-                  <div className="flex justify-between items-end">
-                    <h3 className="text-4xl font-black text-rose-600 tracking-tighter italic">৳{invoice.dueAmount?.toLocaleString()}</h3>
-                    <div className="p-2 bg-white rounded-xl text-rose-600 shadow-sm"><Zap size={20} fill="currentColor"/></div>
-                  </div>
-               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white border border-gray-100">
-            <CardHeader className="bg-gray-50/50 p-6 border-b flex flex-row items-center justify-between">
-               <CardTitle className="text-sm font-black uppercase tracking-widest text-[#081621] flex items-center gap-2"><History size={16} /> History</CardTitle>
-               <Badge className="bg-indigo-50 text-indigo-700 border-none text-[8px] font-black uppercase">{invoice.paymentHistory?.length || 0} TRNS</Badge>
-            </CardHeader>
-            <CardContent className="p-6">
-               <div className="space-y-4">
-                  {invoice.paymentHistory?.map((pay: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center group border-b border-gray-50 pb-3 last:border-none last:pb-0">
-                      <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><Check size={14} strokeWidth={4}/></div>
-                         <div>
-                            <p className="text-[10px] font-black text-gray-900 uppercase leading-none">৳{pay.amount.toLocaleString()}</p>
-                            <p className="text-[8px] font-bold text-gray-400 uppercase mt-1">{format(new Date(pay.date), 'MMM dd, yyyy')}</p>
-                         </div>
-                      </div>
-                      <Badge variant="outline" className="text-[7px] font-black uppercase border-gray-100 bg-gray-50 text-gray-500">{pay.method}</Badge>
-                    </div>
-                  ))}
-                  {!invoice.paymentHistory?.length && (
-                    <div className="text-center py-10 opacity-20 grayscale"><Zap size={40} className="mx-auto mb-2" /><p className="text-[9px] font-black uppercase">No records found</p></div>
-                  )}
-               </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
