@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, deleteDoc, doc, writeBatch, limit } from 'firebase/firestore';
+import { collection, query, orderBy, deleteDoc, doc, writeBatch, limit, increment, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,9 @@ import {
   ShieldCheck,
   Clock,
   FileText,
-  Wallet
+  Wallet,
+  X,
+  CheckCircle2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -31,6 +33,16 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function InvoicesListContent() {
   const db = useFirestore();
@@ -43,6 +55,11 @@ function InvoicesListContent() {
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Quick Payment State
+  const [paymentTarget, setPaymentTarget] = useState<any>(null);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'Cash', notes: '' });
 
   useEffect(() => {
     setMounted(true);
@@ -108,6 +125,54 @@ function InvoicesListContent() {
       toast({ variant: "destructive", title: "Action Failed" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRecordPayment = async () => {
+    if (!db || !paymentTarget || !paymentForm.amount) return;
+    setIsPaymentProcessing(true);
+    const amt = parseFloat(paymentForm.amount);
+    const batch = writeBatch(db);
+
+    try {
+      const invoiceRef = doc(db, 'invoices', paymentTarget.id);
+      const newPaid = (paymentTarget.paidAmount || 0) + amt;
+      const newDue = Math.max(0, paymentTarget.total - newPaid);
+      const newStatus = newDue <= 0 ? 'Paid' : 'Partial';
+
+      const record = {
+        id: 'pay_lst_' + Date.now(),
+        amount: amt,
+        date: new Date().toISOString(),
+        method: paymentForm.method,
+        notes: paymentForm.notes || 'Settled from list view'
+      };
+
+      batch.update(invoiceRef, {
+        paidAmount: newPaid,
+        dueAmount: newDue,
+        paymentStatus: newStatus,
+        paymentHistory: [...(paymentTarget.paymentHistory || []), record],
+        updatedAt: serverTimestamp()
+      });
+
+      if (paymentTarget.customerId) {
+        const customerRef = doc(db, 'users', paymentTarget.customerId);
+        batch.update(customerRef, {
+          totalPaid: increment(amt),
+          outstandingBalance: increment(-amt),
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      await batch.commit();
+      toast({ title: "Payment Synchronized", description: `৳${amt} has been recorded.` });
+      setPaymentTarget(null);
+      setPaymentForm({ amount: '', method: 'Cash', notes: '' });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Settlement Error" });
+    } finally {
+      setIsPaymentProcessing(false);
     }
   };
 
@@ -185,7 +250,7 @@ function InvoicesListContent() {
                     <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Customer</TableHead>
                     <TableHead className="font-black uppercase text-[9px] tracking-widest text-[#081621]">Total Bill</TableHead>
                     <TableHead className="font-black uppercase text-[9px] tracking-widest text-center text-[#081621]">Status</TableHead>
-                    <TableHead className="text-right pr-8 uppercase text-[9px] tracking-widest text-[#081621]">Actions</TableHead>
+                    <TableHead className="text-right pr-8 uppercase text-[9px] tracking-widest">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -215,6 +280,17 @@ function InvoicesListContent() {
                       </TableCell>
                       <TableCell className="text-right pr-8">
                         <div className="flex justify-end gap-1 opacity-100">
+                          {inv.dueAmount > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-emerald-600 bg-emerald-50 hover:bg-emerald-100" 
+                              onClick={() => { setPaymentTarget(inv); setPaymentForm({ ...paymentForm, amount: inv.dueAmount.toString() }); }}
+                              title="Record Payment"
+                            >
+                              <Banknote size={16} />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild><Link href={`/invoice/${inv.invoiceNumber}`}><Eye size={16} /></Link></Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" asChild><Link href={`/admin/invoices/${inv.id}/edit`}><Edit size={16} /></Link></Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteSingle(inv.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
@@ -228,6 +304,54 @@ function InvoicesListContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 🛠️ QUICK PAYMENT MODAL */}
+      <Dialog open={!!paymentTarget} onOpenChange={() => setPaymentTarget(null)}>
+        <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
+          <header className="p-8 bg-[#081621] text-white shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary rounded-xl"><Wallet size={24}/></div>
+              <div><DialogTitle className="text-xl font-black uppercase tracking-tight">Invoice Settlement</DialogTitle></div>
+            </div>
+          </header>
+          <div className="p-8 space-y-6">
+             <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
+                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Reference</p>
+                   <p className="text-sm font-black text-[#081621] font-mono">{paymentTarget?.invoiceNumber}</p>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase text-gray-400">Payment Amount (৳)</Label>
+                   <Input 
+                      type="number" 
+                      value={paymentForm.amount} 
+                      onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
+                      className="h-14 bg-gray-50 border-none rounded-2xl font-black text-xl text-emerald-600 shadow-inner" 
+                   />
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase text-gray-400">Gateway</Label>
+                   <Select value={paymentForm.method} onValueChange={v => setPaymentForm({...paymentForm, method: v})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                      <SelectContent className="rounded-xl border-none shadow-2xl">
+                         {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m} className="font-bold text-xs uppercase py-3">{m}</SelectItem>)}
+                      </SelectContent>
+                   </Select>
+                </div>
+                <div className="space-y-2">
+                   <Label className="text-[10px] font-black uppercase text-gray-400">Notes</Label>
+                   <Textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} placeholder="Reference details..." className="bg-gray-50 border-none rounded-xl" />
+                </div>
+             </div>
+          </div>
+          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-3">
+             <Button variant="ghost" onClick={() => setPaymentTarget(null)} className="flex-1 rounded-xl">Discard</Button>
+             <Button onClick={handleRecordPayment} disabled={isPaymentProcessing || !paymentForm.amount} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-emerald-600/20">
+                {isPaymentProcessing ? <Loader2 className="animate-spin" /> : "Verify & Authorize"}
+             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
