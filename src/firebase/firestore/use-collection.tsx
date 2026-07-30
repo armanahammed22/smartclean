@@ -89,7 +89,7 @@ export function useCollection<T = any>(
             const errorStr = (err.message || String(err)).toLowerCase();
             const errorCode = err.code;
             
-            // 🛡️ SDK Resilience Shield: Detection of internal assertion IDs
+            // 🛡️ SDK Resilience Shield: Detection of internal assertion IDs (b815, ca9)
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
@@ -100,12 +100,12 @@ export function useCollection<T = any>(
               errorStr.includes('fe":-1') ||
               errorStr.includes('fe": -1')
             ) {
-              console.warn(`[Firestore Shield] Recovering from SDK assertion in collection: ${currentPath}.`);
+              console.warn(`[Firestore Shield] Recovering from SDK assertion in collection: ${currentPath}. Triggering silent retry.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) setRefreshKey(k => k + 1);
-              }, 2000); 
+              }, 1500); 
               return;
             }
 
@@ -128,11 +128,11 @@ export function useCollection<T = any>(
         );
       } catch (setupError: any) {
         const setupErrorStr = setupError.message.toLowerCase();
-        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815')) {
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
             if (activeToken.current === token) setRefreshKey(k => k + 1);
-          }, 3000);
+          }, 2000);
         }
       }
     };

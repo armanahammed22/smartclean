@@ -35,12 +35,13 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
         return false;
       }
 
-      // Suppress target list
+      // Suppress target list (Specifically ID: b815 and ca9)
       return (
         lowMsg.includes('ca9') || 
         lowMsg.includes('b815') || 
         lowMsg.includes('internal assertion failed') || 
-        lowMsg.includes('onbeforeloaded') || // Fix for Tawk.to/Chat widget crash
+        lowMsg.includes('unexpected state') ||
+        lowMsg.includes('onbeforeloaded') ||
         lowMsg.includes('i18next') ||
         lowMsg.includes('persistent_stream') ||
         lowMsg.includes('assertion failed') ||
@@ -66,25 +67,19 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       originalConsoleError.apply(console, args);
     };
 
-    window.addEventListener('error', (event) => {
-      const msg = event.message || (event.error && event.error.message) || '';
+    // Prevent Next.js Error Overlay for specific internal SDK issues
+    const silence = (event: any) => {
+      const msg = event.message || (event.reason && event.reason.message) || String(event.reason || '');
       if (isSuppressedError(msg)) {
-        console.warn('[System Shield] Blocking window error overlay:', msg.slice(0, 100));
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
+        console.warn('[System Shield] Prevented error overlay for SDK internal state.');
       }
-    }, true);
+    };
 
-    window.addEventListener('unhandledrejection', (event) => {
-      const msg = String(event.reason?.message || event.reason || '');
-      if (isSuppressedError(msg)) {
-        console.warn('[System Shield] Blocking unhandled rejection overlay:', msg.slice(0, 100));
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-      }
-    }, true);
+    window.addEventListener('error', silence, true);
+    window.addEventListener('unhandledrejection', silence, true);
 
     (window as any)._fs_shield_active = true;
   }
@@ -106,7 +101,7 @@ export function initializeFirebase(): { firebaseApp: FirebaseApp | null; auth: A
       
       try {
         firestore = initializeFirestore(firebaseApp, {
-          experimentalForceLongPolling: true,
+          experimentalForceLongPolling: true, // Force long polling to avoid stream crashes in some proxy environments
           localCache: memoryLocalCache(),
         });
       } catch (e) {

@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect, useRef } from 'react';
@@ -41,7 +40,6 @@ export function useDoc<T = any>(
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Sync isLoading state when ref changes to prevent stale reads
   useEffect(() => {
     if (memoizedDocRef) {
       setIsLoading(true);
@@ -88,6 +86,7 @@ export function useDoc<T = any>(
             const errorStr = (err.message || String(err)).toLowerCase();
             const errorCode = err.code;
             
+            // 🛡️ SDK Resilience Shield: Detection of internal assertion IDs (b815, ca9)
             if (
               errorStr.includes('ca9') || 
               errorStr.includes('b815') || 
@@ -98,12 +97,12 @@ export function useDoc<T = any>(
               errorStr.includes('fe":-1') ||
               errorStr.includes('fe": -1')
             ) {
-              console.warn(`[Firestore Shield] Recovering from SDK assertion in doc: ${currentPath}.`);
+              console.warn(`[Firestore Shield] Recovering from SDK assertion in doc: ${currentPath}. Triggering silent retry.`);
               
               if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
               retryTimeoutRef.current = setTimeout(() => {
                 if (activeToken.current === token) setRefreshKey(k => k + 1);
-              }, 2000);
+              }, 1500);
               return;
             }
 
@@ -129,11 +128,11 @@ export function useDoc<T = any>(
         );
       } catch (setupError: any) {
         const setupErrorStr = setupError.message.toLowerCase();
-        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815')) {
+        if (setupErrorStr.includes('ca9') || setupErrorStr.includes('b815') || setupErrorStr.includes('unexpected state')) {
           if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
           retryTimeoutRef.current = setTimeout(() => {
             if (activeToken.current === token) setRefreshKey(k => k + 1);
-          }, 3000);
+          }, 2000);
         }
       }
     };
