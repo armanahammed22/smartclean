@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -45,7 +44,8 @@ import {
   Edit2,
   Languages,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Image as ImageIcon
 } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -112,6 +112,7 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState<any>({
     websiteName: 'Smart Clean',
     logoUrl: '',
+    watermarkLogoUrl: '',
     signatureUrl: '',
     logoLink: '/',
     faviconUrl: '',
@@ -303,6 +304,31 @@ export default function AdminSettingsPage() {
                   </div>
                   <div className="space-y-8">
                     <ImageUploader label="Master Branding Logo" hint="512 x 512 px" initialUrl={formData.logoUrl} onUpload={(url) => setFormData({...formData, logoUrl: url})} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b p-8">
+                <CardTitle className="text-lg font-bold">Digital Protection & Watermark</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <ImageUploader 
+                      label="Watermark Logo (Transparent PNG)" 
+                      hint="200 x 200 px (No Background)" 
+                      initialUrl={formData.watermarkLogoUrl} 
+                      onUpload={(url) => setFormData({...formData, watermarkLogoUrl: url})} 
+                      aspectRatio="aspect-square w-32" 
+                    />
+                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                      <Info size={16} className="text-blue-600 mt-1 shrink-0" />
+                      <p className="text-[10px] font-bold text-blue-800 leading-normal uppercase">
+                        This logo will appear as a watermark on Team Photos. Anti-copy and screenshot protection is automatically enabled for protected images.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>

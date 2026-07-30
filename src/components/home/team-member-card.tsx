@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TeamMemberDetails } from './team-member-details';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 interface TeamMemberCardProps {
   member: TeamMember;
@@ -17,11 +19,16 @@ interface TeamMemberCardProps {
 /**
  * Optimized Team Member Card
  * Dimensions: 3" High x 2" Wide (approx 288px x 192px)
- * Top 2" (192px): Image
+ * Top 2" (192px): Image with Watermark and Protection
  * Bottom 1" (96px): Content
  */
 export function TeamMemberCard({ member }: TeamMemberCardProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const db = useFirestore();
+
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+  const watermarkUrl = settings?.watermarkLogoUrl;
 
   return (
     <>
@@ -30,7 +37,7 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
         onClick={() => setIsOpen(true)}
       >
         {/* Photo Container (2 Inches / 192px) */}
-        <div className="relative h-[192px] w-full overflow-hidden bg-gray-50 shrink-0">
+        <div className="relative h-[192px] w-full overflow-hidden bg-gray-50 shrink-0 pointer-events-none select-none">
           <Image 
             src={member.image || 'https://picsum.photos/seed/staff/200/200'} 
             alt={member.name} 
@@ -38,18 +45,30 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
             className="object-cover transition-transform duration-700 group-hover:scale-110"
             sizes="192px"
             unoptimized
+            draggable={false}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          {/* 💧 WATERMARK LAYER */}
+          {watermarkUrl && (
+            <div className="absolute top-2 right-2 w-8 h-8 opacity-40 z-20 pointer-events-none grayscale brightness-200">
+               <Image src={watermarkUrl} alt="Watermark" fill className="object-contain" unoptimized />
+            </div>
+          )}
+
+          {/* 🛡️ PROTECTION OVERLAY (Prevents simple right-click/drag) */}
+          <div className="absolute inset-0 bg-transparent z-10" onContextMenu={(e) => e.preventDefault()} />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
           
           {member.featured && (
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 z-20">
               <Badge className="bg-primary text-white border-none px-2 py-0.5 rounded-md font-black text-[7px] uppercase tracking-widest shadow-lg">
                 PRO
               </Badge>
             </div>
           )}
 
-          <div className="absolute bottom-2 left-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+          <div className="absolute bottom-2 left-2 right-2 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 z-30 pointer-events-auto">
              <div className="flex gap-1.5 justify-center">
                 {member.phone && (
                   <button className="h-7 w-7 rounded-lg bg-white text-primary flex items-center justify-center shadow-lg active:scale-90" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}>

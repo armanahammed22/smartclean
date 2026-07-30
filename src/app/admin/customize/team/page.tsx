@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -32,7 +31,9 @@ import {
   MapPin,
   Calendar,
   Languages,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -224,7 +225,25 @@ export default function TeamManagementPage() {
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 custom-scrollbar">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <aside className="lg:col-span-4 space-y-6">
-                <ImageUploader label="Profile Photo" hint="800 x 1000 px" initialUrl={formData.image} onUpload={url => setFormData({...formData, image: url})} aspectRatio="aspect-[4/5]" />
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-amber-900 uppercase">Image Standard</p>
+                      <p className="text-[11px] font-medium text-amber-800 leading-tight">
+                        টিম কার্ডের উপরের ২ ইঞ্চির জন্য **৮০০ x ৮০০ px (১:১ রেশিও)** এর ছবি ব্যবহার করুন।
+                      </p>
+                    </div>
+                  </div>
+                  <ImageUploader 
+                    label="Profile Photo" 
+                    hint="800 x 800 px (1:1 Ratio for Top Section)" 
+                    initialUrl={formData.image} 
+                    onUpload={url => setFormData({...formData, image: url})} 
+                    aspectRatio="aspect-square" 
+                  />
+                </div>
+                
                 <div className="space-y-4 pt-6 border-t">
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
                     <Label className="text-[10px] font-black uppercase">Featured Member</Label>
