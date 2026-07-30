@@ -61,14 +61,12 @@ export function TeamSection() {
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-12 px-2">
           <div className="space-y-2 max-w-3xl text-center md:text-left">
-            {/* Minimalist Header - Manageable Title */}
             <h2 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter italic font-headline leading-tight">
               {sectionTitle}
             </h2>
           </div>
         </div>
 
-        {/* Increased width container for wider cards */}
         <div className="relative px-4 md:px-12">
           <Carousel
             opts={{
@@ -95,22 +93,7 @@ export function TeamSection() {
             </div>
           </Carousel>
         </div>
-
-        <div className="mt-12 text-center md:hidden">
-           <div className="flex justify-center gap-2 items-center text-[10px] font-black text-gray-300 uppercase tracking-widest">
-              <ArrowRight size={14} className="animate-bounce-x" /> Swipe to see more
-           </div>
-        </div>
       </div>
-      <style jsx global>{`
-        @keyframes bounce-x {
-          0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(5px); }
-        }
-        .animate-bounce-x {
-          animation: bounce-x 1s infinite;
-        }
-      `}</style>
     </section>
   );
 }
