@@ -287,12 +287,14 @@ export interface Invoice {
     phone: string;
     email?: string | null;
     address: string;
+    company?: string;
   };
   items: InvoiceItem[];
   subtotal: number;
   tax: number;
   vatPercent?: number;
   discount: number;
+  discountType?: 'percentage' | 'fixed';
   deliveryCharge: number;
   previousDue: number; 
   total: number; 
@@ -301,8 +303,11 @@ export interface Invoice {
   paidAmount: number;
   dueAmount: number;
   paymentHistory: PaymentRecord[];
+  terms?: string[];
+  notes?: string;
+  tagline?: string;
   createdAt: string;
-  dueDate: string;
+  dueDate: string | null;
   publicLink?: string;
 }
 
@@ -407,10 +412,11 @@ export interface Quotation {
   status: 'Draft' | 'Sent' | 'Approved' | 'Rejected' | 'Expired' | 'Converted';
   issueDate: string;
   expiryDate: string;
-  terms: string;
+  terms: string[];
   customerNotes?: string;
   internalNotes?: string;
   salesPerson?: string;
+  tagline?: string;
   convertedTo?: 'booking' | 'invoice';
   convertedId?: string;
   publicLink?: string;

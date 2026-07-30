@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -98,6 +99,12 @@ function InvoiceViewContent() {
     const list = settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
     return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
   }, [settings]);
+
+  const terms = useMemo(() => {
+    const currentTerms = invoice?.terms || settings?.invoiceDefaultTerms;
+    if (!currentTerms) return ["Standard service terms apply."];
+    return Array.isArray(currentTerms) ? currentTerms : [currentTerms];
+  }, [invoice, settings]);
 
   const handleWhatsApp = () => {
     if (!invoice) return;
@@ -211,7 +218,7 @@ function InvoiceViewContent() {
                 <thead className="bg-[#081621] text-white">
                   <tr>
                     <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
-                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service & Material Description</th>
+                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service Description</th>
                     <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
                     <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Unit Price</th>
                     <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Amount</th>
@@ -224,26 +231,19 @@ function InvoiceViewContent() {
                       <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
                         <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                       </td>
-                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{item.price?.toLocaleString()}</td>
-                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price?.toLocaleString()}</td>
+                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
                   
-                  {invoice.previousDue > 0 && (
-                    <tr className="border-t border-gray-100">
-                      <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Arrears / Previous Due</td>
-                      <td className="py-1.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue?.toLocaleString()}/-</td>
-                    </tr>
-                  )}
-
-                  <tr className="border-t-2 border-[#081621] text-white" style={{ backgroundColor: d.primaryColor }}>
+                  <tr className="border-t-[3px] border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
                     <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Total Payable</td>
                     <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
                   </tr>
                   
                   <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Payments Received (-)</td>
+                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Received (-)</td>
                     <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
                   </tr>
 
@@ -258,6 +258,20 @@ function InvoiceViewContent() {
             <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
               <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(invoice.total) || 0)}"</p>
+            </div>
+
+            <div className="space-y-1.5">
+               <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
+               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-inner">
+                  <div className="grid grid-cols-1 gap-0.5">
+                    {terms.map((term: string, i: number) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="text-[9px] font-black min-w-[12px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                        <p className="font-medium text-gray-600 leading-tight" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
+                      </div>
+                    ))}
+                  </div>
+               </div>
             </div>
 
             <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-2 pb-2" style={{ marginTop: `${d.signatureSpacing}px` }}>
@@ -276,7 +290,7 @@ function InvoiceViewContent() {
 
           <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
              <div className="text-center space-y-0.5 mb-2">
-                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{settings?.tagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p>
+                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{invoice.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p>
              </div>
              
              <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -22,7 +23,8 @@ import {
   AlertCircle,
   X,
   Banknote,
-  Printer
+  Printer,
+  Star
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -58,15 +60,24 @@ export default function AdminInvoiceDetailPage() {
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
+  const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
+  const { data: design } = useDoc(designRef);
+
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
   const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212';
   
   const websiteName = settings?.websiteName || 'Smart Clean';
+  const tagline = invoice?.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living.";
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
 
   const isDue = (invoice?.dueAmount || 0) > 0;
   const isQuotation = invoice?.invoiceNumber?.startsWith('QTN');
+
+  const providedServices = useMemo(() => {
+    const list = settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
+    return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+  }, [settings]);
 
   const handleWhatsApp = () => {
     if (!invoice) return;
@@ -170,6 +181,24 @@ export default function AdminInvoiceDetailPage() {
   const signatureUrl = settings?.signatureUrl;
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
 
+  const d = design || {
+    primaryColor: '#1E5F7A',
+    headerPaddingTop: 5,
+    headerPaddingBottom: 5,
+    sectionSpacing: 10,
+    tableFontSize: 10.5,
+    tableRowPadding: 2,
+    headerFontSize: 22,
+    bodyFontSize: 11,
+    logoSize: 52,
+    showGridLines: true,
+    footerMarginTop: 5,
+    footerPaddingBottom: 5,
+    signatureSpacing: 25,
+    taglineFontSize: 11,
+    disclaimerFontSize: 7.5
+  };
+
   return (
     <div className="space-y-12 pb-32 md:pb-24 max-w-6xl mx-auto min-w-0">
       <style jsx global>{`
@@ -196,19 +225,18 @@ export default function AdminInvoiceDetailPage() {
                 </Badge>
             </div>
             <h1 className="text-3xl font-black tracking-tighter uppercase leading-none italic">{invoice.invoiceNumber}</h1>
-            <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">Document Audit Context: {invoice.id}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-3 relative z-10">
           {isDue && (
-            <Button onClick={() => setIsPaymentModalOpen(true)} className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-2xl bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button onClick={() => setIsPaymentModalOpen(true)} className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-xl shadow-primary/20 bg-emerald-600 hover:bg-emerald-700 text-white">
               <Banknote size={18} /> Add Payment
             </Button>
           )}
           <Button variant="outline" onClick={handleWhatsApp} className="gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-500/30 text-emerald-400 bg-white/5 hover:bg-emerald-500/10">
             <MessageCircle size={18} /> WhatsApp Share
           </Button>
-          <Button className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-2xl bg-primary hover:bg-[#15435a] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
+          <Button className="gap-2 font-black uppercase text-[10px] h-12 px-8 rounded-xl shadow-xl shadow-primary/20 bg-primary hover:bg-[#15435a] text-white" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
             {isDownloading ? <Loader2 className="animate-spin h-4 w-4" /> : <Download size={18} />} Export Document
           </Button>
         </div>
@@ -223,92 +251,97 @@ export default function AdminInvoiceDetailPage() {
             className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.15)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]"
             style={{ width: '210mm', minHeight: 'auto', color: '#333' }}
           >
-            <div className="pt-10 px-12 pb-6 flex justify-between items-start border-b-[3px] border-gray-50 mb-10">
-              <div className="flex gap-6">
-                <div className="w-16 h-16 relative shrink-0">
+            <div className="px-12 flex justify-between items-start border-b-[3px] border-gray-50" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
+              <div className="flex gap-4">
+                <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                   <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
                 </div>
-                <div className="space-y-1 text-left">
-                  <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
-                  <p className="text-[9px] font-bold text-primary uppercase tracking-[0.3em]">Professional Infrastructure</p>
+                <div className="space-y-0.5 text-left flex flex-col justify-center">
+                  <h2 className="font-black text-[#081621] tracking-tighter uppercase leading-none" style={{ fontSize: `${d.headerFontSize}px` }}>{websiteName}</h2>
+                  <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: d.primaryColor }}>Professional Infrastructure</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
-                <p className="text-[9px] font-bold text-[#081621] uppercase">Cell: <span className="font-black">{headerPhone}</span></p>
+              <div className="text-right max-w-[280px]">
+                <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+                <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
               </div>
             </div>
 
-            <div className="px-12 pb-10">
+            <div className="px-12 pb-10 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
+              <div className="text-center space-y-1 mb-10">
+                  <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3>
+                  <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
+              </div>
+
               <div className="flex justify-between items-start mb-12">
-                <div className="text-left">
-                  <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.3em] mb-2 border-b border-primary/20 pb-1 w-fit">Bill Recipient</p>
-                  <h4 className="text-lg font-black text-[#081621] uppercase tracking-tight">{invoice.customerInfo.name}</h4>
-                  <p className="text-[10px] font-black text-gray-600 mt-1">{invoice.customerInfo.phone}</p>
-                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] mt-1.5 uppercase italic">{invoice.customerInfo.address}</p>
+                <div className="text-left space-y-4">
+                  <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{invoice.customerInfo.name}</h4>
+                    <p className="text-[10px] font-bold text-gray-600">{invoice.customerInfo.phone}</p>
+                    <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{invoice.customerInfo.address}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
-                  <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Issue Date</p>
-                  <p className="text-[11px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
+                <div className="text-right space-y-4">
+                  <div>
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
+                    <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issue Date</p>
+                    <p className="text-[11px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm mb-6">
+              <div className={cn("overflow-hidden rounded-xl mb-6", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
                 <table className="w-full border-collapse text-[10px]">
                   <thead className="bg-[#081621] text-white">
                     <tr>
                       <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
-                      <th className="py-3 px-4 font-black uppercase text-left">Service & Description</th>
-                      <th className="py-3 px-4 font-black uppercase text-center w-32">Quantity / Area</th>
-                      <th className="py-3 px-4 font-black uppercase text-right w-32">Unit Price</th>
-                      <th className="py-3 px-4 font-black uppercase text-right w-32">Amount</th>
+                      <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
+                      <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
+                      <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
+                      <th className="py-3 px-4 font-black uppercase text-right w-32">Total</th>
                     </tr>
                   </thead>
                   <tbody className="font-bold bg-white">
                     {invoice.items.map((item: any, i: number) => (
                       <tr key={i} className="border-t-2 border-gray-50 align-top">
-                        <td className="py-4 px-4 text-left text-gray-400">{i + 1}</td>
-                        <td className="py-4 px-4 text-left">
-                          <p className="font-black text-gray-900 uppercase leading-tight mb-1">{item.name}</p>
-                          {item.description && <p className="text-[9px] text-gray-500 font-medium leading-relaxed italic">{item.description}</p>}
+                        <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
+                        <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
+                          <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                         </td>
-                        <td className="py-4 px-4 text-center text-gray-600 uppercase">
-                          {item.quantity} {item.unit || 'PCS'}
-                        </td>
-                        <td className="py-4 px-4 text-right text-gray-600">
-                          ৳{item.price.toLocaleString()} / <span className="text-[8px] uppercase">{item.unit || 'PCS'}</span>
-                        </td>
-                        <td className="py-4 px-4 text-right text-[#081621]">৳{(item.price * item.quantity).toLocaleString()}</td>
+                        <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'PCS'}</td>
+                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price.toLocaleString()}</td>
+                        <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                       </tr>
                     ))}
                     
-                    {/* SUMMARY SECTION */}
                     <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Subtotal (Current Services)</td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
                       <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                     </tr>
 
                     {invoice.previousDue > 0 && (
                       <tr className="border-t border-gray-100 bg-white">
-                        <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Due Amount</td>
+                        <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Arrears</td>
                         <td className="py-2.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue.toLocaleString()}</td>
                       </tr>
                     )}
 
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                      <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Grand Total</td>
+                      <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Payable Amount</td>
                       <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
                     </tr>
 
                     <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px]">Payments Received (-)</td>
+                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px]">Received (-)</td>
                       <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
                     </tr>
 
                     <tr className="border-t-[3px] border-[#081621] bg-rose-50/80 text-rose-700">
-                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Due Amount</td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
                       <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                     </tr>
                   </tbody>
@@ -316,11 +349,25 @@ export default function AdminInvoiceDetailPage() {
               </div>
 
               <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left mb-8">
-                <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Authorized Proof:</p>
-                <p className="text-[11px] font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
+                <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Amount in Words:</p>
+                <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
               </div>
 
-              <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-10 pb-10">
+              {invoice.terms && invoice.terms.length > 0 && (
+                <div className="space-y-2 mb-8">
+                   <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
+                   <div className="grid grid-cols-1 gap-1">
+                      {invoice.terms.map((term: string, i: number) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                          <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              )}
+
+              <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-10" style={{ marginTop: `${d.signatureSpacing}px` }}>
                 <div className="text-center space-y-4">
                   <div className="border-b-[3px] border-gray-100 h-10"></div>
                   <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
@@ -333,6 +380,27 @@ export default function AdminInvoiceDetailPage() {
                 </div>
               </div>
             </div>
+
+            <footer className="pt-6 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+              <div className="text-center space-y-0.5 mb-2">
+                  <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
+                  {Array.from({ length: 3 }).map((_, colIdx) => (
+                    <div key={colIdx} className="space-y-0.5">
+                        {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
+                        <div key={sIdx} className="flex items-center gap-2">
+                            <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                            <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                        </div>
+                        ))}
+                    </div>
+                  ))}
+              </div>
+
+              <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{footerDisclaimer}</p>
+            </footer>
           </div>
         </div>
 
@@ -362,27 +430,6 @@ export default function AdminInvoiceDetailPage() {
                       <div className="text-center py-10 opacity-20"><Zap size={40} className="mx-auto"/><p className="text-[10px] font-black mt-2">NO PAYMENTS LOGGED</p></div>
                     )}
                  </div>
-              </CardContent>
-           </Card>
-
-           <Card className="border-none shadow-sm bg-indigo-600 text-white rounded-[2.5rem] overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150"><ShieldCheck size={120} /></div>
-              <CardContent className="p-8 space-y-6 relative z-10">
-                 <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">Net Due Amount</p>
-                    <h3 className="text-4xl font-black tracking-tighter italic">৳{invoice.dueAmount?.toLocaleString()}</h3>
-                 </div>
-                 <div className="p-4 bg-white/10 rounded-2xl border border-white/5 space-y-4">
-                    <div className="flex justify-between text-[10px] font-black uppercase"><span>Settled</span><span>৳{invoice.paidAmount?.toLocaleString()}</span></div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                       <div className="h-full bg-primary" style={{ width: `${(invoice.paidAmount / invoice.total) * 100}%` }} />
-                    </div>
-                 </div>
-                 {isDue && (
-                   <Button onClick={() => setIsPaymentModalOpen(true)} className="w-full h-12 bg-white text-indigo-600 hover:bg-gray-100 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl">
-                      Record Collection
-                   </Button>
-                 )}
               </CardContent>
            </Card>
         </div>

@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getNextInvoiceNumber } from '@/lib/invoice-utils';
 
 export default function CreateInvoicePage() {
   const router = useRouter();
@@ -42,6 +44,7 @@ export default function CreateInvoicePage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
 
   // Feature Modes
   const [isNewCustomer, setIsNewCustomer] = useState(false);
@@ -57,20 +60,39 @@ export default function CreateInvoicePage() {
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
   const [payment, setPayment] = useState({ paidAmount: '0', method: 'Cash', notes: '' });
   const [config, setConfig] = useState({ 
-    invoiceNumber: '',
     issueDate: new Date().toISOString().split('T')[0],
     expiryDate: '',
+    terms: [] as string[],
+    tagline: '',
     notes: '' 
   });
 
   // Data Fetch
   const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
 
   const { data: customersRaw } = useCollection(customersQuery);
   const { data: services } = useCollection(servicesQuery);
+  const { data: globalSettings } = useDoc(settingsRef);
 
   const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')), [customersRaw]);
+
+  useEffect(() => {
+    if (db) {
+      getNextInvoiceNumber(db).then(setInvoiceNumber);
+    }
+  }, [db]);
+
+  useEffect(() => {
+    if (globalSettings) {
+      setConfig(prev => ({
+        ...prev,
+        terms: Array.isArray(globalSettings.invoiceDefaultTerms) ? globalSettings.invoiceDefaultTerms : [globalSettings.invoiceDefaultTerms || ''],
+        tagline: globalSettings.invoiceTagline || ''
+      }));
+    }
+  }, [globalSettings]);
 
   const handleAddItemToBill = () => {
     if (isManualItem) {
@@ -128,8 +150,16 @@ export default function CreateInvoicePage() {
     const initialPaid = parseFloat(payment.paidAmount) || 0;
     const dueAmount = Math.max(0, currentTotal - initialPaid);
 
-    return { subtotal, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
+    return { subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
   }, [items, pricing, payment]);
+
+  const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
+  const updateTerm = (idx: number, val: string) => {
+    const next = [...config.terms];
+    next[idx] = val;
+    setConfig({ ...config, terms: next });
+  };
+  const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
 
   const handleSave = async () => {
     if (!db) return;
@@ -167,11 +197,10 @@ export default function CreateInvoicePage() {
         }
       }
 
-      const invoiceId = 'INV-' + Date.now().toString().slice(-6);
       const invoiceRef = doc(collection(db, 'invoices'));
       
       const invoiceData: any = {
-        invoiceNumber: invoiceId,
+        invoiceNumber,
         customerId: currentCustomerId,
         customerInfo: { ...customer, id: currentCustomerId },
         items,
@@ -190,6 +219,8 @@ export default function CreateInvoicePage() {
           method: payment.method,
           notes: payment.notes || 'Initial Payment'
         }] : [],
+        terms: config.terms,
+        tagline: config.tagline,
         createdAt: new Date(config.issueDate).toISOString(),
         dueDate: config.expiryDate ? new Date(config.expiryDate).toISOString() : null,
         updatedAt: serverTimestamp()
@@ -197,7 +228,7 @@ export default function CreateInvoicePage() {
 
       batch.set(invoiceRef, invoiceData);
 
-      // 3. Update Customer Overall Balance
+      // Update Customer Overall Balance
       if (currentCustomerId) {
         const customerRef = doc(db, 'users', currentCustomerId);
         batch.update(customerRef, {
@@ -226,7 +257,7 @@ export default function CreateInvoicePage() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border">
             <ArrowLeft size={16} />
           </Button>
-          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">New Invoice</h1>
+          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">{invoiceNumber || 'New Invoice'}</h1>
         </div>
         <Button onClick={handleSave} disabled={isSubmitting} className="h-9 px-8 rounded-lg font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
           {isSubmitting ? <Loader2 className="animate-spin h-3 w-3" /> : <><Save size={14} /> Create Invoice</>}
@@ -311,22 +342,22 @@ export default function CreateInvoicePage() {
                   </div>
                   <div className="md:col-span-3 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Unit/Area Qty</Label>
-                    <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-9" />
+                    <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-9 bg-white" />
                   </div>
                 </>
               ) : (
                 <>
                   <div className="md:col-span-5 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Item Name</Label>
-                    <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} placeholder="Item Name" className="h-9" />
+                    <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} placeholder="Item Name" className="h-9 bg-white" />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Rate</Label>
-                    <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} placeholder="0.00" className="h-9" />
+                    <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} placeholder="0.00" className="h-9 bg-white" />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Unit/Area</Label>
-                    <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-9" />
+                    <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-9 bg-white" />
                   </div>
                   <div className="md:col-span-1 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Unit</Label>
@@ -428,14 +459,19 @@ export default function CreateInvoicePage() {
                         </Select>
                       </div>
                    </div>
-                   <div className="space-y-1.5">
-                      <Label className="text-[9px] font-black uppercase text-gray-400">Internal Audit Remarks</Label>
-                      <Textarea 
-                        value={config.notes} 
-                        onChange={e => setConfig({...config, notes: e.target.value})} 
-                        placeholder="Notes about payment or conditions..." 
-                        className="min-h-[80px] bg-white rounded-xl border border-gray-200 p-4 text-xs" 
-                      />
+                   <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-gray-400">Terms & Conditions</Label>
+                      <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3 shadow-inner">
+                        {config.terms.map((term: string, i: number) => (
+                          <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
+                            <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-8 border-none bg-white text-[10px] font-medium" />
+                            <button type="button" onClick={() => removeTerm(i)} className="p-1.5 text-gray-300 hover:text-red-500 group-hover:opacity-100 opacity-0"><X size={12}/></button>
+                          </div>
+                        ))}
+                        <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary transition-all">
+                          <Plus size={12}/> Add Custom Rule
+                        </button>
+                      </div>
                    </div>
                 </CardContent>
              </Card>

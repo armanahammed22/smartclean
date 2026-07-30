@@ -1,3 +1,4 @@
+
 'use client';
 
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
@@ -34,6 +35,28 @@ export function numberToWords(amount: number): string {
 }
 
 /**
+ * Generates the next invoice number based on global settings.
+ * Synchronized logic with Quotation.
+ */
+export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
+  try {
+    const settingsRef = doc(db, 'site_settings', 'global');
+    const settingsSnap = await getDoc(settingsRef);
+    const settings = settingsSnap.exists() ? settingsSnap.data() : { invoicePrefix: 'INV', invoiceLastNumber: 1000 };
+    
+    const prefix = settings.invoicePrefix || 'INV';
+    const nextNumber = (settings.invoiceLastNumber || 1000) + 1;
+    
+    // Update the counter in global settings
+    await setDoc(settingsRef, { invoiceLastNumber: nextNumber }, { merge: true });
+    
+    return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
+  } catch (e) {
+    return `INV-${Date.now().toString().slice(-6)}`;
+  }
+}
+
+/**
  * Utility to generate Invoice from an Order or Booking with Atomic Transaction Support
  */
 export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any, paidAmount: number = 0): Promise<string> {
@@ -60,7 +83,10 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const delivery = sourceData.deliveryCharge || 0;
   const currentTotal = subtotal + delivery - discount;
 
-  // 3. Atomicity via Transactions (Shield against data race conditions)
+  // 3. Get Next Invoice Number
+  const invNumber = await getNextInvoiceNumber(db);
+
+  // 4. Atomicity via Transactions
   let invoiceId = '';
   await runTransaction(db, async (transaction) => {
     let customerId = sourceData.customerId;
@@ -100,7 +126,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     const initialDue = Math.max(0, grandTotal - initialPaid);
 
     transaction.set(invRef, {
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      invoiceNumber: invNumber,
       [fieldName]: sourceId,
       customerId,
       customerInfo: {
