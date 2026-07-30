@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
@@ -74,7 +75,9 @@ import {
   FileSpreadsheet,
   Printer,
   X,
-  UserX
+  UserX,
+  CreditCard,
+  Calculator
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
