@@ -31,12 +31,13 @@ import {
   Layers,
   Download,
   Eye,
-  ListChecks
+  ListChecks,
+  Printer
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { convertQuotationToBooking, downloadQuotationPDF } from '@/lib/quotation-utils';
+import { convertQuotationToBooking, convertQuotationToInvoice, downloadQuotationPDF } from '@/lib/quotation-utils';
 import Link from 'next/link';
 
 export default function QuotationEditorPage() {
@@ -46,6 +47,7 @@ export default function QuotationEditorPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [isConvertingToInvoice, setIsConvertingToInvoice] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const quoteRef = useMemoFirebase(() => (db && id && id !== 'new') ? doc(db, 'quotations', id as string) : null, [db, id]);
@@ -162,6 +164,20 @@ export default function QuotationEditorPage() {
     }
   };
 
+  const handleConvertToInvoice = async () => {
+    if (!db || !quote) return;
+    setIsConvertingToInvoice(true);
+    try {
+      const invoiceId = await convertQuotationToInvoice(db, { ...quote, ...config, customerInfo: customer, items, total: totals.total, subtotal: totals.subtotal, tax: totals.taxAmt, discount: pricing.discount, discountType: pricing.discountType });
+      toast({ title: "Invoice Generated", description: "The quote has been converted to an invoice." });
+      router.push(`/admin/invoices/${invoiceId}`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Conversion Failed" });
+    } finally {
+      setIsConvertingToInvoice(false);
+    }
+  };
+
   const handleDownload = () => {
     if (!quote?.quoteNumber) return;
     setIsDownloading(true);
@@ -196,9 +212,14 @@ export default function QuotationEditorPage() {
              <Download size={16}/> Download PDF
            </Button>
            {quote?.status === 'Approved' && (
-             <Button onClick={handleConvertToBooking} disabled={isConverting} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 gap-2 active:scale-95 transition-all">
-               {isConverting ? <Loader2 className="animate-spin" size={14} /> : <><ShoppingCart size={18} /> Convert to Job</>}
-             </Button>
+             <>
+               <Button onClick={handleConvertToBooking} disabled={isConverting} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/20 gap-2 active:scale-95 transition-all">
+                 {isConverting ? <Loader2 className="animate-spin" size={14} /> : <><ShoppingCart size={18} /> Convert to Job</>}
+               </Button>
+               <Button onClick={handleConvertToInvoice} disabled={isConvertingToInvoice} className="h-12 px-8 rounded-xl font-black uppercase text-[10px] bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/20 gap-2 active:scale-95 transition-all">
+                 {isConvertingToInvoice ? <Loader2 className="animate-spin" size={14} /> : <><Printer size={18} /> Convert to Invoice</>}
+               </Button>
+             </>
            )}
            <Button onClick={handleUpdate} disabled={isSaving} className="h-12 px-10 rounded-xl font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
              {isSaving ? <Loader2 className="animate-spin" size={14} /> : <><Save size={18} /> Update & Sync</>}
@@ -316,7 +337,7 @@ export default function QuotationEditorPage() {
              </div>
              <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden border border-gray-100">
                <CardContent className="p-8 space-y-4">
-                  {config.terms.map((term: string, i: number) => (
+                  {config.terms.map((term, i) => (
                     <div key={i} className="flex gap-3 group animate-in slide-in-from-top-1">
                       <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center font-black text-xs text-primary shrink-0 shadow-inner">{i + 1}</div>
                       <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-11 bg-gray-50 border-none rounded-xl text-xs font-medium" />

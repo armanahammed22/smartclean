@@ -68,6 +68,63 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 }
 
 /**
+ * Converts a Quotation to an Invoice
+ */
+export async function convertQuotationToInvoice(db: Firestore, quotation: any): Promise<string> {
+  try {
+    const collName = 'invoices';
+    
+    // Get count for invoice number
+    const countSnap = await getDocs(query(collection(db, collName)));
+    const invNumber = `INV-QTN-${(countSnap.size + 1).toString().padStart(4, '0')}`;
+
+    const invoiceData = {
+      invoiceNumber: invNumber,
+      quotationId: quotation.id,
+      quoteRef: quotation.quoteNumber,
+      customerId: quotation.customerId || null,
+      customerInfo: quotation.customerInfo,
+      items: [
+        ...quotation.items.map((i: any) => ({ ...i, type: 'service' })),
+        ...(quotation.addOns || []).map((a: any) => ({ ...a, type: 'addon' }))
+      ],
+      subtotal: quotation.subtotal,
+      discount: quotation.discount,
+      discountType: quotation.discountType,
+      additionalCharges: quotation.additionalCharges || 0,
+      vatPercent: quotation.vatPercent || 0,
+      tax: quotation.tax,
+      total: quotation.total,
+      paymentStatus: 'Unpaid',
+      paidAmount: 0,
+      dueAmount: quotation.total,
+      paymentHistory: [],
+      createdAt: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    const docRef = await addDoc(collection(db, collName), invoiceData);
+    
+    // Update quotation status
+    await updateDoc(doc(db, 'quotations', quotation.id), {
+      status: 'Converted',
+      convertedTo: 'invoice',
+      convertedId: docRef.id,
+      updatedAt: new Date().toISOString()
+    });
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
+    const publicLink = `${baseUrl}/invoice/${invNumber}`;
+    await updateDoc(docRef, { publicLink });
+
+    return docRef.id;
+  } catch (e) {
+    console.error('Conversion Error:', e);
+    throw new Error('Failed to convert quotation to invoice');
+  }
+}
+
+/**
  * Downloads a quotation as PDF
  * Optimized for single-page export.
  */
