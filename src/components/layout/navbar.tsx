@@ -13,7 +13,8 @@ import {
   Wrench,
   User,
   Zap,
-  MessageCircle
+  MessageCircle,
+  Globe
 } from 'lucide-react';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import { useCart } from '@/components/providers/cart-provider';
 import { doc, collection } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export function Navbar() {
   const { setLanguage, language, t } = useLanguage();
@@ -93,7 +95,7 @@ export function Navbar() {
           <div className="relative h-14 w-14 rounded-xl overflow-hidden bg-white shadow-sm border border-gray-100">
             {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain" unoptimized /> : <div className="w-full h-full bg-primary flex items-center justify-center text-white font-black">S</div>}
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <span className="text-xl font-black font-headline uppercase leading-none" style={{ color: layout?.header?.textColor }}>{companyName}</span>
             <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em] mt-1">{t('public.service_tagline')}</span>
           </div>
@@ -131,6 +133,11 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary/5 rounded-xl h-9">
+            <Globe size={14} className="text-primary" />
+            <span>{language === 'bn' ? 'EN' : 'বাংলা'}</span>
+          </Button>
+
           {servicesEnabled && (
             <Link href="/account/custom-requests" className="flex items-center gap-3 px-5 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-lg hover:scale-105 active:scale-95 transition-all">
               <div className="relative w-5 h-5 shrink-0"><Image src={customReqIcon} alt="Icon" fill className="object-contain" unoptimized /></div>

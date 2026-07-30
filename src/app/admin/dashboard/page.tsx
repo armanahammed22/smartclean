@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -57,9 +56,9 @@ const DashboardChart = dynamic(() => import('recharts').then((mod) => {
 const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92', 'uZAUBd4L5veqdxk4H6QvKz4Ddgf2'];
 const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
 
-const DashboardSkeleton = () => (
+const DashboardSkeleton = ({ t }: any) => (
   <div className="space-y-10 animate-in fade-in duration-500">
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center text-left">
       <div className="space-y-2"><Skeleton className="h-8 w-48" /><Skeleton className="h-4 w-32" /></div>
       <div className="flex gap-2"><Skeleton className="h-10 w-32 rounded-xl" /><Skeleton className="h-10 w-32 rounded-xl" /></div>
     </div>
@@ -127,7 +126,7 @@ export default function AdminDashboard() {
   ];
 
   if (!mounted) return null;
-  if (isUserLoading || roleLoading || oLoading || pLoading) return <div className="p-8"><DashboardSkeleton /></div>;
+  if (isUserLoading || roleLoading || oLoading || pLoading) return <div className="p-8"><DashboardSkeleton t={t} /></div>;
 
   if (!isAuthorized) return <div className="p-20 text-center text-muted-foreground italic uppercase tracking-widest text-[10px]">Unauthorized Session.</div>;
 
@@ -141,7 +140,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-10 pb-24 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
+        <div className="text-left">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">{t('admin.dashboard_link')}</h1>
           <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -153,7 +152,7 @@ export default function AdminDashboard() {
             <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> {t('admin.new_booking')}</Link>
           </Button>
           <Button asChild variant="outline" className="h-10 px-6 rounded-xl font-black gap-2 text-[10px] uppercase tracking-widest border-gray-200">
-            <Link href="/admin/invoices"><FileText size={16} /> {t('admin.ledger')}</Link>
+            <Link href="/admin/invoices"><FileText size={16} /> {t('admin.ledger_audit')}</Link>
           </Button>
         </div>
       </div>
@@ -162,7 +161,7 @@ export default function AdminDashboard() {
         {STATS_CARDS.map((stat, i) => (
           <Link key={i} href={stat.link || '#'}>
             <Card className="border-none shadow-sm bg-white rounded-2xl group hover:shadow-md transition-all border border-gray-100">
-              <CardContent className="p-6">
+              <CardContent className="p-6 text-left">
                 <div className={cn("p-2.5 rounded-xl transition-all group-hover:scale-110 group-hover:rotate-6 w-fit shadow-sm mb-4", stat.bg, stat.color)}>
                   <stat.icon size={20} />
                 </div>
@@ -177,7 +176,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8">
           <Card className="border-none shadow-sm bg-white rounded-[2rem] overflow-hidden border border-gray-100">
-            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between">
+            <CardHeader className="bg-gray-50/50 border-b p-8 flex flex-row items-center justify-between text-left">
               <div>
                 <CardTitle className="text-base font-black uppercase tracking-widest">{t('admin.revenue_velocity')}</CardTitle>
                 <CardDescription className="text-[9px] font-bold uppercase tracking-[0.1em] mt-1 text-primary">7-Day performance analysis</CardDescription>
@@ -192,10 +191,10 @@ export default function AdminDashboard() {
         <div className="lg:col-span-4 space-y-8">
           <Card className="border-none shadow-xl bg-[#081621] text-white rounded-[2.5rem] overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150 transition-transform group-hover:scale-125 duration-1000"><Zap size={160} /></div>
-            <CardHeader className="relative z-10 p-8 pb-4">
+            <CardHeader className="relative z-10 p-8 pb-4 text-left">
               <CardTitle className="text-base font-black uppercase tracking-[0.2em] text-primary">{t('admin.workforce_health')}</CardTitle>
             </CardHeader>
-            <CardContent className="relative z-10 p-8 pt-0 space-y-4">
+            <CardContent className="relative z-10 p-8 pt-0 space-y-4 text-left">
               {[
                 { label: t('admin.idle_personnel'), val: metrics?.idleStaff || 0, icon: UserX, color: "text-rose-400" },
                 { label: "Active Techs", val: todayAttendance?.filter(l => l.status === 'Present').length || 0, icon: UserCheck, color: "text-emerald-400" },

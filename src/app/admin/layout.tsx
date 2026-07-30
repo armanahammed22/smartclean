@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -98,7 +97,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
@@ -167,7 +165,7 @@ const SidebarContent = React.memo(({
           {displayLogo ? <Image src={displayLogo} alt="Logo" fill className="object-contain p-1" unoptimized /> : <ShieldCheck size={20} className="text-primary" />}
         </div>
         {!collapsed && (
-          <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap">
+          <div className="animate-in fade-in duration-500 overflow-hidden whitespace-nowrap text-left">
             <h1 className="font-black text-sm uppercase leading-none">{settings?.websiteName || 'Smart Clean'}</h1>
             <p className="text-[9px] text-primary font-black uppercase tracking-widest mt-1">Admin Central</p>
           </div>
@@ -256,7 +254,7 @@ const SidebarContent = React.memo(({
                         style={isItemActive ? activeStyles : {}}
                       >
                         <item.icon size={16} className={cn("mr-3 transition-colors shrink-0", isItemActive ? "scale-110" : "opacity-40 group-hover/item:opacity-100")} />
-                        <span className="truncate whitespace-nowrap" style={{ ...textStyle, fontSize: `calc(${textStyle.fontSize} - 2px)` }}>{t(`admin.${item.key || item.name.toLowerCase().replace(/\s+/g, '_')}`)}</span>
+                        <span className="truncate whitespace-nowrap text-left" style={{ ...textStyle, fontSize: `calc(${textStyle.fontSize} - 2px)` }}>{t(`admin.${item.key || item.name.toLowerCase().replace(/\s+/g, '_')}`)}</span>
                       </Link>
                     )
                   })}
@@ -436,7 +434,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
         <Loader2 className="animate-spin text-primary" size={48} />
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Loading Terminal...</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">{t('common.loading')}</p>
       </div>
     );
   }
@@ -505,7 +503,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 />
               </SheetContent>
             </Sheet>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{t('admin.command_center')}</span>
               <span className="text-xs font-bold text-gray-900 flex items-center gap-2">{t('admin.live_status')} <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
             </div>
@@ -536,8 +534,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
         <AlertDialogContent className="rounded-[2rem] max-w-[90vw] border-none shadow-2xl bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2"><LogOut size={20} /> {t('admin.logout')}?</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm font-medium leading-relaxed">Confirm session termination. You will be redirected to the login page.</AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight text-red-600 flex items-center gap-2 text-left"><LogOut size={20} /> {t('admin.logout')}?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium leading-relaxed text-left">Confirm session termination. You will be redirected to the login page.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 flex gap-3">
             <AlertDialogCancel className="rounded-xl flex-1 font-bold">{t('common.cancel')}</AlertDialogCancel>
