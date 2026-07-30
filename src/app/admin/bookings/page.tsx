@@ -67,12 +67,18 @@ function BookingsListContent() {
     setMounted(true);
   }, []);
 
+  // 🛡️ Safe query to avoid index errors during prototyping
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'), limit(100));
+    return query(collection(db, 'bookings'), limit(100));
   }, [db, user]);
 
-  const { data: bookings, isLoading } = useCollection(bookingsQuery);
+  const { data: bookingsRaw, isLoading } = useCollection(bookingsQuery);
+
+  const bookings = useMemo(() => {
+    if (!bookingsRaw) return [];
+    return [...bookingsRaw].sort((a, b) => (b.dateTime || '').localeCompare(a.dateTime || ''));
+  }, [bookingsRaw]);
 
   const stats = useMemo(() => {
     if (!bookings) return { total: 0, pending: 0, completed: 0, cancelled: 0 };

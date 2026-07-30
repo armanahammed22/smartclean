@@ -46,8 +46,14 @@ function InvoicesListContent() {
     setMounted(true);
   }, []);
 
-  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(100)) : null, [db]);
-  const { data: invoices, isLoading } = useCollection(invoicesQuery);
+  // 🛡️ Optimized query to avoid index errors: Fetch list and sort/filter client side
+  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), limit(100)) : null, [db]);
+  const { data: invoicesRaw, isLoading } = useCollection(invoicesQuery);
+
+  const invoices = useMemo(() => {
+    if (!invoicesRaw) return [];
+    return [...invoicesRaw].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }, [invoicesRaw]);
 
   const stats = useMemo(() => {
     if (!invoices) return { total: 0, paidCount: 0, unpaidCount: 0, revenue: 0, due: 0 };

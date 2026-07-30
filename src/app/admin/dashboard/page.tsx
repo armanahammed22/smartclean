@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// 🚀 DYNAMIC IMPORT FOR HEAVY CHART LIBRARY
+// 🚀 DYNAMIC IMPORT FOR HEAVY CHART LIBRARY - Client Only
 const DashboardChart = dynamic(() => import('recharts').then((mod) => {
   const { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = mod;
   return function Chart({ data }: { data: any[] }) {
@@ -92,28 +92,28 @@ export default function AdminDashboard() {
            user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
   }, [adminRole, user]);
 
-  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)) : null, [db, isAuthorized]);
-  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, isAuthorized]);
+  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
+  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
   
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized, todayStr]);
 
-  const { data: orders, isLoading: oLoading } = useCollection(ordersQuery);
-  const { data: products, isLoading: pLoading } = useCollection(productsQuery);
+  const { data: ordersRaw, isLoading: oLoading } = useCollection(ordersQuery);
+  const { data: productsRaw, isLoading: pLoading } = useCollection(productsQuery);
   const { data: todayAttendance } = useCollection(attendanceQuery);
 
   const metrics = useMemo(() => {
-    if (!orders || !products) return null;
-    const totalRevenue = orders.reduce((acc, o) => acc + (o.totalPrice || 0), 0);
+    if (!ordersRaw || !productsRaw) return null;
+    const totalRevenue = ordersRaw.reduce((acc, o) => acc + (o.totalPrice || 0), 0);
     const idleCount = todayAttendance?.filter(l => l.status === 'No Task').length || 0;
     
     return {
       revenue: totalRevenue,
-      pendingProducts: products.filter(p => p.approvalStatus === 'Pending').length,
-      totalOrders: orders.length,
+      pendingProducts: productsRaw.filter(p => p.approvalStatus === 'Pending').length,
+      totalOrders: ordersRaw.length,
       idleStaff: idleCount
     };
-  }, [orders, products, todayAttendance]);
+  }, [ordersRaw, productsRaw, todayAttendance]);
 
   const chartData = [
     { name: 'Mon', revenue: 15000 },

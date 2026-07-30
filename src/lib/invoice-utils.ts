@@ -1,7 +1,7 @@
 'use client';
 
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, runTransaction } from 'firebase/firestore';
 import { Invoice, InvoiceItem } from '@/types';
 
 /**
@@ -34,127 +34,102 @@ export function numberToWords(amount: number): string {
 }
 
 /**
- * Utility to generate Invoice from an Order or Booking with Customer Management
+ * Utility to generate Invoice from an Order or Booking with Atomic Transaction Support
  */
 export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any, paidAmount: number = 0): Promise<string> {
   const collName = 'invoices';
   const fieldName = type === 'order' ? 'orderId' : 'bookingId';
   
-  const q = query(collection(db, collName), where(fieldName, '==', sourceId));
+  // 1. Check for existing invoice
+  const q = query(collection(db, collName), where(fieldName, '==', sourceId), limit(1));
   const snap = await getDocs(q);
-  
-  if (!snap.empty) {
-    return snap.docs[0].id;
-  }
+  if (!snap.empty) return snap.docs[0].id;
 
-  // 1. Customer Auto-Management
-  let customerId = sourceData.customerId || null;
-  let previousDue = 0;
-
-  if (!customerId && sourceData.customerPhone) {
-    const custQuery = query(collection(db, 'users'), where('phone', '==', sourceData.customerPhone), where('role', '==', 'customer'));
-    const custSnap = await getDocs(custQuery);
-    if (!custSnap.empty) {
-      const customerRecord = custSnap.docs[0];
-      customerId = customerRecord.id;
-      previousDue = customerRecord.data().outstandingBalance || 0;
-    } else {
-      // Auto-enroll new customer
-      const newCustRef = doc(collection(db, 'users'));
-      await setDoc(newCustRef, {
-        uid: newCustRef.id,
-        name: sourceData.customerName,
-        phone: sourceData.customerPhone,
-        address: sourceData.address,
-        email: sourceData.customerEmail || '',
-        role: 'customer',
-        status: 'active',
-        totalInvoiced: 0,
-        totalPaid: 0,
-        outstandingBalance: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      customerId = newCustRef.id;
-    }
-  }
-
+  // 2. Business Logic Calculations
   const items: InvoiceItem[] = sourceData.items?.map((i: any) => ({
-    id: i.id,
+    id: i.id || Math.random().toString(),
     name: i.name,
     price: i.price,
     quantity: i.quantity || 1,
     type: i.itemType || 'product',
-    unit: i.unit || 'Qty',
-    subItems: i.subItems || []
+    unit: i.unit || 'Qty'
   })) || [];
 
   const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = sourceData.tax || 0; 
-  const delivery = sourceData.deliveryCharge || sourceData.additionalCharge || 0;
-  const discount = sourceData.discount || sourceData.couponDiscount || 0;
-  
-  const currentInvoiceTotal = subtotal + tax + delivery - discount;
-  const grandTotal = Number((currentInvoiceTotal + previousDue).toFixed(2));
+  const discount = sourceData.discount || 0;
+  const delivery = sourceData.deliveryCharge || 0;
+  const currentTotal = subtotal + delivery - discount;
 
-  const countQuery = query(collection(db, collName));
-  const countSnap = await getDocs(countQuery);
-  const invNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
+  // 3. Atomicity via Transactions (Shield against data race conditions)
+  let invoiceId = '';
+  await runTransaction(db, async (transaction) => {
+    let customerId = sourceData.customerId;
+    let previousDue = 0;
 
-  const isCompleted = sourceData.status === 'Delivered' || sourceData.status === 'Completed';
-  const initialPaid = isCompleted ? grandTotal : paidAmount;
-  const initialDue = grandTotal - initialPaid;
+    // Resolve or Enroll Customer
+    if (!customerId && sourceData.customerPhone) {
+      const cleanPhone = sourceData.customerPhone.replace(/\D/g, '');
+      const custQuery = query(collection(db, 'users'), where('phone', '==', cleanPhone), limit(1));
+      const custSnap = await getDocs(custQuery);
+      
+      if (!custSnap.empty) {
+        customerId = custSnap.docs[0].id;
+        previousDue = custSnap.docs[0].data().outstandingBalance || 0;
+      } else {
+        const newCustRef = doc(collection(db, 'users'));
+        customerId = newCustRef.id;
+        transaction.set(newCustRef, {
+          uid: customerId,
+          name: sourceData.customerName,
+          phone: cleanPhone,
+          address: sourceData.address,
+          email: sourceData.customerEmail || '',
+          role: 'customer',
+          status: 'active',
+          totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0,
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
 
-  const invoiceData: any = {
-    invoiceNumber: invNumber,
-    [fieldName]: sourceId,
-    customerId,
-    customerInfo: {
-      name: sourceData.customerName,
-      phone: sourceData.customerPhone,
-      email: sourceData.customerEmail,
-      address: sourceData.address
-    },
-    items,
-    currentAmount: currentInvoiceTotal,
-    subtotal,
-    tax,
-    discount,
-    deliveryCharge: delivery,
-    previousDue,
-    total: grandTotal,
-    paymentStatus: initialDue <= 0 ? 'Paid' : initialPaid > 0 ? 'Partial' : 'Unpaid',
-    paymentMethod: sourceData.paymentMethod || 'Cash',
-    paidAmount: initialPaid,
-    dueAmount: initialDue,
-    paymentHistory: initialPaid > 0 ? [{
-      id: 'pay_init_' + Date.now(),
-      amount: initialPaid,
-      date: new Date().toISOString(),
-      method: sourceData.paymentMethod || 'Cash',
-      notes: 'Initial Payment'
-    }] : [],
-    createdAt: new Date().toISOString(),
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-  };
+    const grandTotal = Number((currentTotal + previousDue).toFixed(2));
+    const invRef = doc(collection(db, 'invoices'));
+    invoiceId = invRef.id;
 
-  const docRef = await addDoc(collection(db, collName), invoiceData);
-  
-  // 3. Update Customer Stats with atomic increments
-  if (customerId) {
-    await updateDoc(doc(db, 'users', customerId), {
-      totalInvoiced: increment(currentInvoiceTotal),
-      totalPaid: increment(initialPaid),
-      outstandingBalance: increment(initialDue - previousDue),
-      updatedAt: new Date().toISOString()
+    const initialPaid = sourceData.status === 'Completed' ? grandTotal : paidAmount;
+    const initialDue = Math.max(0, grandTotal - initialPaid);
+
+    transaction.set(invRef, {
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      [fieldName]: sourceId,
+      customerId,
+      customerInfo: {
+        name: sourceData.customerName,
+        phone: sourceData.customerPhone,
+        address: sourceData.address
+      },
+      items,
+      subtotal,
+      discount,
+      deliveryCharge: delivery,
+      previousDue,
+      total: grandTotal,
+      paidAmount: initialPaid,
+      dueAmount: initialDue,
+      paymentStatus: initialDue <= 0 ? 'Paid' : initialPaid > 0 ? 'Partial' : 'Unpaid',
+      createdAt: new Date().toISOString()
     });
-  }
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
-  const publicLink = `${baseUrl}/invoice/${invNumber}`;
-  await setDoc(doc(db, collName, docRef.id), { publicLink }, { merge: true });
+    if (customerId) {
+      transaction.update(doc(db, 'users', customerId), {
+        totalInvoiced: increment(currentTotal),
+        totalPaid: increment(initialPaid),
+        outstandingBalance: increment(initialDue - previousDue)
+      });
+    }
+  });
 
-  return docRef.id;
+  return invoiceId;
 }
 
 /**
