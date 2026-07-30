@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -62,13 +61,18 @@ export default function CreateManualBookingPage() {
   const [manualUnit, setManualUnit] = useState('Qty');
 
   // DB Fetch
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
+  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
   const subsQuery = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active')) : null, [db]);
   const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
   
-  const { data: services } = useCollection(servicesQuery);
+  const { data: servicesRaw } = useCollection(servicesQuery);
   const { data: allSubs } = useCollection(subsQuery);
   const { data: customersRaw } = useCollection(customersQuery);
+
+  // 🛡️ Memory-based Sorting to avoid Firestore index requirement
+  const services = useMemo(() => {
+    return servicesRaw?.sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
+  }, [servicesRaw]);
 
   const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')), [customersRaw]);
   const selectedService = useMemo(() => services?.find(s => s.id === selectedServiceId), [services, selectedServiceId]);
