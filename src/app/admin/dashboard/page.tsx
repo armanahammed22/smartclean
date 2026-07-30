@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -82,6 +83,11 @@ export default function AdminDashboard() {
     setMounted(true);
   }, []);
 
+  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(settingsRef);
+  const productsEnabled = settings?.productsEnabled !== false;
+  const servicesEnabled = settings?.servicesEnabled !== false;
+
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   
@@ -133,9 +139,9 @@ export default function AdminDashboard() {
   const STATS_CARDS = [
     { label: t('admin.revenue'), val: `৳${metrics?.revenue.toLocaleString() || 0}`, icon: DollarSign, color: "text-indigo-600", bg: "bg-indigo-50" },
     { label: t('admin.idle_personnel'), val: metrics?.idleStaff || 0, icon: UserX, color: "text-orange-600", bg: "bg-orange-50", link: "/admin/hrm/attendance" },
-    { label: t('admin.pending_items'), val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: t('admin.total_orders'), val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50" },
-  ];
+    { label: t('admin.pending_items'), val: metrics?.pendingProducts || 0, icon: Box, color: "text-blue-600", bg: "bg-blue-50", hide: !productsEnabled },
+    { label: t('admin.total_orders'), val: metrics?.totalOrders || 0, icon: ShoppingCart, color: "text-emerald-600", bg: "bg-emerald-50", hide: !productsEnabled },
+  ].filter(c => !c.hide);
 
   return (
     <div className="space-y-10 pb-24 min-w-0 page-transition-fade">
@@ -148,9 +154,11 @@ export default function AdminDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild className="h-10 px-6 rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/10 gap-2 text-[10px] uppercase tracking-widest">
-            <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> {t('admin.new_booking')}</Link>
-          </Button>
+          {servicesEnabled && (
+            <Button asChild className="h-10 px-6 rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/10 gap-2 text-[10px] uppercase tracking-widest">
+              <Link href="/admin/bookings/create"><Plus size={16} strokeWidth={3} /> {t('admin.new_booking')}</Link>
+            </Button>
+          )}
           <Button asChild variant="outline" className="h-10 px-6 rounded-xl font-black gap-2 text-[10px] uppercase tracking-widest border-gray-200">
             <Link href="/admin/invoices"><FileText size={16} /> {t('admin.ledger_audit')}</Link>
           </Button>

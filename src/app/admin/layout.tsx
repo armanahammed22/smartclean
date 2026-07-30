@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
@@ -76,7 +77,6 @@ import {
   X,
   UserX,
   CreditCard,
-  Calculator,
   CheckCircle2
 } from 'lucide-react';
 import Image from 'next/image';
@@ -295,23 +295,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   const NAV_GROUPS = useMemo(() => {
+    const pEnabled = settings?.productsEnabled !== false;
+    const sEnabled = settings?.servicesEnabled !== false;
+
     const groups = [
       { id: 'dashboard_link', href: '/admin/dashboard', icon: LayoutDashboard, color: "text-indigo-400", items: [] },
       { id: 'sales', icon: Zap, color: "text-rose-400", items: [
-        { name: "Orders", key: "orders", href: '/admin/orders', icon: ShoppingCart }, 
-        { name: "Bookings", key: "bookings", href: '/admin/bookings', icon: Calendar }, 
+        { name: "Orders", key: "orders", href: '/admin/orders', icon: ShoppingCart, hide: !pEnabled }, 
+        { name: "Bookings", key: "bookings", href: '/admin/bookings', icon: Calendar, hide: !sEnabled }, 
         { name: "Invoices", key: "invoices", href: '/admin/invoices', icon: ReceiptText },
-        { name: "Quotations", key: "quotations", href: '/admin/quotations', icon: FileSpreadsheet }, 
+        { name: "Quotations", key: "quotations", href: '/admin/quotations', icon: FileSpreadsheet, hide: !sEnabled }, 
         { name: "Leads", key: "leads", href: '/admin/leads', icon: TrendingUp }
       ]},
-      { id: 'inventory', icon: Box, color: "text-amber-400", items: [
+      { id: 'inventory', icon: Box, color: "text-amber-400", hide: !pEnabled, items: [
         { name: "Product List", key: "product_list", href: '/admin/products', icon: Package }, 
         { name: "Attributes", key: "attributes", href: '/admin/products/attributes', icon: Tags },
         { name: "Brands", key: "brands", href: '/admin/attributes/brands', icon: Award },
         { name: "Variants", key: "variants", href: '/admin/attributes/variants', icon: Shapes },
         { name: "Stock Alerts", key: "stock_alerts", href: '/admin/inventory/alerts', icon: AlertCircle }
       ]},
-      { id: 'services', icon: Wrench, color: "text-sky-400", items: [
+      { id: 'services', icon: Wrench, color: "text-sky-400", hide: !sEnabled, items: [
         { name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench }, 
         { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers },
         { name: "Attributes", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 },
@@ -328,7 +331,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'offers', icon: Gift, color: "text-red-400", items: [
         { name: "Advanced Offers", key: "advanced_offers", href: '/admin/offers/advanced', icon: Sparkles },
         { name: "Coupons", key: "coupons", href: '/admin/offers/coupons', icon: TicketPercent },
-        { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Clock },
+        { name: "Flash Sales", key: "flash_sales", href: '/admin/offers/flash-sales', icon: Clock, hide: !pEnabled },
         { name: "Smart Pricing", key: "smart_pricing", href: '/admin/offers/smart-pricing', icon: TrendingUp }
       ]},
       { id: 'seo', icon: Search, color: "text-blue-400", items: [
@@ -351,13 +354,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'customer_hub', href: '/admin/customers', icon: Users, color: "text-purple-400", items: [] },
       { id: 'partners', icon: Handshake, color: "text-indigo-400", items: [
         { name: "Partner Registry", key: "partner_registry", href: '/admin/partners', icon: Building2 },
-        { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase },
+        { name: "Partner Projects", key: "partner_projects", href: '/admin/partners/projects', icon: Briefcase, hide: !sEnabled },
         { name: "Commission Ledger", key: "commission_ledger", href: '/admin/partners/commissions', icon: FileText }
       ]},
       { id: 'vendors', icon: Store, color: "text-pink-400", items: [
         { name: "Vendor Registry", key: "vendor_registry", href: '/admin/vendors', icon: Store },
-        { name: "Product Approvals", key: "product_approvals", href: '/admin/products/approvals', icon: CheckCircle2 },
-        { name: "Service Approvals", key: "service_approvals", href: '/admin/services/approvals', icon: CheckCircle2 },
+        { name: "Product Approvals", key: "product_approvals", href: '/admin/products/approvals', icon: CheckCircle2, hide: !pEnabled },
+        { name: "Service Approvals", key: "service_approvals", href: '/admin/services/approvals', icon: CheckCircle2, hide: !sEnabled },
         { name: "Vendor Commissions", key: "vendor_commissions", href: '/admin/vendors/commissions', icon: Wallet },
         { name: "Verification Queue", key: "verification_queue", href: '/admin/vendors/verifications', icon: ShieldCheck }
       ]},
@@ -366,7 +369,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Master Ledger", key: "ledger", href: '/admin/finance/ledger', icon: FileText },
         { name: "Bank & Cash", key: "accounts", href: '/admin/finance/accounts', icon: Building2 },
         { name: "Staff Salaries", key: "staff_salaries", href: '/admin/finance/salaries', icon: Users },
-        { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Calculator }
+        { name: "Project Costing", key: "projects", href: '/admin/finance/projects', icon: Calculator, hide: !sEnabled }
       ]},
       { id: 'reports', href: '/admin/reports', icon: BarChart3, color: "text-emerald-400", items: [] },
       { id: 'customize', icon: Palette, color: "text-fuchsia-400", items: [
@@ -382,21 +385,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Sidebar", key: "sidebar_appearance", href: '/admin/settings/appearance/sidebar', icon: List },
         { name: "API & Webhooks", key: "api_settings", href: '/admin/settings/api', icon: Code },
         { name: "Payments", key: "payment_gateways", href: '/admin/payments', icon: Wallet },
-        { name: "Delivery", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck },
+        { name: "Delivery", key: "delivery_fees", href: '/admin/settings/delivery', icon: Truck, hide: !pEnabled },
         { name: "Localization", key: "localization", href: '/admin/settings/languages', icon: Globe },
         { name: "Documents", key: "documents", href: '/admin/settings/documents', icon: Printer }
       ]},
       { id: 'ai_agents', icon: Bot, color: "text-cyan-400", items: [
-        { name: "AI Sales Desk", key: "ai_sales", href: '/admin/ai/sales', icon: Zap },
-        { name: "AI Booking Assistant", key: "ai_booking", href: '/admin/ai/booking', icon: Clock }
+        { name: "AI Sales Desk", key: "ai_sales", href: '/admin/ai/sales', icon: Zap, hide: !pEnabled },
+        { name: "AI Booking Assistant", key: "ai_booking", href: '/admin/ai/booking', icon: Clock, hide: !sEnabled }
       ]},
       { id: 'support', icon: Headphones, color: "text-rose-300", items: [
         { name: "Tickets", key: "tickets", href: '/admin/support', icon: MessageCircle },
         { name: "Hub Config", key: "support_config", href: '/admin/support-hub', icon: Zap }
       ]}
     ];
-    return groups;
-  }, [sidebarConfig, t]);
+
+    // Final Filter based on hide property
+    return groups
+      .filter(g => !g.hide)
+      .map(g => ({
+        ...g,
+        items: (g.items || []).filter((i: any) => !i.hide)
+      }));
+  }, [sidebarConfig, t, settings]);
 
   if (isUserLoading || roleLoading || !mounted) return <div className="h-screen flex flex-col items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!user || !isAdmin) return null;
