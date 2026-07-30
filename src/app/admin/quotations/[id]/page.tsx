@@ -32,8 +32,7 @@ import {
   Download,
   Eye,
   ListChecks,
-  Printer,
-  Switch
+  Printer
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { convertQuotationToBooking, convertQuotationToInvoice, downloadQuotationPDF } from '@/lib/quotation-utils';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 
 export default function QuotationEditorPage() {
   const { id } = useParams();
