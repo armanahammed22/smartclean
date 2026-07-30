@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -33,10 +32,6 @@ import { format } from 'date-fns';
 import { downloadInvoicePDF, numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
-/**
- * Visual-Designer Integrated Public Invoice View
- * Re-uses Unified Design logic from Quotation for consistent branding.
- */
 function InvoiceViewContent() {
   const { id } = useParams();
   const db = useFirestore();
@@ -46,15 +41,17 @@ function InvoiceViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // 1. Fetch Dynamic Design
+  // 1. Fetch Dynamic Design & Global Settings
   const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
   const { data: design } = useDoc(designRef);
+
+  const globalRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(globalRef);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch Logic (Handle ID or Number)
   useEffect(() => {
     async function fetchInvoice() {
       if (!db || !id) return;
@@ -90,16 +87,8 @@ function InvoiceViewContent() {
     fetchInvoice();
   }, [db, id, router]);
 
-  const [settings, setSettings] = useState<any>(null);
-  useEffect(() => {
-    if (db) {
-      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
-        if (!snap.empty) setSettings(snap.docs[0].data());
-      });
-    }
-  }, [db]);
-
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
+  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
@@ -112,7 +101,7 @@ function InvoiceViewContent() {
 
   const handleWhatsApp = () => {
     if (!invoice) return;
-    const text = `আসসালামু আলাইকুম, আমার ইনভয়েস (${invoice.invoiceNumber}) সম্পর্কে একটি আপডেট প্রয়োজন।`;
+    const text = `আসসালামু আলাইকুম, আমার ইনভয়েস (${invoice.invoiceNumber}) টি চেক করার জন্য অনুরোধ করা হলো।`;
     window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -134,9 +123,7 @@ function InvoiceViewContent() {
     footerPaddingBottom: 5,
     signatureSpacing: 25,
     taglineFontSize: 11,
-    disclaimerFontSize: 7.5,
-    customTopText: '',
-    customBottomText: ''
+    disclaimerFontSize: 7.5
   };
 
   const isPaid = invoice.paymentStatus === 'Paid';
@@ -172,16 +159,6 @@ function InvoiceViewContent() {
 
         <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
-          {/* PAID/UNPAID STATUS SEAL */}
-          <div className="absolute top-48 right-16 z-20 pointer-events-none rotate-[25deg] opacity-20">
-             <div className={cn(
-                "border-[6px] rounded-2xl px-8 py-3 font-black text-6xl uppercase tracking-[0.2em]",
-                isPaid ? "border-emerald-600 text-emerald-600" : "border-rose-600 text-rose-600"
-             )}>
-                {isPaid ? 'PAID' : 'UNPAID'}
-             </div>
-          </div>
-
           <header 
             className="px-12 flex justify-between items-start border-b-2 border-gray-50"
             style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
@@ -203,12 +180,6 @@ function InvoiceViewContent() {
 
           <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
             
-            {d.customTopText && (
-              <div className="p-2 text-center rounded-xl font-black uppercase text-[9px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
-                {d.customTopText}
-              </div>
-            )}
-
             <div className="text-center space-y-0.5">
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Service Bill</h3>
                 <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
@@ -277,8 +248,8 @@ function InvoiceViewContent() {
                   </tr>
 
                   <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Net Outstanding Due</td>
-                    <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Outstanding Balance</td>
+                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                   </tr>
                 </tbody>
               </table>
@@ -307,12 +278,6 @@ function InvoiceViewContent() {
              <div className="text-center space-y-0.5 mb-2">
                 <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{settings?.tagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p>
              </div>
-
-             {d.customBottomText && (
-               <div className="mb-2 p-2 bg-gray-50 rounded-lg text-center text-[9px] font-medium text-gray-500 italic">
-                 {d.customBottomText}
-               </div>
-             )}
              
              <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
                 {Array.from({ length: 3 }).map((_, colIdx) => (

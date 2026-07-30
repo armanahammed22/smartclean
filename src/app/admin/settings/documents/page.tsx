@@ -39,7 +39,8 @@ import {
   Trash2,
   CheckSquare,
   MoveVertical,
-  Star
+  Star,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -101,7 +102,8 @@ export default function DocumentEnginePage() {
     invoiceHeaderAddress: '',
     invoiceFooterNote: '',
     invoiceFooterDisclaimer: '',
-    invoiceProvidedServices: ''
+    invoiceProvidedServices: '',
+    signatureUrl: ''
   });
 
   useEffect(() => {
@@ -121,7 +123,8 @@ export default function DocumentEnginePage() {
             invoiceHeaderAddress: globalSettings.invoiceHeaderAddress || '',
             invoiceFooterNote: globalSettings.invoiceFooterNote || '',
             invoiceFooterDisclaimer: globalSettings.invoiceFooterDisclaimer || '',
-            invoiceProvidedServices: globalSettings.invoiceProvidedServices || ''
+            invoiceProvidedServices: globalSettings.invoiceProvidedServices || '',
+            signatureUrl: globalSettings.signatureUrl || ''
         });
     }
   }, [currentDesign, quoteConfig, globalSettings]);
@@ -309,7 +312,6 @@ export default function DocumentEnginePage() {
           </div>
         </TabsContent>
 
-        {/* 📑 TAB 2: QUOTATION LOGIC */}
         <TabsContent value="quotation" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
@@ -327,6 +329,10 @@ export default function DocumentEnginePage() {
                         <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Current Sequence ID</Label>
                         <Input type="number" value={quoteForm.lastNumber} onChange={e => setQuoteForm({...quoteForm, lastNumber: parseInt(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-black" />
                       </div>
+                   </div>
+                   <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Corporate Tagline</Label>
+                      <Input value={quoteForm.tagline} onChange={e => setQuoteForm({...quoteForm, tagline: e.target.value})} className="h-12 bg-gray-50 border-none rounded-xl font-bold italic" />
                    </div>
                 </CardContent>
               </Card>
@@ -354,7 +360,7 @@ export default function DocumentEnginePage() {
                     <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2"><FileSignature size={16}/> Authority Assets</CardTitle>
                  </CardHeader>
                  <CardContent className="p-8 space-y-8">
-                    <ImageUploader label="Quotation Signature" hint="200 x 80 px" initialUrl={quoteForm.signatureUrl} onUpload={url => setQuoteForm({...quoteForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
+                    <ImageUploader label="Digital Signature" hint="200 x 80 px" initialUrl={quoteForm.signatureUrl} onUpload={url => setQuoteForm({...quoteForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
                     <ImageUploader label="Official Seal" hint="200 x 200 px" initialUrl={quoteForm.sealUrl} onUpload={url => setQuoteForm({...quoteForm, sealUrl: url})} aspectRatio="aspect-square w-24 mx-auto" />
                  </CardContent>
                </Card>
@@ -362,37 +368,36 @@ export default function DocumentEnginePage() {
           </div>
         </TabsContent>
 
-        {/* 🧾 TAB 3: INVOICE LOGIC */}
         <TabsContent value="invoice" className="mt-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
                 <CardHeader className="bg-[#081621] text-white p-8">
-                   <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3"><Printer size={20} className="text-primary" /> Invoice Business Data</CardTitle>
+                   <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-3"><Printer size={20} className="text-primary" /> Invoice Business Settings</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 space-y-8">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-6">
-                        <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2">Public Header Data</h4>
+                        <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2">Header Configuration</h4>
                         <div className="space-y-4">
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Support Phone</Label><Input value={invoiceForm.invoiceHeaderPhone} onChange={e => setInvoiceForm({...invoiceForm, invoiceHeaderPhone: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" /></div>
                            <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Billing Email</Label><Input value={invoiceForm.invoiceHeaderEmail} onChange={e => setInvoiceForm({...invoiceForm, invoiceHeaderEmail: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Physical Office</Label><Input value={invoiceForm.invoiceHeaderAddress} onChange={e => setInvoiceForm({...invoiceForm, invoiceHeaderAddress: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Office Address</Label><Input value={invoiceForm.invoiceHeaderAddress} onChange={e => setInvoiceForm({...invoiceForm, invoiceHeaderAddress: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" /></div>
                         </div>
                       </div>
                       <div className="space-y-6">
                         <h4 className="text-[10px] font-black uppercase text-primary tracking-widest border-b pb-2">Footer Metadata</h4>
                         <div className="space-y-4">
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Settlement Note</Label><Textarea value={invoiceForm.invoiceFooterNote} onChange={e => setInvoiceForm({...invoiceForm, invoiceFooterNote: e.target.value})} className="h-24 bg-gray-50 border-none rounded-xl text-xs" /></div>
-                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Electronic Disclaimer</Label><Textarea value={invoiceForm.invoiceFooterDisclaimer} onChange={e => setInvoiceForm({...invoiceForm, invoiceFooterDisclaimer: e.target.value})} className="h-20 bg-gray-50 border-none rounded-xl text-[9px]" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Standard Note</Label><Textarea value={invoiceForm.invoiceFooterNote} onChange={e => setInvoiceForm({...invoiceForm, invoiceFooterNote: e.target.value})} className="h-24 bg-gray-50 border-none rounded-xl text-xs" /></div>
+                           <div className="space-y-1"><Label className="text-[9px] font-black uppercase">Verification Disclaimer</Label><Textarea value={invoiceForm.invoiceFooterDisclaimer} onChange={e => setInvoiceForm({...invoiceForm, invoiceFooterDisclaimer: e.target.value})} className="h-20 bg-gray-50 border-none rounded-xl text-[9px]" /></div>
                         </div>
                       </div>
                    </div>
                    
                    <div className="space-y-6 pt-4 border-t">
-                      <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest border-b pb-2 flex items-center gap-2"><CheckSquare size={14}/> Services Grid (CSV List)</h4>
+                      <h4 className="text-[10px] font-black uppercase text-indigo-600 tracking-widest border-b pb-2 flex items-center gap-2"><CheckSquare size={14}/> Catalog Service List</h4>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-gray-400">List of Services (Comma Separated)</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400">Services for Grid Display (Comma Separated)</Label>
                         <Textarea value={invoiceForm.invoiceProvidedServices} onChange={e => setInvoiceForm({...invoiceForm, invoiceProvidedServices: e.target.value})} placeholder="Service 1, Service 2..." className="h-24 bg-gray-50 border-none rounded-xl text-sm font-medium" />
                       </div>
                    </div>
@@ -400,14 +405,23 @@ export default function DocumentEnginePage() {
               </Card>
             </div>
 
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 space-y-6">
+               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden border border-gray-100">
+                  <CardHeader className="bg-gray-50/50 p-6 border-b">
+                     <CardTitle className="text-xs font-black uppercase text-primary">Authority Signature</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                     <ImageUploader label="Invoice Signature" hint="200 x 80 px" initialUrl={invoiceForm.signatureUrl} onUpload={url => setInvoiceForm({...invoiceForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
+                  </CardContent>
+               </Card>
+               
                <Card className="border-none shadow-sm bg-blue-50/50 rounded-3xl p-8 border border-blue-100">
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><Info size={20}/></div>
-                    <h4 className="text-sm font-black uppercase text-blue-900">Automation Rule</h4>
+                    <h4 className="text-sm font-black uppercase text-blue-900">Logic Bridge</h4>
                   </div>
                   <p className="text-[11px] font-medium text-blue-800/80 leading-relaxed uppercase">
-                    ইনভয়েসের এই ফিল্ডগুলো শুধুমাত্র পিডিএফে ডাটা রেন্ডার করার জন্য ব্যবহৃত হয়। কোনো বুকিং সম্পন্ন হলে স্বয়ংক্রিয়ভাবে এখান থেকে লেটেস্ট কন্টেন্ট নিয়ে ইনভয়েস তৈরি হবে।
+                    ইনভয়েসের এই ফিল্ডগুলো শুধুমাত্র পিডিএফে ডাটা রেন্ডার করার জন্য ব্যবহৃত হয়। কোনো বুকিং সম্পন্ন হলে স্বয়ংক্রিয়ভাবে এই সেটিংস অনুযায়ী ইনভয়েস তৈরি হবে।
                   </p>
                </Card>
             </div>

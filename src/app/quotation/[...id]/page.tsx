@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -27,10 +26,6 @@ import { downloadQuotationPDF } from '@/lib/quotation-utils';
 import { numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
-/**
- * Visual-Designer Integrated Quotation View
- * Respects dynamic styles from Admin Document Designer.
- */
 function QuotationViewContent() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -40,8 +35,6 @@ function QuotationViewContent() {
   const [quote, setQuote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [settings, setSettings] = useState<any>(null);
-  const [quoteSettings, setQuoteSettings] = useState<any>(null);
 
   const quoteIdFromUrl = useMemo(() => {
     if (params.id && Array.isArray(params.id)) {
@@ -55,6 +48,12 @@ function QuotationViewContent() {
   // 1. Fetch Dynamic Design
   const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
   const { data: design } = useDoc(designRef);
+
+  const globalRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(globalRef);
+
+  const quoteSettingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'quotation') : null, [db]);
+  const { data: quoteSettings } = useDoc(quoteSettingsRef);
 
   useEffect(() => {
     setMounted(true);
@@ -96,17 +95,6 @@ function QuotationViewContent() {
   }, [db, quoteIdFromUrl, router]);
 
   useEffect(() => {
-    if (db) {
-      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
-        if (!snap.empty) setSettings(snap.docs[0].data());
-      });
-      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'quotation'), limit(1))).then(snap => {
-        if (!snap.empty) setQuoteSettings(snap.docs[0].data());
-      });
-    }
-  }, [db]);
-
-  useEffect(() => {
     if (quote && isAutoDownload && !isDownloading) {
       const timer = setTimeout(() => {
         setIsDownloading(true);
@@ -120,6 +108,7 @@ function QuotationViewContent() {
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = quoteSettings?.signatureUrl || settings?.signatureUrl;
+  const sealUrl = quoteSettings?.sealUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
@@ -142,14 +131,8 @@ function QuotationViewContent() {
     window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  if (!mounted || isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center space-y-4">
-        <Loader2 className="animate-spin text-primary mx-auto" size={48} />
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Quotation...</p>
-      </div>
-    </div>
-  );
+  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  if (!quote) return <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50"><X size={64} className="mx-auto text-gray-200" /><h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em]">Document Not Found</h1></div>;
 
   const d = design || {
     primaryColor: '#1E5F7A',
@@ -166,9 +149,7 @@ function QuotationViewContent() {
     footerPaddingBottom: 5,
     signatureSpacing: 25,
     taglineFontSize: 11,
-    disclaimerFontSize: 7.5,
-    customTopText: '',
-    customBottomText: ''
+    disclaimerFontSize: 7.5
   };
 
   return (
@@ -200,6 +181,14 @@ function QuotationViewContent() {
 
         <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
+          {sealUrl && (
+            <div className="absolute top-64 right-20 z-20 pointer-events-none opacity-40">
+              <div className="relative w-40 h-40">
+                <Image src={sealUrl} alt="Seal" fill className="object-contain" unoptimized />
+              </div>
+            </div>
+          )}
+
           <header 
             className="px-12 flex justify-between items-start border-b-2 border-gray-50"
             style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
@@ -221,12 +210,6 @@ function QuotationViewContent() {
 
           <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
             
-            {d.customTopText && (
-              <div className="p-2 text-center rounded-xl font-black uppercase text-[9px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
-                {d.customTopText}
-              </div>
-            )}
-
             <div className="text-center space-y-0.5">
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
                 <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
@@ -326,12 +309,6 @@ function QuotationViewContent() {
              <div className="text-center space-y-0.5 mb-2">
                 <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p>
              </div>
-
-             {d.customBottomText && (
-               <div className="mb-2 p-2 bg-gray-50 rounded-lg text-center text-[9px] font-medium text-gray-500 italic">
-                 {d.customBottomText}
-               </div>
-             )}
              
              <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
                 {Array.from({ length: 3 }).map((_, colIdx) => (
