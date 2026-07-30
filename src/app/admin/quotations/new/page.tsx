@@ -53,7 +53,7 @@ export default function CreateQuotationPage() {
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
   
   // Manual Item Helper State
-  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Pcs' });
+  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
 
@@ -117,7 +117,7 @@ export default function CreateQuotationPage() {
         total: (parseFloat(manualItem.price) || 0) * manualItem.quantity
       };
       setItems([...items, newItem]);
-      setManualItem({ name: '', price: '', quantity: 1, unit: 'Pcs' });
+      setManualItem({ name: '', price: '', quantity: 1, unit: 'Qty' });
     } else {
       const service = services.find(s => s.id === selectedProductId);
       if (!service) return;
@@ -182,7 +182,6 @@ export default function CreateQuotationPage() {
     try {
       let currentCustomerId = customer.id;
 
-      // 1. Handle New Customer Enrollment
       if (isNewCustomer || !currentCustomerId) {
         const phone = customer.phone.replace(/\D/g, '');
         const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
@@ -224,13 +223,12 @@ export default function CreateQuotationPage() {
 
       const quoteDocRef = await addDoc(collection(db, 'quotations'), finalData);
       
-      // 2. Sync to Bookings if requested
       if (syncToBooking) {
         await convertQuotationToBooking(db, { ...finalData, id: quoteDocRef.id });
       }
 
       router.push('/admin/quotations');
-      toast({ title: "Quotation Generated", description: syncToBooking ? "Synced with Booking menu." : "" });
+      toast({ title: "Quotation Generated" });
     } catch (e) {
       toast({ variant: "destructive", title: "Save Failed" });
     } finally {
@@ -261,7 +259,6 @@ export default function CreateQuotationPage() {
 
       <div className="space-y-6">
         
-        {/* 👤 CUSTOMER SECTION */}
         <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
           <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
@@ -316,7 +313,6 @@ export default function CreateQuotationPage() {
           </CardContent>
         </Card>
 
-        {/* 📦 ITEM SELECTION SECTION */}
         <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
           <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
@@ -332,7 +328,7 @@ export default function CreateQuotationPage() {
               {!isManualItem ? (
                 <>
                   <div className="md:col-span-7 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Link From Catalog</Label>
+                    <Label className="text-[10px] font-bold uppercase">Link From Catalog</Label>
                     <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                       <SelectTrigger className="h-10 bg-white border-gray-200 rounded-lg">
                         <SelectValue placeholder="Choose standard service..." />
@@ -343,27 +339,32 @@ export default function CreateQuotationPage() {
                     </Select>
                   </div>
                   <div className="md:col-span-3 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Quantity</Label>
+                    <Label className="text-[10px] font-bold uppercase">Unit/Area Qty</Label>
                     <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-10 bg-white" />
                   </div>
                 </>
               ) : (
                 <>
                   <div className="md:col-span-5 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Manual Item Name</Label>
+                    <Label className="text-[10px] font-bold uppercase">Manual Item Name</Label>
                     <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} placeholder="e.g. Special Sofa Polish" className="h-10 bg-white" />
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Rate</Label>
+                    <Label className="text-[10px] font-bold uppercase">Rate</Label>
                     <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} placeholder="0.00" className="h-10 bg-white" />
                   </div>
                   <div className="md:col-span-2 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Qty</Label>
+                    <Label className="text-[10px] font-bold uppercase">Unit/Area Qty</Label>
                     <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-10 bg-white" />
                   </div>
                   <div className="md:col-span-1 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Unit</Label>
-                    <Input value={manualItem.unit} onChange={e => setManualItem({...manualItem, unit: e.target.value})} className="h-10 bg-white" />
+                    <Label className="text-[10px] font-bold uppercase">Unit</Label>
+                    <Select value={manualItem.unit} onValueChange={v => setManualItem({...manualItem, unit: v})}>
+                      <SelectTrigger className="h-10 bg-white rounded-lg"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
@@ -379,7 +380,8 @@ export default function CreateQuotationPage() {
                 <TableHeader className="bg-gray-50">
                   <TableRow className="border-none">
                     <TableHead className="text-[10px] font-black uppercase py-4">Item Name</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase text-center w-32">Quantity</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center w-32">Unit/Area</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase text-center w-32">Unit Type</TableHead>
                     <TableHead className="text-[10px] font-black uppercase text-right w-32">Rate</TableHead>
                     <TableHead className="text-[10px] font-black uppercase text-right w-40">Item Discount (৳)</TableHead>
                     <TableHead className="text-[10px] font-black uppercase text-right w-32">Subtotal</TableHead>
@@ -396,6 +398,14 @@ export default function CreateQuotationPage() {
                         <Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', parseInt(e.target.value) || 0)} className="h-8 w-20 mx-auto text-center font-bold text-xs" />
                       </TableCell>
                       <TableCell>
+                        <Select value={item.unit} onValueChange={v => updateItemField(item.id, 'unit', v)}>
+                          <SelectTrigger className="h-8 w-24 mx-auto text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
                         <Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', parseFloat(e.target.value) || 0)} className="h-8 w-24 ml-auto text-right font-bold text-xs" />
                       </TableCell>
                       <TableCell>
@@ -406,7 +416,7 @@ export default function CreateQuotationPage() {
                     </TableRow>
                   ))}
                   {items.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="py-12 text-center text-gray-300 italic text-xs uppercase tracking-widest">Add items above to calculate bill.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="py-12 text-center text-gray-300 italic text-xs uppercase tracking-widest">Add items above to calculate bill.</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -414,7 +424,6 @@ export default function CreateQuotationPage() {
           </CardContent>
         </Card>
 
-        {/* 📝 FOOTER & TOTALS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-2">

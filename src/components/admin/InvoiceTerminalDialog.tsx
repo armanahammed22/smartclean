@@ -54,7 +54,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
   // Selection state
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
-  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Pcs' });
+  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
 
   const [items, setItems] = useState<any[]>([]);
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
@@ -118,7 +118,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
         discount: 0,
         total: (parseFloat(manualItem.price) || 0) * manualItem.quantity
       }]);
-      setManualItem({ name: '', price: '', quantity: 1, unit: 'Pcs' });
+      setManualItem({ name: '', price: '', quantity: 1, unit: 'Qty' });
     } else {
       const service = services?.find(s => s.id === selectedProductId);
       if (!service) return;
@@ -174,7 +174,6 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
     try {
       let currentCustomerId = customer.id;
 
-      // 1. New Customer Logic
       if (isNewCustomer || !currentCustomerId) {
         const phone = customer.phone.replace(/\D/g, '');
         const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
@@ -242,7 +241,6 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
-           {/* 👤 CUSTOMER SECTION */}
            <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100">
              <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
                 <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><UserIcon size={14}/> Client Profile</CardTitle>
@@ -260,7 +258,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                    ) : (
                      <Select onValueChange={(val) => {
                        const c = clients?.find(i => i.id === val);
-                       if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', address: c.address || '' });
+                       if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', email: c.email || '', company: c.company || '', address: c.address || '' });
                      }}>
                        <SelectTrigger className="h-10 bg-gray-50 border-none rounded-lg font-bold shadow-inner">
                          <SelectValue placeholder={customer.name || "Search customers..."} />
@@ -291,7 +289,6 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
              </CardContent>
            </Card>
 
-           {/* 📦 ITEM SELECTION SECTION */}
            <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100">
              <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
                 <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={14}/> Items List</CardTitle>
@@ -316,27 +313,32 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                        </Select>
                      </div>
                      <div className="md:col-span-3 space-y-1.5">
-                       <Label className="text-[10px] font-bold uppercase">Quantity</Label>
+                       <Label className="text-[10px] font-bold uppercase">Unit/Area Qty</Label>
                        <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-10 bg-white" />
                      </div>
                    </>
                  ) : (
                    <>
-                     <div className="md:col-span-5 space-y-1.5">
+                     <div className="md:col-span-4 space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase">Item Name</Label>
                         <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} className="h-10 bg-white" />
                      </div>
                      <div className="md:col-span-2 space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase">Price</Label>
+                        <Label className="text-[10px] font-bold uppercase">Rate</Label>
                         <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} className="h-10 bg-white" />
                      </div>
                      <div className="md:col-span-2 space-y-1.5">
-                        <Label className="text-[10px] font-bold uppercase">Qty</Label>
+                        <Label className="text-[10px] font-bold uppercase">Unit/Area Qty</Label>
                         <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-10 bg-white" />
                      </div>
-                     <div className="md:col-span-1 space-y-1.5">
+                     <div className="md:col-span-2 space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase">Unit</Label>
-                        <Input value={manualItem.unit} onChange={e => setManualItem({...manualItem, unit: e.target.value})} className="h-10 bg-white" />
+                        <Select value={manualItem.unit} onValueChange={v => setManualItem({...manualItem, unit: v})}>
+                          <SelectTrigger className="h-10 bg-white rounded-lg"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                      </div>
                    </>
                  )}
@@ -348,7 +350,8 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                    <TableHeader className="bg-gray-50">
                      <TableRow>
                        <TableHead className="text-[10px] font-black uppercase py-4">Item Name</TableHead>
-                       <TableHead className="text-[10px] font-black uppercase text-center w-32">Quantity</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-center w-32">Unit/Area</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-center w-32">Unit Type</TableHead>
                        <TableHead className="text-[10px] font-black uppercase text-right w-32">Unit Price</TableHead>
                        <TableHead className="text-[10px] font-black uppercase text-right w-24">Discount</TableHead>
                        <TableHead className="text-[10px] font-black uppercase text-right w-32">Net Amount</TableHead>
@@ -359,10 +362,18 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                      {items.map((item) => (
                        <TableRow key={item.id}>
                          <TableCell className="font-bold text-xs uppercase">{item.name}</TableCell>
-                         <TableCell><Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', e.target.value)} className="h-8 w-20 mx-auto text-center" /></TableCell>
-                         <TableCell><Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', e.target.value)} className="h-8 w-24 ml-auto text-right" /></TableCell>
-                         <TableCell><Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', e.target.value)} className="h-8 w-24 ml-auto text-right" /></TableCell>
-                         <TableCell className="text-right font-black text-xs">৳{item.total.toFixed(2)}</TableCell>
+                         <TableCell><Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', e.target.value)} className="h-8 w-20 mx-auto text-center font-bold text-xs" /></TableCell>
+                         <TableCell>
+                            <Select value={item.unit} onValueChange={v => updateItemField(item.id, 'unit', v)}>
+                              <SelectTrigger className="h-8 w-24 mx-auto text-[10px] font-black uppercase"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                         </TableCell>
+                         <TableCell><Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', e.target.value)} className="h-8 w-24 ml-auto text-right font-bold text-xs" /></TableCell>
+                         <TableCell><Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', e.target.value)} className="h-8 w-24 ml-auto text-right font-bold text-xs" /></TableCell>
+                         <TableCell className="text-right font-black text-xs text-gray-900">৳{item.total.toFixed(2)}</TableCell>
                          <TableCell><button onClick={() => removeItem(item.id)}><Trash2 size={14} className="text-rose-300"/></button></TableCell>
                        </TableRow>
                      ))}
@@ -375,7 +386,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
              <div className="lg:col-span-7 space-y-4">
                <Label className="text-[10px] font-black uppercase text-gray-500">Customers Notes</Label>
-               <Textarea value={config.notes} onChange={e => setConfig({...config, notes: e.target.value})} className="h-32 bg-white rounded-xl" />
+               <Textarea value={config.notes} onChange={e => setConfig({...config, notes: e.target.value})} className="h-32 bg-white rounded-xl shadow-inner border-none" />
              </div>
              <div className="lg:col-span-5 bg-[#081621] text-white p-6 rounded-2xl space-y-6">
                 <div className="flex justify-between text-xs font-bold text-white/40">
@@ -385,24 +396,24 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                 <div className="flex justify-between items-center gap-4">
                    <span className="text-[10px] font-black uppercase text-white/40">Global Discount</span>
                    <div className="flex gap-1">
-                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 text-center bg-white/10 border-white/10" />
+                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 text-center bg-white/10 border-white/10 text-white" />
                       <Select value={pricing.discountType} onValueChange={(v:any) => setPricing({...pricing, discountType: v})}>
-                         <SelectTrigger className="h-9 w-16 bg-white/10 border-white/10"><SelectValue/></SelectTrigger>
+                         <SelectTrigger className="h-9 w-16 bg-white/10 border-white/10 text-white"><SelectValue/></SelectTrigger>
                          <SelectContent><SelectItem value="percentage">%</SelectItem><SelectItem value="fixed">৳</SelectItem></SelectContent>
                       </Select>
                    </div>
                 </div>
                 <div className="pt-6 border-t border-white/10 flex justify-between items-end">
                    <span className="text-lg font-black uppercase text-primary">Grand Total:</span>
-                   <span className="text-3xl font-black text-white">{totals.total.toFixed(2)}</span>
+                   <span className="text-3xl font-black text-white">৳{totals.total.toFixed(2)}</span>
                 </div>
              </div>
            </div>
         </div>
 
-        <DialogFooter className="p-6 bg-gray-50 border-t flex gap-2">
+        <DialogFooter className="p-6 bg-gray-50 border-t flex gap-2 shrink-0">
           <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button onClick={handleSave} className="bg-primary hover:bg-[#15435a] text-white rounded-xl px-12 font-black uppercase text-xs" disabled={isSubmitting}>
+          <Button onClick={handleSave} className="bg-primary hover:bg-[#15435a] text-white rounded-xl px-12 font-black uppercase text-xs shadow-xl shadow-primary/20" disabled={isSubmitting}>
             {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Publish"}
           </Button>
         </DialogFooter>
