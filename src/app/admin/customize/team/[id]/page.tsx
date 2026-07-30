@@ -130,19 +130,19 @@ export default function TeamMemberEditorPage() {
             <CardContent className="p-6 space-y-6">
               <ImageUploader 
                 label="Profile Photo" 
-                hint="800 x 800 px (1:1 Ratio for Top Section)" 
+                hint="800 x 800 px (Top 2 Inches Focal Area)" 
                 initialUrl={formData.image} 
                 onUpload={url => setFormData({...formData, image: url})} 
                 aspectRatio="aspect-square" 
               />
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
                 <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] font-bold text-blue-900 leading-relaxed uppercase">ছবি আপলোড গাইড: ছবির উপরের ২ ইঞ্চির জন্য ৮০০x৮০০ পিএক্স ইমেজ ব্যবহার করুন।</p>
+                <p className="text-[10px] font-bold text-blue-900 leading-relaxed uppercase">ছবি আপলোড গাইড: মেম্বারের মুখ যেন ফ্রেমের উপরের অংশে থাকে। ৮০০x৮০০ সাইজ ব্যবহার করুন।</p>
               </div>
               
               <div className="space-y-4 pt-6 border-t">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                  <Label className="text-[10px] font-black uppercase">Featured Member</Label>
+                  <Label className="text-[10px] font-black uppercase">Elite Member Badge</Label>
                   <Switch checked={formData.featured} onCheckedChange={v => setFormData({...formData, featured: v})} />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
@@ -150,7 +150,7 @@ export default function TeamMemberEditorPage() {
                   <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} />
                 </div>
                 <div className="space-y-2 px-1">
-                  <Label className="text-[10px] font-black uppercase text-gray-400">Sort Order</Label>
+                  <Label className="text-[10px] font-black uppercase text-gray-400">Sort Priority Order</Label>
                   <Input type="number" value={formData.displayOrder} onChange={e => setFormData({...formData, displayOrder: parseInt(e.target.value) || 0})} className="h-10 bg-gray-50 border-none rounded-xl" />
                 </div>
               </div>
@@ -172,50 +172,50 @@ export default function TeamMemberEditorPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase ml-1">Designation</Label>
-                  <Input value={formData.designation} onChange={e => setFormData({...formData, designation: e.target.value})} required placeholder="e.g. Lead Technician" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Department</Label>
-                  <Input value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} placeholder="e.g. Operations" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Experience (Years)</Label>
-                  <Input type="number" value={formData.experience} onChange={e => setFormData({...formData, experience: parseInt(e.target.value) || 0})} className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  <Input value={formData.designation} onChange={e => setFormData({...formData, designation: e.target.value})} required placeholder="e.g. Senior Technician" className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase ml-1">Professional Biography</Label>
-                <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} placeholder="Brief professional overview for the public profile..." className="min-h-[120px] bg-gray-50 border-none rounded-2xl p-6 text-sm leading-relaxed" />
+                <Label className="text-[10px] font-black uppercase ml-1">Professional Bio (Displayed in Modal)</Label>
+                <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} placeholder="Write a brief professional summary..." className="min-h-[120px] bg-gray-50 border-none rounded-2xl p-6 text-sm leading-relaxed" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Smartphone size={12}/> Phone</Label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs" />
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><Phone size={12} className="text-primary"/> Mobile Number</Label>
+                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MessageCircle size={12}/> WhatsApp</Label>
-                  <Input value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs" />
+                  <Label className="text-[10px] font-black uppercase flex items-center gap-2"><MessageCircle size={12} className="text-emerald-600"/> WhatsApp</Label>
+                  <Input value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="Display on card" className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase flex items-center gap-2">Service Region</Label>
-                  <Input value={formData.serviceArea} onChange={e => setFormData({...formData, serviceArea: e.target.value})} placeholder="e.g. Uttara, Dhaka" className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs" />
+                  <Input value={formData.serviceArea} onChange={e => setFormData({...formData, serviceArea: e.target.value})} placeholder="e.g. Dhaka Central" className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-blue-600"><Facebook size={12}/> Facebook URL</Label>
-                  <Input value={formData.facebook} onChange={e => setFormData({...formData, facebook: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl text-[10px]" />
+                  <Label className="text-[10px] font-black uppercase ml-1">Department</Label>
+                  <Select value={formData.department} onValueChange={v => setFormData({...formData, department: v})}>
+                    <SelectTrigger className="h-11 bg-gray-50 border-none rounded-xl font-bold text-xs uppercase"><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Operations">Operations</SelectItem>
+                      <SelectItem value="Cleaning">Cleaning</SelectItem>
+                      <SelectItem value="Support">Support</SelectItem>
+                      <SelectItem value="Tech">Technical</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-indigo-600"><Linkedin size={12}/> LinkedIn URL</Label>
-                  <Input value={formData.linkedin} onChange={e => setFormData({...formData, linkedin: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl text-[10px]" />
+                  <Label className="text-[10px] font-black uppercase ml-1">Experience (Years)</Label>
+                  <Input type="number" value={formData.experience} onChange={e => setFormData({...formData, experience: parseInt(e.target.value) || 0})} className="h-11 bg-gray-50 border-none rounded-xl font-black" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-pink-600"><Instagram size={12}/> Instagram URL</Label>
-                  <Input value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl text-[10px]" />
+                  <Label className="text-[10px] font-black uppercase ml-1">Official Email</Label>
+                  <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl font-bold text-[10px]" />
                 </div>
               </div>
             </CardContent>

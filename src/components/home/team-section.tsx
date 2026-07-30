@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -69,7 +70,7 @@ export function TeamSection() {
           </div>
         </div>
 
-        <div className="relative px-10 md:px-12">
+        <div className="relative px-8 md:px-12">
           <Carousel
             opts={{
               align: "start",
@@ -77,21 +78,21 @@ export function TeamSection() {
             }}
             plugins={[
               Autoplay({
-                delay: 4000,
+                delay: 5000,
               }),
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ml-6 md:-ml-10">
               {sortedTeam.map((member) => (
-                <CarouselItem key={member.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
+                <CarouselItem key={member.id} className="pl-6 md:pl-10 basis-1/2 md:basis-1/3 lg:basis-1/5">
                   <TeamMemberCard member={member as any} />
                 </CarouselItem>
               ))}
             </CarouselContent>
             <div className="hidden md:block">
-              <CarouselPrevious className="-left-6 lg:-left-12 h-10 w-10 border-gray-200 text-primary hover:bg-primary hover:text-white transition-all shadow-lg" />
-              <CarouselNext className="-right-6 lg:-right-12 h-10 w-10 border-gray-200 text-primary hover:bg-primary hover:text-white transition-all shadow-lg" />
+              <CarouselPrevious className="-left-6 lg:-left-12 h-11 w-11 border-gray-100 text-primary hover:bg-primary hover:text-white transition-all shadow-xl bg-white" />
+              <CarouselNext className="-right-6 lg:-right-12 h-11 w-11 border-gray-100 text-primary hover:bg-primary hover:text-white transition-all shadow-xl bg-white" />
             </div>
           </Carousel>
         </div>
