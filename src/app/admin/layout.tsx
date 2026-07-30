@@ -376,6 +376,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { id: 'customize', icon: Palette, color: "text-fuchsia-400", items: [
         { name: "Home Builder", key: "homepage_builder", href: '/admin/customize/homepage-builder', icon: Navigation },
         { name: "Banners", key: "hero_banners", href: '/admin/customize/hero', icon: Layout },
+        { name: "Trust Stats", key: "trust_stats", href: '/admin/customize/trust-stats', icon: Award },
         { name: "Navigation", key: "navigation_hub", href: '/admin/customize/navigation', icon: Compass },
         { name: "Team", key: "team", href: '/admin/customize/team', icon: Users },
         { name: "Theme", key: "theme", href: '/admin/customize/theme', icon: Palette },

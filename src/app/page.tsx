@@ -94,6 +94,7 @@ export default function SmartCleanHomePage() {
   const couponsRef = useMemoFirebase(() => db ? collection(db, 'coupons') : null, [db]);
   const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
   const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
+  const siteStatsRef = useMemoFirebase(() => db ? collection(db, 'site_stats') : null, [db]);
 
   const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
@@ -107,6 +108,7 @@ export default function SmartCleanHomePage() {
   const { data: coupons } = useCollection(couponsRef);
   const { data: quickLinks } = useCollection(quickLinksRef);
   const { data: quickActions } = useCollection(quickActionsRef);
+  const { data: siteStats } = useCollection(useMemoFirebase(() => siteStatsRef ? query(siteStatsRef, orderBy('order', 'asc')) : null, [siteStatsRef]));
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
@@ -380,23 +382,30 @@ export default function SmartCleanHomePage() {
         );
 
       case 'trust_stats':
+        const statsToRender = siteStats && siteStats.length > 0 ? siteStats : [
+          { label: t('happy_clients'), value: "15k+", icon: 'Users', color: "text-blue-600", bg: "bg-blue-50" },
+          { label: t('trust_score'), value: "4.9/5", icon: 'Star', color: "text-rose-600", bg: "bg-rose-50" },
+          { label: t('verified_pros'), value: "250+", icon: 'Award', color: "text-amber-600", bg: "bg-amber-50" },
+          { label: t('service_hours'), value: "50k+", icon: 'Clock', color: "text-green-600", bg: "bg-green-50" }
+        ];
+
         return (
-          <section key={section.id} className="px-4 py-4 bg-white border-y border-gray-50">
-            <div className="container mx-auto max-w-7xl flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
-              {[
-                { label: t('happy_clients'), val: "15k+", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-                { label: t('trust_score'), val: "4.9/5", icon: Star, color: "text-rose-600", bg: "bg-rose-50" },
-                { label: t('verified_pros'), val: "250+", icon: Award, color: "text-amber-600", bg: "bg-amber-50" },
-                { label: t('service_hours'), val: "50k+", icon: Clock, color: "text-green-600", bg: "bg-green-50" }
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-3 h-[48px] shrink-0">
-                  <div className={cn("p-2 rounded-xl shrink-0 shadow-sm", stat.bg, stat.color)}><stat.icon size={18} strokeWidth={2.5} /></div>
-                  <div className="flex flex-col justify-center">
-                    <h4 className="text-base font-black text-[#081621] tracking-tighter leading-none">{stat.val}</h4>
-                    <p className="text-[8px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-0.5 whitespace-nowrap">{stat.label}</p>
+          <section key={section.id} className="px-4 py-6 bg-white border-y border-gray-50">
+            <div className="container mx-auto max-w-7xl flex flex-wrap items-center justify-center gap-x-8 md:gap-x-12 gap-y-6">
+              {statsToRender.map((stat: any, i: number) => {
+                const Icon = ICONS[stat.icon] || Zap;
+                return (
+                  <div key={stat.id || i} className="flex items-center gap-3 h-[48px] shrink-0">
+                    <div className={cn("p-2.5 rounded-xl shrink-0 shadow-sm transition-transform hover:scale-110", stat.bg, stat.color)}>
+                      <Icon size={18} strokeWidth={2.5} />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="text-base md:text-lg font-black text-[#081621] tracking-tighter leading-none">{stat.value}</h4>
+                      <p className="text-[8px] md:text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em] mt-0.5 whitespace-nowrap">{stat.label}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         );
