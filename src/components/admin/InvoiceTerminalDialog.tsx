@@ -57,7 +57,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
 
   const [items, setItems] = useState<any[]>([]);
-  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
   const [config, setConfig] = useState({ 
     invoiceNumber: '',
@@ -289,7 +289,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
              </CardContent>
            </Card>
 
-           <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100">
+           <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
              <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
                 <CardTitle className="text-[9px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={12}/> Items Matrix</CardTitle>
                 <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border">
@@ -362,7 +362,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                      {items.map((item) => (
                        <TableRow key={item.id}>
                          <TableCell className="font-bold text-[11px] uppercase py-2">{item.name}</TableCell>
-                         <TableCell><Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', e.target.value)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white" /></TableCell>
+                         <TableCell><Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', e.target.value)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
                          <TableCell>
                             <Select value={item.unit} onValueChange={v => updateItemField(item.id, 'unit', v)}>
                               <SelectTrigger className="h-7 w-20 mx-auto text-[9px] font-black uppercase bg-white"><SelectValue /></SelectTrigger>
@@ -371,8 +371,8 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                               </SelectContent>
                             </Select>
                          </TableCell>
-                         <TableCell><Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white" /></TableCell>
-                         <TableCell><Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white" /></TableCell>
+                         <TableCell><Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
+                         <TableCell><Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
                          <TableCell className="text-right font-black text-[11px] text-gray-900">৳{item.total.toFixed(2)}</TableCell>
                          <TableCell><button onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600"><Trash2 size={14}/></button></TableCell>
                        </TableRow>

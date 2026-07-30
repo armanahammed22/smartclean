@@ -238,7 +238,7 @@ export default function CreateQuotationPage() {
 
   return (
     <div className="space-y-4 pb-20 min-w-0 -mt-6">
-      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm sticky top-0 z-[100]">
+      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border hover:bg-gray-50">
             <ArrowLeft size={16} />
@@ -395,7 +395,7 @@ export default function CreateQuotationPage() {
                         <p className="font-bold text-[11px] text-gray-900 uppercase">{item.name}</p>
                       </TableCell>
                       <TableCell>
-                        <Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', parseInt(e.target.value) || 0)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white" />
+                        <Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', parseInt(e.target.value) || 0)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white shadow-inner rounded-lg" />
                       </TableCell>
                       <TableCell>
                         <Select value={item.unit} onValueChange={v => updateItemField(item.id, 'unit', v)}>
@@ -406,10 +406,10 @@ export default function CreateQuotationPage() {
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', parseFloat(e.target.value) || 0)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white" />
+                        <Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', parseFloat(e.target.value) || 0)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" />
                       </TableCell>
                       <TableCell>
-                        <Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', parseFloat(e.target.value) || 0)} className="h-7 w-24 ml-auto text-right font-bold text-[11px] bg-white" />
+                        <Input type="number" value={item.discount} onChange={e => updateItemField(item.id, 'discount', parseFloat(e.target.value) || 0)} className="h-7 w-24 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" />
                       </TableCell>
                       <TableCell className="text-right font-black text-[11px] text-gray-900">৳{item.total?.toFixed(2)}</TableCell>
                       <TableCell><button type="button" onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={14}/></button></TableCell>
@@ -425,21 +425,21 @@ export default function CreateQuotationPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-7 space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Terms & Conditions Registry</Label>
-              <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
-                {config.terms.map((term, i) => (
-                  <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
-                    <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-8 border-none bg-gray-50 text-[10px] font-medium" />
-                    <button type="button" onClick={() => removeTerm(i)} className="p-1.5 text-gray-300 hover:text-red-500 transition-opacity group-hover:opacity-100"><X size={12}/></button>
-                  </div>
-                ))}
-                <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary transition-all">
-                  <Plus size={12}/> Add Custom Rule
-                </button>
-              </div>
-            </div>
+          <div className="lg:col-span-7 space-y-4">
+             <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-gray-400">Terms & Registry</Label>
+                <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
+                  {config.terms.map((term: string, i: number) => (
+                    <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
+                      <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-8 border-none bg-gray-50 text-[10px] font-medium" />
+                      <button type="button" onClick={() => removeTerm(i)} className="p-1.5 text-gray-300 hover:text-red-500 group-hover:opacity-100 opacity-0"><X size={12}/></button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary transition-all">
+                    <Plus size={12}/> Add Custom Rule
+                  </button>
+                </div>
+             </div>
           </div>
 
           <div className="lg:col-span-5">
@@ -449,15 +449,15 @@ export default function CreateQuotationPage() {
                   <span>Gross Valuation</span>
                   <span>৳{totals.subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center gap-6">
-                  <span className="uppercase tracking-widest text-[9px] font-black text-gray-400">Global Adjustment</span>
-                  <div className="flex items-center gap-2">
-                    <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
-                    <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
-                      <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-xl"><SelectItem value="percentage" className="text-xs">%</SelectItem><SelectItem value="fixed" className="text-xs">৳</SelectItem></SelectContent>
-                    </Select>
-                  </div>
+                <div className="flex justify-between items-center gap-4">
+                   <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Global Adjustment</span>
+                   <div className="flex gap-1">
+                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
+                      <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
+                         <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue /></SelectTrigger>
+                         <SelectContent className="rounded-xl"><SelectItem value="percentage" className="text-xs">%</SelectItem><SelectItem value="fixed" className="text-xs">৳</SelectItem></SelectContent>
+                      </Select>
+                   </div>
                 </div>
                 <div className="pt-6 flex justify-between items-end border-t border-gray-200">
                   <div className="flex flex-col">

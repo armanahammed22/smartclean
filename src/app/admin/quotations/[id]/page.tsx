@@ -32,13 +32,15 @@ import {
   Download,
   Eye,
   ListChecks,
-  Printer
+  Printer,
+  Switch
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { convertQuotationToBooking, convertQuotationToInvoice, downloadQuotationPDF } from '@/lib/quotation-utils';
 import Link from 'next/link';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function QuotationEditorPage() {
   const { id } = useParams();
@@ -46,9 +48,6 @@ export default function QuotationEditorPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
-  const [isConvertingToInvoice, setIsConvertingToInvoice] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -188,7 +187,7 @@ export default function QuotationEditorPage() {
 
   return (
     <div className="space-y-4 pb-24 min-w-0 -mt-6">
-      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm sticky top-0 z-[100]">
+      <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border hover:bg-gray-50">
             <ArrowLeft size={16} />
@@ -360,7 +359,7 @@ export default function QuotationEditorPage() {
                     </div>
                   ))}
                   <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary">
-                    <Plus size={12}/> New Policy
+                    <Plus size={12}/> Add Custom Rule
                   </button>
                 </div>
              </div>
