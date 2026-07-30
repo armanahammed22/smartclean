@@ -48,12 +48,18 @@ const ICONS: Record<string, any> = {
   Award, TicketPercent, Gift, Users, Clock
 };
 
+/**
+ * 🦴 Optimized Skeleton for better perceived performance
+ */
 const SectionSkeleton = () => (
   <div className="container mx-auto px-4 py-8 max-w-7xl space-y-6">
-    <Skeleton className="h-10 w-64 rounded-xl" />
+    <div className="flex justify-between items-center">
+      <Skeleton className="h-10 w-64 rounded-xl" />
+      <Skeleton className="h-6 w-20 rounded-lg" />
+    </div>
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {[1, 2, 3, 4, 5, 6].map(i => (
-        <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
+        <Skeleton key={i} className="aspect-[3/4.5] rounded-[2rem]" />
       ))}
     </div>
   </div>
@@ -80,54 +86,41 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // 🚀 OPTIMIZATION: Catalog reads limited to 50 items for Home
+  // 🚀 PERFORMANCE: Catalog reads limited to top 50 items for Home to reduce snapshot overhead
   const productsRef = useMemoFirebase(() => db ? query(collection(db, 'products'), where('status', '==', 'Active'), limit(50)) : null, [db]);
   const servicesRef = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(50)) : null, [db]);
   const subServicesRef = useMemoFirebase(() => db ? query(collection(db, 'sub_services'), where('status', '==', 'Active'), limit(50)) : null, [db]);
 
-  const sectionsRef = useMemoFirebase(() => db ? collection(db, 'homepage_sections') : null, [db]);
+  const sectionsRef = useMemoFirebase(() => db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
-  const topNavRef = useMemoFirebase(() => db ? collection(db, 'top_nav_categories') : null, [db]);
+  const topNavRef = useMemoFirebase(() => db ? query(collection(db, 'top_nav_categories'), orderBy('order', 'asc')) : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const advancedOffersRef = useMemoFirebase(() => db ? collection(db, 'advanced_offers') : null, [db]);
   const couponsRef = useMemoFirebase(() => db ? collection(db, 'coupons') : null, [db]);
-  const quickLinksRef = useMemoFirebase(() => db ? collection(db, 'quick_links') : null, [db]);
+  const quickLinksRef = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
-  const siteStatsRef = useMemoFirebase(() => db ? collection(db, 'site_stats') : null, [db]);
+  const siteStatsRef = useMemoFirebase(() => db ? query(collection(db, 'site_stats'), orderBy('order', 'asc')) : null, [db]);
 
-  const { data: allSectionsRaw, isLoading: layoutLoading } = useCollection(sectionsRef);
+  const { data: activeLayoutSections, isLoading: layoutLoading } = useCollection(sectionsRef);
   const { data: allBanners } = useCollection(bannersRef);
-  const { data: allTopNav } = useCollection(topNavRef);
-  const { data: allProducts } = useCollection(productsRef);
-  const { data: allServices } = useCollection(servicesRef);
-  const { data: allSubServices } = useCollection(subServicesRef);
+  const { data: topCategories } = useCollection(topNavRef);
+  const { data: allProducts, isLoading: pLoading } = useCollection(productsRef);
+  const { data: allServices, isLoading: sLoading } = useCollection(servicesRef);
+  const { data: allSubServices, isLoading: subLoading } = useCollection(subServicesRef);
   const { data: settings } = useDoc(settingsRef);
   const { data: cardStyles } = useDoc(stylesRef);
   const { data: advancedOffers } = useCollection(advancedOffersRef);
   const { data: coupons } = useCollection(couponsRef);
   const { data: quickLinks } = useCollection(quickLinksRef);
   const { data: quickActions } = useCollection(quickActionsRef);
-  const { data: siteStats } = useCollection(useMemoFirebase(() => siteStatsRef ? query(siteStatsRef, orderBy('order', 'asc')) : null, [siteStatsRef]));
+  const { data: siteStats } = useCollection(siteStatsRef);
 
   const productsEnabled = settings?.productsEnabled !== false;
   const servicesEnabled = settings?.servicesEnabled !== false;
 
-  const activeLayoutSections = useMemo(() => {
-    if (layoutLoading) return [];
-    return (allSectionsRaw || [])
-      .filter(s => {
-        if (!s.isActive) return false;
-        if (!productsEnabled && (s.type === 'flash_deals' || s.type.startsWith('products_'))) return false;
-        if (!servicesEnabled && (s.type.startsWith('services_') || s.type === 'sub_services_custom')) return false;
-        return true;
-      })
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-  }, [allSectionsRaw, layoutLoading, productsEnabled, servicesEnabled]);
-
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
-  const topCategories = useMemo(() => allTopNav?.sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allTopNav]);
 
   const getGridCols = (cols: string | undefined) => {
     const c = cols || '5';
@@ -143,14 +136,18 @@ export default function SmartCleanHomePage() {
     const config = section.config || {};
     const sectionType = section.type;
     
+    // Safety check for feature logic toggles
+    if (!productsEnabled && (sectionType === 'flash_deals' || sectionType.startsWith('products_'))) return null;
+    if (!servicesEnabled && (sectionType.startsWith('services_') || sectionType === 'sub_services_custom')) return null;
+
     if (sectionType === 'hero' || sectionType === 'side_promo') return null;
 
     switch (sectionType) {
       case 'top_nav_links':
-        if (!topCategories.length) return null;
+        if (!topCategories?.length) return null;
         return (
           <section key={section.id} className="px-4 py-6">
-            <div className="container mx-auto max-7xl">
+            <div className="container mx-auto max-w-7xl">
               <div className="bg-white border rounded-2xl p-4 shadow-sm overflow-x-auto no-scrollbar whitespace-nowrap flex gap-6">
                 {topCategories.map(cat => (
                   <Link key={cat.id} href={cat.link || '#'} className="text-xs font-black uppercase tracking-widest text-gray-600 hover:text-primary transition-colors">
@@ -174,7 +171,7 @@ export default function SmartCleanHomePage() {
                     <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-2 group">
                       <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
                         {link.imageUrl ? (
-                          <Image src={link.imageUrl} alt={link.label} fill className="object-cover" sizes="(max-width: 768px) 48px, 64px" />
+                          <Image src={link.imageUrl} alt={link.label} fill className="object-cover" sizes="(max-width: 768px) 48px, 64px" unoptimized />
                         ) : (
                           <LinkIcon size={24} className="text-primary" />
                         )}
@@ -210,6 +207,7 @@ export default function SmartCleanHomePage() {
         );
 
       case 'products_dynamic':
+        if (pLoading) return <SectionSkeleton key={section.id} />;
         let filteredProducts = allProducts?.filter(p => p.status?.toLowerCase() === 'active') || [];
         if (config.sourceType === 'category' && config.sourceId) {
           filteredProducts = filteredProducts.filter(p => p.categoryId === config.sourceId);
@@ -227,7 +225,7 @@ export default function SmartCleanHomePage() {
         else filteredProducts.sort((a,b) => (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime()));
         
         filteredProducts = filteredProducts.slice(0, config.limit || 12);
-        if (!filteredProducts.length && !layoutLoading) return null;
+        if (!filteredProducts.length) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -244,6 +242,7 @@ export default function SmartCleanHomePage() {
         );
 
       case 'services_dynamic':
+        if (sLoading) return <SectionSkeleton key={section.id} />;
         let filteredServices = allServices?.filter(s => s.status?.toLowerCase() === 'active') || [];
         if (config.sourceType === 'category' && config.sourceId) {
           filteredServices = filteredServices.filter(s => s.categoryId === config.sourceId);
@@ -252,7 +251,7 @@ export default function SmartCleanHomePage() {
         }
         
         filteredServices = filteredServices.slice(0, config.limit || 10);
-        if (!filteredServices.length && !layoutLoading) return null;
+        if (!filteredServices.length) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -266,13 +265,14 @@ export default function SmartCleanHomePage() {
         );
 
       case 'sub_services_custom':
+        if (subLoading) return <SectionSkeleton key={section.id} />;
         let filteredSubs = allSubServices?.filter(s => s.status?.toLowerCase() === 'active') || [];
         if (config.sourceType === 'manual' && config.manualIds?.length) {
           filteredSubs = filteredSubs.filter(s => config.manualIds.includes(s.id));
         }
         
         filteredSubs = filteredSubs.slice(0, config.limit || 10);
-        if (!filteredSubs.length && !layoutLoading) return null;
+        if (!filteredSubs.length) return null;
 
         return (
           <section key={section.id} className="px-4 py-8 md:py-12">
@@ -431,6 +431,7 @@ export default function SmartCleanHomePage() {
           </div>
         ) : (
           <>
+            {/* 🎯 HERO SECTION - OPTIMIZED */}
             <section className="w-full px-0 lg:px-4 lg:mt-4 mb-6">
               <div className="flex flex-row flex-nowrap gap-2 md:gap-4 w-full h-[200px] sm:h-[280px] md:h-[320px] max-h-[320px] overflow-hidden">
                 <div className="relative overflow-hidden bg-gray-100 shadow-sm rounded-xl md:rounded-2xl lg:rounded-3xl h-full w-[70%]">
@@ -445,8 +446,9 @@ export default function SmartCleanHomePage() {
                                 alt={banner.title} 
                                 fill 
                                 className="object-cover" 
-                                priority={i === 0} 
+                                priority={i === 0} // ⚡ LOAD FIRST BANNER IMMEDIATELY
                                 sizes="(max-width: 1024px) 70vw, 982px"
+                                unoptimized // Picsum bypass
                               />
                               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-3 sm:p-6 md:p-12 text-left">
                                 <h2 className="text-white text-xs sm:text-2xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl line-clamp-1">{banner.title}</h2>
@@ -473,6 +475,7 @@ export default function SmartCleanHomePage() {
                           className="object-cover transition-transform duration-700 group-hover:scale-110" 
                           priority={i === 0}
                           sizes="(max-width: 1024px) 30vw, 600px"
+                          unoptimized
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 md:p-6 flex flex-col justify-end text-left">
                           <h3 className="text-white text-[7px] sm:text-sm lg:text-lg font-black uppercase tracking-tight leading-tight line-clamp-2 drop-shadow-md">{promo.title}</h3>
@@ -487,7 +490,7 @@ export default function SmartCleanHomePage() {
               </div>
             </section>
 
-            {activeLayoutSections.map(renderSection)}
+            {activeLayoutSections?.map(renderSection)}
           </>
         )}
       </div>
