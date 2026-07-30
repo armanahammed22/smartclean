@@ -17,7 +17,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations: Record<Language, any> = { bn, en };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Default to Bangla ('bn')
+  // Default to Bangla ('bn') as per requirement
   const [language, setLanguageState] = useState<Language>('bn');
   const [mounted, setMounted] = useState(false);
 
@@ -37,15 +37,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * 🛡️ Improved Translation Function
-   * Fallback priority: Requested Language -> Bangla (Master) -> Humanized Key
+   * 🛡️ Resilient Translation Engine
+   * Logic: Target Language -> Bangla Fallback -> Humanized Key
    */
   const t = useCallback((key: string) => {
     if (!key) return '';
     
     const keys = key.split('.');
     
-    // 1. Try to find key in current language
+    // 1. Try Target Language
     let value = translations[language];
     for (const k of keys) {
       if (value && value[k]) {
@@ -56,7 +56,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 2. Resilient Fallback: If not found or empty in current, try Bangla (Default)
+    // 2. Fallback to Bangla ('bn') if missing in English or undefined
     if (typeof value !== 'string' || value === '') {
       let fallbackValue = translations['bn'];
       for (const k of keys) {
@@ -70,10 +70,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (typeof fallbackValue === 'string' && fallbackValue !== '') return fallbackValue;
     }
 
-    // 3. Final Safety: Never show raw key (e.g. ADMIN.DASHBOARD), humanize it instead
+    // 3. Last Resort: Show human-readable string instead of the raw key ID
     if (typeof value !== 'string' || value === '') {
       const lastKey = keys[keys.length - 1];
-      return lastKey.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); 
+      return lastKey
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '); 
     }
     
     return value;
@@ -95,7 +99,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    // Default return to prevent crash if hook called outside provider during SSR/Hydration
     return {
       language: 'bn' as Language,
       setLanguage: () => {},

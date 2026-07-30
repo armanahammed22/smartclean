@@ -145,13 +145,8 @@ const SidebarContent = React.memo(({
 
   const hoverClass = appearance?.hoverBgColor ? "" : "hover:bg-white/5";
 
-  // Helper to get bilingual custom label
+  // Helper to get translated labels
   const getLabel = (groupId: string) => {
-    const customLabels = sidebarConfig?.customLabels || {};
-    const itemLabels = customLabels[groupId];
-    if (itemLabels && itemLabels[language]) {
-      return itemLabels[language];
-    }
     return t(`admin.${groupId}`);
   };
 
