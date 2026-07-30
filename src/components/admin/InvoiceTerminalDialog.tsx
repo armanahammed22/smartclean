@@ -11,6 +11,7 @@ import {
   DialogDescription, 
   DialogFooter 
 } from '@/components/ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -226,7 +227,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-[95vw] h-full md:h-auto md:max-h-[95vh] p-0 border-none rounded-[1.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
+      <DialogContent className="max-w-6xl w-[95vw] h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-[1.5rem] shadow-2xl bg-white flex flex-col overflow-hidden">
         <header className="h-[60px] bg-[#081621] text-white flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-primary/20 rounded-xl text-primary"><ReceiptText size={20} /></div>
@@ -237,7 +238,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
               </DialogDescription>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
+          <button type="button" onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-white/60 transition-colors"><X size={24}/></button>
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-6 space-y-4">
