@@ -22,7 +22,8 @@ import {
   Banknote,
   ShieldCheck,
   Clock,
-  FileText
+  FileText,
+  Wallet
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -232,7 +233,7 @@ function InvoicesListContent() {
                       <TableCell className="text-center">
                         <Badge className={cn(
                           "text-[7px] font-black uppercase border-none px-2 py-0.5 rounded-md",
-                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-600"
+                          inv.paymentStatus === 'Paid' ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                         )}>{inv.paymentStatus}</Badge>
                       </TableCell>
                       <TableCell className="text-right pr-8">
