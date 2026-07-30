@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -23,7 +24,8 @@ import {
   History,
   Zap,
   Clock,
-  Star
+  Star,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +35,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * Visual-Designer Integrated Public Invoice View
+ * Re-uses Unified Design logic from Quotation for consistent branding.
  */
 function InvoiceViewContent() {
   const { id } = useParams();
@@ -51,13 +54,22 @@ function InvoiceViewContent() {
     setMounted(true);
   }, []);
 
-  // Fetch Logic
+  // Fetch Logic (Handle ID or Number)
   useEffect(() => {
     async function fetchInvoice() {
       if (!db || !id) return;
       setIsLoading(true);
       try {
         const docRef = collection(db, 'invoices');
+        const qByNum = query(docRef, where('invoiceNumber', '==', id), limit(1));
+        const snapByNum = await getDocs(qByNum);
+
+        if (!snapByNum.empty) {
+          setInvoice({ ...snapByNum.docs[0].data(), id: snapByNum.docs[0].id });
+          setIsLoading(false);
+          return;
+        }
+
         const qById = query(docRef, where('__name__', '==', id), limit(1));
         const snapById = await getDocs(qById);
 
@@ -68,15 +80,6 @@ function InvoiceViewContent() {
             return;
           }
           setInvoice({ ...data, id: snapById.docs[0].id });
-          setIsLoading(false);
-          return;
-        }
-
-        const qByNum = query(docRef, where('invoiceNumber', '==', id), limit(1));
-        const snapByNum = await getDocs(qByNum);
-
-        if (!snapByNum.empty) {
-          setInvoice({ ...snapByNum.docs[0].data(), id: snapByNum.docs[0].id });
         }
       } catch (e) {
         console.error('Fetch error:', e);
@@ -102,65 +105,85 @@ function InvoiceViewContent() {
   const signatureUrl = settings?.signatureUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
+  const providedServices = useMemo(() => {
+    const list = settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
+    return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+  }, [settings]);
+
   const handleWhatsApp = () => {
     if (!invoice) return;
-    const text = `আসসালামু আলাইকুম, আমি আমার ইনভয়েস (${invoice.invoiceNumber}) সম্পর্কে জানতে চাই।`;
+    const text = `আসসালামু আলাইকুম, আমার ইনভয়েস (${invoice.invoiceNumber}) সম্পর্কে একটি আপডেট প্রয়োজন।`;
     window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
-  if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center uppercase font-black opacity-20">Document Not Found</div>;
+  if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50"><X size={64} className="mx-auto text-gray-200" /><h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em] mt-4">Document Not Found</h1></div>;
 
   const d = design || {
     primaryColor: '#1E5F7A',
-    headerPaddingTop: 10,
-    headerPaddingBottom: 10,
-    sectionSpacing: 16,
-    tableFontSize: 11,
-    tableRowPadding: 6,
-    headerFontSize: 24,
-    bodyFontSize: 12,
-    logoSize: 56,
+    headerPaddingTop: 5,
+    headerPaddingBottom: 5,
+    sectionSpacing: 10,
+    tableFontSize: 10.5,
+    tableRowPadding: 2,
+    headerFontSize: 22,
+    bodyFontSize: 11,
+    logoSize: 52,
     showGridLines: true,
-    footerMarginTop: 20,
-    signatureSpacing: 40,
-    taglineFontSize: 12,
-    disclaimerFontSize: 8,
+    footerMarginTop: 5,
+    footerPaddingBottom: 5,
+    signatureSpacing: 25,
+    taglineFontSize: 11,
+    disclaimerFontSize: 7.5,
     customTopText: '',
     customBottomText: ''
   };
 
+  const isPaid = invoice.paymentStatus === 'Paid';
+
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-16 selection:bg-primary selection:text-white pb-32 md:pb-16">
+    <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #invoice-render-area { shadow: none !important; border-top: none !important; border-radius: 0 !important; }
+          #invoice-render-area { shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
         }
       `}</style>
 
       <div className="container mx-auto px-4 flex flex-col items-center">
-        <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-10 gap-6 px-4 no-print">
+        <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 px-4 no-print">
           <div className="flex items-center gap-4 text-left">
-            <div className="w-12 h-12 bg-[#081621] rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl border border-white/10">SC</div>
+            <div className="w-10 h-10 bg-[#081621] rounded-xl flex items-center justify-center text-white font-black text-sm shadow-xl border border-white/10">SC</div>
             <div>
-                <span className="text-[11px] font-black uppercase tracking-widest text-[#081621] block">Secure Billing Portal</span>
-                <Badge className="bg-emerald-100 text-emerald-700 border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1">Verified Document</Badge>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#081621] block">Secure Billing Portal</span>
+                <Badge className={cn("border-none font-black text-[7px] uppercase tracking-widest px-2 py-0.5 mt-0.5", isPaid ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
+                    {isPaid ? 'Payment Received' : 'Arrears Pending'}
+                </Badge>
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={handleWhatsApp} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50"><MessageCircle size={18} /> WhatsApp</Button>
-            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
-              {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button variant="outline" onClick={handleWhatsApp} className="rounded-lg gap-2 font-black uppercase text-[9px] h-9 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={16} /> Support</Button>
+            <Button className="rounded-lg gap-2 font-black uppercase text-[9px] h-9 px-6 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
+              {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} DOWNLOAD PDF
             </Button>
           </div>
         </div>
 
-        <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[2rem]" style={{ width: '210mm', minHeight: 'auto', color: '#333', borderTop: `14px solid ${d.primaryColor}` }}>
+        <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
+          {/* PAID/UNPAID STATUS SEAL */}
+          <div className="absolute top-48 right-16 z-20 pointer-events-none rotate-[25deg] opacity-20">
+             <div className={cn(
+                "border-[6px] rounded-2xl px-8 py-3 font-black text-6xl uppercase tracking-[0.2em]",
+                isPaid ? "border-emerald-600 text-emerald-600" : "border-rose-600 text-rose-600"
+             )}>
+                {isPaid ? 'PAID' : 'UNPAID'}
+             </div>
+          </div>
+
           <header 
-            className="px-12 flex justify-between items-start border-b-2 border-gray-100 mb-8"
+            className="px-12 flex justify-between items-start border-b-2 border-gray-50"
             style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
           >
             <div className="flex gap-4">
@@ -172,88 +195,140 @@ function InvoiceViewContent() {
                 <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: d.primaryColor }}>Professional Infrastructure</p>
               </div>
             </div>
-            <div className="text-left space-y-0.5 max-w-[250px]">
-              <p className="text-[8px] font-bold text-gray-600 leading-normal uppercase">{headerAddress}</p>
+            <div className="text-right max-w-[280px]">
+              <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
               <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
             </div>
           </header>
 
-          <div className="px-12 pb-10" style={{ marginTop: `${d.sectionSpacing}px` }}>
+          <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
+            
             {d.customTopText && (
-              <div className="p-3 text-center rounded-xl font-black uppercase text-[10px] mb-8" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
+              <div className="p-2 text-center rounded-xl font-black uppercase text-[9px] italic shadow-inner" style={{ backgroundColor: `${d.primaryColor}10`, color: d.primaryColor }}>
                 {d.customTopText}
               </div>
             )}
 
-            <div className="flex justify-between items-start mb-8">
-              <div className="text-left space-y-2">
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Bill Recipient</p>
-                <h4 className="font-black text-[#081621] uppercase tracking-tight" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{invoice.customerInfo.name}</h4>
-                <p className="text-[9px] font-bold text-gray-700">{invoice.customerInfo.phone}</p>
-                <p className="text-[8px] text-gray-500 font-medium leading-normal max-w-[300px]">{invoice.customerInfo.address}</p>
+            <div className="text-center space-y-0.5">
+                <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Service Bill</h3>
+                <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
+            </div>
+
+            <div className="flex justify-between items-start">
+              <div className="text-left space-y-1.5">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Customer Profile</p>
+                <div className="space-y-0.5">
+                  <h4 className="font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 1}px` }}>{invoice.customerInfo?.name}</h4>
+                  <p className="text-[9px] font-bold text-gray-600">{invoice.customerInfo?.phone}</p>
+                  <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{invoice.customerInfo?.address}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p>
-                <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
-                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-4">Date</p>
-                <p className="text-[11px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
+              <div className="text-right space-y-2">
+                <div>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p>
+                  <p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Billing Date</p>
+                  <p className="text-[10px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'N/A'}</p>
+                </div>
               </div>
             </div>
 
             <div className={cn("overflow-hidden rounded-xl", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse text-[10px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-2.5 px-3 font-black uppercase text-left w-10 text-[10px]">SL</th>
-                    <th className="py-2.5 px-3 font-black uppercase text-left text-[10px]">Service & Description</th>
-                    <th className="py-2.5 px-3 font-black uppercase text-center w-24 text-[10px]">Qty</th>
-                    <th className="py-2.5 px-3 font-black uppercase text-right w-24 text-[10px]">Price</th>
-                    <th className="py-2.5 px-3 font-black uppercase text-right w-24 text-[10px]">Total</th>
+                    <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
+                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service & Material Description</th>
+                    <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Unit Price</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Amount</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
-                  {invoice.items.map((item: any, i: number) => (
-                    <tr key={i} className="border-t border-gray-100">
-                      <td className="px-3 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
-                      <td className="px-3 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
-                        <p className="font-black text-gray-900 uppercase leading-tight mb-1">{item.name}</p>
+                  {invoice.items?.map((item: any, i: number) => (
+                    <tr key={i} className="border-t border-gray-100 align-top">
+                      <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
+                      <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
+                        <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                       </td>
-                      <td className="px-3 text-center" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit}</td>
-                      <td className="px-3 text-right" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price.toLocaleString()}</td>
-                      <td className="px-3 text-right" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{item.price?.toLocaleString()}</td>
+                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
-                  <tr className="border-t border-[#081621] text-white" style={{ backgroundColor: d.primaryColor }}>
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest italic">Net Total Amount</td>
-                    <td className="py-3 px-3 text-right font-black text-xs">৳{invoice.total.toLocaleString()}/-</td>
+                  
+                  {invoice.previousDue > 0 && (
+                    <tr className="border-t border-gray-100">
+                      <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Arrears / Previous Due</td>
+                      <td className="py-1.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue?.toLocaleString()}/-</td>
+                    </tr>
+                  )}
+
+                  <tr className="border-t-2 border-[#081621] text-white" style={{ backgroundColor: d.primaryColor }}>
+                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Total Payable</td>
+                    <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
                   </tr>
+                  
+                  <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
+                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Payments Received (-)</td>
+                    <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
+                  </tr>
+
                   <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px]">Net Due Amount</td>
-                    <td className="py-2 px-3 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
+                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Net Outstanding Due</td>
+                    <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-12 pb-10" style={{ marginTop: `${d.signatureSpacing}px` }}>
-              <div className="text-center space-y-4">
-                <div className="border-b border-gray-100 h-8"></div>
-                <p className="text-[8px] font-black uppercase text-[#081621]">Client Signature</p>
-              </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-2">
-                <div className="h-12 w-24 relative border-b border-primary/10 flex items-center justify-center">
-                  {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[6px] font-black text-gray-200 uppercase">Authorized</div>}
-                </div>
-                <p className="font-black text-[8px] uppercase text-[#081621]">Smart Clean Authority</p>
-              </div>
+            <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
+              <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
+              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(invoice.total) || 0)}"</p>
             </div>
 
-            <div className="pt-6 border-t-2 border-gray-100" style={{ marginTop: `${d.footerMarginTop}px` }}>
-               <p className="text-center font-black uppercase tracking-widest mb-4" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{settings?.tagline || "Smart Cleaning, Better Living."} <Star size={10} fill="currentColor" className="inline ml-1"/></p>
-               {d.customBottomText && <p className="text-center text-[10px] text-gray-400 italic mb-4">{d.customBottomText}</p>}
-               <p className="font-bold uppercase text-center tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}</p>
+            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-2 pb-2" style={{ marginTop: `${d.signatureSpacing}px` }}>
+              <div className="text-center space-y-1.5">
+                <div className="border-b-[2px] border-gray-100 h-6"></div>
+                <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
+              </div>
+              <div className="flex flex-col items-center justify-end text-center space-y-1.5">
+                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center">
+                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
+                </div>
+                <p className="font-black text-[9px] uppercase text-[#081621]">Smart Clean Authority</p>
+              </div>
             </div>
           </div>
+
+          <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+             <div className="text-center space-y-0.5 mb-2">
+                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{settings?.tagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p>
+             </div>
+
+             {d.customBottomText && (
+               <div className="mb-2 p-2 bg-gray-50 rounded-lg text-center text-[9px] font-medium text-gray-500 italic">
+                 {d.customBottomText}
+               </div>
+             )}
+             
+             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
+                {Array.from({ length: 3 }).map((_, colIdx) => (
+                  <div key={colIdx} className="space-y-0.5">
+                     {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
+                       <div key={sIdx} className="flex items-center gap-2">
+                          <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                          <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                       </div>
+                     ))}
+                  </div>
+                ))}
+             </div>
+
+             <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}</p>
+          </footer>
         </div>
       </div>
     </div>
