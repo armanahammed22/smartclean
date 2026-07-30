@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,9 +25,11 @@ import {
   Search,
   Check,
   UserPlus,
-  Package,
+  PackagePlus,
   ShieldCheck,
-  ReceiptText
+  ReceiptText,
+  Wallet,
+  Banknote
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -53,6 +55,7 @@ export default function CreateInvoicePage() {
   const [items, setItems] = useState<any[]>([]);
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
+  const [payment, setPayment] = useState({ paidAmount: '0', method: 'Cash', notes: '' });
   const [config, setConfig] = useState({ 
     invoiceNumber: '',
     issueDate: new Date().toISOString().split('T')[0],
@@ -121,10 +124,12 @@ export default function CreateInvoicePage() {
       ? (subtotal * (pricing.discount / 100)) 
       : pricing.discount;
       
-    const finalTotal = subtotal - itemDiscounts - globalDiscountAmt + pricing.delivery;
+    const currentTotal = subtotal - itemDiscounts - globalDiscountAmt + pricing.delivery;
+    const initialPaid = parseFloat(payment.paidAmount) || 0;
+    const dueAmount = Math.max(0, currentTotal - initialPaid);
 
-    return { subtotal, globalDiscountAmt, total: Math.max(0, finalTotal) };
-  }, [items, pricing]);
+    return { subtotal, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
+  }, [items, pricing, payment]);
 
   const handleSave = async () => {
     if (!db) return;
@@ -134,6 +139,8 @@ export default function CreateInvoicePage() {
     }
 
     setIsSubmitting(true);
+    const batch = writeBatch(db);
+
     try {
       let currentCustomerId = customer.id;
 
@@ -143,7 +150,7 @@ export default function CreateInvoicePage() {
         const snap = await getDocs(q);
         if (snap.empty) {
           const newRef = doc(collection(db, 'users'));
-          await setDoc(newRef, {
+          batch.set(newRef, {
             uid: newRef.id,
             name: customer.name,
             phone: phone,
@@ -160,26 +167,50 @@ export default function CreateInvoicePage() {
         }
       }
 
+      const invoiceId = 'INV-' + Date.now().toString().slice(-6);
+      const invoiceRef = doc(collection(db, 'invoices'));
+      
       const invoiceData: any = {
-        invoiceNumber: 'INV-' + Date.now().toString().slice(-6),
+        invoiceNumber: invoiceId,
         customerId: currentCustomerId,
         customerInfo: { ...customer, id: currentCustomerId },
         items,
         subtotal: totals.subtotal,
         discount: pricing.discount,
         discountType: pricing.discountType,
+        deliveryCharge: pricing.delivery,
         total: totals.total,
-        paymentStatus: 'Unpaid',
-        paidAmount: 0,
-        dueAmount: totals.total,
-        paymentHistory: [],
+        paymentStatus: totals.dueAmount <= 0 ? 'Paid' : totals.initialPaid > 0 ? 'Partial' : 'Unpaid',
+        paidAmount: totals.initialPaid,
+        dueAmount: totals.dueAmount,
+        paymentHistory: totals.initialPaid > 0 ? [{
+          id: 'pay_init_' + Date.now(),
+          amount: totals.initialPaid,
+          date: new Date().toISOString(),
+          method: payment.method,
+          notes: payment.notes || 'Initial Payment'
+        }] : [],
         createdAt: new Date(config.issueDate).toISOString(),
         dueDate: config.expiryDate ? new Date(config.expiryDate).toISOString() : null,
         updatedAt: serverTimestamp()
       };
 
-      await addDoc(collection(db, 'invoices'), invoiceData);
-      toast({ title: "Invoice Published" });
+      batch.set(invoiceRef, invoiceData);
+
+      // 3. Update Customer Overall Balance
+      if (currentCustomerId) {
+        const customerRef = doc(db, 'users', currentCustomerId);
+        batch.update(customerRef, {
+          totalInvoiced: increment(totals.total),
+          totalPaid: increment(totals.initialPaid),
+          outstandingBalance: increment(totals.dueAmount),
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      await batch.commit();
+      
+      toast({ title: "Invoice Published", description: `Saved with ৳${totals.initialPaid} initial payment.` });
       router.push('/admin/invoices');
     } catch (e) {
       toast({ variant: "destructive", title: "Process Failed" });
@@ -189,7 +220,7 @@ export default function CreateInvoicePage() {
   };
 
   return (
-    <div className="space-y-4 pb-20 min-w-0">
+    <div className="space-y-4 pb-20 min-w-0 -mt-6">
       <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border">
@@ -366,10 +397,48 @@ export default function CreateInvoicePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-4">
-             <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Additional Ledger Remarks</Label>
-                <Textarea value={config.notes} onChange={e => setConfig({...config, notes: e.target.value})} placeholder="Notes about payment or service conditions..." className="min-h-[120px] bg-white rounded-xl border border-gray-200 p-4 shadow-sm" />
-             </div>
+             <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
+                <CardHeader className="bg-emerald-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
+                   <CardTitle className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-emerald-700">
+                      <Wallet size={12} /> Settlement & Initial Payment
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 space-y-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Amount Paid (৳)</Label>
+                        <div className="relative">
+                           <Banknote size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
+                           <Input 
+                              type="number" 
+                              value={payment.paidAmount} 
+                              onChange={e => setPayment({...payment, paidAmount: e.target.value})} 
+                              className="h-10 pl-9 font-black text-emerald-700 bg-emerald-50/20 border-emerald-100" 
+                              placeholder="0.00" 
+                           />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Payment Channel</Label>
+                        <Select value={payment.method} onValueChange={v => setPayment({...payment, method: v})}>
+                           <SelectTrigger className="h-10 bg-white border-gray-200 font-bold text-xs"><SelectValue /></SelectTrigger>
+                           <SelectContent>
+                              {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                           </SelectContent>
+                        </Select>
+                      </div>
+                   </div>
+                   <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase text-gray-400">Internal Audit Remarks</Label>
+                      <Textarea 
+                        value={config.notes} 
+                        onChange={e => setConfig({...config, notes: e.target.value})} 
+                        placeholder="Notes about payment or conditions..." 
+                        className="min-h-[80px] bg-white rounded-xl border border-gray-200 p-4 text-xs" 
+                      />
+                   </div>
+                </CardContent>
+             </Card>
           </div>
 
           <div className="lg:col-span-5">
@@ -389,12 +458,25 @@ export default function CreateInvoicePage() {
                       </Select>
                    </div>
                 </div>
-                <div className="pt-6 border-t border-gray-200 flex justify-between items-end">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Grand Final Value</span>
-                    <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toFixed(2)}</span>
+                <div className="space-y-3 pt-6 border-t border-gray-200">
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grand Final Value</span>
+                      <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toFixed(2)}</span>
+                    </div>
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
                   </div>
-                  <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
+                    <div className="flex flex-col">
+                       <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Paid Today</span>
+                       <span className="text-lg font-black text-emerald-700">৳{totals.initialPaid.toLocaleString()}</span>
+                    </div>
+                    <div className="flex flex-col text-right">
+                       <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Net Arrears Due</span>
+                       <span className="text-lg font-black text-rose-600">৳{totals.dueAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

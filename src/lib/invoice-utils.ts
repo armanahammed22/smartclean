@@ -36,7 +36,7 @@ export function numberToWords(amount: number): string {
 /**
  * Utility to generate Invoice from an Order or Booking with Customer Management
  */
-export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any): Promise<string> {
+export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any, paidAmount: number = 0): Promise<string> {
   const collName = 'invoices';
   const fieldName = type === 'order' ? 'orderId' : 'bookingId';
   
@@ -102,7 +102,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const invNumber = `INV-${(countSnap.size + 1).toString().padStart(4, '0')}`;
 
   const isCompleted = sourceData.status === 'Delivered' || sourceData.status === 'Completed';
-  const initialPaid = isCompleted ? grandTotal : 0;
+  const initialPaid = isCompleted ? grandTotal : paidAmount;
   const initialDue = grandTotal - initialPaid;
 
   const invoiceData: any = {
