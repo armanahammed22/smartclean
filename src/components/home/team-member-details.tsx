@@ -20,7 +20,10 @@ import {
   Instagram,
   Zap,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  User,
+  Heart,
+  Globe
 } from 'lucide-react';
 import { TeamMember } from '@/types';
 import { 
@@ -43,7 +46,7 @@ interface TeamMemberDetailsProps {
 export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetailsProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] rounded-none md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col md:flex-row bg-white">
+      <DialogContent className="max-w-4xl w-[95vw] rounded-none md:rounded-[3rem] p-0 border-none shadow-2xl overflow-hidden flex flex-col md:flex-row bg-white h-auto md:max-h-[90vh]">
         {/* Photo Section */}
         <div className="relative w-full md:w-[40%] aspect-[4/5] md:aspect-auto overflow-hidden bg-gray-50">
           <Image 
@@ -63,7 +66,7 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
         </div>
 
         {/* Content Section */}
-        <div className="flex-1 flex flex-col h-full max-h-[70vh] md:max-h-none overflow-y-auto custom-scrollbar p-8 md:p-12 space-y-8 bg-white relative">
+        <div className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar p-8 md:p-12 space-y-8 bg-white relative">
           <button 
             onClick={onClose}
             className="absolute top-6 right-6 p-3 hover:bg-gray-50 rounded-full transition-colors text-gray-400 hidden md:block"
@@ -115,11 +118,11 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
              <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Direct Connect</h4>
                 <div className="space-y-3">
-                   <div className="flex items-center gap-3 text-xs font-bold text-gray-700">
+                   <div className="flex items-center gap-3 text-xs font-bold text-gray-700 cursor-pointer hover:text-primary transition-colors" onClick={() => window.location.href = `tel:${member.phone}`}>
                      <div className="p-2 bg-primary/5 text-primary rounded-xl"><Phone size={14}/></div>
                      {member.phone}
                    </div>
-                   <div className="flex items-center gap-3 text-xs font-bold text-gray-700">
+                   <div className="flex items-center gap-3 text-xs font-bold text-gray-700 cursor-pointer hover:text-primary transition-colors" onClick={() => window.location.href = `mailto:${member.email}`}>
                      <div className="p-2 bg-primary/5 text-primary rounded-xl"><Mail size={14}/></div>
                      {member.email}
                    </div>
@@ -146,7 +149,7 @@ export function TeamMemberDetails({ member, isOpen, onClose }: TeamMemberDetails
 
           <div className="pt-8 border-t flex flex-col sm:flex-row gap-4">
              <Button asChild className="flex-1 h-14 rounded-2xl bg-primary hover:bg-[#15435a] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
-                <Link href="/services">Book with {member.name.split(' ')[0]}</Link>
+                <Link href="/services">Book Service</Link>
              </Button>
              {member.whatsapp && (
                <Button variant="outline" asChild className="flex-1 h-14 rounded-2xl border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5 font-black uppercase tracking-widest text-[10px]">

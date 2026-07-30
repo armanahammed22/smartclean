@@ -1,8 +1,9 @@
+
 'use client';
 
 import React from 'react';
 import Image from 'next/image';
-import { Star, MessageCircle, Phone, Award, MapPin, ArrowRight } from 'lucide-react';
+import { Star, MessageCircle, Phone, Award, MapPin, ArrowRight, Info } from 'lucide-react';
 import { TeamMember } from '@/types';
 import { CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -87,22 +88,22 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
         {/* Content Section (1 Inch / 96px) */}
         <CardContent className="p-3 flex flex-col justify-center h-[96px] bg-white text-center">
           <div className="space-y-0.5">
-            <h3 className="font-black text-[11px] text-gray-900 uppercase tracking-tight truncate leading-none">
+            <h3 className="font-black text-[12px] md:text-[13px] text-gray-900 uppercase tracking-tight truncate leading-none">
               {member.name}
             </h3>
-            <p className="text-[8px] font-bold text-primary uppercase tracking-tighter truncate opacity-80">
+            <p className="text-[9px] font-black text-primary uppercase tracking-tighter truncate opacity-90">
               {member.designation}
             </p>
           </div>
 
           <div className="mt-2 pt-2 border-t border-gray-50 flex flex-col gap-1">
-             <div className="flex items-center justify-center gap-1.5 text-gray-400">
+             <div className="flex items-center justify-center gap-1.5 text-gray-400 group/link" onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${member.phone}`; }}>
                 <Phone size={8} className="text-primary/60 shrink-0" />
-                <span className="text-[8px] font-black tracking-tighter truncate">{member.phone || '01XXXXXXXXX'}</span>
+                <span className="text-[9px] font-black tracking-tighter truncate group-hover/link:text-primary transition-colors">{member.phone || '01XXXXXXXXX'}</span>
              </div>
              <div className="flex items-center justify-center gap-1.5 text-gray-400">
                 <MapPin size={8} className="text-primary/60 shrink-0" />
-                <span className="text-[8px] font-bold tracking-tighter truncate uppercase">{member.serviceArea || 'Dhaka North'}</span>
+                <span className="text-[9px] font-bold tracking-tighter truncate uppercase">{member.serviceArea || 'Dhaka North'}</span>
              </div>
           </div>
           
@@ -110,7 +111,7 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
              <div className="flex text-amber-500">
                 <Star size={8} fill="currentColor" />
              </div>
-             <span className="text-[8px] font-black text-gray-900">{member.rating?.toFixed(1) || '5.0'}</span>
+             <span className="text-[9px] font-black text-gray-900">{member.rating?.toFixed(1) || '5.0'}</span>
           </div>
         </CardContent>
       </div>

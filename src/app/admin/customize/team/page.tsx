@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -33,7 +34,9 @@ import {
   Languages,
   ArrowRight,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -186,7 +189,7 @@ export default function TeamManagementPage() {
               </div>
             </div>
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-1">
+              <div className="space-y-1 text-center">
                 <h3 className="font-black text-gray-900 uppercase tracking-tight text-base leading-none">{member.name}</h3>
                 <p className="text-[10px] font-black text-primary uppercase tracking-widest">{member.designation}</p>
               </div>
@@ -201,12 +204,6 @@ export default function TeamManagementPage() {
             </CardContent>
           </Card>
         ))}
-        {!team?.length && !isLoading && (
-          <div className="col-span-full p-20 text-center border-2 border-dashed rounded-[3rem] bg-white text-muted-foreground italic flex flex-col items-center gap-4">
-            <Users size={48} className="text-gray-200" />
-            <p className="font-bold uppercase text-xs">No Team Members Registered</p>
-          </div>
-        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -226,15 +223,6 @@ export default function TeamManagementPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <aside className="lg:col-span-4 space-y-6">
                 <div className="space-y-4">
-                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
-                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-amber-900 uppercase">Image Standard</p>
-                      <p className="text-[11px] font-medium text-amber-800 leading-tight">
-                        টিম কার্ডের উপরের ২ ইঞ্চির জন্য **৮০০ x ৮০০ px (১:১ রেশিও)** এর ছবি ব্যবহার করুন।
-                      </p>
-                    </div>
-                  </div>
                   <ImageUploader 
                     label="Profile Photo" 
                     hint="800 x 800 px (1:1 Ratio for Top Section)" 
@@ -242,6 +230,10 @@ export default function TeamManagementPage() {
                     onUpload={url => setFormData({...formData, image: url})} 
                     aspectRatio="aspect-square" 
                   />
+                  <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+                    <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-bold text-blue-900 uppercase">Image Guideline: ছবির উপরের ২ ইঞ্চির জন্য ৮০০x৮০০ পিএক্স ইমেজ ব্যবহার করুন।</p>
+                  </div>
                 </div>
                 
                 <div className="space-y-4 pt-6 border-t">
@@ -295,8 +287,8 @@ export default function TeamManagementPage() {
                     <Input value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase flex items-center gap-2">Rating</Label>
-                    <Input type="number" step="0.1" value={formData.rating} onChange={e => setFormData({...formData, rating: parseFloat(e.target.value) || 0})} className="h-10 bg-gray-50 border-none rounded-xl font-black text-xs" />
+                    <Label className="text-[10px] font-black uppercase flex items-center gap-2">Service Area</Label>
+                    <Input value={formData.serviceArea} onChange={e => setFormData({...formData, serviceArea: e.target.value})} placeholder="Dhaka North" className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs" />
                   </div>
                 </div>
 
