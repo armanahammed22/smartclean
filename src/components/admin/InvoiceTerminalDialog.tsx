@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, doc, getDocs, updateDoc, where, setDoc, addDoc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, doc, getDocs, updateDoc, where, setDoc, addDoc, limit, serverTimestamp, increment } from 'firebase/firestore';
 import { 
   Dialog, 
   DialogContent, 
@@ -22,13 +22,14 @@ import {
   Plus, 
   Trash2, 
   X, 
-  User, 
+  User as UserIcon, 
   ShoppingCart, 
   Calculator, 
   Save, 
   Info,
   Package,
-  ReceiptText
+  ReceiptText,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,9 +47,14 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Feature Modes
+  const [isNewCustomer, setIsNewCustomer] = useState(false);
+  const [isManualItem, setIsManualItem] = useState(false);
+
   // Selection state
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
+  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Pcs' });
 
   const [items, setItems] = useState<any[]>([]);
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
@@ -101,22 +107,34 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
   }, [editingInvoice]);
 
   const handleAddItemToBill = () => {
-    const service = services?.find(s => s.id === selectedProductId);
-    if (!service) return;
-    
-    const newItem = {
-      id: service.id + '-' + Date.now(),
-      name: service.title,
-      price: service.basePrice,
-      quantity: selectedQty,
-      unit: service.pricingType === 'sqft' ? 'Sqft' : 'Pcs',
-      discount: 0,
-      total: service.basePrice * selectedQty
-    };
-
-    setItems([...items, newItem]);
-    setSelectedProductId('');
-    setSelectedQty(1);
+    if (isManualItem) {
+      if (!manualItem.name || !manualItem.price) return;
+      setItems([...items, {
+        id: 'manual-' + Date.now(),
+        name: manualItem.name,
+        price: parseFloat(manualItem.price) || 0,
+        quantity: manualItem.quantity,
+        unit: manualItem.unit,
+        discount: 0,
+        total: (parseFloat(manualItem.price) || 0) * manualItem.quantity
+      }]);
+      setManualItem({ name: '', price: '', quantity: 1, unit: 'Pcs' });
+    } else {
+      const service = services?.find(s => s.id === selectedProductId);
+      if (!service) return;
+      const newItem = {
+        id: service.id + '-' + Date.now(),
+        name: service.title,
+        price: service.basePrice,
+        quantity: selectedQty,
+        unit: service.pricingType === 'sqft' ? 'Sqft' : 'Pcs',
+        discount: 0,
+        total: service.basePrice * selectedQty
+      };
+      setItems([...items, newItem]);
+      setSelectedProductId('');
+      setSelectedQty(1);
+    }
   };
 
   const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
@@ -147,10 +165,42 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
 
   const handleSave = async () => {
     if (!db) return;
+    if (!customer.name || items.length === 0) {
+      toast({ variant: "destructive", title: "Validation Error" });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      let currentCustomerId = customer.id;
+
+      // 1. New Customer Logic
+      if (isNewCustomer || !currentCustomerId) {
+        const phone = customer.phone.replace(/\D/g, '');
+        const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          const newRef = doc(collection(db, 'users'));
+          await setDoc(newRef, {
+            uid: newRef.id,
+            name: customer.name,
+            phone: phone,
+            address: customer.address,
+            role: 'customer',
+            status: 'active',
+            totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          currentCustomerId = newRef.id;
+        } else {
+          currentCustomerId = snap.docs[0].id;
+        }
+      }
+
       const invoiceData = {
-        customerInfo: customer,
+        customerId: currentCustomerId,
+        customerInfo: { ...customer, id: currentCustomerId },
         items,
         subtotal: totals.subtotal,
         discount: pricing.discount,
@@ -166,7 +216,7 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
       } else {
         await addDoc(collection(db, 'invoices'), { ...invoiceData, invoiceNumber: 'INV-' + Date.now().toString().slice(-6) });
       }
-      toast({ title: "Operation Processed" });
+      toast({ title: "Invoice Published" });
       onClose();
     } catch (e) {
       toast({ variant: "destructive", title: "Process Failed" });
@@ -192,27 +242,38 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
-           {/* 👤 CUSTOMER DETAILS SECTION */}
+           {/* 👤 CUSTOMER SECTION */}
            <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100">
+             <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><UserIcon size={14}/> Client Profile</CardTitle>
+                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border">
+                   <Label className="text-[9px] font-black uppercase text-primary">New Customer</Label>
+                   <Switch checked={isNewCustomer} onCheckedChange={setIsNewCustomer} className="scale-75" />
+                </div>
+             </CardHeader>
              <CardContent className="p-6">
                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                  <div className="space-y-1.5">
                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Customer Name</Label>
-                   <Select onValueChange={(val) => {
-                     const c = clients?.find(i => i.id === val);
-                     if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', address: c.address || '' });
-                   }}>
-                     <SelectTrigger className="h-10 bg-gray-50 border-none rounded-lg font-bold">
-                       <SelectValue placeholder={customer.name || "Search customers..."} />
-                     </SelectTrigger>
-                     <SelectContent>
-                       {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                     </SelectContent>
-                   </Select>
+                   {isNewCustomer ? (
+                     <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-10" placeholder="Type name..." />
+                   ) : (
+                     <Select onValueChange={(val) => {
+                       const c = clients?.find(i => i.id === val);
+                       if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', address: c.address || '' });
+                     }}>
+                       <SelectTrigger className="h-10 bg-gray-50 border-none rounded-lg font-bold shadow-inner">
+                         <SelectValue placeholder={customer.name || "Search customers..."} />
+                       </SelectTrigger>
+                       <SelectContent>
+                         {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
+                   )}
                  </div>
                  <div className="space-y-1.5">
-                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Invoice Number</Label>
-                   <Input value={config.invoiceNumber} readOnly className="h-10 bg-gray-50 border-none rounded-lg" />
+                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Mobile Number</Label>
+                   <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-10" placeholder="01XXXXXXXXX" disabled={!isNewCustomer && customer.id !== ''} />
                  </div>
                  <div className="space-y-1.5">
                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Invoice Date</Label>
@@ -222,29 +283,63 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                    <Label className="text-[10px] font-bold text-gray-500 uppercase">Due Date</Label>
                    <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-10 bg-gray-50 border-none" />
                  </div>
+                 <div className="md:col-span-4 space-y-1.5">
+                   <Label className="text-[10px] font-bold text-gray-500 uppercase">Site Address</Label>
+                   <Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="h-10" placeholder="Detailed Address" />
+                 </div>
                </div>
              </CardContent>
            </Card>
 
-           {/* 📦 PRODUCT DETAILS SECTION */}
+           {/* 📦 ITEM SELECTION SECTION */}
            <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100">
+             <CardHeader className="bg-gray-50/50 p-4 border-b flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={14}/> Items List</CardTitle>
+                <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border">
+                   <Label className="text-[9px] font-black uppercase text-primary">Manual Mode</Label>
+                   <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
+                </div>
+             </CardHeader>
              <CardContent className="p-6 space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded-xl">
-                 <div className="md:col-span-7 space-y-1.5">
-                   <Label className="text-[10px] font-bold uppercase">Select Products</Label>
-                   <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                     <SelectTrigger className="h-10 bg-white border-gray-200">
-                       <SelectValue placeholder="Choose product..." />
-                     </SelectTrigger>
-                     <SelectContent>
-                       {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
-                     </SelectContent>
-                   </Select>
-                 </div>
-                 <div className="md:col-span-3 space-y-1.5">
-                   <Label className="text-[10px] font-bold uppercase">Quantity</Label>
-                   <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-10 bg-white" />
-                 </div>
+               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-gray-50 p-4 rounded-xl border">
+                 {!isManualItem ? (
+                   <>
+                     <div className="md:col-span-7 space-y-1.5">
+                       <Label className="text-[10px] font-bold uppercase">Select Products</Label>
+                       <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                         <SelectTrigger className="h-10 bg-white border-gray-200">
+                           <SelectValue placeholder="Choose product..." />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {services?.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div className="md:col-span-3 space-y-1.5">
+                       <Label className="text-[10px] font-bold uppercase">Quantity</Label>
+                       <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-10 bg-white" />
+                     </div>
+                   </>
+                 ) : (
+                   <>
+                     <div className="md:col-span-5 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase">Item Name</Label>
+                        <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} className="h-10 bg-white" />
+                     </div>
+                     <div className="md:col-span-2 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase">Price</Label>
+                        <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} className="h-10 bg-white" />
+                     </div>
+                     <div className="md:col-span-2 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase">Qty</Label>
+                        <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-10 bg-white" />
+                     </div>
+                     <div className="md:col-span-1 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase">Unit</Label>
+                        <Input value={manualItem.unit} onChange={e => setManualItem({...manualItem, unit: e.target.value})} className="h-10 bg-white" />
+                     </div>
+                   </>
+                 )}
                  <Button type="button" onClick={handleAddItemToBill} className="md:col-span-2 h-10 bg-blue-600 font-bold">+ Add to Bill</Button>
                </div>
 
@@ -252,11 +347,11 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                  <Table>
                    <TableHeader className="bg-gray-50">
                      <TableRow>
-                       <TableHead className="text-[10px] font-black uppercase py-4">Product Name</TableHead>
-                       <TableHead className="text-[10px] font-black uppercase text-center">Quantity</TableHead>
-                       <TableHead className="text-[10px] font-black uppercase text-right">Unit Price</TableHead>
-                       <TableHead className="text-[10px] font-black uppercase text-right">Discount</TableHead>
-                       <TableHead className="text-[10px] font-black uppercase text-right">Net Amount</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase py-4">Item Name</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-center w-32">Quantity</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-right w-32">Unit Price</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-right w-24">Discount</TableHead>
+                       <TableHead className="text-[10px] font-black uppercase text-right w-32">Net Amount</TableHead>
                        <TableHead></TableHead>
                      </TableRow>
                    </TableHeader>
@@ -282,29 +377,24 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
                <Label className="text-[10px] font-black uppercase text-gray-500">Customers Notes</Label>
                <Textarea value={config.notes} onChange={e => setConfig({...config, notes: e.target.value})} className="h-32 bg-white rounded-xl" />
              </div>
-             <div className="lg:col-span-5 bg-gray-50 p-6 rounded-2xl space-y-6">
-                <div className="flex justify-between text-xs font-bold text-gray-600">
-                  <span className="uppercase">Sub Total</span>
+             <div className="lg:col-span-5 bg-[#081621] text-white p-6 rounded-2xl space-y-6">
+                <div className="flex justify-between text-xs font-bold text-white/40">
+                  <span className="uppercase tracking-widest">Sub Total</span>
                   <span>{totals.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center gap-4">
-                   <span className="text-[10px] font-black uppercase text-gray-400">Discount</span>
+                   <span className="text-[10px] font-black uppercase text-white/40">Global Discount</span>
                    <div className="flex gap-1">
-                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 text-center" />
+                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 text-center bg-white/10 border-white/10" />
                       <Select value={pricing.discountType} onValueChange={(v:any) => setPricing({...pricing, discountType: v})}>
-                         <SelectTrigger className="h-9 w-16"><SelectValue/></SelectTrigger>
+                         <SelectTrigger className="h-9 w-16 bg-white/10 border-white/10"><SelectValue/></SelectTrigger>
                          <SelectContent><SelectItem value="percentage">%</SelectItem><SelectItem value="fixed">৳</SelectItem></SelectContent>
                       </Select>
                    </div>
-                   <span className="text-rose-500 font-bold">-{totals.globalDiscountAmt.toFixed(2)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t pt-4">
-                  <div className="flex items-center gap-2"><Switch checked={true} className="scale-75" /><span className="text-[10px] font-bold text-gray-400">TCS Applicable ?</span></div>
-                  <span className="text-[10px] font-bold text-gray-400">0.00</span>
-                </div>
-                <div className="pt-6 border-t-2 border-gray-200 flex justify-between items-end">
-                   <span className="text-lg font-black uppercase">Total Amount:</span>
-                   <span className="text-2xl font-black text-gray-900">{totals.total.toFixed(2)}</span>
+                <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                   <span className="text-lg font-black uppercase text-primary">Grand Total:</span>
+                   <span className="text-3xl font-black text-white">{totals.total.toFixed(2)}</span>
                 </div>
              </div>
            </div>
@@ -312,8 +402,8 @@ export function InvoiceTerminalDialog({ isOpen, onClose, editingInvoice }: Invoi
 
         <DialogFooter className="p-6 bg-gray-50 border-t flex gap-2">
           <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button onClick={handleSave} className="bg-blue-600 rounded-xl px-10 font-bold" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="animate-spin" /> : "Save and Send"}
+          <Button onClick={handleSave} className="bg-primary hover:bg-[#15435a] text-white rounded-xl px-12 font-black uppercase text-xs" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Publish"}
           </Button>
         </DialogFooter>
       </DialogContent>
