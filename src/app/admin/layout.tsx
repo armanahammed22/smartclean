@@ -286,7 +286,6 @@ SidebarContent.displayName = 'SidebarContent';
 const DEFAULT_MENU_KEYS = [
   'dashboard_link', 
   'sales', 
-  'orders', 
   'inventory',
   'services', 
   'marketing', 
@@ -372,17 +371,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const groups = [
       { id: 'dashboard_link', title: "Dashboard", href: '/admin/dashboard', icon: LayoutDashboard, color: "text-indigo-400", items: [] },
       { id: 'sales', title: "Sales Terminal", icon: Zap, color: "text-rose-400", items: [
-        { name: "New Order", key: "new_order", href: '/admin/orders/create', icon: Plus, visible: productsEnabled }, 
-        { name: "New Booking", key: "new_booking", href: '/admin/bookings/create', icon: Plus, visible: servicesEnabled }, 
+        { name: "Product Orders", key: "orders", href: '/admin/orders', icon: ShoppingCart, visible: productsEnabled }, 
+        { name: "Service Bookings", key: "bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled }, 
         { name: "Invoices", key: "invoices", href: '/admin/invoices', icon: ReceiptText },
         { name: "Quotations", key: "quotations", href: '/admin/quotations', icon: FileSpreadsheet }, 
         { name: "Sales Leads", key: "leads", href: '/admin/leads', icon: TrendingUp }
-      ].filter(i => i.visible !== false) },
-      { id: 'orders', title: "Order & Booking", icon: ShoppingCart, color: "text-blue-400", items: [
-        { name: "Product Orders", key: "orders", href: '/admin/orders', icon: Package, visible: productsEnabled }, 
-        { name: "Service Bookings", key: "bookings", href: '/admin/bookings', icon: Calendar, visible: servicesEnabled }, 
-        { name: "Cleaning Projects", key: "projects", href: '/admin/projects', icon: Briefcase }, 
-        { name: "Logistics", key: "couriers", href: '/admin/couriers', icon: Truck, visible: productsEnabled }
       ].filter(i => i.visible !== false) },
       { id: 'inventory', title: "PRODUCT MENU", icon: Box, color: "text-amber-400", visible: productsEnabled, items: [{ name: "All Products", key: "product_list", href: '/admin/products', icon: Package }, { name: "Product Attributes", key: "attributes", href: '/admin/products/attributes', icon: Settings2 }, { name: "Taxonomy Levels", key: "taxonomy", href: '/admin/products/attributes?tab=taxonomy', icon: FolderTree }, { name: "Brand Registry", key: "brands", href: '/admin/attributes/brands', icon: Award }, { name: "Variant Rules", key: "variants", href: '/admin/attributes/variants', icon: Shapes }, { name: "Stock Alerts", key: "stock_alerts", href: '/admin/inventory/alerts', icon: AlertCircle }] },
       { id: 'services', title: "SERVICE MENU", icon: Wrench, color: "text-sky-400", visible: servicesEnabled, items: [{ name: "Service List", key: "service_list", href: '/admin/services', icon: Wrench }, { name: "Sub-Services", key: "sub_services", href: '/admin/services/sub-services', icon: Layers }, { name: "Service Attributes", key: "service_attributes", href: '/admin/services/attributes', icon: Settings2 }, { name: "Custom Requests", key: "custom_requests", href: '/admin/services/custom-requests', icon: ClipboardList }, { name: "Service Areas", key: "areas", href: '/admin/areas', icon: Globe }, { name: "Billing & Plan", key: "subscription", href: '/admin/subscription', icon: Wallet }] },

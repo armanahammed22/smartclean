@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -30,7 +31,8 @@ import {
   X,
   PackagePlus,
   UserPlus,
-  ShoppingCart
+  ShoppingCart,
+  ChevronDown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -57,6 +59,7 @@ export default function CreateManualBookingPage() {
   const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
   const [manualPrice, setManualPrice] = useState('');
   const [manualTitle, setManualTitle] = useState('');
+  const [manualUnit, setManualUnit] = useState('Qty');
 
   // DB Fetch
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), orderBy('title', 'asc')) : null, [db]);
@@ -134,7 +137,7 @@ export default function CreateManualBookingPage() {
         serviceId: isManualItem ? 'manual' : selectedServiceId,
         serviceTitle: isManualItem ? manualTitle : selectedService?.title,
         items: [
-          { id: isManualItem ? 'manual' : selectedServiceId, name: isManualItem ? manualTitle : selectedService?.title, price: basePrice, quantity: 1, itemType: 'service' },
+          { id: isManualItem ? 'manual' : selectedServiceId, name: isManualItem ? manualTitle : selectedService?.title, price: basePrice, quantity: 1, itemType: 'service', unit: isManualItem ? manualUnit : (selectedService?.pricingType || 'Qty') },
           ...addOnOptions?.filter(a => selectedAddOnIds.includes(a.id)).map(a => ({ id: a.id, name: a.name, price: a.price, quantity: 1, itemType: 'service' })) || []
         ],
         dateTime: schedule.date,
@@ -195,7 +198,7 @@ export default function CreateManualBookingPage() {
                 ) : (
                   <Select value={customer.id} onValueChange={(val) => {
                     const c = clients?.find(i => i.id === val);
-                    if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', email: c.email || '', company: c.company || '', address: c.address || '' });
+                    if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', address: c.address || '' });
                   }}>
                     <SelectTrigger className="h-9 bg-white border-gray-200">
                       <SelectValue placeholder="Search existing..." />
@@ -238,7 +241,7 @@ export default function CreateManualBookingPage() {
           <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><Wrench size={12}/> Service Definition</CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-primary">Manual Price</Label>
+               <Label className="text-[8px] font-black uppercase text-primary">Manual Entry</Label>
                <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
             </div>
           </CardHeader>
@@ -258,13 +261,22 @@ export default function CreateManualBookingPage() {
                  </div>
                ) : (
                  <>
-                   <div className="md:col-span-8 space-y-2">
+                   <div className="md:col-span-6 space-y-2">
                      <Label className="text-[10px] font-black uppercase text-gray-400">Manual Service Name</Label>
                      <Input value={manualTitle} onChange={e => setManualTitle(e.target.value)} className="h-11 md:h-12 bg-white rounded-xl font-bold" />
                    </div>
-                   <div className="md:col-span-4 space-y-2">
+                   <div className="md:col-span-3 space-y-2">
                      <Label className="text-[10px] font-black uppercase text-gray-400">Price Override (৳)</Label>
                      <Input type="number" value={manualPrice} onChange={e => setManualPrice(e.target.value)} className="h-11 md:h-12 bg-white rounded-xl font-black text-primary shadow-inner" />
+                   </div>
+                   <div className="md:col-span-3 space-y-2">
+                     <Label className="text-[10px] font-black uppercase text-gray-400">Unit/Area</Label>
+                     <Select value={manualUnit} onValueChange={setManualUnit}>
+                       <SelectTrigger className="h-11 md:h-12 bg-white rounded-xl font-bold text-xs"><SelectValue/></SelectTrigger>
+                       <SelectContent>
+                         {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
+                       </SelectContent>
+                     </Select>
                    </div>
                  </>
                )}
@@ -300,8 +312,8 @@ export default function CreateManualBookingPage() {
         {/* Billing Row */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
            <div className="lg:col-span-7 space-y-2">
-              <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Work Instructions</Label>
-              <Textarea placeholder="Specific scope or notes for field staff..." className="h-32 bg-white rounded-xl border-gray-100 shadow-inner p-4" />
+              <Label className="text-[10px] font-black uppercase text-gray-400 ml-1">Special Job Instructions</Label>
+              <Textarea value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="Detailed address and scope..." className="h-32 bg-white rounded-xl border-gray-100 shadow-inner p-4" />
            </div>
            <div className="lg:col-span-5 bg-slate-50 border border-gray-100 p-6 rounded-2xl space-y-5">
               <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
