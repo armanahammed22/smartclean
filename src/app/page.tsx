@@ -452,9 +452,9 @@ export default function SmartCleanHomePage() {
                                 alt={banner.title} 
                                 fill 
                                 className="object-cover" 
-                                priority={i === 0} // ⚡ LOAD FIRST BANNER IMMEDIATELY
+                                priority={i === 0} 
                                 sizes="(max-width: 1024px) 70vw, 982px"
-                                unoptimized // Picsum bypass
+                                unoptimized 
                               />
                               <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center p-3 sm:p-6 md:p-12 text-left">
                                 <h2 className="text-white text-xs sm:text-2xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight mb-1 drop-shadow-xl line-clamp-1">{banner.title}</h2>
