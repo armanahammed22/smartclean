@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -310,7 +309,7 @@ export default function AdminInvoiceDetailPage() {
 
                     <tr className="border-t-[3px] border-[#081621] bg-rose-50/80 text-rose-700">
                       <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Due Amount</td>
-                      <td className="py-3 px-4 text-right font-black text-base">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
+                      <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -389,16 +388,18 @@ export default function AdminInvoiceDetailPage() {
         </div>
       </div>
 
-      {/* 🛠️ PAYMENT MODAL */}
+      {/* 🛠️ PAYMENT MODAL (MOBILE FRIENDLY) */}
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent className="max-w-md rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white">
-          <header className="p-8 bg-[#081621] text-white shrink-0 flex items-center justify-between">
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 border-none shadow-2xl overflow-hidden bg-white flex flex-col max-h-[90vh]">
+          <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex items-center justify-between">
              <div className="flex items-center gap-3">
                <div className="p-3 bg-primary rounded-xl"><Wallet size={24}/></div>
                <div><DialogTitle className="text-xl font-black uppercase tracking-tight">Record Receipt</DialogTitle></div>
              </div>
+             <button onClick={() => setIsPaymentModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={20}/></button>
           </header>
-          <div className="p-8 space-y-6">
+          
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
              <div className="space-y-4">
                 <div className="space-y-2">
                    <Label className="text-[10px] font-black uppercase text-gray-400">Amount to Settle (৳)</Label>
@@ -406,21 +407,21 @@ export default function AdminInvoiceDetailPage() {
                       type="number" 
                       value={paymentForm.amount} 
                       onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
-                      className="h-14 bg-gray-50 border-none rounded-2xl font-black text-xl text-emerald-600 shadow-inner" 
+                      className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-black text-lg text-emerald-600 shadow-inner" 
                    />
                 </div>
                 <div className="space-y-2">
                    <Label className="text-[10px] font-black uppercase text-gray-400">Payment Gateway</Label>
                    <Select value={paymentForm.method} onValueChange={v => setPaymentForm({...paymentForm, method: v})}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                      <SelectContent className="rounded-xl border-none shadow-2xl z-[300]">
                          {['Cash', 'bKash', 'Nagad', 'Bank Transfer', 'A/C Payee Check'].map(m => <SelectItem key={m} value={m} className="font-bold text-xs uppercase py-3">{m}</SelectItem>)}
                       </SelectContent>
                    </Select>
                 </div>
                 <div className="space-y-2">
                    <Label className="text-[10px] font-black uppercase text-gray-400">Reference / Notes</Label>
-                   <Textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} placeholder="e.g. Received via bKash App" className="bg-gray-50 border-none rounded-xl" />
+                   <Textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} placeholder="e.g. Received via bKash App" className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
                 </div>
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
                    <AlertCircle size={18} className="text-amber-600 mt-1" />
@@ -430,9 +431,9 @@ export default function AdminInvoiceDetailPage() {
                 </div>
              </div>
           </div>
-          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-3">
-             <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)} className="flex-1 rounded-xl">Cancel</Button>
-             <Button onClick={handleRecordPayment} disabled={isProcessingPayment || !paymentForm.amount} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-emerald-600/20">
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t flex flex-row gap-3 shrink-0">
+             <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)} className="flex-1 rounded-xl h-12 md:h-14 font-bold uppercase text-[10px] tracking-widest">Cancel</Button>
+             <Button onClick={handleRecordPayment} disabled={isProcessingPayment || !paymentForm.amount} className="flex-1 h-12 md:h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">
                 {isProcessingPayment ? <Loader2 className="animate-spin" /> : "Verify & Authorize"}
              </Button>
           </DialogFooter>

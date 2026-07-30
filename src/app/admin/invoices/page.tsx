@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
-import dynamic from 'next/dynamic';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, deleteDoc, doc, writeBatch, limit, increment, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,7 +31,6 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getOrCreateInvoice } from '@/lib/invoice-utils';
 import { 
   Dialog, 
   DialogContent, 
@@ -305,16 +303,18 @@ function InvoicesListContent() {
         </Card>
       </div>
 
-      {/* 🛠️ QUICK PAYMENT MODAL */}
+      {/* 🛠️ QUICK PAYMENT MODAL (MOBILE FRIENDLY) */}
       <Dialog open={!!paymentTarget} onOpenChange={() => setPaymentTarget(null)}>
-        <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <header className="p-8 bg-[#081621] text-white shrink-0 flex items-center justify-between">
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl bg-white flex flex-col max-h-[90vh]">
+          <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-primary rounded-xl"><Wallet size={24}/></div>
               <div><DialogTitle className="text-xl font-black uppercase tracking-tight">Invoice Settlement</DialogTitle></div>
             </div>
+            <button onClick={() => setPaymentTarget(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60"><X size={20}/></button>
           </header>
-          <div className="p-8 space-y-6">
+          
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
              <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-2">
                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Reference</p>
@@ -326,28 +326,28 @@ function InvoicesListContent() {
                       type="number" 
                       value={paymentForm.amount} 
                       onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
-                      className="h-14 bg-gray-50 border-none rounded-2xl font-black text-xl text-emerald-600 shadow-inner" 
+                      className="h-12 md:h-14 bg-gray-50 border-none rounded-2xl font-black text-lg text-emerald-600 shadow-inner" 
                    />
                 </div>
                 <div className="space-y-2">
                    <Label className="text-[10px] font-black uppercase text-gray-400">Gateway</Label>
                    <Select value={paymentForm.method} onValueChange={v => setPaymentForm({...paymentForm, method: v})}>
-                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
+                      <SelectTrigger className="h-11 md:h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue/></SelectTrigger>
+                      <SelectContent className="rounded-xl border-none shadow-2xl z-[300]">
                          {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m} className="font-bold text-xs uppercase py-3">{m}</SelectItem>)}
                       </SelectContent>
                    </Select>
                 </div>
                 <div className="space-y-2">
                    <Label className="text-[10px] font-black uppercase text-gray-400">Notes</Label>
-                   <Textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} placeholder="Reference details..." className="bg-gray-50 border-none rounded-xl" />
+                   <Textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} placeholder="Reference details..." className="bg-gray-50 border-none rounded-xl min-h-[80px]" />
                 </div>
              </div>
           </div>
-          <DialogFooter className="p-8 bg-gray-50 border-t flex gap-3">
-             <Button variant="ghost" onClick={() => setPaymentTarget(null)} className="flex-1 rounded-xl">Discard</Button>
-             <Button onClick={handleRecordPayment} disabled={isPaymentProcessing || !paymentForm.amount} className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-emerald-600/20">
-                {isPaymentProcessing ? <Loader2 className="animate-spin" /> : "Verify & Authorize"}
+          <DialogFooter className="p-6 md:p-8 bg-gray-50 border-t flex flex-row gap-3 shrink-0">
+             <Button variant="ghost" onClick={() => setPaymentTarget(null)} className="flex-1 rounded-xl h-12 md:h-14 font-bold uppercase text-[10px] tracking-widest">Discard</Button>
+             <Button onClick={handleRecordPayment} disabled={isPaymentProcessing || !paymentForm.amount} className="flex-1 h-12 md:h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">
+                {isPaymentProcessing ? <Loader2 className="animate-spin h-4 w-4" /> : "Verify & Authorize"}
              </Button>
           </DialogFooter>
         </DialogContent>
