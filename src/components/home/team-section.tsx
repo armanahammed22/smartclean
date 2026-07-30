@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -9,14 +8,20 @@ import { Loader2, Users, Star, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export function TeamSection() {
   const db = useFirestore();
 
   const teamQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // We fetch the whole collection to avoid Composite Index errors in prototyping.
-    // Filtering and sorting are handled in memory below.
     return collection(db, 'team_members');
   }, [db]);
 
@@ -24,17 +29,12 @@ export function TeamSection() {
 
   const sortedTeam = useMemo(() => {
     if (!team) return [];
-    
-    // Filter active members and sort by displayOrder in memory
     return team
       .filter(m => m.active === true)
       .sort((a, b) => {
         const orderA = a.displayOrder ?? 999;
         const orderB = b.displayOrder ?? 999;
-        
         if (orderA !== orderB) return orderA - orderB;
-        
-        // Secondary sort: featured members first
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
         return 0;
@@ -51,55 +51,66 @@ export function TeamSection() {
   if (!sortedTeam.length) return null;
 
   return (
-    <section className="py-20 md:py-32 bg-[#F8FAFC] overflow-hidden">
+    <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16 px-2">
-          <div className="space-y-6 max-w-2xl text-center md:text-left">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-12 px-2">
+          <div className="space-y-4 max-w-2xl text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="p-2.5 bg-primary/10 rounded-2xl text-primary shadow-inner">
-                <Users size={24} strokeWidth={2.5} />
+              <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-inner">
+                <Users size={20} strokeWidth={2.5} />
               </div>
               <Badge className="bg-primary/5 text-primary border-none uppercase font-black text-[9px] tracking-widest px-4 py-1.5 rounded-full">
                 Workforce Excellence
               </Badge>
             </div>
-            <div className="space-y-3">
-              <h2 className="text-4xl md:text-6xl font-black text-[#081621] uppercase tracking-tighter leading-[0.9] italic font-headline">
-                Meet Our <span className="text-primary">Professional</span> Team
-              </h2>
-              <p className="text-gray-500 font-medium text-lg leading-relaxed">
-                Trained, background-checked, and dedicated pros at your service. Experience the Smart Clean difference.
-              </p>
+            <h2 className="text-3xl md:text-5xl font-black text-[#081621] uppercase tracking-tighter italic font-headline leading-none">
+              Meet Our <span className="text-primary">Professional</span> Team
+            </h2>
+          </div>
+        </div>
+
+        <div className="relative px-10 md:px-12">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 4000,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {sortedTeam.map((member) => (
+                <CarouselItem key={member.id} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
+                  <TeamMemberCard member={member as any} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="hidden md:block">
+              <CarouselPrevious className="-left-6 lg:-left-12 h-10 w-10 border-gray-200 text-primary hover:bg-primary hover:text-white transition-all shadow-lg" />
+              <CarouselNext className="-right-6 lg:-right-12 h-10 w-10 border-gray-200 text-primary hover:bg-primary hover:text-white transition-all shadow-lg" />
             </div>
-          </div>
-          <div className="hidden lg:block">
-             <div className="flex items-center gap-4 bg-white p-6 rounded-[2.5rem] shadow-xl border border-gray-50">
-                <div className="text-right">
-                   <p className="text-2xl font-black text-gray-900 leading-none">4.9/5</p>
-                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Average Pro Rating</p>
-                </div>
-                <div className="w-px h-10 bg-gray-100" />
-                <div className="flex text-amber-400">
-                   {[1,2,3,4,5].map(i => <Star key={i} size={18} fill="currentColor" />)}
-                </div>
-             </div>
-          </div>
+          </Carousel>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {sortedTeam.slice(0, 4).map((member) => (
-            <TeamMemberCard key={member.id} member={member as any} />
-          ))}
+        <div className="mt-12 text-center md:hidden">
+           <div className="flex justify-center gap-2 items-center text-[10px] font-black text-gray-300 uppercase tracking-widest">
+              <ArrowRight size={14} className="animate-bounce-x" /> Swipe to see more
+           </div>
         </div>
-
-        {sortedTeam.length > 4 && (
-          <div className="mt-16 text-center">
-            <Button asChild variant="outline" className="h-14 px-12 rounded-2xl border-primary/20 text-primary hover:bg-primary hover:text-white font-black uppercase text-xs tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/5">
-              <Link href="/team">View All Team Members <ArrowRight size={18} className="ml-2" /></Link>
-            </Button>
-          </div>
-        )}
       </div>
+      <style jsx global>{`
+        @keyframes bounce-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(5px); }
+        }
+        .animate-bounce-x {
+          animation: bounce-x 1s infinite;
+        }
+      `}</style>
     </section>
   );
 }
