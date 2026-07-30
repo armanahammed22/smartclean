@@ -25,7 +25,8 @@ import {
   XCircle,
   Plus,
   Search,
-  Users
+  Users,
+  FileSpreadsheet
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getOrCreateInvoice } from '@/lib/invoice-utils';
+import { convertBookingToQuotation } from '@/lib/quotation-utils';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 
@@ -56,6 +58,7 @@ function BookingsListContent() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessingInvoice, setIsProcessingInvoice] = useState<string | null>(null);
+  const [isProcessingQuote, setIsProcessingQuote] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [assignBooking, setAssignBooking] = useState<any>(null);
@@ -103,6 +106,20 @@ function BookingsListContent() {
       toast({ variant: "destructive", title: "Invoice Error" });
     } finally {
       setIsProcessingInvoice(null);
+    }
+  };
+
+  const handleCreateQuote = async (booking: any) => {
+    if (!db) return;
+    setIsProcessingQuote(booking.id);
+    try {
+      const quoteId = await convertBookingToQuotation(db, booking);
+      toast({ title: "Quotation Generated", description: "Booking has been converted to a quotation draft." });
+      router.push(`/admin/quotations/${quoteId}`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Quotation Error" });
+    } finally {
+      setIsProcessingQuote(null);
     }
   };
 
@@ -166,7 +183,7 @@ function BookingsListContent() {
         </div>
         <CardContent className="p-0 overflow-x-auto custom-scrollbar">
           <div className="min-w-full">
-            <Table className="min-w-[900px]">
+            <Table className="min-w-[1000px]">
               <TableHeader className="bg-gray-50/30">
                 <TableRow>
                   <TableHead className="font-bold py-5 pl-8 uppercase text-[10px] tracking-widest">Service</TableHead>
@@ -217,8 +234,9 @@ function BookingsListContent() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-100">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => setAssignBooking(booking)} title="Assign Team"><Users size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(booking)} disabled={isProcessingInvoice === booking.id}><FileText size={16} /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(booking.id)} disabled={isSubmitting}><Trash2 size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600" onClick={() => handleCreateQuote(booking)} disabled={isProcessingQuote === booking.id} title="Convert to Quotation"><FileSpreadsheet size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(booking)} disabled={isProcessingInvoice === booking.id} title="Convert to Invoice"><FileText size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(booking.id)} disabled={isSubmitting} title="Delete Record"><Trash2 size={16} /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

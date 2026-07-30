@@ -48,6 +48,7 @@ export default function QuotationEditorPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -178,6 +179,20 @@ export default function QuotationEditorPage() {
     }
   };
 
+  const handleConvertToInvoice = async () => {
+    if (!db || !quote) return;
+    setIsConverting(true);
+    try {
+      const invId = await convertQuotationToInvoice(db, quote);
+      toast({ title: "Invoice Created", description: "Quotation has been successfully converted to an invoice." });
+      router.push(`/admin/invoices/${invId}`);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Conversion Failed" });
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   const handleDownload = () => {
     if (!quote?.quoteNumber) return;
     window.open(`/quotation/${quote.quoteNumber}?download=true`, '_blank');
@@ -200,6 +215,15 @@ export default function QuotationEditorPage() {
            </Button>
            <Button variant="outline" onClick={handleDownload} className="h-9 px-4 rounded-lg font-black uppercase text-[10px] bg-white border-primary/20 text-indigo-600 gap-2 shadow-sm">
              <Download size={14}/> PDF</Button>
+           <Button 
+             variant="outline"
+             onClick={handleConvertToInvoice} 
+             disabled={isConverting || quote?.status === 'Converted'} 
+             className="h-9 px-4 rounded-lg font-black uppercase text-[10px] bg-blue-50 border-blue-200 text-blue-700 gap-2 shadow-sm hover:bg-blue-100"
+           >
+             {isConverting ? <Loader2 className="animate-spin h-3 w-3" /> : <Printer size={14} />} 
+             {quote?.status === 'Converted' ? 'Invoiced' : 'Convert to Invoice'}
+           </Button>
            <Button onClick={handleUpdate} disabled={isSaving} className="h-9 px-8 rounded-lg font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
              {isSaving ? <Loader2 className="animate-spin h-3 w-3" /> : <><Save size={14} /> Sync Changes</>}
            </Button>
@@ -386,7 +410,7 @@ export default function QuotationEditorPage() {
                    <div className="flex gap-1">
                       <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
                       <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
-                         <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue/></SelectTrigger>
+                         <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue /></SelectTrigger>
                          <SelectContent className="rounded-xl"><SelectItem value="percentage">%</SelectItem><SelectItem value="fixed">৳</SelectItem></SelectContent>
                       </Select>
                    </div>

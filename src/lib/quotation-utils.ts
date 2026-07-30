@@ -3,6 +3,7 @@
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc, limit, orderBy } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { Quotation } from '@/types';
+import { getOrCreateInvoice } from './invoice-utils';
 
 /**
  * Generates the next quotation number based on settings.
@@ -24,6 +25,47 @@ export async function getNextQuotationNumber(db: Firestore): Promise<string> {
   } catch (e) {
     return `QTN-${Math.floor(Math.random() * 9000) + 1000}`;
   }
+}
+
+/**
+ * Converts a Booking into a Quotation
+ */
+export async function convertBookingToQuotation(db: Firestore, booking: any): Promise<string> {
+  const quoteNumber = await getNextQuotationNumber(db);
+  const quotationData = {
+    quoteNumber,
+    customerId: booking.customerId || null,
+    customerInfo: {
+      name: booking.customerName,
+      phone: booking.customerPhone,
+      address: booking.address,
+      email: booking.customerEmail || ''
+    },
+    items: booking.items?.map((item: any) => ({
+      id: item.id || 'gen',
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      unit: item.unit || 'Qty',
+      description: ''
+    })) || [
+      { id: booking.serviceId || 'gen', name: booking.serviceTitle, price: booking.totalPrice, quantity: 1, unit: 'Qty', description: '' }
+    ],
+    subtotal: booking.totalPrice,
+    discount: 0,
+    discountType: 'percentage',
+    total: booking.totalPrice,
+    status: 'Sent',
+    issueDate: new Date().toISOString().split('T')[0],
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    terms: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    sourceBookingId: booking.id
+  };
+
+  const docRef = await addDoc(collection(db, 'quotations'), quotationData);
+  return docRef.id;
 }
 
 /**
@@ -100,7 +142,8 @@ export async function convertQuotationToInvoice(db: Firestore, quotation: any): 
       dueAmount: quotation.total,
       paymentHistory: [],
       createdAt: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     const docRef = await addDoc(collection(db, collName), invoiceData);
