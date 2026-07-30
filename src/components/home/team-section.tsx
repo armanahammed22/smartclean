@@ -1,12 +1,11 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { TeamMemberCard } from './team-member-card';
-import { Loader2, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Carousel,
   CarouselContent,
@@ -19,14 +18,14 @@ import Autoplay from "embla-carousel-autoplay";
 export function TeamSection() {
   const db = useFirestore();
 
-  // 1. Fetch Team Members
+  // 1. Fetch Team Members independently
   const teamQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, 'team_members');
   }, [db]);
   const { data: team, isLoading: teamLoading } = useCollection(teamQuery);
 
-  // 2. Fetch Custom Title from Homepage Sections config
+  // 2. Fetch Custom Title from Homepage Sections config independently
   const sectionsQuery = useMemoFirebase(() => 
     db ? query(collection(db, 'homepage_sections'), where('type', '==', 'team_grid')) : null, [db]);
   const { data: sectionConfigs, isLoading: configLoading } = useCollection(sectionsQuery);
@@ -48,9 +47,15 @@ export function TeamSection() {
   }, [team]);
 
   if (teamLoading || configLoading) return (
-    <div className="py-20 text-center flex flex-col items-center gap-4">
-      <Loader2 className="animate-spin text-primary" size={40} />
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Loading Elite Team...</p>
+    <div className="py-20 bg-white">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <Skeleton className="h-10 w-80 mb-12 rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Skeleton key={i} className="h-[340px] rounded-[2.5rem]" />
+          ))}
+        </div>
+      </div>
     </div>
   );
 

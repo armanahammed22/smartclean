@@ -1,13 +1,11 @@
-
 'use client';
 
-import React, { useMemo, useState, useEffect, Suspense, memo } from 'react';
+import React, { useMemo, useState, useEffect, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/components/providers/language-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/public-layout';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, query, where, orderBy, limit } from 'firebase/firestore';
@@ -28,11 +26,11 @@ const ICONS: Record<string, any> = {
   Award, TicketPercent, Gift, Users, Clock
 };
 
-// 🦴 Component Skeletons to prevent CLS
+// 🦴 Reusable Skeleton Grid to prevent CLS
 const GridSkeleton = ({ count = 6 }) => (
   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
     {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="space-y-3">
+      <div key={i} className="space-y-3 p-4 bg-white rounded-[2rem] border border-gray-100">
         <Skeleton className="aspect-square w-full rounded-2xl" />
         <Skeleton className="h-4 w-3/4 rounded" />
         <Skeleton className="h-4 w-1/2 rounded" />
@@ -42,81 +40,70 @@ const GridSkeleton = ({ count = 6 }) => (
 );
 
 /**
- * 🚀 Optimized Dynamic Section Component
- * Handles its own data fetching to allow progressive rendering
+ * ⚡ Isolated Dynamic Data Section
+ * Fetches its own data to prevent main page blocking
  */
-const DynamicDataSection = memo(({ section, allProducts, allServices, allSubServices, cardStyles }: any) => {
+const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardStyles: any }) => {
+  const db = useFirestore();
   const config = section.config || {};
   const type = section.type;
 
-  if (type === 'products_dynamic') {
-    let filtered = allProducts?.filter((p: any) => p.status === 'Active') || [];
+  // Optimized Fetching based on section type
+  const targetCol = type === 'products_dynamic' ? 'products' : (type === 'services_dynamic' ? 'services' : 'sub_services');
+  
+  // Build query in memory to avoid index complexity where possible
+  const dataQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, targetCol), where('status', '==', 'Active'), limit(50));
+  }, [db, targetCol]);
+
+  const { data: items, isLoading } = useCollection(dataQuery);
+
+  const filteredItems = useMemo(() => {
+    if (!items) return [];
+    let list = [...items];
+    
     if (config.sourceType === 'category' && config.sourceId) {
-      filtered = filtered.filter((p: any) => p.categoryId === config.sourceId);
+      list = list.filter((p: any) => p.categoryId === config.sourceId);
     } else if (config.sourceType === 'manual' && config.manualIds?.length) {
-      filtered = filtered.filter((p: any) => config.manualIds.includes(p.id));
+      list = list.filter((p: any) => config.manualIds.includes(p.id));
     }
-    filtered = filtered.slice(0, config.limit || 12);
-    if (!filtered.length) return null;
+    
+    return list.slice(0, config.limit || 12);
+  }, [items, config]);
 
-    return (
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-8 px-2">
-          <h2 className="font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl">{section.title}</h2>
-          <Link href="/products" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">See More <ChevronRight size={14}/></Link>
-        </div>
-        <div className={cn("grid gap-4", getGridCols(config.gridColsDesktop))}>
-          {filtered.map((p: any) => <ProductCard key={p.id} product={p} customStyle={cardStyles?.productCard} />)}
-        </div>
+  if (isLoading) return (
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <Skeleton className="h-8 w-48 mb-8 rounded-lg" />
+      <GridSkeleton count={6} />
+    </div>
+  );
+
+  if (!filteredItems.length) return null;
+
+  const isService = type === 'services_dynamic' || type === 'sub_services_custom';
+  const targetPath = isService ? '/services' : '/products';
+  const customCardStyle = isService ? cardStyles?.serviceCard : cardStyles?.productCard;
+
+  return (
+    <div className="container mx-auto max-w-7xl px-4 py-12">
+      <div className="flex items-center justify-between mb-8 px-2">
+        <h2 className="font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl">{section.title}</h2>
+        <Link href={targetPath} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">
+          See More <ChevronRight size={14}/>
+        </Link>
       </div>
-    );
-  }
-
-  if (type === 'services_dynamic') {
-    let filtered = allServices?.filter((s: any) => s.status === 'Active') || [];
-    if (config.sourceType === 'category' && config.sourceId) {
-      filtered = filtered.filter((s: any) => s.categoryId === config.sourceId);
-    } else if (config.sourceType === 'manual' && config.manualIds?.length) {
-      filtered = filtered.filter((s: any) => config.manualIds.includes(s.id));
-    }
-    filtered = filtered.slice(0, config.limit || 12);
-    if (!filtered.length) return null;
-
-    return (
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-8 px-2">
-          <h2 className="font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl">{section.title}</h2>
-          <Link href="/services" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">See More <ChevronRight size={14}/></Link>
-        </div>
-        <div className={cn("grid gap-4", getGridCols(config.gridColsDesktop))}>
-          {filtered.map((s: any) => <ProductCard key={s.id} product={{...s, type: 'service'} as any} customStyle={cardStyles?.serviceCard} />)}
-        </div>
+      <div className={cn("grid gap-4", getGridCols(config.gridColsDesktop))}>
+        {filteredItems.map((item: any) => (
+          <ProductCard 
+            key={item.id} 
+            product={isService ? {...item, type: 'service'} as any : item} 
+            customStyle={customCardStyle} 
+          />
+        ))}
       </div>
-    );
-  }
-
-  if (type === 'sub_services_custom') {
-    let filtered = allSubServices?.filter((s: any) => s.status === 'Active') || [];
-    if (config.sourceType === 'manual' && config.manualIds?.length) {
-      filtered = filtered.filter((s: any) => config.manualIds.includes(s.id));
-    }
-    filtered = filtered.slice(0, config.limit || 12);
-    if (!filtered.length) return null;
-
-    return (
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-8 px-2">
-          <h2 className="font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl">{section.title}</h2>
-          <Link href="/services" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">See More <ChevronRight size={14}/></Link>
-        </div>
-        <div className={cn("grid gap-4", getGridCols(config.gridColsDesktop))}>
-          {filtered.map((s: any) => <ProductCard key={s.id} product={{...s, type: 'service'} as any} customStyle={cardStyles?.serviceCard} />)}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 });
 
 DynamicDataSection.displayName = 'DynamicDataSection';
@@ -139,7 +126,7 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // 1. Critical Meta-Data Fetch (Render Shell)
+  // 1. Structure & Config (Required for Shell)
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
@@ -152,16 +139,7 @@ export default function SmartCleanHomePage() {
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const { data: cardStyles } = useDoc(stylesRef);
 
-  // 2. Data Pipes for dynamic sections (limited to reduce payload)
-  const productsRef = useMemoFirebase(() => (db && settings?.productsEnabled !== false) ? query(collection(db, 'products'), where('status', '==', 'Active'), limit(50)) : null, [db, settings]);
-  const servicesRef = useMemoFirebase(() => (db && settings?.servicesEnabled !== false) ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(50)) : null, [db, settings]);
-  const subServicesRef = useMemoFirebase(() => (db && settings?.servicesEnabled !== false) ? query(collection(db, 'sub_services'), where('status', '==', 'Active'), limit(50)) : null, [db, settings]);
-
-  const { data: allProducts } = useCollection(productsRef);
-  const { data: allServices } = useCollection(servicesRef);
-  const { data: allSubServices } = useCollection(subServicesRef);
-
-  // Other dynamic data
+  // Other structural dynamic data
   const quickLinksRef = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const { data: quickLinks } = useCollection(quickLinksRef);
 
@@ -174,10 +152,6 @@ export default function SmartCleanHomePage() {
   const topNavRef = useMemoFirebase(() => db ? query(collection(db, 'top_nav_categories'), orderBy('order', 'asc')) : null, [db]);
   const { data: topCategories } = useCollection(topNavRef);
 
-  const couponsRef = useMemoFirebase(() => db ? collection(db, 'coupons') : null, [db]);
-  const { data: coupons } = useCollection(couponsRef);
-
-  // Derived above-the-fold content
   const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
 
@@ -202,7 +176,7 @@ export default function SmartCleanHomePage() {
                             alt={banner.title} 
                             fill 
                             className="object-cover" 
-                            priority={i === 0} // CRITICAL: Prioritize first banner
+                            priority={i === 0} 
                             sizes="(max-width: 1024px) 70vw, 982px"
                             unoptimized 
                           />
@@ -222,7 +196,7 @@ export default function SmartCleanHomePage() {
             </div>
             {sidePromos.length > 0 && (
               <div className="flex w-[30%] min-w-[100px] flex-col gap-2 md:gap-4 h-full">
-                {sidePromos.slice(0, 2).map((promo, i) => (
+                {sidePromos.slice(0, 2).map((promo) => (
                   <Link key={promo.id} href={promo.buttonLink || '#'} className="flex-1 relative rounded-xl md:rounded-3xl overflow-hidden shadow-sm group border border-gray-100">
                     <Image 
                       src={promo.imageUrl} 
@@ -253,7 +227,7 @@ export default function SmartCleanHomePage() {
           activeLayoutSections?.map((section: any) => {
             const type = section.type;
             
-            // Non-data Static/Internal Sections
+            // Render non-data sections first
             if (type === 'top_nav_links') {
               return topCategories?.length ? (
                 <section key={section.id} className="px-4 py-4">
@@ -304,10 +278,10 @@ export default function SmartCleanHomePage() {
             }
 
             if (type === 'trust_stats') {
-              return (
+              return siteStats?.length ? (
                 <section key={section.id} className="px-4 py-6 bg-white border-y">
                   <div className="container mx-auto max-w-7xl flex flex-wrap justify-center gap-x-12 gap-y-6">
-                    {(siteStats?.length ? siteStats : []).map((stat: any, i: number) => {
+                    {siteStats.map((stat: any, i: number) => {
                       const Icon = ICONS[stat.icon] || Zap;
                       return (
                         <div key={i} className="flex items-center gap-3">
@@ -321,24 +295,25 @@ export default function SmartCleanHomePage() {
                     })}
                   </div>
                 </section>
-              );
+              ) : null;
             }
 
             if (type === 'team_grid') return <TeamSection key={section.id} />;
             if (type === 'campaign') return <CampaignSection key={section.id} />;
 
-            // ⚡ Data Intensive Sections: Optimized with progressive loading
-            return (
-              <section key={section.id} className="px-4 py-12">
-                <DynamicDataSection 
-                  section={section} 
-                  allProducts={allProducts} 
-                  allServices={allServices} 
-                  allSubServices={allSubServices}
-                  cardStyles={cardStyles}
-                />
-              </section>
-            );
+            // ⚡ Data Intensive Sections: Each component fetches its own data independently
+            if (['products_dynamic', 'services_dynamic', 'sub_services_custom'].includes(type)) {
+              return (
+                <section key={section.id} className="py-2">
+                  <DynamicDataSection 
+                    section={section} 
+                    cardStyles={cardStyles}
+                  />
+                </section>
+              );
+            }
+
+            return null;
           })
         )}
       </div>
@@ -347,8 +322,8 @@ export default function SmartCleanHomePage() {
 }
 
 const SectionSkeleton = () => (
-  <div className="container mx-auto px-4 max-w-7xl space-y-6">
+  <div className="container mx-auto px-4 max-w-7xl space-y-8 py-10">
     <Skeleton className="h-10 w-64 rounded-xl" />
-    <GridSkeleton count={6} />
+    <GridSkeleton count={5} />
   </div>
 );

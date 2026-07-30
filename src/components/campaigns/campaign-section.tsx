@@ -1,21 +1,21 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { CountdownTimer } from './countdown-timer';
-import { ChevronRight, Zap, Loader2, Package } from 'lucide-react';
+import { ChevronRight, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
 import { ProductCard } from '@/components/products/product-card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function CampaignSection() {
   const db = useFirestore();
   
-  // 1. Fetch All Campaigns
-  // We fetch the collection and filter in memory to avoid "Missing Index" errors
+  // 1. Fetch All Campaigns independently
   const campaignsRef = useMemoFirebase(() => db ? collection(db, 'campaigns') : null, [db]);
   const { data: allCampaignsRaw, isLoading: campaignsLoading } = useCollection(campaignsRef);
 
@@ -33,7 +33,7 @@ export function CampaignSection() {
       .sort((a, b) => (b.priority || 0) - (a.priority || 0))[0];
   }, [allCampaignsRaw]);
 
-  // 3. Fetch all products to merge details
+  // 3. Fetch all products to merge details independently
   const productsRef = useMemoFirebase(() => db ? collection(db, 'products') : null, [db]);
   const { data: allProducts } = useCollection(productsRef);
 
@@ -60,11 +60,13 @@ export function CampaignSection() {
     }).filter(p => !!p) as Product[];
   }, [campaignItems, allProducts]);
 
-  if (campaignsLoading) return null;
+  if (campaignsLoading) return (
+    <div className="container mx-auto px-4 py-8">
+      <Skeleton className="h-[400px] w-full rounded-[2rem]" />
+    </div>
+  );
+  
   if (!activeCampaign) return null;
-
-  // We only hide if loading is finished and there really are no products
-  if (!itemsLoading && mergedProducts.length === 0) return null;
 
   const themeColor = activeCampaign.themeColor || '#EF4444';
 
@@ -115,7 +117,9 @@ export function CampaignSection() {
           </div>
 
           {itemsLoading ? (
-            <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+            <div className="flex gap-4 overflow-hidden">
+               {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="w-[140px] md:w-[200px] h-48 rounded-2xl shrink-0" />)}
+            </div>
           ) : mergedProducts.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {mergedProducts.map((product) => (
