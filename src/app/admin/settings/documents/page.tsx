@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -230,22 +229,38 @@ export default function DocumentEnginePage() {
                       <Zap size={14} className="text-primary"/> Document Seals (Master)
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 space-y-8">
-                    <ImageUploader 
-                      label="Paid Status Seal" 
-                      hint="Transparent PNG (e.g. Circular Paid Stamp)" 
-                      initialUrl={designForm.paidSealUrl} 
-                      onUpload={url => updateDesign('paidSealUrl', url)} 
-                      aspectRatio="aspect-square w-24 mx-auto"
-                    />
-                    <ImageUploader 
-                      label="Unpaid Status Seal" 
-                      hint="Transparent PNG (e.g. Circular Unpaid Stamp)" 
-                      initialUrl={designForm.unpaidSealUrl} 
-                      onUpload={url => updateDesign('unpaidSealUrl', url)} 
-                      aspectRatio="aspect-square w-24 mx-auto"
-                    />
-                    <div className="pt-4 border-t border-gray-50">
+                  <CardContent className="p-6 space-y-10">
+                    <div className="space-y-3">
+                      <ImageUploader 
+                        label="Paid Status Seal" 
+                        hint="Transparent PNG (e.g. Circular Paid Stamp)" 
+                        initialUrl={designForm.paidSealUrl} 
+                        onUpload={url => updateDesign('paidSealUrl', url)} 
+                        aspectRatio="aspect-square w-24 mx-auto"
+                      />
+                      {designForm.paidSealUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => updateDesign('paidSealUrl', '')} className="w-full text-rose-500 hover:text-rose-700 font-bold uppercase text-[9px] gap-2">
+                           <Trash2 size={12}/> Remove Paid Seal
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <ImageUploader 
+                        label="Unpaid Status Seal" 
+                        hint="Transparent PNG (e.g. Circular Unpaid Stamp)" 
+                        initialUrl={designForm.unpaidSealUrl} 
+                        onUpload={url => updateDesign('unpaidSealUrl', url)} 
+                        aspectRatio="aspect-square w-24 mx-auto"
+                      />
+                      {designForm.unpaidSealUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => updateDesign('unpaidSealUrl', '')} className="w-full text-rose-500 hover:text-rose-700 font-bold uppercase text-[9px] gap-2">
+                           <Trash2 size={12}/> Remove Unpaid Seal
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="pt-8 border-t border-gray-100 space-y-3">
                       <ImageUploader 
                         label="Authority Official Seal" 
                         hint="Place within signature area (Transparent PNG)" 
@@ -253,6 +268,11 @@ export default function DocumentEnginePage() {
                         onUpload={url => updateDesign('authoritySealUrl', url)} 
                         aspectRatio="aspect-square w-24 mx-auto"
                       />
+                      {designForm.authoritySealUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => updateDesign('authoritySealUrl', '')} className="w-full text-rose-500 hover:text-rose-700 font-bold uppercase text-[9px] gap-2">
+                           <Trash2 size={12}/> Remove Auth Seal
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                </Card>
@@ -368,9 +388,19 @@ export default function DocumentEnginePage() {
                  <CardHeader className="p-8 pb-4 border-b bg-gray-50/50">
                     <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2"><FileSignature size={16}/> Authority Assets</CardTitle>
                  </CardHeader>
-                 <CardContent className="p-8 space-y-8">
-                    <ImageUploader label="Digital Signature" hint="200 x 80 px" initialUrl={quoteForm.signatureUrl} onUpload={url => setQuoteForm({...quoteForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
-                    <ImageUploader label="Quotation Seal" hint="200 x 200 px" initialUrl={quoteForm.sealUrl} onUpload={url => setQuoteForm({...quoteForm, sealUrl: url})} aspectRatio="aspect-square w-24 mx-auto" />
+                 <CardContent className="p-8 space-y-10">
+                    <div className="space-y-3">
+                      <ImageUploader label="Digital Signature" hint="200 x 80 px" initialUrl={quoteForm.signatureUrl} onUpload={url => setQuoteForm({...quoteForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
+                      {quoteForm.signatureUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => setQuoteForm({...quoteForm, signatureUrl: ''})} className="w-full text-rose-500 font-bold text-[9px] uppercase">Remove Signature</Button>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <ImageUploader label="Quotation Seal" hint="200 x 200 px" initialUrl={quoteForm.sealUrl} onUpload={url => setQuoteForm({...quoteForm, sealUrl: url})} aspectRatio="aspect-square w-24 mx-auto" />
+                      {quoteForm.sealUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => setQuoteForm({...quoteForm, sealUrl: ''})} className="w-full text-rose-500 font-bold text-[9px] uppercase">Remove Seal</Button>
+                      )}
+                    </div>
                  </CardContent>
                </Card>
             </div>
@@ -437,8 +467,13 @@ export default function DocumentEnginePage() {
                  <CardHeader className="p-8 pb-4 border-b bg-gray-50/50">
                     <CardTitle className="text-sm font-black uppercase text-primary flex items-center gap-2"><FileSignature size={16}/> Authority Assets</CardTitle>
                  </CardHeader>
-                 <CardContent className="p-8 space-y-8">
-                    <ImageUploader label="Invoice Signature" hint="200 x 80 px" initialUrl={invoiceForm.signatureUrl} onUpload={url => setInvoiceForm({...invoiceForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
+                 <CardContent className="p-8 space-y-10">
+                    <div className="space-y-3">
+                      <ImageUploader label="Invoice Signature" hint="200 x 80 px" initialUrl={invoiceForm.signatureUrl} onUpload={url => setInvoiceForm({...invoiceForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
+                      {invoiceForm.signatureUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => setInvoiceForm({...invoiceForm, signatureUrl: ''})} className="w-full text-rose-500 font-bold text-[9px] uppercase">Remove Signature</Button>
+                      )}
+                    </div>
                  </CardContent>
                </Card>
                
