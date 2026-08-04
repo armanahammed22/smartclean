@@ -41,7 +41,8 @@ import {
   CheckSquare,
   MoveVertical,
   Star,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -66,7 +67,10 @@ const DEFAULT_DESIGN = {
   disclaimerFontSize: 7.5,
   customTopText: '',
   customBottomText: '',
-  isCompactMode: true
+  isCompactMode: true,
+  paidSealUrl: '',
+  unpaidSealUrl: '',
+  authoritySealUrl: ''
 };
 
 export default function DocumentEnginePage() {
@@ -219,6 +223,39 @@ export default function DocumentEnginePage() {
                     </div>
                   </CardContent>
                </Card>
+
+               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-gray-100">
+                  <CardHeader className="bg-gray-50/50 p-6 border-b">
+                    <CardTitle className="text-xs font-black uppercase flex items-center gap-2">
+                      <Zap size={14} className="text-primary"/> Document Seals (Master)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-8">
+                    <ImageUploader 
+                      label="Paid Status Seal" 
+                      hint="Transparent PNG (e.g. Circular Paid Stamp)" 
+                      initialUrl={designForm.paidSealUrl} 
+                      onUpload={url => updateDesign('paidSealUrl', url)} 
+                      aspectRatio="aspect-square w-24 mx-auto"
+                    />
+                    <ImageUploader 
+                      label="Unpaid Status Seal" 
+                      hint="Transparent PNG (e.g. Circular Unpaid Stamp)" 
+                      initialUrl={designForm.unpaidSealUrl} 
+                      onUpload={url => updateDesign('unpaidSealUrl', url)} 
+                      aspectRatio="aspect-square w-24 mx-auto"
+                    />
+                    <div className="pt-4 border-t border-gray-50">
+                      <ImageUploader 
+                        label="Authority Official Seal" 
+                        hint="Place within signature area (Transparent PNG)" 
+                        initialUrl={designForm.authoritySealUrl} 
+                        onUpload={url => updateDesign('authoritySealUrl', url)} 
+                        aspectRatio="aspect-square w-24 mx-auto"
+                      />
+                    </div>
+                  </CardContent>
+               </Card>
             </div>
 
             <div className="lg:col-span-8 sticky top-6">
@@ -231,12 +268,19 @@ export default function DocumentEnginePage() {
                     className="bg-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative origin-top scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] transition-all duration-300 overflow-hidden"
                     style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', borderTop: `14px solid ${designForm.primaryColor}`, borderRadius: '0 0 1.5rem 1.5rem', display: 'flex', flexDirection: 'column' }}
                   >
+                    {/* Mock Paid Seal in Preview */}
+                    {designForm.paidSealUrl && (
+                      <div className="absolute top-48 right-16 z-50 opacity-20 rotate-12 pointer-events-none w-32 h-32">
+                        <Image src={designForm.paidSealUrl} alt="Paid" fill className="object-contain" unoptimized />
+                      </div>
+                    )}
+
                     <header className="px-12 flex justify-between items-start border-b-2 border-gray-50" style={{ paddingTop: `${designForm.headerPaddingTop}px`, paddingBottom: `${designForm.headerPaddingBottom}px` }}>
                        <div className="flex gap-4">
                          <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-gray-300"><Layers size={24}/></div>
                          <div className="text-left"><h2 className="font-black text-2xl uppercase text-[#081621]">SMART CLEAN</h2><p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: designForm.primaryColor }}>Professional Infrastructure</p></div>
                        </div>
-                       <div className="text-right space-y-1"><p className="text-[10px] font-bold text-gray-600 uppercase">MOHAKHALI, DHAKA, BD</p></div>
+                       <div className="text-right space-y-1"><p className="text-[10px] font-bold text-gray-700 uppercase">MOHAKHALI, DHAKA, BD</p></div>
                     </header>
                     <div className="px-12 py-10 space-y-8 flex-1" style={{ marginTop: `${designForm.sectionSpacing}px` }}>
                        <div className="flex justify-between items-end border-b pb-4">
@@ -261,7 +305,14 @@ export default function DocumentEnginePage() {
                        </div>
                        <div className="flex justify-between items-end pt-20" style={{ marginTop: `${designForm.signatureSpacing}px` }}>
                           <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px]">Client Sign</div>
-                          <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px]">Authority Sign</div>
+                          <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px] relative">
+                             {designForm.authoritySealUrl && (
+                               <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-20 h-20 opacity-30 z-0">
+                                  <Image src={designForm.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized />
+                               </div>
+                             )}
+                             <span className="relative z-10">Authority Sign</span>
+                          </div>
                        </div>
                     </div>
                   </div>
@@ -319,7 +370,7 @@ export default function DocumentEnginePage() {
                  </CardHeader>
                  <CardContent className="p-8 space-y-8">
                     <ImageUploader label="Digital Signature" hint="200 x 80 px" initialUrl={quoteForm.signatureUrl} onUpload={url => setQuoteForm({...quoteForm, signatureUrl: url})} aspectRatio="aspect-[2/1]" />
-                    <ImageUploader label="Official Seal" hint="200 x 200 px" initialUrl={quoteForm.sealUrl} onUpload={url => setQuoteForm({...quoteForm, sealUrl: url})} aspectRatio="aspect-square w-24 mx-auto" />
+                    <ImageUploader label="Quotation Seal" hint="200 x 200 px" initialUrl={quoteForm.sealUrl} onUpload={url => setQuoteForm({...quoteForm, sealUrl: url})} aspectRatio="aspect-square w-24 mx-auto" />
                  </CardContent>
                </Card>
             </div>

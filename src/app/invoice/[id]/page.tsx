@@ -90,7 +90,7 @@ function InvoiceViewContent() {
 
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
   const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
@@ -130,10 +130,14 @@ function InvoiceViewContent() {
     footerPaddingBottom: 5,
     signatureSpacing: 25,
     taglineFontSize: 11,
-    disclaimerFontSize: 7.5
+    disclaimerFontSize: 7.5,
+    paidSealUrl: '',
+    unpaidSealUrl: '',
+    authoritySealUrl: ''
   };
 
   const isPaid = invoice.paymentStatus === 'Paid';
+  const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -166,6 +170,13 @@ function InvoiceViewContent() {
 
         <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
+          {/* 💎 DYNAMIC PAYMENT STATUS SEAL */}
+          {statusSealUrl && (
+            <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
+              <Image src={statusSealUrl} alt="Status Seal" fill className="object-contain" unoptimized />
+            </div>
+          )}
+
           <header 
             className="px-12 flex justify-between items-start border-b-2 border-gray-50"
             style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
@@ -188,7 +199,7 @@ function InvoiceViewContent() {
           <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
             
             <div className="text-center space-y-0.5">
-                <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Service Bill</h3>
+                <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3>
                 <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
             </div>
 
@@ -279,11 +290,17 @@ function InvoiceViewContent() {
                 <div className="border-b-[2px] border-gray-100 h-6"></div>
                 <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-1.5">
-                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center">
+              <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
+                {/* 🏆 AUTHORITY SEAL PLACEMENT */}
+                {d.authoritySealUrl && (
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none">
+                    <Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized />
+                  </div>
+                )}
+                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">
                    {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
                 </div>
-                <p className="font-black text-[9px] uppercase text-[#081621]">Smart Clean Authority</p>
+                <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
               </div>
             </div>
           </div>

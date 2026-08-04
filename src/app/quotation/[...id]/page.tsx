@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -149,8 +150,15 @@ function QuotationViewContent() {
     footerPaddingBottom: 5,
     signatureSpacing: 25,
     taglineFontSize: 11,
-    disclaimerFontSize: 7.5
+    disclaimerFontSize: 7.5,
+    paidSealUrl: '',
+    unpaidSealUrl: '',
+    authoritySealUrl: ''
   };
+
+  // Logic for dynamic seal on Quotation (typically unpaid unless deposit made)
+  const isPaid = (quote.paidAmount >= quote.total && quote.total > 0);
+  const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -181,6 +189,13 @@ function QuotationViewContent() {
 
         <div id="quote-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
+          {/* 💎 DYNAMIC PAYMENT STATUS SEAL */}
+          {statusSealUrl && (
+            <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
+              <Image src={statusSealUrl} alt="Status Seal" fill className="object-contain" unoptimized />
+            </div>
+          )}
+
           {sealUrl && (
             <div className="absolute top-64 right-20 z-20 pointer-events-none opacity-40">
               <div className="relative w-40 h-40">
@@ -255,9 +270,9 @@ function QuotationViewContent() {
                         <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                         {item.description && <p className="text-[8px] text-gray-500 font-medium leading-tight italic">{item.description}</p>}
                       </td>
-                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{item.price?.toLocaleString()}</td>
-                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price?.toLocaleString()}</td>
+                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
                   <tr className="border-t border-[#081621] bg-gray-50/50">
@@ -296,11 +311,17 @@ function QuotationViewContent() {
                 <div className="border-b-[2px] border-gray-100 h-6"></div>
                 <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-1.5">
-                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center">
+              <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
+                {/* 🏆 AUTHORITY SEAL PLACEMENT */}
+                {d.authoritySealUrl && (
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none">
+                    <Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized />
+                  </div>
+                )}
+                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">
                    {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
                 </div>
-                <p className="font-black text-[9px] uppercase text-[#081621]">Smart Clean Authority</p>
+                <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
               </div>
             </div>
           </div>
