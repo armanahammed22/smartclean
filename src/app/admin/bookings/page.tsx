@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -26,7 +27,8 @@ import {
   Plus,
   Search,
   Users,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -240,6 +242,9 @@ function BookingsListContent() {
                     <TableCell className="text-right pr-8">
                       <div className="flex justify-end gap-1 opacity-100">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600" onClick={() => setAssignBooking(booking)} title="Assign Team"><Users size={16} /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600" asChild title="View Public Page">
+                           <Link href={`/service/${booking.serviceId || 'general'}`} target="_blank"><Eye size={16} /></Link>
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600" onClick={() => handleCreateQuote(booking)} disabled={isProcessingQuote === booking.id} title="Convert to Quotation"><FileSpreadsheet size={16} /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleOpenInvoice(booking)} disabled={isProcessingInvoice === booking.id} title="Convert to Invoice"><FileText size={16} /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(booking.id)} disabled={isSubmitting} title="Delete Record"><Trash2 size={16} /></Button>

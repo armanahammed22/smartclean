@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -48,6 +49,7 @@ export default function ServiceBookingPage() {
   const { t } = useLanguage();
   const { addToCart, setCheckoutOpen, isCheckoutOpen } = useCart();
   const db = useFirestore();
+  const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
   const [mainQuantity, setMainQuantity] = useState(1);
@@ -58,12 +60,14 @@ export default function ServiceBookingPage() {
     setMounted(true);
   }, []);
 
-  const serviceQuery = useMemoFirebase(() => {
+  // 🛡️ SEO Optimization: Try fetching by Slug first
+  const serviceBySlugQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'services'), where('slug', '==', slugOrId), limit(1));
   }, [db, slugOrId]);
-  const { data: slugServices, isLoading: slugLoading } = useCollection(serviceQuery);
+  const { data: slugServices, isLoading: slugLoading } = useCollection(serviceBySlugQuery);
 
+  // 🛡️ Fallback: Try fetching by ID
   const mainServiceRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'services', slugOrId as string) : null, [db, slugOrId]);
   const { data: idService, isLoading: idLoading } = useDoc(mainServiceRef);
 
@@ -71,6 +75,13 @@ export default function ServiceBookingPage() {
     if (slugServices && slugServices.length > 0) return slugServices[0];
     return idService || null;
   }, [slugServices, idService]);
+
+  // 🛡️ Canonical SEO Redirect
+  useEffect(() => {
+    if (baseService && baseService.slug && slugOrId !== baseService.slug) {
+      router.replace(`/service/${baseService.slug}`);
+    }
+  }, [baseService, slugOrId, router]);
 
   const targetId = baseService?.id || null;
 

@@ -41,6 +41,7 @@ import { ProductCard } from '@/components/products/product-card';
 import { trackEvent } from '@/lib/tracking';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
 
 export default function ProductDetailsPage() {
   const { id: slugOrId } = useParams();
@@ -57,13 +58,15 @@ export default function ProductDetailsPage() {
     setMounted(true);
   }, []);
 
-  const productQuery = useMemoFirebase(() => {
+  // 🛡️ SEO Optimization: Try fetching by Slug first
+  const productBySlugQuery = useMemoFirebase(() => {
     if (!db || !slugOrId) return null;
     return query(collection(db, 'products'), where('slug', '==', slugOrId), limit(1));
   }, [db, slugOrId]);
   
-  const { data: slugProducts, isLoading: slugLoading } = useCollection(productQuery);
+  const { data: slugProducts, isLoading: slugLoading } = useCollection(productBySlugQuery);
   
+  // 🛡️ Fallback: Try fetching by ID
   const productByIdRef = useMemoFirebase(() => (db && slugOrId) ? doc(db, 'products', slugOrId as string) : null, [db, slugOrId]);
   const { data: idProduct, isLoading: idLoading } = useDoc(productByIdRef);
 
@@ -73,6 +76,13 @@ export default function ProductDetailsPage() {
   }, [slugProducts, idProduct]);
 
   const isLoading = slugLoading && idLoading;
+
+  // 🛡️ Canonical SEO Redirect: If accessed via ID but slug exists, redirect to slug
+  useEffect(() => {
+    if (product && product.slug && slugOrId !== product.slug) {
+      router.replace(`/product/${product.slug}`);
+    }
+  }, [product, slugOrId, router]);
 
   const relatedQuery = useMemoFirebase(() => {
     if (!db || !product?.categoryId) return null;
