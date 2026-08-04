@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -24,11 +23,13 @@ import {
   Linkedin, 
   Instagram,
   Zap,
-  X
+  X,
+  Phone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader } from '@/components/ui/image-uploader';
 import Link from 'next/link';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function TeamMemberEditorPage() {
   const { id } = useParams();
