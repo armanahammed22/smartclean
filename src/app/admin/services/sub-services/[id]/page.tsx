@@ -50,6 +50,7 @@ export default function SubServiceEditorPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isNew = id === 'new';
 
   // 1. Core Data
@@ -82,7 +83,7 @@ export default function SubServiceEditorPage() {
   });
 
   useEffect(() => {
-    if (subService) {
+    if (subService && !isInitialized) {
       setFormData({
         ...formData,
         ...subService,
@@ -95,8 +96,9 @@ export default function SubServiceEditorPage() {
         features: subService.features || [],
         galleryImages: subService.galleryImages || []
       });
+      setIsInitialized(true);
     }
-  }, [subService]);
+  }, [subService, isInitialized]);
 
   const handleSave = async (statusOverride?: string) => {
     if (!db) return;

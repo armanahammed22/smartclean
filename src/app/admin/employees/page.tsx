@@ -200,10 +200,9 @@ export default function EmployeesPage() {
           <Plus size={20} /> Hire New Personnel
         </Button>
 
-        {/* 🛠️ IMPROVED SCROLLABLE DIALOG */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => { if(!open) setIsDialogOpen(false); }}>
           <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] overflow-hidden p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl flex flex-col bg-white">
-            <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden" key={editingStaff?.id || 'new'}>
+            <form key={editingStaff?.id || 'new'} onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
               <DialogHeader className="bg-[#081621] text-white p-6 md:p-8 shrink-0 flex flex-row items-center justify-between">
                 <div className="space-y-1">
                   <DialogTitle className="text-2xl font-black uppercase tracking-widest flex items-center gap-3">

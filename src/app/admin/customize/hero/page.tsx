@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -170,9 +171,10 @@ function BannerEditor({ banner, onUpdate, onDelete, isSide }: { banner: any, onU
   const { toast } = useToast();
 
   useEffect(() => {
-    setLocalData({ ...banner });
-    setHasChanges(false);
-  }, [banner]);
+    if (!hasChanges) {
+      setLocalData({ ...banner });
+    }
+  }, [banner, hasChanges]);
 
   const updateLocal = (field: string, val: any) => {
     setLocalData(prev => ({ ...prev, [field]: val }));

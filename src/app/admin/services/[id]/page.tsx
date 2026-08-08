@@ -135,6 +135,7 @@ export default function UnifiedServiceEditor() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isNew = id === 'new';
 
   // 1. Core Service Data
@@ -184,7 +185,7 @@ export default function UnifiedServiceEditor() {
   const [isAddonPopoverOpen, setIsAddonPopoverOpen] = useState(false);
 
   useEffect(() => {
-    if (service) {
+    if (service && !isInitialized) {
       setFormData({
         ...formData,
         ...service,
@@ -199,8 +200,9 @@ export default function UnifiedServiceEditor() {
         linkedSubServiceIds: service.linkedSubServiceIds || [],
         subChildCategoryId: service.subChildCategoryId || service.childCategoryId || ''
       });
+      setIsInitialized(true);
     }
-  }, [service]);
+  }, [service, isInitialized]);
 
   // Taxonomy Filtering Logic
   const availableSubCats = useMemo(() => 

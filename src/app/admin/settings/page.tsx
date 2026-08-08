@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -137,7 +138,7 @@ export default function AdminSettingsPage() {
   const [expandedLabelEdit, setExpandedLabelEdit] = useState<string | null>(null);
 
   useEffect(() => {
-    if (settings) {
+    if (settings && !isInitialized) {
       setFormData({
         ...formData,
         ...settings,
@@ -146,7 +147,7 @@ export default function AdminSettingsPage() {
         servicesEnabled: settings.servicesEnabled ?? true
       });
     }
-  }, [settings]);
+  }, [settings, isInitialized]);
 
   useEffect(() => {
     if (sidebarConfig && !isInitialized) {
@@ -595,7 +596,7 @@ export default function AdminSettingsPage() {
                   <Input value={formData.apkDownloadLink} onChange={(e) => setFormData({...formData, apkDownloadLink: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
               </CardContent>
-            </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

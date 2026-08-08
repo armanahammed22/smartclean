@@ -280,7 +280,7 @@ export default function ProductsManagementPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("text-[9px] font-black border-none px-2 py-0.5", product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500")}>
+                      <Badge variant="outline" className={cn("text-[9px] font-black border-none px-2 py-0.5", product.status === 'Active' ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-400")}>
                         {product.stockQuantity} {product.unitType || 'UNITS'}
                       </Badge>
                     </TableCell>
@@ -317,7 +317,7 @@ export default function ProductsManagementPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[2.5rem] p-0 border-none shadow-2xl flex flex-col bg-white overflow-hidden">
-          <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
+          <form key={editingProduct?.id || 'new'} onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
             <DialogHeader className="p-6 md:p-8 bg-[#081621] text-white shrink-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">

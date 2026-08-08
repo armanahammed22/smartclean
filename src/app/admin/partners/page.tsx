@@ -222,73 +222,75 @@ export default function PartnerManagementPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl bg-white">
-          <header className="p-8 bg-[#081621] text-white flex justify-between items-center">
-            <div>
-              <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingPartner ? 'Update Partner Profile' : 'New Partner Enrollment'}</DialogTitle>
-              <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure collaboration and commission logic</DialogDescription>
-            </div>
-            <button onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
-          </header>
-          <form onSubmit={handleSavePartner} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Company/Partner Name</Label>
-                  <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Official Email</Label>
-                  <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Contact Phone</Label>
-                  <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
-                </div>
+          <form key={editingPartner?.id || 'new'} onSubmit={handleSavePartner} className="flex flex-col max-h-[90vh]">
+            <header className="p-8 bg-[#081621] text-white flex justify-between items-center">
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-widest">{editingPartner ? 'Update Partner Profile' : 'New Partner Enrollment'}</DialogTitle>
+                <DialogDescription className="text-white/40 mt-1 uppercase font-bold text-[10px]">Configure collaboration and commission logic</DialogDescription>
               </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Commission Direction</Label>
-                  <Select value={formData.commissionDirection} onValueChange={v => setFormData({...formData, commissionDirection: v as any})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="TheyGiveMe" className="text-[10px] font-black uppercase">They Give Me (Income)</SelectItem>
-                      <SelectItem value="IGiveThem" className="text-[10px] font-black uppercase">I Give Them (Expense)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <button type="button" onClick={() => setIsDialogOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X size={24}/></button>
+            </header>
+            <div className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Rate Type</Label>
-                    <Select value={formData.commissionType} onValueChange={v => setFormData({...formData, commissionType: v as any})}>
+                    <Label className="text-[10px] font-black uppercase ml-1">Company/Partner Name</Label>
+                    <Input name="name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Official Email</Label>
+                    <Input type="email" name="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Contact Phone</Label>
+                    <Input name="phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase ml-1">Commission Direction</Label>
+                    <Select value={formData.commissionDirection} onValueChange={v => setFormData({...formData, commissionDirection: v as any})}>
                       <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="percentage" className="text-[10px] font-black uppercase">Percentage %</SelectItem>
-                        <SelectItem value="fixed" className="text-[10px] font-black uppercase">Fixed ৳</SelectItem>
+                        <SelectItem value="TheyGiveMe" className="text-[10px] font-black uppercase">They Give Me (Income)</SelectItem>
+                        <SelectItem value="IGiveThem" className="text-[10px] font-black uppercase">I Give Them (Expense)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase ml-1">Rate Type</Label>
+                      <Select value={formData.commissionType} onValueChange={v => setFormData({...formData, commissionType: v as any})}>
+                        <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="percentage" className="text-[10px] font-black uppercase">Percentage %</SelectItem>
+                          <SelectItem value="fixed" className="text-[10px] font-black uppercase">Fixed ৳</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase ml-1">Default Rate</Label>
+                      <Input type="number" name="commissionRate" value={formData.commissionRate} onChange={e => setFormData({...formData, commissionRate: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase ml-1">Default Rate</Label>
-                    <Input type="number" value={formData.commissionRate} onChange={e => setFormData({...formData, commissionRate: e.target.value})} required className="h-12 bg-gray-50 border-none rounded-xl font-black text-primary" />
+                    <Label className="text-[10px] font-black uppercase ml-1">Active Status</Label>
+                    <Select value={formData.status} onValueChange={v => setFormData({...formData, status: v as any})}>
+                      <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="active" className="text-[10px] font-black uppercase">Active Partner</SelectItem>
+                        <SelectItem value="inactive" className="text-[10px] font-black uppercase">Inactive / Hold</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase ml-1">Active Status</Label>
-                  <Select value={formData.status} onValueChange={v => setFormData({...formData, status: v as any})}>
-                    <SelectTrigger className="h-12 bg-gray-50 border-none rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="active" className="text-[10px] font-black uppercase">Active Partner</SelectItem>
-                      <SelectItem value="inactive" className="text-[10px] font-black uppercase">Inactive / Hold</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase ml-1">Agreement Notes</Label>
-              <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Contract terms or internal references..." className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4" />
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase ml-1">Agreement Notes</Label>
+                <Textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Contract terms or internal references..." className="min-h-[100px] bg-gray-50 border-none rounded-2xl p-4" />
+              </div>
             </div>
 
             <DialogFooter className="p-8 bg-gray-50 border-t gap-2">
