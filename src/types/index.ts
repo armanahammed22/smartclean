@@ -275,6 +275,8 @@ export interface InvoiceItem {
   subItems?: string[]; 
 }
 
+export type PricingMode = 'dynamic' | 'combo' | 'manual';
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -310,8 +312,9 @@ export interface Invoice {
   createdAt: string;
   dueDate: string | null;
   publicLink?: string;
-  isCombinedPricing?: boolean;
-  combinedPrice?: number;
+  pricingMode?: PricingMode;
+  manualPrice?: number;
+  comboPrice?: number;
 }
 
 export interface User {
@@ -357,8 +360,9 @@ export interface Booking {
   createdAt: string;
   isPackageBooking?: boolean;
   packageId?: string;
-  isCombinedPricing?: boolean;
-  combinedPrice?: number;
+  pricingMode?: PricingMode;
+  manualPrice?: number;
+  comboPrice?: number;
 }
 
 export interface CustomRequest {
@@ -427,8 +431,9 @@ export interface Quotation {
   publicLink?: string;
   createdAt: string;
   updatedAt: string;
-  isCombinedPricing?: boolean;
-  combinedPrice?: number;
+  pricingMode?: PricingMode;
+  manualPrice?: number;
+  comboPrice?: number;
 }
 
 export interface LedgerEntry {

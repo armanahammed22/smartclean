@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,17 @@ import {
   Calculator,
   Search,
   Banknote,
-  ReceiptText
+  ReceiptText,
+  Layers,
+  Edit2,
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getNextInvoiceNumber } from '@/lib/invoice-utils';
+import { PricingMode } from '@/types';
 
 export default function CreateInvoicePage() {
   const router = useRouter();
@@ -40,14 +44,16 @@ export default function CreateInvoicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
+  // Pricing Mode
+  const [pricingMode, setPricingMode] = useState<PricingMode>('dynamic');
+
   // Feature Modes
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
-  const [isCombinedPricing, setIsCombinedPricing] = useState(false);
 
   // Form State
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
-  const [packagePrice, setPackagePrice] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
   
   // Selection state
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -68,10 +74,12 @@ export default function CreateInvoicePage() {
   // Data Fetch
   const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
   const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
+  const packagesQuery = useMemoFirebase(() => db ? query(collection(db, 'service_packages'), where('status', '==', 'Active')) : null, [db]);
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
 
   const { data: customersRaw } = useCollection(customersQuery);
   const { data: services } = useCollection(servicesQuery);
+  const { data: packages } = useCollection(packagesQuery);
   const { data: globalSettings } = useDoc(settingsRef);
 
   const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')), [customersRaw]);
@@ -123,6 +131,27 @@ export default function CreateInvoicePage() {
     }
   };
 
+  const handleAddPackage = (pkgId: string) => {
+    const pkg = packages?.find(p => p.id === pkgId);
+    if (!pkg) return;
+
+    const pkgItems = pkg.serviceIds.map(sid => {
+      const s = services?.find(srv => srv.id === sid);
+      return {
+        id: (s?.id || sid) + '-' + Date.now(),
+        name: s?.title || pkg.name,
+        price: s?.basePrice || 0,
+        quantity: 1,
+        unit: 'Qty',
+        total: s?.basePrice || 0
+      };
+    });
+
+    setItems(pkgItems);
+    setPricingMode('combo');
+    setCustomPrice(pkg.price.toString());
+  };
+
   const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
   
   const updateItemField = (id: string, field: string, val: any) => {
@@ -138,7 +167,7 @@ export default function CreateInvoicePage() {
 
   const totals = useMemo(() => {
     const calculatedSubtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
-    const subtotal = isCombinedPricing ? (parseFloat(packagePrice) || 0) : calculatedSubtotal;
+    const subtotal = (pricingMode === 'combo' || pricingMode === 'manual') ? (parseFloat(customPrice) || 0) : calculatedSubtotal;
     
     const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
     
@@ -151,7 +180,7 @@ export default function CreateInvoicePage() {
     const dueAmount = Math.max(0, currentTotal - initialPaid);
 
     return { calculatedSubtotal, subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
-  }, [items, pricing, payment, isCombinedPricing, packagePrice]);
+  }, [items, pricing, payment, pricingMode, customPrice]);
 
   const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
   const updateTerm = (idx: number, val: string) => {
@@ -163,7 +192,7 @@ export default function CreateInvoicePage() {
 
   const handleSave = async () => {
     if (!db) return;
-    if (!customer.name || items.length === 0) {
+    if (!customer.name || (items.length === 0 && pricingMode !== 'manual')) {
       toast({ variant: "destructive", title: "Validation Error", description: "Customer and items are required." });
       return;
     }
@@ -205,8 +234,9 @@ export default function CreateInvoicePage() {
         customerInfo: { ...customer, id: currentCustomerId },
         items,
         subtotal: totals.subtotal,
-        isCombinedPricing,
-        combinedPrice: isCombinedPricing ? totals.subtotal : null,
+        pricingMode,
+        manualPrice: pricingMode === 'manual' ? totals.total : null,
+        comboPrice: pricingMode === 'combo' ? totals.subtotal : null,
         discount: pricing.discount,
         discountType: pricing.discountType,
         deliveryCharge: pricing.delivery,
@@ -267,6 +297,19 @@ export default function CreateInvoicePage() {
       </div>
 
       <div className="space-y-4">
+        {/* Pricing Mode Switcher */}
+        <div className="grid grid-cols-3 gap-2 bg-white p-2 rounded-2xl border shadow-sm">
+           <button type="button" onClick={() => setPricingMode('dynamic')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'dynamic' ? "bg-primary text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
+             <Zap size={14}/> Dynamic
+           </button>
+           <button type="button" onClick={() => setPricingMode('combo')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'combo' ? "bg-indigo-600 text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
+             <Layers size={14}/> Combo
+           </button>
+           <button type="button" onClick={() => setPricingMode('manual')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'manual' ? "bg-amber-600 text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
+             <Edit2 size={14}/> Manual
+           </button>
+        </div>
+
         <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
           <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
@@ -292,7 +335,7 @@ export default function CreateInvoicePage() {
                       <SelectValue placeholder="Search existing..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {clients?.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name} ({c.phone})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
@@ -322,10 +365,16 @@ export default function CreateInvoicePage() {
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
               <ShoppingCart size={12} /> Product & Service Entry
             </CardTitle>
-            <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-indigo-600">Combined Pricing</Label>
-               <Switch checked={isCombinedPricing} onCheckedChange={setIsCombinedPricing} className="scale-75" />
-            </div>
+            {pricingMode === 'combo' && (
+               <Select onValueChange={handleAddPackage}>
+                  <SelectTrigger className="h-7 w-40 bg-white border-indigo-200 text-indigo-600 text-[9px] font-black uppercase rounded-lg">
+                    <SelectValue placeholder="Import Package..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {packages?.map(p => <SelectItem key={p.id} value={p.id} className="text-[10px] font-bold">{p.name}</SelectItem>)}
+                  </SelectContent>
+               </Select>
+            )}
           </CardHeader>
           <CardContent className="p-5 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border">
@@ -335,7 +384,7 @@ export default function CreateInvoicePage() {
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Select Item</Label>
                     <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                       <SelectTrigger className="h-9 bg-white border-gray-200">
-                        <SelectValue placeholder="Choose product/service..." />
+                        <SelectValue placeholder="Choose service..." />
                       </SelectTrigger>
                       <SelectContent>
                         {services?.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold">{s.title}</SelectItem>)}
@@ -366,7 +415,7 @@ export default function CreateInvoicePage() {
                     <Select value={manualItem.unit} onValueChange={v => setManualItem({...manualItem, unit: v})}>
                       <SelectTrigger className="h-9 bg-white rounded-lg px-2 text-[10px] font-bold"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
+                        {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -385,43 +434,27 @@ export default function CreateInvoicePage() {
                   <TableRow className="border-none">
                     <TableHead className="text-[9px] font-black uppercase py-3">Item Name</TableHead>
                     <TableHead className="text-[9px] font-black uppercase text-center w-24">Unit/Area</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-center w-24">Unit</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-right w-24">Rate</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-right w-28">Discount (৳)</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-right w-28">Net Total</TableHead>
+                    <TableHead className="text-[9px] font-black uppercase text-right w-24">Normal Rate</TableHead>
+                    <TableHead className="text-[9px] font-black uppercase text-right w-28">Net Amount</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => (
                     <TableRow key={item.id} className="hover:bg-gray-50/30">
-                      <TableCell className="py-3">
-                        <p className="font-bold text-[11px] text-gray-900 uppercase">{item.name}</p>
-                      </TableCell>
+                      <TableCell className="py-3 font-bold text-[11px] text-gray-900 uppercase">{item.name}</TableCell>
                       <TableCell>
                         <Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', parseInt(e.target.value) || 0)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white shadow-inner rounded-lg" />
                       </TableCell>
-                      <TableCell>
-                        <Select value={item.unit} onValueChange={v => updateItemField(item.id, 'unit', v)}>
-                          <SelectTrigger className="h-7 w-20 mx-auto text-[9px] font-black uppercase bg-white"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour', 'Room'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-black uppercase">{u}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                      <TableCell className="text-right text-[11px] font-black text-gray-400">
+                        {pricingMode === 'dynamic' ? `৳${item.price.toLocaleString()}` : '---'}
                       </TableCell>
-                      <TableCell>
-                        <Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', parseFloat(e.target.value) || 0)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" />
+                      <TableCell className="text-right font-black text-[11px] text-gray-900">
+                        {pricingMode === 'dynamic' ? `৳${(item.price * item.quantity).toLocaleString()}` : '---'}
                       </TableCell>
-                      <TableCell>
-                        <Input type="number" value={item.discount || 0} onChange={e => updateItemField(item.id, 'discount', parseFloat(e.target.value) || 0)} className="h-7 w-24 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" />
-                      </TableCell>
-                      <TableCell className="text-right font-black text-[11px] text-gray-900">৳{item.total?.toFixed(2)}</TableCell>
                       <TableCell><button type="button" onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={14}/></button></TableCell>
                     </TableRow>
                   ))}
-                  {items.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="py-8 text-center text-gray-300 italic text-[10px] uppercase tracking-widest">No items added to bill.</TableCell></TableRow>
-                  )}
                 </TableBody>
               </Table>
             </div>
@@ -433,46 +466,21 @@ export default function CreateInvoicePage() {
              <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
                 <CardHeader className="bg-emerald-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
                    <CardTitle className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-emerald-700">
-                      <Wallet size={12} /> Settlement & Initial Payment
+                      <Wallet size={12} /> Transaction Log
                    </CardTitle>
                 </CardHeader>
                 <CardContent className="p-5 space-y-4">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Amount Paid (৳)</Label>
-                        <div className="relative">
-                           <Banknote size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
-                           <Input 
-                              type="number" 
-                              value={payment.paidAmount} 
-                              onChange={e => setPayment({...payment, paidAmount: e.target.value})} 
-                              className="h-10 pl-9 font-black text-emerald-700 bg-emerald-50/20 border-emerald-100" 
-                              placeholder="0.00" 
-                           />
-                        </div>
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Amount Paid Today (৳)</Label>
+                        <Input type="number" value={payment.paidAmount} onChange={e => setPayment({...payment, paidAmount: e.target.value})} className="h-10 font-black text-emerald-700 bg-emerald-50/20 border-emerald-100" />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Payment Channel</Label>
+                        <Label className="text-[9px] font-black uppercase text-gray-400">Gateway</Label>
                         <Select value={payment.method} onValueChange={v => setPayment({...payment, method: v})}>
                            <SelectTrigger className="h-10 bg-white border-gray-200 font-bold text-xs"><SelectValue /></SelectTrigger>
-                           <SelectContent>
-                              {['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                           </SelectContent>
+                           <SelectContent>{['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                         </Select>
-                      </div>
-                   </div>
-                   <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-gray-400">Terms & Conditions</Label>
-                      <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3 shadow-inner">
-                        {config.terms.map((term: string, i: number) => (
-                          <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
-                            <Input value={term} onChange={e => updateTerm(i, e.target.value)} className="h-8 border-none bg-white text-[10px] font-medium" />
-                            <button type="button" onClick={() => removeTerm(i)} className="p-1.5 text-gray-300 hover:text-red-500 group-hover:opacity-100 opacity-0"><X size={12}/></button>
-                          </div>
-                        ))}
-                        <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary transition-all">
-                          <Plus size={12}/> Add Custom Rule
-                        </button>
                       </div>
                    </div>
                 </CardContent>
@@ -482,26 +490,28 @@ export default function CreateInvoicePage() {
           <div className="lg:col-span-5">
             <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
               <CardContent className="p-6 md:p-8 space-y-5">
-                {!isCombinedPricing ? (
+                {pricingMode === 'dynamic' ? (
                   <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <span>Gross Subtotal</span>
-                    <span>৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                    <span>Base Subtotal</span>
+                    <span>৳{totals.calculatedSubtotal.toLocaleString()}</span>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                      <span>Individual Total</span>
-                      <span className="text-gray-400 line-through">৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                      <span>Service List Total</span>
+                      <span className="text-gray-400 line-through">৳{totals.calculatedSubtotal.toLocaleString()}</span>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-indigo-700 ml-1">Combo Package Price (৳)</Label>
-                      <Input type="number" value={packagePrice} onChange={e => setPackagePrice(e.target.value)} placeholder="0.00" className="h-12 bg-white border-none rounded-xl font-black text-lg text-indigo-700 shadow-inner" />
+                      <Label className="text-[10px] font-black uppercase text-indigo-700 ml-1">
+                          {pricingMode === 'combo' ? 'Grouped Bundle Price' : 'Custom Override Bill'} (৳)
+                      </Label>
+                      <Input type="number" value={customPrice} onChange={e => setCustomPrice(e.target.value)} placeholder="0.00" className="h-12 bg-white border-none rounded-xl font-black text-lg text-indigo-700 shadow-inner" />
                     </div>
                   </div>
                 )}
                 
                 <div className="flex justify-between items-center gap-4">
-                   <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Global Adjustment</span>
+                   <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Discount</span>
                    <div className="flex gap-1">
                       <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
                       <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
@@ -513,21 +523,10 @@ export default function CreateInvoicePage() {
                 <div className="space-y-3 pt-6 border-t border-gray-200">
                   <div className="flex justify-between items-end">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Grand Final Value</span>
-                      <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toFixed(2)}</span>
+                      <span className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Net Final Bill</span>
+                      <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toLocaleString()}</span>
                     </div>
                     <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-4 border-t border-dashed border-gray-200">
-                    <div className="flex flex-col">
-                       <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Paid Today</span>
-                       <span className="text-lg font-black text-emerald-700">৳{totals.initialPaid.toLocaleString()}</span>
-                    </div>
-                    <div className="flex flex-col text-right">
-                       <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">Net Arrears Due</span>
-                       <span className="text-lg font-black text-rose-600">৳{totals.dueAmount.toLocaleString()}</span>
-                    </div>
                   </div>
                 </div>
               </CardContent>

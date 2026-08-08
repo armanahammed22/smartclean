@@ -138,7 +138,9 @@ function InvoiceViewContent() {
 
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
-  const isCombined = invoice.isCombinedPricing === true;
+  
+  // Advanced Pricing Logic Visibility
+  const isCombined = invoice.pricingMode === 'combo' || invoice.pricingMode === 'manual';
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -254,7 +256,9 @@ function InvoiceViewContent() {
                   
                   {isCombined && (
                     <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">Combo Package Valuation</td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">
+                        {invoice.pricingMode === 'combo' ? 'Bundle Package Pricing' : 'Adjusted Project Valuation'}
+                      </td>
                       <td className="py-3 px-4 text-right font-black text-sm text-[#081621]">৳{invoice.subtotal?.toLocaleString()}</td>
                     </tr>
                   )}
