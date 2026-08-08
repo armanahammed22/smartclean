@@ -35,7 +35,9 @@ const PROTECTED_DOCS = [
   'homepage_sections', 'custom_grid_modules', 'pages_management',
   'landing_pages', 'quick_actions', 'quick_links', 'campaigns',
   'invoices', 'coupons', 'team_members', 'attendance_logs',
-  'expense_claims', 'leave_requests', 'quotations', 'payment_methods'
+  'expense_claims', 'leave_requests', 'quotations', 'payment_methods',
+  'site_stats', 'product_qna', 'referrals', 'staff_salary_records',
+  'payroll_records', 'document_design'
 ];
 
 /**
@@ -119,7 +121,7 @@ export function useDoc<T = any>(
             }
 
             if (errorCode === 'permission-denied') {
-              const isProtected = PROTECTED_DOCS.some(pd => currentPath.includes(pd));
+              const isProtected = PROTECTED_DOCS.some(pd => currentPath.toLowerCase().includes(pd.toLowerCase()));
               const contextualError = new FirestorePermissionError({
                 operation: 'get',
                 path: currentPath,

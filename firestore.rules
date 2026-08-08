@@ -7,7 +7,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Comprehensive Admin Check
+    // Comprehensive Admin Check (Matches src/lib/admin-config.ts)
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'Q8QpZP1GzzWf2f2K6WTe476PcD92' ||
@@ -23,11 +23,15 @@ service cloud.firestore {
     }
 
     // 🌍 PUBLIC ACCESS (Read for everyone, Write for Admin)
+    match /site_settings/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /site_stats/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /payment_methods/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /categories/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /subcategories/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /childcategories/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /master_attributes/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /products/{document=**} { allow read: if true; allow write: if isAdmin(); }
+    match /product_qna/{document=**} { allow read: if true; allow write: if isSignedIn(); }
     match /services/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /service_packages/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /sub_services/{document=**} { allow read: if true; allow write: if isAdmin(); }
@@ -39,7 +43,6 @@ service cloud.firestore {
     match /variant_types/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /service_areas/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /subscription_plans/{document=**} { allow read: if true; allow write: if isAdmin(); }
-    match /site_settings/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /hero_banners/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
     match /marketing_offers/{document=**} { allow read: if true; allow write: if isAdmin(); }
@@ -75,8 +78,13 @@ service cloud.firestore {
     }
 
     match /invoices/{id} {
-      allow read: if true; // Invoices are usually public via link
+      allow read: if true; // Invoices are public via number
       allow write: if isAdmin();
+    }
+
+    match /referrals/{id} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.referrerId == request.auth.uid);
     }
 
     // HRM & Field Operations
@@ -93,29 +101,9 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
     }
-    match /staff_earnings/{id} { allow read: if isSignedIn() && (resource.data.staffId == request.auth.uid || isAdmin()); allow write: if isAdmin(); }
-    match /staff_availability/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (request.auth.uid == id || isAdmin()); }
-    
-    // CRM
-    match /leads/{id} { allow read, write: if isAdmin(); }
-    match /custom_requests/{id} { 
-      allow create: if true; 
-      allow read: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid); 
-      allow update: if isAdmin(); 
-    }
-    
-    // Finance
-    match /finance_ledger/{id} { allow read, write: if isAdmin(); }
-    match /finance_accounts/{id} { allow read, write: if isAdmin(); }
-    match /finance_staff_salaries/{id} { allow read, write: if isAdmin(); }
-    
-    // Partners & Vendors
-    match /partners/{id} { allow read, write: if isAdmin(); }
-    match /vendor_profiles/{id} { allow read: if true; allow write: if isAdmin(); }
-    match /couriers/{id} { allow read, write: if isAdmin(); }
     
     // Tracking & Analytics
-    match /tracking_logs/{id} { allow create: if true; allow read, write: if isAdmin(); }
+    match /tracking_logs/{id} { allow create: if true; allow read: if isAdmin(); }
     match /live_locations/{id} { allow read: if true; allow write: if isSignedIn(); }
   }
 }

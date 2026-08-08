@@ -21,6 +21,8 @@ export interface UseCollectionResult<T> {
 }
 
 // 🛡️ COMPREHENSIVE PROTECTED COLLECTIONS LIST
+// Any collection NOT in this list that triggers a permission error will cause a fatal UI crash (Next.js Error Overlay).
+// Admin/Sensitive collections should be in this list to ensure a graceful error handling.
 const PROTECTED_COLLECTIONS = [
   'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
   'employee_profiles', 'staff_earnings', 'staff_availability',
@@ -36,7 +38,9 @@ const PROTECTED_COLLECTIONS = [
   'homepage_sections', 'custom_grid_modules', 'pages_management',
   'landing_pages', 'quick_actions', 'quick_links', 'campaigns',
   'invoices', 'coupons', 'team_members', 'attendance_logs',
-  'expense_claims', 'leave_requests', 'quotations', 'payment_methods'
+  'expense_claims', 'leave_requests', 'quotations', 'payment_methods',
+  'site_stats', 'product_qna', 'referrals', 'staff_salary_records',
+  'payroll_records', 'document_design'
 ];
 
 function extractPath(target: any): string {
@@ -122,11 +126,12 @@ export function useCollection<T = any>(
             }
 
             if (errorCode === 'permission-denied') {
-              const isProtected = PROTECTED_COLLECTIONS.some(pc => currentPath.includes(pc));
+              const isProtected = PROTECTED_COLLECTIONS.some(pc => currentPath.toLowerCase().includes(pc.toLowerCase()));
               const contextualError = new FirestorePermissionError({ operation: 'list', path: currentPath });
               
               setError(contextualError);
               
+              // Only emit to global listener if it's NOT in our protected fallback list
               if (!isProtected && currentPath !== 'query') {
                 errorEmitter.emit('permission-error', contextualError);
               }

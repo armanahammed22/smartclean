@@ -108,9 +108,7 @@ import { AdminBottomNav } from '@/components/admin/admin-bottom-nav';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/components/providers/language-provider';
-
-const BOOTSTRAP_ADMIN_UIDS = ['Q8QpZP1GzzWf2f2K6WTe476PcD92'];
-const BOOTSTRAP_ADMIN_EMAIL = 'smartclean422@gmail.com';
+import { BOOTSTRAP_ADMIN_UIDS, BOOTSTRAP_ADMIN_EMAIL, isUserAdmin } from '@/lib/admin-config';
 
 const STORAGE_KEY = 'admin_sidebar_collapsed';
 
@@ -279,13 +277,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
   
-  // Comprehensive Admin Check
-  const isAdmin = useMemo(() => {
-    if (!user) return false;
-    return !!adminRole || 
-           BOOTSTRAP_ADMIN_UIDS.includes(user.uid) || 
-           user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
-  }, [adminRole, user]);
+  // 🛡️ Comprehensive Admin Guard
+  const isAdmin = useMemo(() => isUserAdmin(user, adminRole), [adminRole, user]);
 
   useEffect(() => {
     if (!isUserLoading && !user) router.replace('/login');
@@ -295,8 +288,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
-  const layoutConfigRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_sidebar') : null, [db]);
-  const { data: sidebarConfig } = useDoc(layoutConfigRef);
   const appearanceRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'admin_appearance') : null, [db]);
   const { data: appearance } = useDoc(appearanceRef);
 
@@ -415,7 +406,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ...g,
         items: (g.items || []).filter((i: any) => !i.hide)
       }));
-  }, [sidebarConfig, t, settings]);
+  }, [t, settings]);
 
   if (isUserLoading || roleLoading || !mounted) return <div className="h-screen flex flex-col items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!user || !isAdmin) return null;
@@ -434,7 +425,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-4">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild><Button variant="ghost" size="icon" className="lg:hidden"><Menu size={22} /></Button></SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-[#08101b] border-none w-72">
+              <SheetContent side="left" className="p-0 bg-[#081621] border-none w-72">
                 <SheetHeader className="sr-only"><SheetTitle>Admin Menu</SheetTitle></SheetHeader>
                 <SidebarContent collapsed={false} closeMobile={()=>setIsMobileMenuOpen(false)} pathname={pathname} NAV_GROUPS={NAV_GROUPS} expandedGroups={expandedGroups} toggleGroup={(id:string)=>setExpandedGroups(p=>({...p,[id]:!p[id]}))} displayLogo={displayLogo} settings={settings} appearance={appearance} onLogout={()=>setIsLogoutDialogOpen(true)} t={t} />
               </SheetContent>
