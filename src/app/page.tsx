@@ -32,8 +32,10 @@ const GridSkeleton = ({ count = 6 }) => (
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="space-y-3 p-4 bg-white rounded-[2rem] border border-gray-100">
         <Skeleton className="aspect-square w-full rounded-2xl" />
-        <Skeleton className="h-4 w-3/4 rounded" />
-        <Skeleton className="h-4 w-1/2 rounded" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-3/4 rounded" />
+          <Skeleton className="h-4 w-1/2 rounded" />
+        </div>
       </div>
     ))}
   </div>
@@ -51,11 +53,10 @@ const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardSt
   // Optimized Fetching based on section type
   const targetCol = type === 'products_dynamic' ? 'products' : (type === 'services_dynamic' ? 'services' : 'sub_services');
   
-  // Build query in memory to avoid index complexity where possible
   const dataQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, targetCol), where('status', '==', 'Active'), limit(50));
-  }, [db, targetCol]);
+    return query(collection(db, targetCol), where('status', '==', 'Active'), limit(config.limit || 8));
+  }, [db, targetCol, config.limit]);
 
   const { data: items, isLoading } = useCollection(dataQuery);
 
@@ -69,7 +70,7 @@ const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardSt
       list = list.filter((p: any) => config.manualIds.includes(p.id));
     }
     
-    return list.slice(0, config.limit || 12);
+    return list;
   }, [items, config]);
 
   if (isLoading) return (
@@ -126,20 +127,18 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  // 1. Structure & Config (Required for Shell)
   const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
   const { data: settings } = useDoc(settingsRef);
 
   const sectionsRef = useMemoFirebase(() => db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const { data: activeLayoutSections, isLoading: layoutLoading } = useCollection(sectionsRef);
 
-  const bannersRef = useMemoFirebase(() => db ? collection(db, 'hero_banners') : null, [db]);
+  const bannersRef = useMemoFirebase(() => db ? query(collection(db, 'hero_banners'), where('isActive', '==', true)) : null, [db]);
   const { data: allBanners } = useCollection(bannersRef);
 
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const { data: cardStyles } = useDoc(stylesRef);
 
-  // Other structural dynamic data
   const quickLinksRef = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
   const { data: quickLinks } = useCollection(quickLinksRef);
 
@@ -152,8 +151,8 @@ export default function SmartCleanHomePage() {
   const topNavRef = useMemoFirebase(() => db ? query(collection(db, 'top_nav_categories'), orderBy('order', 'asc')) : null, [db]);
   const { data: topCategories } = useCollection(topNavRef);
 
-  const mainBanners = useMemo(() => allBanners?.filter(b => b.isActive && (b.type === 'main' || !b.type)).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
-  const sidePromos = useMemo(() => allBanners?.filter(b => b.isActive && b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
+  const mainBanners = useMemo(() => allBanners?.filter(b => b.type === 'main' || !b.type).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
+  const sidePromos = useMemo(() => allBanners?.filter(b => b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
 
   if (!mounted) return null;
 
@@ -227,7 +226,6 @@ export default function SmartCleanHomePage() {
           activeLayoutSections?.map((section: any) => {
             const type = section.type;
             
-            // Render non-data sections first
             if (type === 'top_nav_links') {
               return topCategories?.length ? (
                 <section key={section.id} className="px-4 py-4">
@@ -301,7 +299,6 @@ export default function SmartCleanHomePage() {
             if (type === 'team_grid') return <TeamSection key={section.id} />;
             if (type === 'campaign') return <CampaignSection key={section.id} />;
 
-            // ⚡ Data Intensive Sections: Each component fetches its own data independently
             if (['products_dynamic', 'services_dynamic', 'sub_services_custom'].includes(type)) {
               return (
                 <section key={section.id} className="py-2">
