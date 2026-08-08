@@ -19,11 +19,23 @@ export interface UseDocResult<T> {
   error: FirestoreError | Error | null;
 }
 
+// 🛡️ COMPREHENSIVE PROTECTED DOCS LIST
 const PROTECTED_DOCS = [
   'orders', 'bookings', 'leads', 'users', 'vendor_profiles', 
   'employee_profiles', 'staff_earnings', 'staff_availability',
   'tracking_logs', 'live_locations', 'roles_admins', 'roles_employees',
-  'delivery_options'
+  'delivery_options', 'partner_projects', 'partners', 'finance_ledger',
+  'finance_accounts', 'finance_staff_salaries', 'cleaning_projects',
+  'work_entries', 'support_tickets', 'custom_requests', 'site_settings',
+  'hero_banners', 'categories', 'subcategories', 'childcategories',
+  'master_attributes', 'products', 'services', 'service_packages',
+  'sub_services', 'advanced_offers', 'smart_pricing_rules', 'brands',
+  'reusable_features', 'reusable_specs', 'variant_types', 'service_areas',
+  'subscription_plans', 'offers', 'marketing_offers', 'top_nav_categories',
+  'homepage_sections', 'custom_grid_modules', 'pages_management',
+  'landing_pages', 'quick_actions', 'quick_links', 'campaigns',
+  'invoices', 'coupons', 'team_members', 'attendance_logs',
+  'expense_claims', 'leave_requests', 'quotations', 'payment_methods'
 ];
 
 /**

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
@@ -279,10 +278,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const adminRoleRef = useMemoFirebase(() => (db && user) ? doc(db, 'roles_admins', user.uid) : null, [db, user]);
   const { data: adminRole, isLoading: roleLoading } = useDoc(adminRoleRef);
-  const isAdmin = !!adminRole || (user && BOOTSTRAP_ADMIN_UIDS.includes(user.uid)) || (user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL);
+  
+  // Comprehensive Admin Check
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    return !!adminRole || 
+           BOOTSTRAP_ADMIN_UIDS.includes(user.uid) || 
+           user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
+  }, [adminRole, user]);
 
   useEffect(() => {
     if (!isUserLoading && !user) router.replace('/login');
+    // Ensure we wait for role loading to prevent flickering permission errors
     if (!isUserLoading && !roleLoading && user && !isAdmin) router.replace('/');
   }, [user, isAdmin, isUserLoading, roleLoading, router]);
 
@@ -432,7 +439,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <SidebarContent collapsed={false} closeMobile={()=>setIsMobileMenuOpen(false)} pathname={pathname} NAV_GROUPS={NAV_GROUPS} expandedGroups={expandedGroups} toggleGroup={(id:string)=>setExpandedGroups(p=>({...p,[id]:!p[id]}))} displayLogo={displayLogo} settings={settings} appearance={appearance} onLogout={()=>setIsLogoutDialogOpen(true)} t={t} />
               </SheetContent>
             </Sheet>
-            <span className="text-xs font-bold text-gray-900 flex items-center gap-2">{t('admin.live_status')} <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
+            <Suspense fallback={<div className="w-20 h-4 bg-gray-100 animate-pulse rounded" />}>
+               <span className="text-xs font-bold text-gray-900 flex items-center gap-2">{t('admin.live_status')} <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
+            </Suspense>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')} className="text-[10px] font-black gap-2 h-9">
