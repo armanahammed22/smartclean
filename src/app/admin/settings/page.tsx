@@ -596,7 +596,7 @@ export default function AdminSettingsPage() {
                   <Input value={formData.apkDownloadLink} onChange={(e) => setFormData({...formData, apkDownloadLink: e.target.value})} className="h-11 bg-gray-50 border-none rounded-xl" />
                 </div>
               </CardContent>
-            </div>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
