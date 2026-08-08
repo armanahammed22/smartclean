@@ -216,7 +216,7 @@ export interface ServicePackage {
   status: 'Active' | 'Inactive';
   isPopular?: boolean;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 export interface SubService {
@@ -281,6 +281,7 @@ export interface Invoice {
   orderId?: string;
   bookingId?: string;
   projectId?: string;
+  quotationId?: string;
   customerId?: string; 
   customerInfo: {
     name: string;
@@ -309,6 +310,8 @@ export interface Invoice {
   createdAt: string;
   dueDate: string | null;
   publicLink?: string;
+  isCombinedPricing?: boolean;
+  combinedPrice?: number;
 }
 
 export interface User {
@@ -354,6 +357,8 @@ export interface Booking {
   createdAt: string;
   isPackageBooking?: boolean;
   packageId?: string;
+  isCombinedPricing?: boolean;
+  combinedPrice?: number;
 }
 
 export interface CustomRequest {
@@ -422,6 +427,8 @@ export interface Quotation {
   publicLink?: string;
   createdAt: string;
   updatedAt: string;
+  isCombinedPricing?: boolean;
+  combinedPrice?: number;
 }
 
 export interface LedgerEntry {

@@ -21,16 +21,10 @@ import {
   User as UserIcon, 
   ShoppingCart,
   X,
-  FileText,
   Calculator,
   Search,
-  Check,
-  UserPlus,
-  PackagePlus,
-  ShieldCheck,
-  ReceiptText,
-  Wallet,
-  Banknote
+  Banknote,
+  ReceiptText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -49,14 +43,18 @@ export default function CreateInvoicePage() {
   // Feature Modes
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
+  const [isCombinedPricing, setIsCombinedPricing] = useState(false);
 
+  // Form State
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
+  const [packagePrice, setPackagePrice] = useState('');
+  
   // Selection state
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
 
   const [items, setItems] = useState<any[]>([]);
-  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
   const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
   const [payment, setPayment] = useState({ paidAmount: '0', method: 'Cash', notes: '' });
   const [config, setConfig] = useState({ 
@@ -139,7 +137,9 @@ export default function CreateInvoicePage() {
   };
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
+    const calculatedSubtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
+    const subtotal = isCombinedPricing ? (parseFloat(packagePrice) || 0) : calculatedSubtotal;
+    
     const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
     
     let globalDiscountAmt = pricing.discountType === 'percentage' 
@@ -150,8 +150,8 @@ export default function CreateInvoicePage() {
     const initialPaid = parseFloat(payment.paidAmount) || 0;
     const dueAmount = Math.max(0, currentTotal - initialPaid);
 
-    return { subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
-  }, [items, pricing, payment]);
+    return { calculatedSubtotal, subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
+  }, [items, pricing, payment, isCombinedPricing, packagePrice]);
 
   const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
   const updateTerm = (idx: number, val: string) => {
@@ -205,6 +205,8 @@ export default function CreateInvoicePage() {
         customerInfo: { ...customer, id: currentCustomerId },
         items,
         subtotal: totals.subtotal,
+        isCombinedPricing,
+        combinedPrice: isCombinedPricing ? totals.subtotal : null,
         discount: pricing.discount,
         discountType: pricing.discountType,
         deliveryCharge: pricing.delivery,
@@ -321,8 +323,8 @@ export default function CreateInvoicePage() {
               <ShoppingCart size={12} /> Product & Service Entry
             </CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-primary">Manual Entry</Label>
-               <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
+               <Label className="text-[8px] font-black uppercase text-indigo-600">Combined Pricing</Label>
+               <Switch checked={isCombinedPricing} onCheckedChange={setIsCombinedPricing} className="scale-75" />
             </div>
           </CardHeader>
           <CardContent className="p-5 space-y-5">
@@ -332,7 +334,7 @@ export default function CreateInvoicePage() {
                   <div className="md:col-span-7 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Select Item</Label>
                     <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                      <SelectTrigger className="h-9 bg-white">
+                      <SelectTrigger className="h-9 bg-white border-gray-200">
                         <SelectValue placeholder="Choose product/service..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -480,10 +482,24 @@ export default function CreateInvoicePage() {
           <div className="lg:col-span-5">
             <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
               <CardContent className="p-6 md:p-8 space-y-5">
-                <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  <span>Gross Valuation</span>
-                  <span>৳{totals.subtotal.toFixed(2)}</span>
-                </div>
+                {!isCombinedPricing ? (
+                  <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <span>Gross Subtotal</span>
+                    <span>৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                      <span>Individual Total</span>
+                      <span className="text-gray-400 line-through">৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-indigo-700 ml-1">Combo Package Price (৳)</Label>
+                      <Input type="number" value={packagePrice} onChange={e => setPackagePrice(e.target.value)} placeholder="0.00" className="h-12 bg-white border-none rounded-xl font-black text-lg text-indigo-700 shadow-inner" />
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex justify-between items-center gap-4">
                    <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Global Adjustment</span>
                    <div className="flex gap-1">

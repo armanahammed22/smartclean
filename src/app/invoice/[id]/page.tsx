@@ -138,6 +138,7 @@ function InvoiceViewContent() {
 
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
+  const isCombined = invoice.isCombinedPricing === true;
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -170,7 +171,6 @@ function InvoiceViewContent() {
 
         <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
-          {/* 💎 DYNAMIC PAYMENT STATUS SEAL */}
           {statusSealUrl && (
             <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
               <Image src={statusSealUrl} alt="Status Seal" fill className="object-contain" unoptimized />
@@ -224,15 +224,15 @@ function InvoiceViewContent() {
               </div>
             </div>
 
-            <div className={cn("overflow-hidden rounded-xl", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+            <div className={cn("overflow-hidden rounded-xl mb-2", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
               <table className="w-full border-collapse text-[10px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
                     <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
-                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service Description</th>
+                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Description</th>
                     <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
-                    <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Unit Price</th>
-                    <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Amount</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Rate</th>
+                    <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Total</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
@@ -243,23 +243,48 @@ function InvoiceViewContent() {
                         <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                       </td>
                       <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price?.toLocaleString()}</td>
-                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>
+                        {isCombined ? '---' : `৳${item.price?.toLocaleString()}`}
+                      </td>
+                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>
+                        {isCombined ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}
+                      </td>
                     </tr>
                   ))}
                   
-                  <tr className="border-t-[3px] border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
-                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Total Payable</td>
+                  {isCombined && (
+                    <tr className="border-t-2 border-[#081621] bg-gray-50/50">
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">Combo Package Valuation</td>
+                      <td className="py-3 px-4 text-right font-black text-sm text-[#081621]">৳{invoice.subtotal?.toLocaleString()}</td>
+                    </tr>
+                  )}
+
+                  {!isCombined && (
+                    <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
+                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] tracking-widest">Gross Subtotal</td>
+                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
+                    </tr>
+                  )}
+
+                  {invoice.discount > 0 && (
+                    <tr className="border-t border-gray-100 bg-white">
+                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] text-rose-500">Adjustment / Discount</td>
+                      <td className="py-2 px-4 text-right font-black text-xs text-rose-500">-৳{invoice.discount?.toLocaleString()}</td>
+                    </tr>
+                  )}
+                  
+                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
+                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Grand Total Payable</td>
                     <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
                   </tr>
                   
                   <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Received (-)</td>
+                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Received Payment (-)</td>
                     <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
                   </tr>
 
                   <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Outstanding Balance</td>
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
                     <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                   </tr>
                 </tbody>
@@ -267,7 +292,7 @@ function InvoiceViewContent() {
             </div>
 
             <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
-              <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
+              <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Total Amount (In words):</p>
               <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(invoice.total) || 0)}"</p>
             </div>
 
@@ -291,7 +316,6 @@ function InvoiceViewContent() {
                 <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
               <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
-                {/* 🏆 AUTHORITY SEAL PLACEMENT */}
                 {d.authoritySealUrl && (
                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none">
                     <Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized />

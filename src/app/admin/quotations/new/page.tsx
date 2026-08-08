@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { collection, addDoc, query, orderBy, where, doc, setDoc, updateDoc, getDocs, limit } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, where, doc, setDoc, updateDoc, getDocs, limit, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,14 +22,10 @@ import {
   ShoppingCart,
   X,
   FileSpreadsheet,
-  ListChecks,
-  Zap,
   Calculator,
   Search,
   Check,
-  UserPlus,
-  PackagePlus,
-  Calendar
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -47,12 +44,14 @@ export default function CreateQuotationPage() {
   // Mode States
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
+  const [isCombinedPricing, setIsCombinedPricing] = useState(false);
   const [syncToBooking, setSyncToBooking] = useState(true);
 
   // Form State
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
+  const [packagePrice, setPackagePrice] = useState('');
   
-  // Manual Item Helper State
+  // Selection Helpers
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
@@ -159,17 +158,17 @@ export default function CreateQuotationPage() {
   };
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
-    const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
+    const calculatedSubtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
+    const subtotal = isCombinedPricing ? (parseFloat(packagePrice) || 0) : calculatedSubtotal;
     
-    let globalDiscountAmt = pricing.discountType === 'percentage' 
+    let discountAmt = pricing.discountType === 'percentage' 
       ? (subtotal * (pricing.discount / 100)) 
       : pricing.discount;
       
-    const finalTotal = subtotal - itemDiscounts - globalDiscountAmt + (pricing.additional || 0);
+    const finalTotal = Math.max(0, subtotal - discountAmt + (pricing.additional || 0));
 
-    return { subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, finalTotal) };
-  }, [items, pricing]);
+    return { calculatedSubtotal, subtotal, discountAmt, total: finalTotal };
+  }, [items, pricing, isCombinedPricing, packagePrice]);
 
   const handleSave = async (status: string) => {
     if (!db) return;
@@ -197,6 +196,7 @@ export default function CreateQuotationPage() {
             address: customer.address,
             role: 'customer',
             status: 'active',
+            totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
@@ -210,11 +210,13 @@ export default function CreateQuotationPage() {
         quoteNumber,
         customerId: currentCustomerId,
         customerInfo: { ...customer, id: currentCustomerId },
-        items: items.map(i => ({ ...i, price: parseFloat(i.price) || 0, quantity: parseFloat(i.quantity) || 1, discount: parseFloat(i.discount) || 0 })),
+        items,
         subtotal: totals.subtotal,
         discount: pricing.discount,
         discountType: pricing.discountType,
         total: totals.total,
+        isCombinedPricing,
+        combinedPrice: isCombinedPricing ? totals.subtotal : null,
         status,
         ...config,
         createdAt: new Date().toISOString(),
@@ -243,7 +245,7 @@ export default function CreateQuotationPage() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border hover:bg-gray-50">
             <ArrowLeft size={16} />
           </Button>
-          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight">Create Quotation</h1>
+          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight">{quoteNumber || 'New Quotation'}</h1>
         </div>
         <div className="flex items-center gap-3">
            <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-xl border">
@@ -274,16 +276,16 @@ export default function CreateQuotationPage() {
               <div className="md:col-span-1 space-y-1.5">
                 <Label className="text-[9px] font-bold text-gray-400 uppercase">Customer Name</Label>
                 {isNewCustomer ? (
-                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Full Name" className="h-9 bg-white border-primary/20 rounded-lg shadow-sm" />
+                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Full Name" className="h-9" />
                 ) : (
                   <Select value={customer.id} onValueChange={(val) => {
                     const c = clients?.find(i => i.id === val);
                     if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', email: c.email || '', company: c.company || '', address: c.address || '' });
                   }}>
-                    <SelectTrigger className="h-9 bg-white border-gray-200 rounded-lg shadow-sm">
+                    <SelectTrigger className="h-9 bg-white border-gray-200">
                       <SelectValue placeholder="Search existing..." />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-none shadow-2xl">
+                    <SelectContent>
                       {clients?.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name} ({c.phone})</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -292,22 +294,22 @@ export default function CreateQuotationPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-bold text-gray-400 uppercase">Mobile Number</Label>
-                <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-9 rounded-lg" disabled={!isNewCustomer && customer.id !== ''} />
+                <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-9" disabled={!isNewCustomer && customer.id !== ''} />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-bold text-gray-400 uppercase">Issue Date</Label>
-                <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-9 bg-white rounded-lg text-xs" />
+                <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-9 bg-white" />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-[9px] font-bold text-gray-400 uppercase">Expiry Date</Label>
-                <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-9 bg-white rounded-lg text-xs" />
+                <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-9 bg-white" />
               </div>
               
               <div className="md:col-span-4 space-y-1.5">
                 <Label className="text-[9px] font-bold text-gray-400 uppercase">Detailed Address</Label>
-                <Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, District" className="h-9 bg-white rounded-lg" />
+                <Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, District" className="h-9 bg-white" />
               </div>
             </div>
           </CardContent>
@@ -319,8 +321,8 @@ export default function CreateQuotationPage() {
               <ShoppingCart size={12} /> Item Selection
             </CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-primary">Manual Entry</Label>
-               <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
+               <Label className="text-[8px] font-black uppercase text-indigo-600">Combined Pricing</Label>
+               <Switch checked={isCombinedPricing} onCheckedChange={setIsCombinedPricing} className="scale-75" />
             </div>
           </CardHeader>
           <CardContent className="p-5 space-y-5">
@@ -330,7 +332,7 @@ export default function CreateQuotationPage() {
                   <div className="md:col-span-7 space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-gray-400">Catalog Items</Label>
                     <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                      <SelectTrigger className="h-9 bg-white border-gray-200 rounded-lg">
+                      <SelectTrigger className="h-9 bg-white border-gray-200">
                         <SelectValue placeholder="Choose standard service..." />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
@@ -415,9 +417,6 @@ export default function CreateQuotationPage() {
                       <TableCell><button type="button" onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={14}/></button></TableCell>
                     </TableRow>
                   ))}
-                  {items.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="py-8 text-center text-gray-300 italic text-[10px] uppercase tracking-widest">Add items above to calculate bill.</TableCell></TableRow>
-                  )}
                 </TableBody>
               </Table>
             </div>
@@ -445,17 +444,31 @@ export default function CreateQuotationPage() {
           <div className="lg:col-span-5">
             <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
               <CardContent className="p-6 md:p-8 space-y-5">
-                <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  <span>Gross Valuation</span>
-                  <span>৳{totals.subtotal.toFixed(2)}</span>
-                </div>
+                {!isCombinedPricing ? (
+                  <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <span>Gross Subtotal</span>
+                    <span>৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                      <span>Standard List Total</span>
+                      <span className="text-gray-400 line-through">৳{totals.calculatedSubtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-indigo-700 ml-1">Combo Package Price (৳)</Label>
+                      <Input type="number" value={packagePrice} onChange={e => setPackagePrice(e.target.value)} placeholder="0.00" className="h-12 bg-white border-none rounded-xl font-black text-lg text-indigo-700 shadow-inner" />
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex justify-between items-center gap-4">
                    <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Global Adjustment</span>
                    <div className="flex gap-1">
                       <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
                       <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
                          <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue /></SelectTrigger>
-                         <SelectContent className="rounded-xl"><SelectItem value="percentage" className="text-xs">%</SelectItem><SelectItem value="fixed" className="text-xs">৳</SelectItem></SelectContent>
+                         <SelectContent className="rounded-xl"><SelectItem value="percentage">%</SelectItem><SelectItem value="fixed">৳</SelectItem></SelectContent>
                       </Select>
                    </div>
                 </div>
