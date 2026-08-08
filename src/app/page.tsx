@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState, useEffect, memo } from 'react';
@@ -43,14 +44,12 @@ const GridSkeleton = ({ count = 6 }) => (
 
 /**
  * ⚡ Isolated Dynamic Data Section
- * Fetches its own data to prevent main page blocking
  */
 const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardStyles: any }) => {
   const db = useFirestore();
   const config = section.config || {};
   const type = section.type;
 
-  // Optimized Fetching based on section type
   const targetCol = type === 'products_dynamic' ? 'products' : (type === 'services_dynamic' ? 'services' : 'sub_services');
   
   const dataQuery = useMemoFirebase(() => {
@@ -109,6 +108,68 @@ const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardSt
 
 DynamicDataSection.displayName = 'DynamicDataSection';
 
+/**
+ * ⚡ Isolated Quick Links Section
+ */
+const QuickLinksSection = memo(() => {
+  const db = useFirestore();
+  const q = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
+  const { data: links, isLoading } = useCollection(q);
+
+  if (isLoading) return <div className="container mx-auto max-w-7xl px-4 py-8 grid grid-cols-4 md:grid-cols-8 gap-6">{[1,2,3,4].map(i => <Skeleton key={i} className="h-20 rounded-full" />)}</div>;
+  if (!links?.length) return null;
+
+  return (
+    <section className="px-4 py-8">
+      <div className="container mx-auto max-w-7xl grid grid-cols-4 md:grid-cols-8 gap-6">
+        {links.map(link => {
+          const Icon = ICONS[link.iconName] || Grid;
+          return (
+            <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-2 group">
+              <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
+                {link.imageUrl ? <Image src={link.imageUrl} alt={link.label} fill className="object-cover p-2" unoptimized /> : <Icon size={24} className="text-primary" />}
+              </div>
+              <span className="text-[9px] font-black uppercase text-gray-600 truncate w-full text-center">{link.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+QuickLinksSection.displayName = 'QuickLinksSection';
+
+/**
+ * ⚡ Isolated Stats Section
+ */
+const StatsSection = memo(() => {
+  const db = useFirestore();
+  const q = useMemoFirebase(() => db ? query(collection(db, 'site_stats'), orderBy('order', 'asc')) : null, [db]);
+  const { data: stats, isLoading } = useCollection(q);
+
+  if (isLoading || !stats?.length) return null;
+
+  return (
+    <section className="px-4 py-6 bg-white border-y">
+      <div className="container mx-auto max-w-7xl flex flex-wrap justify-center gap-x-12 gap-y-6">
+        {stats.map((stat: any, i: number) => {
+          const Icon = ICONS[stat.icon] || Zap;
+          return (
+            <div key={i} className="flex items-center gap-3">
+              <div className={cn("p-2.5 rounded-xl", stat.bg, stat.color)}><Icon size={18} strokeWidth={3}/></div>
+              <div>
+                <p className="text-sm font-black text-gray-900">{stat.value}</p>
+                <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">{stat.label}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+StatsSection.displayName = 'StatsSection';
+
 const getGridCols = (cols: string | undefined) => {
   const c = cols || '5';
   if (c === '2') return 'grid-cols-2';
@@ -127,9 +188,6 @@ export default function SmartCleanHomePage() {
     setMounted(true);
   }, []);
 
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
-  const { data: settings } = useDoc(settingsRef);
-
   const sectionsRef = useMemoFirebase(() => db ? query(collection(db, 'homepage_sections'), orderBy('order', 'asc')) : null, [db]);
   const { data: activeLayoutSections, isLoading: layoutLoading } = useCollection(sectionsRef);
 
@@ -139,17 +197,11 @@ export default function SmartCleanHomePage() {
   const stylesRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'card_styles') : null, [db]);
   const { data: cardStyles } = useDoc(stylesRef);
 
-  const quickLinksRef = useMemoFirebase(() => db ? query(collection(db, 'quick_links'), orderBy('order', 'asc')) : null, [db]);
-  const { data: quickLinks } = useCollection(quickLinksRef);
+  const topNavRef = useMemoFirebase(() => db ? query(collection(db, 'top_nav_categories'), orderBy('order', 'asc')) : null, [db]);
+  const { data: topCategories } = useCollection(topNavRef);
 
   const quickActionsRef = useMemoFirebase(() => db ? collection(db, 'quick_actions') : null, [db]);
   const { data: quickActions } = useCollection(quickActionsRef);
-
-  const siteStatsRef = useMemoFirebase(() => db ? query(collection(db, 'site_stats'), orderBy('order', 'asc')) : null, [db]);
-  const { data: siteStats } = useCollection(siteStatsRef);
-
-  const topNavRef = useMemoFirebase(() => db ? query(collection(db, 'top_nav_categories'), orderBy('order', 'asc')) : null, [db]);
-  const { data: topCategories } = useCollection(topNavRef);
 
   const mainBanners = useMemo(() => allBanners?.filter(b => b.type === 'main' || !b.type).sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
   const sidePromos = useMemo(() => allBanners?.filter(b => b.type === 'side').sort((a, b) => (a.order || 0) - (b.order || 0)) || [], [allBanners]);
@@ -238,25 +290,7 @@ export default function SmartCleanHomePage() {
               ) : null;
             }
 
-            if (type === 'icon_grid') {
-              return quickLinks?.length ? (
-                <section key={section.id} className="px-4 py-8">
-                  <div className="container mx-auto max-w-7xl grid grid-cols-4 md:grid-cols-8 gap-6">
-                    {quickLinks.map(link => {
-                      const Icon = ICONS[link.iconName] || Grid;
-                      return (
-                        <Link key={link.id} href={link.link || '#'} className="flex flex-col items-center gap-2 group">
-                          <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-white border shadow-sm flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110">
-                            {link.imageUrl ? <Image src={link.imageUrl} alt={link.label} fill className="object-cover p-2" unoptimized /> : <Icon size={24} className="text-primary" />}
-                          </div>
-                          <span className="text-[9px] font-black uppercase text-gray-600 truncate w-full text-center">{link.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null;
-            }
+            if (type === 'icon_grid') return <QuickLinksSection key={section.id} />;
 
             if (type === 'feature_cards') {
               return quickActions?.length ? (
@@ -275,26 +309,7 @@ export default function SmartCleanHomePage() {
               ) : null;
             }
 
-            if (type === 'trust_stats') {
-              return siteStats?.length ? (
-                <section key={section.id} className="px-4 py-6 bg-white border-y">
-                  <div className="container mx-auto max-w-7xl flex flex-wrap justify-center gap-x-12 gap-y-6">
-                    {siteStats.map((stat: any, i: number) => {
-                      const Icon = ICONS[stat.icon] || Zap;
-                      return (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className={cn("p-2.5 rounded-xl", stat.bg, stat.color)}><Icon size={18} strokeWidth={3}/></div>
-                          <div>
-                            <p className="text-sm font-black text-gray-900">{stat.value}</p>
-                            <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">{stat.label}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null;
-            }
+            if (type === 'trust_stats') return <StatsSection key={section.id} />;
 
             if (type === 'team_grid') return <TeamSection key={section.id} />;
             if (type === 'campaign') return <CampaignSection key={section.id} />;

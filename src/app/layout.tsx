@@ -76,7 +76,8 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Critical CSS Preloading */}
+        <link rel="dns-prefetch" href="https://picsum.photos" />
+        <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
         <link rel="preload" href="/globals.css" as="style" />
       </head>
       <body className="font-body antialiased min-h-screen bg-[#F8FAFC]">

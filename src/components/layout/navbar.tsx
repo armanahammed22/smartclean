@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirestore, useDoc, useMemoFirebase, useCollection, useUser } from '@/firebase';
 import { useCart } from '@/components/providers/cart-provider';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, query, where, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -32,22 +32,43 @@ export const Navbar = memo(() => {
   const layoutRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
   const { data: layout } = useDoc(layoutRef);
 
-  const productsRef = useMemoFirebase(() => (db && settings?.productsEnabled !== false) ? collection(db, 'products') : null, [db, settings]);
-  const servicesRef = useMemoFirebase(() => (db && settings?.servicesEnabled !== false) ? collection(db, 'services') : null, [db, settings]);
+  // 🚀 OPTIMIZATION: Don't fetch entire collections. Use a focused query when searching.
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const { data: products } = useCollection(productsRef);
-  const { data: services } = useCollection(servicesRef);
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
-  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
+    const delayDebounceFn = setTimeout(async () => {
+      if (!db) return;
+      setIsSearching(true);
+      try {
+        // Fetch limited products and services matching search
+        const pQuery = query(collection(db, 'products'), where('status', '==', 'Active'), limit(10));
+        const sQuery = query(collection(db, 'services'), where('status', '==', 'Active'), limit(10));
+        
+        const [pSnap, sSnap] = await Promise.all([getDocs(pQuery), getDocs(sQuery)]);
+        
+        const pItems = pSnap.docs.map(d => ({ ...d.data(), id: d.id, type: 'product' }));
+        const sItems = sSnap.docs.map(d => ({ ...d.data(), id: d.id, type: 'service' }));
+        
+        const combined = [...pItems, ...sItems].filter(item => 
+          (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+        ).slice(0, 5);
 
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) return [];
-    const combined = [
-      ...(products?.map(p => ({ ...p, type: 'product' })) || []),
-      ...(services?.map(s => ({ ...s, type: 'service' })) || [])
-    ];
-    return combined.filter(item => (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5);
-  }, [searchQuery, products, services]);
+        setSearchResults(combined);
+      } catch (e) {
+        console.warn('Search fetch error');
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, db]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -61,6 +82,8 @@ export const Navbar = memo(() => {
     backgroundColor: layout?.header?.bgColor || '#ffffff',
     color: layout?.header?.textColor || '#081621'
   };
+
+  const displayLogo = settings?.logoUrl || PlaceHolderImages.find(img => img.id === 'app-logo')?.imageUrl;
 
   return (
     <header className="hidden lg:block w-full z-[160] sticky top-0 shadow-md transition-all duration-500" style={navStyles}>
@@ -91,11 +114,17 @@ export const Navbar = memo(() => {
               className="w-full bg-gray-50 border-none h-10 pl-10 rounded-xl focus:bg-white shadow-inner text-sm"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            {isSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" size={14} />}
           </form>
           {isSearchFocused && searchResults.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[200]">
               {searchResults.map((item: any) => (
-                <Link key={item.id} href={`/${item.type === 'product' ? 'product' : 'service'}/${item.slug || item.id}`} className="flex items-center gap-4 p-3 hover:bg-gray-50 border-b border-gray-50 last:border-none">
+                <Link 
+                  key={item.id} 
+                  href={`/${item.type === 'product' ? 'product' : 'service'}/${item.slug || item.id}`} 
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 border-b border-gray-50 last:border-none"
+                  onClick={() => setIsSearchFocused(false)}
+                >
                   <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-gray-50 shrink-0">
                     {item.imageUrl && <Image src={item.imageUrl} alt="Res" fill className="object-cover" unoptimized />}
                   </div>
@@ -126,4 +155,5 @@ export const Navbar = memo(() => {
   );
 });
 
+import { getDocs } from 'firebase/firestore';
 Navbar.displayName = 'Navbar';
