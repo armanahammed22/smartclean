@@ -41,7 +41,9 @@ import {
   MoveVertical,
   Star,
   Image as ImageIcon,
-  ShieldCheck
+  ShieldCheck,
+  AlignLeft,
+  AlignCenter
 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -155,7 +157,6 @@ export default function DocumentEnginePage() {
 
   const updateDesign = (key: string, val: any) => setDesignForm((p: any) => ({ ...p, [key]: val }));
   
-  // Quotation Term Helpers
   const addQuoteTerm = () => setQuoteForm((p: any) => ({ ...p, defaultTerms: [...p.defaultTerms, ''] }));
   const updateQuoteTerm = (idx: number, val: string) => {
     const next = [...quoteForm.defaultTerms];
@@ -164,7 +165,6 @@ export default function DocumentEnginePage() {
   };
   const removeQuoteTerm = (idx: number) => setQuoteForm((p: any) => ({ ...p, defaultTerms: p.defaultTerms.filter((_: any, i: number) => i !== idx) }));
 
-  // Invoice Term Helpers
   const addInvoiceTerm = () => setInvoiceForm((p: any) => ({ ...p, invoiceDefaultTerms: [...p.invoiceDefaultTerms, ''] }));
   const updateInvoiceTerm = (idx: number, val: string) => {
     const next = [...invoiceForm.invoiceDefaultTerms];
@@ -202,7 +202,7 @@ export default function DocumentEnginePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-4 space-y-6">
                <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-gray-100">
-                  <CardHeader className="bg-gray-50/50 p-6 border-b"><CardTitle className="text-xs font-black uppercase">Layout & Spacing</CardTitle></CardHeader>
+                  <CardHeader className="bg-gray-50/50 p-6 border-b"><CardTitle className="text-xs font-black uppercase">Layout & Header Spacing</CardTitle></CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase">Header Top Gap</Label><span className="text-[10px] font-bold text-primary">{designForm.headerPaddingTop}px</span></div>
@@ -224,16 +224,42 @@ export default function DocumentEnginePage() {
                </Card>
 
                <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-gray-100">
+                  <CardHeader className="bg-emerald-50/50 p-6 border-b">
+                    <CardTitle className="text-xs font-black uppercase flex items-center gap-2 text-emerald-900">
+                      <MoveVertical size={14} className="text-emerald-600"/> Footer Section Layout
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase text-gray-400">Footer Top Margin</Label><span className="text-[10px] font-bold text-primary">{designForm.footerMarginTop}px</span></div>
+                      <Slider value={[designForm.footerMarginTop]} max={100} step={1} onValueChange={([v]) => updateDesign('footerMarginTop', v)} />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase text-gray-400">Footer Bottom Padding</Label><span className="text-[10px] font-bold text-primary">{designForm.footerPaddingBottom}px</span></div>
+                      <Slider value={[designForm.footerPaddingBottom]} max={100} step={1} onValueChange={([v]) => updateDesign('footerPaddingBottom', v)} />
+                    </div>
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase text-gray-400">Tagline Font Size</Label><span className="text-[10px] font-bold text-primary">{designForm.taglineFontSize}px</span></div>
+                      <Slider value={[designForm.taglineFontSize]} min={6} max={24} step={0.5} onValueChange={([v]) => updateDesign('taglineFontSize', v)} />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase text-gray-400">Disclaimer Font Size</Label><span className="text-[10px] font-bold text-primary">{designForm.disclaimerFontSize}px</span></div>
+                      <Slider value={[designForm.disclaimerFontSize]} min={5} max={16} step={0.5} onValueChange={([v]) => updateDesign('disclaimerFontSize', v)} />
+                    </div>
+                  </CardContent>
+               </Card>
+
+               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white border border-gray-100">
                   <CardHeader className="bg-gray-50/50 p-6 border-b">
-                    <CardTitle className="text-xs font-black uppercase flex items-center gap-2">
-                      <Zap size={14} className="text-primary"/> Document Seals (Master)
+                    <CardTitle className="text-xs font-black uppercase flex items-center gap-2 text-[#081621]">
+                      <Zap size={14} className="text-primary"/> Document Seals & Status
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-10">
                     <div className="space-y-3">
                       <ImageUploader 
                         label="Paid Status Seal" 
-                        hint="Transparent PNG (e.g. Circular Paid Stamp)" 
+                        hint="Transparent PNG (Circular Paid Stamp)" 
                         initialUrl={designForm.paidSealUrl} 
                         onUpload={url => updateDesign('paidSealUrl', url)} 
                         aspectRatio="aspect-square w-24 mx-auto"
@@ -248,7 +274,7 @@ export default function DocumentEnginePage() {
                     <div className="space-y-3">
                       <ImageUploader 
                         label="Unpaid Status Seal" 
-                        hint="Transparent PNG (e.g. Circular Unpaid Stamp)" 
+                        hint="Transparent PNG (Circular Unpaid Stamp)" 
                         initialUrl={designForm.unpaidSealUrl} 
                         onUpload={url => updateDesign('unpaidSealUrl', url)} 
                         aspectRatio="aspect-square w-24 mx-auto"
@@ -282,10 +308,10 @@ export default function DocumentEnginePage() {
                <div className="flex flex-col items-center gap-4">
                   <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full border shadow-sm">
                      <Monitor size={14} className="text-primary"/>
-                     <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">A4 Scale Real-time Preview (65%)</span>
+                     <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">A4 Scale Real-time Preview (75%)</span>
                   </div>
                   <div 
-                    className="bg-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative origin-top scale-[0.65] lg:scale-[0.7] xl:scale-[0.8] transition-all duration-300 overflow-hidden"
+                    className="bg-white shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative origin-top scale-[0.65] lg:scale-[0.75] transition-all duration-300 overflow-hidden"
                     style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', borderTop: `14px solid ${designForm.primaryColor}`, borderRadius: '0 0 1.5rem 1.5rem', display: 'flex', flexDirection: 'column' }}
                   >
                     {/* Mock Paid Seal in Preview */}
@@ -295,18 +321,20 @@ export default function DocumentEnginePage() {
                       </div>
                     )}
 
-                    <header className="px-12 flex justify-between items-start border-b-2 border-gray-50" style={{ paddingTop: `${designForm.headerPaddingTop}px`, paddingBottom: `${designForm.headerPaddingBottom}px` }}>
+                    <header className="px-12 flex justify-between items-start border-b-2 border-gray-50 shrink-0" style={{ paddingTop: `${designForm.headerPaddingTop}px`, paddingBottom: `${designForm.headerPaddingBottom}px` }}>
                        <div className="flex gap-4">
                          <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-gray-300"><Layers size={24}/></div>
                          <div className="text-left"><h2 className="font-black text-2xl uppercase text-[#081621]">SMART CLEAN</h2><p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: designForm.primaryColor }}>Professional Infrastructure</p></div>
                        </div>
                        <div className="text-right space-y-1"><p className="text-[10px] font-bold text-gray-700 uppercase">MOHAKHALI, DHAKA, BD</p></div>
                     </header>
-                    <div className="px-12 py-10 space-y-8 flex-1" style={{ marginTop: `${designForm.sectionSpacing}px` }}>
+                    
+                    <div className="px-12 py-10 space-y-8 flex-1 overflow-hidden" style={{ marginTop: `${designForm.sectionSpacing}px` }}>
                        <div className="flex justify-between items-end border-b pb-4">
                          <div className="space-y-1"><p className="text-[10px] font-black uppercase text-gray-400">Recipient Name</p><h4 className="text-xl font-black uppercase text-[#081621]">SAMPLE CLIENT NAME</h4></div>
                          <div className="text-right"><p className="text-[10px] font-black text-gray-400">Ref ID</p><p className="text-lg font-black text-[#081621] font-mono">INV/QTN-2026-1001</p></div>
                        </div>
+                       
                        <div className={cn("overflow-hidden rounded-xl", designForm.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
                           <table className="w-full border-collapse">
                              <thead className="bg-[#081621] text-white">
@@ -323,6 +351,7 @@ export default function DocumentEnginePage() {
                              </tbody>
                           </table>
                        </div>
+
                        <div className="flex justify-between items-end pt-20" style={{ marginTop: `${designForm.signatureSpacing}px` }}>
                           <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px]">Client Sign</div>
                           <div className="text-center w-48 border-t-2 border-gray-100 pt-2 font-black uppercase text-[10px] relative">
@@ -335,6 +364,26 @@ export default function DocumentEnginePage() {
                           </div>
                        </div>
                     </div>
+
+                    {/* PREVIEW FOOTER SECTION */}
+                    <footer className="pt-6 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${designForm.footerMarginTop}px`, paddingBottom: `${designForm.footerPaddingBottom}px` }}>
+                       <div className="text-center space-y-0.5 mb-2">
+                          <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${designForm.taglineFontSize}px`, color: designForm.primaryColor }}>
+                             {invoiceForm.invoiceTagline || "EXCELLENCE IN MAINTENANCE"} <Star size={8} fill="currentColor"/>
+                          </p>
+                       </div>
+                       <div className="grid grid-cols-3 gap-x-6 gap-y-0.5 opacity-60">
+                          {[1,2,3,4,5,6].map(i => (
+                            <div key={i} className="flex items-center gap-2">
+                               <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                               <span className="text-[8px] font-bold text-gray-600 uppercase truncate">Service Logic #{i}</span>
+                            </div>
+                          ))}
+                       </div>
+                       <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${designForm.disclaimerFontSize}px` }}>
+                          {invoiceForm.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}
+                       </p>
+                    </footer>
                   </div>
                </div>
             </div>
