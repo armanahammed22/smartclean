@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useDoc, useMemoFirebase, useFirestore, useCollection, useUser } from '@/firebase';
 import { collection, query, where, doc, updateDoc, limit, serverTimestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,9 +74,10 @@ export default function EditInvoicePage() {
         company: invoice.customerInfo?.company || '',
         address: invoice.customerInfo?.address || ''
       });
-      setItems(invoice.items?.map((i: any) => ({
+      // 🛡️ Ensure every item has a unique ID to prevent key prop warnings
+      setItems(invoice.items?.map((i: any, idx: number) => ({
         ...i,
-        id: i.id || Math.random().toString(),
+        id: i.id || `inv-item-${idx}-${Date.now()}`,
         total: (i.price * i.quantity) - (i.discount || 0)
       })) || []);
       setPricing({
@@ -226,7 +227,7 @@ export default function EditInvoicePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100 overflow-hidden">
+        <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden overflow-hidden">
           <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={12}/> Billing Matrix</CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border">
@@ -296,8 +297,8 @@ export default function EditInvoicePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id}>
+                  {items.map((item, idx) => (
+                    <TableRow key={item.id || idx}>
                       <TableCell className="font-bold text-[11px] uppercase py-2">{item.name}</TableCell>
                       <TableCell><Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', e.target.value)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
                       <TableCell>

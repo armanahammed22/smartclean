@@ -72,7 +72,12 @@ export default function QuotationEditorPage() {
   useEffect(() => {
     if (quote) {
       setCustomer(quote.customerInfo || {});
-      setItems(quote.items || []);
+      // 🛡️ Ensure every item has a stable unique ID to prevent React "key" errors
+      const itemsWithIds = (quote.items || []).map((item: any, idx: number) => ({
+        ...item,
+        id: item.id || `quote-item-${idx}-${Date.now()}`
+      }));
+      setItems(itemsWithIds);
       setPricing({ 
         discount: quote.discount || 0, 
         discountType: quote.discountType || 'percentage', 
@@ -339,8 +344,8 @@ export default function QuotationEditorPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-gray-50/30">
+                  {items.map((item, idx) => (
+                    <TableRow key={item.id || idx} className="hover:bg-gray-50/30">
                       <TableCell className="py-3">
                         <p className="font-bold text-[11px] text-gray-900 uppercase">{item.name}</p>
                       </TableCell>
