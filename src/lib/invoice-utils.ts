@@ -1,7 +1,6 @@
-
 'use client';
 
-import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc, limit } from 'firebase/firestore';
 import { Firestore, runTransaction } from 'firebase/firestore';
 import { Invoice, InvoiceItem } from '@/types';
 
@@ -159,7 +158,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * PDF Generation Logic
+ * PDF Generation Logic - Optimized for Single Page A4
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -170,8 +169,14 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
     margin: 0,
     filename: `${fileName}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true,
+      letterRendering: true,
+      scrollY: 0
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
   await html2pdf().from(element).set(opt).save();

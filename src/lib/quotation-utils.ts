@@ -168,8 +168,7 @@ export async function convertQuotationToInvoice(db: Firestore, quotation: any): 
 }
 
 /**
- * Downloads a quotation as PDF
- * Optimized for single-page export.
+ * Downloads a quotation as PDF - Optimized for Single Page A4
  */
 export async function downloadQuotationPDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -184,10 +183,11 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
       scale: 2, 
       useCORS: true,
       logging: false,
-      letterRendering: true
+      letterRendering: true,
+      scrollY: 0
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all'] } // Forces content to avoid breaking if possible
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
   await html2pdf().from(element).set(opt).save();

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -147,7 +146,7 @@ function InvoiceViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #invoice-render-area { shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
+          #invoice-render-area { shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; height: auto !important; min-height: 0 !important; }
         }
       `}</style>
 
@@ -170,7 +169,7 @@ function InvoiceViewContent() {
           </div>
         </div>
 
-        <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', maxHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
+        <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
           
           {statusSealUrl && (
             <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
@@ -178,7 +177,7 @@ function InvoiceViewContent() {
             </div>
           )}
 
-          <header className="px-12 flex justify-between items-start border-b-2 border-gray-50" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
+          <header className="px-12 flex justify-between items-start border-b-2 border-gray-50 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
             <div className="flex gap-4">
               <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                 <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
@@ -194,7 +193,7 @@ function InvoiceViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
+          <div className="px-12 pb-4 space-y-3 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
             <div className="text-center space-y-0.5"><h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
 
             <div className="flex justify-between items-start">
@@ -298,7 +297,7 @@ function InvoiceViewContent() {
             </div>
           </div>
 
-          <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
              <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{invoice.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p></div>
              <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">{Array.from({ length: 3 }).map((_, colIdx) => (<div key={colIdx} className="space-y-0.5">{providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-2"><CheckCircle2 size={10} className="text-emerald-500 shrink-0" /><span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>))}</div>
              <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}</p>
@@ -311,7 +310,7 @@ function InvoiceViewContent() {
 
 export default function PublicInvoiceViewWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
       <InvoiceViewContent />
     </Suspense>
   )

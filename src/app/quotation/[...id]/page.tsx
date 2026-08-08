@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -135,7 +134,7 @@ function QuotationViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #quote-render-area { shadow: none !important; border-top: none !important; }
+          #quote-render-area { shadow: none !important; border-top: none !important; height: auto !important; min-height: 0 !important; }
         }
       `}</style>
 
@@ -148,11 +147,11 @@ function QuotationViewContent() {
           </div>
         </div>
 
-        <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
+        <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" style={{ width: '210mm', minHeight: '296mm', color: '#333', display: 'flex', flexDirection: 'column' }}>
           {sealUrl && (<div className="absolute top-64 right-20 z-20 pointer-events-none opacity-40"><div className="relative w-40 h-40"><Image src={sealUrl} alt="Seal" fill className="object-contain" unoptimized /></div></div>)}
-          <header className="pt-10 px-12 pb-4 flex justify-between items-start border-b-[3px] border-gray-100 mb-8"><div className="flex gap-6"><div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div><div className="space-y-1 text-left"><h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2><p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p></div></div><div className="text-right max-w-[280px]"><p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p><p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p></div></header>
+          <header className="pt-10 px-12 pb-4 flex justify-between items-start border-b-[3px] border-gray-100 mb-8 shrink-0"><div className="flex gap-6"><div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div><div className="space-y-1 text-left"><h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2><p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p></div></div><div className="text-right max-w-[280px]"><p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p><p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p></div></header>
 
-          <div className="px-12 pb-4 space-y-8 flex-1">
+          <div className="px-12 pb-4 space-y-8 flex-1 overflow-hidden">
             <div className="text-center space-y-1"><h3 className="text-3xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3><div className="h-1.5 w-24 bg-primary mx-auto rounded-full" /></div>
             <div className="flex justify-between items-start">
               <div className="text-left space-y-4"><p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p><div className="space-y-1"><h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{quote.customerInfo?.name}</h4><p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p><p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{quote.customerInfo?.address}</p></div></div>
@@ -176,7 +175,7 @@ function QuotationViewContent() {
                   ))}
                   {(isCombo || isManual) && (
                     <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[10px] tracking-widest">{isCombo ? 'Bundle Package Valuation' : 'Project Total Valuation'}</td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">{isCombo ? 'Bundle Package Valuation' : 'Project Total Valuation'}</td>
                       <td className="py-2 px-4 text-right font-black text-xs text-[#081621]">৳{quote.subtotal?.toLocaleString()}</td>
                     </tr>
                   )}
@@ -199,7 +198,7 @@ function QuotationViewContent() {
             <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-6 pb-6"><div className="text-center space-y-4"><div className="border-b-[3px] border-gray-100 h-10"></div><p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p></div><div className="flex flex-col items-center justify-end text-center space-y-4"><div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>}</div><p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p></div></div>
           </div>
 
-          <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}><div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div><div className="grid grid-cols-3 gap-x-6 gap-y-1.5">{Array.from({ length: 3 }).map((_, colIdx) => (<div key={colIdx} className="space-y-1.5">{providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-1.5"><CheckCircle2 size={8} className="text-emerald-500 shrink-0" /><span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>))}</div><p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-8 tracking-[0.3em]">{footerDisclaimer}</p></footer>
+          <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}><div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div><div className="grid grid-cols-3 gap-x-6 gap-y-1.5">{Array.from({ length: 3 }).map((_, colIdx) => (<div key={colIdx} className="space-y-1.5">{providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-1.5"><CheckCircle2 size={8} className="text-emerald-500 shrink-0" /><span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>))}</div><p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-8 tracking-[0.3em]">{footerDisclaimer}</p></footer>
         </div>
       </div>
     </div>
@@ -207,5 +206,5 @@ function QuotationViewContent() {
 }
 
 export default function PublicQuotationViewPage() {
-  return (<Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>}><QuotationViewContent /></Suspense>)
+  return (<Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>}><QuotationViewContent /></Suspense>)
 }
