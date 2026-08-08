@@ -35,7 +35,6 @@ export function numberToWords(amount: number): string {
 
 /**
  * Generates the next invoice number based on global settings.
- * Synchronized logic with Quotation.
  */
 export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
   try {
@@ -46,7 +45,6 @@ export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
     const prefix = settings.invoicePrefix || 'INV';
     const nextNumber = (settings.invoiceLastNumber || 1000) + 1;
     
-    // Update the counter in global settings
     await setDoc(settingsRef, { invoiceLastNumber: nextNumber }, { merge: true });
     
     return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
@@ -56,18 +54,16 @@ export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
 }
 
 /**
- * Utility to generate Invoice from an Order or Booking with Atomic Transaction Support
+ * Utility to generate Invoice from an Order or Booking
  */
 export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 'order' | 'booking', sourceData: any, paidAmount: number = 0): Promise<string> {
   const collName = 'invoices';
   const fieldName = type === 'order' ? 'orderId' : 'bookingId';
   
-  // 1. Check for existing invoice
   const q = query(collection(db, collName), where(fieldName, '==', sourceId), limit(1));
   const snap = await getDocs(q);
   if (!snap.empty) return snap.docs[0].id;
 
-  // 2. Business Logic Calculations
   const items: InvoiceItem[] = sourceData.items?.map((i: any) => ({
     id: i.id || Math.random().toString(),
     name: i.name,
@@ -82,16 +78,13 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
   const delivery = sourceData.deliveryCharge || 0;
   const currentTotal = subtotal + delivery - discount;
 
-  // 3. Get Next Invoice Number
   const invNumber = await getNextInvoiceNumber(db);
 
-  // 4. Atomicity via Transactions
   let invoiceId = '';
   await runTransaction(db, async (transaction) => {
     let customerId = sourceData.customerId;
     let previousDue = 0;
 
-    // Resolve or Enroll Customer
     if (!customerId && sourceData.customerPhone) {
       const cleanPhone = sourceData.customerPhone.replace(/\D/g, '');
       const custQuery = query(collection(db, 'users'), where('phone', '==', cleanPhone), limit(1));
@@ -158,7 +151,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * PDF Generation Logic - Optimized for Single Page A4
+ * 🚀 HARD LOCKED A4 PDF GENERATION
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -168,15 +161,16 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
   const opt = {
     margin: 0,
     filename: `${fileName}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
+    image: { type: 'jpeg', quality: 1.0 },
     html2canvas: { 
-      scale: 2, 
+      scale: 3, // Higher quality
       useCORS: true,
       letterRendering: true,
-      scrollY: 0
+      scrollY: 0,
+      windowWidth: 794, // 210mm at 96dpi
     },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+    pagebreak: { mode: 'avoid-all' }
   };
 
   await html2pdf().from(element).set(opt).save();

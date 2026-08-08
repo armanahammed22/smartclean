@@ -102,11 +102,8 @@ function InvoiceViewContent() {
     return Array.isArray(currentTerms) ? currentTerms : [currentTerms];
   }, [invoice, settings]);
 
-  const handleWhatsApp = () => {
-    if (!invoice) return;
-    const text = `আসসালামু আলাইকুম, আমার ইনভয়েস (${invoice.invoiceNumber}) টি চেক করার জন্য অনুরোধ করা হলো।`;
-    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-  };
+  const tagline = invoice?.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living.";
+  const footerDisclaimer = settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50"><X size={64} className="mx-auto text-gray-200" /><h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em] mt-4">Document Not Found</h1></div>;
@@ -135,7 +132,6 @@ function InvoiceViewContent() {
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
   
-  // Advanced Mode Detection
   const mode = invoice.pricingMode || 'dynamic';
   const isCombo = mode === 'combo';
   const isManual = mode === 'manual';
@@ -146,7 +142,14 @@ function InvoiceViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #invoice-render-area { shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; height: auto !important; min-height: 0 !important; }
+          #invoice-render-area { 
+            box-shadow: none !important; 
+            border-top: none !important; 
+            border-radius: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+            height: 100% !important; 
+          }
         }
       `}</style>
 
@@ -162,144 +165,133 @@ function InvoiceViewContent() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-2">
-            <Button variant="outline" onClick={handleWhatsApp} className="rounded-lg gap-2 font-black uppercase text-[9px] h-9 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={16} /> Support</Button>
+            <Button variant="outline" onClick={() => window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}`, '_blank')} className="rounded-lg gap-2 font-black uppercase text-[9px] h-9 px-4 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={16} /> Support</Button>
             <Button className="rounded-lg gap-2 font-black uppercase text-[9px] h-9 px-6 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
               {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} DOWNLOAD PDF
             </Button>
           </div>
         </div>
 
-        <div id="invoice-render-area" className="bg-white shadow-2xl relative rounded-b-[1.5rem] overflow-hidden" style={{ width: '210mm', minHeight: '296mm', color: '#333', borderTop: `14px solid ${d.primaryColor}`, display: 'flex', flexDirection: 'column' }}>
-          
+        {/* 📄 HARD LOCKED A4 CONTAINER */}
+        <div 
+          id="invoice-render-area" 
+          className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] overflow-hidden" 
+          style={{ 
+            width: '210mm', 
+            height: '297mm', 
+            maxHeight: '297mm',
+            color: '#333', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between',
+            borderRadius: '0 0 1.5rem 1.5rem'
+          }}
+        >
           {statusSealUrl && (
             <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
               <Image src={statusSealUrl} alt="Status Seal" fill className="object-contain" unoptimized />
             </div>
           )}
 
-          <header className="px-12 flex justify-between items-start border-b-2 border-gray-50 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
-            <div className="flex gap-4">
-              <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
-                <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
-              </div>
-              <div className="space-y-0.5 text-left flex flex-col justify-center">
-                <h2 className="font-black text-[#081621] tracking-tighter uppercase leading-none" style={{ fontSize: `${d.headerFontSize}px` }}>{websiteName}</h2>
-                <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: d.primaryColor }}>Professional Infrastructure</p>
-              </div>
-            </div>
-            <div className="text-right max-w-[280px]">
-              <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
-              <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
-            </div>
-          </header>
-
-          <div className="px-12 pb-4 space-y-3 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
-            <div className="text-center space-y-0.5"><h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
-
-            <div className="flex justify-between items-start">
-              <div className="text-left space-y-1.5">
-                <p className="text-[8px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Customer Profile</p>
-                <div className="space-y-0.5">
-                  <h4 className="font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 1}px` }}>{invoice.customerInfo?.name}</h4>
-                  <p className="text-[9px] font-bold text-gray-600">{invoice.customerInfo?.phone}</p>
-                  <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{invoice.customerInfo?.address}</p>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <header className="px-12 flex justify-between items-start border-b-2 border-gray-50 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
+              <div className="flex gap-4">
+                <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
+                  <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+                </div>
+                <div className="space-y-0.5 text-left flex flex-col justify-center">
+                  <h2 className="font-black text-[#081621] tracking-tighter uppercase leading-none" style={{ fontSize: `${d.headerFontSize}px` }}>{websiteName}</h2>
+                  <p className="text-[8px] font-bold uppercase tracking-widest" style={{ color: d.primaryColor }}>Professional Infrastructure</p>
                 </div>
               </div>
-              <div className="text-right space-y-2">
-                <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p><p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p></div>
-                <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Billing Date</p><p className="text-[10px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'N/A'}</p></div>
+              <div className="text-right max-w-[280px]">
+                <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+                <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
               </div>
-            </div>
+            </header>
 
-            <div className={cn("overflow-hidden rounded-xl mb-2", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
-              <table className="w-full border-collapse text-[10px]">
-                <thead className="bg-[#081621] text-white">
-                  <tr>
-                    <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
-                    <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Description</th>
-                    <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
-                    <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Rate</th>
-                    <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="font-bold bg-white">
-                  {invoice.items?.map((item: any, i: number) => (
-                    <tr key={i} className="border-t border-gray-100 align-top">
-                      <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
-                      <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
-                        <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
-                      </td>
-                      <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>
-                        {isCombo ? '---' : `৳${item.price?.toLocaleString()}`}
-                      </td>
-                      <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>
-                        {isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {(isCombo || isManual) && (
-                    <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">{isCombo ? 'Bundle Package Pricing' : 'Total Adjusted Valuation'}</td>
-                      <td className="py-3 px-4 text-right font-black text-sm text-[#081621]">৳{invoice.subtotal?.toLocaleString()}</td>
-                    </tr>
-                  )}
+            <div className="px-12 py-6 space-y-4 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
+              <div className="text-center space-y-0.5 shrink-0"><h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
 
-                  {!isCombo && !isManual && (
-                    <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] tracking-widest">Gross Subtotal</td>
-                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
-                    </tr>
-                  )}
-
-                  {invoice.discount > 0 && (
-                    <tr className="border-t border-gray-100 bg-white">
-                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] text-rose-500">Adjustment / Discount</td>
-                      <td className="py-2 px-4 text-right font-black text-xs text-rose-500">-৳{invoice.discount?.toLocaleString()}</td>
-                    </tr>
-                  )}
-                  
-                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
-                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Grand Total Payable</td>
-                    <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shadow-inner">
-              <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Total Amount (In words):</p>
-              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(invoice.total) || 0)}"</p>
-            </div>
-
-            <div className="space-y-1.5">
-               <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
-               <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-inner">
-                  <div className="grid grid-cols-1 gap-0.5">
-                    {terms.map((term: string, i: number) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        <span className="text-[9px] font-black min-w-[12px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
-                        <p className="font-medium text-gray-600 leading-tight" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
-                      </div>
-                    ))}
+              <div className="flex justify-between items-start shrink-0">
+                <div className="text-left space-y-1.5">
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Customer Profile</p>
+                  <div className="space-y-0.5">
+                    <h4 className="font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 1}px` }}>{invoice.customerInfo?.name}</h4>
+                    <p className="text-[9px] font-bold text-gray-600">{invoice.customerInfo?.phone}</p>
+                    <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{invoice.customerInfo?.address}</p>
                   </div>
-               </div>
-            </div>
+                </div>
+                <div className="text-right space-y-2">
+                  <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p><p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p></div>
+                  <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Billing Date</p><p className="text-[10px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'N/A'}</p></div>
+                </div>
+              </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-2 pb-2" style={{ marginTop: `${d.signatureSpacing}px` }}>
-              <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
-              <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
-                {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized /></div>)}
-                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}</div>
-                <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
+              <div className={cn("overflow-hidden rounded-xl mb-2", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+                <table className="w-full border-collapse text-[10px]">
+                  <thead className="bg-[#081621] text-white">
+                    <tr>
+                      <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
+                      <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Description</th>
+                      <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
+                      <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Rate</th>
+                      <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-bold bg-white">
+                    {invoice.items?.map((item: any, i: number) => (
+                      <tr key={i} className="border-t border-gray-100 align-top">
+                        <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
+                        <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
+                          <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
+                        </td>
+                        <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${item.price?.toLocaleString()}`}</td>
+                        <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-[#081621] bg-gray-50/50">
+                      <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] tracking-widest">Grand Total Payable</td>
+                      <td className="py-2 px-4 text-right font-black text-sm text-[#081621]">৳{invoice.total?.toLocaleString()}/-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shrink-0 shadow-inner">
+                <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Total Amount (In words):</p>
+                <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(invoice.total) || 0)}"</p>
+              </div>
+
+              <div className="space-y-1.5 overflow-hidden">
+                 <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
+                 <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-inner">
+                    <div className="grid grid-cols-1 gap-0.5">
+                      {terms.slice(0, 8).map((term: string, i: number) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <span className="text-[9px] font-black min-w-[12px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                          <p className="font-medium text-gray-600 leading-tight" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
+                        </div>
+                      ))}
+                    </div>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-32 items-end pt-2 pb-2 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
+                <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
+                <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
+                  {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized /></div>)}
+                  <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}</div>
+                  <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
+                </div>
               </div>
             </div>
           </div>
 
           <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
              <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{invoice.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p></div>
-             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">{Array.from({ length: 3 }).map((_, colIdx) => (<div key={colIdx} className="space-y-0.5">{providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-2"><CheckCircle2 size={10} className="text-emerald-500 shrink-0" /><span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>))}</div>
+             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">{providedServices.slice(0, 9).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-2"><CheckCircle2 size={10} className="text-emerald-500 shrink-0" /><span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>
              <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}</p>
           </footer>
         </div>

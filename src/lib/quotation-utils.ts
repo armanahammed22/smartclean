@@ -7,7 +7,6 @@ import { getOrCreateInvoice } from './invoice-utils';
 
 /**
  * Generates the next quotation number based on settings.
- * Supports complex prefixes with slashes (e.g., QTN/SM/2026)
  */
 export async function getNextQuotationNumber(db: Firestore): Promise<string> {
   try {
@@ -18,7 +17,6 @@ export async function getNextQuotationNumber(db: Firestore): Promise<string> {
     const prefix = settings.prefix || 'QTN';
     const nextNumber = (settings.lastNumber || 1000) + 1;
     
-    // Update the counter in settings
     await setDoc(settingsRef, { lastNumber: nextNumber }, { merge: true });
     
     return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
@@ -41,8 +39,8 @@ export async function convertBookingToQuotation(db: Firestore, booking: any): Pr
       address: booking.address,
       email: booking.customerEmail || ''
     },
-    items: booking.items?.map((item: any) => ({
-      id: item.id || 'gen',
+    items: booking.items?.map((item: any, idx: number) => ({
+      id: item.id || `quote-item-${idx}-${Date.now()}`,
       name: item.name,
       price: item.price,
       quantity: item.quantity,
@@ -95,7 +93,6 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 
     const docRef = await addDoc(collection(db, 'bookings'), bookingData);
     
-    // Update quotation status
     await updateDoc(doc(db, 'quotations', quotation.id), {
       status: 'Converted',
       convertedTo: 'booking',
@@ -115,8 +112,6 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 export async function convertQuotationToInvoice(db: Firestore, quotation: any): Promise<string> {
   try {
     const collName = 'invoices';
-    
-    // Get count for invoice number
     const countSnap = await getDocs(query(collection(db, collName)));
     const invNumber = `INV-QTN-${(countSnap.size + 1).toString().padStart(4, '0')}`;
 
@@ -148,7 +143,6 @@ export async function convertQuotationToInvoice(db: Firestore, quotation: any): 
 
     const docRef = await addDoc(collection(db, collName), invoiceData);
     
-    // Update quotation status
     await updateDoc(doc(db, 'quotations', quotation.id), {
       status: 'Converted',
       convertedTo: 'invoice',
@@ -156,19 +150,14 @@ export async function convertQuotationToInvoice(db: Firestore, quotation: any): 
       updatedAt: new Date().toISOString()
     });
 
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://smartclean.com.bd';
-    const publicLink = `${baseUrl}/invoice/${invNumber}`;
-    await updateDoc(docRef, { publicLink });
-
     return docRef.id;
   } catch (e) {
-    console.error('Conversion Error:', e);
     throw new Error('Failed to convert quotation to invoice');
   }
 }
 
 /**
- * Downloads a quotation as PDF - Optimized for Single Page A4
+ * 🚀 HARD LOCKED A4 PDF GENERATION
  */
 export async function downloadQuotationPDF(elementId: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
@@ -178,16 +167,16 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
   const opt = {
     margin: 0,
     filename: `${fileName.replace(/\//g, '_')}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
+    image: { type: 'jpeg', quality: 1.0 },
     html2canvas: { 
-      scale: 2, 
+      scale: 3,
       useCORS: true,
-      logging: false,
       letterRendering: true,
-      scrollY: 0
+      scrollY: 0,
+      windowWidth: 794
     },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+    pagebreak: { mode: 'avoid-all' }
   };
 
   await html2pdf().from(element).set(opt).save();
