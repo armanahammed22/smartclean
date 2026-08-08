@@ -11,7 +11,6 @@ import {
   Download, 
   Loader2, 
   MapPin, 
-  Phone, 
   Globe,
   Mail,
   ShieldCheck,
@@ -42,7 +41,6 @@ function InvoiceViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // 1. Fetch Dynamic Design & Global Settings
   const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
   const { data: design } = useDoc(designRef);
 
@@ -89,7 +87,6 @@ function InvoiceViewContent() {
   }, [db, id, router]);
 
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerEmail = settings?.invoiceHeaderEmail || settings?.contactEmail || 'smartclean422@gmail.com';
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
@@ -139,8 +136,10 @@ function InvoiceViewContent() {
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
   
-  // Advanced Pricing Logic Visibility
-  const isCombined = invoice.pricingMode === 'combo' || invoice.pricingMode === 'manual';
+  // Advanced Mode Detection
+  const mode = invoice.pricingMode || 'dynamic';
+  const isCombo = mode === 'combo';
+  const isManual = mode === 'manual';
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -179,10 +178,7 @@ function InvoiceViewContent() {
             </div>
           )}
 
-          <header 
-            className="px-12 flex justify-between items-start border-b-2 border-gray-50"
-            style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}
-          >
+          <header className="px-12 flex justify-between items-start border-b-2 border-gray-50" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
             <div className="flex gap-4">
               <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                 <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
@@ -199,11 +195,7 @@ function InvoiceViewContent() {
           </header>
 
           <div className="px-12 pb-4 space-y-3 flex-1" style={{ marginTop: `${d.sectionSpacing}px` }}>
-            
-            <div className="text-center space-y-0.5">
-                <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3>
-                <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
-            </div>
+            <div className="text-center space-y-0.5"><h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
 
             <div className="flex justify-between items-start">
               <div className="text-left space-y-1.5">
@@ -215,14 +207,8 @@ function InvoiceViewContent() {
                 </div>
               </div>
               <div className="text-right space-y-2">
-                <div>
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p>
-                  <p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p>
-                </div>
-                <div>
-                  <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Billing Date</p>
-                  <p className="text-[10px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'N/A'}</p>
-                </div>
+                <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Invoice Ref.</p><p className="text-sm font-black text-[#081621] font-mono tracking-tighter">{invoice.invoiceNumber}</p></div>
+                <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Billing Date</p><p className="text-[10px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMM yyyy') : 'N/A'}</p></div>
               </div>
             </div>
 
@@ -246,24 +232,22 @@ function InvoiceViewContent() {
                       </td>
                       <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
                       <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>
-                        {isCombined ? '---' : `৳${item.price?.toLocaleString()}`}
+                        {isCombo ? '---' : `৳${item.price?.toLocaleString()}`}
                       </td>
                       <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>
-                        {isCombined ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}
+                        {isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}
                       </td>
                     </tr>
                   ))}
                   
-                  {isCombined && (
+                  {(isCombo || isManual) && (
                     <tr className="border-t-2 border-[#081621] bg-gray-50/50">
-                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">
-                        {invoice.pricingMode === 'combo' ? 'Bundle Package Pricing' : 'Adjusted Project Valuation'}
-                      </td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest">{isCombo ? 'Bundle Package Pricing' : 'Total Adjusted Valuation'}</td>
                       <td className="py-3 px-4 text-right font-black text-sm text-[#081621]">৳{invoice.subtotal?.toLocaleString()}</td>
                     </tr>
                   )}
 
-                  {!isCombined && (
+                  {!isCombo && !isManual && (
                     <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
                       <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] tracking-widest">Gross Subtotal</td>
                       <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
@@ -280,16 +264,6 @@ function InvoiceViewContent() {
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
                     <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Grand Total Payable</td>
                     <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
-                  </tr>
-                  
-                  <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                    <td colSpan={4} className="py-1.5 px-8 text-right font-black uppercase text-[9px]">Received Payment (-)</td>
-                    <td className="py-1.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}/-</td>
-                  </tr>
-
-                  <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
-                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}/-</td>
                   </tr>
                 </tbody>
               </table>
@@ -315,42 +289,18 @@ function InvoiceViewContent() {
             </div>
 
             <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-2 pb-2" style={{ marginTop: `${d.signatureSpacing}px` }}>
-              <div className="text-center space-y-1.5">
-                <div className="border-b-[2px] border-gray-100 h-6"></div>
-                <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
-              </div>
+              <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
               <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
-                {d.authoritySealUrl && (
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none">
-                    <Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized />
-                  </div>
-                )}
-                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">
-                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
-                </div>
+                {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized /></div>)}
+                <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}</div>
                 <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
               </div>
             </div>
           </div>
 
           <footer className="pt-2 border-t border-gray-100 px-12" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
-             <div className="text-center space-y-0.5 mb-2">
-                <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{invoice.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p>
-             </div>
-             
-             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
-                {Array.from({ length: 3 }).map((_, colIdx) => (
-                  <div key={colIdx} className="space-y-0.5">
-                     {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
-                       <div key={sIdx} className="flex items-center gap-2">
-                          <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                          <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
-                       </div>
-                     ))}
-                  </div>
-                ))}
-             </div>
-
+             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{invoice.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living."} <Star size={8} fill="currentColor"/></p></div>
+             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">{Array.from({ length: 3 }).map((_, colIdx) => (<div key={colIdx} className="space-y-0.5">{providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-2"><CheckCircle2 size={10} className="text-emerald-500 shrink-0" /><span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>))}</div>
              <p className="font-bold uppercase text-center mt-3 tracking-[0.3em] text-gray-300" style={{ fontSize: `${d.disclaimerFontSize}px` }}>{settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT"}</p>
           </footer>
         </div>

@@ -27,14 +27,16 @@ import {
   ReceiptText,
   Layers,
   Edit2,
-  Zap
+  Zap,
+  ListPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getNextInvoiceNumber } from '@/lib/invoice-utils';
-import { PricingMode } from '@/types';
+
+type EntryMode = 'dynamic' | 'combo' | 'manual';
 
 export default function CreateInvoicePage() {
   const router = useRouter();
@@ -44,156 +46,90 @@ export default function CreateInvoicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
-  // Pricing Mode
-  const [pricingMode, setPricingMode] = useState<PricingMode>('dynamic');
+  // 🛠️ Entry Mode State
+  const [entryMode, setEntryMode] = useState<EntryMode>('dynamic');
 
-  // Feature Modes
+  // Mode States
   const [isNewCustomer, setIsNewCustomer] = useState(false);
-  const [isManualItem, setIsManualItem] = useState(false);
 
-  // Form State
-  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
-  const [customPrice, setCustomPrice] = useState('');
+  // Identity Form State
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
   
-  // Selection state
+  // Dynamic Mode Cart
+  const [dynamicItems, setDynamicItems] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
-  const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
 
-  const [items, setItems] = useState<any[]>([]);
-  const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
-  const [payment, setPayment] = useState({ paidAmount: '0', method: 'Cash', notes: '' });
+  // Combo Mode State
+  const [comboServices, setComboServices] = useState<string[]>(['']);
+  const [comboTotalPrice, setComboTotalPrice] = useState('');
+
+  // Manual Mode State
+  const [manualRows, setManualRows] = useState<any[]>([{ name: '', price: '', quantity: 1, unit: 'Qty' }]);
+
+  const [pricing, setPricing] = useState({ discount: 0, delivery: 0 });
+  const [payment, setPayment] = useState({ paidAmount: '0', method: 'Cash' });
   const [config, setConfig] = useState({ 
     issueDate: new Date().toISOString().split('T')[0],
     expiryDate: '',
-    terms: [] as string[],
-    tagline: '',
     notes: '' 
   });
 
   // Data Fetch
-  const customersQuery = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
-  const servicesQuery = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
-  const packagesQuery = useMemoFirebase(() => db ? query(collection(db, 'service_packages'), where('status', '==', 'Active')) : null, [db]);
-  const settingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const customersRef = useMemoFirebase(() => db ? query(collection(db, 'users'), where('role', '==', 'customer'), limit(100)) : null, [db]);
+  const servicesRef = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active'), limit(100)) : null, [db]);
+  const { data: customersRaw } = useCollection(customersRef);
+  const { data: servicesRaw } = useCollection(servicesRef);
 
-  const { data: customersRaw } = useCollection(customersQuery);
-  const { data: services } = useCollection(servicesQuery);
-  const { data: packages } = useCollection(packagesQuery);
-  const { data: globalSettings } = useDoc(settingsRef);
-
-  const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')), [customersRaw]);
+  const services = useMemo(() => servicesRaw?.sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [], [servicesRaw]);
+  const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [], [customersRaw]);
 
   useEffect(() => {
-    if (db) {
-      getNextInvoiceNumber(db).then(setInvoiceNumber);
-    }
+    if (db) getNextInvoiceNumber(db).then(setInvoiceNumber);
   }, [db]);
 
-  useEffect(() => {
-    if (globalSettings) {
-      setConfig(prev => ({
-        ...prev,
-        terms: Array.isArray(globalSettings.invoiceDefaultTerms) ? globalSettings.invoiceDefaultTerms : [globalSettings.invoiceDefaultTerms || ''],
-        tagline: globalSettings.invoiceTagline || ''
-      }));
-    }
-  }, [globalSettings]);
-
-  const handleAddItemToBill = () => {
-    if (isManualItem) {
-      if (!manualItem.name || !manualItem.price) return;
-      setItems([...items, {
-        id: 'manual-' + Date.now(),
-        name: manualItem.name,
-        price: parseFloat(manualItem.price) || 0,
-        quantity: manualItem.quantity,
-        unit: manualItem.unit,
-        discount: 0,
-        total: (parseFloat(manualItem.price) || 0) * manualItem.quantity
-      }]);
-      setManualItem({ name: '', price: '', quantity: 1, unit: 'Qty' });
-    } else {
-      const service = services?.find(s => s.id === selectedProductId);
-      if (!service) return;
-      const newItem = {
-        id: service.id + '-' + Date.now(),
-        name: service.title,
-        price: service.basePrice,
-        quantity: selectedQty,
-        unit: service.pricingType === 'sqft' ? 'Sqft' : 'Pcs',
-        discount: 0,
-        total: service.basePrice * selectedQty
-      };
-      setItems([...items, newItem]);
-      setSelectedProductId('');
-      setSelectedQty(1);
-    }
+  // Actions
+  const addComboRow = () => setComboServices([...comboServices, '']);
+  const removeComboRow = (idx: number) => setComboServices(comboServices.filter((_, i) => i !== idx));
+  const updateComboRow = (idx: number, val: string) => {
+    const next = [...comboServices];
+    next[idx] = val;
+    setComboServices(next);
   };
 
-  const handleAddPackage = (pkgId: string) => {
-    const pkg = packages?.find(p => p.id === pkgId);
-    if (!pkg) return;
-
-    const pkgItems = pkg.serviceIds.map(sid => {
-      const s = services?.find(srv => srv.id === sid);
-      return {
-        id: (s?.id || sid) + '-' + Date.now(),
-        name: s?.title || pkg.name,
-        price: s?.basePrice || 0,
-        quantity: 1,
-        unit: 'Qty',
-        total: s?.basePrice || 0
-      };
-    });
-
-    setItems(pkgItems);
-    setPricingMode('combo');
-    setCustomPrice(pkg.price.toString());
+  const addManualRow = () => setManualRows([...manualRows, { name: '', price: '', quantity: 1, unit: 'Qty' }]);
+  const removeManualRow = (idx: number) => setManualRows(manualRows.filter((_, i) => i !== idx));
+  const updateManualRow = (idx: number, field: string, val: any) => {
+    const next = [...manualRows];
+    next[idx][field] = val;
+    setManualRows(next);
   };
 
-  const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
-  
-  const updateItemField = (id: string, field: string, val: any) => {
-    setItems(items.map(i => {
-      if (i.id === id) {
-        const updated = { ...i, [field]: val };
-        updated.total = (parseFloat(updated.price) || 0) * (parseFloat(updated.quantity) || 0) - (parseFloat(updated.discount) || 0);
-        return updated;
-      }
-      return i;
-    }));
+  const handleAddDynamic = () => {
+    const service = services.find(s => s.id === selectedProductId);
+    if (!service) return;
+    setDynamicItems([...dynamicItems, { id: service.id + '-' + Date.now(), name: service.title, price: service.basePrice, quantity: selectedQty, unit: service.pricingType === 'sqft' ? 'Sqft' : 'Pcs' }]);
+    setSelectedProductId('');
+    setSelectedQty(1);
   };
 
   const totals = useMemo(() => {
-    const calculatedSubtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
-    const subtotal = (pricingMode === 'combo' || pricingMode === 'manual') ? (parseFloat(customPrice) || 0) : calculatedSubtotal;
+    let subtotal = 0;
+    if (entryMode === 'dynamic') subtotal = dynamicItems.reduce((acc, i) => acc + (i.price * i.quantity), 0);
+    else if (entryMode === 'combo') subtotal = parseFloat(comboTotalPrice) || 0;
+    else subtotal = manualRows.reduce((acc, i) => acc + ((parseFloat(i.price) || 0) * i.quantity), 0);
     
-    const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
-    
-    let globalDiscountAmt = pricing.discountType === 'percentage' 
-      ? (subtotal * (pricing.discount / 100)) 
-      : pricing.discount;
-      
-    const currentTotal = subtotal - itemDiscounts - globalDiscountAmt + pricing.delivery;
+    const finalTotal = subtotal + pricing.delivery - pricing.discount;
     const initialPaid = parseFloat(payment.paidAmount) || 0;
-    const dueAmount = Math.max(0, currentTotal - initialPaid);
+    const dueAmount = Math.max(0, finalTotal - initialPaid);
 
-    return { calculatedSubtotal, subtotal, itemDiscounts, globalDiscountAmt, total: Math.max(0, currentTotal), initialPaid, dueAmount };
-  }, [items, pricing, payment, pricingMode, customPrice]);
-
-  const addTerm = () => setConfig({ ...config, terms: [...config.terms, ''] });
-  const updateTerm = (idx: number, val: string) => {
-    const next = [...config.terms];
-    next[idx] = val;
-    setConfig({ ...config, terms: next });
-  };
-  const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
+    return { subtotal, total: finalTotal, initialPaid, dueAmount };
+  }, [entryMode, dynamicItems, comboTotalPrice, manualRows, pricing, payment]);
 
   const handleSave = async () => {
     if (!db) return;
-    if (!customer.name || (items.length === 0 && pricingMode !== 'manual')) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Customer and items are required." });
+    if (!customer.name) {
+      toast({ variant: "destructive", title: "Identity Required" });
       return;
     }
 
@@ -202,337 +138,168 @@ export default function CreateInvoicePage() {
 
     try {
       let currentCustomerId = customer.id;
-
       if (isNewCustomer || !currentCustomerId) {
         const phone = customer.phone.replace(/\D/g, '');
-        const q = query(collection(db, 'users'), where('phone', '==', phone), limit(1));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          const newRef = doc(collection(db, 'users'));
-          batch.set(newRef, {
-            uid: newRef.id,
-            name: customer.name,
-            phone: phone,
-            address: customer.address,
-            role: 'customer',
-            status: 'active',
-            totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          });
-          currentCustomerId = newRef.id;
-        } else {
-          currentCustomerId = snap.docs[0].id;
-        }
+        const newRef = doc(collection(db, 'users'));
+        batch.set(newRef, { uid: newRef.id, name: customer.name, phone, role: 'customer', status: 'active', totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0, createdAt: new Date().toISOString() });
+        currentCustomerId = newRef.id;
       }
 
+      let items = [];
+      if (entryMode === 'dynamic') items = dynamicItems.map(i => ({ ...i, itemType: 'service' }));
+      else if (entryMode === 'combo') items = comboServices.filter(s => !!s).map(s => ({ name: s, itemType: 'combo_member', price: 0, quantity: 1 }));
+      else items = manualRows.filter(r => !!r.name).map(r => ({ ...r, price: parseFloat(r.price) || 0, itemType: 'manual' }));
+
       const invoiceRef = doc(collection(db, 'invoices'));
-      
-      const invoiceData: any = {
+      const invoiceData = {
         invoiceNumber,
         customerId: currentCustomerId,
         customerInfo: { ...customer, id: currentCustomerId },
         items,
         subtotal: totals.subtotal,
-        pricingMode,
-        manualPrice: pricingMode === 'manual' ? totals.total : null,
-        comboPrice: pricingMode === 'combo' ? totals.subtotal : null,
+        pricingMode: entryMode,
         discount: pricing.discount,
-        discountType: pricing.discountType,
         deliveryCharge: pricing.delivery,
         total: totals.total,
-        paymentStatus: totals.dueAmount <= 0 ? 'Paid' : totals.initialPaid > 0 ? 'Partial' : 'Unpaid',
         paidAmount: totals.initialPaid,
         dueAmount: totals.dueAmount,
-        paymentHistory: totals.initialPaid > 0 ? [{
-          id: 'pay_init_' + Date.now(),
-          amount: totals.initialPaid,
-          date: new Date().toISOString(),
-          method: payment.method,
-          notes: payment.notes || 'Initial Payment'
-        }] : [],
-        terms: config.terms,
-        tagline: config.tagline,
+        paymentStatus: totals.dueAmount <= 0 ? 'Paid' : totals.initialPaid > 0 ? 'Partial' : 'Unpaid',
+        paymentHistory: totals.initialPaid > 0 ? [{ id: 'init_'+Date.now(), amount: totals.initialPaid, date: new Date().toISOString(), method: payment.method, notes: 'Initial Settlement' }] : [],
         createdAt: new Date(config.issueDate).toISOString(),
         dueDate: config.expiryDate ? new Date(config.expiryDate).toISOString() : null,
         updatedAt: serverTimestamp()
       };
 
       batch.set(invoiceRef, invoiceData);
-
-      // Update Customer Overall Balance
       if (currentCustomerId) {
-        const customerRef = doc(db, 'users', currentCustomerId);
-        batch.update(customerRef, {
+        batch.update(doc(db, 'users', currentCustomerId), {
           totalInvoiced: increment(totals.total),
           totalPaid: increment(totals.initialPaid),
-          outstandingBalance: increment(totals.dueAmount),
-          updatedAt: serverTimestamp()
+          outstandingBalance: increment(totals.dueAmount)
         });
       }
 
       await batch.commit();
-      
-      toast({ title: "Invoice Published", description: `Saved with ৳${totals.initialPaid} initial payment.` });
+      toast({ title: "Invoice Published" });
       router.push('/admin/invoices');
     } catch (e) {
-      toast({ variant: "destructive", title: "Process Failed" });
+      toast({ variant: "destructive", title: "Failed" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-4 pb-20 min-w-0 -mt-6">
+    <div className="space-y-4 pb-24 min-w-0 -mt-6">
       <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border">
-            <ArrowLeft size={16} />
-          </Button>
-          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight leading-none">{invoiceNumber || 'New Invoice'}</h1>
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border"><ArrowLeft size={16} /></Button>
+          <h1 className="text-lg font-black text-gray-900 uppercase tracking-tight">{invoiceNumber || 'New Invoice'}</h1>
         </div>
-        <Button onClick={handleSave} disabled={isSubmitting} className="h-9 px-8 rounded-lg font-black uppercase text-[10px] bg-primary text-white shadow-xl shadow-primary/20 gap-2 active:scale-95 transition-all">
-          {isSubmitting ? <Loader2 className="animate-spin h-3 w-3" /> : <><Save size={14} /> Create Invoice</>}
+        <Button onClick={handleSave} disabled={isSubmitting} className="h-9 px-10 rounded-lg font-black uppercase text-[10px] bg-primary text-white shadow-xl">
+          {isSubmitting ? <Loader2 className="animate-spin h-3 w-3" /> : "Authorize Entry"}
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {/* Pricing Mode Switcher */}
-        <div className="grid grid-cols-3 gap-2 bg-white p-2 rounded-2xl border shadow-sm">
-           <button type="button" onClick={() => setPricingMode('dynamic')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'dynamic' ? "bg-primary text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
-             <Zap size={14}/> Dynamic
-           </button>
-           <button type="button" onClick={() => setPricingMode('combo')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'combo' ? "bg-indigo-600 text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
-             <Layers size={14}/> Combo
-           </button>
-           <button type="button" onClick={() => setPricingMode('manual')} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", pricingMode === 'manual' ? "bg-amber-600 text-white shadow-lg" : "bg-gray-50 text-gray-400 hover:bg-gray-100")}>
-             <Edit2 size={14}/> Manual
-           </button>
-        </div>
+      <div className="grid grid-cols-3 gap-2 bg-white p-2 rounded-2xl border shadow-sm">
+        {(['dynamic', 'combo', 'manual'] as EntryMode[]).map(m => (
+          <button key={m} type="button" onClick={() => setEntryMode(m)} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase transition-all", entryMode === m ? "bg-primary text-white shadow-lg" : "bg-gray-50 text-gray-400")}>
+            {m === 'dynamic' ? <Zap size={14}/> : m === 'combo' ? <Layers size={14}/> : <Edit2 size={14}/>} {m}
+          </button>
+        ))}
+      </div>
 
-        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
-          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
-              <UserIcon size={12} /> Client Identity
-            </CardTitle>
-            <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-primary">New Profile</Label>
-               <Switch checked={isNewCustomer} onCheckedChange={setIsNewCustomer} className="scale-75" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-1 space-y-1.5">
-                <Label className="text-[9px] font-bold text-gray-400 uppercase">Customer Name</Label>
-                {isNewCustomer ? (
-                  <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} placeholder="Full Name" className="h-9" />
-                ) : (
-                  <Select value={customer.id} onValueChange={(val) => {
-                    const c = clients?.find(i => i.id === val);
-                    if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', email: c.email || '', company: c.company || '', address: c.address || '' });
-                  }}>
-                    <SelectTrigger className="h-9 bg-white border-gray-200">
-                      <SelectValue placeholder="Search existing..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients?.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name} ({c.phone})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-bold text-gray-400 uppercase">Mobile Number</Label>
-                <Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} placeholder="01XXXXXXXXX" className="h-9" disabled={!isNewCustomer && customer.id !== ''} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-bold text-gray-400 uppercase">Issue Date</Label>
-                <Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-9" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[9px] font-bold text-gray-400 uppercase">Due Date</Label>
-                <Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-9" />
-              </div>
-              <div className="md:col-span-4 space-y-1.5">
-                <Label className="text-[9px] font-bold text-gray-400 uppercase">Delivery Address</Label>
-                <Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} placeholder="House, Road, Area, District" className="h-9" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
-          <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
-              <ShoppingCart size={12} /> Product & Service Entry
-            </CardTitle>
-            {pricingMode === 'combo' && (
-               <Select onValueChange={handleAddPackage}>
-                  <SelectTrigger className="h-7 w-40 bg-white border-indigo-200 text-indigo-600 text-[9px] font-black uppercase rounded-lg">
-                    <SelectValue placeholder="Import Package..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {packages?.map(p => <SelectItem key={p.id} value={p.id} className="text-[10px] font-bold">{p.name}</SelectItem>)}
-                  </SelectContent>
-               </Select>
+      <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
+        <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between"><CardTitle className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2"><UserIcon size={12}/> Client Registry</CardTitle>
+          <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border">
+             <Label className="text-[8px] font-black uppercase text-primary">New Profile</Label>
+             <Switch checked={isNewCustomer} onCheckedChange={setIsNewCustomer} className="scale-75" />
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-1 space-y-1.5"><Label className="text-[9px] font-bold text-gray-400 uppercase">Customer Name</Label>
+            {isNewCustomer ? <Input value={customer.name} onChange={e => setCustomer({...customer, name: e.target.value})} className="h-9 font-bold" /> : (
+              <Select onValueChange={(val) => { const c = clients?.find(i => i.id === val); if (c) setCustomer({ id: c.id, name: c.name || '', phone: c.phone || '', address: c.address || '' }); }}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Search..." /></SelectTrigger>
+                <SelectContent>{clients?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
             )}
-          </CardHeader>
-          <CardContent className="p-5 space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border">
-              {!isManualItem ? (
-                <>
-                  <div className="md:col-span-7 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Select Item</Label>
-                    <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                      <SelectTrigger className="h-9 bg-white border-gray-200">
-                        <SelectValue placeholder="Choose service..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {services?.map(s => <SelectItem key={s.id} value={s.id} className="text-xs uppercase font-bold">{s.title}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-3 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Unit/Area Qty</Label>
-                    <Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-9 bg-white" />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="md:col-span-5 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Item Name</Label>
-                    <Input value={manualItem.name} onChange={e => setManualItem({...manualItem, name: e.target.value})} placeholder="Item Name" className="h-9 bg-white" />
-                  </div>
-                  <div className="md:col-span-2 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Rate</Label>
-                    <Input type="number" value={manualItem.price} onChange={e => setManualItem({...manualItem, price: e.target.value})} placeholder="0.00" className="h-9 bg-white" />
-                  </div>
-                  <div className="md:col-span-2 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Unit/Area</Label>
-                    <Input type="number" value={manualItem.quantity} onChange={e => setManualItem({...manualItem, quantity: parseInt(e.target.value) || 1})} className="h-9 bg-white" />
-                  </div>
-                  <div className="md:col-span-1 space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-gray-400">Unit</Label>
-                    <Select value={manualItem.unit} onValueChange={v => setManualItem({...manualItem, unit: v})}>
-                      <SelectTrigger className="h-9 bg-white rounded-lg px-2 text-[10px] font-bold"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {['Qty', 'Sqft', 'Pcs', 'Unit', 'Hour'].map(u => <SelectItem key={u} value={u} className="text-[10px] font-bold uppercase">{u}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-              <div className="md:col-span-2">
-                <Button type="button" onClick={handleAddItemToBill} className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase gap-2 shadow-md">
-                  <Plus size={14} /> Add Item
-                </Button>
-              </div>
-            </div>
+          </div>
+          <div className="space-y-1.5"><Label className="text-[9px] font-bold text-gray-400 uppercase">Phone</Label><Input value={customer.phone} onChange={e => setCustomer({...customer, phone: e.target.value})} className="h-9" /></div>
+          <div className="space-y-1.5"><Label className="text-[9px] font-bold text-gray-400 uppercase">Issue Date</Label><Input type="date" value={config.issueDate} onChange={e => setConfig({...config, issueDate: e.target.value})} className="h-9 bg-white" /></div>
+          <div className="space-y-1.5"><Label className="text-[9px] font-bold text-gray-400 uppercase">Due Date</Label><Input type="date" value={config.expiryDate} onChange={e => setConfig({...config, expiryDate: e.target.value})} className="h-9 bg-white" /></div>
+          <div className="md:col-span-4 space-y-1.5"><Label className="text-[9px] font-bold text-gray-400 uppercase">Address</Label><Input value={customer.address} onChange={e => setCustomer({...customer, address: e.target.value})} className="h-9 bg-white" /></div>
+        </CardContent>
+      </Card>
 
-            <div className="rounded-xl border border-gray-100 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow className="border-none">
-                    <TableHead className="text-[9px] font-black uppercase py-3">Item Name</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-center w-24">Unit/Area</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-right w-24">Normal Rate</TableHead>
-                    <TableHead className="text-[9px] font-black uppercase text-right w-28">Net Amount</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-gray-50/30">
-                      <TableCell className="py-3 font-bold text-[11px] text-gray-900 uppercase">{item.name}</TableCell>
-                      <TableCell>
-                        <Input type="number" value={item.quantity} onChange={e => updateItemField(item.id, 'quantity', parseInt(e.target.value) || 0)} className="h-7 w-16 mx-auto text-center font-bold text-[11px] bg-white shadow-inner rounded-lg" />
-                      </TableCell>
-                      <TableCell className="text-right text-[11px] font-black text-gray-400">
-                        {pricingMode === 'dynamic' ? `৳${item.price.toLocaleString()}` : '---'}
-                      </TableCell>
-                      <TableCell className="text-right font-black text-[11px] text-gray-900">
-                        {pricingMode === 'dynamic' ? `৳${(item.price * item.quantity).toLocaleString()}` : '---'}
-                      </TableCell>
-                      <TableCell><button type="button" onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={14}/></button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+      <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
+        <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex items-center justify-between"><CardTitle className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2"><ShoppingCart size={12}/> Item Matrix ({entryMode.toUpperCase()})</CardTitle></CardHeader>
+        <CardContent className="p-5 space-y-4">
+          {entryMode === 'dynamic' && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border">
+                <div className="md:col-span-7 space-y-1"><Label className="text-[9px] font-bold uppercase text-gray-400">Select Item</Label>
+                  <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Choose..." /></SelectTrigger>
+                    <SelectContent>{services.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-3 space-y-1"><Label className="text-[9px] font-bold uppercase text-gray-400">Qty</Label><Input type="number" min="1" value={selectedQty} onChange={e => setSelectedQty(parseInt(e.target.value) || 1)} className="h-9 bg-white" /></div>
+                <Button type="button" onClick={handleAddDynamic} className="md:col-span-2 h-9 bg-blue-600 font-bold text-[10px] uppercase shadow-md"><Plus size={14} /> Add to List</Button>
+              </div>
+              <Table><TableHeader><TableRow><TableHead className="text-[9px] font-black uppercase py-3">Name</TableHead><TableHead className="text-[9px] font-black uppercase text-center w-24">Qty</TableHead><TableHead className="text-[9px] font-black uppercase text-right w-24">Rate</TableHead><TableHead className="text-[9px] font-black uppercase text-right w-28">Net Amount</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+                <TableBody>{dynamicItems.map((item, idx) => (
+                  <TableRow key={idx}><TableCell className="py-3 font-bold text-[11px] uppercase">{item.name}</TableCell><TableCell className="text-center font-black text-[11px]">{item.quantity} {item.unit}</TableCell><TableCell className="text-right text-[11px] font-black text-gray-400">৳{item.price.toLocaleString()}</TableCell><TableCell className="text-right font-black text-[11px] text-gray-900">৳{(item.price * item.quantity).toLocaleString()}</TableCell><TableCell><button onClick={() => setDynamicItems(dynamicItems.filter((_, i) => i !== idx))} className="text-rose-400"><Trash2 size={14}/></button></TableCell></TableRow>))}</TableBody>
               </Table>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-7 space-y-4">
-             <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
-                <CardHeader className="bg-emerald-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
-                   <CardTitle className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 text-emerald-700">
-                      <Wallet size={12} /> Transaction Log
-                   </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 space-y-4">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Amount Paid Today (৳)</Label>
-                        <Input type="number" value={payment.paidAmount} onChange={e => setPayment({...payment, paidAmount: e.target.value})} className="h-10 font-black text-emerald-700 bg-emerald-50/20 border-emerald-100" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase text-gray-400">Gateway</Label>
-                        <Select value={payment.method} onValueChange={v => setPayment({...payment, method: v})}>
-                           <SelectTrigger className="h-10 bg-white border-gray-200 font-bold text-xs"><SelectValue /></SelectTrigger>
-                           <SelectContent>{['Cash', 'bKash', 'Nagad', 'Bank Transfer'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                        </Select>
-                      </div>
-                   </div>
-                </CardContent>
-             </Card>
-          </div>
+          {entryMode === 'combo' && (
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label className="text-[9px] font-black uppercase text-gray-400">Services Included (Manual Type)</Label>
+                {comboServices.map((s, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Input value={s} onChange={e => updateComboRow(idx, e.target.value)} placeholder="Type service name..." className="h-10 bg-gray-50 border-none rounded-xl font-bold text-xs shadow-inner" />
+                    {comboServices.length > 1 && <button onClick={() => removeComboRow(idx)} className="text-rose-400 hover:text-rose-600"><X size={18}/></button>}
+                  </div>
+                ))}
+                <Button type="button" onClick={addComboRow} variant="outline" className="w-full h-9 border-dashed border-2 rounded-xl text-[9px] font-black uppercase text-gray-400"><Plus size={14} /> Add Service Entry</Button>
+              </div>
+              <div className="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                 <Label className="text-[10px] font-black uppercase text-indigo-700">One Time Package Bill (৳)</Label>
+                 <Input type="number" value={comboTotalPrice} onChange={e => setComboTotalPrice(e.target.value)} className="h-12 w-48 bg-white border-none rounded-xl font-black text-lg text-indigo-700 text-right shadow-sm" />
+              </div>
+            </div>
+          )}
 
-          <div className="lg:col-span-5">
-            <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
-              <CardContent className="p-6 md:p-8 space-y-5">
-                {pricingMode === 'dynamic' ? (
-                  <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    <span>Base Subtotal</span>
-                    <span>৳{totals.calculatedSubtotal.toLocaleString()}</span>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                      <span>Service List Total</span>
-                      <span className="text-gray-400 line-through">৳{totals.calculatedSubtotal.toLocaleString()}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-indigo-700 ml-1">
-                          {pricingMode === 'combo' ? 'Grouped Bundle Price' : 'Custom Override Bill'} (৳)
-                      </Label>
-                      <Input type="number" value={customPrice} onChange={e => setCustomPrice(e.target.value)} placeholder="0.00" className="h-12 bg-white border-none rounded-xl font-black text-lg text-indigo-700 shadow-inner" />
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center gap-4">
-                   <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Discount</span>
-                   <div className="flex gap-1">
-                      <Input type="number" value={pricing.discount} onChange={e => setPricing({...pricing, discount: parseFloat(e.target.value) || 0})} className="h-9 w-20 bg-white border-gray-200 text-center font-black text-rose-600 shadow-sm" />
-                      <Select value={pricing.discountType} onValueChange={(v: any) => setPricing({...pricing, discountType: v})}>
-                         <SelectTrigger className="h-9 w-14 bg-white border-gray-200 text-xs font-black"><SelectValue/></SelectTrigger>
-                         <SelectContent className="rounded-xl"><SelectItem value="percentage">%</SelectItem><SelectItem value="fixed">৳</SelectItem></SelectContent>
-                      </Select>
-                   </div>
-                </div>
-                <div className="space-y-3 pt-6 border-t border-gray-200">
-                  <div className="flex justify-between items-end">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Net Final Bill</span>
-                      <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toLocaleString()}</span>
-                    </div>
-                    <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {entryMode === 'manual' && (
+            <div className="space-y-4">
+              <Table><TableHeader><TableRow><TableHead className="text-[10px] uppercase">Service/Product</TableHead><TableHead className="text-center w-24 uppercase">Price</TableHead><TableHead className="text-center w-20 uppercase">Qty</TableHead><TableHead className="text-center w-24 uppercase">Unit</TableHead><TableHead className="text-right w-28 uppercase">Total</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+                <TableBody>{manualRows.map((row, idx) => (
+                  <TableRow key={idx}><TableCell><Input value={row.name} onChange={e => updateManualRow(idx, 'name', e.target.value)} className="h-8 text-xs font-bold bg-gray-50 border-none" placeholder="Description" /></TableCell>
+                    <TableCell><Input type="number" value={row.price} onChange={e => updateManualRow(idx, 'price', e.target.value)} className="h-8 text-center text-xs font-black bg-gray-50 border-none" /></TableCell>
+                    <TableCell><Input type="number" value={row.quantity} onChange={e => updateManualRow(idx, 'quantity', parseInt(e.target.value) || 0)} className="h-8 text-center text-xs font-black bg-gray-50 border-none" /></TableCell>
+                    <TableCell><Select value={row.unit} onValueChange={v => updateManualRow(idx, 'unit', v)}><SelectTrigger className="h-8 text-[10px] uppercase font-black"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Qty">Qty</SelectItem><SelectItem value="Sqft">Sqft</SelectItem><SelectItem value="Pcs">Pcs</SelectItem><SelectItem value="Room">Room</SelectItem></SelectContent></Select></TableCell>
+                    <TableCell className="text-right font-black text-xs text-primary">৳{((parseFloat(row.price) || 0) * row.quantity).toLocaleString()}</TableCell>
+                    <TableCell><button onClick={() => removeManualRow(idx)} className="text-rose-400"><X size={16}/></button></TableCell></TableRow>))}</TableBody>
+              </Table>
+              <Button type="button" onClick={addManualRow} variant="outline" className="w-full h-9 border-dashed border-2 rounded-xl text-[9px] font-black uppercase text-gray-400"><ListPlus size={14} /> Add New Row</Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="bg-slate-50 border border-gray-100 p-6 rounded-[1.5rem] space-y-4">
+          <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest"><span>Net Value</span><span>৳{totals.subtotal.toLocaleString()}</span></div>
+          <div className="flex justify-between items-center gap-4">
+             <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Entry Settlement (৳)</span>
+             <Input type="number" value={payment.paidAmount} onChange={e => setPayment({...payment, paidAmount: e.target.value})} className="h-8 w-32 bg-white border-emerald-100 text-center font-black text-emerald-600 shadow-sm" />
           </div>
-        </div>
+          <div className="pt-5 border-t-2 border-dashed border-gray-200 flex justify-between items-end">
+             <div className="flex flex-col"><span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Total Payable</span><span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toLocaleString()}</span></div>
+             <div className="p-2 bg-primary/10 rounded-xl text-primary"><Calculator size={22}/></div>
+          </div>
       </div>
     </div>
   );
