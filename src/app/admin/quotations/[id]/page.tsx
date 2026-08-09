@@ -160,7 +160,6 @@ export default function QuotationEditorPage() {
   const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
 
   const totals = useMemo(() => {
-    // If it's combo or manual mode with a fixed total, we respect the original total unless changed
     if (config.pricingMode === 'combo' || config.pricingMode === 'manual_fixed') {
         return { subtotal: pricing.manualTotal, discountAmt: 0, taxAmt: 0, total: pricing.manualTotal };
     }
@@ -191,6 +190,7 @@ export default function QuotationEditorPage() {
         updatedAt: serverTimestamp()
       });
       toast({ title: "Quotation Updated" });
+      router.push('/admin/quotations');
     } catch (e) {
       toast({ variant: "destructive", title: "Update Failed" });
     } finally {
