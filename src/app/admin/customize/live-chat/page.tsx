@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -43,6 +44,7 @@ export default function LiveChatManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const configRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'live_chat') : null, [db]);
   const { data: config, isLoading } = useDoc(configRef);
@@ -59,7 +61,7 @@ export default function LiveChatManagementPage() {
   });
 
   useEffect(() => {
-    if (config) {
+    if (!isLoading && config && !isInitialized) {
       setFormData({
         isEnabled: config.isEnabled ?? true,
         provider: config.provider || 'tawk',
@@ -70,8 +72,9 @@ export default function LiveChatManagementPage() {
         customCss: config.customCss || '',
         customJs: config.customJs || ''
       });
+      setIsInitialized(true);
     }
-  }, [config]);
+  }, [config, isLoading, isInitialized]);
 
   const handleSave = async () => {
     if (!db) return;
@@ -89,7 +92,7 @@ export default function LiveChatManagementPage() {
     }
   };
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
+  if (isLoading && !isInitialized) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-24 min-w-0">
@@ -164,7 +167,7 @@ export default function LiveChatManagementPage() {
                 />
                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
                   <AlertCircle size={18} className="text-amber-600 mt-1 shrink-0" />
-                  <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase">
+                  <p className="text-[10px] font-bold text-amber-800 leading-normal uppercase">
                     Security Sync: All scripts are sanitized before rendering. Standard tracking scripts work instantly after save.
                   </p>
                 </div>

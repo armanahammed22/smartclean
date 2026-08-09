@@ -137,34 +137,36 @@ export default function AdminSettingsPage() {
   const [customLabels, setCustomLabels] = useState<Record<string, { en: string, bn: string }>>({});
   const [expandedLabelEdit, setExpandedLabelEdit] = useState<string | null>(null);
 
+  // 🛡️ Consolidated Initialization - Runs ONLY ONCE when data arrives
   useEffect(() => {
-    if (settings && !isInitialized) {
-      setFormData({
-        ...formData,
-        ...settings,
-        socialLinks: { ...formData.socialLinks, ...(settings.socialLinks || {}) },
-        productsEnabled: settings.productsEnabled ?? true,
-        servicesEnabled: settings.servicesEnabled ?? true
-      });
-    }
-  }, [settings, isInitialized]);
-
-  useEffect(() => {
-    if (sidebarConfig && !isInitialized) {
-      if (sidebarConfig.order) {
-        const saved = sidebarConfig.order as string[];
-        const missing = DEFAULT_MENU_KEYS.filter(k => !saved.includes(k));
-        setMenuOrder([...saved, ...missing]);
+    if (!isLoading && (settings || sidebarConfig) && !isInitialized) {
+      if (settings) {
+        setFormData((prev: any) => ({
+          ...prev,
+          ...settings,
+          socialLinks: { ...prev.socialLinks, ...(settings.socialLinks || {}) },
+          productsEnabled: settings.productsEnabled ?? true,
+          servicesEnabled: settings.servicesEnabled ?? true
+        }));
       }
-      if (sidebarConfig.visibility) {
-        setMenuVisibility(sidebarConfig.visibility);
+      
+      if (sidebarConfig) {
+        if (sidebarConfig.order) {
+          const saved = sidebarConfig.order as string[];
+          const missing = DEFAULT_MENU_KEYS.filter(k => !saved.includes(k));
+          setMenuOrder([...saved, ...missing]);
+        }
+        if (sidebarConfig.visibility) {
+          setMenuVisibility(sidebarConfig.visibility);
+        }
+        if (sidebarConfig.customLabels) {
+          setCustomLabels(sidebarConfig.customLabels);
+        }
       }
-      if (sidebarConfig.customLabels) {
-        setCustomLabels(sidebarConfig.customLabels);
-      }
+      
       setIsInitialized(true);
     }
-  }, [sidebarConfig, isInitialized]);
+  }, [settings, sidebarConfig, isLoading, isInitialized]);
 
   const handleSave = () => {
     if (!db || !user) return;
@@ -258,7 +260,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Loading Settings...</div>;
+  if (isLoading && !isInitialized) return <div className="p-20 text-center"><Loader2 className="animate-spin inline mr-2" /> Loading Settings...</div>;
 
   return (
     <div className="space-y-8 pb-12">

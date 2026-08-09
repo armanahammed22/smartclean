@@ -80,6 +80,7 @@ export default function LayoutThemePage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const themeRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'layout') : null, [db]);
   const { data: themeData, isLoading } = useDoc(themeRef);
@@ -87,15 +88,16 @@ export default function LayoutThemePage() {
   const [formData, setFormData] = useState<any>(DEFAULT_THEME);
 
   useEffect(() => {
-    if (themeData) {
+    if (!isLoading && themeData && !isInitialized) {
       setFormData({
         ...DEFAULT_THEME,
         ...themeData,
         header: { ...DEFAULT_THEME.header, ...(themeData.header || {}) },
         footer: { ...DEFAULT_THEME.footer, ...(themeData.footer || {}) }
       });
+      setIsInitialized(true);
     }
-  }, [themeData]);
+  }, [themeData, isLoading, isInitialized]);
 
   const handleSave = async () => {
     if (!db) return;
@@ -128,7 +130,7 @@ export default function LayoutThemePage() {
     setFormData({ ...formData, [section]: { ...formData[section], [listKey]: list } });
   };
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
+  if (isLoading && !isInitialized) return <div className="p-20 text-center"><Loader2 className="animate-spin inline" /></div>;
 
   return (
     <div className="space-y-8 pb-24">
@@ -196,13 +198,11 @@ export default function LayoutThemePage() {
               </CardContent>
             </Card>
 
-            {/* Custom Request Section Remains */}
             <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
               <CardHeader className="bg-gray-50 p-8 border-b">
                 <CardTitle className="text-lg font-bold flex items-center gap-2"><Zap className="text-primary" size={20} /> Custom Request Branding</CardTitle>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
-                {/* ... existing custom request code ... */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div className="space-y-2">
@@ -243,7 +243,6 @@ export default function LayoutThemePage() {
         </TabsContent>
 
         <TabsContent value="footer">
-          {/* ... existing footer code ... */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-6">
               <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">

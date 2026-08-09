@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -41,6 +42,7 @@ export default function FooterChatManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const configRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'footer_live_chat') : null, [db]);
   const { data: config, isLoading } = useDoc(configRef);
@@ -76,10 +78,11 @@ export default function FooterChatManagementPage() {
   });
 
   useEffect(() => {
-    if (config) {
+    if (!isLoading && config && !isInitialized) {
       setFormData({ ...formData, ...config });
+      setIsInitialized(true);
     }
-  }, [config]);
+  }, [config, isLoading, isInitialized]);
 
   const handleSave = async () => {
     if (!db) return;
@@ -108,7 +111,7 @@ export default function FooterChatManagementPage() {
 
   const ActiveIcon = (LucideIcons as any)[formData.iconName] || MessageCircle;
 
-  if (isLoading) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
+  if (isLoading && !isInitialized) return <div className="p-20 text-center"><Loader2 className="animate-spin text-primary inline" /></div>;
 
   return (
     <div className="space-y-8 pb-24 min-w-0">

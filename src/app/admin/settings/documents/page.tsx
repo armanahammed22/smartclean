@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -78,7 +79,7 @@ export default function DocumentEnginePage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isSaving, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 1. Design Data
   const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
@@ -117,24 +118,27 @@ export default function DocumentEnginePage() {
     signatureUrl: ''
   });
 
+  // 🛡️ Safe Initialization Protocol
   useEffect(() => {
-    setMounted(true);
-    if (currentDesign) setDesignForm({ ...DEFAULT_DESIGN, ...currentDesign });
-    if (quoteConfig) {
-      setQuoteForm({
-        ...quoteForm,
-        ...quoteConfig,
-        defaultTerms: Array.isArray(quoteConfig.defaultTerms) ? quoteConfig.defaultTerms : [quoteConfig.defaultTerms || '']
-      });
+    if (!dLoading && !qLoading && !gLoading && !isInitialized) {
+      if (currentDesign) setDesignForm({ ...DEFAULT_DESIGN, ...currentDesign });
+      if (quoteConfig) {
+        setQuoteForm({
+          ...quoteForm,
+          ...quoteConfig,
+          defaultTerms: Array.isArray(quoteConfig.defaultTerms) ? quoteConfig.defaultTerms : [quoteConfig.defaultTerms || '']
+        });
+      }
+      if (globalSettings) {
+        setInvoiceForm((prev: any) => ({
+          ...prev,
+          ...globalSettings,
+          invoiceDefaultTerms: Array.isArray(globalSettings.invoiceDefaultTerms) ? globalSettings.invoiceDefaultTerms : [globalSettings.invoiceDefaultTerms || '']
+        }));
+      }
+      setIsInitialized(true);
     }
-    if (globalSettings) {
-      setInvoiceForm({
-        ...invoiceForm,
-        ...globalSettings,
-        invoiceDefaultTerms: Array.isArray(globalSettings.invoiceDefaultTerms) ? globalSettings.invoiceDefaultTerms : [globalSettings.invoiceDefaultTerms || '']
-      });
-    }
-  }, [currentDesign, quoteConfig, globalSettings]);
+  }, [currentDesign, quoteConfig, globalSettings, dLoading, qLoading, gLoading, isInitialized]);
 
   const handleSaveAll = async () => {
     if (!db) return;
@@ -173,7 +177,7 @@ export default function DocumentEnginePage() {
   };
   const removeInvoiceTerm = (idx: number) => setInvoiceForm((p: any) => ({ ...p, invoiceDefaultTerms: p.invoiceDefaultTerms.filter((_: any, i: number) => i !== idx) }));
 
-  if (!mounted || dLoading || qLoading || gLoading) return <div className="p-32 text-center"><Loader2 className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Booting Document Engine...</p></div>;
+  if (!isInitialized && (dLoading || qLoading || gLoading)) return <div className="p-32 text-center"><Loader2 className="animate-spin text-primary mx-auto" size={48} /><p className="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Booting Document Engine...</p></div>;
 
   return (
     <div className="space-y-8 pb-24 min-w-0">
