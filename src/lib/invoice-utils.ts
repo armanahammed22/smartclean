@@ -34,7 +34,8 @@ export function numberToWords(amount: number): string {
 }
 
 /**
- * Generates the next invoice number based on global settings.
+ * Generates the next invoice number based on global settings (Read Only).
+ * Calculates next number but does NOT update DB.
  */
 export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
   try {
@@ -44,8 +45,6 @@ export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
     
     const prefix = settings.invoicePrefix || 'INV';
     const nextNumber = (settings.invoiceLastNumber || 1000) + 1;
-    
-    await setDoc(settingsRef, { invoiceLastNumber: nextNumber }, { merge: true });
     
     return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
   } catch (e) {
@@ -116,6 +115,9 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 
     const initialPaid = sourceData.status === 'Completed' ? grandTotal : paidAmount;
     const initialDue = Math.max(0, grandTotal - initialPaid);
+
+    // Update the sequence ID inside transaction for safety
+    transaction.update(doc(db, 'site_settings', 'global'), { invoiceLastNumber: increment(1) });
 
     transaction.set(invRef, {
       invoiceNumber: invNumber,

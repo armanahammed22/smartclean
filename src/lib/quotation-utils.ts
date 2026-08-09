@@ -1,12 +1,13 @@
 'use client';
 
-import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, getDoc, limit, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { Quotation } from '@/types';
 import { getOrCreateInvoice } from './invoice-utils';
 
 /**
- * Generates the next quotation number based on settings.
+ * Generates the next quotation number based on settings (Read Only).
+ * It calculates the next number but does NOT update the DB.
  */
 export async function getNextQuotationNumber(db: Firestore): Promise<string> {
   try {
@@ -16,8 +17,6 @@ export async function getNextQuotationNumber(db: Firestore): Promise<string> {
     
     const prefix = settings.prefix || 'QTN';
     const nextNumber = (settings.lastNumber || 1000) + 1;
-    
-    await setDoc(settingsRef, { lastNumber: nextNumber }, { merge: true });
     
     return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
   } catch (e) {
@@ -61,6 +60,10 @@ export async function convertBookingToQuotation(db: Firestore, booking: any): Pr
     updatedAt: new Date().toISOString(),
     sourceBookingId: booking.id
   };
+
+  // Increment last number in DB since we are creating it
+  const settingsRef = doc(db, 'site_settings', 'quotation');
+  await updateDoc(settingsRef, { lastNumber: increment(1) });
 
   const docRef = await addDoc(collection(db, 'quotations'), quotationData);
   return docRef.id;

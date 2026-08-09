@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
@@ -45,6 +44,7 @@ export default function CreateInvoicePage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const idFetchedRef = useRef(false);
 
   // 🛠️ Entry Mode State
   const [entryMode, setEntryMode] = useState<EntryMode>('dynamic');
@@ -85,7 +85,12 @@ export default function CreateInvoicePage() {
   const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [], [customersRaw]);
 
   useEffect(() => {
-    if (db) getNextInvoiceNumber(db).then(setInvoiceNumber);
+    if (db && !idFetchedRef.current) {
+      getNextInvoiceNumber(db).then(num => {
+        setInvoiceNumber(num);
+        idFetchedRef.current = true;
+      });
+    }
   }, [db]);
 
   // Actions
@@ -141,8 +146,18 @@ export default function CreateInvoicePage() {
       if (isNewCustomer || !currentCustomerId) {
         const phone = customer.phone.replace(/\D/g, '');
         const newRef = doc(collection(db, 'users'));
-        batch.set(newRef, { uid: newRef.id, name: customer.name, phone, role: 'customer', status: 'active', totalInvoiced: 0, totalPaid: 0, outstandingBalance: 0, createdAt: new Date().toISOString() });
         currentCustomerId = newRef.id;
+        batch.set(newRef, { 
+          uid: currentCustomerId, 
+          name: customer.name, 
+          phone, 
+          role: 'customer', 
+          status: 'active', 
+          totalInvoiced: 0, 
+          totalPaid: 0, 
+          outstandingBalance: 0, 
+          createdAt: new Date().toISOString() 
+        });
       }
 
       let items = [];
@@ -171,6 +186,11 @@ export default function CreateInvoicePage() {
       };
 
       batch.set(invoiceRef, invoiceData);
+
+      // Increment Counter in Global Settings
+      const settingsRef = doc(db, 'site_settings', 'global');
+      batch.update(settingsRef, { invoiceLastNumber: increment(1) });
+
       if (currentCustomerId) {
         batch.update(doc(db, 'users', currentCustomerId), {
           totalInvoiced: increment(totals.total),
@@ -183,7 +203,7 @@ export default function CreateInvoicePage() {
       toast({ title: "Invoice Published" });
       router.push('/admin/invoices');
     } catch (e) {
-      toast({ variant: "destructive", title: "Failed" });
+      toast({ variant: "destructive", title: "Failed to save invoice" });
     } finally {
       setIsSubmitting(false);
     }

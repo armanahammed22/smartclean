@@ -1,10 +1,9 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, useCollection, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, doc, setDoc, getDocs, limit, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +43,7 @@ export default function CreateQuotationPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quoteNumber, setQuoteNumber] = useState('');
+  const idFetchedRef = useRef(false);
 
   // 🛠️ Entry Mode State
   const [entryMode, setEntryMode] = useState<EntryMode>('dynamic');
@@ -53,7 +53,7 @@ export default function CreateQuotationPage() {
   const [syncToBooking, setSyncToBooking] = useState(true);
 
   // Identity Form State
-  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '' });
+  const [customer, setCustomer] = useState({ id: '', name: '', phone: '', address: '', email: '' });
   
   // Dynamic Mode Cart
   const [dynamicItems, setDynamicItems] = useState<any[]>([]);
@@ -83,11 +83,22 @@ export default function CreateQuotationPage() {
   const { data: customersRaw } = useCollection(customersRef);
   const { data: quoteSettings } = useDoc(settingsRef);
 
-  const services = useMemo(() => servicesRaw?.sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [], [servicesRaw]);
+  const services = useMemo(() => {
+    return servicesRaw?.sort((a, b) => (a.title || '').localeCompare(b.title || '')) || [];
+  }, [servicesRaw]);
+
   const clients = useMemo(() => customersRaw?.sort((a, b) => (a.name || '').localeCompare(b.name || '')) || [], [customersRaw]);
 
   useEffect(() => {
-    if (db) getNextQuotationNumber(db).then(setQuoteNumber);
+    if (db && !idFetchedRef.current) {
+      getNextQuotationNumber(db).then(num => {
+        setQuoteNumber(num);
+        idFetchedRef.current = true;
+      });
+    }
+  }, [db]);
+
+  useEffect(() => {
     if (quoteSettings) {
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + (quoteSettings.defaultValidityDays || 7));
@@ -97,7 +108,7 @@ export default function CreateQuotationPage() {
         terms: Array.isArray(quoteSettings.defaultTerms) ? quoteSettings.defaultTerms : [quoteSettings.defaultTerms || '']
       }));
     }
-  }, [db, quoteSettings]);
+  }, [quoteSettings]);
 
   // Logic Helpers
   const addComboRow = () => setComboServices([...comboServices, '']);
@@ -142,13 +153,22 @@ export default function CreateQuotationPage() {
     }
 
     setIsSubmitting(true);
+    const batch = writeBatch(db);
+
     try {
       let currentCustomerId = customer.id;
       if (isNewCustomer || !currentCustomerId) {
         const phone = customer.phone.replace(/\D/g, '');
         const newRef = doc(collection(db, 'users'));
-        await setDoc(newRef, { uid: newRef.id, name: customer.name, phone, role: 'customer', status: 'active', createdAt: new Date().toISOString() });
         currentCustomerId = newRef.id;
+        batch.set(newRef, { 
+          uid: currentCustomerId, 
+          name: customer.name, 
+          phone, 
+          role: 'customer', 
+          status: 'active', 
+          createdAt: new Date().toISOString() 
+        });
       }
 
       let items = [];
@@ -156,6 +176,7 @@ export default function CreateQuotationPage() {
       else if (entryMode === 'combo') items = comboServices.filter(s => !!s).map(s => ({ name: s, itemType: 'combo_member', price: 0, quantity: 1 }));
       else items = manualRows.filter(r => !!r.name).map(r => ({ ...r, price: parseFloat(r.price) || 0, itemType: 'manual' }));
 
+      // Final Logic Sync
       const finalData = {
         quoteNumber,
         customerId: currentCustomerId,
@@ -167,16 +188,28 @@ export default function CreateQuotationPage() {
         pricingMode: entryMode,
         status,
         ...config,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
-      const quoteRef = await addDoc(collection(db, 'quotations'), finalData);
-      if (syncToBooking) await convertQuotationToBooking(db, { ...finalData, id: quoteRef.id } as any);
+      // 1. Create Quotation
+      const quoteRef = doc(collection(db, 'quotations'));
+      batch.set(quoteRef, finalData);
+
+      // 2. Increment Counter
+      const settingsRef = doc(db, 'site_settings', 'quotation');
+      batch.update(settingsRef, { lastNumber: increment(1) });
+
+      await batch.commit();
+
+      if (syncToBooking) {
+        await convertQuotationToBooking(db, { ...finalData, id: quoteRef.id } as any);
+      }
 
       toast({ title: "Quotation Generated" });
       router.push('/admin/quotations');
     } catch (e) {
-      toast({ variant: "destructive", title: "Failed" });
+      toast({ variant: "destructive", title: "Failed to save quotation" });
     } finally {
       setIsSubmitting(false);
     }
@@ -235,7 +268,9 @@ export default function CreateQuotationPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-xl border">
                 <div className="md:col-span-7 space-y-1"><Label className="text-[9px] font-bold uppercase text-gray-400">Select Service</Label>
                   <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Choose..." /></SelectTrigger>
+                    <SelectTrigger className="h-9 bg-white border-gray-200">
+                      <SelectValue placeholder="Choose..." />
+                    </SelectTrigger>
                     <SelectContent>{services.map(s => <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
