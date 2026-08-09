@@ -69,10 +69,18 @@ export default function CreateQuotationPage() {
 
   const [pricing, setPricing] = useState({ discount: 0, additional: 0 });
   const [config, setConfig] = useState({ 
-    issueDate: new Date().toISOString().split('T')[0], 
+    issueDate: '', 
     expiryDate: '', 
     terms: [] as string[]
   });
+
+  // 🛡️ Hydration Safe Date Initializer
+  useEffect(() => {
+    setConfig(prev => ({
+      ...prev,
+      issueDate: new Date().toISOString().split('T')[0]
+    }));
+  }, []);
 
   // Data Fetch
   const servicesRef = useMemoFirebase(() => db ? query(collection(db, 'services'), where('status', '==', 'Active')) : null, [db]);
