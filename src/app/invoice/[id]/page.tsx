@@ -32,7 +32,8 @@ import { downloadInvoicePDF, numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
 function InvoiceViewContent() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id as string;
   const db = useFirestore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -56,7 +57,10 @@ function InvoiceViewContent() {
       setIsLoading(true);
       try {
         const docRef = collection(db, 'invoices');
-        const qByNum = query(docRef, where('invoiceNumber', '==', id), limit(1));
+        const normalizedId = id.toUpperCase();
+        
+        // 1. Try fetching by invoiceNumber (SEO URL)
+        const qByNum = query(docRef, where('invoiceNumber', '==', normalizedId), limit(1));
         const snapByNum = await getDocs(qByNum);
 
         if (!snapByNum.empty) {
@@ -65,11 +69,13 @@ function InvoiceViewContent() {
           return;
         }
 
+        // 2. Try fetching by literal ID (Fallback)
         const qById = query(docRef, where('__name__', '==', id), limit(1));
         const snapById = await getDocs(qById);
 
         if (!snapById.empty) {
           const data = snapById.docs[0].data();
+          // If it has a clean number, redirect to the clean URL
           if (data.invoiceNumber && id !== data.invoiceNumber) {
             router.replace(`/invoice/${data.invoiceNumber}`);
             return;
@@ -77,7 +83,7 @@ function InvoiceViewContent() {
           setInvoice({ ...data, id: snapById.docs[0].id });
         }
       } catch (e) {
-        console.error('Fetch error:', e);
+        console.error('[Invoice Fetch Error]:', e);
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +112,17 @@ function InvoiceViewContent() {
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
-  if (!invoice) return <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50"><X size={64} className="mx-auto text-gray-200" /><h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em] mt-4">Document Not Found</h1></div>;
+  
+  if (!invoice) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gray-50">
+      <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-6 max-w-md">
+        <X size={64} className="mx-auto text-rose-200" />
+        <h1 className="text-xl font-black uppercase opacity-60 tracking-[0.2em]">Document Not Found</h1>
+        <p className="text-sm text-gray-400 font-medium">The invoice reference you are looking for might have been removed or the URL is incorrect.</p>
+        <Button onClick={() => router.push('/')} className="rounded-xl px-10">Back to Site</Button>
+      </div>
+    </div>
+  );
 
   const d = design || {
     primaryColor: '#1E5F7A',
@@ -134,7 +150,6 @@ function InvoiceViewContent() {
   
   const mode = invoice.pricingMode || 'dynamic';
   const isCombo = mode === 'combo';
-  const isManual = mode === 'manual';
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -172,7 +187,6 @@ function InvoiceViewContent() {
           </div>
         </div>
 
-        {/* 📄 HARD LOCKED A4 CONTAINER */}
         <div 
           id="invoice-render-area" 
           className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] overflow-hidden" 
@@ -281,7 +295,7 @@ function InvoiceViewContent() {
               <div className="grid grid-cols-2 gap-32 items-end pt-2 pb-2 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
                 <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
                 <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
-                  {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Auth Seal" fill className="object-contain" unoptimized /></div>)}
+                  {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized /></div>)}
                   <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}</div>
                   <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
                 </div>

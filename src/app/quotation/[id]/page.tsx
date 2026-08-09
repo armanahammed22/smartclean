@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
   CheckCircle2, 
@@ -25,12 +25,9 @@ import { downloadQuotationPDF } from '@/lib/quotation-utils';
 import { numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
-/**
- * Clean SEO URL Public Quotation View
- * Handles both Document ID and Quotation Number.
- */
 function QuotationViewContent() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id as string;
   const searchParams = useSearchParams();
   const db = useFirestore();
   const router = useRouter();
@@ -38,23 +35,41 @@ function QuotationViewContent() {
   const [quote, setQuote] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [settings, setSettings] = useState<any>(null);
-  const [quoteSettings, setQuoteSettings] = useState<any>(null);
 
   const isAutoDownload = searchParams.get('download') === 'true';
+
+  const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
+  const { data: design } = useDoc(designRef);
+
+  const globalRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'global') : null, [db]);
+  const { data: settings } = useDoc(globalRef);
+
+  const quoteSettingsRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'quotation') : null, [db]);
+  const { data: quoteSettings } = useDoc(quoteSettingsRef);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch Logic (Handle ID or Number)
   useEffect(() => {
     async function fetchQuote() {
       if (!db || !id) return;
       setIsLoading(true);
       try {
-        // 1. Try fetching by Document ID
         const docRef = collection(db, 'quotations');
+        const normalizedId = id.toUpperCase();
+        
+        // 1. Try fetching by quoteNumber (SEO URL)
+        const qByNum = query(docRef, where('quoteNumber', '==', normalizedId), limit(1));
+        const snapByNum = await getDocs(qByNum);
+
+        if (!snapByNum.empty) {
+          setQuote({ ...snapByNum.docs[0].data(), id: snapByNum.docs[0].id });
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Try fetching by literal ID (Fallback)
         const qById = query(docRef, where('__name__', '==', id), limit(1));
         const snapById = await getDocs(qById);
 
@@ -65,19 +80,9 @@ function QuotationViewContent() {
             return;
           }
           setQuote({ ...data, id: snapById.docs[0].id });
-          setIsLoading(false);
-          return;
-        }
-
-        // 2. Try fetching by Quote Number (SEO URL)
-        const qByNum = query(docRef, where('quoteNumber', '==', id), limit(1));
-        const snapByNum = await getDocs(qByNum);
-
-        if (!snapByNum.empty) {
-          setQuote({ ...snapByNum.docs[0].data(), id: snapByNum.docs[0].id });
         }
       } catch (e) {
-        console.error('Fetch error:', e);
+        console.error('[Quotation Fetch Error]:', e);
       } finally {
         setIsLoading(false);
       }
@@ -85,19 +90,6 @@ function QuotationViewContent() {
     fetchQuote();
   }, [db, id, router]);
 
-  // Fetch Branding Settings
-  useEffect(() => {
-    if (db) {
-      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'global'), limit(1))).then(snap => {
-        if (!snap.empty) setSettings(snap.docs[0].data());
-      });
-      getDocs(query(collection(db, 'site_settings'), where('__name__', '==', 'quotation'), limit(1))).then(snap => {
-        if (!snap.empty) setQuoteSettings(snap.docs[0].data());
-      });
-    }
-  }, [db]);
-
-  // Auto-Download Effect
   useEffect(() => {
     if (quote && isAutoDownload && !isDownloading) {
       const timer = setTimeout(() => {
@@ -112,6 +104,7 @@ function QuotationViewContent() {
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = quoteSettings?.signatureUrl || settings?.signatureUrl;
+  const sealUrl = quoteSettings?.sealUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
@@ -126,40 +119,40 @@ function QuotationViewContent() {
   }, [quote, quoteSettings]);
 
   const tagline = quote?.tagline || quoteSettings?.tagline || "Smart Cleaning, Better Living.";
-  const footerDisclaimer = quoteSettings?.footerDisclaimer || "This document is electronically verified and ready for activation.";
+  const footerDisclaimer = quoteSettings?.footerDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
-  const handleWhatsApp = () => {
-    if (!quote) return;
-    const text = `আসসালামু আলাইকুম, স্মার্ট ক্লিন থেকে আপনার কোটিশনটি (${quote.quoteNumber}) পাঠানো হলো। এখানে দেখুন: ${window.location.href}`;
-    window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  if (!mounted || isLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center space-y-4">
-        <Loader2 className="animate-spin text-primary mx-auto" size={48} />
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Loading Quotation...</p>
-      </div>
-    </div>
-  );
-
+  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  
   if (!quote) return (
-    <div className="min-h-screen flex items-center justify-center p-8 text-center bg-gray-50">
-      <div className="space-y-4">
-        <X size={64} className="mx-auto text-gray-200" />
-        <h1 className="text-xl font-black uppercase opacity-20 tracking-[0.2em]">Document Not Found</h1>
-        <Button onClick={() => router.push('/')} variant="outline" className="rounded-full">Back to Home</Button>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gray-50">
+      <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-6 max-w-md">
+        <X size={64} className="mx-auto text-amber-200" />
+        <h1 className="text-xl font-black uppercase opacity-60 tracking-[0.2em]">Document Not Found</h1>
+        <p className="text-sm text-gray-400 font-medium">The quotation reference you are looking for might have been removed or the URL is incorrect.</p>
+        <Button onClick={() => router.push('/')} className="rounded-xl px-10">Back to Site</Button>
       </div>
     </div>
   );
+
+  const d = design || { primaryColor: '#1E5F7A', headerPaddingTop: 5, headerPaddingBottom: 5, sectionSpacing: 10, tableFontSize: 10.5, tableRowPadding: 2, headerFontSize: 22, bodyFontSize: 11, logoSize: 52, showGridLines: true, footerMarginTop: 5, footerPaddingBottom: 5, signatureSpacing: 25, taglineFontSize: 11, disclaimerFontSize: 7.5, paidSealUrl: '', unpaidSealUrl: '', authoritySealUrl: '' };
+
+  const mode = quote.pricingMode || 'dynamic';
+  const isCombo = mode === 'combo';
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-8 md:py-16 pb-32 md:pb-16">
+    <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #quote-render-area { shadow: none !important; border-top: none !important; }
+          #quote-render-area { 
+            box-shadow: none !important; 
+            border-top: none !important; 
+            border-radius: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+            height: 100% !important; 
+          }
         }
       `}</style>
 
@@ -173,147 +166,144 @@ function QuotationViewContent() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" onClick={handleWhatsApp} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all"><MessageCircle size={18} /> WhatsApp</Button>
-            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>
-              {isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF
-            </Button>
+            <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all" onClick={() => window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}`, '_blank')}><MessageCircle size={18} /> WhatsApp</Button>
+            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF</Button>
           </div>
         </div>
 
-        <div id="quote-render-area" className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" style={{ width: '210mm', minHeight: '297mm', color: '#333' }}>
-          <header className="pt-10 px-12 pb-4 flex justify-between items-start border-b-[3px] border-gray-100 mb-8">
-            <div className="flex gap-6">
-              <div className="w-16 h-16 relative shrink-0"><Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized /></div>
-              <div className="space-y-1 text-left">
-                <h2 className="text-2xl font-black text-[#081621] tracking-tighter uppercase leading-none">{websiteName}</h2>
-                <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
-              </div>
-            </div>
-            <div className="text-right max-w-[280px]">
-              <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
-              <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
-            </div>
-          </header>
-
-          <div className="px-12 pb-10 space-y-8">
-            <div className="text-center space-y-1">
-                <h3 className="text-3xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
-                <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
-            </div>
-
-            <div className="flex justify-between items-start">
-              <div className="text-left space-y-4">
-                <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
-                <div className="space-y-1">
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{quote.customerInfo?.name}</h4>
-                  <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
-                  <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{quote.customerInfo?.address}</p>
+        <div 
+          id="quote-render-area" 
+          className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" 
+          style={{ 
+            width: '210mm', 
+            height: '297mm', 
+            maxHeight: '297mm',
+            color: '#333', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between',
+            borderRadius: '0 0 1.5rem 1.5rem'
+          }}
+        >
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {sealUrl && (<div className="absolute top-64 right-20 z-20 pointer-events-none opacity-40"><div className="relative w-40 h-40"><Image src={sealUrl} alt="Seal" fill className="object-contain" unoptimized /></div></div>)}
+            <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
+              <div className="flex gap-6">
+                <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
+                  <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
+                </div>
+                <div className="space-y-1 text-left">
+                  <h2 className="font-black text-[#081621] tracking-tighter uppercase leading-none" style={{ fontSize: `${d.headerFontSize}px` }}>{websiteName}</h2>
+                  <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Professional Excellence</p>
                 </div>
               </div>
-              <div className="text-right space-y-6">
-                <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
-                  <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
-                  <p className="text-[11px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMMM yyyy') : 'N/A'}</p>
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-4">Valid Until</p>
-                  <p className="text-[11px] font-black text-rose-600">{quote.expiryDate ? format(new Date(quote.expiryDate), 'dd MMMM yyyy') : 'N/A'}</p>
-                </div>
+              <div className="text-right max-w-[280px]">
+                <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
+                <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
               </div>
-            </div>
+            </header>
 
-            <div className="overflow-hidden border-2 border-[#081621] rounded-2xl shadow-sm">
-              <table className="w-full border-collapse text-[10px]">
-                <thead className="bg-[#081621] text-white">
-                  <tr>
-                    <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
-                    <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-32">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="font-bold bg-white">
-                  {quote.items?.map((item: any, i: number) => (
-                    <tr key={i} className="border-t-2 border-gray-50 align-top">
-                      <td className="py-4 px-4 text-left text-gray-400">{i + 1}</td>
-                      <td className="py-4 px-4 text-left">
-                        <p className="font-black text-gray-900 uppercase leading-tight mb-1">{item.name}</p>
-                        <p className="text-[8px] text-gray-500 font-medium leading-relaxed italic">{item.description}</p>
-                      </td>
-                      <td className="py-4 px-4 text-center text-gray-600 uppercase font-black">{item.quantity} {item.unit || 'Qty'}</td>
-                      <td className="py-4 px-4 text-right text-gray-600">৳{item.price?.toLocaleString()}</td>
-                      <td className="py-4 px-4 text-right text-[#081621] font-black">৳{(item.price * item.quantity).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                  <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Estimate Total</td>
-                    <td className="py-3 px-4 text-right font-black text-xs">৳{quote.subtotal?.toLocaleString()}/-</td>
-                  </tr>
-                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                    <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left">
-              <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
-              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
-            </div>
-
-            <div className="space-y-3">
-               <h5 className="text-[10px] font-black uppercase tracking-widest text-primary border-b border-primary/20 pb-1 w-fit">General Terms & Conditions</h5>
-               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-inner">
-                  <div className="space-y-2">
-                    {terms.map((term: string, i: number) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <span className="text-[10px] font-black text-primary min-w-[20px]">{i + 1}.</span>
-                        <p className="text-[10px] md:text-[11px] font-medium text-gray-600 leading-relaxed">{term}</p>
-                      </div>
-                    ))}
+            <div className="px-12 py-6 space-y-4 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
+              <div className="text-center space-y-1 shrink-0">
+                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
+                <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
+              </div>
+              
+              <div className="flex justify-between items-start shrink-0">
+                <div className="text-left space-y-3">
+                  <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b pb-0.5 w-fit">Recipient Profile</p>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{quote.customerInfo?.name}</h4>
+                    <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
+                    <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                   </div>
-               </div>
-            </div>
-
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-6 pb-6">
-              <div className="text-center space-y-4">
-                <div className="border-b-[3px] border-gray-100 h-10"></div>
-                <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
-              </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-4">
-                <div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center">
-                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[8px] font-black border-dashed border-primary/30 text-primary uppercase">Authorized Digitally</Badge>}
                 </div>
-                <p className="font-black text-[10px] uppercase text-[#081621]">Smart Clean Authority</p>
+                <div className="text-right space-y-4">
+                  <div>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
+                    <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
+                    <p className="text-[10px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="pt-6 border-t-2 border-gray-100">
-               <div className="text-center space-y-2 mb-6">
-                  <p className="text-[12px] font-black text-primary flex items-center justify-center gap-2 uppercase tracking-widest">{tagline} <Star size={10} fill="currentColor"/></p>
-                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.2em]">Our Professional Service Network</p>
-               </div>
-               
-               <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
-                  {Array.from({ length: 3 }).map((_, colIdx) => (
-                    <div key={colIdx} className="space-y-1.5">
-                       {providedServices.filter((_: string, i: number) => i % 3 === colIdx).map((service: string, sIdx: number) => (
-                         <div key={sIdx} className="flex items-center gap-2">
-                            <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                            <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>
-                         </div>
-                       ))}
+              <div className={cn("overflow-hidden rounded-xl mb-2", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+                <table className="w-full border-collapse text-[10px]">
+                  <thead className="bg-[#081621] text-white">
+                    <tr>
+                      <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
+                      <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service Components</th>
+                      <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
+                      <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Rate</th>
+                      <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-bold bg-white">
+                    {quote.items?.map((item: any, i: number) => (
+                      <tr key={i} className="border-t border-gray-100 align-top">
+                        <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
+                        <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
+                          <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
+                        </td>
+                        <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
+                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${item.price?.toLocaleString()}`}</td>
+                        <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
+                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                      <td className="py-2.5 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shrink-0">
+                <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
+                <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
+              </div>
+              
+              <div className="space-y-1.5 overflow-hidden">
+                 <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
+                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-inner">
+                    <div className="space-y-1.5">
+                      {terms.slice(0, 6).map((term: string, i: number) => (
+                        <div key={i} className="flex gap-2 items-start">
+                          <span className="text-[9px] font-black min-w-[20px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                          <p className="text-gray-600 leading-tight font-medium" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-               </div>
+                 </div>
+              </div>
 
-               <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-8 tracking-[0.3em]">{footerDisclaimer}</p>
+              <div className="grid grid-cols-2 gap-32 items-end pt-4 pb-2 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
+                <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
+                <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
+                  <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center">
+                    {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}
+                  </div>
+                  <p className="font-black text-[9px] uppercase text-[#081621]">Smart Clean Authority</p>
+                </div>
+              </div>
             </div>
           </div>
+
+          <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+            <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+              {providedServices.slice(0, 9).map((service: string, sIdx: number) => (
+                <div key={sIdx} className="flex items-center gap-1.5">
+                  <CheckCircle2 size={8} className="text-emerald-500 shrink-0" />
+                  <span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-4 tracking-[0.3em]">{footerDisclaimer}</p>
+          </footer>
         </div>
       </div>
     </div>
@@ -322,7 +312,7 @@ function QuotationViewContent() {
 
 export default function PublicQuotationViewPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
       <QuotationViewContent />
     </Suspense>
   )
