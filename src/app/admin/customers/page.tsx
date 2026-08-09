@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -81,7 +80,7 @@ export default function CustomersPage() {
   const [removalTarget, setRemovalTarget] = useState<any>(null);
   const [removalType, setRemovalType] = useState<'delete' | 'block' | null>(null);
 
-  // 🚀 OPTIMIZATION: Limited to 100 recent customers
+  // 🚀 OPTIMIZATION: Limited to 100 recent customers for snappy load
   const customersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(100));
@@ -102,12 +101,17 @@ export default function CustomersPage() {
     };
   }, [customers]);
 
-  const filtered = customers?.filter(c => 
-    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.phone?.includes(searchTerm) ||
-    c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.id?.includes(searchTerm)
-  );
+  const filtered = useMemo(() => {
+    if (!customers) return [];
+    if (!searchTerm.trim()) return customers;
+    const s = searchTerm.toLowerCase();
+    return customers.filter(c => 
+      c.name?.toLowerCase().includes(s) || 
+      c.phone?.includes(s) ||
+      c.email?.toLowerCase().includes(s) ||
+      c.id?.includes(s)
+    );
+  }, [customers, searchTerm]);
 
   const toggleSelectAll = () => {
     if (filtered && selectedIds.length === filtered.length) {
@@ -127,7 +131,7 @@ export default function CustomersPage() {
     toast({ title: "Migration Started", description: "Scanning all ledger records..." });
 
     try {
-      const invoicesSnap = await getDocs(collection(db, 'invoices'));
+      const invoicesSnap = await getDocs(query(collection(db, 'invoices'), limit(500)));
       const usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'customer'), limit(500)));
       
       const invoices = invoicesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -305,7 +309,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="space-y-8 min-w-0">
+    <div className="space-y-8 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase leading-none">Customer Intelligence</h1>

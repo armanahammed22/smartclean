@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -69,17 +68,16 @@ function BookingsListContent() {
     setMounted(true);
   }, []);
 
-  // 🛡️ Safe query to avoid index errors during prototyping
+  // 🛡️ Safe query with limit(100) to ensure snappy initial load
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'bookings'), limit(100));
+    return query(collection(db, 'bookings'), orderBy('dateTime', 'desc'), limit(100));
   }, [db, user]);
 
   const { data: bookingsRaw, isLoading } = useCollection(bookingsQuery);
 
   const bookings = useMemo(() => {
-    if (!bookingsRaw) return [];
-    return [...bookingsRaw].sort((a, b) => (b.dateTime || '').localeCompare(a.dateTime || ''));
+    return bookingsRaw || [];
   }, [bookingsRaw]);
 
   const stats = useMemo(() => {
@@ -92,11 +90,15 @@ function BookingsListContent() {
     };
   }, [bookings]);
 
-  const filteredBookings = bookings?.filter(b => 
-    b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.customerPhone?.includes(searchTerm)
-  );
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    if (!searchTerm.trim()) return bookings;
+    return bookings.filter(b => 
+      b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.serviceTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.customerPhone?.includes(searchTerm)
+    );
+  }, [bookings, searchTerm]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     if (!db) return;
@@ -147,7 +149,7 @@ function BookingsListContent() {
   if (!mounted) return null;
 
   return (
-    <div className="space-y-8 min-w-0">
+    <div className="space-y-8 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Service Bookings</h1>

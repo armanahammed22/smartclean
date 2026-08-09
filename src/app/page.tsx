@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect, memo } from 'react';
@@ -43,7 +42,7 @@ const GridSkeleton = ({ count = 6 }) => (
 );
 
 /**
- * ⚡ Isolated Dynamic Data Section
+ * ⚡ Optimized Data Section with strict limits
  */
 const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardStyles: any }) => {
   const db = useFirestore();
@@ -52,9 +51,10 @@ const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardSt
 
   const targetCol = type === 'products_dynamic' ? 'products' : (type === 'services_dynamic' ? 'services' : 'sub_services');
   
+  // 🚀 OPTIMIZATION: Hard limit of 10 items for homepage grids to ensure speed
   const dataQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, targetCol), where('status', '==', 'Active'), limit(config.limit || 8));
+    return query(collection(db, targetCol), where('status', '==', 'Active'), limit(Math.min(config.limit || 8, 12)));
   }, [db, targetCol, config.limit]);
 
   const { data: items, isLoading } = useCollection(dataQuery);
@@ -86,7 +86,7 @@ const DynamicDataSection = memo(({ section, cardStyles }: { section: any, cardSt
   const customCardStyle = isService ? cardStyles?.serviceCard : cardStyles?.productCard;
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-12">
+    <div className="container mx-auto max-w-7xl px-4 py-12 page-transition-fade">
       <div className="flex items-center justify-between mb-8 px-2">
         <h2 className="font-black uppercase tracking-tighter text-[#081621] text-2xl md:text-4xl">{section.title}</h2>
         <Link href={targetPath} className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1">
@@ -120,7 +120,7 @@ const QuickLinksSection = memo(() => {
   if (!links?.length) return null;
 
   return (
-    <section className="px-4 py-8">
+    <section className="px-4 py-8 page-transition-fade">
       <div className="container mx-auto max-w-7xl grid grid-cols-4 md:grid-cols-8 gap-6">
         {links.map(link => {
           const Icon = ICONS[link.iconName] || Grid;
@@ -150,7 +150,7 @@ const StatsSection = memo(() => {
   if (isLoading || !stats?.length) return null;
 
   return (
-    <section className="px-4 py-6 bg-white border-y">
+    <section className="px-4 py-6 bg-white border-y page-transition-fade">
       <div className="container mx-auto max-w-7xl flex flex-wrap justify-center gap-x-12 gap-y-6">
         {stats.map((stat: any, i: number) => {
           const Icon = ICONS[stat.icon] || Zap;

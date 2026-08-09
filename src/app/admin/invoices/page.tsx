@@ -46,13 +46,12 @@ function InvoicesListContent() {
     setMounted(true);
   }, []);
 
-  // 🛡️ Optimized query to avoid index errors: Fetch list and sort/filter client side
-  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), limit(100)) : null, [db]);
+  // 🛡️ Optimized query to avoid index errors and improve speed: Fetch most recent 100
+  const invoicesQuery = useMemoFirebase(() => db ? query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(100)) : null, [db]);
   const { data: invoicesRaw, isLoading } = useCollection(invoicesQuery);
 
   const invoices = useMemo(() => {
-    if (!invoicesRaw) return [];
-    return [...invoicesRaw].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return invoicesRaw || [];
   }, [invoicesRaw]);
 
   const stats = useMemo(() => {
@@ -66,11 +65,15 @@ function InvoicesListContent() {
     };
   }, [invoices]);
 
-  const filtered = invoices?.filter(inv => 
-    inv.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.customerInfo?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.customerInfo?.phone?.includes(searchTerm)
-  );
+  const filtered = useMemo(() => {
+    if (!invoices) return [];
+    if (!searchTerm.trim()) return invoices;
+    return invoices.filter(inv => 
+      inv.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.customerInfo?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.customerInfo?.phone?.includes(searchTerm)
+    );
+  }, [invoices, searchTerm]);
 
   const toggleSelectAll = () => {
     if (selectedIds.length === filtered?.length) {
@@ -118,7 +121,7 @@ function InvoicesListContent() {
   if (!mounted) return null;
 
   return (
-    <div className="space-y-8 min-w-0">
+    <div className="space-y-8 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Billing Registry</h1>

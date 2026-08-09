@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -85,13 +84,13 @@ function OrdersListContent() {
     }
   }, [searchParams]);
 
-  // 🚀 OPTIMIZATION: Limited to 100 most recent orders
+  // 🚀 OPTIMIZATION: Strictly limited to 100 most recent orders for snappy load
   const ordersQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100));
   }, [db, user]);
 
-  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc'), limit(100)) : null, [db]);
+  const productsQuery = useMemoFirebase(() => db ? query(collection(db, 'products'), orderBy('name', 'asc'), limit(50)) : null, [db]);
   const gatewaysQuery = useMemoFirebase(() => db ? query(collection(db, 'payment_methods'), where('isEnabled', '==', true)) : null, [db]);
   
   const { data: orders, isLoading } = useCollection(ordersQuery);
@@ -108,11 +107,15 @@ function OrdersListContent() {
     };
   }, [orders]);
 
-  const filteredOrders = orders?.filter(o => 
-    o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.id?.includes(searchTerm) ||
-    o.customerPhone?.includes(searchTerm)
-  );
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    if (!searchTerm.trim()) return orders;
+    return orders.filter(o => 
+      o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.customerPhone?.includes(searchTerm)
+    );
+  }, [orders, searchTerm]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -213,7 +216,7 @@ function OrdersListContent() {
   if (!mounted) return null;
 
   return (
-    <div className="space-y-8 min-w-0">
+    <div className="space-y-8 min-w-0 page-transition-fade">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-[#081621]">Product Orders</h1>
@@ -249,7 +252,7 @@ function OrdersListContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input 
               placeholder="Search by Order ID or Name..." 
-              className="pl-10 h-11 bg-white border-gray-200"
+              className="pl-10 h-11 bg-white border-gray-100 rounded-xl"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -308,7 +311,7 @@ function OrdersListContent() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] p-0 border-none rounded-none md:rounded-[2.5rem] shadow-2xl bg-white flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-            <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center shrink-0">
+            <header className="p-6 md:p-8 bg-[#081621] text-white shrink-0 flex justify-between items-center">
               <div className="space-y-1">
                 <DialogTitle className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-3">
                   <ShoppingCart className="text-primary" size={24} /> Manual Order Terminal

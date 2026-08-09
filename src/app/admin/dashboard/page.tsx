@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
@@ -98,8 +97,9 @@ export default function AdminDashboard() {
            user.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL;
   }, [adminRole, user]);
 
-  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'orders') : null, [db, isAuthorized]);
-  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? collection(db, 'products') : null, [db, isAuthorized]);
+  // 🚀 OPTIMIZATION: Added limit(100) to main dashboard queries for faster init
+  const ordersQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)) : null, [db, isAuthorized]);
+  const productsQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'products'), limit(100)) : null, [db, isAuthorized]);
   
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const attendanceQuery = useMemoFirebase(() => (db && isAuthorized) ? query(collection(db, 'attendance_logs'), where('date', '==', todayStr)) : null, [db, isAuthorized, todayStr]);
