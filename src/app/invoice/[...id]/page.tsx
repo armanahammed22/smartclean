@@ -23,7 +23,8 @@ import {
   Zap,
   Clock,
   Star,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +33,8 @@ import { downloadInvoicePDF, numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
 /**
- * 🛡️ Robust Invoice View with Multi-Segment Support
- * Handles URLs like /invoice/INV/SM/2026/1001 correctly.
+ * 🛡️ REBORN INVOICE VIEW (Multi-Segment Catch-all)
+ * Handles URLs like /invoice/INV/SM/2026/1001 by joining segments correctly.
  */
 function InvoiceViewContent() {
   const params = useParams();
@@ -44,11 +45,10 @@ function InvoiceViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Join all path segments into a single string
   const fullId = useMemo(() => {
     if (!params.id) return '';
     const segments = Array.isArray(params.id) ? params.id : [params.id];
-    return segments.join('/');
+    return segments.map(s => decodeURIComponent(s)).join('/');
   }, [params.id]);
 
   const designRef = useMemoFirebase(() => db ? doc(db, 'site_settings', 'document_design') : null, [db]);
@@ -69,7 +69,7 @@ function InvoiceViewContent() {
         const docRef = collection(db, 'invoices');
         const normalizedId = fullId.toUpperCase().trim();
         
-        // 1. Try fetching by invoiceNumber (SEO URL)
+        // 1. Try fetching by invoiceNumber (Canonical SEO URL)
         const qByNum = query(docRef, where('invoiceNumber', '==', normalizedId), limit(1));
         const snapByNum = await getDocs(qByNum);
 
@@ -79,7 +79,7 @@ function InvoiceViewContent() {
           return;
         }
 
-        // 2. Try fetching by literal ID (Fallback)
+        // 2. Try fetching by literal ID (Internal Firebase ID)
         const qById = doc(db, 'invoices', fullId);
         const snapById = await getDoc(qById);
 
@@ -97,7 +97,7 @@ function InvoiceViewContent() {
   }, [db, fullId]);
 
   const headerPhone = settings?.invoiceHeaderPhone || settings?.contactPhone || '+8801919640422';
-  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
+  const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'GP.JA-66/2, Wireless Gate, Mohakhali, Dhaka-1212';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = settings?.signatureUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
@@ -114,16 +114,16 @@ function InvoiceViewContent() {
   }, [invoice, settings]);
 
   const tagline = invoice?.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living.";
-  const footerDisclaimer = settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
-  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   
   if (!invoice) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gray-50">
       <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-6 max-w-md">
         <X size={64} className="mx-auto text-rose-200" />
         <h1 className="text-xl font-black uppercase opacity-60 tracking-[0.2em]">Document Not Found</h1>
-        <p className="text-sm text-gray-400 font-medium">The invoice reference you are looking for might have been removed or the URL is incorrect.</p>
+        <p className="text-sm text-gray-400 font-medium italic">"{fullId}"</p>
+        <p className="text-xs text-gray-400">The reference might have been removed or the URL is incorrect.</p>
         <Button onClick={() => router.push('/')} className="rounded-xl px-10">Back to Site</Button>
       </div>
     </div>
@@ -133,30 +133,22 @@ function InvoiceViewContent() {
 
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
-  
   const isCombo = invoice.pricingMode === 'combo';
 
   return (
-    <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16 selection:bg-primary selection:text-white">
+    <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-8 pb-32 md:pb-16">
       <style jsx global>{`
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #invoice-render-area { 
-            box-shadow: none !important; 
-            border-top: none !important; 
-            border-radius: 0 !important; 
-            margin: 0 !important; 
-            width: 100% !important; 
-            height: 100% !important; 
-          }
+          #invoice-render-area { box-shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
         }
       `}</style>
 
       <div className="container mx-auto px-4 flex flex-col items-center">
         <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 px-4 no-print">
           <div className="flex items-center gap-4 text-left">
-            <div className="w-10 h-10 bg-[#081621] rounded-xl flex items-center justify-center text-white font-black text-sm shadow-xl border border-white/10">SC</div>
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-xl h-10 w-10 bg-white border shadow-sm"><ArrowLeft size={20}/></Button>
             <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#081621] block">Secure Billing Portal</span>
                 <Badge className={cn("border-none font-black text-[7px] uppercase tracking-widest px-2 py-0.5 mt-0.5", isPaid ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
@@ -299,7 +291,7 @@ function InvoiceViewContent() {
   );
 }
 
-export default function PublicInvoiceViewWrapper() {
+export default function CatchAllInvoiceView() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
       <InvoiceViewContent />

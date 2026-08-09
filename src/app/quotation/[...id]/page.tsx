@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, query, where, limit, getDocs, doc } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
   CheckCircle2, 
@@ -16,7 +16,8 @@ import {
   MessageCircle,
   Star,
   Check,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,8 +27,8 @@ import { numberToWords } from '@/lib/invoice-utils';
 import { cn } from '@/lib/utils';
 
 /**
- * 🛡️ Robust Quotation View with Multi-Segment Support
- * Handles URLs like /quotation/QTN/SM/2026/1001 correctly.
+ * 🛡️ REBORN QUOTATION VIEW (Multi-Segment Catch-all)
+ * Handles URLs like /quotation/QTN/SM/2026/1001 correctly by joining segments.
  */
 function QuotationViewContent() {
   const params = useParams();
@@ -40,11 +41,10 @@ function QuotationViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Join all path segments into a single string (e.g. ["QTN", "1001"] -> "QTN/1001")
   const fullId = useMemo(() => {
     if (!params.id) return '';
     const segments = Array.isArray(params.id) ? params.id : [params.id];
-    return segments.join('/');
+    return segments.map(s => decodeURIComponent(s)).join('/');
   }, [params.id]);
 
   const isAutoDownload = searchParams.get('download') === 'true';
@@ -80,7 +80,7 @@ function QuotationViewContent() {
           return;
         }
 
-        // 2. Try fetching by literal ID (Fallback)
+        // 2. Try fetching by literal ID (Firebase Internal)
         const qById = doc(db, 'quotations', fullId);
         const snapById = await getDoc(qById);
 
@@ -110,7 +110,6 @@ function QuotationViewContent() {
   const headerAddress = settings?.invoiceHeaderAddress || settings?.address || 'Wireless Gate, Mohakhali, Dhaka';
   const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
   const signatureUrl = quoteSettings?.signatureUrl || settings?.signatureUrl;
-  const sealUrl = quoteSettings?.sealUrl;
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
@@ -127,14 +126,15 @@ function QuotationViewContent() {
   const tagline = quote?.tagline || quoteSettings?.tagline || "Smart Cleaning, Better Living.";
   const footerDisclaimer = quoteSettings?.footerDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
-  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-primary" size={48} /></div>;
+  if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   
   if (!quote) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-gray-50">
       <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 space-y-6 max-w-md">
         <X size={64} className="mx-auto text-amber-200" />
         <h1 className="text-xl font-black uppercase opacity-60 tracking-[0.2em]">Document Not Found</h1>
-        <p className="text-sm text-gray-400 font-medium">The quotation reference you are looking for might have been removed or the URL is incorrect.</p>
+        <p className="text-sm text-gray-400 font-medium italic">"{fullId}"</p>
+        <p className="text-xs text-gray-400">The reference might have been removed or the URL is incorrect.</p>
         <Button onClick={() => router.push('/')} className="rounded-xl px-10">Back to Site</Button>
       </div>
     </div>
@@ -151,21 +151,14 @@ function QuotationViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #quote-render-area { 
-            box-shadow: none !important; 
-            border-top: none !important; 
-            border-radius: 0 !important; 
-            margin: 0 !important; 
-            width: 100% !important; 
-            height: 100% !important; 
-          }
+          #quote-render-area { box-shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
         }
       `}</style>
 
       <div className="container mx-auto px-4 flex flex-col items-center">
         <div className="w-full max-w-[210mm] flex flex-col sm:flex-row justify-between items-center mb-10 gap-6 px-4 no-print">
           <div className="flex items-center gap-4 text-left">
-            <div className="w-12 h-12 bg-[#081621] rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl border border-white/10">SC</div>
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-xl h-10 w-10 bg-white border shadow-sm"><ArrowLeft size={20}/></Button>
             <div>
                 <span className="text-[11px] font-black uppercase tracking-widest text-[#081621] block">Secure Service Portal</span>
                 <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1">Official Quotation</Badge>
@@ -180,19 +173,9 @@ function QuotationViewContent() {
         <div 
           id="quote-render-area" 
           className="bg-white shadow-2xl relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" 
-          style={{ 
-            width: '210mm', 
-            height: '297mm', 
-            maxHeight: '297mm',
-            color: '#333', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'space-between',
-            borderRadius: '0 0 1.5rem 1.5rem'
-          }}
+          style={{ width: '210mm', height: '297mm', maxHeight: '297mm', color: '#333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '0 0 1.5rem 1.5rem' }}
         >
           <div className="flex-1 flex flex-col overflow-hidden">
-            {sealUrl && (<div className="absolute top-64 right-20 z-20 pointer-events-none opacity-40"><div className="relative w-40 h-40"><Image src={sealUrl} alt="Seal" fill className="object-contain" unoptimized /></div></div>)}
             <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
               <div className="flex gap-6">
                 <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
@@ -210,10 +193,7 @@ function QuotationViewContent() {
             </header>
 
             <div className="px-12 py-6 space-y-4 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
-              <div className="text-center space-y-1 shrink-0">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3>
-                <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
-              </div>
+              <div className="text-center space-y-1 shrink-0"><h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
               
               <div className="flex justify-between items-start shrink-0">
                 <div className="text-left space-y-3">
@@ -225,14 +205,8 @@ function QuotationViewContent() {
                   </div>
                 </div>
                 <div className="text-right space-y-4">
-                  <div>
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p>
-                    <p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Issued On</p>
-                    <p className="text-[10px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p>
-                  </div>
+                  <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Document Ref.</p><p className="text-base font-black text-[#081621] font-mono tracking-tighter">{quote.quoteNumber}</p></div>
+                  <div><p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Issued On</p><p className="text-[10px] font-black text-[#081621]">{quote.issueDate ? format(new Date(quote.issueDate), 'dd MMM yyyy') : 'N/A'}</p></div>
                 </div>
               </div>
 
@@ -251,9 +225,7 @@ function QuotationViewContent() {
                     {quote.items?.map((item: any, i: number) => (
                       <tr key={i} className="border-t border-gray-100 align-top">
                         <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
-                        <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
-                          <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
-                        </td>
+                        <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}><p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p></td>
                         <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
                         <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${item.price?.toLocaleString()}`}</td>
                         <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}</td>
@@ -267,10 +239,7 @@ function QuotationViewContent() {
                 </table>
               </div>
 
-              <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shrink-0">
-                <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Value Proof (In words):</p>
-                <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
-              </div>
+              <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shrink-0"><p className="text-[7px] font-black text-gray-400 uppercase tracking-[0.3em]">Value Proof (In words):</p><p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p></div>
               
               <div className="space-y-1.5 overflow-hidden">
                  <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
@@ -300,14 +269,7 @@ function QuotationViewContent() {
 
           <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
-              {providedServices.slice(0, 9).map((service: string, sIdx: number) => (
-                <div key={sIdx} className="flex items-center gap-1.5">
-                  <CheckCircle2 size={8} className="text-emerald-500 shrink-0" />
-                  <span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span>
-                </div>
-              ))}
-            </div>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">{providedServices.slice(0, 9).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-1.5"><CheckCircle2 size={8} className="text-emerald-500 shrink-0" /><span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>
             <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-4 tracking-[0.3em]">{footerDisclaimer}</p>
           </footer>
         </div>
@@ -316,9 +278,7 @@ function QuotationViewContent() {
   );
 }
 
-import { getDoc } from 'firebase/firestore';
-
-export default function PublicQuotationViewPage() {
+export default function CatchAllQuotationView() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>}>
       <QuotationViewContent />

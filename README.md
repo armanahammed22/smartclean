@@ -1,4 +1,4 @@
-
+Resolving Invoice URL.
 # Smart Clean SaaS CRM Setup Guide
 
 A modern, multi-tenant CRM platform for cleaning companies built with Next.js 15, Tailwind CSS, and Firebase.
