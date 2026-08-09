@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -50,6 +51,8 @@ export default function QuotationEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [isManualItem, setIsManualItem] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   const [manualItem, setManualItem] = useState({ name: '', price: '', quantity: 1, unit: 'Qty' });
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQty, setSelectedQty] = useState(1);
@@ -66,24 +69,27 @@ export default function QuotationEditorPage() {
 
   const [customer, setCustomer] = useState<any>({ name: '', phone: '', email: '', company: '', address: '' });
   const [items, setItems] = useState<any[]>([]);
-  const [pricing, setPricing] = useState<any>({ discount: 0, discountType: 'percentage', additional: 0, vatPercent: 0 });
-  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: [] as string[], status: 'Draft', salesPerson: '', footerServices: '', tagline: '' });
+  const [pricing, setPricing] = useState<any>({ discount: 0, discountType: 'percentage', additional: 0, vatPercent: 0, manualTotal: 0 });
+  const [config, setConfig] = useState<any>({ issueDate: '', expiryDate: '', terms: [] as string[], status: 'Draft', salesPerson: '', footerServices: '', tagline: '', pricingMode: 'dynamic' });
 
   useEffect(() => {
-    if (quote) {
+    if (quote && !isInitialized) {
       setCustomer(quote.customerInfo || {});
-      // 🛡️ Ensure every item has a stable unique ID to prevent React "key" errors
+      
       const itemsWithIds = (quote.items || []).map((item: any, idx: number) => ({
         ...item,
         id: item.id || `quote-item-${idx}-${Date.now()}`
       }));
       setItems(itemsWithIds);
+      
       setPricing({ 
         discount: quote.discount || 0, 
         discountType: quote.discountType || 'percentage', 
         additional: quote.additionalCharges || 0, 
-        vatPercent: quote.vatPercent || 0 
+        vatPercent: quote.vatPercent || 0,
+        manualTotal: quote.total || 0 
       });
+      
       setConfig({ 
         issueDate: quote.issueDate || '', 
         expiryDate: quote.expiryDate || '', 
@@ -91,10 +97,13 @@ export default function QuotationEditorPage() {
         status: quote.status || 'Draft',
         salesPerson: quote.salesPerson || '',
         footerServices: quote.footerServices || '',
-        tagline: quote.tagline || ''
+        tagline: quote.tagline || '',
+        pricingMode: quote.pricingMode || 'dynamic'
       });
+      
+      setIsInitialized(true);
     }
-  }, [quote]);
+  }, [quote, isInitialized]);
 
   const handleAddItemToBill = () => {
     if (isManualItem) {
@@ -151,13 +160,18 @@ export default function QuotationEditorPage() {
   const removeTerm = (idx: number) => setConfig({ ...config, terms: config.terms.filter((_, i) => i !== idx) });
 
   const totals = useMemo(() => {
+    // If it's combo or manual mode with a fixed total, we respect the original total unless changed
+    if (config.pricingMode === 'combo' || config.pricingMode === 'manual_fixed') {
+        return { subtotal: pricing.manualTotal, discountAmt: 0, taxAmt: 0, total: pricing.manualTotal };
+    }
+
     const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
     let discountAmt = pricing.discountType === 'percentage' ? (subtotal * (pricing.discount / 100)) : pricing.discount;
     const net = subtotal - discountAmt;
     const taxAmt = net * (pricing.vatPercent / 100);
     const total = net + taxAmt + (pricing.additional || 0);
     return { subtotal, discountAmt, taxAmt, total };
-  }, [items, pricing]);
+  }, [items, pricing, config.pricingMode]);
 
   const handleUpdate = async () => {
     if (!db || !quoteRef) return;
@@ -198,11 +212,6 @@ export default function QuotationEditorPage() {
     }
   };
 
-  const handleDownload = () => {
-    if (!quote?.quoteNumber) return;
-    window.open(`/quotation/${quote.quoteNumber}?download=true`, '_blank');
-  };
-
   if (qLoading) return <div className="p-32 text-center flex flex-col items-center gap-4"><Loader2 className="animate-spin text-primary" size={48} /><p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Loading Protocol...</p></div>;
 
   return (
@@ -218,8 +227,6 @@ export default function QuotationEditorPage() {
            <Button variant="outline" className="h-9 px-4 rounded-lg font-black uppercase text-[10px] bg-white border-primary/20 text-primary gap-2 shadow-sm" asChild>
              <Link href={`/quotation/${quote?.quoteNumber}`} target="_blank"><Eye size={14}/> View</Link>
            </Button>
-           <Button variant="outline" onClick={handleDownload} className="h-9 px-4 rounded-lg font-black uppercase text-[10px] bg-white border-primary/20 text-indigo-600 gap-2 shadow-sm">
-             <Download size={14}/> PDF</Button>
            <Button 
              variant="outline"
              onClick={handleConvertToInvoice} 
@@ -268,13 +275,13 @@ export default function QuotationEditorPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-xl bg-white overflow-hidden border border-gray-100">
+        <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
           <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-500">
-              <ShoppingCart size={12} /> Item Correction
+              <ShoppingCart size={12} /> Item Matrix ({config.pricingMode?.toUpperCase()})
             </CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border shadow-inner">
-               <Label className="text-[8px] font-black uppercase text-primary">Manual Entry</Label>
+               <Label className="text-[8px] font-black uppercase text-primary">Add Item Manually</Label>
                <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
             </div>
           </CardHeader>
@@ -379,7 +386,7 @@ export default function QuotationEditorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-4">
              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-gray-400">Terms & Registry</Label>
+                <Label className="text-[10px] font-black uppercase text-gray-400">Terms & Conditions Registry</Label>
                 <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-sm">
                   {config.terms.map((term: string, i: number) => (
                     <div key={i} className="flex gap-2 group animate-in slide-in-from-left-2">
@@ -388,7 +395,7 @@ export default function QuotationEditorPage() {
                     </div>
                   ))}
                   <button type="button" onClick={addTerm} className="w-full flex items-center justify-center gap-2 border-dashed border-2 rounded-lg h-9 text-[9px] font-black uppercase text-gray-400 hover:text-primary hover:border-primary">
-                    <Plus size={12}/> Add Custom Rule
+                    <Plus size={12}/> Add Custom Line
                   </button>
                 </div>
              </div>
@@ -407,7 +414,7 @@ export default function QuotationEditorPage() {
             <Card className="border-none shadow-xl rounded-2xl bg-slate-50 border border-gray-100 overflow-hidden">
               <CardContent className="p-6 md:p-8 space-y-5">
                 <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  <span>Sub-Total</span>
+                  <span>Gross Estimation</span>
                   <span>৳{totals.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center gap-4">
@@ -422,7 +429,7 @@ export default function QuotationEditorPage() {
                 </div>
                 <div className="pt-6 border-t border-gray-200 flex justify-between items-end">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Grand Final Value</span>
+                    <span className="text-[10px] font-black text-primary uppercase mb-1 tracking-widest">Current Proposal Total</span>
                     <span className="text-4xl font-black text-[#081621] tracking-tighter italic">৳{totals.total.toFixed(2)}</span>
                   </div>
                   <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-sm"><Calculator size={22}/></div>

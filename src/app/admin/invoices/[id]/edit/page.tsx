@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -39,6 +40,7 @@ export default function EditInvoicePage() {
   const { user } = useUser();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Feature Modes
   const [isManualItem, setIsManualItem] = useState(false);
@@ -50,12 +52,13 @@ export default function EditInvoicePage() {
 
   const [items, setItems] = useState<any[]>([]);
   const [customer, setCustomer] = useState({ id: '', name: '', phone: '', email: '', company: '', address: '' });
-  const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0 });
+  const [pricing, setPricing] = useState({ discount: 0, discountType: 'percentage' as 'percentage' | 'fixed', delivery: 0, vatPercent: 0, manualTotal: 0 });
   const [config, setConfig] = useState({ 
     invoiceNumber: '',
     issueDate: '',
     expiryDate: '',
-    notes: '' 
+    notes: '',
+    pricingMode: 'dynamic'
   });
 
   const invoiceRef = useMemoFirebase(() => (db && id) ? doc(db, 'invoices', id as string) : null, [db, id]);
@@ -65,7 +68,7 @@ export default function EditInvoicePage() {
   const { data: services } = useCollection(servicesQuery);
 
   useEffect(() => {
-    if (invoice) {
+    if (invoice && !isInitialized) {
       setCustomer({
         id: invoice.customerId || '',
         name: invoice.customerInfo?.name || '',
@@ -74,26 +77,32 @@ export default function EditInvoicePage() {
         company: invoice.customerInfo?.company || '',
         address: invoice.customerInfo?.address || ''
       });
-      // 🛡️ Ensure every item has a unique ID to prevent key prop warnings
+      
       setItems(invoice.items?.map((i: any, idx: number) => ({
         ...i,
         id: i.id || `inv-item-${idx}-${Date.now()}`,
         total: (i.price * i.quantity) - (i.discount || 0)
       })) || []);
+      
       setPricing({
         discount: invoice.discount || 0,
         discountType: invoice.discountType || 'percentage',
         delivery: invoice.deliveryCharge || 0,
-        vatPercent: invoice.vatPercent || 0
+        vatPercent: invoice.vatPercent || 0,
+        manualTotal: invoice.total || 0
       });
+      
       setConfig({
         invoiceNumber: invoice.invoiceNumber || '',
         issueDate: invoice.createdAt ? invoice.createdAt.split('T')[0] : '',
         expiryDate: invoice.dueDate ? invoice.dueDate.split('T')[0] : '',
-        notes: invoice.notes || ''
+        notes: invoice.notes || '',
+        pricingMode: invoice.pricingMode || 'dynamic'
       });
+      
+      setIsInitialized(true);
     }
-  }, [invoice]);
+  }, [invoice, isInitialized]);
 
   const handleAddItemToBill = () => {
     if (isManualItem) {
@@ -140,6 +149,10 @@ export default function EditInvoicePage() {
   };
 
   const totals = useMemo(() => {
+    if (config.pricingMode === 'combo' || config.pricingMode === 'manual_fixed') {
+        return { subtotal: pricing.manualTotal, globalDiscountAmt: 0, total: pricing.manualTotal };
+    }
+
     const subtotal = items.reduce((acc, i) => acc + (parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0), 0);
     const itemDiscounts = items.reduce((acc, i) => acc + (parseFloat(i.discount) || 0), 0);
     
@@ -150,7 +163,7 @@ export default function EditInvoicePage() {
     const finalTotal = subtotal - itemDiscounts - globalDiscountAmt + pricing.delivery;
 
     return { subtotal, globalDiscountAmt, total: Math.max(0, finalTotal) };
-  }, [items, pricing]);
+  }, [items, pricing, config.pricingMode]);
 
   const handleUpdate = async () => {
     if (!db || !invoiceRef) return;
@@ -167,6 +180,7 @@ export default function EditInvoicePage() {
         createdAt: new Date(config.issueDate).toISOString(),
         dueDate: config.expiryDate ? new Date(config.expiryDate).toISOString() : null,
         notes: config.notes,
+        pricingMode: config.pricingMode,
         updatedAt: serverTimestamp()
       };
 
@@ -183,7 +197,7 @@ export default function EditInvoicePage() {
   if (vLoading) return <div className="p-32 text-center"><Loader2 className="animate-spin text-primary mx-auto" /></div>;
 
   return (
-    <div className="space-y-4 pb-20 min-w-0">
+    <div className="space-y-4 pb-20 min-w-0 -mt-6">
       <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-lg h-9 w-9 border">
@@ -227,9 +241,9 @@ export default function EditInvoicePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden overflow-hidden">
+        <Card className="border-none shadow-sm rounded-xl bg-white border border-gray-100 overflow-hidden">
           <CardHeader className="bg-gray-50/50 p-3 px-5 border-b flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={12}/> Billing Matrix</CardTitle>
+            <CardTitle className="text-[10px] font-black text-gray-500 uppercase flex items-center gap-2"><ShoppingCart size={12}/> Billing Matrix ({config.pricingMode?.toUpperCase()})</CardTitle>
             <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-full border">
                <Label className="text-[8px] font-black uppercase text-primary">Manual Item</Label>
                <Switch checked={isManualItem} onCheckedChange={setIsManualItem} className="scale-75" />
@@ -311,7 +325,7 @@ export default function EditInvoicePage() {
                       </TableCell>
                       <TableCell><Input type="number" value={item.price} onChange={e => updateItemField(item.id, 'price', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
                       <TableCell><Input type="number" value={item.discount || 0} onChange={e => updateItemField(item.id, 'discount', e.target.value)} className="h-7 w-20 ml-auto text-right font-bold text-[11px] bg-white shadow-inner rounded-lg" /></TableCell>
-                      <TableCell className="text-right font-black text-[11px] text-gray-900">৳{item.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-black text-[11px] text-gray-900">৳{item.total?.toFixed(2)}</TableCell>
                       <TableCell><button onClick={() => removeItem(item.id)} className="p-1 text-rose-300 hover:text-rose-600"><Trash2 size={14}/></button></TableCell>
                     </TableRow>
                   ))}
