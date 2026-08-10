@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useDoc, useCollection } from '@/firebase';
 import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
@@ -182,7 +182,7 @@ function QuotationViewContent() {
         >
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
-              <div className="flex gap-6">
+              <div className="flex gap-4">
                 <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                   <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
                 </div>

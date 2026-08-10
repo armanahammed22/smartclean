@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
@@ -161,7 +161,7 @@ function InvoiceViewContent() {
 
         <div 
           id="invoice-render-area" 
-          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" 
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.15)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" 
           style={{ width: '210mm', height: '297mm', maxHeight: '297mm', color: '#333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '0 0 1.5rem 1.5rem' }}
         >
           {statusSealUrl && (
@@ -172,7 +172,7 @@ function InvoiceViewContent() {
 
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
-              <div className="flex gap-6">
+              <div className="flex gap-4">
                 <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                   <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
                 </div>
@@ -194,9 +194,9 @@ function InvoiceViewContent() {
                 <div className="text-left space-y-3">
                   <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b pb-0.5 w-fit">Recipient Profile</p>
                   <div className="space-y-1">
-                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{invoice.customerInfo?.name}</h4>
-                    <p className="text-[10px] font-bold text-gray-600">{invoice.customerInfo?.phone}</p>
-                    <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{invoice.customerInfo?.address}</p>
+                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{invoice.customerInfo.name}</h4>
+                    <p className="text-[10px] font-bold text-gray-600">{invoice.customerInfo.phone}</p>
+                    <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{invoice.customerInfo.address}</p>
                   </div>
                 </div>
                 <div className="text-right space-y-4">
@@ -217,22 +217,22 @@ function InvoiceViewContent() {
                     </tr>
                   </thead>
                   <tbody className="font-bold bg-white">
-                    {invoice.items?.map((item: any, i: number) => (
+                    {invoice.items.map((item: any, i: number) => (
                       <tr key={i} className="border-t border-gray-100 align-top">
                         <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                         <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}><p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p></td>
-                        <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price?.toLocaleString()}</td>
+                        <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'PCS'}</td>
+                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price.toLocaleString()}</td>
                         <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                       </tr>
                     ))}
                     <tr className="border-t-2 border-[#081621] bg-gray-50/50">
                       <td colSpan={4} className="py-2 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
-                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                     </tr>
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
                       <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Final Total Amount</td>
-                      <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total?.toLocaleString()}/-</td>
+                      <td className="py-2.5 px-4 text-right font-black text-base">৳{invoice.total.toLocaleString()}/-</td>
                     </tr>
                   </tbody>
                 </table>
