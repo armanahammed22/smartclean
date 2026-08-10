@@ -3,11 +3,9 @@
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, getDoc, limit, setDoc } from 'firebase/firestore';
 import { Firestore } from 'firebase/firestore';
 import { Quotation } from '@/types';
-import { getOrCreateInvoice } from './invoice-utils';
 
 /**
- * Generates the next quotation number based on settings (Read Only).
- * It calculates the next number but does NOT update the DB.
+ * Generates the next quotation number based on settings
  */
 export async function getNextQuotationNumber(db: Firestore): Promise<string> {
   try {
@@ -61,7 +59,6 @@ export async function convertBookingToQuotation(db: Firestore, booking: any): Pr
     sourceBookingId: booking.id
   };
 
-  // Increment last number in DB since we are creating it
   const settingsRef = doc(db, 'site_settings', 'quotation');
   await updateDoc(settingsRef, { lastNumber: increment(1) });
 
@@ -81,12 +78,10 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
       customerEmail: quotation.customerInfo.email,
       address: quotation.customerInfo.address,
       items: [
-        ...quotation.items.map(i => ({ ...i, itemType: 'service' })),
-        ...(quotation.addOns || []).map(a => ({ ...a, itemType: 'service' }))
+        ...quotation.items.map(i => ({ ...i, itemType: 'service' }))
       ],
       totalPrice: quotation.total,
       subtotal: quotation.subtotal,
-      tax: quotation.tax,
       status: 'New',
       source: `quotation_${quotation.quoteNumber}`,
       createdAt: new Date().toISOString(),
@@ -110,77 +105,36 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 }
 
 /**
- * Converts a Quotation to an Invoice
- */
-export async function convertQuotationToInvoice(db: Firestore, quotation: any): Promise<string> {
-  try {
-    const collName = 'invoices';
-    const countSnap = await getDocs(query(collection(db, collName)));
-    const invNumber = `INV-QTN-${(countSnap.size + 1).toString().padStart(4, '0')}`;
-
-    const invoiceData = {
-      invoiceNumber: invNumber,
-      quotationId: quotation.id,
-      quoteRef: quotation.quoteNumber,
-      customerId: quotation.customerId || null,
-      customerInfo: quotation.customerInfo,
-      items: [
-        ...quotation.items.map((i: any) => ({ ...i, type: 'service' })),
-        ...(quotation.addOns || []).map((a: any) => ({ ...a, type: 'addon' }))
-      ],
-      subtotal: quotation.subtotal,
-      discount: quotation.discount,
-      discountType: quotation.discountType,
-      additionalCharges: quotation.additionalCharges || 0,
-      vatPercent: quotation.vatPercent || 0,
-      tax: quotation.tax,
-      total: quotation.total,
-      paymentStatus: 'Unpaid',
-      paidAmount: 0,
-      dueAmount: quotation.total,
-      paymentHistory: [],
-      createdAt: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    const docRef = await addDoc(collection(db, collName), invoiceData);
-    
-    await updateDoc(doc(db, 'quotations', quotation.id), {
-      status: 'Converted',
-      convertedTo: 'invoice',
-      convertedId: docRef.id,
-      updatedAt: new Date().toISOString()
-    });
-
-    return docRef.id;
-  } catch (e) {
-    throw new Error('Failed to convert quotation to invoice');
-  }
-}
-
-/**
- * 🚀 HARD LOCKED A4 PDF GENERATION
+ * 🚀 ROBUST A4 PDF GENERATION
  */
 export async function downloadQuotationPDF(elementId: string, fileName: string) {
-  const html2pdf = (await import('html2pdf.js')).default;
-  const element = document.getElementById(elementId);
-  if (!element) return;
+  if (typeof window === 'undefined') return;
 
-  const opt = {
-    margin: 0,
-    filename: `${fileName.replace(/\//g, '_')}.pdf`,
-    image: { type: 'jpeg', quality: 1.0 },
-    html2canvas: { 
-      scale: 3,
-      useCORS: true,
-      letterRendering: true,
-      scrollY: 0,
-      windowWidth: 794
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-    pagebreak: { mode: 'avoid-all' }
-  };
+  try {
+    const html2pdfModule = await import('html2pdf.js');
+    const html2pdf = html2pdfModule.default;
 
-  await html2pdf().from(element).set(opt).save();
+    const element = document.getElementById(elementId);
+    if (!element) throw new Error("Target element not found");
+
+    const opt = {
+      margin: 0,
+      filename: `${fileName.replace(/\//g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        scrollY: 0,
+        windowWidth: 794
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      pagebreak: { mode: 'avoid-all' }
+    };
+
+    await html2pdf().from(element).set(opt).save();
+  } catch (error) {
+    console.error('[PDF Engine Error]:', error);
+    throw error;
+  }
 }

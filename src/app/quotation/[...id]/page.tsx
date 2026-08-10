@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useFirestore, useMemoFirebase, useDoc, useCollection } from '@/firebase';
+import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { 
@@ -140,7 +140,7 @@ function QuotationViewContent() {
         <h1 className="text-xl font-black uppercase opacity-60 tracking-[0.2em]">Document Not Found</h1>
         <p className="text-sm text-gray-400 font-medium italic">Reference: "{fullId}"</p>
         <p className="text-xs text-gray-400 leading-relaxed">The link might be expired or the reference number is invalid.</p>
-        <Button onClick={() => router.push('/')} className="rounded-xl px-10 h-12 w-full font-black uppercase shadow-lg shadow-primary/20">Back to Site</Button>
+        <Button onClick={() => router.push('/')} className="rounded-xl px-10 h-12 w-full font-black uppercase shadow-lg shadow-primary/20">Back to Home</Button>
       </div>
     </div>
   );

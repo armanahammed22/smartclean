@@ -34,8 +34,7 @@ export function numberToWords(amount: number): string {
 }
 
 /**
- * Generates the next invoice number based on global settings (Read Only).
- * Calculates next number but does NOT update DB.
+ * Generates the next invoice number based on global settings
  */
 export async function getNextInvoiceNumber(db: Firestore): Promise<string> {
   try {
@@ -116,7 +115,6 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
     const initialPaid = sourceData.status === 'Completed' ? grandTotal : paidAmount;
     const initialDue = Math.max(0, grandTotal - initialPaid);
 
-    // Update the sequence ID inside transaction for safety
     transaction.update(doc(db, 'site_settings', 'global'), { invoiceLastNumber: increment(1) });
 
     transaction.set(invRef, {
@@ -153,27 +151,36 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * 🚀 HARD LOCKED A4 PDF GENERATION
+ * 🚀 ROBUST A4 PDF GENERATION
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
-  const html2pdf = (await import('html2pdf.js')).default;
-  const element = document.getElementById(elementId);
-  if (!element) return;
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const html2pdfModule = await import('html2pdf.js');
+    const html2pdf = html2pdfModule.default;
+    
+    const element = document.getElementById(elementId);
+    if (!element) throw new Error("Target element not found");
 
-  const opt = {
-    margin: 0,
-    filename: `${fileName}.pdf`,
-    image: { type: 'jpeg', quality: 1.0 },
-    html2canvas: { 
-      scale: 3, // Higher quality
-      useCORS: true,
-      letterRendering: true,
-      scrollY: 0,
-      windowWidth: 794, // 210mm at 96dpi
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-    pagebreak: { mode: 'avoid-all' }
-  };
+    const opt = {
+      margin: 0,
+      filename: `${fileName.replace(/\//g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        letterRendering: true,
+        scrollY: 0,
+        windowWidth: 794 // 210mm at 96dpi
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      pagebreak: { mode: 'avoid-all' }
+    };
 
-  await html2pdf().from(element).set(opt).save();
+    await html2pdf().from(element).set(opt).save();
+  } catch (error) {
+    console.error('[PDF Engine Error]:', error);
+    throw error;
+  }
 }
