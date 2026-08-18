@@ -116,7 +116,7 @@ function QuotationViewContent() {
   const websiteName = settings?.websiteName || 'Smart Clean';
 
   const providedServices = useMemo(() => {
-    const list = quote?.footerServices || quoteSettings?.defaultFooterServices || settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
+    const list = quote?.defaultFooterServices || quoteSettings?.defaultFooterServices || settings?.invoiceProvidedServices || 'Home Cleaning, Office Cleaning, Deep Cleaning, Sofa & Carpet, Kitchen Sanitization, Pest Control';
     return list.split(',').map((s: string) => s.trim()).filter((s: string) => s);
   }, [settings, quote, quoteSettings]);
 
@@ -127,7 +127,7 @@ function QuotationViewContent() {
   }, [quote, quoteSettings]);
 
   const tagline = quote?.tagline || quoteSettings?.tagline || "Smart Cleaning, Better Living.";
-  const footerDisclaimer = quoteSettings?.footerDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
+  const footerDisclaimer = settings?.invoiceFooterDisclaimer || "ELECTRONICALLY VERIFIED DOCUMENT";
 
   if (!mounted || isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary" size={48} /></div>;
   
@@ -174,8 +174,8 @@ function QuotationViewContent() {
 
         <div 
           id="quote-render-area" 
-          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem]" 
-          style={{ width: '210mm', height: '297mm', maxHeight: '297mm', color: '#333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '0 0 1.5rem 1.5rem' }}
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem] overflow-hidden" 
+          style={{ width: '210mm', height: '297mm', color: '#333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '0 0 1.5rem 1.5rem' }}
         >
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
@@ -260,7 +260,7 @@ function QuotationViewContent() {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-32 items-end pt-4 pb-2 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
+              <div className="grid grid-cols-2 gap-32 items-end pt-4 pb-2 shrink-0 mt-auto" style={{ marginTop: `${d.signatureSpacing}px` }}>
                 <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
                 <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
                   {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized /></div>)}
@@ -273,7 +273,14 @@ function QuotationViewContent() {
 
           <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">{providedServices.slice(0, 9).map((service: string, sIdx: number) => (<div key={sIdx} className="flex items-center gap-1.5"><CheckCircle2 size={8} className="text-emerald-500 shrink-0" /><span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span></div>))}</div>
+            <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+               {providedServices.slice(0, 9).map((service: string, sIdx: number) => (
+                  <div key={sIdx} className="flex items-center gap-1.5">
+                    <CheckCircle2 size={8} className="text-emerald-500 shrink-0" />
+                    <span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span>
+                  </div>
+               ))}
+            </div>
             <p className="text-[7.5px] text-gray-300 font-bold uppercase text-center mt-4 tracking-[0.3em]">{footerDisclaimer}</p>
           </footer>
         </div>
