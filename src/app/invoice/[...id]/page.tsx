@@ -101,6 +101,8 @@ function InvoiceViewContent() {
   const websiteName = settings?.websiteName || 'Smart Clean';
   const tagline = invoice?.tagline || settings?.invoiceTagline || "Smart Cleaning, Better Living.";
   const footerDisclaimer = settings?.invoiceFooterDisclaimer || 'This is a computer generated document and does not require a physical stamp.';
+  const logoUrl = settings?.logoUrl || "https://picsum.photos/seed/smartclean-logo/512/512";
+  const signatureUrl = settings?.signatureUrl;
 
   const isDue = (invoice?.dueAmount || 0) > 0;
   const isQuotation = invoice?.invoiceNumber?.startsWith('QTN');
@@ -132,10 +134,7 @@ function InvoiceViewContent() {
     </div>
   );
 
-  const d = design || { primaryColor: '#1E5F7A', headerPaddingTop: 5, headerPaddingBottom: 5, sectionSpacing: 10, tableFontSize: 10.5, tableRowPadding: 2, headerFontSize: 22, bodyFontSize: 11, logoSize: 52, showGridLines: true, footerMarginTop: 5, footerPaddingBottom: 5, signatureSpacing: 25, taglineFontSize: 11, disclaimerFontSize: 7.5, paidSealUrl: '', unpaidSealUrl: '', authoritySealUrl: '' };
-
-  const isPaid = invoice.paymentStatus === 'Paid';
-  const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
+  const d = design || { primaryColor: '#1E5F7A', headerPaddingTop: 5, headerPaddingBottom: 5, sectionSpacing: 10, tableFontSize: 10.5, tableRowPadding: 2, headerFontSize: 22, bodyFontSize: 11, logoSize: 52, showGridLines: true, footerMarginTop: 5, footerPaddingBottom: 5, signatureSpacing: 25, taglineFontSize: 11, disclaimerFontSize: 7.5 };
 
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-12 pb-32 md:pb-16 selection:bg-primary selection:text-white">
@@ -153,8 +152,8 @@ function InvoiceViewContent() {
             <Button variant="ghost" size="icon" onClick={() => router.push('/')} className="rounded-xl h-10 w-10 bg-white border shadow-sm"><ArrowLeft size={20}/></Button>
             <div>
                 <span className="text-[11px] font-black uppercase tracking-widest text-[#081621] block">Authorized Billing Portal</span>
-                <Badge className={cn("border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1", isPaid ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-                    {isPaid ? 'Payment Received' : 'Balance Due'}
+                <Badge className={cn("border-none font-black text-[8px] uppercase tracking-widest px-2 py-0.5 mt-1", !isDue ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
+                    {!isDue ? 'Payment Received' : 'Balance Due'}
                 </Badge>
             </div>
           </div>
@@ -224,7 +223,7 @@ function InvoiceViewContent() {
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
-                  {invoice.items.map((item: any, i: number) => (
+                  {invoice.items?.map((item: any, i: number) => (
                     <tr key={i} className="border-t-2 border-gray-50 align-top">
                       <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                       <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
@@ -238,7 +237,7 @@ function InvoiceViewContent() {
                   
                   <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
                     <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
-                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
+                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
                   </tr>
 
                   {invoice.previousDue > 0 && (
@@ -250,7 +249,7 @@ function InvoiceViewContent() {
 
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
                     <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Payable Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
+                    <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total?.toLocaleString()}</td>
                   </tr>
 
                   <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
@@ -271,11 +270,11 @@ function InvoiceViewContent() {
               <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
             </div>
 
-            {invoice.terms && invoice.terms.length > 0 && (
+            {terms && terms.length > 0 && (
               <div className="space-y-2 mb-8">
                  <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
                  <div className="grid grid-cols-1 gap-1">
-                    {invoice.terms.map((term: string, i: number) => (
+                    {terms.map((term: string, i: number) => (
                       <div key={i} className="flex gap-2 items-start">
                         <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
                         <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>

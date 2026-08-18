@@ -147,9 +147,6 @@ function QuotationViewContent() {
 
   const d = design || { primaryColor: '#1E5F7A', headerPaddingTop: 5, headerPaddingBottom: 5, sectionSpacing: 10, tableFontSize: 10.5, tableRowPadding: 2, headerFontSize: 22, bodyFontSize: 11, logoSize: 52, showGridLines: true, footerMarginTop: 5, footerPaddingBottom: 5, signatureSpacing: 25, taglineFontSize: 11, disclaimerFontSize: 7.5, paidSealUrl: '', unpaidSealUrl: '', authoritySealUrl: '' };
 
-  const mode = quote.pricingMode || 'dynamic';
-  const isCombo = mode === 'combo';
-
   return (
     <div className="bg-[#F2F4F8] min-h-screen py-4 md:py-12 pb-32 md:pb-16 selection:bg-primary selection:text-white">
       <style jsx global>{`
@@ -232,8 +229,8 @@ function QuotationViewContent() {
                         <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                         <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}><p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p></td>
                         <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
-                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${item.price?.toLocaleString()}`}</td>
-                        <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{isCombo ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}</td>
+                        <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>{quote.pricingMode === 'combo' ? '---' : `৳${item.price?.toLocaleString()}`}</td>
+                        <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{quote.pricingMode === 'combo' ? '---' : `৳${(item.price * item.quantity).toLocaleString()}`}</td>
                       </tr>
                     ))}
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
