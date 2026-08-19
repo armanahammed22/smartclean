@@ -105,7 +105,7 @@ export async function convertQuotationToBooking(db: Firestore, quotation: Quotat
 }
 
 /**
- * 🚀 ROBUST A4 PDF GENERATION
+ * 🚀 ROBUST A4 PDF GENERATION (Strict Single Page)
  */
 export async function downloadQuotationPDF(elementId: string, fileName: string) {
   if (typeof window === 'undefined') return;
@@ -120,7 +120,7 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
     const opt = {
       margin: 0,
       filename: `${fileName.replace(/\//g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2,
         useCORS: true,
@@ -128,7 +128,7 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
         scrollY: 0,
         windowWidth: 794
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: 'avoid-all' }
     };
 

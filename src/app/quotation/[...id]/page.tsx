@@ -153,7 +153,14 @@ function QuotationViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #quote-render-area { box-shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
+          #quote-render-area { 
+            box-shadow: none !important; 
+            border-top: none !important; 
+            border-radius: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+            height: 297mm !important;
+          }
         }
       `}</style>
 
@@ -167,15 +174,24 @@ function QuotationViewContent() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" onClick={() => window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}`, '_blank')}><MessageCircle size={18} /> WhatsApp Support</Button>
-            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={16} />} DOWNLOAD PDF</Button>
+            <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" style={{ backgroundColor: 'white' }}><MessageCircle size={18} /> WhatsApp Support</Button>
+            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} DOWNLOAD PDF</Button>
           </div>
         </div>
 
         <div 
           id="quote-render-area" 
-          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem] overflow-hidden" 
-          style={{ width: '210mm', height: '297mm', color: '#333', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '0 0 1.5rem 1.5rem' }}
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] relative border-t-[14px] border-[#1E5F7A] overflow-hidden" 
+          style={{ 
+            width: '210mm', 
+            height: '297mm', 
+            maxHeight: '297mm', 
+            color: '#333', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between',
+            boxSizing: 'border-box'
+          }}
         >
           <div className="flex-1 flex flex-col overflow-hidden">
             <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-100 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
@@ -194,14 +210,14 @@ function QuotationViewContent() {
               </div>
             </header>
 
-            <div className="px-12 py-6 space-y-4 flex-1 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
+            <div className="px-12 py-6 space-y-4 flex-1 flex flex-col min-h-0" style={{ marginTop: `${d.sectionSpacing}px` }}>
               <div className="text-center space-y-1 shrink-0"><h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
               
-              <div className="flex justify-between items-start shrink-0 mb-6">
+              <div className="flex justify-between items-start shrink-0 mb-8">
                 <div className="text-left space-y-3">
                   <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b pb-0.5 w-fit">Recipient Profile</p>
                   <div className="space-y-1">
-                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none" style={{ fontSize: `${d.bodyFontSize + 2}px` }}>{quote.customerInfo?.name}</h4>
+                    <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
                     <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
                     <p className="text-[8px] text-gray-500 font-medium leading-relaxed max-w-[400px] uppercase italic">{quote.customerInfo?.address}</p>
                   </div>
@@ -212,15 +228,15 @@ function QuotationViewContent() {
                 </div>
               </div>
 
-              <div className={cn("overflow-hidden rounded-xl mb-2", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+              <div className={cn("overflow-hidden rounded-xl mb-4 shrink-0", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
                 <table className="w-full border-collapse text-[10px]">
                   <thead className="bg-[#081621] text-white">
                     <tr>
-                      <th className="py-2 px-4 font-black uppercase text-left w-10 text-[10px]">SL</th>
-                      <th className="py-2 px-4 font-black uppercase text-left text-[10px]">Service Components</th>
-                      <th className="py-2 px-4 font-black uppercase text-center w-24 text-[10px]">Unit/Area</th>
-                      <th className="py-2 px-4 font-black uppercase text-right w-24 text-[10px]">Rate</th>
-                      <th className="py-2 px-4 font-black uppercase text-right w-28 text-[10px]">Subtotal</th>
+                      <th className="py-2.5 px-4 font-black uppercase text-left w-10">SL</th>
+                      <th className="py-2.5 px-4 font-black uppercase text-left">Service Components</th>
+                      <th className="py-2.5 px-4 font-black uppercase text-center w-24">Unit/Area</th>
+                      <th className="py-2.5 px-4 font-black uppercase text-right w-24">Rate</th>
+                      <th className="py-2.5 px-4 font-black uppercase text-right w-28">Subtotal</th>
                     </tr>
                   </thead>
                   <tbody className="font-bold bg-white">
@@ -241,16 +257,16 @@ function QuotationViewContent() {
                 </table>
               </div>
 
-              <div className="p-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-0.5 text-left shrink-0 shadow-inner">
+              <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left mb-6 shrink-0 shadow-inner">
                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-[0.3em]">Value Proof (In words):</p>
-                <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
+                <p className="text-[10px] font-black text-[#081621] italic leading-none">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
               </div>
               
-              <div className="space-y-1.5 overflow-hidden">
+              <div className="space-y-1.5 mb-6 shrink-0">
                  <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
-                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                 <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                     <div className="space-y-1">
-                      {terms.slice(0, 8).map((term: string, i: number) => (
+                      {terms.slice(0, 6).map((term: string, i: number) => (
                         <div key={i} className="flex gap-2 items-start">
                           <span className="text-[9px] font-black min-w-[20px]" style={{ color: d.primaryColor }}>{i + 1}.</span>
                           <p className="text-gray-600 leading-tight font-medium" style={{ fontSize: `${d.bodyFontSize - 2}px` }}>{term}</p>
@@ -260,21 +276,21 @@ function QuotationViewContent() {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-32 items-end pt-4 pb-2 shrink-0 mt-auto" style={{ marginTop: `${d.signatureSpacing}px` }}>
-                <div className="text-center space-y-1.5"><div className="border-b-[2px] border-gray-100 h-6"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
-                <div className="flex flex-col items-center justify-end text-center space-y-1.5 relative">
+              <div className="mt-auto grid grid-cols-2 gap-32 items-end pt-4 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
+                <div className="text-center space-y-2"><div className="border-b-[3px] border-gray-100 h-8"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
+                <div className="flex flex-col items-center justify-end text-center space-y-2 relative">
                   {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized /></div>)}
-                  <div className="h-10 w-24 relative border-b-[2px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <Badge variant="outline" className="text-[7px] font-black border-dashed border-primary/30 text-primary uppercase h-5">Authorized</Badge>}</div>
+                  <div className="h-12 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[8px] font-black text-gray-300 uppercase">Authorized</div>}</div>
                   <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <footer className="pt-2 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
             <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
-               {providedServices.slice(0, 9).map((service: string, sIdx: number) => (
+               {providedServices.slice(0, 9).map((service, sIdx) => (
                   <div key={sIdx} className="flex items-center gap-1.5">
                     <CheckCircle2 size={8} className="text-emerald-500 shrink-0" />
                     <span className="text-[8.5px] font-bold text-gray-600 uppercase truncate">{service}</span>

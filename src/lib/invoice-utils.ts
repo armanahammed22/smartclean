@@ -1,6 +1,6 @@
 'use client';
 
-import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment, getDoc, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment, getDoc, limit } from 'firebase/firestore';
 import { Firestore, runTransaction } from 'firebase/firestore';
 import { Invoice, InvoiceItem } from '@/types';
 
@@ -151,7 +151,7 @@ export async function getOrCreateInvoice(db: Firestore, sourceId: string, type: 
 }
 
 /**
- * 🚀 ROBUST A4 PDF GENERATION
+ * 🚀 ROBUST A4 PDF GENERATION (Strict Single Page)
  */
 export async function downloadInvoicePDF(elementId: string, fileName: string) {
   if (typeof window === 'undefined') return;
@@ -166,7 +166,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
     const opt = {
       margin: 0,
       filename: `${fileName.replace(/\//g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
         scale: 2, 
         useCORS: true,
@@ -174,7 +174,7 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
         scrollY: 0,
         windowWidth: 794 // 210mm at 96dpi
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: 'avoid-all' }
     };
 

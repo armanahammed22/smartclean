@@ -145,7 +145,14 @@ function InvoiceViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #invoice-render-area { box-shadow: none !important; border-top: none !important; border-radius: 0 !important; margin: 0 !important; width: 100% !important; }
+          #invoice-render-area { 
+            box-shadow: none !important; 
+            border-top: none !important; 
+            border-radius: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+            height: 297mm !important;
+          }
         }
       `}</style>
 
@@ -161,15 +168,23 @@ function InvoiceViewContent() {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" onClick={() => window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}`, '_blank')}><MessageCircle size={18} /> WhatsApp</Button>
+            <Button variant="outline" onClick={() => window.open(`https://wa.me/${headerPhone.replace(/\D/g, '')}`, '_blank')} className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" style={{ backgroundColor: 'white' }}><MessageCircle size={18} /> WhatsApp</Button>
             <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadInvoicePDF('invoice-render-area', invoice.invoiceNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} EXPORT INVOICE</Button>
           </div>
         </div>
 
         <div 
           id="invoice-render-area" 
-          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.15)] relative border-t-[14px] border-[#1E5F7A] rounded-b-[2rem] overflow-hidden"
-          style={{ width: '210mm', minHeight: '297mm', color: '#333' }}
+          className="bg-white shadow-[0_50px_100px_rgba(0,0,0,0.15)] relative border-t-[14px] border-[#1E5F7A] overflow-hidden"
+          style={{ 
+            width: '210mm', 
+            height: '297mm', 
+            maxHeight: '297mm', 
+            color: '#333',
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box'
+          }}
         >
           {statusSealUrl && (
             <div className="absolute top-48 right-16 z-50 opacity-25 rotate-[20deg] pointer-events-none w-48 h-48">
@@ -177,7 +192,7 @@ function InvoiceViewContent() {
             </div>
           )}
 
-          <div className="px-12 flex justify-between items-start border-b-[3px] border-gray-50" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
+          <header className="px-12 flex justify-between items-start border-b-[3px] border-gray-50 shrink-0" style={{ paddingTop: `${d.headerPaddingTop}px`, paddingBottom: `${d.headerPaddingBottom}px` }}>
             <div className="flex gap-4">
               <div className="relative shrink-0" style={{ width: `${d.logoSize}px`, height: `${d.logoSize}px` }}>
                 <Image src={logoUrl} alt="Logo" fill className="object-contain" unoptimized />
@@ -191,19 +206,19 @@ function InvoiceViewContent() {
               <p className="text-[8px] font-bold text-gray-700 leading-normal uppercase">{headerAddress}</p>
               <p className="text-[8px] font-bold text-[#081621] uppercase mt-1">Cell: <span className="font-black">{headerPhone}</span></p>
             </div>
-          </div>
+          </header>
 
-          <div className="px-12 pb-10 flex-1 flex flex-col" style={{ marginTop: `${d.sectionSpacing}px` }}>
-            <div className="text-center space-y-1 mb-10">
+          <div className="px-12 pb-6 flex-1 flex flex-col min-h-0" style={{ marginTop: `${d.sectionSpacing}px` }}>
+            <div className="text-center space-y-1 mb-8 shrink-0">
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3>
                 <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
             </div>
 
-            <div className="flex justify-between items-start mb-12">
-              <div className="text-left space-y-4">
+            <div className="flex justify-between items-start mb-10 shrink-0">
+              <div className="text-left space-y-3">
                 <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
                 <div className="space-y-1">
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{invoice.customerInfo.name}</h4>
+                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{invoice.customerInfo.name}</h4>
                   <p className="text-[10px] font-bold text-gray-600">{invoice.customerInfo.phone}</p>
                   <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{invoice.customerInfo.address}</p>
                 </div>
@@ -220,15 +235,15 @@ function InvoiceViewContent() {
               </div>
             </div>
 
-            <div className={cn("overflow-hidden rounded-xl mb-6", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+            <div className={cn("overflow-hidden rounded-xl mb-4 shrink-0", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
               <table className="w-full border-collapse text-[10px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
-                    <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
-                    <th className="py-3 px-4 font-black uppercase text-right w-32">Total</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left w-12">SL</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-left">Service Components</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-center w-24">Unit/Area</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-24">Unit Price</th>
+                    <th className="py-2.5 px-4 font-black uppercase text-right w-28">Total</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
@@ -245,74 +260,60 @@ function InvoiceViewContent() {
                   ))}
                   
                   <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
-                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
+                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
+                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
                   </tr>
-
-                  {invoice.previousDue > 0 && (
-                    <tr className="border-t border-gray-100 bg-white">
-                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Arrears</td>
-                      <td className="py-2.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue.toLocaleString()}</td>
-                    </tr>
-                  )}
 
                   <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
-                    <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Payable Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total?.toLocaleString()}</td>
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Payable Amount</td>
+                    <td className="py-3 px-4 text-right font-black text-sm">৳{invoice.total?.toLocaleString()}</td>
                   </tr>
 
-                  <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700">
-                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px]">Received (-)</td>
-                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
-                  </tr>
-
-                  <tr className="border-t-[3px] border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
-                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
+                  <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
+                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
+                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left mb-8">
+            <div className="p-3 bg-gray-50 rounded-xl border-2 border-gray-100 flex flex-col gap-0.5 text-left mb-6 shrink-0">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Amount in Words:</p>
-              <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
+              <p className="text-[10px] font-black text-[#081621] italic leading-none">"{numberToWords(invoice.total)}"</p>
             </div>
 
-            {terms && terms.length > 0 && (
-              <div className="space-y-2 mb-8">
-                 <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
-                 <div className="grid grid-cols-1 gap-1">
-                    {terms.map((term: string, i: number) => (
-                      <div key={i} className="flex gap-2 items-start">
-                        <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
-                        <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            )}
+            <div className="space-y-1.5 mb-6 shrink-0">
+               <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
+               <div className="grid grid-cols-1 gap-0.5">
+                  {terms.slice(0, 5).map((term: string, i: number) => (
+                    <div key={i} className="flex gap-2 items-start">
+                      <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                      <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>
+                    </div>
+                  ))}
+               </div>
+            </div>
 
-            <div className="avoid-break grid grid-cols-2 gap-32 items-end pt-10 mt-auto" style={{ marginTop: `${d.signatureSpacing}px` }}>
-              <div className="text-center space-y-4">
-                <div className="border-b-[3px] border-gray-100 h-10"></div>
-                <p className="text-[10px] font-black uppercase text-[#081621]">Client Signature</p>
+            <div className="mt-auto grid grid-cols-2 gap-32 items-end pt-6 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
+              <div className="text-center space-y-2">
+                <div className="border-b-[3px] border-gray-100 h-8"></div>
+                <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
               </div>
-              <div className="flex flex-col items-center justify-end text-center space-y-4 relative">
+              <div className="flex flex-col items-center justify-end text-center space-y-2 relative">
                 {d.authoritySealUrl && (
                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none">
                     <Image src={d.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized />
                   </div>
                 )}
-                <div className="h-16 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center z-10">
+                <div className="h-12 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center z-10">
                   {signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[8px] font-black text-gray-300 uppercase">Authorized</div>}
                 </div>
-                <p className="font-black text-[10px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
+                <p className="font-black text-[9px] uppercase text-[#081621] relative z-10">Smart Clean Authority</p>
               </div>
             </div>
           </div>
 
-          <footer className="pt-6 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2">
                 <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p>
             </div>
