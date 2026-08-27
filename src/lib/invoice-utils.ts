@@ -166,16 +166,17 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
     const opt = {
       margin: 0,
       filename: `${fileName.replace(/\//g, '_')}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
         scale: 2, 
         useCORS: true,
         letterRendering: true,
         scrollY: 0,
+        scrollX: 0,
         windowWidth: 794 // 210mm at 96dpi (Standard A4 Width)
       },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'avoid-all', before: '.avoid-break', after: '.avoid-break', avoid: '.avoid-break' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      pagebreak: { mode: 'avoid-all' }
     };
 
     await html2pdf().set(opt).from(element).save();

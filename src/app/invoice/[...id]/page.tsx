@@ -132,7 +132,23 @@ function InvoiceViewContent() {
     </div>
   );
 
-  const d = design || { primaryColor: '#1E5F7A', headerPaddingTop: 5, headerPaddingBottom: 5, sectionSpacing: 10, tableFontSize: 10.5, tableRowPadding: 2, headerFontSize: 22, bodyFontSize: 11, logoSize: 52, showGridLines: true, footerMarginTop: 5, footerPaddingBottom: 5, signatureSpacing: 25, taglineFontSize: 11, disclaimerFontSize: 7.5, paidSealUrl: '', unpaidSealUrl: '', authoritySealUrl: '' };
+  const d = design || {
+    primaryColor: '#1E5F7A',
+    headerPaddingTop: 5,
+    headerPaddingBottom: 5,
+    sectionSpacing: 10,
+    tableFontSize: 10.5,
+    tableRowPadding: 2,
+    headerFontSize: 22,
+    bodyFontSize: 11,
+    logoSize: 52,
+    showGridLines: true,
+    footerMarginTop: 5,
+    footerPaddingBottom: 5,
+    signatureSpacing: 25,
+    taglineFontSize: 11,
+    disclaimerFontSize: 7.5
+  };
 
   const isPaid = invoice.paymentStatus === 'Paid';
   const statusSealUrl = isPaid ? d.paidSealUrl : d.unpaidSealUrl;
@@ -171,7 +187,7 @@ function InvoiceViewContent() {
           style={{ 
             width: '210mm', 
             height: '297mm', 
-            maxHeight: '297mm', 
+            maxHeight: '297mm',
             color: '#333',
             display: 'flex',
             flexDirection: 'column',
@@ -200,17 +216,17 @@ function InvoiceViewContent() {
             </div>
           </header>
 
-          <div className="px-12 pb-6 flex-1 flex flex-col min-h-0" style={{ marginTop: `${d.sectionSpacing}px` }}>
+          <div className="px-12 pb-4 flex-1 flex flex-col min-h-0 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
             <div className="text-center space-y-1 mb-8 shrink-0">
                 <h3 className="text-xl font-black uppercase tracking-tighter italic text-[#081621]">Tax Invoice / Bill</h3>
                 <div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} />
             </div>
 
             <div className="flex justify-between items-start mb-8 shrink-0">
-              <div className="text-left space-y-3">
+              <div className="text-left space-y-4">
                 <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
                 <div className="space-y-1">
-                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{invoice.customerInfo.name}</h4>
+                  <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight">{invoice.customerInfo.name}</h4>
                   <p className="text-[10px] font-bold text-gray-600">{invoice.customerInfo.phone}</p>
                   <p className="text-[9px] text-gray-500 font-medium leading-relaxed max-w-[350px] uppercase italic">{invoice.customerInfo.address}</p>
                 </div>
@@ -222,69 +238,83 @@ function InvoiceViewContent() {
                 </div>
                 <div>
                   <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Issue Date</p>
-                  <p className="text-[11px] font-black text-[#081621]">{invoice.createdAt ? format(new Date(invoice.createdAt), 'dd MMMM yyyy') : 'N/A'}</p>
+                  <p className="text-[11px] font-black text-[#081621]">{format(new Date(invoice.createdAt), 'dd MMMM yyyy')}</p>
                 </div>
               </div>
             </div>
 
-            <div className={cn("overflow-hidden rounded-xl mb-4 shrink-0 avoid-break", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+            <div className={cn("overflow-hidden rounded-xl mb-6 shrink-0", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
               <table className="w-full border-collapse text-[10px]">
                 <thead className="bg-[#081621] text-white">
                   <tr>
-                    <th className="py-2.5 px-4 font-black uppercase text-left w-12">SL</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-left">Service Components</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-center w-28">Unit/Area</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-28">Unit Price</th>
-                    <th className="py-2.5 px-4 font-black uppercase text-right w-32">Total</th>
+                    <th className="py-3 px-4 font-black uppercase text-left w-12">SL</th>
+                    <th className="py-3 px-4 font-black uppercase text-left">Service Components</th>
+                    <th className="py-3 px-4 font-black uppercase text-center w-28">Unit/Area</th>
+                    <th className="py-3 px-4 font-black uppercase text-right w-28">Unit Price</th>
+                    <th className="py-3 px-4 font-black uppercase text-right w-32">Total</th>
                   </tr>
                 </thead>
                 <tbody className="font-bold bg-white">
-                  {invoice.items?.map((item: any, i: number) => (
-                    <tr key={i} className="border-t-2 border-gray-50 align-top">
+                  {invoice.items.map((item: any, i: number) => (
+                    <tr key={i} className="border-t-2 border-gray-50 align-top break-inside-avoid">
                       <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                       <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>
                         <p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p>
                       </td>
                       <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'PCS'}</td>
-                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price?.toLocaleString()}</td>
+                      <td className="px-4 text-right text-gray-600" style={{ fontSize: `${d.tableFontSize}px` }}>৳{item.price.toLocaleString()}</td>
                       <td className="px-4 text-right text-[#081621] font-black" style={{ fontSize: `${d.tableFontSize}px` }}>৳{(item.price * item.quantity).toLocaleString()}</td>
                     </tr>
                   ))}
                   
-                  <tr className="border-t-[3px] border-[#081621] bg-gray-50/50">
-                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
-                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.subtotal?.toLocaleString()}</td>
+                  <tr className="border-t-[3px] border-[#081621] bg-gray-50/50 break-inside-avoid">
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[9px] tracking-widest">Base Subtotal</td>
+                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.subtotal.toLocaleString()}</td>
                   </tr>
 
-                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white">
+                  {invoice.previousDue > 0 && (
+                    <tr className="border-t border-gray-100 bg-white break-inside-avoid">
+                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px] tracking-widest text-rose-500">Previous Arrears</td>
+                      <td className="py-2.5 px-4 text-right font-black text-xs text-rose-500">৳{invoice.previousDue.toLocaleString()}</td>
+                    </tr>
+                  )}
+
+                  <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white break-inside-avoid">
                     <td colSpan={4} className="py-4 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Payable Amount</td>
-                    <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total?.toLocaleString()}</td>
+                    <td className="py-4 px-4 text-right font-black text-sm">৳{invoice.total.toLocaleString()}</td>
                   </tr>
 
-                  <tr className="border-t border-[#081621] bg-rose-50/80 text-rose-700">
-                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
-                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
+                  <tr className="border-t border-[#081621] bg-emerald-50/50 text-emerald-700 break-inside-avoid">
+                    <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[9px]">Received (-)</td>
+                    <td className="py-2.5 px-4 text-right font-black text-xs">৳{invoice.paidAmount?.toLocaleString() || 0}</td>
+                  </tr>
+
+                  <tr className="border-t-[3px] border-[#081621] bg-rose-50/80 text-rose-700 break-inside-avoid">
+                    <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-widest italic">Net Balance Due</td>
+                    <td className="py-3 px-4 text-right font-black text-xs">৳{invoice.dueAmount?.toLocaleString() || 0}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left mb-6 shrink-0">
+            <div className="p-4 bg-gray-50 rounded-2xl border-2 border-gray-100 flex flex-col gap-1 text-left mb-8 shrink-0">
               <p className="text-[7px] font-black uppercase text-gray-400 tracking-[0.3em]">Amount in Words:</p>
               <p className="text-[10px] font-black text-[#081621] italic">"{numberToWords(invoice.total)}"</p>
             </div>
 
-            <div className="space-y-2 mb-6 shrink-0 avoid-break">
-               <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
-               <div className="grid grid-cols-1 gap-1">
-                  {terms.slice(0, 5).map((term: string, i: number) => (
-                    <div key={i} className="flex gap-2 items-start">
-                      <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
-                      <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>
-                    </div>
-                  ))}
-               </div>
-            </div>
+            {terms.length > 0 && (
+              <div className="space-y-2 mb-8 shrink-0 overflow-hidden">
+                 <h5 className="text-[9px] font-black uppercase tracking-widest border-b border-primary/20 pb-0.5 w-fit" style={{ color: d.primaryColor }}>Terms & Conditions</h5>
+                 <div className="grid grid-cols-1 gap-1">
+                    {terms.map((term: string, i: number) => (
+                      <div key={i} className="flex gap-2 items-start">
+                        <span className="text-[9px] font-black" style={{ color: d.primaryColor }}>{i + 1}.</span>
+                        <p className="text-[9px] font-medium text-gray-600 leading-tight">{term}</p>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            )}
 
             <div className="mt-auto grid grid-cols-2 gap-32 items-end pt-10 shrink-0 avoid-break" style={{ marginTop: `${d.signatureSpacing}px` }}>
               <div className="text-center space-y-4">
@@ -305,13 +335,13 @@ function InvoiceViewContent() {
             </div>
           </div>
 
-          <footer className="pt-6 border-t border-gray-100 px-12 shrink-0 avoid-break" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-6 border-t border-gray-100 px-12 shrink-0 overflow-hidden" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2">
                 <p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p>
             </div>
             
             <div className="grid grid-cols-3 gap-x-6 gap-y-0.5">
-                {providedServices.slice(0, 9).map((service, sIdx) => (
+                {providedServices.map((service, sIdx) => (
                   <div key={sIdx} className="flex items-center gap-2">
                       <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
                       <span className="text-[9px] font-bold text-gray-600 uppercase truncate">{service}</span>

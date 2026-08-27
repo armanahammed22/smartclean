@@ -164,7 +164,7 @@ function QuotationViewContent() {
           </div>
           <div className="flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-6 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" style={{ backgroundColor: 'white' }}><MessageCircle size={18} /> WhatsApp Support</Button>
-            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }} disabled={isDownloading}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} DOWNLOAD PDF</Button>
+            <Button className="rounded-xl gap-2 font-black uppercase text-[10px] h-12 px-10 bg-[#1E5F7A] text-white shadow-xl shadow-primary/20 hover:scale-105 transition-all" onClick={() => { setIsDownloading(true); downloadQuotationPDF('quote-render-area', quote.quoteNumber).finally(() => setIsDownloading(false)); }}>{isDownloading ? <Loader2 className="animate-spin h-3 w-3" /> : <Download size={14} />} DOWNLOAD PDF</Button>
           </div>
         </div>
 
@@ -178,7 +178,6 @@ function QuotationViewContent() {
             color: '#333', 
             display: 'flex', 
             flexDirection: 'column', 
-            justifyContent: 'space-between',
             boxSizing: 'border-box'
           }}
         >
@@ -199,7 +198,7 @@ function QuotationViewContent() {
               </div>
             </header>
 
-            <div className="px-12 py-6 space-y-4 flex-1 flex flex-col min-h-0" style={{ marginTop: `${d.sectionSpacing}px` }}>
+            <div className="px-12 py-6 space-y-4 flex-1 flex flex-col min-h-0 overflow-hidden" style={{ marginTop: `${d.sectionSpacing}px` }}>
               <div className="text-center space-y-1 shrink-0"><h3 className="text-2xl font-black uppercase tracking-tighter italic text-[#081621]">Service Quotation</h3><div className="h-1 w-16 mx-auto rounded-full" style={{ backgroundColor: d.primaryColor }} /></div>
               
               <div className="flex justify-between items-start shrink-0 mb-8">
@@ -230,7 +229,7 @@ function QuotationViewContent() {
                   </thead>
                   <tbody className="font-bold bg-white">
                     {quote.items?.map((item: any, i: number) => (
-                      <tr key={i} className="border-t border-gray-100 align-top">
+                      <tr key={i} className="border-t border-gray-100 align-top break-inside-avoid">
                         <td className="px-4 text-left text-gray-400" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}>{i + 1}</td>
                         <td className="px-4 text-left" style={{ fontSize: `${d.tableFontSize}px`, paddingTop: `${d.tableRowPadding}px`, paddingBottom: `${d.tableRowPadding}px` }}><p className="font-black text-gray-900 uppercase leading-tight">{item.name}</p></td>
                         <td className="px-4 text-center text-gray-600 uppercase font-black" style={{ fontSize: `${d.tableFontSize}px` }}>{item.quantity} {item.unit || 'Qty'}</td>
@@ -251,7 +250,7 @@ function QuotationViewContent() {
                 <p className="text-[10px] font-black text-[#081621] italic leading-none">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
               </div>
               
-              <div className="space-y-1.5 mb-6 shrink-0 avoid-break">
+              <div className="space-y-1.5 mb-6 shrink-0 overflow-hidden avoid-break">
                  <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
                  <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                     <div className="space-y-1">
@@ -279,7 +278,7 @@ function QuotationViewContent() {
             </div>
           </div>
 
-          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0 avoid-break" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0 overflow-hidden avoid-break" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
             <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
                {providedServices.slice(0, 9).map((service, sIdx) => (
