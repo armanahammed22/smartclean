@@ -126,13 +126,13 @@ export async function downloadQuotationPDF(elementId: string, fileName: string) 
         useCORS: true,
         letterRendering: true,
         scrollY: 0,
-        windowWidth: 794
+        windowWidth: 794 // 210mm at 96dpi (Standard A4 Width)
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'avoid-all' }
+      pagebreak: { mode: 'avoid-all', avoid: '.avoid-break' }
     };
 
-    await html2pdf().from(element).set(opt).save();
+    await html2pdf().set(opt).from(element).save();
   } catch (error) {
     console.error('[PDF Engine Error]:', error);
     throw error;

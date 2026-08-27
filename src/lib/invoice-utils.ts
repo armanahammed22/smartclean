@@ -172,13 +172,13 @@ export async function downloadInvoicePDF(elementId: string, fileName: string) {
         useCORS: true,
         letterRendering: true,
         scrollY: 0,
-        windowWidth: 794 // 210mm at 96dpi
+        windowWidth: 794 // 210mm at 96dpi (Standard A4 Width)
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: 'avoid-all' }
+      pagebreak: { mode: 'avoid-all', before: '.avoid-break', after: '.avoid-break', avoid: '.avoid-break' }
     };
 
-    await html2pdf().from(element).set(opt).save();
+    await html2pdf().set(opt).from(element).save();
   } catch (error) {
     console.error('[PDF Engine Error]:', error);
     throw error;

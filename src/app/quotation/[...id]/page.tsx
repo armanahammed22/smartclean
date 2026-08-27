@@ -42,7 +42,6 @@ function QuotationViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // 🧩 Extract and Join Segments safely
   const fullId = useMemo(() => {
     const rawId = params.id;
     if (!rawId) return '';
@@ -73,7 +72,6 @@ function QuotationViewContent() {
         const docRef = collection(db, 'quotations');
         const normalizedId = fullId.toUpperCase().trim();
         
-        // 1. Primary Strategy: Search by quoteNumber field
         const qByNum = query(docRef, where('quoteNumber', '==', normalizedId), limit(1));
         const snapByNum = await getDocs(qByNum);
 
@@ -83,7 +81,6 @@ function QuotationViewContent() {
           return;
         }
 
-        // 2. Secondary Strategy: Search by direct Firebase ID
         const qById = doc(db, 'quotations', fullId);
         const snapById = await getDoc(qById);
 
@@ -153,14 +150,6 @@ function QuotationViewContent() {
         @media print {
           body { background: white !important; }
           .no-print { display: none !important; }
-          #quote-render-area { 
-            box-shadow: none !important; 
-            border-top: none !important; 
-            border-radius: 0 !important; 
-            margin: 0 !important; 
-            width: 100% !important; 
-            height: 297mm !important;
-          }
         }
       `}</style>
 
@@ -215,7 +204,7 @@ function QuotationViewContent() {
               
               <div className="flex justify-between items-start shrink-0 mb-8">
                 <div className="text-left space-y-3">
-                  <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b pb-0.5 w-fit">Recipient Profile</p>
+                  <p className="text-[9px] font-black text-[#1E5F7A] uppercase tracking-[0.2em] border-b border-primary/20 pb-0.5 w-fit">Recipient Profile</p>
                   <div className="space-y-1">
                     <h4 className="text-xl font-black text-[#081621] uppercase tracking-tight leading-none">{quote.customerInfo?.name}</h4>
                     <p className="text-[10px] font-bold text-gray-600">{quote.customerInfo?.phone}</p>
@@ -228,7 +217,7 @@ function QuotationViewContent() {
                 </div>
               </div>
 
-              <div className={cn("overflow-hidden rounded-xl mb-4 shrink-0", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
+              <div className={cn("overflow-hidden rounded-xl mb-4 shrink-0 avoid-break", d.showGridLines ? "border-2 border-[#081621]" : "border-none shadow-sm")}>
                 <table className="w-full border-collapse text-[10px]">
                   <thead className="bg-[#081621] text-white">
                     <tr>
@@ -250,8 +239,8 @@ function QuotationViewContent() {
                       </tr>
                     ))}
                     <tr className="border-t-2 border-[#081621] bg-[#1E5F7A] text-white" style={{ backgroundColor: d.primaryColor }}>
-                      <td colSpan={4} className="py-2.5 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
-                      <td className="py-2.5 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
+                      <td colSpan={4} className="py-3 px-8 text-right font-black uppercase text-[10px] tracking-[0.2em] italic">Net Proposed Amount</td>
+                      <td className="py-3 px-4 text-right font-black text-base">৳{quote.total?.toLocaleString()}/-</td>
                     </tr>
                   </tbody>
                 </table>
@@ -262,7 +251,7 @@ function QuotationViewContent() {
                 <p className="text-[10px] font-black text-[#081621] italic leading-none">"{numberToWords(parseFloat(quote.total) || 0)}"</p>
               </div>
               
-              <div className="space-y-1.5 mb-6 shrink-0">
+              <div className="space-y-1.5 mb-6 shrink-0 avoid-break">
                  <h5 className="text-[9px] font-black uppercase tracking-widest border-b pb-0.5 w-fit" style={{ color: d.primaryColor, borderColor: `${d.primaryColor}40` }}>Terms & Conditions</h5>
                  <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                     <div className="space-y-1">
@@ -276,8 +265,11 @@ function QuotationViewContent() {
                  </div>
               </div>
 
-              <div className="mt-auto grid grid-cols-2 gap-32 items-end pt-4 shrink-0" style={{ marginTop: `${d.signatureSpacing}px` }}>
-                <div className="text-center space-y-2"><div className="border-b-[3px] border-gray-100 h-8"></div><p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p></div>
+              <div className="mt-auto grid grid-cols-2 gap-32 items-end pt-4 shrink-0 avoid-break" style={{ marginTop: `${d.signatureSpacing}px` }}>
+                <div className="text-center space-y-2">
+                  <div className="border-b-[3px] border-gray-100 h-8"></div>
+                  <p className="text-[9px] font-black uppercase text-[#081621]">Client Signature</p>
+                </div>
                 <div className="flex flex-col items-center justify-end text-center space-y-2 relative">
                   {d.authoritySealUrl && (<div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 opacity-30 z-0 pointer-events-none"><Image src={d.authoritySealUrl} alt="Seal" fill className="object-contain" unoptimized /></div>)}
                   <div className="h-12 w-32 relative border-b-[3px] border-primary/10 flex items-center justify-center z-10">{signatureUrl ? <Image src={signatureUrl} alt="Sign" fill className="object-contain" unoptimized /> : <div className="text-[8px] font-black text-gray-300 uppercase">Authorized</div>}</div>
@@ -287,7 +279,7 @@ function QuotationViewContent() {
             </div>
           </div>
 
-          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
+          <footer className="pt-4 border-t border-gray-100 px-12 shrink-0 avoid-break" style={{ marginTop: `${d.footerMarginTop}px`, paddingBottom: `${d.footerPaddingBottom}px` }}>
             <div className="text-center space-y-0.5 mb-2"><p className="font-black flex items-center justify-center gap-2 uppercase tracking-widest" style={{ fontSize: `${d.taglineFontSize}px`, color: d.primaryColor }}>{tagline} <Star size={8} fill="currentColor"/></p></div>
             <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
                {providedServices.slice(0, 9).map((service, sIdx) => (
